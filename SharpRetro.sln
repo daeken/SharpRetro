@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleSdlFrontend", "Simple
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DamageCore", "DamageCore\DamageCore.csproj", "{9B01FFEE-EC63-422B-97EA-464021DA0C8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreArchCompiler", "CoreArchCompiler\CoreArchCompiler.csproj", "{8443463C-BBD9-4E93-89BC-7FD29E4772DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DamageGenerator", "DamageGenerator\DamageGenerator.csproj", "{E6776321-7A1D-433F-BAAA-15E64817F58B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{9B01FFEE-EC63-422B-97EA-464021DA0C8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B01FFEE-EC63-422B-97EA-464021DA0C8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B01FFEE-EC63-422B-97EA-464021DA0C8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8443463C-BBD9-4E93-89BC-7FD29E4772DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8443463C-BBD9-4E93-89BC-7FD29E4772DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8443463C-BBD9-4E93-89BC-7FD29E4772DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8443463C-BBD9-4E93-89BC-7FD29E4772DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6776321-7A1D-433F-BAAA-15E64817F58B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6776321-7A1D-433F-BAAA-15E64817F58B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6776321-7A1D-433F-BAAA-15E64817F58B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6776321-7A1D-433F-BAAA-15E64817F58B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

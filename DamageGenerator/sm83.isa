@@ -1,0 +1,166 @@
+(defm u1  (v) (cast v u1))
+(defm u8  (v) (cast v u8))
+(defm u16 (v) (cast v u16))
+
+(defm i8  (v) (cast v i8))
+(defm i16 (v) (cast v i16))
+
+(def LD-rd-rs
+    "01 ddd sss"
+    "ld $(reg rd), $(reg rs)"
+    (names (rd d) (rs s))
+    (cycles 1)
+    (requires (!= rs 0b110))
+    (= (reg rd) (reg rs)))
+
+(def LD-rd-imm8
+    "00 ddd 110 iiiiiiii"
+    "ld $(reg rd), $imm"
+    (names (rd d) (imm i))
+    (cycles 2)
+    (requires (!= rd 0b110))
+    (= (reg rd) imm))
+
+(def LD-rd-HL
+    "01 ddd 110"
+    "ld $(reg rd), (HL)"
+    (names (rd d))
+    (cycles 2)
+    (requires (!= rd 0b110))
+    (= (reg rd) (load (reg-hl) u8)))
+
+(def LD-HL-rs
+    "01 110 sss"
+    "ld (HL), $(reg rs)"
+    (names (rs s))
+    (cycles 2)
+    (requires (!= rs 0b110))
+    (store (reg-hl) (reg rs)))
+
+(def LD-HL-imm8
+    "00 110 110 iiiiiiii"
+    "ld (HL), $imm"
+    (names (imm i))
+    (cycles 3)
+    (block)
+    (store (reg-hl) imm))
+
+(def LD-A-BC
+    "00001010"
+    "ld A, (BC)"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-a) (load (reg-bc) u8)))
+
+(def LD-A-DE
+    "00011010"
+    "ld A, (DE)"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-a) (load (reg-de) u8)))
+
+(def LD-BC-A
+    "00000010"
+    "ld (BC), A"
+    (names)
+    (cycles 2)
+    (block)
+    (store (reg-bc) (reg-a)))
+
+(def LD-DE-A
+    "00010010"
+    "ld (DE), A"
+    (names)
+    (cycles 2)
+    (block)
+    (store (reg-de) (reg-a)))
+
+(def LD-A-imm16
+    "11111010 LLLLLLLL MMMMMMMM"
+    "ld A, ($addr)"
+    (names (lsb L) (msb M))
+    (cycles 4)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (= (reg-a) (load addr u8)))
+
+(def LD-imm16-A
+    "11101010 LLLLLLLL MMMMMMMM"
+    "ld ($addr), A"
+    (names (lsb L) (msb M))
+    (cycles 4)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (store addr (reg-a)))
+
+(def LDH-A-C
+    "11110010"
+    "ldh A, (C)"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-a) (load (| (u16 0xFF00) (reg-c)) u8)))
+
+(def LDH-C-A
+    "11100010"
+    "ldh (C), A"
+    (names)
+    (cycles 2)
+    (block)(block)
+    (store (| (u16 0xFF00) (reg-c)) (reg-a)))
+
+(def LDH-A-imm8
+    "11110000 iiiiiiii"
+    "ldh A, ($addr)"
+    (names (imm i))
+    (cycles 3)
+    (= addr (| (u16 0xFF00) imm))
+    (= (reg-a) (load addr u8)))
+
+(def LDH-imm8-A
+    "11100000 iiiiiiii"
+    "ldh ($addr), A"
+    (names (imm i))
+    (cycles 3)
+    (= addr (| (u16 0xFF00) imm))
+    (store addr (reg-a)))
+
+(def LD-A-HL-
+    "00111010"
+    "ld A, (HL-)"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (= (reg-a) (load hl u8))
+        (= (reg-hl) (- hl 1))))
+
+(def LD-HL--A
+    "00110010"
+    "ld (HL-), A"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (store hl (reg-a))
+        (= (reg-hl) (- hl 1))))
+
+(def LD-A-HL+
+    "00101010"
+    "ld A, (HL+)"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (= (reg-a) (load hl u8))
+        (= (reg-hl) (+ hl 1))))
+
+(def LD-HL+-A
+    "00100010"
+    "ld (HL+), A"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (store hl (reg-a))
+        (= (reg-hl) (+ hl 1))))
