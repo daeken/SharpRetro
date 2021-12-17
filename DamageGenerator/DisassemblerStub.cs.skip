@@ -3,7 +3,7 @@
 namespace DamageCore;
 
 public partial class Disassembler {
-    public static string Disassemble(Span<byte> insnBytes, ushort pc) {
+    public static string Disassemble(Span<byte> insnBytes, ref ushort pc) {
 /*%D_CODE%*/
         return null;
     }

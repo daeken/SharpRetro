@@ -3,7 +3,7 @@
 namespace DamageCore;
 
 public partial class Interpreter {
-    public bool Interpret(Span<byte> insnBytes, ushort pc) {
+    public bool Interpret(Span<byte> insnBytes, ref ushort pc) {
 /*%CODE%*/
         return false;
     }

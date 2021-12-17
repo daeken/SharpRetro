@@ -209,7 +209,7 @@ class ControlFlow : Builtin {
 						c--;
 						c += "}";
 					} else {
-						c += $"case {GenerateExpression(list[i])}: {{";
+						c += $"case ({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}): {{";
 						c++;
 						GenerateStatement(c, (PList) list[i + 1]);
 						c += "break;";
@@ -264,20 +264,6 @@ class ControlFlow : Builtin {
 
 		BranchExpression("branch", _ => EType.Unit.AsRuntime(), list => $"Branch({GenerateExpression(list[1])})")
 			.Interpret((list, state) => state.Registers["PC"] = state.Evaluate(list[1]));
-		BranchExpression("branch-linked", _ => EType.Unit.AsRuntime(), list => $"BranchLinked({GenerateExpression(list[1])})")
-			.Interpret((list, state) => {
-				state.Registers["X30"] = state.GetRegister("PC") + 4;
-				return state.Registers["PC"] = state.Evaluate(list[1]);
-			});
-		BranchExpression("branch-linked-register", _ => EType.Unit.AsRuntime(), list => $"BranchLinkedRegister({GenerateExpression(list[1])})")
-			.Interpret((list, state) => {
-				state.Registers["X30"] = state.GetRegister("PC") + 4;
-				return state.Registers["PC"] = state.GetRegister($"X{state.Evaluate(list[1])}");
-			});
-		BranchExpression("branch-register", _ => EType.Unit.AsRuntime(), list => $"BranchRegister({GenerateExpression(list[1])})")
-			.Interpret((list, state) => state.Registers["PC"] = state.GetRegister($"X{state.Evaluate(list[1])}"));
-		BranchExpression("branch-default", _ => EType.Unit.AsRuntime(), list => "Branch(pc + 4)")
-			.Interpret((list, state) => state.Registers["PC"] = state.GetRegister("PC") + 4);
 			
 		Expression("unimplemented", _ => EType.Unit, _ => "throw new NotImplementedException()").NoInterpret();
 	}

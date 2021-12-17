@@ -26,6 +26,10 @@ public class Expressions : Builtin {
 				return (byte) state.GetRegister(RegName(reg));
 			});
 		
+		Expression("reg-flags", _ => new EInt(false, 8).AsRuntime(), 
+			_ => "Flags", 
+			_ => "/*UNIMPLEMENTED*/").NoInterpret();
+		
 		Expression("reg-bc", _ => new EInt(false, 16).AsRuntime(), 
 			_ => "((((ushort) Registers[0b000]) << 8) | (ushort) Registers[0b001])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
@@ -36,6 +40,14 @@ public class Expressions : Builtin {
 		
 		Expression("reg-hl", _ => new EInt(false, 16).AsRuntime(), 
 			_ => "((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101])", 
+			_ => "/*UNIMPLEMENTED*/").NoInterpret();
+		
+		Expression("reg-af", _ => new EInt(false, 16).AsRuntime(), 
+			_ => "((((ushort) Registers[0b111]) << 8) | (ushort) Flags)", 
+			_ => "/*UNIMPLEMENTED*/").NoInterpret();
+		
+		Expression("reg-sp", _ => new EInt(false, 16).AsRuntime(), 
+			_ => "SP", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Statement("=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
@@ -58,6 +70,15 @@ public class Expressions : Builtin {
 							};
 							c += $"Registers[{a}] = (byte) ({temp} >> 8);";
 							c += $"Registers[{b}] = (byte) ({temp} & 0xFF);";
+							return;
+						case PName("reg-af"):
+							var aftemp = Core.TempName();
+							c += $"var {aftemp} = (ushort) {GenerateExpression(list[2])};";
+							c += $"Registers[0b111] = (byte) ({aftemp} >> 8);";
+							c += $"Flags = (byte) ({aftemp} & 0xFF);";
+							return;
+						case PName("reg-sp"):
+							c += $"SP = (ushort) {GenerateExpression(list[2])};";
 							return;
 					}
 
@@ -84,5 +105,8 @@ public class Expressions : Builtin {
 				state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
 				return null;
 			});
+		
+		BranchExpression("branch-default", _ => EType.Unit.AsRuntime(), list => "Branch(pc)")
+			.Interpret((_, _) => null);
 	}
 }

@@ -24,6 +24,18 @@
         0b111 "A"
         (unimplemented)))
 
+(defm reg16-name (r)
+    (match r
+        0b00 "BC"
+        0b01 "DE"
+        0b10 "HL"
+        "SP"))
+
+(defm reg16-or-af-name (r)
+    (if (== r 0b11)
+        "AF"
+        (reg16-name r)))
+
 (def LD-rd-rs
     "01 ddd sss"
     "ld $(reg-name rd), $(reg-name rs)"
@@ -183,3 +195,105 @@
     (let hl (reg-hl)
         (store hl (reg-a))
         (= (reg-hl) (+ hl 1))))
+
+(def LD-rr-imm16
+    "00rr0001 LLLLLLLL MMMMMMMM"
+    "ld $(reg16-name r), $imm"
+    (names (r r) (lsb L) (msb M))
+    (cycles 3)
+    (let imm (| (<< (u16 msb) 8) lsb))
+    (match r
+        0b00 (= (reg-bc) imm)
+        0b01 (= (reg-de) imm)
+        0b10 (= (reg-hl) imm)
+             (= (reg-sp) imm)))
+
+(def LD-imm16-SP
+    "00001000 LLLLLLLL MMMMMMMM"
+    "ld ($addr), SP"
+    (names (r r) (lsb L) (msb M))
+    (cycles 5)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (store addr (reg-sp)))
+
+(def LD-SP-HL
+    "11111001"
+    "ld SP, HL"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-sp) (reg-hl)))
+
+(def PUSH-rr
+    "11rr0101"
+    "push $(reg16-or-af-name r)"
+    (names (r r))
+    (cycles 4)
+    (block)
+    (let sp (- (reg-sp) 2)
+        (= (reg-sp) sp)
+        (store sp (match r
+            0b00 (reg-bc)
+            0b01 (reg-de)
+            0b10 (reg-hl)
+                 (reg-af)))))
+
+(def POP-rr
+    "11rr0001"
+    "pop $(reg16-or-af-name r)"
+    (names (r r))
+    (cycles 4)
+    (block)
+    (mlet (sp (reg-sp) v (load sp u16))
+        (match r
+            0b00 (= (reg-bc) v)
+            0b01 (= (reg-de) v)
+            0b10 (= (reg-hl) v)
+                 (= (reg-af) v))
+        (= (reg-sp) (+ sp 2))))
+
+(def JP-nn
+    "11000011 LLLLLLLL MMMMMMMM"
+    "jp $addr"
+    (names (lsb L) (msb M))
+    (cycles 4)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (branch addr))
+
+(def JP-HL
+    "11101001"
+    "jp HL"
+    (names)
+    (cycles 1)
+    (block)
+    (branch (reg-hl)))
+
+(defm cc-name (cc)
+    (match cc
+        0b00 "NZ"
+        0b01 "Z"
+        0b10 "NC"
+             "C"))
+
+(defm cc-taken (cc)
+    (match (>> cc 1)
+        0 (== (>> (reg-flags) 7) (& cc 1))
+          (== (& (>> (reg-flags) 6) 1) (& cc 1))))
+
+(def JP-cc-imm16
+    "110cc010 LLLLLLLL MMMMMMMM"
+    "jp $(cc-name cc), $addr"
+    (names (cc c) (lsb L) (msb M))
+    (cycles (if (cc-taken cc) 4 3))
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (if (cc-taken cc)
+        (branch addr)
+        (branch-default)))
+
+(def JR-simm8
+    "00011000 eeeeeeee"
+    "jr $offset"
+    (names (e e))
+    (cycles 3)
+    (let offset (i8 e))
+    (branch (+ (pc) offset)))

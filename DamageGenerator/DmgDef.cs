@@ -5,14 +5,16 @@ using MoreLinq.Extensions;
 namespace DamageGenerator; 
 
 public class DmgDef : Def {
+	public readonly int Size;
 	public readonly Dictionary<int, (byte Mask, byte Match)> MatchBytes;
 	public readonly Dictionary<string, (int Byte, int Size, int Shift)> Fields;
 
-	DmgDef(string name, Dictionary<int, (byte Mask, byte Match)> matchBytes, 
+	DmgDef(string name, int size, Dictionary<int, (byte Mask, byte Match)> matchBytes, 
 		Dictionary<string, (int Byte, int Size, int Shift)> fields, 
 		PTree dasm, PList decode, PList eval,
 		IReadOnlyDictionary<string, EType> _locals
 	) : base(name, dasm, decode, eval, _locals) {
+		Size = size;
 		MatchBytes = matchBytes;
 		Fields = fields;
 	}
@@ -23,7 +25,7 @@ public class DmgDef : Def {
 		if(def[2] is not PString _bitstr) throw new Exception();
 		if(def[3] is not PTree disasm) throw new Exception();
 		if(def[4] is not PList names) throw new Exception();
-		if(def[5] is not PList cycles || cycles[0] is not PName("cycles") || cycles[1] is not PInt(_)) throw new Exception();
+		if(def[5] is not PList cycles || cycles[0] is not PName("cycles")) throw new Exception();
 		if(def[6] is not PList decode) throw new Exception();
 		if(def[7] is not PList eval) throw new Exception();
 
@@ -69,6 +71,6 @@ public class DmgDef : Def {
 		foreach(var (fname, (_, bits, _)) in fields)
 			locals[fname] = new EInt(false, bits);
 
-		return new DmgDef(name, matchBytes, fields, disasm, decode, eval, locals);
+		return new DmgDef(name, bitstr.Length / 8, matchBytes, fields, disasm, decode, eval, locals);
 	}
 }

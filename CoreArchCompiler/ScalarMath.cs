@@ -98,7 +98,7 @@ class ScalarMath : Builtin {
 			});
 			
 		Expression(">>", FirstType, 
-				list => $"({GenerateExpression(list[1])}) >> (uint) ({GenerateExpression(list[2])})", 
+				list => $"({GenerateExpression(list[1])}) >> (int) ({GenerateExpression(list[2])})", 
 				list => $"({GenerateExpression(list[1])}) >> ({GenerateExpression(list[2])})")
 			.Interpret((list, state) => {
 				var shift = (int) state.Evaluate(list[2]);

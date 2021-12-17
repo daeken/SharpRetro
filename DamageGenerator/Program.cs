@@ -31,6 +31,7 @@ public class Program : Core {
 			GenerateFields(ic, def);
 			GenerateStatement(ic, def.Decode);
 			ic += $"return \"{def.Name}\";";
+			c += $"pc += {def.Size};";
 			c += $"return {GenerateExpression(def.Disassembly)};";
 			c--;
 			ic--;
@@ -63,6 +64,7 @@ public class Program : Core {
 			c++;
 			GenerateFields(c, def);
 			GenerateStatement(c, def.Decode);
+			c += $"pc += {def.Size};";
 			GenerateStatement(c, def.Eval);
 			c += "return true;";
 			c--;
