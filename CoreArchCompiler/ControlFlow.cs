@@ -226,7 +226,7 @@ class ControlFlow : Builtin {
 				for(var i = 2; i < list.Count; i += 2)
 					opts.Add(i + 1 == list.Count
 						? $"_ => {GenerateExpression(list[i])}"
-						: $"{GenerateExpression(list[i])} => {GenerateExpression(list[i + 1])}");
+						: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {GenerateExpression(list[i + 1])}");
 				var tn = TempName();
 				return $"{GenerateExpression(list[1])} switch {{ {string.Join(", ", opts)} }}";
 			}, list => {
@@ -238,7 +238,7 @@ class ControlFlow : Builtin {
 				for(var i = 2; i < list.Count; i += 2)
 					opts.Add(i + 1 == list.Count
 						? $"_ => {GenerateExpression(list[i])}"
-						: $"{GenerateExpression(list[i])} => {Expr(list[i + 1])}");
+						: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {Expr(list[i + 1])}");
 				var tn = TempName();
 				return $"{GenerateExpression(list[1])} switch {{ {string.Join(" ", opts)} }}";
 			});

@@ -8,34 +8,34 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xC0) == 0x40) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-			if(((uint) (((rs) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rs) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_1;
-			return (string) ("ld " + (string) (rd switch { 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => throw new NotImplementedException() }) + ", " + (string) (rs switch { 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => throw new NotImplementedException() }));
+			return (string) ("ld " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }) + ", " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }));
 		}
 		insn_1:
 		/* LD-rd-imm8 */
 		if((insnBytes[0] & 0xC7) == 0x6) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-			if(((uint) (((rd) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rd) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_2;
-			return (string) ("ld " + (string) (rd switch { 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => throw new NotImplementedException() }) + ", " + (imm).ToString());
+			return (string) ("ld " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }) + ", " + (imm).ToString());
 		}
 		insn_2:
 		/* LD-rd-HL */
 		if((insnBytes[0] & 0xC7) == 0x46) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-			if(((uint) (((rd) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rd) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_3;
-			return (string) ("ld " + (string) (rd switch { 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => throw new NotImplementedException() }) + ", (HL)");
+			return (string) ("ld " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }) + ", (HL)");
 		}
 		insn_3:
 		/* LD-HL-rs */
 		if((insnBytes[0] & 0xF8) == 0x70) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-			if(((uint) (((rs) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rs) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_4;
-			return (string) ("ld (HL), " + (string) (rs switch { 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => throw new NotImplementedException() }));
+			return (string) ("ld (HL), " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }));
 		}
 		insn_4:
 		/* LD-HL-imm8 */
@@ -68,7 +68,7 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xFF) == 0xFA) {
 			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8)))) | ((ushort) (lsb))));
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			return (string) ("ld A, (" + (addr).ToString() + ")");
 		}
 		insn_10:
@@ -76,7 +76,7 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xFF) == 0xEA) {
 			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8)))) | ((ushort) (lsb))));
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			return (string) ("ld (" + (addr).ToString() + "), A");
 		}
 		insn_11:
@@ -93,14 +93,14 @@ public partial class Disassembler {
 		/* LDH-A-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xF0) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00)))) | ((ushort) (imm))));
+			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00U)))) | ((ushort) (imm))));
 			return (string) ("ldh A, (" + (addr).ToString() + ")");
 		}
 		insn_14:
 		/* LDH-imm8-A */
 		if((insnBytes[0] & 0xFF) == 0xE0) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00)))) | ((ushort) (imm))));
+			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00U)))) | ((ushort) (imm))));
 			return (string) ("ldh (" + (addr).ToString() + "), A");
 		}
 		insn_15:
@@ -132,7 +132,7 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xC0) == 0x40) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-			if(((uint) (((rs) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rs) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_1;
 			return "LD-rd-rs";
 		}
@@ -140,21 +140,21 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xC7) == 0x6) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-			if(((uint) (((rd) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rd) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_2;
 			return "LD-rd-imm8";
 		}
 		insn_2:
 		if((insnBytes[0] & 0xC7) == 0x46) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-			if(((uint) (((rd) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rd) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_3;
 			return "LD-rd-HL";
 		}
 		insn_3:
 		if((insnBytes[0] & 0xF8) == 0x70) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-			if(((uint) (((rs) != (0x6)) ? 1U : 0U)) == 0)
+			if(((uint) (((rs) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_4;
 			return "LD-HL-rs";
 		}
@@ -183,14 +183,14 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xFF) == 0xFA) {
 			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8)))) | ((ushort) (lsb))));
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			return "LD-A-imm16";
 		}
 		insn_10:
 		if((insnBytes[0] & 0xFF) == 0xEA) {
 			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8)))) | ((ushort) (lsb))));
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			return "LD-imm16-A";
 		}
 		insn_11:
@@ -204,13 +204,13 @@ public partial class Disassembler {
 		insn_13:
 		if((insnBytes[0] & 0xFF) == 0xF0) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00)))) | ((ushort) (imm))));
+			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00U)))) | ((ushort) (imm))));
 			return "LDH-A-imm8";
 		}
 		insn_14:
 		if((insnBytes[0] & 0xFF) == 0xE0) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00)))) | ((ushort) (imm))));
+			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00U)))) | ((ushort) (imm))));
 			return "LDH-imm8-A";
 		}
 		insn_15:

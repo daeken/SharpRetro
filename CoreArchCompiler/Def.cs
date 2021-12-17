@@ -59,8 +59,21 @@ public class Def {
 					}
 				case PString:
 					return EType.String;
-				case PInt:
-					return new EInt(true, 64);
+				case PInt(var value):
+					if(value >= 0)
+						return value switch {
+							<= byte.MaxValue => new EInt(false, 8), 
+							<= ushort.MaxValue => new EInt(false, 16), 
+							<= uint.MaxValue => new EInt(false, 16), 
+							_ => new EInt(false, 64), 
+						};
+					else
+						return value switch {
+							>= sbyte.MinValue => new EInt(true, 8), 
+							>= short.MinValue => new EInt(true, 16), 
+							>= int.MinValue => new EInt(true, 16), 
+							_ => new EInt(true, 64), 
+						};
 				case PName pname:
 					return locals.ContainsKey(pname.Name) ? locals[pname.Name] : EType.Unit;
 				default:
