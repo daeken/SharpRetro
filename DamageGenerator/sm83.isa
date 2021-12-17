@@ -5,6 +5,14 @@
 (defm i8  (v) (cast v i8))
 (defm i16 (v) (cast v i16))
 
+(defm reg-b () (reg 0b000))
+(defm reg-c () (reg 0b001))
+(defm reg-d () (reg 0b010))
+(defm reg-e () (reg 0b011))
+(defm reg-h () (reg 0b100))
+(defm reg-l () (reg 0b101))
+(defm reg-a () (reg 0b111))
+
 (defm reg-name (r)
     (match r
         0b000 "B"

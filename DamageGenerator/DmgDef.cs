@@ -18,7 +18,6 @@ public class DmgDef : Def {
 	}
 
 	public static DmgDef Parse(PList def) {
-		Console.WriteLine(def);
 		if(def[0] is not PName("def")) throw new Exception();
 		if(def[1] is not PName name) throw new Exception();
 		if(def[2] is not PString _bitstr) throw new Exception();
@@ -34,7 +33,6 @@ public class DmgDef : Def {
 			.Select(x => (((PName) x[1]).Name, ((PName) x[0]).Name)).ToDictionary();
 
 		var bitstr = _bitstr.String.Replace(" ", "");
-		Console.WriteLine(bitstr);
 		Debug.Assert(bitstr.Length % 8 == 0);
 		var matchBytes = new Dictionary<int, (byte Mask, byte Match)>();
 		for(var bi = 0; bi < bitstr.Length / 8; ++bi) {

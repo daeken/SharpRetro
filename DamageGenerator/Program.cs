@@ -3,11 +3,12 @@ using CoreArchCompiler;
 
 public class Program : Core {
 	public static void Main(string[] args) {
-		var defs = Core.ParseSpec(File.ReadAllText("sm83.isa"), new ExecutionState(), DmgDef.Parse);
+		var defs = Core.ParseSpec(File.ReadAllText("sm83.isa"), new ExecutionState(), DmgDef.Parse).Select(x => (DmgDef) x).ToList();
 		BuildDisassembler(defs);
+		BuildInterpreter(defs);
 	}
 	
-	static void BuildDisassembler(List<Def> defs) {
+	static void BuildDisassembler(List<DmgDef> defs) {
 		Context = ContextTypes.Disassembler;
 
 		var c = new CodeBuilder();
@@ -17,9 +18,7 @@ public class Program : Core {
 
 		var labelNum = 0;
 
-		foreach(var _def in defs) {
-			if(_def is not DmgDef def)
-				throw new NotSupportedException();
+		foreach(var def in defs) {
 			NextLabel = $"insn_{++labelNum}";
 			var matcher = string.Join(" && ", def.MatchBytes.Select(x => $"(insnBytes[{x.Key}] & 0x{x.Value.Mask:X}) == 0x{x.Value.Match:X}"));
 			c += $"/* {def.Name} */";
@@ -48,9 +47,36 @@ public class Program : Core {
 			.Replace("/*%IC_CODE%*/", ic.Code)
 			.Replace("/*%IC_COUNT%*/", defs.Count.ToString()));
 	}
+	
+	static void BuildInterpreter(List<DmgDef> defs) {
+		Context = ContextTypes.Interpreter;
+
+		var c = new CodeBuilder();
+		c += 1;
+		var labelNum = 0;
+
+		foreach(var def in defs) {
+			NextLabel = $"insn_{++labelNum}";
+			c += $"/* {def.Name} */";
+			var matcher = string.Join(" && ", def.MatchBytes.Select(x => $"(insnBytes[{x.Key}] & 0x{x.Value.Mask:X}) == 0x{x.Value.Match:X}"));
+			c += $"if({matcher}) {{";
+			c++;
+			GenerateFields(c, def);
+			GenerateStatement(c, def.Decode);
+			GenerateStatement(c, def.Eval);
+			c += "return true;";
+			c--;
+			c += "}";
+			c += $"{NextLabel}:";
+		}
+
+		using var fp = File.Open("../DamageCore/Generated/Interpreter.cs", FileMode.Create);
+		using var sw = new StreamWriter(fp);
+		sw.Write(File.ReadAllText("InterpreterStub.cs.skip").Replace("/*%CODE%*/", c.Code));
+	}
 
 	static void GenerateFields(CodeBuilder c, DmgDef def) {
 		foreach(var (fname, (bi, size, shift)) in def.Fields)
-			c += $"var {fname} = (insnBytes[{bi}] >> {shift}) & 0x{(1 << size) - 1:X};";
+			c += $"var {fname} = (byte) ((byte) (insnBytes[{bi}] >> {shift}) & 0x{(1 << size) - 1:X});";
 	}
 }

@@ -1,0 +1,10 @@
+// ReSharper disable CheckNamespace
+#pragma warning disable CS0164
+namespace DamageCore;
+
+public partial class Interpreter {
+    public bool Interpret(Span<byte> insnBytes, ushort pc) {
+/*%CODE%*/
+        return false;
+    }
+}

@@ -19,51 +19,70 @@ public class Expressions : Builtin {
 		Expression("pc", _ => new EInt(false, 16), _ => "pc").Interpret((_, state) => state.GetRegister("PC"));
 
 		Expression("reg", _ => new EInt(false, 8).AsRuntime(),
-				list => $"({GenerateExpression(list[1])}) switch {{ 0b110 => throw new NotSupportedException(), {{}} i => state.Registers[i] }}",
-				list => $"({GenerateExpression(list[1])}) == 31 ? (LlvmRuntimeValue<uint>) 0U : (LlvmRuntimeValue<uint>) (XR[(int) {GenerateExpression(list[1])}]())")
+				list => $"({GenerateExpression(list[1])}) switch {{ 0b110 => throw new NotSupportedException(), {{}} i => Registers[i] }}",
+				_ => "/*UNIMPLEMENTED*/")
 			.Interpret((list, state) => {
 				var reg = state.Evaluate(list[1]);
 				return (byte) state.GetRegister(RegName(reg));
 			});
 		
-		Expression("reg-a", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.A", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
-		Expression("reg-b", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.B", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
-		Expression("reg-c", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.C", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
-		Expression("reg-d", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.D", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
-		Expression("reg-e", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.E", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
-		Expression("reg-H", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.H", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
-		Expression("reg-L", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "state.L", 
-			_ => "/*UNIMPLEMENTED*/").NoInterpret();
-		
 		Expression("reg-bc", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) state.B) << 8) | (ushort) state.C)", 
+			_ => "((((ushort) Registers[0b000]) << 8) | (ushort) Registers[0b001])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-de", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) state.D) << 8) | (ushort) state.E)", 
+			_ => "((((ushort) Registers[0b010]) << 8) | (ushort) Registers[0b011])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-hl", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) state.H) << 8) | (ushort) state.L)", 
+			_ => "((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
+		
+		Statement("=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
+			(c, list) => {
+				if(list[1] is PList sub)
+					switch(sub[0]) {
+						case PName("reg"):
+							c += $"Registers[(int) {GenerateExpression(sub[1])}] = (byte) ({GenerateExpression(list[2])});";
+							return;
+						case PName("reg-bc"):
+						case PName("reg-de"):
+						case PName("reg-hl"):
+							var temp = Core.TempName();
+							c += $"var {temp} = (ushort) {GenerateExpression(list[2])};";
+							var (a, b) = ((PName) sub[0]).Name switch {
+								"reg-bc" => ("0b000", "0b001"), 
+								"reg-de" => ("0b010", "0b011"), 
+								"reg-hl" => ("0b100", "0b101"), 
+								_ => throw new NotSupportedException()
+							};
+							c += $"Registers[{a}] = (byte) ({temp} >> 8);";
+							c += $"Registers[{b}] = (byte) ({temp} & 0xFF);";
+							return;
+					}
+
+				c += $"{GenerateExpression(list[1], lhs: true)} = {GenerateExpression(list[2])};";
+			},
+			(c, list) => {
+				c += $"/*UNIMPLEMENTED*/";
+			}).NoInterpret();
+		
+		Expression("load", list => TypeFromName(list[2]).AsRuntime(),
+				list => {
+					var type = GenerateType(list.Type);
+					return $"ReadMemory<{type}>({GenerateExpression(list[1])})";
+				},
+				list =>
+					$"((RuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value()")
+			.Interpret((list, state) => state.GetMemory(state.Evaluate(list[1]), list.Type));
+
+		Expression("store", _ => EType.Unit.AsRuntime(),
+				list => $"WriteMemory({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
+				list =>
+					$"((RuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value({GenerateExpression(list[2])})")
+			.Interpret((list, state) => {
+				state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
+				return null;
+			});
 	}
 }
