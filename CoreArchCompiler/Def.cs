@@ -10,11 +10,11 @@ namespace CoreArchCompiler {
 		public static List<Def> ParseAll(PList top, Func<PList, Def> transform) => top.Where(x => ((PList) x)[0] is PName("def")).Select(x => transform((PList) x)).ToList();
 		
 		public readonly string Name;
-		public readonly string Disassembly;
+		public readonly PTree Disassembly;
 		public readonly IReadOnlyDictionary<string, EType> Locals;
 		public readonly PList Decode, Eval;
 
-		protected Def(string name, string dasm, PList decode, PList eval, IReadOnlyDictionary<string, EType> _locals) {
+		protected Def(string name, PTree dasm, PList decode, PList eval, IReadOnlyDictionary<string, EType> _locals) {
 			Name = name;
 			Disassembly = dasm;
 			Decode = decode;
@@ -66,6 +66,7 @@ namespace CoreArchCompiler {
 						throw new NotImplementedException($"Unknown type for inference: {tree.ToPrettyString()}");
 				}
 			}
+			InferType(Disassembly);
 			InferType(Decode);
 			InferType(Eval);
 			Locals = locals;

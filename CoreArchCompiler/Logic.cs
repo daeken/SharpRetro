@@ -177,13 +177,13 @@ namespace CoreArchCompiler {
 			Statement("let", 
 				list => list.Last().Type.AsRuntime(list[2].Type.Runtime),
 				(c, list) => {
-					c += $"auto {list[1]} = {GenerateExpression(list[2])};";
+					c += $"var {list[1]} = {GenerateExpression(list[2])};";
 					list.Skip(3).ForEach(x => GenerateStatement(c, (PList) x));
 				}, (c, list) => {
 					if(list[2].Type.Runtime)
-						c += $"auto {list[1]} = ({GenerateExpression(list[2])}).Store();";
+						c += $"var {list[1]} = ({GenerateExpression(list[2])}).Store();";
 					else
-						c += $"auto {list[1]} = {GenerateExpression(list[2])};";
+						c += $"var {list[1]} = {GenerateExpression(list[2])};";
 					list.Skip(3).ForEach(x => GenerateStatement(c, (PList) x));
 				}).Interpret((list, state) => {
 					state.Locals[list[1].AsName()] = state.Evaluate(list[2]);
@@ -196,16 +196,16 @@ namespace CoreArchCompiler {
 					if(list[1] is not PList dlist) throw new NotSupportedException();
 					Debug.Assert(dlist.Count % 2 == 0);
 					for(var i = 0; i < dlist.Count; i += 2)
-						c += $"auto {dlist[i]} = {GenerateExpression(dlist[i + 1])};";
+						c += $"var {dlist[i]} = {GenerateExpression(dlist[i + 1])};";
 					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
 				}, (c, list) => {
 					if(list[1] is not PList dlist) throw new NotSupportedException();
 					Debug.Assert(dlist.Count % 2 == 0);
 					for(var i = 0; i < dlist.Count; i += 2)
 						if(dlist[i + 1].Type.Runtime)
-							c += $"auto {dlist[i]} = ({GenerateExpression(dlist[i + 1])}).Store();";
+							c += $"var {dlist[i]} = ({GenerateExpression(dlist[i + 1])}).Store();";
 						else
-							c += $"auto {dlist[i]} = {GenerateExpression(dlist[i + 1])};";
+							c += $"var {dlist[i]} = {GenerateExpression(dlist[i + 1])};";
 					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
 				}).Interpret((list, state) => {
 					var assigns = (PList) list[1];

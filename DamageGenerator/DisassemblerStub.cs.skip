@@ -1,0 +1,17 @@
+// ReSharper disable CheckNamespace
+#pragma warning disable CS0164
+namespace DamageCore;
+
+public partial class Disassembler {
+    public static string Disassemble(Span<byte> insnBytes, ushort pc) {
+/*%D_CODE%*/
+        return null;
+    }
+
+    public static string ClassifyInstruction(Span<byte> insnBytes) {
+/*%IC_CODE%*/
+        return null;
+    }
+
+    public const int InstructionCount = /*%IC_COUNT%*/ + 0;
+}

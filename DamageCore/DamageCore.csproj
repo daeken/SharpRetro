@@ -10,4 +10,8 @@
       <ProjectReference Include="..\LibSharpRetro\LibSharpRetro.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Generated" />
+    </ItemGroup>
+
 </Project>

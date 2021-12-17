@@ -239,28 +239,52 @@ namespace CoreArchCompiler {
 			return new PInt(negative ? -value : value);
 		}
 
-		static PString ParseString(string code, ref int i) {
+		static PTree ParseString(string code, ref int i) {
 			var start = code[i++];
+			var segs = new List<PTree>();
 			var parsed = "";
-			while(true) {
+			var done = false;
+
+			void PushSeg() {
+				if(parsed != "")
+					segs.Add(new PString(parsed));
+				parsed = "";
+			}
+			while(!done) {
 				switch(code[i++]) {
 					case '\\':
 						parsed += code[i++];
 						break;
-					case char x when x == start:
-						return new PString(parsed);
-					case char x:
+					case var x when x == start:
+						done = true;
+						break;
+					case '$':
+						PushSeg();
+						if(code[i] == '(') {
+							i++;
+							segs.Add(ParseList(code, ref i));
+						} else
+							segs.Add(ParseName(code, ref i, true));
+						break;
+					case var x:
 						parsed += x;
 						break;
 				}
 			}
+			PushSeg();
+			if(segs.Count == 0) return new PString("");
+			if(segs.Count == 1) return segs[0];
+			var ret = new PList { new PName("string-concat") };
+			segs.ForEach(ret.Add);
+			return ret;
 		}
 
-		static PName ParseName(string code, ref int i) {
+		static PName ParseName(string code, ref int i, bool inString = false) {
 			var name = "";
 			while(true) {
 				switch(code[i++]) {
 					case ' ': case '\t': case '\n': case '\r': case '(': case ')':
+					case '\'' when inString: case '"' when inString:
 						i--;
 						return new PName(name);
 					case char x:

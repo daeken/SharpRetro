@@ -8,7 +8,7 @@ namespace CoreArchCompiler {
 		public override void Define() {
 			Statement("requires", list => EType.Unit,
 				(c, list) => {
-					c += $"if({string.Join(" && ", list.Skip(1).Select(x => $"!({GenerateExpression(x)})"))})";
+					c += $"if({string.Join(" || ", list.Skip(1).Select(x => $"({GenerateExpression(x)}) != 0"))})";
 					c++;
 					c += $"goto {Core.NextLabel};";
 					c--;
@@ -23,7 +23,7 @@ namespace CoreArchCompiler {
 				.Interpret((list, state) => state.Evaluate(list.Skip(1)));
 			
 			Expression("block", list => list.Last().Type, 
-				list => $@"([=]() -> {GenerateType(list.Type)} {{
+				list => $@"(() => {GenerateType(list.Type)} {{
 {string.Join('\n', list.Skip(1).Select((x, i) => {
 					string code;
 					if(x is PList xl) {
@@ -37,7 +37,7 @@ namespace CoreArchCompiler {
 					return $"\t\t{code.Trim()}";
 				}))}
 	}})()", 
-				list => $@"([=]() -> {GenerateType(list.Type)} {{
+				list => $@"(() => {GenerateType(list.Type)} {{
 {string.Join('\n', list.Skip(1).Select((x, i) => {
 					string code;
 					if(x is PList xl) {
@@ -219,17 +219,15 @@ namespace CoreArchCompiler {
 					c += "}";
 				});
 
-			string GenerateReturn(string expr) => expr.StartsWith("throw ") ? expr : $"return {expr}";
-
 			Expression("match", list => list.Count == 3 ? list[2].Type : list[3].Type,
 				list => {
 					var opts = new List<string>();
 					for(var i = 2; i < list.Count; i += 2)
 						opts.Add(i + 1 == list.Count
-							? $"default: {GenerateReturn(GenerateExpression(list[i]))};"
-							: $"case {GenerateExpression(list[i])}: {GenerateReturn(GenerateExpression(list[i + 1]))};");
+							? $"_ => {GenerateExpression(list[i])}"
+							: $"{GenerateExpression(list[i])} => {GenerateExpression(list[i + 1])}");
 					var tn = TempName();
-					return $"([=](auto {tn}) -> {GenerateType(list.Count == 3 ? list[2].Type : list[3].Type)} {{ switch({tn}) {{ {string.Join(" ", opts)} }} }})({GenerateExpression(list[1])})";
+					return $"{GenerateExpression(list[1])} switch {{ {string.Join(", ", opts)} }}";
 				}, list => {
 					string Expr(PTree expr) {
 						var str = GenerateExpression(expr);
@@ -238,10 +236,10 @@ namespace CoreArchCompiler {
 					var opts = new List<string>();
 					for(var i = 2; i < list.Count; i += 2)
 						opts.Add(i + 1 == list.Count
-							? $"default: {GenerateReturn(GenerateExpression(list[i]))};"
-							: $"case {GenerateExpression(list[i])}: {GenerateReturn(Expr(list[i + 1]))};");
+							? $"_ => {GenerateExpression(list[i])}"
+							: $"{GenerateExpression(list[i])} => {Expr(list[i + 1])}");
 					var tn = TempName();
-					return $"([=](auto {tn}) -> {GenerateType(list.Count == 3 ? list[2].Type : list[3].Type)} {{ switch({tn}) {{ {string.Join(" ", opts)} }} }})({GenerateExpression(list[1])})";
+					return $"{GenerateExpression(list[1])} switch {{ {string.Join(" ", opts)} }}";
 				});
 
 			Interpret("match", (list, state) => {
@@ -263,11 +261,6 @@ namespace CoreArchCompiler {
 				throw new BailoutException(); // This can only be hit if nothing matches and there's no default case
 			});
 
-			Expression("svc", _ => EType.Unit.AsRuntime(),
-				list => $"Svc({GenerateExpression(list[1])})",
-				list => $"CallSvc({GenerateExpression(list[1])})")
-				.NoInterpret();
-			
 			BranchExpression("branch", _ => EType.Unit.AsRuntime(), list => $"Branch({GenerateExpression(list[1])})")
 				.Interpret((list, state) => state.Registers["PC"] = state.Evaluate(list[1]));
 			BranchExpression("branch-linked", _ => EType.Unit.AsRuntime(), list => $"BranchLinked({GenerateExpression(list[1])})")
@@ -285,7 +278,7 @@ namespace CoreArchCompiler {
 			BranchExpression("branch-default", _ => EType.Unit.AsRuntime(), list => "Branch(pc + 4)")
 				.Interpret((list, state) => state.Registers["PC"] = state.GetRegister("PC") + 4);
 			
-			Expression("unimplemented", _ => EType.Unit, _ => "throw \"Not implemented\"").NoInterpret();
+			Expression("unimplemented", _ => EType.Unit, _ => "throw new NotImplementedException()").NoInterpret();
 		}
 	}
 }

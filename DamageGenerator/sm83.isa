@@ -5,9 +5,20 @@
 (defm i8  (v) (cast v i8))
 (defm i16 (v) (cast v i16))
 
+(defm reg-name (r)
+    (match r
+        0b000 "B"
+        0b001 "C"
+        0b010 "D"
+        0b011 "E"
+        0b100 "H"
+        0b101 "L"
+        0b111 "A"
+        (unimplemented)))
+
 (def LD-rd-rs
     "01 ddd sss"
-    "ld $(reg rd), $(reg rs)"
+    "ld $(reg-name rd), $(reg-name rs)"
     (names (rd d) (rs s))
     (cycles 1)
     (requires (!= rs 0b110))
@@ -15,7 +26,7 @@
 
 (def LD-rd-imm8
     "00 ddd 110 iiiiiiii"
-    "ld $(reg rd), $imm"
+    "ld $(reg-name rd), $imm"
     (names (rd d) (imm i))
     (cycles 2)
     (requires (!= rd 0b110))
@@ -23,7 +34,7 @@
 
 (def LD-rd-HL
     "01 ddd 110"
-    "ld $(reg rd), (HL)"
+    "ld $(reg-name rd), (HL)"
     (names (rd d))
     (cycles 2)
     (requires (!= rd 0b110))
@@ -31,7 +42,7 @@
 
 (def LD-HL-rs
     "01 110 sss"
-    "ld (HL), $(reg rs)"
+    "ld (HL), $(reg-name rs)"
     (names (rs s))
     (cycles 2)
     (requires (!= rs 0b110))
@@ -114,7 +125,7 @@
     "ldh A, ($addr)"
     (names (imm i))
     (cycles 3)
-    (= addr (| (u16 0xFF00) imm))
+    (let addr (| (u16 0xFF00) imm))
     (= (reg-a) (load addr u8)))
 
 (def LDH-imm8-A
@@ -122,7 +133,7 @@
     "ldh ($addr), A"
     (names (imm i))
     (cycles 3)
-    (= addr (| (u16 0xFF00) imm))
+    (let addr (| (u16 0xFF00) imm))
     (store addr (reg-a)))
 
 (def LD-A-HL-

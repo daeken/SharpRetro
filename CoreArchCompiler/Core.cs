@@ -211,13 +211,13 @@ namespace CoreArchCompiler {
 		public static string ToHex(long value) => value < 0 ? $"-0x{-value:X}" : $"0x{value:X}";
 
 		public static string GenerateExpression(PTree v, bool lhs = false) {
-			switch(v) {
-				case PName name: return name.Name;
-				case PInt value: return ((EInt) value.Type).Signed ? ToHex(value.Value) : ToHex(value.Value) + "U";
-				case PString str: return $"string({str.String.ToPrettyString()})";
-				case PList list: return GenerateListExpression(list, lhs: lhs);
-				default: throw new NotImplementedException();
-			}
+			return v switch {
+				PName name => name.Name,
+				PInt value => ((EInt) value.Type).Signed ? ToHex(value.Value) : ToHex(value.Value) + "U",
+				PString str => str.String.ToPrettyString(),
+				PList list => GenerateListExpression(list, lhs: lhs),
+				_ => throw new NotImplementedException()
+			};
 		}
 
 		public static string GenerateType(EType type) {
@@ -228,12 +228,12 @@ namespace CoreArchCompiler {
 					case EString: return "string";
 					case EInt i:
 						switch(i.Width) {
-							case 1: return "bool";
-							case > 64: return i.Signed ? "__int128_t" : "__uint128_t";
-							case > 32: return i.Signed ? "int64_t" : "uint64_t";
-							case > 16: return i.Signed ? "int32_t" : "uint32_t";
-							case > 8: return i.Signed ? "int16_t" : "uint16_t";
-							default: return i.Signed ? "int8_t" : "uint8_t";
+							case 1: return "uint"; // TODO: Figure out how to use real bools here!
+							case > 64: return i.Signed ? "Int128" : "UInt128";
+							case > 32: return i.Signed ? "long" : "ulong";
+							case > 16: return i.Signed ? "int" : "uint";
+							case > 8: return i.Signed ? "short" : "ushort";
+							default: return i.Signed ? "sbyte" : "byte";
 						}
 					case EFloat f:
 						switch(f.Width) {
