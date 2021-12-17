@@ -9,7 +9,7 @@ class ControlFlow : Builtin {
 	public override void Define() {
 		Statement("requires", list => EType.Unit,
 			(c, list) => {
-				c += $"if({string.Join(" || ", list.Skip(1).Select(x => $"({GenerateExpression(x)}) != 0"))})";
+				c += $"if({string.Join(" || ", list.Skip(1).Select(x => $"({GenerateExpression(x)}) == 0"))})";
 				c++;
 				c += $"goto {Core.NextLabel};";
 				c--;

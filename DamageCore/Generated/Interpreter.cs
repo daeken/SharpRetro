@@ -8,7 +8,7 @@ public partial class Interpreter {
 	if((insnBytes[0] & 0xC0) == 0x40) {
 		var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-		if(((uint) (((rs) != (0x6)) ? 1U : 0U)) != 0)
+		if(((uint) (((rs) != (0x6)) ? 1U : 0U)) == 0)
 			goto insn_1;
 		Registers[(int) rd] = (byte) ((byte) ((rs) switch { 0b110 => throw new NotSupportedException(), {} i => Registers[i] }));
 		return true;
@@ -18,7 +18,7 @@ public partial class Interpreter {
 	if((insnBytes[0] & 0xC7) == 0x6) {
 		var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-		if(((uint) (((rd) != (0x6)) ? 1U : 0U)) != 0)
+		if(((uint) (((rd) != (0x6)) ? 1U : 0U)) == 0)
 			goto insn_2;
 		Registers[(int) rd] = (byte) (imm);
 		return true;
@@ -27,7 +27,7 @@ public partial class Interpreter {
 	/* LD-rd-HL */
 	if((insnBytes[0] & 0xC7) == 0x46) {
 		var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-		if(((uint) (((rd) != (0x6)) ? 1U : 0U)) != 0)
+		if(((uint) (((rd) != (0x6)) ? 1U : 0U)) == 0)
 			goto insn_3;
 		Registers[(int) rd] = (byte) ((byte) (ReadMemory<byte>((ushort) (((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101])))));
 		return true;
@@ -36,7 +36,7 @@ public partial class Interpreter {
 	/* LD-HL-rs */
 	if((insnBytes[0] & 0xF8) == 0x70) {
 		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-		if(((uint) (((rs) != (0x6)) ? 1U : 0U)) != 0)
+		if(((uint) (((rs) != (0x6)) ? 1U : 0U)) == 0)
 			goto insn_4;
 		WriteMemory((ushort) (((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101])), (byte) ((rs) switch { 0b110 => throw new NotSupportedException(), {} i => Registers[i] }));
 		return true;

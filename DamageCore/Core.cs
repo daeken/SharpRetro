@@ -21,6 +21,8 @@ public class Core : ICore {
 			FramebufferBackend = fbb;
 		else
 			throw new NotSupportedException("Given non-framebuffer graphics backend");
+		
+		Console.WriteLine($"Disassembler: {Disassembler.Disassemble(new byte[] { 0x41, 0, 0, 0, 0, 0, 0 }, 0)}");
 	}
 
 	public void Teardown() {
