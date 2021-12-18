@@ -28,6 +28,8 @@ public class DmgDef : Def {
 		if(def[5] is not PList cycles || cycles[0] is not PName("cycles")) throw new Exception();
 		if(def[6] is not PList decode) throw new Exception();
 		if(def[7] is not PList eval) throw new Exception();
+		
+		Console.WriteLine(name);
 
 		var fields = new Dictionary<string, (int Byte, int Size, int Shift)>();
 		

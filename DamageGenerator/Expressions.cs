@@ -26,6 +26,14 @@ public class Expressions : Builtin {
 				return (byte) state.GetRegister(RegName(reg));
 			});
 		
+		Expression("reg-ime", _ => new EInt(false, 1).AsRuntime(), 
+			_ => "InterruptsEnabled", 
+			_ => "/*UNIMPLEMENTED*/").NoInterpret();
+		
+		Expression("reg-ime-schedule", _ => new EInt(false, 1).AsRuntime(), 
+			_ => "InterruptsEnableScheduled", 
+			_ => "/*UNIMPLEMENTED*/").NoInterpret();
+		
 		Expression("reg-flags", _ => new EInt(false, 8).AsRuntime(), 
 			_ => "Flags", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
@@ -79,6 +87,12 @@ public class Expressions : Builtin {
 							return;
 						case PName("reg-sp"):
 							c += $"SP = (ushort) {GenerateExpression(list[2])};";
+							return;
+						case PName("reg-ime"):
+							c += $"InterruptsEnabled = {GenerateExpression(list[2])};";
+							return;
+						case PName("reg-ime-schedule"):
+							c += $"InterruptsEnableScheduled = {GenerateExpression(list[2])};";
 							return;
 					}
 

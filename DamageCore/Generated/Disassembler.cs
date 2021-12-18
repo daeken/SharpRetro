@@ -1,4 +1,6 @@
 // ReSharper disable CheckNamespace
+// ReSharper disable ArrangeRedundantParentheses
+// ReSharper disable RedundantCast
 #pragma warning disable CS0164
 namespace DamageCore;
 
@@ -21,7 +23,7 @@ public partial class Disassembler {
 			if(((uint) (((rd) != (0x6U)) ? 1U : 0U)) == 0)
 				goto insn_2;
 			pc += 2;
-			return (string) ("ld " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }) + ", " + (imm).ToString());
+			return (string) ("ld " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => throw new NotImplementedException() }) + ", " + (string) ($"0x{(imm):x02}"));
 		}
 		insn_2:
 		/* LD-rd-HL */
@@ -46,7 +48,7 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xFF) == 0x36) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
-			return (string) ("ld (HL), " + (imm).ToString());
+			return (string) ("ld (HL), " + (string) ($"0x{(imm):x02}"));
 		}
 		insn_5:
 		/* LD-A-BC */
@@ -79,7 +81,7 @@ public partial class Disassembler {
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			pc += 3;
-			return (string) ("ld A, (" + (addr).ToString() + ")");
+			return (string) ("ld A, (" + (string) ($"0x{(addr):x04}") + ")");
 		}
 		insn_10:
 		/* LD-imm16-A */
@@ -88,7 +90,7 @@ public partial class Disassembler {
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			pc += 3;
-			return (string) ("ld (" + (addr).ToString() + "), A");
+			return (string) ("ld (" + (string) ($"0x{(addr):x04}") + "), A");
 		}
 		insn_11:
 		/* LDH-A-C */
@@ -108,7 +110,7 @@ public partial class Disassembler {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00U)))) | ((ushort) (imm))));
 			pc += 2;
-			return (string) ("ldh A, (" + (addr).ToString() + ")");
+			return (string) ("ldh A, (" + (string) ($"0x{(addr):x04}") + ")");
 		}
 		insn_14:
 		/* LDH-imm8-A */
@@ -116,7 +118,7 @@ public partial class Disassembler {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) ((ushort) (0xFF00U)))) | ((ushort) (imm))));
 			pc += 2;
-			return (string) ("ldh (" + (addr).ToString() + "), A");
+			return (string) ("ldh (" + (string) ($"0x{(addr):x04}") + "), A");
 		}
 		insn_15:
 		/* LD-A-HL- */
@@ -150,7 +152,7 @@ public partial class Disassembler {
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
 			var imm = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			pc += 3;
-			return (string) ("ld " + (string) (r switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }) + ", " + (imm).ToString());
+			return (string) ("ld " + (string) (r switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }) + ", " + (string) ($"0x{(imm):x04}"));
 		}
 		insn_20:
 		/* LD-imm16-SP */
@@ -159,7 +161,7 @@ public partial class Disassembler {
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			pc += 3;
-			return (string) ("ld (" + (addr).ToString() + "), SP");
+			return (string) ("ld (" + (string) ($"0x{(addr):x04}") + "), SP");
 		}
 		insn_21:
 		/* LD-SP-HL */
@@ -188,7 +190,7 @@ public partial class Disassembler {
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			pc += 3;
-			return (string) ("jp " + (addr).ToString());
+			return (string) ("jp " + (string) ($"0x{(addr):x04}"));
 		}
 		insn_25:
 		/* JP-HL */
@@ -204,7 +206,7 @@ public partial class Disassembler {
 			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
 			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
 			pc += 3;
-			return (string) ("jp " + (string) (cc switch { (byte) (0x0U) => "NZ", (byte) (0x1U) => "Z", (byte) (0x2U) => "NC", _ => "C" }) + ", " + (addr).ToString());
+			return (string) ("jp " + (string) (cc switch { (byte) (0x0U) => "NZ", (byte) (0x1U) => "Z", (byte) (0x2U) => "NC", _ => "C" }) + ", " + (string) ($"0x{(addr):x04}"));
 		}
 		insn_27:
 		/* JR-simm8 */
@@ -212,9 +214,94 @@ public partial class Disassembler {
 			var e = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			var offset = (sbyte) ((sbyte) (e));
 			pc += 2;
-			return (string) ("jr " + (offset).ToString());
+			return (string) ("jr " + (string) ($"0x{((ushort) (((ushort) (ushort) ((ushort) (pc))) + ((ushort) (sbyte) (offset)))):x04}"));
 		}
 		insn_28:
+		/* JR-cc-simm8 */
+		if((insnBytes[0] & 0xE7) == 0x20) {
+			var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+			var e = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var offset = (sbyte) ((sbyte) (e));
+			pc += 2;
+			return (string) ("jr " + (string) (cc switch { (byte) (0x0U) => "NZ", (byte) (0x1U) => "Z", (byte) (0x2U) => "NC", _ => "C" }) + ", " + (string) ($"0x{((ushort) (((ushort) (ushort) ((ushort) (pc))) + ((ushort) (sbyte) (offset)))):x04}"));
+		}
+		insn_29:
+		/* CALL-imm16 */
+		if((insnBytes[0] & 0xFF) == 0xCD) {
+			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
+			pc += 3;
+			return (string) ("call " + (string) ($"0x{(addr):x04}"));
+		}
+		insn_30:
+		/* CALL-cc-imm16 */
+		if((insnBytes[0] & 0xE7) == 0xC4) {
+			var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
+			pc += 3;
+			return (string) ("call " + (string) (cc switch { (byte) (0x0U) => "NZ", (byte) (0x1U) => "Z", (byte) (0x2U) => "NC", _ => "C" }) + ", " + (string) ($"0x{(addr):x04}"));
+		}
+		insn_31:
+		/* RET */
+		if((insnBytes[0] & 0xFF) == 0xC9) {
+			pc += 1;
+			return "ret";
+		}
+		insn_32:
+		/* RET-cc */
+		if((insnBytes[0] & 0xE7) == 0xC0) {
+			var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+			pc += 1;
+			return (string) ("ret " + (string) (cc switch { (byte) (0x0U) => "NZ", (byte) (0x1U) => "Z", (byte) (0x2U) => "NC", _ => "C" }));
+		}
+		insn_33:
+		/* RETI */
+		if((insnBytes[0] & 0xFF) == 0xD9) {
+			pc += 1;
+			return "reti";
+		}
+		insn_34:
+		/* RST */
+		if((insnBytes[0] & 0xC7) == 0xC7) {
+			var n = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
+			var addr = (byte) ((n) << (int) (0x3U));
+			pc += 1;
+			return (string) ("rst " + (string) ($"0x{(addr):x00}"));
+		}
+		insn_35:
+		/* DI */
+		if((insnBytes[0] & 0xFF) == 0xF3) {
+			pc += 1;
+			return "di";
+		}
+		insn_36:
+		/* EI */
+		if((insnBytes[0] & 0xFF) == 0xFB) {
+			pc += 1;
+			return "ei";
+		}
+		insn_37:
+		/* CCF */
+		if((insnBytes[0] & 0xFF) == 0x3F) {
+			pc += 1;
+			return "ccf";
+		}
+		insn_38:
+		/* SCF */
+		if((insnBytes[0] & 0xFF) == 0x37) {
+			pc += 1;
+			return "scf";
+		}
+		insn_39:
+		/* NOP */
+		if((insnBytes[0] & 0xFF) == 0x0) {
+			pc += 1;
+			return "nop";
+		}
+		insn_40:
 
         return null;
     }
@@ -375,9 +462,70 @@ public partial class Disassembler {
 			return "JR-simm8";
 		}
 		insn_28:
+		if((insnBytes[0] & 0xE7) == 0x20) {
+			var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+			var e = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var offset = (sbyte) ((sbyte) (e));
+			return "JR-cc-simm8";
+		}
+		insn_29:
+		if((insnBytes[0] & 0xFF) == 0xCD) {
+			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
+			return "CALL-imm16";
+		}
+		insn_30:
+		if((insnBytes[0] & 0xE7) == 0xC4) {
+			var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+			var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
+			var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
+			return "CALL-cc-imm16";
+		}
+		insn_31:
+		if((insnBytes[0] & 0xFF) == 0xC9) {
+			return "RET";
+		}
+		insn_32:
+		if((insnBytes[0] & 0xE7) == 0xC0) {
+			var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+			return "RET-cc";
+		}
+		insn_33:
+		if((insnBytes[0] & 0xFF) == 0xD9) {
+			return "RETI";
+		}
+		insn_34:
+		if((insnBytes[0] & 0xC7) == 0xC7) {
+			var n = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
+			var addr = (byte) ((n) << (int) (0x3U));
+			return "RST";
+		}
+		insn_35:
+		if((insnBytes[0] & 0xFF) == 0xF3) {
+			return "DI";
+		}
+		insn_36:
+		if((insnBytes[0] & 0xFF) == 0xFB) {
+			return "EI";
+		}
+		insn_37:
+		if((insnBytes[0] & 0xFF) == 0x3F) {
+			return "CCF";
+		}
+		insn_38:
+		if((insnBytes[0] & 0xFF) == 0x37) {
+			return "SCF";
+		}
+		insn_39:
+		if((insnBytes[0] & 0xFF) == 0x0) {
+			return "NOP";
+		}
+		insn_40:
 
         return null;
     }
 
-    public const int InstructionCount = 28 + 0;
+    public const int InstructionCount = 40 + 0;
 }

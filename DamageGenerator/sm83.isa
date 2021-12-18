@@ -46,7 +46,7 @@
 
 (def LD-rd-imm8
     "00 ddd 110 iiiiiiii"
-    "ld $(reg-name rd), $imm"
+    "ld $(reg-name rd), $(hex imm)"
     (names (rd d) (imm i))
     (cycles 2)
     (requires (!= rd 0b110))
@@ -70,7 +70,7 @@
 
 (def LD-HL-imm8
     "00 110 110 iiiiiiii"
-    "ld (HL), $imm"
+    "ld (HL), $(hex imm)"
     (names (imm i))
     (cycles 3)
     (block)
@@ -110,7 +110,7 @@
 
 (def LD-A-imm16
     "11111010 LLLLLLLL MMMMMMMM"
-    "ld A, ($addr)"
+    "ld A, ($(hex addr))"
     (names (lsb L) (msb M))
     (cycles 4)
     (let addr (| (<< (u16 msb) 8) lsb))
@@ -118,7 +118,7 @@
 
 (def LD-imm16-A
     "11101010 LLLLLLLL MMMMMMMM"
-    "ld ($addr), A"
+    "ld ($(hex addr)), A"
     (names (lsb L) (msb M))
     (cycles 4)
     (let addr (| (<< (u16 msb) 8) lsb))
@@ -142,7 +142,7 @@
 
 (def LDH-A-imm8
     "11110000 iiiiiiii"
-    "ldh A, ($addr)"
+    "ldh A, ($(hex addr))"
     (names (imm i))
     (cycles 3)
     (let addr (| (u16 0xFF00) imm))
@@ -150,7 +150,7 @@
 
 (def LDH-imm8-A
     "11100000 iiiiiiii"
-    "ldh ($addr), A"
+    "ldh ($(hex addr)), A"
     (names (imm i))
     (cycles 3)
     (let addr (| (u16 0xFF00) imm))
@@ -198,7 +198,7 @@
 
 (def LD-rr-imm16
     "00rr0001 LLLLLLLL MMMMMMMM"
-    "ld $(reg16-name r), $imm"
+    "ld $(reg16-name r), $(hex imm)"
     (names (r r) (lsb L) (msb M))
     (cycles 3)
     (let imm (| (<< (u16 msb) 8) lsb))
@@ -210,7 +210,7 @@
 
 (def LD-imm16-SP
     "00001000 LLLLLLLL MMMMMMMM"
-    "ld ($addr), SP"
+    "ld ($(hex addr)), SP"
     (names (r r) (lsb L) (msb M))
     (cycles 5)
     (let addr (| (<< (u16 msb) 8) lsb))
@@ -254,7 +254,7 @@
 
 (def JP-nn
     "11000011 LLLLLLLL MMMMMMMM"
-    "jp $addr"
+    "jp $(hex addr)"
     (names (lsb L) (msb M))
     (cycles 4)
     (let addr (| (<< (u16 msb) 8) lsb))
@@ -282,7 +282,7 @@
 
 (def JP-cc-imm16
     "110cc010 LLLLLLLL MMMMMMMM"
-    "jp $(cc-name cc), $addr"
+    "jp $(cc-name cc), $(hex addr)"
     (names (cc c) (lsb L) (msb M))
     (cycles (if (cc-taken cc) 4 3))
     (let addr (| (<< (u16 msb) 8) lsb))
@@ -292,8 +292,133 @@
 
 (def JR-simm8
     "00011000 eeeeeeee"
-    "jr $offset"
+    "jr $(hex (+ (pc) offset))"
     (names (e e))
     (cycles 3)
     (let offset (i8 e))
     (branch (+ (pc) offset)))
+
+(def JR-cc-simm8
+    "001cc000 eeeeeeee"
+    "jr $(cc-name cc), $(hex (+ (pc) offset))"
+    (names (cc c) (e e))
+    (cycles (if (cc-taken cc) 3 2))
+    (let offset (i8 e))
+    (branch (+ (pc) offset)))
+
+(def CALL-imm16
+    "11001101 LLLLLLLL MMMMMMMM"
+    "call $(hex addr)"
+    (names (lsb L) (msb M))
+    (cycles 6)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (let sp (- (reg-sp) 2)
+        (= (reg-sp) sp)
+        (store sp (pc))
+        (branch addr)))
+
+(def CALL-cc-imm16
+    "110cc100 LLLLLLLL MMMMMMMM"
+    "call $(cc-name cc), $(hex addr)"
+    (names (cc c) (lsb L) (msb M))
+    (cycles (if (cc-taken cc) 6 3))
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (if (cc-taken cc)
+        (let sp (- (reg-sp) 2)
+            (= (reg-sp) sp)
+            (store sp (pc))
+            (branch addr))
+        (branch-default)))
+
+(def RET
+    "11001001"
+    "ret"
+    (names)
+    (cycles 4)
+    (block)
+    (mlet (sp (reg-sp)
+          ra (load sp u16))
+        (= (reg-sp) (+ sp 2))
+        (branch ra)))
+
+(def RET-cc
+    "110cc000"
+    "ret $(cc-name cc)"
+    (names (cc c))
+    (cycles (if (cc-taken cc) 5 2))
+    (block)
+    (if (cc-taken cc)
+        (mlet (sp (reg-sp)
+              ra (load sp u16))
+            (= (reg-sp) (+ sp 2))
+            (branch ra))
+        (branch-default)))
+
+(def RETI
+    "11011001"
+    "reti"
+    (names)
+    (cycles 4)
+    (block)
+    (mlet (sp (reg-sp)
+          ra (load sp u16))
+        (= (reg-sp) (+ sp 2))
+        (= (reg-ime) true)
+        (branch ra)))
+
+(def RST
+    "11nnn111"
+    "rst $(hex addr)"
+    (names (n n))
+    (cycles 4)
+    (let addr (<< n 3))
+    (let sp (- (reg-sp) 2)
+        (= (reg-sp) sp)
+        (store sp (pc))
+        (branch addr)))
+
+(def DI
+    "11110011"
+    "di"
+    (names)
+    (cycles 1)
+    (block)
+    (block
+        (= (reg-ime) false)
+        (= (reg-ime-schedule) false)))
+
+(def EI
+    "11111011"
+    "ei"
+    (names)
+    (cycles 1)
+    (block)
+    (= (reg-ime-schedule) true))
+
+(def CCF
+    "00111111"
+    "ccf"
+    (names)
+    (cycles 1)
+    (block)
+    (let flags (reg-flags)
+        (= flags (& flags 0b10011111))
+        (= (reg-flags) (^ flags 0b00010000))))
+
+(def SCF
+    "00110111"
+    "scf"
+    (names)
+    (cycles 1)
+    (block)
+    (let flags (reg-flags)
+        (= flags (& flags 0b10001111))
+        (= (reg-flags) (| flags 0b00010000))))
+
+(def NOP
+    "00000000"
+    "nop"
+    (names)
+    (cycles 1)
+    (block)
+    (block))

@@ -10,5 +10,8 @@ public class StringManipulation : Builtin {
 				_ => "/*UNIMPLEMENTED*/")
 			.Interpret((list, state) =>
 				list.Skip(1).Aggregate("", (current, elem) => (string) (current + state.Evaluate(elem).ToString())));
+		Expression("hex", list => EType.String.AsRuntime(list.AnyRuntime),
+			list => list[1].Type is EInt(_, var bits) ? $"$\"0x{{({GenerateExpression(list[1])}):x0{bits / 4}}}\"" : throw new NotSupportedException())
+			.NoInterpret(); // TODO: Implement
 	}
 }

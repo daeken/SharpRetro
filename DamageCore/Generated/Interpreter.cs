@@ -1,4 +1,6 @@
 // ReSharper disable CheckNamespace
+// ReSharper disable ArrangeRedundantParentheses
+// ReSharper disable RedundantCast
 #pragma warning disable CS0164
 namespace DamageCore;
 
@@ -138,9 +140,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101]));
 		Registers[(int) 0x7U] = (byte) ((byte) (ReadMemory<byte>(hl)));
-		var temp_9 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
-		Registers[0b100] = (byte) (temp_9 >> 8);
-		Registers[0b101] = (byte) (temp_9 & 0xFF);
+		var temp_12 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
+		Registers[0b100] = (byte) (temp_12 >> 8);
+		Registers[0b101] = (byte) (temp_12 & 0xFF);
 		return true;
 	}
 	insn_16:
@@ -149,9 +151,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101]));
 		WriteMemory(hl, (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => Registers[i] }));
-		var temp_10 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
-		Registers[0b100] = (byte) (temp_10 >> 8);
-		Registers[0b101] = (byte) (temp_10 & 0xFF);
+		var temp_13 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
+		Registers[0b100] = (byte) (temp_13 >> 8);
+		Registers[0b101] = (byte) (temp_13 & 0xFF);
 		return true;
 	}
 	insn_17:
@@ -160,9 +162,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101]));
 		Registers[(int) 0x7U] = (byte) ((byte) (ReadMemory<byte>(hl)));
-		var temp_11 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
-		Registers[0b100] = (byte) (temp_11 >> 8);
-		Registers[0b101] = (byte) (temp_11 & 0xFF);
+		var temp_14 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
+		Registers[0b100] = (byte) (temp_14 >> 8);
+		Registers[0b101] = (byte) (temp_14 & 0xFF);
 		return true;
 	}
 	insn_18:
@@ -171,9 +173,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101]));
 		WriteMemory(hl, (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => Registers[i] }));
-		var temp_12 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
-		Registers[0b100] = (byte) (temp_12 >> 8);
-		Registers[0b101] = (byte) (temp_12 & 0xFF);
+		var temp_15 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
+		Registers[0b100] = (byte) (temp_15 >> 8);
+		Registers[0b101] = (byte) (temp_15 & 0xFF);
 		return true;
 	}
 	insn_19:
@@ -186,21 +188,21 @@ public partial class Interpreter {
 		pc += 3;
 		switch(r) {
 			case (byte) (0x0U): {
-				var temp_13 = (ushort) imm;
-				Registers[0b000] = (byte) (temp_13 >> 8);
-				Registers[0b001] = (byte) (temp_13 & 0xFF);
+				var temp_16 = (ushort) imm;
+				Registers[0b000] = (byte) (temp_16 >> 8);
+				Registers[0b001] = (byte) (temp_16 & 0xFF);
 				break;
 			}
 			case (byte) (0x1U): {
-				var temp_14 = (ushort) imm;
-				Registers[0b010] = (byte) (temp_14 >> 8);
-				Registers[0b011] = (byte) (temp_14 & 0xFF);
+				var temp_17 = (ushort) imm;
+				Registers[0b010] = (byte) (temp_17 >> 8);
+				Registers[0b011] = (byte) (temp_17 & 0xFF);
 				break;
 			}
 			case (byte) (0x2U): {
-				var temp_15 = (ushort) imm;
-				Registers[0b100] = (byte) (temp_15 >> 8);
-				Registers[0b101] = (byte) (temp_15 & 0xFF);
+				var temp_18 = (ushort) imm;
+				Registers[0b100] = (byte) (temp_18 >> 8);
+				Registers[0b101] = (byte) (temp_18 & 0xFF);
 				break;
 			}
 			default: {
@@ -246,27 +248,27 @@ public partial class Interpreter {
 		var v = (ushort) (ReadMemory<ushort>(sp));
 		switch(r) {
 			case (byte) (0x0U): {
-				var temp_17 = (ushort) v;
-				Registers[0b000] = (byte) (temp_17 >> 8);
-				Registers[0b001] = (byte) (temp_17 & 0xFF);
+				var temp_20 = (ushort) v;
+				Registers[0b000] = (byte) (temp_20 >> 8);
+				Registers[0b001] = (byte) (temp_20 & 0xFF);
 				break;
 			}
 			case (byte) (0x1U): {
-				var temp_18 = (ushort) v;
-				Registers[0b010] = (byte) (temp_18 >> 8);
-				Registers[0b011] = (byte) (temp_18 & 0xFF);
+				var temp_21 = (ushort) v;
+				Registers[0b010] = (byte) (temp_21 >> 8);
+				Registers[0b011] = (byte) (temp_21 & 0xFF);
 				break;
 			}
 			case (byte) (0x2U): {
-				var temp_19 = (ushort) v;
-				Registers[0b100] = (byte) (temp_19 >> 8);
-				Registers[0b101] = (byte) (temp_19 & 0xFF);
+				var temp_22 = (ushort) v;
+				Registers[0b100] = (byte) (temp_22 >> 8);
+				Registers[0b101] = (byte) (temp_22 & 0xFF);
 				break;
 			}
 			default: {
-				var temp_20 = (ushort) v;
-				Registers[0b111] = (byte) (temp_20 >> 8);
-				Flags = (byte) (temp_20 & 0xFF);
+				var temp_23 = (ushort) v;
+				Registers[0b111] = (byte) (temp_23 >> 8);
+				Flags = (byte) (temp_23 & 0xFF);
 				break;
 			}
 		}
@@ -315,6 +317,134 @@ public partial class Interpreter {
 		return true;
 	}
 	insn_28:
+	/* JR-cc-simm8 */
+	if((insnBytes[0] & 0xE7) == 0x20) {
+		var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+		var e = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		var offset = (sbyte) ((sbyte) (e));
+		pc += 2;
+		Branch((ushort) (((ushort) (ushort) ((ushort) (pc))) + ((ushort) (sbyte) (offset))));
+		return true;
+	}
+	insn_29:
+	/* CALL-imm16 */
+	if((insnBytes[0] & 0xFF) == 0xCD) {
+		var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
+		var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
+		pc += 3;
+		var sp = (ushort) (((ushort) (ushort) ((ushort) (SP))) - ((ushort) (byte) (0x2U)));
+		SP = (ushort) sp;
+		WriteMemory(sp, (ushort) (pc));
+		Branch(addr);
+		return true;
+	}
+	insn_30:
+	/* CALL-cc-imm16 */
+	if((insnBytes[0] & 0xE7) == 0xC4) {
+		var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+		var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
+		var addr = (ushort) ((((ushort) ((ushort) (((ushort) ((ushort) (msb))) << (int) (0x8U)))) | ((ushort) (lsb))));
+		pc += 3;
+		if(((uint) ((byte) ((cc) >> (int) (0x1U)) switch { (byte) (0x0U) => (uint) ((((byte) (((byte) (Flags)) >> (int) (0x7U))) == ((byte) ((((byte) (cc)) & ((byte) (0x1U)))))) ? 1U : 0U), _ => (uint) ((((byte) ((((byte) ((byte) (((byte) (Flags)) >> (int) (0x6U)))) & ((byte) (0x1U))))) == ((byte) ((((byte) (cc)) & ((byte) (0x1U)))))) ? 1U : 0U) })) != 0) {
+			var sp = (ushort) (((ushort) (ushort) ((ushort) (SP))) - ((ushort) (byte) (0x2U)));
+			SP = (ushort) sp;
+			WriteMemory(sp, (ushort) (pc));
+			Branch(addr);
+		} else {
+			Branch(pc);
+		}
+		return true;
+	}
+	insn_31:
+	/* RET */
+	if((insnBytes[0] & 0xFF) == 0xC9) {
+		pc += 1;
+		var sp = (ushort) (SP);
+		var ra = (ushort) (ReadMemory<ushort>(sp));
+		SP = (ushort) (ushort) (((ushort) (ushort) (sp)) + ((ushort) (byte) (0x2U)));
+		Branch(ra);
+		return true;
+	}
+	insn_32:
+	/* RET-cc */
+	if((insnBytes[0] & 0xE7) == 0xC0) {
+		var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
+		pc += 1;
+		if(((uint) ((byte) ((cc) >> (int) (0x1U)) switch { (byte) (0x0U) => (uint) ((((byte) (((byte) (Flags)) >> (int) (0x7U))) == ((byte) ((((byte) (cc)) & ((byte) (0x1U)))))) ? 1U : 0U), _ => (uint) ((((byte) ((((byte) ((byte) (((byte) (Flags)) >> (int) (0x6U)))) & ((byte) (0x1U))))) == ((byte) ((((byte) (cc)) & ((byte) (0x1U)))))) ? 1U : 0U) })) != 0) {
+			var sp = (ushort) (SP);
+			var ra = (ushort) (ReadMemory<ushort>(sp));
+			SP = (ushort) (ushort) (((ushort) (ushort) (sp)) + ((ushort) (byte) (0x2U)));
+			Branch(ra);
+		} else {
+			Branch(pc);
+		}
+		return true;
+	}
+	insn_33:
+	/* RETI */
+	if((insnBytes[0] & 0xFF) == 0xD9) {
+		pc += 1;
+		var sp = (ushort) (SP);
+		var ra = (ushort) (ReadMemory<ushort>(sp));
+		SP = (ushort) (ushort) (((ushort) (ushort) (sp)) + ((ushort) (byte) (0x2U)));
+		InterruptsEnabled = true;
+		Branch(ra);
+		return true;
+	}
+	insn_34:
+	/* RST */
+	if((insnBytes[0] & 0xC7) == 0xC7) {
+		var n = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
+		var addr = (byte) ((n) << (int) (0x3U));
+		pc += 1;
+		var sp = (ushort) (((ushort) (ushort) ((ushort) (SP))) - ((ushort) (byte) (0x2U)));
+		SP = (ushort) sp;
+		WriteMemory(sp, (ushort) (pc));
+		Branch(addr);
+		return true;
+	}
+	insn_35:
+	/* DI */
+	if((insnBytes[0] & 0xFF) == 0xF3) {
+		pc += 1;
+		InterruptsEnabled = false;
+		InterruptsEnableScheduled = false;
+		return true;
+	}
+	insn_36:
+	/* EI */
+	if((insnBytes[0] & 0xFF) == 0xFB) {
+		pc += 1;
+		InterruptsEnableScheduled = true;
+		return true;
+	}
+	insn_37:
+	/* CCF */
+	if((insnBytes[0] & 0xFF) == 0x3F) {
+		pc += 1;
+		var flags = (byte) (Flags);
+		flags = (byte) ((((byte) (flags)) & ((byte) (0x9FU))));
+		Flags = (byte) ((((byte) (flags)) ^ ((byte) (0x10U))));
+		return true;
+	}
+	insn_38:
+	/* SCF */
+	if((insnBytes[0] & 0xFF) == 0x37) {
+		pc += 1;
+		var flags = (byte) (Flags);
+		flags = (byte) ((((byte) (flags)) & ((byte) (0x8FU))));
+		Flags = (byte) ((((byte) (flags)) | ((byte) (0x10U))));
+		return true;
+	}
+	insn_39:
+	/* NOP */
+	if((insnBytes[0] & 0xFF) == 0x0) {
+		pc += 1;
+		return true;
+	}
+	insn_40:
 
         return false;
     }

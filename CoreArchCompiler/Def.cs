@@ -80,8 +80,8 @@ public class Def {
 					throw new NotImplementedException($"Unknown type for inference: {tree.ToPrettyString()}");
 			}
 		}
-		InferType(Disassembly);
 		InferType(Decode);
+		InferType(Disassembly);
 		InferType(Eval);
 		Locals = locals;
 	}
