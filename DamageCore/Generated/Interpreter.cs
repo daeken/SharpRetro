@@ -439,12 +439,20 @@ public partial class Interpreter {
 		return true;
 	}
 	insn_39:
+	/* CPL */
+	if((insnBytes[0] & 0xFF) == 0x2F) {
+		pc += 1;
+		Flags = (byte) ((((byte) ((byte) (Flags))) | ((byte) (0x60U))));
+		Registers[(int) 0x7U] = (byte) ((byte) (~((byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => Registers[i] }))));
+		return true;
+	}
+	insn_40:
 	/* NOP */
 	if((insnBytes[0] & 0xFF) == 0x0) {
 		pc += 1;
 		return true;
 	}
-	insn_40:
+	insn_41:
 
         return false;
     }

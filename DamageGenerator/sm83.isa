@@ -415,6 +415,16 @@
         (= flags (& flags 0b10001111))
         (= (reg-flags) (| flags 0b00010000))))
 
+(def CPL
+    "00101111"
+    "cpl"
+    (names)
+    (cycles 1)
+    (block)
+    (block
+        (= (reg-flags) (| (reg-flags) 0b01100000))
+        (= (reg-a) (~ (reg-a)))))
+
 (def NOP
     "00000000"
     "nop"

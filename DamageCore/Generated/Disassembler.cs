@@ -296,12 +296,18 @@ public partial class Disassembler {
 			return "scf";
 		}
 		insn_39:
+		/* CPL */
+		if((insnBytes[0] & 0xFF) == 0x2F) {
+			pc += 1;
+			return "cpl";
+		}
+		insn_40:
 		/* NOP */
 		if((insnBytes[0] & 0xFF) == 0x0) {
 			pc += 1;
 			return "nop";
 		}
-		insn_40:
+		insn_41:
 
         return null;
     }
@@ -519,13 +525,17 @@ public partial class Disassembler {
 			return "SCF";
 		}
 		insn_39:
+		if((insnBytes[0] & 0xFF) == 0x2F) {
+			return "CPL";
+		}
+		insn_40:
 		if((insnBytes[0] & 0xFF) == 0x0) {
 			return "NOP";
 		}
-		insn_40:
+		insn_41:
 
         return null;
     }
 
-    public const int InstructionCount = 40 + 0;
+    public const int InstructionCount = 41 + 0;
 }
