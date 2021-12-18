@@ -22,7 +22,7 @@
         0b100 "H"
         0b101 "L"
         0b111 "A"
-        (unimplemented)))
+              "(HL)"))
 
 (defm reg16-name (r)
     (match r
@@ -304,7 +304,9 @@
     (names (cc c) (e e))
     (cycles (if (cc-taken cc) 3 2))
     (let offset (i8 e))
-    (branch (+ (pc) offset)))
+    (if (cc-taken cc)
+        (branch (+ (pc) offset))
+        (branch-default)))
 
 (def CALL-imm16
     "11001101 LLLLLLLL MMMMMMMM"
@@ -432,3 +434,104 @@
     (cycles 1)
     (block)
     (block))
+
+(defm arith-value (r)
+    (match r
+        0b000 (reg-b)
+        0b001 (reg-c)
+        0b010 (reg-d)
+        0b011 (reg-e)
+        0b100 (reg-h)
+        0b101 (reg-l)
+        0b110 (load (reg-hl) u8)
+              (reg-a)))
+
+(defm z-from (v) (== (u8 v) (u8 0)))
+(defm h-from (a b) (> (+ (& a 0xF) (& b 0xF)) 0xF))
+(defm h-from-sub (a b) (< (& a 0xF) (& b 0xF)))
+(defm c-from (v) (>= v 0x100))
+
+(defm set-znhc (z n h c)
+    (= (reg-flags) (|
+        (& (reg-flags) 0b00001111)
+        (<< (u8 z) 7)
+        (<< (u8 n) 6)
+        (<< (u8 h) 5)
+        (<< (u8 c) 4))))
+
+(defm set-znh (z n h)
+    (= (reg-flags) (|
+        (& (reg-flags) 0b00011111)
+        (<< (u8 z) 7)
+        (<< (u8 n) 6)
+        (<< (u8 h) 5))))
+
+(defm reg-or-hl (r)
+    (if (== r 0b110)
+        (load (reg-hl) u8)
+        (reg r)))
+
+(defm set-reg-or-hl (r v)
+    (if (== r 0b110)
+        (store (reg-hl) v)
+        (= (reg r) v)))
+
+(def INC-8
+    "0rrr0100"
+    "inc $(reg-name rd)"
+    (names (rd r))
+    (cycles (if (== rd 0b110) 3 1))
+    (block)
+    (mlet (lhs (reg-or-hl rd)
+           result (+ lhs 1))
+        (set-znh
+            (z-from result)
+            0
+            (h-from lhs 1))
+        (set-reg-or-hl rd result)))
+
+(def DEC-8
+    "0rrr0101"
+    "dec $(reg-name rd)"
+    (names (rd r))
+    (cycles (if (== rd 0b110) 3 1))
+    (block)
+    (mlet (lhs (reg-or-hl rd)
+           result (- lhs 1))
+        (set-znh
+            (z-from result)
+            0
+            (h-from-sub lhs 1))
+        (set-reg-or-hl rd result)))
+
+(def ADD
+    "10000rrr"
+    "add A,$(reg-name rs)"
+    (names (rs r))
+    (cycles (if (== rs 0b110) 2 1))
+    (block)
+    (mlet (lhs (reg-a)
+           rhs (arith-value rs)
+           result (+ (u16 lhs) (u16 rhs)))
+        (set-znhc
+            (z-from result)
+            0
+            (h-from lhs rhs)
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(def XOR
+    "10101rrr"
+    "xor $(reg-name rs)"
+    (names (rs r))
+    (cycles (if (== rs 0b110) 2 1))
+    (block)
+    (mlet (lhs (reg-a)
+           rhs (arith-value rs)
+           result (^ lhs rhs))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            0)
+        (= (reg-a) (u8 result))))

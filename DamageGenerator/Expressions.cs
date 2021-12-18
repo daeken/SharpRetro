@@ -19,7 +19,7 @@ public class Expressions : Builtin {
 		Expression("pc", _ => new EInt(false, 16), _ => "pc").Interpret((_, state) => state.GetRegister("PC"));
 
 		Expression("reg", _ => new EInt(false, 8).AsRuntime(),
-				list => $"({GenerateExpression(list[1])}) switch {{ 0b110 => throw new NotSupportedException(), {{}} i => Registers[i] }}",
+				list => $"({GenerateExpression(list[1])}) switch {{ 0b110 => throw new NotSupportedException(), {{}} i => State.Registers[i] }}",
 				_ => "/*UNIMPLEMENTED*/")
 			.Interpret((list, state) => {
 				var reg = state.Evaluate(list[1]);
@@ -27,35 +27,35 @@ public class Expressions : Builtin {
 			});
 		
 		Expression("reg-ime", _ => new EInt(false, 1).AsRuntime(), 
-			_ => "InterruptsEnabled", 
+			_ => "State.InterruptsEnabled", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-ime-schedule", _ => new EInt(false, 1).AsRuntime(), 
-			_ => "InterruptsEnableScheduled", 
+			_ => "State.InterruptsEnableScheduled", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-flags", _ => new EInt(false, 8).AsRuntime(), 
-			_ => "Flags", 
+			_ => "State.Flags", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-bc", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) Registers[0b000]) << 8) | (ushort) Registers[0b001])", 
+			_ => "((((ushort) State.Registers[0b000]) << 8) | (ushort) State.Registers[0b001])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-de", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) Registers[0b010]) << 8) | (ushort) Registers[0b011])", 
+			_ => "((((ushort) State.Registers[0b010]) << 8) | (ushort) State.Registers[0b011])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-hl", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) Registers[0b100]) << 8) | (ushort) Registers[0b101])", 
+			_ => "((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-af", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "((((ushort) Registers[0b111]) << 8) | (ushort) Flags)", 
+			_ => "((((ushort) State.Registers[0b111]) << 8) | (ushort) State.Flags)", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Expression("reg-sp", _ => new EInt(false, 16).AsRuntime(), 
-			_ => "SP", 
+			_ => "State.SP", 
 			_ => "/*UNIMPLEMENTED*/").NoInterpret();
 		
 		Statement("=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
@@ -63,7 +63,7 @@ public class Expressions : Builtin {
 				if(list[1] is PList sub)
 					switch(sub[0]) {
 						case PName("reg"):
-							c += $"Registers[(int) {GenerateExpression(sub[1])}] = (byte) ({GenerateExpression(list[2])});";
+							c += $"State.Registers[(int) {GenerateExpression(sub[1])}] = (byte) ({GenerateExpression(list[2])});";
 							return;
 						case PName("reg-bc"):
 						case PName("reg-de"):
@@ -76,23 +76,23 @@ public class Expressions : Builtin {
 								"reg-hl" => ("0b100", "0b101"), 
 								_ => throw new NotSupportedException()
 							};
-							c += $"Registers[{a}] = (byte) ({temp} >> 8);";
-							c += $"Registers[{b}] = (byte) ({temp} & 0xFF);";
+							c += $"State.Registers[{a}] = (byte) ({temp} >> 8);";
+							c += $"State.Registers[{b}] = (byte) ({temp} & 0xFF);";
 							return;
 						case PName("reg-af"):
 							var aftemp = Core.TempName();
 							c += $"var {aftemp} = (ushort) {GenerateExpression(list[2])};";
-							c += $"Registers[0b111] = (byte) ({aftemp} >> 8);";
-							c += $"Flags = (byte) ({aftemp} & 0xFF);";
+							c += $"State.Registers[0b111] = (byte) ({aftemp} >> 8);";
+							c += $"State.Flags = (byte) ({aftemp} & 0xFF);";
 							return;
 						case PName("reg-sp"):
-							c += $"SP = (ushort) {GenerateExpression(list[2])};";
+							c += $"State.SP = (ushort) {GenerateExpression(list[2])};";
 							return;
 						case PName("reg-ime"):
-							c += $"InterruptsEnabled = {GenerateExpression(list[2])};";
+							c += $"State.InterruptsEnabled = {GenerateExpression(list[2])};";
 							return;
 						case PName("reg-ime-schedule"):
-							c += $"InterruptsEnableScheduled = {GenerateExpression(list[2])};";
+							c += $"State.InterruptsEnableScheduled = {GenerateExpression(list[2])};";
 							return;
 					}
 
