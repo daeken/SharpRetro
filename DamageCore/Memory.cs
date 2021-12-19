@@ -1,7 +1,7 @@
 namespace DamageCore; 
 
 public class Memory {
-	public readonly Cpu Cpu;
+	public readonly Core Core;
 	public readonly ICartridge Cartridge;
 
 	public readonly byte[] VRam = new byte[0x2000];
@@ -9,8 +9,8 @@ public class Memory {
 	public readonly byte[] HRam = new byte[0x7F];
 	public readonly byte[] Oam = new byte[0xA0];
 
-	public Memory(Cpu cpu, ICartridge cartridge) {
-		Cpu = cpu;
+	public Memory(Core core, ICartridge cartridge) {
+		Core = core;
 		Cartridge = cartridge;
 	}
 
@@ -34,7 +34,7 @@ public class Memory {
 			case <= 0xFEFF:
 				break;
 			case <= 0xFF7F or 0xFFFF:
-				Cpu.IoWrite(addr, value);
+				Core.IoWrite(addr, value);
 				break;
 			case <= 0xFFFE:
 				HRam[addr - 0xFF80] = value;
@@ -49,7 +49,7 @@ public class Memory {
 		<= 0xFDFF => Read((ushort) (addr - 0x2000)),
 		<= 0xFE9F => Oam[addr - 0xFE00],
 		<= 0xFEFF => 0,
-		<= 0xFF7F or 0xFFFF => Cpu.IoRead(addr),
+		<= 0xFF7F or 0xFFFF => Core.IoRead(addr),
 		<= 0xFFFE => HRam[addr - 0xFF80]
 	};
 

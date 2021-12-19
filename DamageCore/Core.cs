@@ -62,4 +62,25 @@ public class Core : ICore {
 	public void Pause() {
 		throw new NotImplementedException();
 	}
+	
+	public void IoWrite(ushort addr, byte value) {
+		switch(addr) {
+			case >= 0xFF40 and <= 0xFFfB:
+				Ppu.IoWrite(addr, value);
+				break;
+			default:
+				Console.WriteLine($"Unhandled IO Write to 0x{addr:X04}: 0x{value:X02}");
+				break;
+		}
+	}
+
+	public byte IoRead(ushort addr) {
+		switch(addr) {
+			case >= 0xFF40 and <= 0xFFfB:
+				return Ppu.IoRead(addr);
+			default:
+				Console.WriteLine($"Unhandled IO read from 0x{addr:X04}");
+				return 0;
+		}
+	}
 }

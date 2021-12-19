@@ -8,7 +8,7 @@ public class Cpu {
 
 	public Cpu(Core core, ICartridge cartridge) {
 		Core = core;
-		Memory = new(this, cartridge);
+		Memory = new(core, cartridge);
 		State = new(Memory);
 		Interpreter = new(core, State);
 	}
@@ -22,12 +22,5 @@ public class Cpu {
 			Console.WriteLine($"H 0x{State.Registers[0b100]:X02}  L 0x{State.Registers[0b101]:X02}");
 			Interpreter.RunOne();
 		}
-	}
-
-	public void IoWrite(ushort addr, byte value) {
-	}
-
-	public byte IoRead(ushort addr) {
-		throw new NotImplementedException();
 	}
 }

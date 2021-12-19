@@ -9,4 +9,20 @@ public class Ppu {
 			yield return 100;
 		}
 	}
+	
+	public void IoWrite(ushort addr, byte value) {
+		switch(addr) {
+			default:
+				Console.WriteLine($"Unhandled PPU IO Write to 0x{addr:X04}: 0x{value:X02}");
+				break;
+		}
+	}
+
+	public byte IoRead(ushort addr) {
+		switch(addr) {
+			default:
+				Console.WriteLine($"Unhandled PPU IO Read from 0x{addr:X04}");
+				return 0;
+		}
+	}
 }
