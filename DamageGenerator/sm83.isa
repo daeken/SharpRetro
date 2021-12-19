@@ -477,7 +477,7 @@
         (= (reg r) v)))
 
 (def INC-8
-    "0rrr0100"
+    "00rrr100"
     "inc $(reg-name rd)"
     (names (rd r))
     (cycles (if (== rd 0b110) 3 1))
@@ -491,7 +491,7 @@
         (set-reg-or-hl rd result)))
 
 (def DEC-8
-    "0rrr0101"
+    "00rrr101"
     "dec $(reg-name rd)"
     (names (rd r))
     (cycles (if (== rd 0b110) 3 1))

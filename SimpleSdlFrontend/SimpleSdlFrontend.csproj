@@ -5,6 +5,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="SDL2-CS" Version="2.0.0" />
+      <PackageReference Include="ppy.SDL2-CS" Version="1.0.486-alpha" />
     </ItemGroup>
 
 </Project>

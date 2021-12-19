@@ -3,19 +3,22 @@
 namespace DamageCore;
 
 public class Core : ICore {
-	public string Name { get; } = "Damage";
-	public string ShortDescription { get; } = "Game Boy/Game Boy Color core";
-	public string LongDescription { get; } = null;
-	public bool Pausable { get; } = true;
-	public bool SupportSaveStates { get; } = true;
-	public GraphicsBackend GraphicsBackends { get; } = GraphicsBackend.Framebuffer;
+	public string Name => "Damage";
+	public string ShortDescription => "Game Boy/Game Boy Color core";
+	public string LongDescription => null;
+	public bool Pausable => true;
+	public bool SupportSaveStates => true;
+	public GraphicsBackend GraphicsBackends => GraphicsBackend.Framebuffer;
 
 	[UserOption("Scaling mode")] public ScalingMode ScalingMode = ScalingMode.None;
 	[UserOption("Preserve aspect ratio")] public bool PreserveAspectRatio = true;
 
 	IFramebufferBackend FramebufferBackend;
 
-	Cpu Cpu;
+	public Timing Timing;
+	public Cpu Cpu;
+	public Ppu Ppu;
+	bool Running;
 
 	public bool CanLoad(string path) => path.ToLower().EndsWith(".gb");
 	public void Setup(IGraphicsBackend graphicsBackend) {
@@ -23,6 +26,8 @@ public class Core : ICore {
 			FramebufferBackend = fbb;
 		else
 			throw new NotSupportedException("Given non-framebuffer graphics backend");
+
+		FramebufferBackend.Resolution = (160, 144);
 	}
 
 	public void Teardown() {
@@ -32,11 +37,13 @@ public class Core : ICore {
 	public bool Load(string path) {
 		var cartridge = ICartridge.Load(File.ReadAllBytes(path));
 		if(cartridge == null) return false;
-		Cpu = new(cartridge) {
+		Timing = new Timing();
+		Cpu = new(this, cartridge) {
 			State = {
 				PC = 0x0100
 			}
 		};
+		Ppu = new(this);
 		return true;
 	}
 
@@ -45,13 +52,12 @@ public class Core : ICore {
 	}
 
 	public void Run() {
-		while(true)
+		Running = true;
+		while(Running)
 			Cpu.Run();
 	}
 
-	public void Stop() {
-		throw new NotImplementedException();
-	}
+	public void Stop() => Running = false;
 
 	public void Pause() {
 		throw new NotImplementedException();

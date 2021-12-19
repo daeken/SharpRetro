@@ -1,4 +1,6 @@
-﻿using LibSharpRetro;
+﻿using System.Runtime.InteropServices;
+using LibSharpRetro;
+using static SDL2.SDL;
 
 var core = ICore.LoadCore(args[0]);
 if(core == null)
@@ -21,6 +23,35 @@ core.Run();
 core.Unload();
 core.Teardown();
 
-class SdlFramebuffer : IFramebufferBackend {
-	
+unsafe class SdlFramebuffer : IFramebufferBackend {
+	(int, int) _Resolution;
+	public (int Width, int Height) Resolution {
+		get => _Resolution;
+		set {
+			if(_Resolution == value) return;
+			_Resolution = value;
+			SDL_SetWindowSize(Window, value.Width, value.Height);
+			Pixels = null;
+			RefreshPixels();
+		}
+	}
+	readonly IntPtr Window;
+	byte* Pixels;
+
+	public SdlFramebuffer() {
+		SDL_Init(SDL_INIT_VIDEO);
+		Window = SDL_CreateWindow("SharpRetro", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
+		Resolution = (640, 480);
+	}
+
+	void RefreshPixels() {
+		if(Pixels != null) return;
+		var surfacePtr = SDL_GetWindowSurface(Window);
+		var surface = Marshal.PtrToStructure<SDL_Surface>(surfacePtr);
+		Pixels = (byte*) surface.pixels;
+	}
+
+	public Span<byte> Framebuffer => new(Pixels, Resolution.Width * Resolution.Height * 4);
+
+	public void Flip() => SDL_UpdateWindowSurface(Window);
 }

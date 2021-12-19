@@ -122,5 +122,8 @@ public class Expressions : Builtin {
 		
 		BranchExpression("branch-default", _ => EType.Unit.AsRuntime(), list => "Branch(pc)")
 			.Interpret((_, _) => null);
+
+		BranchExpression("cycles", _ => EType.Unit.AsRuntime(), list => $"AddCycles({GenerateExpression(list[1])})")
+			.NoInterpret();
 	}
 }

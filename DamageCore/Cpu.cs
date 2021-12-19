@@ -1,14 +1,16 @@
 namespace DamageCore; 
 
 public class Cpu {
+	public readonly Core Core;
 	public readonly Memory Memory;
 	public readonly State State;
 	public readonly Interpreter Interpreter;
 
-	public Cpu(ICartridge cartridge) {
+	public Cpu(Core core, ICartridge cartridge) {
+		Core = core;
 		Memory = new(this, cartridge);
 		State = new(Memory);
-		Interpreter = new(State);
+		Interpreter = new(core, State);
 	}
 
 	public void Run() {

@@ -1,10 +1,16 @@
 namespace DamageCore; 
 
 public partial class Interpreter {
+	public readonly Core Core;
 	public readonly State State;
+	public readonly Timing Timing;
 	ushort? BranchTo;
 
-	public Interpreter(State state) => State = state;
+	public Interpreter(Core core, State state) {
+		Core = core;
+		Timing = Core.Timing;
+		State = state;
+	}
 
 	public void RunOne() {
 		Span<byte> insns = stackalloc byte[8];
@@ -42,4 +48,6 @@ public partial class Interpreter {
 	};
 
 	public void Branch(ushort addr) => BranchTo = addr;
+
+	void AddCycles(ulong count) => Timing.AddCycles(count);
 }

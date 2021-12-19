@@ -72,6 +72,8 @@ public class DmgDef : Def {
 		var locals = new Dictionary<string, EType>();
 		foreach(var (fname, (_, bits, _)) in fields)
 			locals[fname] = new EInt(false, bits);
+		
+		eval = new PList(new PTree[] { new PName("block"), eval, cycles });
 
 		return new DmgDef(name, bitstr.Length / 8, matchBytes, fields, disasm, decode, eval, locals);
 	}
