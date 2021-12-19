@@ -170,6 +170,7 @@ public class Core {
 				es.Evaluate(tle);
 			} catch(BailoutException) {}
 		}
+		Console.WriteLine(ptree);
 		return Def.ParseAll(ptree, defCtor).Select(InferRuntime).ToList();
 	}
 		

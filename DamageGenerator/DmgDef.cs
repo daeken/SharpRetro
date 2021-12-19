@@ -21,14 +21,18 @@ public class DmgDef : Def {
 
 	public static DmgDef Parse(PList def) {
 		if(def[0] is not PName("def")) throw new Exception();
-		if(def[1] is not PName name) throw new Exception();
-		if(def[2] is not PString _bitstr) throw new Exception();
+		if(def[1] is not PTree _name) throw new Exception();
+		if(def[2] is not PTree _bitstr) throw new Exception();
 		if(def[3] is not PTree disasm) throw new Exception();
 		if(def[4] is not PList names) throw new Exception();
 		if(def[5] is not PList cycles || cycles[0] is not PName("cycles")) throw new Exception();
 		if(def[6] is not PList decode) throw new Exception();
 		if(def[7] is not PList eval) throw new Exception();
-		
+
+		var name = _name switch {
+			PName(var x) => x, 
+			var x => (string) new ExecutionState().Evaluate(x)
+		};
 		Console.WriteLine(name);
 
 		var fields = new Dictionary<string, (int Byte, int Size, int Shift)>();
@@ -36,7 +40,7 @@ public class DmgDef : Def {
 		var fieldNames = names.Skip(1).Select(x => (PList) x)
 			.Select(x => (((PName) x[1]).Name, ((PName) x[0]).Name)).ToDictionary();
 
-		var bitstr = _bitstr.String.Replace(" ", "");
+		var bitstr = ((string) new ExecutionState().Evaluate(_bitstr)).Replace(" ", "");
 		Debug.Assert(bitstr.Length % 8 == 0);
 		var matchBytes = new Dictionary<int, (byte Mask, byte Match)>();
 		for(var bi = 0; bi < bitstr.Length / 8; ++bi) {

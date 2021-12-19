@@ -155,9 +155,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101]));
 		State.Registers[(int) 0x7U] = (byte) ((byte) (ReadMemory<byte>(hl)));
-		var temp_16 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
-		State.Registers[0b100] = (byte) (temp_16 >> 8);
-		State.Registers[0b101] = (byte) (temp_16 & 0xFF);
+		var temp_22 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
+		State.Registers[0b100] = (byte) (temp_22 >> 8);
+		State.Registers[0b101] = (byte) (temp_22 & 0xFF);
 		AddCycles(0x2U);
 		return true;
 	}
@@ -167,9 +167,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101]));
 		WriteMemory(hl, (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }));
-		var temp_17 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
-		State.Registers[0b100] = (byte) (temp_17 >> 8);
-		State.Registers[0b101] = (byte) (temp_17 & 0xFF);
+		var temp_23 = (ushort) (ushort) (((ushort) (ushort) (hl)) - ((ushort) (byte) (0x1U)));
+		State.Registers[0b100] = (byte) (temp_23 >> 8);
+		State.Registers[0b101] = (byte) (temp_23 & 0xFF);
 		AddCycles(0x2U);
 		return true;
 	}
@@ -179,9 +179,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101]));
 		State.Registers[(int) 0x7U] = (byte) ((byte) (ReadMemory<byte>(hl)));
-		var temp_18 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
-		State.Registers[0b100] = (byte) (temp_18 >> 8);
-		State.Registers[0b101] = (byte) (temp_18 & 0xFF);
+		var temp_24 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
+		State.Registers[0b100] = (byte) (temp_24 >> 8);
+		State.Registers[0b101] = (byte) (temp_24 & 0xFF);
 		AddCycles(0x2U);
 		return true;
 	}
@@ -191,9 +191,9 @@ public partial class Interpreter {
 		pc += 1;
 		var hl = (ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101]));
 		WriteMemory(hl, (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }));
-		var temp_19 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
-		State.Registers[0b100] = (byte) (temp_19 >> 8);
-		State.Registers[0b101] = (byte) (temp_19 & 0xFF);
+		var temp_25 = (ushort) (ushort) (((ushort) (ushort) (hl)) + ((ushort) (byte) (0x1U)));
+		State.Registers[0b100] = (byte) (temp_25 >> 8);
+		State.Registers[0b101] = (byte) (temp_25 & 0xFF);
 		AddCycles(0x2U);
 		return true;
 	}
@@ -207,21 +207,21 @@ public partial class Interpreter {
 		pc += 3;
 		switch(r) {
 			case (byte) (0x0U): {
-				var temp_20 = (ushort) imm;
-				State.Registers[0b000] = (byte) (temp_20 >> 8);
-				State.Registers[0b001] = (byte) (temp_20 & 0xFF);
+				var temp_26 = (ushort) imm;
+				State.Registers[0b000] = (byte) (temp_26 >> 8);
+				State.Registers[0b001] = (byte) (temp_26 & 0xFF);
 				break;
 			}
 			case (byte) (0x1U): {
-				var temp_21 = (ushort) imm;
-				State.Registers[0b010] = (byte) (temp_21 >> 8);
-				State.Registers[0b011] = (byte) (temp_21 & 0xFF);
+				var temp_27 = (ushort) imm;
+				State.Registers[0b010] = (byte) (temp_27 >> 8);
+				State.Registers[0b011] = (byte) (temp_27 & 0xFF);
 				break;
 			}
 			case (byte) (0x2U): {
-				var temp_22 = (ushort) imm;
-				State.Registers[0b100] = (byte) (temp_22 >> 8);
-				State.Registers[0b101] = (byte) (temp_22 & 0xFF);
+				var temp_28 = (ushort) imm;
+				State.Registers[0b100] = (byte) (temp_28 >> 8);
+				State.Registers[0b101] = (byte) (temp_28 & 0xFF);
 				break;
 			}
 			default: {
@@ -271,27 +271,27 @@ public partial class Interpreter {
 		var v = (ushort) (ReadMemory<ushort>(sp));
 		switch(r) {
 			case (byte) (0x0U): {
-				var temp_24 = (ushort) v;
-				State.Registers[0b000] = (byte) (temp_24 >> 8);
-				State.Registers[0b001] = (byte) (temp_24 & 0xFF);
+				var temp_30 = (ushort) v;
+				State.Registers[0b000] = (byte) (temp_30 >> 8);
+				State.Registers[0b001] = (byte) (temp_30 & 0xFF);
 				break;
 			}
 			case (byte) (0x1U): {
-				var temp_25 = (ushort) v;
-				State.Registers[0b010] = (byte) (temp_25 >> 8);
-				State.Registers[0b011] = (byte) (temp_25 & 0xFF);
+				var temp_31 = (ushort) v;
+				State.Registers[0b010] = (byte) (temp_31 >> 8);
+				State.Registers[0b011] = (byte) (temp_31 & 0xFF);
 				break;
 			}
 			case (byte) (0x2U): {
-				var temp_26 = (ushort) v;
-				State.Registers[0b100] = (byte) (temp_26 >> 8);
-				State.Registers[0b101] = (byte) (temp_26 & 0xFF);
+				var temp_32 = (ushort) v;
+				State.Registers[0b100] = (byte) (temp_32 >> 8);
+				State.Registers[0b101] = (byte) (temp_32 & 0xFF);
 				break;
 			}
 			default: {
-				var temp_27 = (ushort) v;
-				State.Registers[0b111] = (byte) (temp_27 >> 8);
-				State.Flags = (byte) (temp_27 & 0xFF);
+				var temp_33 = (ushort) v;
+				State.Registers[0b111] = (byte) (temp_33 >> 8);
+				State.Flags = (byte) (temp_33 & 0xFF);
 				break;
 			}
 		}
@@ -543,6 +543,127 @@ public partial class Interpreter {
 		return true;
 	}
 	insn_44:
+	/* ADD-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xC6) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var result = (ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) + ((ushort) (ushort) ((ushort) ((ushort) (rhs)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) (((byte) (byte) ((byte) ((((byte) (lhs)) & ((byte) (0xFU)))))) + ((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))))) > (0xFU)) ? 1U : 0U)))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_45:
+	/* ADC */
+	if((insnBytes[0] & 0xF8) == 0x88) {
+		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
+		pc += 1;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = (byte) (rs switch { (byte) (0x0U) => (byte) ((0x0U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x1U) => (byte) ((0x1U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x2U) => (byte) ((0x2U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x3U) => (byte) ((0x3U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x4U) => (byte) ((0x4U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x5U) => (byte) ((0x5U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x6U) => (byte) (ReadMemory<byte>((ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])))), _ => (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }) });
+		var carry = (uint) ((uint) ((byte) ((((byte) ((byte) (((byte) (State.Flags)) >> (int) (0x4U)))) & ((byte) (0x1U))))));
+		var result = (ushort) (((ushort) (ushort) ((ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) + ((ushort) (ushort) ((ushort) ((ushort) (rhs))))))) + ((ushort) (ushort) ((ushort) ((ushort) (carry)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((carry != 0) ? ((uint) ((((byte) (((byte) (byte) ((byte) ((((byte) (lhs)) & ((byte) (0xFU)))))) + ((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))))) >= (0xFU)) ? 1U : 0U)) : ((uint) ((((byte) (((byte) (byte) ((byte) ((((byte) (lhs)) & ((byte) (0xFU)))))) + ((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))))) > (0xFU)) ? 1U : 0U)))))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
+		return true;
+	}
+	insn_46:
+	/* ADC-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xCE) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var carry = (uint) ((uint) ((byte) ((((byte) ((byte) (((byte) (State.Flags)) >> (int) (0x4U)))) & ((byte) (0x1U))))));
+		var result = (ushort) (((ushort) (ushort) ((ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) + ((ushort) (ushort) ((ushort) ((ushort) (rhs))))))) + ((ushort) (ushort) ((ushort) ((ushort) (carry)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((carry != 0) ? ((uint) ((((byte) (((byte) (byte) ((byte) ((((byte) (lhs)) & ((byte) (0xFU)))))) + ((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))))) >= (0xFU)) ? 1U : 0U)) : ((uint) ((((byte) (((byte) (byte) ((byte) ((((byte) (lhs)) & ((byte) (0xFU)))))) + ((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))))) > (0xFU)) ? 1U : 0U)))))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_47:
+	/* SUB */
+	if((insnBytes[0] & 0xF8) == 0x90) {
+		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
+		pc += 1;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = (byte) (rs switch { (byte) (0x0U) => (byte) ((0x0U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x1U) => (byte) ((0x1U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x2U) => (byte) ((0x2U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x3U) => (byte) ((0x3U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x4U) => (byte) ((0x4U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x5U) => (byte) ((0x5U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x6U) => (byte) (ReadMemory<byte>((ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])))), _ => (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }) });
+		var result = (ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) - ((ushort) (ushort) ((ushort) ((ushort) (rhs)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) ? 1U : 0U)))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
+		return true;
+	}
+	insn_48:
+	/* SUB-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xD6) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var result = (ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) - ((ushort) (ushort) ((ushort) ((ushort) (rhs)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) ? 1U : 0U)))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_49:
+	/* SBC */
+	if((insnBytes[0] & 0xF8) == 0x98) {
+		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
+		pc += 1;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = (byte) (rs switch { (byte) (0x0U) => (byte) ((0x0U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x1U) => (byte) ((0x1U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x2U) => (byte) ((0x2U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x3U) => (byte) ((0x3U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x4U) => (byte) ((0x4U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x5U) => (byte) ((0x5U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x6U) => (byte) (ReadMemory<byte>((ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])))), _ => (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }) });
+		var carry = (uint) ((uint) ((byte) ((((byte) ((byte) (((byte) (State.Flags)) >> (int) (0x4U)))) & ((byte) (0x1U))))));
+		var result = (ushort) (((ushort) (ushort) ((ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) - ((ushort) (ushort) ((ushort) ((ushort) (rhs))))))) - ((ushort) (ushort) ((ushort) ((ushort) (carry)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((carry != 0) ? ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) (((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) + ((byte) (byte) (0x1U))))) ? 1U : 0U)) : ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) ? 1U : 0U)))))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
+		return true;
+	}
+	insn_50:
+	/* SBC-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xDE) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var carry = (uint) ((uint) ((byte) ((((byte) ((byte) (((byte) (State.Flags)) >> (int) (0x4U)))) & ((byte) (0x1U))))));
+		var result = (ushort) (((ushort) (ushort) ((ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) - ((ushort) (ushort) ((ushort) ((ushort) (rhs))))))) - ((ushort) (ushort) ((ushort) ((ushort) (carry)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((carry != 0) ? ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) (((byte) (byte) ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) + ((byte) (byte) (0x1U))))) ? 1U : 0U)) : ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) ? 1U : 0U)))))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_51:
+	/* AND */
+	if((insnBytes[0] & 0xF8) == 0xA0) {
+		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
+		pc += 1;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = (byte) (rs switch { (byte) (0x0U) => (byte) ((0x0U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x1U) => (byte) ((0x1U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x2U) => (byte) ((0x2U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x3U) => (byte) ((0x3U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x4U) => (byte) ((0x4U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x5U) => (byte) ((0x5U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x6U) => (byte) (ReadMemory<byte>((ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])))), _ => (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }) });
+		var result = (byte) ((((byte) (lhs)) & ((byte) (rhs))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
+		return true;
+	}
+	insn_52:
+	/* AND-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xE6) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var result = (byte) ((((byte) (lhs)) & ((byte) (rhs))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_53:
 	/* XOR */
 	if((insnBytes[0] & 0xF8) == 0xA8) {
 		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
@@ -555,7 +676,70 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
 		return true;
 	}
-	insn_45:
+	insn_54:
+	/* XOR-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xEE) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var result = (byte) ((((byte) (lhs)) ^ ((byte) (rhs))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_55:
+	/* OR */
+	if((insnBytes[0] & 0xF8) == 0xB0) {
+		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
+		pc += 1;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = (byte) (rs switch { (byte) (0x0U) => (byte) ((0x0U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x1U) => (byte) ((0x1U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x2U) => (byte) ((0x2U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x3U) => (byte) ((0x3U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x4U) => (byte) ((0x4U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x5U) => (byte) ((0x5U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x6U) => (byte) (ReadMemory<byte>((ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])))), _ => (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }) });
+		var result = (byte) ((((byte) (lhs)) | ((byte) (rhs))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
+		return true;
+	}
+	insn_56:
+	/* OR-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xF6) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var result = (byte) ((((byte) (lhs)) | ((byte) (rhs))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((byte) (result)));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_57:
+	/* CP */
+	if((insnBytes[0] & 0xF8) == 0xB8) {
+		var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
+		pc += 1;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = (byte) (rs switch { (byte) (0x0U) => (byte) ((0x0U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x1U) => (byte) ((0x1U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x2U) => (byte) ((0x2U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x3U) => (byte) ((0x3U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x4U) => (byte) ((0x4U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x5U) => (byte) ((0x5U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }), (byte) (0x6U) => (byte) (ReadMemory<byte>((ushort) (((((ushort) State.Registers[0b100]) << 8) | (ushort) State.Registers[0b101])))), _ => (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] }) });
+		var result = (ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) - ((ushort) (ushort) ((ushort) ((ushort) (rhs)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) ? 1U : 0U)))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		AddCycles((byte) (((uint) (((rs) == (0x6U)) ? 1U : 0U) != 0) ? (0x2U) : (0x1U)));
+		return true;
+	}
+	insn_58:
+	/* CP-imm8 */
+	if((insnBytes[0] & 0xFF) == 0xFE) {
+		var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+		pc += 2;
+		var lhs = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		var rhs = imm;
+		var result = (ushort) (((ushort) (ushort) ((ushort) ((ushort) (lhs)))) - ((ushort) (ushort) ((ushort) ((ushort) (rhs)))));
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((byte) (result))) == ((byte) ((byte) (0x0U)))) ? 1U : 0U)))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x1U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) ((((byte) ((((byte) (lhs)) & ((byte) (0xFU))))) < ((byte) ((((byte) (rhs)) & ((byte) (0xFU)))))) ? 1U : 0U)))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((uint) (((result) >= (0x100U)) ? 1U : 0U)))) << (int) (0x4U))))));
+		AddCycles(0x2U);
+		return true;
+	}
+	insn_59:
 
         return false;
     }

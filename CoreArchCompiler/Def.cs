@@ -8,8 +8,21 @@ using PrettyPrinter;
 namespace CoreArchCompiler; 
 
 public class Def {
-	public static List<Def> ParseAll(PList top, Func<PList, Def> transform) => top.Where(x => ((PList) x)[0] is PName("def")).Select(x => transform((PList) x)).ToList();
-		
+	public static List<Def> ParseAll(PList top, Func<PList, Def> transform) {
+		var ret = new List<Def>();
+		foreach(var elem in top)
+			if(elem is PList pl && pl.Count != 0)
+				switch(pl[0]) {
+					case PName("def"):
+						ret.Add(transform(pl));
+						break;
+					case PName("block"):
+						ret.AddRange(ParseAll(pl, transform));
+						break;
+				}
+		return ret;
+	}
+
 	public readonly string Name;
 	public readonly PTree Disassembly;
 	public readonly IReadOnlyDictionary<string, EType> Locals;

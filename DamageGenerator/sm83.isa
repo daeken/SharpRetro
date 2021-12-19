@@ -13,6 +13,8 @@
 (defm reg-l () (reg 0b101))
 (defm reg-a () (reg 0b111))
 
+(defm reg-flag-c () (u1 (& (>> (reg-flags) 4) 1)))
+
 (defm reg-name (r)
     (match r
         0b000 "B"
@@ -449,6 +451,8 @@
 (defm z-from (v) (== (u8 v) (u8 0)))
 (defm h-from (a b) (> (+ (& a 0xF) (& b 0xF)) 0xF))
 (defm h-from-sub (a b) (< (& a 0xF) (& b 0xF)))
+(defm h-from-carry (a b) (>= (+ (& a 0xF) (& b 0xF)) 0xF))
+(defm h-from-sub-carry (a b) (< (& a 0xF) (+ (& b 0xF) 1)))
 (defm c-from (v) (>= v 0x100))
 
 (defm set-znhc (z n h c)
@@ -504,15 +508,29 @@
             (h-from-sub lhs 1))
         (set-reg-or-hl rd result)))
 
-(def ADD
-    "10000rrr"
-    "add A,$(reg-name rs)"
-    (names (rs r))
-    (cycles (if (== rs 0b110) 2 1))
-    (block)
-    (mlet (lhs (reg-a)
-           rhs (arith-value rs)
-           result (+ (u16 lhs) (u16 rhs)))
+(defm arith-insn (name mnem pattern eval) (block
+    (def name
+        (string-concat "10" pattern "rrr")
+        "$mnem $(reg-name rs)"
+        (names (rs r))
+        (cycles (if (== rs 0b110) 2 1))
+        (block)
+        (mlet (lhs (reg-a)
+               rhs (arith-value rs))
+            eval))
+    (def (string-concat name "-imm8")
+        (string-concat "11" pattern "110 iiiiiiii")
+        "$mnem $(hex imm)"
+        (names (imm i))
+        (cycles 2)
+        (block)
+        (mlet (lhs (reg-a)
+               rhs imm)
+            eval))))
+
+(arith-insn
+    "ADD" "add A," "000"
+    (let result (+ (u16 lhs) (u16 rhs))
         (set-znhc
             (z-from result)
             0
@@ -520,18 +538,73 @@
             (c-from result))
         (= (reg-a) (u8 result))))
 
-(def XOR
-    "10101rrr"
-    "xor $(reg-name rs)"
-    (names (rs r))
-    (cycles (if (== rs 0b110) 2 1))
-    (block)
-    (mlet (lhs (reg-a)
-           rhs (arith-value rs)
-           result (^ lhs rhs))
+(arith-insn
+    "ADC" "adc A," "001"
+    (mlet (carry (reg-flag-c)
+           result (+ (+ (u16 lhs) (u16 rhs)) (u16 carry)))
+        (set-znhc
+            (z-from result)
+            0
+            (if carry (h-from-carry lhs rhs) (h-from lhs rhs))
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "SUB" "sub" "010"
+    (let result (- (u16 lhs) (u16 rhs))
+        (set-znhc
+            (z-from result)
+            1
+            (h-from-sub lhs rhs)
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "SBC" "sbc A," "011"
+    (mlet (carry (reg-flag-c)
+           result (- (- (u16 lhs) (u16 rhs)) (u16 carry)))
+        (set-znhc
+            (z-from result)
+            1
+            (if carry (h-from-sub-carry lhs rhs) (h-from-sub lhs rhs))
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "AND" "and" "100"
+    (let result (& lhs rhs)
+        (set-znhc
+            (z-from result)
+            0
+            1
+            0)
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "XOR" "xor" "101"
+    (let result (^ lhs rhs)
         (set-znhc
             (z-from result)
             0
             0
             0)
         (= (reg-a) (u8 result))))
+
+(arith-insn
+    "OR" "or" "110"
+    (let result (| lhs rhs)
+        (set-znhc
+            (z-from result)
+            0
+            0
+            0)
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "CP" "cp" "111"
+    (let result (- (u16 lhs) (u16 rhs))
+        (set-znhc
+            (z-from result)
+            1
+            (h-from-sub lhs rhs)
+            (c-from result))))
