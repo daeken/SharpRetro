@@ -49,9 +49,14 @@ unsafe class SdlFramebuffer : IFramebufferBackend {
 		var surfacePtr = SDL_GetWindowSurface(Window);
 		var surface = Marshal.PtrToStructure<SDL_Surface>(surfacePtr);
 		Pixels = (byte*) surface.pixels;
+		Framebuffer = new byte[Resolution.Width * Resolution.Height * 4];
 	}
 
-	public Span<byte> Framebuffer => new(Pixels, Resolution.Width * Resolution.Height * 4);
+	public byte[] Framebuffer { get; private set; }
 
-	public void Flip() => SDL_UpdateWindowSurface(Window);
+	public void Flip() {
+		var fbs = new Span<byte>(Pixels, Framebuffer.Length);
+		Framebuffer.CopyTo(fbs);
+		SDL_UpdateWindowSurface(Window);
+	}
 }

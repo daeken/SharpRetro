@@ -13,10 +13,11 @@ public class Core : ICore {
 	[UserOption("Scaling mode")] public ScalingMode ScalingMode = ScalingMode.None;
 	[UserOption("Preserve aspect ratio")] public bool PreserveAspectRatio = true;
 
-	IFramebufferBackend FramebufferBackend;
+	public IFramebufferBackend FramebufferBackend;
 
 	public Timing Timing;
 	public Cpu Cpu;
+	public Memory Memory;
 	public Ppu Ppu;
 	bool Running;
 
@@ -27,7 +28,7 @@ public class Core : ICore {
 		else
 			throw new NotSupportedException("Given non-framebuffer graphics backend");
 
-		FramebufferBackend.Resolution = (160, 144);
+		FramebufferBackend.Resolution = (160 * 2, 144 * 2);
 	}
 
 	public void Teardown() {
@@ -43,6 +44,7 @@ public class Core : ICore {
 				PC = 0x0100
 			}
 		};
+		Memory = Cpu.Memory;
 		Ppu = new(this);
 		return true;
 	}

@@ -53,6 +53,9 @@ public class Memory {
 		<= 0xFFFE => HRam[addr - 0xFF80]
 	};
 
+	public byte[] ReadBlock(ushort addr, int length) =>
+		Enumerable.Range(0, length).Select(i => Read((ushort) (addr + i))).ToArray();
+
 	public void Write16(ushort addr, ushort value) {
 		Write(addr, (byte) (value & 0xFF));
 		Write((ushort) (addr + 1), (byte) (value >> 8));

@@ -12,7 +12,6 @@ public class AsyncTimer {
 	}
 
 	public void Update(ulong cycles) {
-		Console.WriteLine($"Timer got {cycles} -- waiting for {WaitingFor}");
 		while(WaitingFor <= cycles) {
 			Current = WaitingFor;
 			Runner.MoveNext();
