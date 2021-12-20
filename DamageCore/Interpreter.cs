@@ -49,5 +49,5 @@ public partial class Interpreter {
 
 	public void Branch(ushort addr) => BranchTo = addr;
 
-	void AddCycles(ulong count) => Timing.AddCycles(count * 4);
+	public void AddCycles(ulong count) => Timing.AddCycles(count * 4);
 }

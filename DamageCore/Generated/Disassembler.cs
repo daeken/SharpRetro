@@ -308,132 +308,231 @@ public partial class Disassembler {
 			return "nop";
 		}
 		insn_41:
-		/* INC-8 */
+		/* INC */
 		if((insnBytes[0] & 0xC7) == 0x4) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			pc += 1;
 			return (string) ("inc " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
 		insn_42:
-		/* DEC-8 */
+		/* DEC */
 		if((insnBytes[0] & 0xC7) == 0x5) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			pc += 1;
 			return (string) ("dec " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
 		insn_43:
+		/* INC-16 */
+		if((insnBytes[0] & 0xCF) == 0x3) {
+			var rd = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
+			pc += 1;
+			return (string) ("inc " + (string) (rd switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }));
+		}
+		insn_44:
+		/* DEC-16 */
+		if((insnBytes[0] & 0xCF) == 0xB) {
+			var rd = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
+			pc += 1;
+			return (string) ("dec " + (string) (rd switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }));
+		}
+		insn_45:
+		/* ADD-HL */
+		if((insnBytes[0] & 0xCF) == 0x9) {
+			var rs = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
+			pc += 1;
+			return (string) ("add HL, " + (string) (rs switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }));
+		}
+		insn_46:
+		/* ADD-SP-r8 */
+		if((insnBytes[0] & 0xFF) == 0xE8) {
+			var rimm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var imm = (sbyte) ((sbyte) (rimm));
+			pc += 2;
+			return (string) ("add SP, " + (string) ($"0x{(imm):x02}"));
+		}
+		insn_47:
 		/* ADD */
 		if((insnBytes[0] & 0xF8) == 0x80) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("add A," + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_44:
+		insn_48:
 		/* ADD-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xC6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("add A," + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_45:
+		insn_49:
 		/* ADC */
 		if((insnBytes[0] & 0xF8) == 0x88) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("adc A," + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_46:
+		insn_50:
 		/* ADC-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xCE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("adc A," + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_47:
+		insn_51:
 		/* SUB */
 		if((insnBytes[0] & 0xF8) == 0x90) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("sub" + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_48:
+		insn_52:
 		/* SUB-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xD6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("sub" + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_49:
+		insn_53:
 		/* SBC */
 		if((insnBytes[0] & 0xF8) == 0x98) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("sbc A," + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_50:
+		insn_54:
 		/* SBC-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xDE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("sbc A," + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_51:
+		insn_55:
 		/* AND */
 		if((insnBytes[0] & 0xF8) == 0xA0) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("and" + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_52:
+		insn_56:
 		/* AND-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xE6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("and" + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_53:
+		insn_57:
 		/* XOR */
 		if((insnBytes[0] & 0xF8) == 0xA8) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("xor" + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_54:
+		insn_58:
 		/* XOR-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xEE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("xor" + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_55:
+		insn_59:
 		/* OR */
 		if((insnBytes[0] & 0xF8) == 0xB0) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("or" + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_56:
+		insn_60:
 		/* OR-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xF6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("or" + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_57:
+		insn_61:
 		/* CP */
 		if((insnBytes[0] & 0xF8) == 0xB8) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			pc += 1;
 			return (string) ("cp" + " " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_58:
+		insn_62:
 		/* CP-imm8 */
 		if((insnBytes[0] & 0xFF) == 0xFE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			pc += 2;
 			return (string) ("cp" + " " + (string) ($"0x{(imm):x02}"));
 		}
-		insn_59:
+		insn_63:
+		/* RLA */
+		if((insnBytes[0] & 0xFF) == 0x17) {
+			pc += 1;
+			return "rla";
+		}
+		insn_64:
+		/* RL */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x10) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("rl " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_65:
+		/* RRA */
+		if((insnBytes[0] & 0xFF) == 0x1F) {
+			pc += 1;
+			return "rra";
+		}
+		insn_66:
+		/* RR */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("rr " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_67:
+		/* SLA */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x20) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("sla " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_68:
+		/* SRA */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x28) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("sra " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_69:
+		/* SWAP */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x30) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("swap " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_70:
+		/* SRL */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x38) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("srl " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_71:
+		/* RES */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x80) {
+			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("res " + (bit).ToString() + ", " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_72:
+		/* SET */
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0xC0) {
+			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			pc += 2;
+			return (string) ("set " + (bit).ToString() + ", " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
+		}
+		insn_73:
 
         return null;
     }
@@ -661,97 +760,168 @@ public partial class Disassembler {
 		insn_41:
 		if((insnBytes[0] & 0xC7) == 0x4) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-			return "INC-8";
+			return "INC";
 		}
 		insn_42:
 		if((insnBytes[0] & 0xC7) == 0x5) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-			return "DEC-8";
+			return "DEC";
 		}
 		insn_43:
+		if((insnBytes[0] & 0xCF) == 0x3) {
+			var rd = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
+			return "INC-16";
+		}
+		insn_44:
+		if((insnBytes[0] & 0xCF) == 0xB) {
+			var rd = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
+			return "DEC-16";
+		}
+		insn_45:
+		if((insnBytes[0] & 0xCF) == 0x9) {
+			var rs = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
+			return "ADD-HL";
+		}
+		insn_46:
+		if((insnBytes[0] & 0xFF) == 0xE8) {
+			var rimm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
+			var imm = (sbyte) ((sbyte) (rimm));
+			return "ADD-SP-r8";
+		}
+		insn_47:
 		if((insnBytes[0] & 0xF8) == 0x80) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "ADD";
 		}
-		insn_44:
+		insn_48:
 		if((insnBytes[0] & 0xFF) == 0xC6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "ADD-imm8";
 		}
-		insn_45:
+		insn_49:
 		if((insnBytes[0] & 0xF8) == 0x88) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "ADC";
 		}
-		insn_46:
+		insn_50:
 		if((insnBytes[0] & 0xFF) == 0xCE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "ADC-imm8";
 		}
-		insn_47:
+		insn_51:
 		if((insnBytes[0] & 0xF8) == 0x90) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "SUB";
 		}
-		insn_48:
+		insn_52:
 		if((insnBytes[0] & 0xFF) == 0xD6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "SUB-imm8";
 		}
-		insn_49:
+		insn_53:
 		if((insnBytes[0] & 0xF8) == 0x98) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "SBC";
 		}
-		insn_50:
+		insn_54:
 		if((insnBytes[0] & 0xFF) == 0xDE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "SBC-imm8";
 		}
-		insn_51:
+		insn_55:
 		if((insnBytes[0] & 0xF8) == 0xA0) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "AND";
 		}
-		insn_52:
+		insn_56:
 		if((insnBytes[0] & 0xFF) == 0xE6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "AND-imm8";
 		}
-		insn_53:
+		insn_57:
 		if((insnBytes[0] & 0xF8) == 0xA8) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "XOR";
 		}
-		insn_54:
+		insn_58:
 		if((insnBytes[0] & 0xFF) == 0xEE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "XOR-imm8";
 		}
-		insn_55:
+		insn_59:
 		if((insnBytes[0] & 0xF8) == 0xB0) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "OR";
 		}
-		insn_56:
+		insn_60:
 		if((insnBytes[0] & 0xFF) == 0xF6) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "OR-imm8";
 		}
-		insn_57:
+		insn_61:
 		if((insnBytes[0] & 0xF8) == 0xB8) {
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
 			return "CP";
 		}
-		insn_58:
+		insn_62:
 		if((insnBytes[0] & 0xFF) == 0xFE) {
 			var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
 			return "CP-imm8";
 		}
-		insn_59:
+		insn_63:
+		if((insnBytes[0] & 0xFF) == 0x17) {
+			return "RLA";
+		}
+		insn_64:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x10) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "RL";
+		}
+		insn_65:
+		if((insnBytes[0] & 0xFF) == 0x1F) {
+			return "RRA";
+		}
+		insn_66:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "RR";
+		}
+		insn_67:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x20) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "SLA";
+		}
+		insn_68:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x28) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "SRA";
+		}
+		insn_69:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x30) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "SWAP";
+		}
+		insn_70:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x38) {
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "SRL";
+		}
+		insn_71:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x80) {
+			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "RES";
+		}
+		insn_72:
+		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0xC0) {
+			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
+			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
+			return "SET";
+		}
+		insn_73:
 
         return null;
     }
 
-    public const int InstructionCount = 59 + 0;
+    public const int InstructionCount = 73 + 0;
 }

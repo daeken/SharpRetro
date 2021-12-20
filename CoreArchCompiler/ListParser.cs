@@ -284,7 +284,7 @@ public static class ListParser {
 		var name = "";
 		while(true) {
 			switch(code[i++]) {
-				case ' ': case '\t': case '\n': case '\r': case '(': case ')':
+				case ' ': case '\t': case '\n': case '\r': case '(': case ')': case ',':
 				case '\'' when inString: case '"' when inString:
 					i--;
 					return new PName(name);

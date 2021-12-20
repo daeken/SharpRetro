@@ -21,6 +21,8 @@ public class Core : ICore {
 	public Ppu Ppu;
 	bool Running;
 
+	public byte InterruptEnable, InterruptFlag;
+
 	public bool CanLoad(string path) => path.ToLower().EndsWith(".gb");
 	public void Setup(IGraphicsBackend graphicsBackend) {
 		if(graphicsBackend is IFramebufferBackend fbb)
@@ -67,6 +69,8 @@ public class Core : ICore {
 	
 	public void IoWrite(ushort addr, byte value) {
 		switch(addr) {
+			case 0xFF0F: InterruptFlag = value; Console.WriteLine($"Setting interruptflag? 0x{value:X}"); break;
+			case 0xFFFF: InterruptEnable = value; break;
 			case >= 0xFF40 and <= 0xFFfB:
 				Ppu.IoWrite(addr, value);
 				break;
@@ -80,6 +84,10 @@ public class Core : ICore {
 		switch(addr) {
 			case >= 0xFF40 and <= 0xFFfB:
 				return Ppu.IoRead(addr);
+			case 0xFF00:
+				return 0b11111111;
+			case 0xFF0F: return InterruptFlag;
+			case 0xFFFF: return InterruptEnable;
 			default:
 				Console.WriteLine($"Unhandled IO read from 0x{addr:X04}");
 				return 0;

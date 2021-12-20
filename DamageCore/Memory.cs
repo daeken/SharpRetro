@@ -15,6 +15,8 @@ public class Memory {
 	}
 
 	public void Write(ushort addr, byte value) {
+		if(addr == 0xFFB6)
+			Console.WriteLine($"Write to 0xFFB6! 0x{Core.Cpu.State.PC:X04}");
 		switch(addr) {
 			case <= 0x7FFF or >= 0xA000 and <= 0xBFFF:
 				Cartridge.Write(addr, value);

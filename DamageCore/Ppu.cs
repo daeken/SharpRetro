@@ -26,11 +26,15 @@ public class Ppu {
 
 	IEnumerable<ulong> Run() {
 		while(true) {
+			/*while(!Lcdc.HasBit(7)) {
+				yield return 70224;
+			}*/
 			for(LY = 0; LY < 144; ++LY) {
 				Mode = Mode.SearchingOAM;
 				yield return 80;
 
-				var tileDataAddr = Lcdc.HasBit(4) ? 0x8000 : 0x8800;
+				var upperIndexing = !Lcdc.HasBit(4);
+				var tileDataAddr = upperIndexing ? 0x9000 : 0x8000;
 				var bgMapAddr = Lcdc.HasBit(3) ? 0x9C00 : 0x9800;
 				var bgMap = Core.Memory.ReadBlock((ushort) bgMapAddr, 0x400);
 				var bgy = LY + SCY;
@@ -38,11 +42,12 @@ public class Ppu {
 				for(var x = 0; x < 160; ++x) {
 					var bgx = x + SCX;
 					var tmIndex = ((bgy / 8) % 32) * 32 + ((bgx / 8) % 32);
-					var tileIndex = bgMap[tmIndex];
+					var tileIndex = (int) bgMap[tmIndex];
+					if(upperIndexing)
+						tileIndex = (sbyte) tileIndex;
 					var tile = Core.Memory.ReadBlock((ushort) (tileDataAddr + tileIndex * 16 + (bgy % 8) * 2), 2);
-					var offset = (bgx % 8) * 2;
-					var sect = offset < 8 ? tile[0] : tile[1];
-					var color = (sect >> (offset % 8)) & 0b11;
+					var offset = 7 - (bgx % 8);
+					var color = ((tile[0] >> offset) & 1) | (((tile[1] >> offset) & 1) << 1);
 					color = (BGP >> (2 * color)) & 0b11;
 					var cval = color switch {
 						0b00 => 255, 0b01 => 186, 
@@ -60,10 +65,11 @@ public class Ppu {
 				yield return 204;
 			}
 
-			FramebufferBackend.Flip();
-
 			Mode = Mode.VBlank;
-			yield return 4560;
+			Core.InterruptFlag |= 1;
+			for(LY = 144; LY < 154; ++LY)
+				yield return 456;
+			FramebufferBackend.Flip();
 		}
 	}
 	

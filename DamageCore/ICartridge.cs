@@ -8,6 +8,7 @@ public interface ICartridge {
 
 	public static ICartridge Load(byte[] data) => data[0x0147] switch {
 		0x00 => new RomOnly(data),
+		0x01 => new Mbc1(data),
 		var mbc => throw new NotSupportedException($"MBC 0x{mbc:X02} unsupported")
 	};
 }
