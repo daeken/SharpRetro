@@ -29,8 +29,6 @@ public class Core : ICore {
 			FramebufferBackend = fbb;
 		else
 			throw new NotSupportedException("Given non-framebuffer graphics backend");
-
-		FramebufferBackend.Resolution = (160 * 2, 144 * 2);
 	}
 
 	public void Teardown() {
@@ -41,11 +39,7 @@ public class Core : ICore {
 		var cartridge = ICartridge.Load(File.ReadAllBytes(path));
 		if(cartridge == null) return false;
 		Timing = new Timing();
-		Cpu = new(this, cartridge) {
-			State = {
-				PC = 0x0100
-			}
-		};
+		Cpu = new(this, cartridge);
 		Memory = Cpu.Memory;
 		Ppu = new(this);
 		return true;
@@ -66,11 +60,20 @@ public class Core : ICore {
 	public void Pause() {
 		throw new NotImplementedException();
 	}
+
+	byte TempSerial;
 	
 	public void IoWrite(ushort addr, byte value) {
 		switch(addr) {
 			case 0xFF0F: InterruptFlag = value; Console.WriteLine($"Setting interruptflag? 0x{value:X}"); break;
 			case 0xFFFF: InterruptEnable = value; break;
+			case 0xFF01: TempSerial = value; break;
+			case 0xFF02:
+				if(value.HasBit(7)) {
+					Console.WriteLine($"Serial: 0x{TempSerial:X02}");
+					TempSerial = 0;
+				}
+				break;
 			case >= 0xFF40 and <= 0xFFfB:
 				Ppu.IoWrite(addr, value);
 				break;
@@ -85,7 +88,7 @@ public class Core : ICore {
 			case >= 0xFF40 and <= 0xFFfB:
 				return Ppu.IoRead(addr);
 			case 0xFF00:
-				return 0b11111111;
+				return 0b00001111;
 			case 0xFF0F: return InterruptFlag;
 			case 0xFFFF: return InterruptEnable;
 			default:

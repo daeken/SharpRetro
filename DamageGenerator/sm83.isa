@@ -578,6 +578,21 @@
             (>= result 0xFFFF))
         (= (reg-sp) (u16 result))))
 
+(def LD-HL-SP-r8
+    "11111000 iiiiiiii"
+    "ld HL, SP+$(hex imm)"
+    (names (rimm i))
+    (cycles 3)
+    (let imm (i8 rimm))
+    (mlet (sp (reg-sp)
+           result (+ (u32 sp) (u32 (i32 imm))))
+        (set-znhc
+            0
+            0
+            (h-from (u8 sp) rimm)
+            (>= result 0xFFFF))
+        (= (reg-hl) (u16 result))))
+
 (defm arith-insn (name mnem pattern eval) (block
     (def name
         (string-concat "10" pattern "rrr")
@@ -776,7 +791,7 @@
     (cycles (if (== reg 0b110) 4 2))
     (block)
     (mlet (v (reg-or-hl reg)
-           result (| (>> v 4) (& v 0b1111)))
+           result (| (>> v 4) (<< v 4)))
         (set-znhc
             (z-from result)
             0
@@ -798,6 +813,17 @@
             0
             (& v 1))
         (set-reg-or-hl reg result)))
+
+(def BIT
+    "11001011 01bbbrrr"
+    "bit $bit, $(reg-name reg)"
+    (names (reg r) (bit b))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (set-znh
+        (^ (& (>> (reg-or-hl reg) bit) 1) 1)
+        0
+        1))
 
 (def RES
     "11001011 10bbbrrr"
