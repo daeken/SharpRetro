@@ -471,60 +471,66 @@ public partial class Disassembler {
 			return (string) ("cp" + " " + (string) ($"0x{(imm):x02}"));
 		}
 		insn_64:
+		/* RLCA */
+		if((insnBytes[0] & 0xFF) == 0x7) {
+			pc += 1;
+			return "rlca";
+		}
+		insn_65:
 		/* RLA */
 		if((insnBytes[0] & 0xFF) == 0x17) {
 			pc += 1;
 			return "rla";
 		}
-		insn_65:
+		insn_66:
 		/* RL */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x10) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			pc += 2;
 			return (string) ("rl " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_66:
+		insn_67:
 		/* RRA */
 		if((insnBytes[0] & 0xFF) == 0x1F) {
 			pc += 1;
 			return "rra";
 		}
-		insn_67:
+		insn_68:
 		/* RR */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			pc += 2;
 			return (string) ("rr " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_68:
+		insn_69:
 		/* SLA */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x20) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			pc += 2;
 			return (string) ("sla " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_69:
+		insn_70:
 		/* SRA */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x28) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			pc += 2;
 			return (string) ("sra " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_70:
+		insn_71:
 		/* SWAP */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x30) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			pc += 2;
 			return (string) ("swap " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_71:
+		insn_72:
 		/* SRL */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x38) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			pc += 2;
 			return (string) ("srl " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_72:
+		insn_73:
 		/* BIT */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x40) {
 			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
@@ -532,7 +538,7 @@ public partial class Disassembler {
 			pc += 2;
 			return (string) ("bit " + (bit).ToString() + ", " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_73:
+		insn_74:
 		/* RES */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x80) {
 			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
@@ -540,7 +546,7 @@ public partial class Disassembler {
 			pc += 2;
 			return (string) ("res " + (bit).ToString() + ", " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_74:
+		insn_75:
 		/* SET */
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0xC0) {
 			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
@@ -548,7 +554,7 @@ public partial class Disassembler {
 			pc += 2;
 			return (string) ("set " + (bit).ToString() + ", " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
-		insn_75:
+		insn_76:
 
         return null;
     }
@@ -891,65 +897,69 @@ public partial class Disassembler {
 			return "CP-imm8";
 		}
 		insn_64:
+		if((insnBytes[0] & 0xFF) == 0x7) {
+			return "RLCA";
+		}
+		insn_65:
 		if((insnBytes[0] & 0xFF) == 0x17) {
 			return "RLA";
 		}
-		insn_65:
+		insn_66:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x10) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "RL";
 		}
-		insn_66:
+		insn_67:
 		if((insnBytes[0] & 0xFF) == 0x1F) {
 			return "RRA";
 		}
-		insn_67:
+		insn_68:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "RR";
 		}
-		insn_68:
+		insn_69:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x20) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "SLA";
 		}
-		insn_69:
+		insn_70:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x28) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "SRA";
 		}
-		insn_70:
+		insn_71:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x30) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "SWAP";
 		}
-		insn_71:
+		insn_72:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x38) {
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "SRL";
 		}
-		insn_72:
+		insn_73:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x40) {
 			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "BIT";
 		}
-		insn_73:
+		insn_74:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x80) {
 			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "RES";
 		}
-		insn_74:
+		insn_75:
 		if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0xC0) {
 			var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
 			var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
 			return "SET";
 		}
-		insn_75:
+		insn_76:
 
         return null;
     }
 
-    public const int InstructionCount = 75 + 0;
+    public const int InstructionCount = 76 + 0;
 }

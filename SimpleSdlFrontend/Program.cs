@@ -14,49 +14,76 @@ if(!core.CanLoad(args[1]))
 if(!core.GraphicsBackends.HasFlag(GraphicsBackend.Framebuffer))
 	throw new Exception("Core doesn't support framebuffer backend");
 
-core.Setup(new SdlFramebuffer());
+var fb = new SdlFramebuffer();
+core.Setup(fb);
 if(!core.Load(args[1]))
 	throw new Exception("Failed to load file");
 
-core.Run();
+SDL_Init(SDL_INIT_EVERYTHING);
+
+while(true) {
+	while(SDL_PollEvent(out var evt) != 0) {
+		switch(evt.type) {
+			case SDL_EventType.SDL_KEYDOWN:
+				core.KeyDown((byte) evt.key.keysym.scancode);
+				break;
+			case SDL_EventType.SDL_KEYUP:
+				core.KeyUp((byte) evt.key.keysym.scancode);
+				break;
+			case SDL_EventType.SDL_QUIT:
+				goto end;
+		}
+	}
+	
+	core.Run();
+	fb.Flip();
+}
+
+end:
 
 core.Unload();
 core.Teardown();
 
-unsafe class SdlFramebuffer : IFramebufferBackend {
+class SdlFramebuffer : IFramebufferBackend {
 	(int, int) _Resolution;
 	public (int Width, int Height) Resolution {
 		get => _Resolution;
 		set {
 			if(_Resolution == value) return;
 			_Resolution = value;
-			SDL_SetWindowSize(Window, value.Width, value.Height);
-			Pixels = null;
-			RefreshPixels();
+			SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(Window), out var dm);
+			var (w, h) = value;
+			var scale = 1;
+			while(true) {
+				scale++;
+				var (sw, sh) = (w * scale, h * scale);
+				if(sw > dm.w || sh > dm.h) break;
+			}
+			scale--;
+			if(scale != 1) scale--;
+			SDL_SetWindowSize(Window, w * scale, h * scale);
+			SDL_SetWindowPosition(Window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+			Framebuffer = new byte[w * h * 3];
+			Texture = SDL_CreateTexture(Renderer, SDL_PIXELFORMAT_RGB24,
+				(int) SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING, w, h);
 		}
 	}
-	readonly IntPtr Window;
-	byte* Pixels;
-
-	public SdlFramebuffer() {
-		SDL_Init(SDL_INIT_VIDEO);
-		Window = SDL_CreateWindow("SharpRetro", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
-		Resolution = (640, 480);
-	}
-
-	void RefreshPixels() {
-		if(Pixels != null) return;
-		var surfacePtr = SDL_GetWindowSurface(Window);
-		var surface = Marshal.PtrToStructure<SDL_Surface>(surfacePtr);
-		Pixels = (byte*) surface.pixels;
-		Framebuffer = new byte[Resolution.Width * Resolution.Height * 4];
-	}
-
+	readonly IntPtr Window, Renderer;
+	IntPtr Texture;
 	public byte[] Framebuffer { get; private set; }
 
-	public void Flip() {
-		var fbs = new Span<byte>(Pixels, Framebuffer.Length);
-		Framebuffer.CopyTo(fbs);
-		SDL_UpdateWindowSurface(Window);
+
+	public SdlFramebuffer() {
+		Window = SDL_CreateWindow("SharpRetro", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
+		Renderer = SDL_CreateRenderer(Window, -1, SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
+		//Resolution = (640, 480);
+	}
+
+	internal unsafe void Flip() {
+		fixed(byte* fbptr = Framebuffer)
+			SDL_UpdateTexture(Texture, IntPtr.Zero, (IntPtr) fbptr, Resolution.Width * 3);
+		SDL_RenderClear(Renderer);
+		SDL_RenderCopy(Renderer, Texture, IntPtr.Zero, IntPtr.Zero);
+		SDL_RenderPresent(Renderer);
 	}
 }

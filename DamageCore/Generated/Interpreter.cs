@@ -848,6 +848,16 @@ public partial class Interpreter {
 		return true;
 	}
 	insn_64:
+	/* RLCA */
+	if((insnBytes[0] & 0xFF) == 0x7) {
+		pc += 1;
+		var a = (byte) ((0x7U) switch { 0b110 => throw new NotSupportedException(), {} i => State.Registers[i] });
+		State.Flags = (byte) (((((((byte) ((byte) ((((byte) ((byte) (State.Flags))) & ((byte) (0xFU)))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x7U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x6U))))) | ((byte) ((byte) (((byte) ((byte) (0x0U))) << (int) (0x5U))))) | ((byte) ((byte) (((byte) ((byte) ((byte) ((a) >> (int) (0x7U))))) << (int) (0x4U))))));
+		State.Registers[(int) 0x7U] = (byte) ((byte) ((((byte) ((byte) ((a) << (int) (0x1U)))) | ((byte) ((byte) ((a) >> (int) (0x7U)))))));
+		AddCycles(0x1U);
+		return true;
+	}
+	insn_65:
 	/* RLA */
 	if((insnBytes[0] & 0xFF) == 0x17) {
 		pc += 1;
@@ -858,7 +868,7 @@ public partial class Interpreter {
 		AddCycles(0x1U);
 		return true;
 	}
-	insn_65:
+	insn_66:
 	/* RL */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x10) {
 		var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
@@ -874,7 +884,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_66:
+	insn_67:
 	/* RRA */
 	if((insnBytes[0] & 0xFF) == 0x1F) {
 		pc += 1;
@@ -885,7 +895,7 @@ public partial class Interpreter {
 		AddCycles(0x1U);
 		return true;
 	}
-	insn_67:
+	insn_68:
 	/* RR */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
 		var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
@@ -901,7 +911,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_68:
+	insn_69:
 	/* SLA */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x20) {
 		var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
@@ -917,7 +927,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_69:
+	insn_70:
 	/* SRA */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x28) {
 		var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
@@ -933,7 +943,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_70:
+	insn_71:
 	/* SWAP */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x30) {
 		var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
@@ -949,7 +959,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_71:
+	insn_72:
 	/* SRL */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x38) {
 		var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
@@ -965,7 +975,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_72:
+	insn_73:
 	/* BIT */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x40) {
 		var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
@@ -975,7 +985,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_73:
+	insn_74:
 	/* RES */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0x80) {
 		var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
@@ -989,7 +999,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_74:
+	insn_75:
 	/* SET */
 	if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xC0) == 0xC0) {
 		var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
@@ -1003,7 +1013,7 @@ public partial class Interpreter {
 		AddCycles((byte) (((uint) (((reg) == (0x6U)) ? 1U : 0U) != 0) ? (0x4U) : (0x2U)));
 		return true;
 	}
-	insn_75:
+	insn_76:
 
         return false;
     }

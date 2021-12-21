@@ -31,4 +31,7 @@ public interface ICore {
 			.Where(type => typeof(ICore).IsAssignableFrom(type))
 			.Select(type => (ICore) Activator.CreateInstance(type)).FirstOrDefault();
 	}
+	
+	public void KeyDown(byte scancode) { }
+	public void KeyUp(byte scancode) { }
 }

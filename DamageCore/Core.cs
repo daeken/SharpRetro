@@ -1,4 +1,5 @@
-﻿using LibSharpRetro;
+﻿using System.Web;
+using LibSharpRetro;
 
 namespace DamageCore;
 
@@ -19,7 +20,9 @@ public class Core : ICore {
 	public Cpu Cpu;
 	public Memory Memory;
 	public Ppu Ppu;
-	bool Running;
+	public Joypad Joypad;
+	
+	public bool Running { get; private set; }
 
 	public byte InterruptEnable, InterruptFlag;
 
@@ -42,6 +45,7 @@ public class Core : ICore {
 		Cpu = new(this, cartridge);
 		Memory = Cpu.Memory;
 		Ppu = new(this);
+		Joypad = new();
 		return true;
 	}
 
@@ -61,16 +65,22 @@ public class Core : ICore {
 		throw new NotImplementedException();
 	}
 
+	string SerialOutput = "";
 	byte TempSerial;
 	
 	public void IoWrite(ushort addr, byte value) {
 		switch(addr) {
 			case 0xFF0F: InterruptFlag = value; Console.WriteLine($"Setting interruptflag? 0x{value:X}"); break;
 			case 0xFFFF: InterruptEnable = value; break;
+			case 0xFF00: Joypad.IoWrite(addr, value); break;
 			case 0xFF01: TempSerial = value; break;
 			case 0xFF02:
 				if(value.HasBit(7)) {
-					Console.WriteLine($"Serial: 0x{TempSerial:X02}");
+					if(TempSerial == 0x0A) {
+						Console.WriteLine($"Serial debug: {SerialOutput}");
+						SerialOutput = "";
+					} else
+						SerialOutput += (char) TempSerial;
 					TempSerial = 0;
 				}
 				break;
@@ -87,8 +97,7 @@ public class Core : ICore {
 		switch(addr) {
 			case >= 0xFF40 and <= 0xFFfB:
 				return Ppu.IoRead(addr);
-			case 0xFF00:
-				return 0b00001111;
+			case 0xFF00: return Joypad.IoRead(addr);
 			case 0xFF0F: return InterruptFlag;
 			case 0xFFFF: return InterruptEnable;
 			default:
@@ -96,4 +105,7 @@ public class Core : ICore {
 				return 0;
 		}
 	}
+
+	public void KeyDown(byte scancode) => Joypad.KeyDown(scancode);
+	public void KeyUp(byte scancode) => Joypad.KeyUp(scancode);
 }

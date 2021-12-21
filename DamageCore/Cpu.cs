@@ -14,7 +14,7 @@ public class Cpu {
 	}
 
 	public void Run() {
-		while(true) {
+		while(Core.Running) {
 			State.InterruptsEnabledPending = State.InterruptsEnableScheduled;
 			/*Console.WriteLine($"PC 0x{State.PC:X04}  SP 0x{State.SP:X04}");
 			Console.WriteLine($"A 0x{State.Registers[0b111]:X02}  B 0x{State.Registers[0b000]:X02}");

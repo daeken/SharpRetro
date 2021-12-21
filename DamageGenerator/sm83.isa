@@ -694,6 +694,20 @@
             (h-from-sub lhs rhs)
             (c-from result))))
 
+(def RLCA
+    "00000111"
+    "rlca"
+    (names)
+    (cycles 1)
+    (block)
+    (let a (reg-a)
+        (set-znhc
+            0
+            0
+            0
+            (>> a 7))
+        (= (reg-a) (| (<< a 1) (>> a 7)))))
+
 (def RLA
     "00010111"
     "rla"
