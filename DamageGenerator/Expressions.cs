@@ -83,7 +83,10 @@ public class Expressions : Builtin {
 							var aftemp = Core.TempName();
 							c += $"var {aftemp} = (ushort) {GenerateExpression(list[2])};";
 							c += $"State.Registers[0b111] = (byte) ({aftemp} >> 8);";
-							c += $"State.Flags = (byte) ({aftemp} & 0xFF);";
+							c += $"State.Flags = (byte) ({aftemp} & 0xF0);";
+							return;
+						case PName("reg-flags"):
+							c += $"State.Flags = (byte) ({GenerateExpression(list[2])} & 0xF0);";
 							return;
 						case PName("reg-sp"):
 							c += $"State.SP = (ushort) {GenerateExpression(list[2])};";
@@ -125,5 +128,7 @@ public class Expressions : Builtin {
 
 		BranchExpression("cycles", _ => EType.Unit.AsRuntime(), list => $"AddCycles({GenerateExpression(list[1])})")
 			.NoInterpret();
+
+		Expression("halt", _ => EType.Unit.AsRuntime(), _ => "Halt()").NoInterpret();
 	}
 }

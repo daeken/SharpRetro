@@ -2,7 +2,7 @@ namespace DamageCore;
 
 public class AsyncTimer {
 	readonly IEnumerator<ulong> Runner;
-	ulong WaitingFor = ulong.MaxValue;
+	public ulong WaitingFor = ulong.MaxValue;
 	ulong Current;
 	
 	public AsyncTimer(IEnumerable<ulong> runner) {
@@ -31,4 +31,9 @@ public class Timing {
 	}
 
 	public void TimeSync(IEnumerable<ulong> runner) => Timers.Add(new AsyncTimer(runner));
+
+	public void WarpToNextWait() {
+		var waitingFor = Timers.Select(x => x.WaitingFor).Where(x => x != ulong.MaxValue).Min();
+		AddCycles(waitingFor - Cycles);
+	}
 }

@@ -726,6 +726,21 @@
             (>> v 7))
         (= (reg-a) result)))
 
+(def RLC
+    "11001011 00000rrr"
+    "rlc $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (<< v 1) (>> v 7)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (>> v 7))
+        (set-reg-or-hl reg result)))
+
 (def RL
     "11001011 00010rrr"
     "rl $(reg-name reg)"
@@ -739,6 +754,35 @@
             0
             0
             (>> v 7))
+        (set-reg-or-hl reg result)))
+
+(def RRCA
+    "00001111"
+    "rrca"
+    (names)
+    (cycles 1)
+    (block)
+    (let a (reg-a)
+        (set-znhc
+            0
+            0
+            0
+            (& a 1))
+        (= (reg-a) (| (>> a 1) (<< a 7)))))
+
+(def RRC
+    "11001011 00001rrr"
+    "rrc $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (>> v 1) (<< v 7)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (& v 1))
         (set-reg-or-hl reg result)))
 
 (def RRA
@@ -878,3 +922,19 @@
             n
             0
             c)))
+
+(def HALT
+    "01110110"
+    "halt"
+    (names)
+    (cycles 1)
+    (block)
+    (halt))
+
+(def STOP
+    "00010000"
+    "stop"
+    (names)
+    (cycles 1)
+    (block)
+    (block))

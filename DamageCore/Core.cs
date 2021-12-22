@@ -20,6 +20,7 @@ public class Core : ICore {
 	public Cpu Cpu;
 	public Memory Memory;
 	public Ppu Ppu;
+	public Timer Timer;
 	public Joypad Joypad;
 	
 	public bool Running { get; private set; }
@@ -45,6 +46,7 @@ public class Core : ICore {
 		Cpu = new(this, cartridge);
 		Memory = Cpu.Memory;
 		Ppu = new(this);
+		Timer = new(this);
 		Joypad = new();
 		return true;
 	}
@@ -95,14 +97,15 @@ public class Core : ICore {
 
 	public byte IoRead(ushort addr) {
 		switch(addr) {
-			case >= 0xFF40 and <= 0xFFfB:
-				return Ppu.IoRead(addr);
+			case 0xFF4D: return 0xFF;
+			case >= 0xFF40 and <= 0xFFFB: return Ppu.IoRead(addr);
+			case >= 0xFF04 and <= 0xFF07: return Timer.IoRead(addr);
 			case 0xFF00: return Joypad.IoRead(addr);
 			case 0xFF0F: return InterruptFlag;
 			case 0xFFFF: return InterruptEnable;
 			default:
 				Console.WriteLine($"Unhandled IO read from 0x{addr:X04}");
-				return 0;
+				return 0xFF;
 		}
 	}
 
