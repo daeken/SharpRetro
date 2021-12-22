@@ -14,8 +14,8 @@ public class Joypad {
 			case 0x28: Start = 1; break;
 			case 0x52: Up = 1; break;
 			case 0x51: Down = 1; break;
-			case 0x50: Right = 1; break;
-			case 0x4F: Left = 1; break;
+			case 0x50: Left = 1; break;
+			case 0x4F: Right = 1; break;
 		}
 	}
 	
@@ -27,8 +27,8 @@ public class Joypad {
 			case 0x28: Start = Start == 1 ? -1 : 0; break;
 			case 0x52: Up = Up == 1 ? -1 : 0; break;
 			case 0x51: Down = Down == 1 ? -1 : 0; break;
-			case 0x50: Right = Right == 1 ? -1 : 0; break;
-			case 0x4F: Left = Left == 1 ? -1 : 0; break;
+			case 0x50: Left = Left == 1 ? -1 : 0; break;
+			case 0x4F: Right = Right == 1 ? -1 : 0; break;
 		}
 	}
 

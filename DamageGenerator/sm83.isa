@@ -15,6 +15,9 @@
 (defm reg-l () (reg 0b101))
 (defm reg-a () (reg 0b111))
 
+(defm reg-flag-z () (u1 (>> (reg-flags) 7)))
+(defm reg-flag-n () (u1 (& (>> (reg-flags) 6) 1)))
+(defm reg-flag-h () (u1 (& (>> (reg-flags) 5) 1)))
 (defm reg-flag-c () (u1 (& (>> (reg-flags) 4) 1)))
 
 (defm reg-name (r)
@@ -45,7 +48,7 @@
     "ld $(reg-name rd), $(reg-name rs)"
     (names (rd d) (rs s))
     (cycles 1)
-    (requires (!= rs 0b110))
+    (requires (& (!= rd 0b110) (!= rs 0b110)))
     (= (reg rd) (reg rs)))
 
 (def LD-rd-imm8
@@ -854,3 +857,24 @@
     (cycles (if (== reg 0b110) 4 2))
     (block)
     (set-reg-or-hl reg (| (reg-or-hl reg) (<< (u8 1) bit))))
+
+(def DAA
+    "00100111"
+    "daa"
+    (names)
+    (cycles 1)
+    (block)
+    (mlet (n (reg-flag-n)
+           h (reg-flag-h)
+           c (reg-flag-c)
+           a (reg-a))
+        (= (reg-a) (if n
+            (+ (if c -0x60 0)
+               (if h -0x6 0))
+            (+ (if (| c (> a 0x99)) (block (= c 1) 0x60) 0)
+               (if (| h (> (& a 0xF) 0x9)) 0x6 0))))
+        (set-znhc
+            (z-from (reg-a))
+            n
+            0
+            c)))

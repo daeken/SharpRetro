@@ -1,3 +1,5 @@
+using LibSharpRetro;
+
 namespace DamageCore;
 
 public class Memory {
@@ -36,8 +38,11 @@ public class Memory {
 	}
 
 	public void Write(ushort addr, byte value) {
-		if(addr == 0xFF85)
-			Console.WriteLine($"Write to 0xFF85! 0x{Core.Cpu.State.PC:X04}");
+		//Console.WriteLine($"MEMWRITE 0x{addr:X04} == 0x{value:X02}");
+		//if(addr is >= 0x9800 and <= 0x9FFF)
+		//	Console.WriteLine($"Write to tile map! 0x{addr:X04} == 0x{value:X02}");
+		//if(addr == 0xFF85)
+		//	Console.WriteLine($"Write to 0xFF85! 0x{Core.Cpu.State.PC:X04}");
 		switch(addr) {
 			case <= 0x7FFF or >= 0xA000 and <= 0xBFFF:
 				Cartridge.Write(addr, value);
@@ -69,20 +74,25 @@ public class Memory {
 		}
 	}
 
-	public byte Read(ushort addr) => addr switch {
-		<= 0xFF when !BootromDisabled => Bootrom[addr], 
-		<= 0x7FFF or >= 0xA000 and <= 0xBFFF => Cartridge.Read(addr), 
-		<= 0x9FFF => VRam[addr - 0x8000],
-		<= 0xDFFF => WRam[addr - 0xC000],
-		<= 0xFDFF => Read((ushort) (addr - 0x2000)),
-		<= 0xFE9F => Oam[addr - 0xFE00],
-		<= 0xFEFF => 0,
-		<= 0xFF7F or 0xFFFF => Core.IoRead(addr),
-		<= 0xFFFE => HRam[addr - 0xFF80]
-	};
+	public byte Read(ushort addr, bool inter = false) {
+		var value = addr switch {
+			<= 0xFF when !BootromDisabled => Bootrom[addr],
+			<= 0x7FFF or >= 0xA000 and <= 0xBFFF => Cartridge.Read(addr),
+			<= 0x9FFF => VRam[addr - 0x8000],
+			<= 0xDFFF => WRam[addr - 0xC000],
+			<= 0xFDFF => Read((ushort) (addr - 0x2000)),
+			<= 0xFE9F => Oam[addr - 0xFE00],
+			<= 0xFEFF => 0,
+			<= 0xFF7F or 0xFFFF => Core.IoRead(addr),
+			<= 0xFFFE => HRam[addr - 0xFF80]
+		};
+		//if(!inter)
+		//	Console.WriteLine($"MEMREAD 0x{addr:X04} == 0x{value:X02}");
+		return (byte) value;
+	}
 
 	public byte[] ReadBlock(ushort addr, int length) =>
-		Enumerable.Range(0, length).Select(i => Read((ushort) (addr + i))).ToArray();
+		Enumerable.Range(0, length).Select(i => Read((ushort) (addr + i), true)).ToArray();
 
 	public void Write16(ushort addr, ushort value) {
 		Write(addr, (byte) (value & 0xFF));
@@ -91,4 +101,7 @@ public class Memory {
 
 	public ushort Read16(ushort addr) =>
 		(ushort) (Read(addr) | (Read((ushort) (addr + 1)) << 8));
+
+	public void WriteBlock(ushort addr, byte[] data) =>
+		data.ForEach((x, i) => Write((ushort) (addr + i), x));
 }

@@ -24,7 +24,7 @@ class ControlFlow : Builtin {
 			.Interpret((list, state) => state.Evaluate(list.Skip(1)));
 			
 		Expression("block", list => list.Last().Type, 
-			list => $@"(() => {GenerateType(list.Type)} {{
+			list => $@"LibSharpRetro.FunctionalHelpers.Funcify(() => {{
 {string.Join('\n', list.Skip(1).Select((x, i) => {
 	string code;
 	if(x is PList xl) {
@@ -32,9 +32,9 @@ class ControlFlow : Builtin {
 		GenerateStatement(c, xl);
 		code = c.Code;
 	} else
-		code = GenerateExpression(x) + ";";
+		code = $"({GenerateExpression(x)});";
 	if(i == list.Count - 2)
-		return $"\t\treturn {code.Trim()}";
+		return $"\t\treturn ({GenerateType(list.Type)}) {code.Trim()}";
 	return $"\t\t{code.Trim()}";
 }))}
 	}})()", 
@@ -99,7 +99,8 @@ class ControlFlow : Builtin {
 			var b = GenerateExpression(list[3]);
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
-			return $"({GenerateExpression(list[1])} != 0) ? {a} : {b}";
+			var type = GenerateType(list[2].Type);
+			return $"({GenerateExpression(list[1])} != 0) ? ({type}) ({a}) : ({type}) ({b})";
 		}, list => {
 			var a = GenerateExpression(list[2]);
 			var b = GenerateExpression(list[3]);

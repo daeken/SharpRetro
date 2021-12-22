@@ -10,7 +10,7 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xC0) == 0x40) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-			if(((uint) (((rs) != (0x6U)) ? 1U : 0U)) == 0)
+			if(((uint) ((((uint) ((uint) (((rd) != (0x6U)) ? 1U : 0U))) & ((uint) ((uint) (((rs) != (0x6U)) ? 1U : 0U)))))) == 0)
 				goto insn_1;
 			pc += 1;
 			return (string) ("ld " + (string) (rd switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }) + ", " + (string) (rs switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
@@ -174,14 +174,14 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xCF) == 0xC5) {
 			var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
 			pc += 1;
-			return (string) ("push " + (string) (((uint) (((r) == (0x3U)) ? 1U : 0U) != 0) ? ("AF") : ((string) (r switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }))));
+			return (string) ("push " + (string) (((uint) (((r) == (0x3U)) ? 1U : 0U) != 0) ? (string) (("AF")) : (string) (((string) (r switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" })))));
 		}
 		insn_23:
 		/* POP-rr */
 		if((insnBytes[0] & 0xCF) == 0xC1) {
 			var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
 			pc += 1;
-			return (string) ("pop " + (string) (((uint) (((r) == (0x3U)) ? 1U : 0U) != 0) ? ("AF") : ((string) (r switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" }))));
+			return (string) ("pop " + (string) (((uint) (((r) == (0x3U)) ? 1U : 0U) != 0) ? (string) (("AF")) : (string) (((string) (r switch { (byte) (0x0U) => "BC", (byte) (0x1U) => "DE", (byte) (0x2U) => "HL", _ => "SP" })))));
 		}
 		insn_24:
 		/* JP-nn */
@@ -555,6 +555,12 @@ public partial class Disassembler {
 			return (string) ("set " + (bit).ToString() + ", " + (string) (reg switch { (byte) (0x0U) => "B", (byte) (0x1U) => "C", (byte) (0x2U) => "D", (byte) (0x3U) => "E", (byte) (0x4U) => "H", (byte) (0x5U) => "L", (byte) (0x7U) => "A", _ => "(HL)" }));
 		}
 		insn_76:
+		/* DAA */
+		if((insnBytes[0] & 0xFF) == 0x27) {
+			pc += 1;
+			return "daa";
+		}
+		insn_77:
 
         return null;
     }
@@ -563,7 +569,7 @@ public partial class Disassembler {
 		if((insnBytes[0] & 0xC0) == 0x40) {
 			var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
 			var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-			if(((uint) (((rs) != (0x6U)) ? 1U : 0U)) == 0)
+			if(((uint) ((((uint) ((uint) (((rd) != (0x6U)) ? 1U : 0U))) & ((uint) ((uint) (((rs) != (0x6U)) ? 1U : 0U)))))) == 0)
 				goto insn_1;
 			return "LD-rd-rs";
 		}
@@ -957,9 +963,13 @@ public partial class Disassembler {
 			return "SET";
 		}
 		insn_76:
+		if((insnBytes[0] & 0xFF) == 0x27) {
+			return "DAA";
+		}
+		insn_77:
 
         return null;
     }
 
-    public const int InstructionCount = 76 + 0;
+    public const int InstructionCount = 77 + 0;
 }

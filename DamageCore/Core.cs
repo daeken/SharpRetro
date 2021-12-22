@@ -5,7 +5,7 @@ namespace DamageCore;
 
 public class Core : ICore {
 	public string Name => "Damage";
-	public string ShortDescription => "Game Boy/Game Boy Color core";
+	public string ShortDescription => "Game Boy core";
 	public string LongDescription => null;
 	public bool Pausable => true;
 	public bool SupportSaveStates => true;
