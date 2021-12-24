@@ -27,7 +27,7 @@ public class Mbc5 : ICartridge {
 			case < 0x4000: RomBankUpper = (byte) (value & 1); break;
 			case < 0x6000: RamBank = value & 0xF; break;
 			case >= 0xA000 and <= 0xBFFF when EramEnabled:
-				Eram[addr - 0xA000] = value;
+				Eram[0x2000 * RamBank + (addr & 0x1FFF)] = value;
 				break;
 		}
 	}
