@@ -15,7 +15,8 @@ if(!core.GraphicsBackends.HasFlag(GraphicsBackend.Framebuffer))
 	throw new Exception("Core doesn't support framebuffer backend");
 
 var fb = new SdlFramebuffer();
-core.Setup(fb);
+var ab = new SdlAudio();
+core.Setup(fb, ab);
 if(!core.Load(args[1]))
 	throw new Exception("Failed to load file");
 
@@ -85,5 +86,43 @@ class SdlFramebuffer : IFramebufferBackend {
 		SDL_RenderClear(Renderer);
 		SDL_RenderCopy(Renderer, Texture, IntPtr.Zero, IntPtr.Zero);
 		SDL_RenderPresent(Renderer);
+	}
+}
+
+class SdlAudio : IAudioBackend {
+	public int SampleRate { get; set; } = 44100;
+	public int Channels { get; set; } = 2;
+	readonly SDL_AudioSpec Requested, Got;
+
+	readonly Queue<short> RawSamples = new();
+	bool Playing;
+
+	public SdlAudio() {
+		Requested = new SDL_AudioSpec {
+			freq = 44100, 
+			format = AUDIO_S16SYS, 
+			channels = 2, 
+			silence = 0, 
+			samples = 256, 
+			callback = Feed
+		};
+		SDL_OpenAudio(ref Requested, out Got);
+	}
+
+	unsafe void Feed(IntPtr _, IntPtr stream, int len) {
+		lock(RawSamples) {
+			var span = new Span<short>((void*) stream, len / 2);
+			for(var i = 0; i < span.Length && RawSamples.TryDequeue(out var sample); ++i)
+				span[i] = sample;
+		}
+	}
+	
+	public void AddSamples(IEnumerable<short> data) {
+		lock(RawSamples)
+			data.ForEach(RawSamples.Enqueue);
+		if(!Playing) {
+			Playing = true;
+			SDL_PauseAudio(0);
+		}
 	}
 }

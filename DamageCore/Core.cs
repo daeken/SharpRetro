@@ -15,11 +15,13 @@ public class Core : ICore {
 	[UserOption("Preserve aspect ratio")] public bool PreserveAspectRatio = true;
 
 	public IFramebufferBackend FramebufferBackend;
+	public IAudioBackend AudioBackend;
 
 	public Timing Timing;
 	public Cpu Cpu;
 	public Memory Memory;
 	public Ppu Ppu;
+	public Apu Apu;
 	public Timer Timer;
 	public Joypad Joypad;
 	
@@ -28,11 +30,12 @@ public class Core : ICore {
 	public byte InterruptEnable, InterruptFlag;
 
 	public bool CanLoad(string path) => path.ToLower().EndsWith(".gb");
-	public void Setup(IGraphicsBackend graphicsBackend) {
+	public void Setup(IGraphicsBackend graphicsBackend, IAudioBackend audioBackend) {
 		if(graphicsBackend is IFramebufferBackend fbb)
 			FramebufferBackend = fbb;
 		else
 			throw new NotSupportedException("Given non-framebuffer graphics backend");
+		AudioBackend = audioBackend;
 	}
 
 	public void Teardown() {
@@ -46,6 +49,7 @@ public class Core : ICore {
 		Cpu = new(this, cartridge);
 		Memory = Cpu.Memory;
 		Ppu = new(this);
+		Apu = new(this);
 		Timer = new(this);
 		Joypad = new();
 		return true;

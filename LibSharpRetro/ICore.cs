@@ -13,7 +13,7 @@ public interface ICore {
 	
 	bool CanLoad(string path) => true;
 
-	void Setup(IGraphicsBackend graphicsBackend);
+	void Setup(IGraphicsBackend graphicsBackend, IAudioBackend audioBackend);
 	void Teardown();
 
 	bool Load(string path);
