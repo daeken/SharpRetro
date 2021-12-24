@@ -86,6 +86,7 @@ public class Core : ICore {
 					TempSerial = 0;
 				}
 				break;
+			case >= 0xFF04 and <= 0xFF07: Timer.IoWrite(addr, value); break;
 			case >= 0xFF40 and <= 0xFFfB:
 				Ppu.IoWrite(addr, value);
 				break;

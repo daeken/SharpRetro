@@ -19,7 +19,7 @@ public partial class Interpreter {
 		var dasm = Disassembler.Disassemble(insns, pc);
 		if(dasm == null)
 			throw new NotImplementedException($"Unsupported instruction at 0x{pc:X04}: {string.Join(' ', insns.ToArray().Select(n => $"{n:X02}"))}");
-		Console.WriteLine($"Disassembly: {dasm}    {Disassembler.ClassifyInstruction(insns)}");
+		//Console.WriteLine($"Disassembly: {dasm}    {Disassembler.ClassifyInstruction(insns)}");
 		if(!Interpret(insns, ref pc))
 			throw new NotImplementedException($"Interpretation failed at 0x{pc:X04} (or 0x{State.PC:X04} ?)");
 		State.PC = BranchTo ?? pc;

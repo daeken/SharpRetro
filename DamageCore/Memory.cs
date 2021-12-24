@@ -39,10 +39,6 @@ public class Memory {
 
 	public void Write(ushort addr, byte value) {
 		//Console.WriteLine($"MEMWRITE 0x{addr:X04} == 0x{value:X02}");
-		//if(addr is >= 0x9800 and <= 0x9FFF)
-		//	Console.WriteLine($"Write to tile map! 0x{addr:X04} == 0x{value:X02}");
-		//if(addr == 0xFF85)
-		//	Console.WriteLine($"Write to 0xFF85! 0x{Core.Cpu.State.PC:X04}");
 		switch(addr) {
 			case <= 0x7FFF or >= 0xA000 and <= 0xBFFF:
 				Cartridge.Write(addr, value);
@@ -86,8 +82,7 @@ public class Memory {
 			<= 0xFF7F or 0xFFFF => Core.IoRead(addr),
 			<= 0xFFFE => HRam[addr - 0xFF80]
 		};
-		//if(!inter)
-		//	Console.WriteLine($"MEMREAD 0x{addr:X04} == 0x{value:X02}");
+		//if(!inter) Console.WriteLine($"MEMREAD 0x{addr:X04} == 0x{value:X02}");
 		return (byte) value;
 	}
 

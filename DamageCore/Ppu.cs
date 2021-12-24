@@ -49,7 +49,7 @@ public class Ppu {
 							sy = (tallMode ? 15 : 7) - sy;
 						Debug.Assert(sy >= 0 && sy < (tallMode ? 16 : 8));
 						var tin = oam[oi + 2];
-						sprites.Add((oam[oi + 1], sy, tallMode ? (sy < 8 ? tin & 0xFE : tin | 1) : tin, flags));
+						sprites.Add((oam[oi + 1], sy % 8, tallMode ? (sy < 8 ? tin & 0xFE : tin | 1) : tin, flags));
 					}
 				}
 				yield return 80;
@@ -81,7 +81,7 @@ public class Ppu {
 							if(!flags.HasBit(5))
 								xOff = 7 - xOff;
 							Debug.Assert(xOff is >= 0 and < 8);
-							tile = Core.Memory.ReadBlock((ushort) (tileDataAddr + sti * 16 + sy * 2), 2);
+							tile = Core.Memory.ReadBlock((ushort) (0x8000 + sti * 16 + sy * 2), 2);
 							var sColor = ((tile[0] >> xOff) & 1) | (((tile[1] >> xOff) & 1) << 1);
 							if(sColor == 0b00) continue;
 							if(flags.HasBit(7) && bgColor != 0b00)

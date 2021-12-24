@@ -285,7 +285,7 @@
 (defm cc-taken (cc)
     (match (>> cc 1)
         0 (== (>> (reg-flags) 7) (& cc 1))
-          (== (& (>> (reg-flags) 6) 1) (& cc 1))))
+          (== (& (>> (reg-flags) 4) 1) (& cc 1))))
 
 (def JP-cc-imm16
     "110cc010 LLLLLLLL MMMMMMMM"
@@ -531,7 +531,7 @@
            result (- lhs 1))
         (set-znh
             (z-from result)
-            0
+            1
             (h-from-sub lhs 1))
         (set-reg-or-hl rd result)))
 
@@ -572,14 +572,13 @@
     (names (rimm i))
     (cycles 4)
     (let imm (i8 rimm))
-    (mlet (sp (reg-sp)
-           result (+ (u32 sp) (u32 (i32 imm))))
+    (let sp (reg-sp)
         (set-znhc
             0
             0
             (h-from (u8 sp) rimm)
-            (>= result 0xFFFF))
-        (= (reg-sp) (u16 result))))
+            (c-from (+ (& sp 0xff) rimm)))
+        (= (reg-sp) (u16 (+ (u32 sp) (u32 (i32 imm)))))))
 
 (def LD-HL-SP-r8
     "11111000 iiiiiiii"
@@ -587,14 +586,13 @@
     (names (rimm i))
     (cycles 3)
     (let imm (i8 rimm))
-    (mlet (sp (reg-sp)
-           result (+ (u32 sp) (u32 (i32 imm))))
+    (let sp (reg-sp)
         (set-znhc
             0
             0
             (h-from (u8 sp) rimm)
-            (>= result 0xFFFF))
-        (= (reg-hl) (u16 result))))
+            (c-from (+ (& sp 0xff) rimm)))
+        (= (reg-hl) (u16 (+ (u32 sp) (u32 (i32 imm)))))))
 
 (defm arith-insn (name mnem pattern eval) (block
     (def name
@@ -912,11 +910,11 @@
            h (reg-flag-h)
            c (reg-flag-c)
            a (reg-a))
-        (= (reg-a) (if n
+        (= (reg-a) (+ a (if n
             (+ (if c -0x60 0)
                (if h -0x6 0))
             (+ (if (| c (> a 0x99)) (block (= c 1) 0x60) 0)
-               (if (| h (> (& a 0xF) 0x9)) 0x6 0))))
+               (if (| h (> (& a 0xF) 0x9)) 0x6 0)))))
         (set-znhc
             (z-from (reg-a))
             n
