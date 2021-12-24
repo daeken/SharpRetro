@@ -55,19 +55,35 @@ public class Ppu {
 				yield return 80;
 
 				var upperIndexing = !Lcdc.HasBit(4);
-				var tileDataAddr = upperIndexing ? 0x9000 : 0x8000;
+				var bgTileDataAddr = upperIndexing ? 0x9000 : 0x8000;
 				var bgMapAddr = Lcdc.HasBit(3) ? 0x9C00 : 0x9800;
 				var bgMap = Core.Memory.ReadBlock((ushort) bgMapAddr, 0x400);
 				var bgy = LY + SCY;
+				var winMapAddr = Lcdc.HasBit(6) ? 0x9C00 : 0x9800;
+				var winy = LY - WY;
+				var inWindow = Lcdc.HasBit(5) && winy >= 0;
+				var winMap = inWindow ? Core.Memory.ReadBlock((ushort) winMapAddr, 0x400) : null;
 				for(var x = 0; x < 160; ++x) {
-					var bgx = x + SCX;
-					var tmIndex = ((bgy / 8) % 32) * 32 + ((bgx / 8) % 32);
-					var tileIndex = (int) bgMap[tmIndex];
-					if(upperIndexing)
-						tileIndex = (sbyte) tileIndex;
-					var tile = Core.Memory.ReadBlock((ushort) (tileDataAddr + tileIndex * 16 + (bgy % 8) * 2), 2);
-					var offset = 7 - (bgx % 8);
-					var bgColor = ((tile[0] >> offset) & 1) | (((tile[1] >> offset) & 1) << 1);
+					int bgColor;
+					if(inWindow && x + 7 >= WX) {
+						var winx = x + 7 - WX;
+						var tmIndex = ((winy / 8) % 32) * 32 + ((winx / 8) % 32);
+						var tileIndex = (int) winMap[tmIndex];
+						if(upperIndexing)
+							tileIndex = (sbyte) tileIndex;
+						var tile = Core.Memory.ReadBlock((ushort) (bgTileDataAddr + tileIndex * 16 + (bgy % 8) * 2), 2);
+						var offset = 7 - (winx % 8);
+						bgColor = ((tile[0] >> offset) & 1) | (((tile[1] >> offset) & 1) << 1);
+					} else {
+						var bgx = x + SCX;
+						var tmIndex = ((bgy / 8) % 32) * 32 + ((bgx / 8) % 32);
+						var tileIndex = (int) bgMap[tmIndex];
+						if(upperIndexing)
+							tileIndex = (sbyte) tileIndex;
+						var tile = Core.Memory.ReadBlock((ushort) (bgTileDataAddr + tileIndex * 16 + (bgy % 8) * 2), 2);
+						var offset = 7 - (bgx % 8);
+						bgColor = ((tile[0] >> offset) & 1) | (((tile[1] >> offset) & 1) << 1);
+					}
 					var mappedBgColor = (BGP >> (2 * bgColor)) & 0b11;
 
 					int color;
@@ -81,7 +97,7 @@ public class Ppu {
 							if(!flags.HasBit(5))
 								xOff = 7 - xOff;
 							Debug.Assert(xOff is >= 0 and < 8);
-							tile = Core.Memory.ReadBlock((ushort) (0x8000 + sti * 16 + sy * 2), 2);
+							var tile = Core.Memory.ReadBlock((ushort) (0x8000 + sti * 16 + sy * 2), 2);
 							var sColor = ((tile[0] >> xOff) & 1) | (((tile[1] >> xOff) & 1) << 1);
 							if(sColor == 0b00) continue;
 							if(flags.HasBit(7) && bgColor != 0b00)
@@ -153,6 +169,8 @@ public class Ppu {
 			case 0xFF47: BGP = value; break;
 			case 0xFF48: OBP0 = value; break;
 			case 0xFF49: OBP1 = value; break;
+			case 0xFF4A: WY = value; break;
+			case 0xFF4B: WX = value; break;
 			default:
 				Console.WriteLine($"Unhandled PPU IO Write to 0x{addr:X04}: 0x{value:X02}");
 				break;
@@ -170,6 +188,8 @@ public class Ppu {
 			case 0xFF47: return BGP;
 			case 0xFF48: return OBP0;
 			case 0xFF49: return OBP1;
+			case 0xFF4A: return WY;
+			case 0xFF4B: return WX;
 			default:
 				Console.WriteLine($"Unhandled PPU IO Read from 0x{addr:X04}");
 				return 0;
