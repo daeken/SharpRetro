@@ -217,23 +217,6 @@ class ScalarMath : Builtin {
 				list => $"({GenerateExpression(list[1])}).Floor()")
 			.Interpret((list, state) => ((object) state.Evaluate(list[1])).If<float>(x => MathF.Floor(x)).IfNot<float>(x => Math.Floor((double) x)));
 
-		Expression("float-to-fixed-point", list => TypeFromName(list[2]).AsRuntime(list[1].Type.Runtime || list[3].Type.Runtime), 
-				list => $"FloatToFixed{((EInt) list.Type).Width}({GenerateExpression(list[1])}, (int) ({GenerateExpression(list[3])}))", 
-				list => $"Call<{(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}, {GenerateType(list[1].Type.AsCompiletime())}, int>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (LlvmRuntimeValue<int>) ({GenerateExpression(list[3])}))")
-			.Interpret((list, state) => {
-				var width = ((EInt) list.Type).Width;
-				var swidth = ((EFloat) list[1].Type).Width;
-				var fvalue = state.Evaluate(list[1]);
-				var fbits = (int) state.Evaluate(list[3]);
-				return (width, swidth) switch {
-					(32, 32) => unchecked((uint) (int) MathF.Round(fvalue * (1 << fbits))), 
-					(64, 32) => unchecked((ulong) (long) MathF.Round(fvalue * (1 << fbits))), 
-					(32, 64) => unchecked((uint) (int) Math.Round(fvalue * (1 << fbits))), 
-					(64, 64) => unchecked((ulong) (long) Math.Round(fvalue * (1 << fbits))), 
-					_ => throw new NotSupportedException()
-				};
-			});
-			
 		Expression("bitwidth", _ => new EInt(true, 32),
 			list => {
 				switch(TypeFromName(list[1])) {
@@ -242,7 +225,7 @@ class ScalarMath : Builtin {
 					case EVector: return "128";
 					default: throw new NotSupportedException(list[1].Type.ToString());
 				}
-			}).Interpret((list, state) => TypeFromName(list[1]) switch {
+		}).Interpret((list, state) => TypeFromName(list[1]) switch {
 			EInt(_, var width) => width, 
 			EFloat(var width) => width, 
 			EVector => 128, 
@@ -258,61 +241,5 @@ class ScalarMath : Builtin {
 		Expression("literal", list => list[1].Type,
 				list => GenerateExpression(new PInt((long) new ExecutionState().Evaluate(list[1])) { Type = list[1].Type }))
 			.Interpret((list, state) => state.Evaluate(list[1]));
-
-		Expression("make-wmask", _ => new EInt(false, 64),
-				list => $"MakeWMask({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[5])}, {GenerateExpression(list[4])})",
-				list => $"MakeWMask({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[5])}, {GenerateExpression(list[4])})")
-			.Interpret((list, state) => MakeWMask((uint) state.Evaluate(list[1]), (uint) state.Evaluate(list[2]), (uint) state.Evaluate(list[3]), (long) state.Evaluate(list[5]), (int) state.Evaluate(list[4])));
-
-		Expression("make-tmask", _ => new EInt(false, 64),
-				list => $"MakeTMask({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[5])}, {GenerateExpression(list[4])})",
-				list => $"MakeTMask({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[5])}, {GenerateExpression(list[4])})")
-			.Interpret((list, state) => MakeTMask((uint) state.Evaluate(list[1]), (uint) state.Evaluate(list[2]), (uint) state.Evaluate(list[3]), (long) state.Evaluate(list[5]), (int) state.Evaluate(list[4])));
 	}
-
-	static int HighestSetBit(ulong v, int bits) {
-		for(var i = bits - 1; i >= 0; --i)
-			if((v & (1UL << i)) != 0)
-				return i;
-		return -1;
-	}
-
-	static ulong ZeroExtend(ulong v, int bits) => v & Ones(bits);
-	static ulong Ones(int bits) => Enumerable.Range(0, bits).Select(i => 1UL << i).Aggregate((a, b) => a | b);
-
-	static ulong Replicate(ulong v, int bits, int start, int rep, int ext) {
-		var repval = (v >> start) & Ones(rep);
-		var times = ext / rep;
-		var val = 0UL;
-		for(var i = 0; i < times; ++i)
-			val = (val << rep) | repval;
-		return v | (val << start);
-	}
-
-	static ulong RollRight(ulong v, int size, int rotate) => ((v << (size - rotate)) | (v >> rotate)) & Ones(size);
-
-	static (ulong, ulong) MakeMasks(uint n, uint imms, uint immr, int m, bool immediate) {
-		var len = HighestSetBit((n << 6) | (imms ^ 0b111111U), 7);
-		if(!(len > 0 && m >= 1 << len)) throw new BailoutException();
-
-		var levels = ZeroExtend(Ones(len), 6);
-		if(!(!immediate || (imms & levels) != levels)) throw new BailoutException();
-            
-		var S = imms & levels;
-		var R = immr & levels;
-
-		var diff = (S - R) & 0b111111;
-		var esize = 1 << len;
-		var d = diff & Ones(len);
-
-		var welem = ZeroExtend(Ones((int) (S + 1)), esize);
-		var telem = ZeroExtend(Ones((int) (d + 1)), esize);
-
-		var wmask = Replicate(RollRight(welem, esize, (int) R), esize, 0, esize, m);
-		var tmask = Replicate(telem, esize, 0, esize, m);
-		return (wmask, tmask);
-	}
-
-	static ulong MakeWMask(uint n, uint imms, uint immr, long m, int immediate) => MakeMasks(n, imms, immr, (int) m, immediate != 0).Item1;
-	static ulong MakeTMask(uint n, uint imms, uint immr, long m, int immediate) => MakeMasks(n, imms, immr, (int) m, immediate != 0).Item2;
 }
