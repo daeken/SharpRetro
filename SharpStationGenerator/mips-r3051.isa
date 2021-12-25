@@ -7,14 +7,18 @@
 (defm i16 (v) (cast v i16))
 (defm i32 (v) (cast v i32))
 
+(defm check-overflow-add (lhs rhs)
+    (block))
+
 (defm itype (name op dasm decode eval)
-    (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$name'")
-    (def name
-        $"$op sssss ttttt iiiiiiiiiiiiiiii"
-        dasm
-        (names (rs s) (rt t) (imm i))
-        decode
-        eval))
+    (block
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op) ('$op')")
+        (def name
+            "$op sssss ttttt iiiiiiiiiiiiiiii"
+            dasm
+            (names (rs s) (rt t) (imm i))
+            decode
+            eval)))
 
 (itype ADDI
     "001000"

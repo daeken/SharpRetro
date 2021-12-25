@@ -1,0 +1,19 @@
+// ReSharper disable CheckNamespace
+// ReSharper disable ArrangeRedundantParentheses
+// ReSharper disable RedundantCast
+#pragma warning disable CS0164
+namespace SharpStationCore;
+
+public partial class Disassembler {
+    public static string Disassemble(uint insn, uint pc) {
+/*%D_CODE%*/
+        return null;
+    }
+
+    public static string ClassifyInstruction(uint insn) {
+/*%IC_CODE%*/
+        return null;
+    }
+
+    public const int InstructionCount = /*%IC_COUNT%*/ + 0;
+}

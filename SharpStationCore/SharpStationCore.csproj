@@ -5,10 +5,15 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CoreArchCompiler\CoreArchCompiler.csproj" />
+      <Folder Include="Generated" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LibSharpRetro\LibSharpRetro.csproj" />
     </ItemGroup>
 
 </Project>

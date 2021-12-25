@@ -1,0 +1,13 @@
+// ReSharper disable CheckNamespace
+// ReSharper disable ArrangeRedundantParentheses
+// ReSharper disable RedundantCast
+#pragma warning disable CS0164
+namespace SharpStationCore;
+using static LibSharpRetro.CpuHelpers.Math;
+
+public unsafe partial class Interpreter {
+    public bool Interpret(uint insn, uint pc) {
+/*%CODE%*/
+        return false;
+    }
+}

@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DamageGenerator", "DamageGe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStationGenerator", "SharpStationGenerator\SharpStationGenerator.csproj", "{D84BDA9D-B70A-4825-9F72-018A76649AD0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStationCore", "SharpStationCore\SharpStationCore.csproj", "{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{D84BDA9D-B70A-4825-9F72-018A76649AD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D84BDA9D-B70A-4825-9F72-018A76649AD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D84BDA9D-B70A-4825-9F72-018A76649AD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

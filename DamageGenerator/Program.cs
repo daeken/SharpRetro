@@ -53,7 +53,7 @@ public class Program : Core {
 		Context = ContextTypes.Interpreter;
 
 		var c = new CodeBuilder();
-		c += 1;
+		c += 2;
 		var labelNum = 0;
 
 		foreach(var def in defs) {

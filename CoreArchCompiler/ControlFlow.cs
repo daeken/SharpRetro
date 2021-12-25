@@ -265,6 +265,15 @@ class ControlFlow : Builtin {
 
 		BranchExpression("branch", _ => EType.Unit.AsRuntime(), list => $"Branch({GenerateExpression(list[1])})")
 			.Interpret((list, state) => state.Registers["PC"] = state.Evaluate(list[1]));
+
+		Statement("assert", _ => EType.Unit, (_, _) => { })
+			.Interpret((list, state) => {
+				if(!state.Evaluate(list[1])) {
+					Console.WriteLine($"Assertion failed {list[1]}: {state.Evaluate(list[2])}");
+					Environment.Exit(1);
+				}
+				return null;
+			});
 			
 		Expression("unimplemented", _ => EType.Unit, _ => "throw new NotImplementedException()").NoInterpret();
 	}

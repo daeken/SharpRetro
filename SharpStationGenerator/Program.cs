@@ -20,10 +20,9 @@ public class Program : Core {
 
 		foreach(var def in defs) {
 			NextLabel = $"insn_{++labelNum}";
-			var matcher = string.Join(" && ", def.MatchBytes.Select(x => $"(insnBytes[{x.Key}] & 0x{x.Value.Mask:X}) == 0x{x.Value.Match:X}"));
 			c += $"/* {def.Name} */";
-			c += $"if({matcher}) {{";
-			ic += $"if({matcher}) {{";
+			c += $"if((insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}) {{";
+			ic += $"if((insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}) {{";
 			c++;
 			ic++;
 			GenerateFields(c, def);
@@ -31,7 +30,6 @@ public class Program : Core {
 			GenerateFields(ic, def);
 			GenerateStatement(ic, def.Decode);
 			ic += $"return \"{def.Name}\";";
-			c += $"pc += {def.Size};";
 			c += $"return {GenerateExpression(def.Disassembly)};";
 			c--;
 			ic--;
@@ -41,7 +39,7 @@ public class Program : Core {
 			ic += $"{NextLabel}:";
 		}
 
-		using var fp = File.Open("../DamageCore/Generated/Disassembler.cs", FileMode.Create);
+		using var fp = File.Open("../SharpStationCore/Generated/Disassembler.cs", FileMode.Create);
 		using var sw = new StreamWriter(fp);
 		sw.Write(File.ReadAllText("DisassemblerStub.cs.skip")
 			.Replace("/*%D_CODE%*/", c.Code)
@@ -53,18 +51,16 @@ public class Program : Core {
 		Context = ContextTypes.Interpreter;
 
 		var c = new CodeBuilder();
-		c += 1;
+		c += 2;
 		var labelNum = 0;
 
 		foreach(var def in defs) {
 			NextLabel = $"insn_{++labelNum}";
 			c += $"/* {def.Name} */";
-			var matcher = string.Join(" && ", def.MatchBytes.Select(x => $"(insnBytes[{x.Key}] & 0x{x.Value.Mask:X}) == 0x{x.Value.Match:X}"));
-			c += $"if({matcher}) {{";
+			c += $"if((insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}) {{";
 			c++;
 			GenerateFields(c, def);
 			GenerateStatement(c, def.Decode);
-			c += $"pc += {def.Size};";
 			GenerateStatement(c, def.Eval);
 			c += "return true;";
 			c--;
@@ -72,13 +68,13 @@ public class Program : Core {
 			c += $"{NextLabel}:";
 		}
 
-		using var fp = File.Open("../DamageCore/Generated/Interpreter.cs", FileMode.Create);
+		using var fp = File.Open("../SharpStationCore/Generated/Interpreter.cs", FileMode.Create);
 		using var sw = new StreamWriter(fp);
 		sw.Write(File.ReadAllText("InterpreterStub.cs.skip").Replace("/*%CODE%*/", c.Code));
 	}
 
 	static void GenerateFields(CodeBuilder c, MipsDef def) {
-		foreach(var (fname, (bi, size, shift)) in def.Fields)
-			c += $"var {fname} = (byte) ((byte) (insnBytes[{bi}] >> {shift}) & 0x{(1 << size) - 1:X});";
+		foreach(var (key, (bits, shift)) in def.Fields)
+			c += $"var {key} = (insn >> {shift}) & 0x{(1 << bits) - 1:X}U;";
 	}
 }
