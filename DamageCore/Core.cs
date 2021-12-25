@@ -91,6 +91,7 @@ public class Core : ICore {
 				}
 				break;
 			case >= 0xFF04 and <= 0xFF07: Timer.IoWrite(addr, value); break;
+			case >= 0xFF10 and <= 0xFF3F: Apu.IoWrite(addr, value); break;
 			case >= 0xFF40 and <= 0xFFfB:
 				Ppu.IoWrite(addr, value);
 				break;
@@ -103,6 +104,7 @@ public class Core : ICore {
 	public byte IoRead(ushort addr) {
 		switch(addr) {
 			case 0xFF4D: return 0xFF;
+			case >= 0xFF10 and <= 0xFF3F: return Apu.IoRead(addr);
 			case >= 0xFF40 and <= 0xFFFB: return Ppu.IoRead(addr);
 			case >= 0xFF04 and <= 0xFF07: return Timer.IoRead(addr);
 			case 0xFF00: return Joypad.IoRead(addr);

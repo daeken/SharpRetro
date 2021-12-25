@@ -5,6 +5,7 @@ namespace DamageCore;
 public class Apu {
 	readonly Core Core;
 	readonly IAudioBackend AudioBackend;
+	readonly byte[] WavePattern = new byte[16];
 	
 	public Apu(Core core) {
 		Core = core;
@@ -13,10 +14,29 @@ public class Apu {
 	}
 
 	IEnumerable<ulong> Run() {
-		var i = 0;
+		var sequence = 0;
 		while(true) {
-			AudioBackend.AddSamples(Enumerable.Range(0, 739).Select(_ => (short) (MathF.Sin(i++ / 44100f * 440 * 2 * MathF.PI) * 16384)).Select(x => new[] { x, x }).SelectMany(x => x));
-			yield return 70224;
+			sequence = (sequence + 1) % 8;
+			
+			yield return 8192; // 512hz
+		}
+	}
+	
+	public void IoWrite(ushort addr, byte value) {
+		switch(addr) {
+			case >= 0xFF30 and <= 0xFF3F: WavePattern[addr - 0xFF30] = value; break;
+			default:
+				Console.WriteLine($"Unhandled APU IO Write to 0x{addr:X04}: 0x{value:X02}");
+				break;
+		}
+	}
+
+	public byte IoRead(ushort addr) {
+		switch(addr) {
+			case >= 0xFF30 and <= 0xFF3F: return WavePattern[addr - 0xFF30];
+			default:
+				Console.WriteLine($"Unhandled APU IO Read from 0x{addr:X04}");
+				return 0;
 		}
 	}
 }
