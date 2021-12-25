@@ -1,0 +1,26 @@
+(defm u1  (v) (cast v u1))
+(defm u8  (v) (cast v u8))
+(defm u16 (v) (cast v u16))
+(defm u32 (v) (cast v u32))
+
+(defm i8  (v) (cast v i8))
+(defm i16 (v) (cast v i16))
+(defm i32 (v) (cast v i32))
+
+(defm itype (name op dasm decode eval)
+    (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$name'")
+    (def name
+        $"$op sssss ttttt iiiiiiiiiiiiiiii"
+        dasm
+        (names (rs s) (rt t) (imm i))
+        decode
+        eval))
+
+(itype ADDI
+    "001000"
+    "addi %$rt, %$rs, $(hex imm)"
+    (block)
+    (mlet (eimm (u32 (signext imm i32))
+           lhs  (reg rs))
+        (check-overflow-add lhs eimm)
+        (= (reg rt) (+ lhs eimm))))
