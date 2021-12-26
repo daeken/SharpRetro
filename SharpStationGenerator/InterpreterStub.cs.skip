@@ -1,5 +1,4 @@
 // ReSharper disable CheckNamespace
-#pragma warning disable CS0164
 namespace SharpStationCore;
 using static LibSharpRetro.CpuHelpers.Math;
 

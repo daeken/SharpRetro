@@ -300,7 +300,12 @@ public class Core {
 		var slnDir = Path.GetFullPath("../");
 		var sln = Directory.GetFiles(slnDir, "*.sln")[0];
 		var relGenPath = Path.GetFullPath(genpath)[slnDir.Length..];
-		Console.WriteLine(RunCommand("jb", "cleanupcode", sln, "--profile=Autogen Cleanup", "--include=" + relGenPath + "/*.cs"));
+		while(true) {
+			Console.WriteLine("Running code cleanup...");
+			var output = RunCommand("jb", "cleanupcode", sln, "--profile=Autogen Cleanup", "--include=" + relGenPath + "/*.cs");
+			if(!output.Contains("Code cleanup hanged up"))
+				break;
+		}
 	}
 
 	static string RunCommand(string command, params string[] args) {

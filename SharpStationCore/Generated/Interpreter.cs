@@ -6,7 +6,6 @@ using Math = LibSharpRetro.CpuHelpers.Math;
 
 #endregion
 
-#pragma warning disable CS0164
 namespace SharpStationCore;
 
     #region
@@ -31,7 +30,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_1:
         /* ADDI */
         if((insn & 0xFC000000) == 0x20000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -45,7 +43,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_2:
         /* ADDIU */
         if((insn & 0xFC000000) == 0x24000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -59,7 +56,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_3:
         /* ADDU */
         if((insn & 0xFC00003F) == 0x00000021) {
             var rs = (insn >> 21) & 0x1FU;
@@ -74,7 +70,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_4:
         /* AND */
         if((insn & 0xFC00003F) == 0x00000024) {
             var rs = (insn >> 21) & 0x1FU;
@@ -88,7 +83,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_5:
         /* ANDI */
         if((insn & 0xFC000000) == 0x30000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -101,7 +95,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_6:
         /* BEQ */
         if((insn & 0xFC000000) == 0x10000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -118,7 +111,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_7:
         /* BGEZ */
         if((insn & 0xFC110000) == 0x04010000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -131,7 +123,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_8:
         /* BGEZAL */
         if((insn & 0xFC110000) == 0x04110000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -145,7 +136,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_9:
         /* BGTZ */
         if((insn & 0xFC1F0000) == 0x1C000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -158,7 +148,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_10:
         /* BLEZ */
         if((insn & 0xFC1F0000) == 0x18000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -171,7 +160,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_11:
         /* BLTZ */
         if((insn & 0xFC110000) == 0x04000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -184,7 +172,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_12:
         /* BLTZAL */
         if((insn & 0xFC110000) == 0x04100000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -198,7 +185,6 @@ public unsafe partial class Interpreter {
             return true;
         }
 
-        insn_13:
         /* BNE */
         if((insn & 0xFC000000) == 0x14000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -214,8 +200,6 @@ public unsafe partial class Interpreter {
                 Branch(pc + 0x8);
             return true;
         }
-
-        insn_14:
 
         return false;
     }

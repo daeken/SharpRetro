@@ -6,6 +6,7 @@ public class Program : Core {
 		var defs = Core.ParseSpec(File.ReadAllText("sm83.isa"), new ExecutionState(), DmgDef.Parse).Select(x => (DmgDef) x).ToList();
 		BuildDisassembler(defs);
 		BuildInterpreter(defs);
+		CleanupCode("../DamageCore/Generated");
 	}
 	
 	static void BuildDisassembler(List<DmgDef> defs) {
@@ -31,7 +32,6 @@ public class Program : Core {
 			GenerateFields(ic, def);
 			GenerateStatement(ic, def.Decode);
 			ic += $"return \"{def.Name}\";";
-			c += $"pc += {def.Size};";
 			c += $"return {GenerateExpression(def.Disassembly)};";
 			c--;
 			ic--;
