@@ -6,6 +6,8 @@ public class Program : Core {
 		var defs = Core.ParseSpec(File.ReadAllText("mips-r3051.isa"), new ExecutionState(), MipsDef.Parse).Select(x => (MipsDef) x).ToList();
 		BuildDisassembler(defs);
 		BuildInterpreter(defs);
+		
+		CleanupCode("../SharpStationCore/Generated");
 	}
 	
 	static void BuildDisassembler(List<MipsDef> defs) {

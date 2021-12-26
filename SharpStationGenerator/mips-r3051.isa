@@ -125,3 +125,25 @@
     (block
         (set-link)
         (branch-if (>= (i32 (reg rs)) 0) target)))
+
+(ritype BGTZ "000111" "00000" "bgtz %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (> (i32 (reg rs)) 0) target))
+
+(ritype BLEZ "000110" "00000" "blez %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (<= (i32 (reg rs)) 0) target))
+
+(ritype BLTZ "000001" "0###0" "bltz %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (< (i32 (reg rs)) 0) target))
+
+(ritype BLTZAL "000001" "1###0" "bltzal %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (block
+        (set-link)
+        (branch-if (< (i32 (reg rs)) 0) target)))
+
+(itype BNE "000101" "bne %$rs, %$rt, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (!= (reg rs) (reg rt)) target))

@@ -290,4 +290,40 @@ public class Core {
 			default: throw new NotSupportedException($"Non-name for first element of list {list.ToPrettyString()}");
 		}
 	}
+
+	public static void CleanupCode(string genpath) {
+		if(!RunCommand("jb", "cleanupcode", "-v").Contains("JetBrains")) {
+			Console.WriteLine("WARNING: JetBrains code cleanup utility not installed. Run `dotnet tool install -g --add-source . JetBrains.ReSharper.GlobalTools`");
+			return;
+		}
+
+		var slnDir = Path.GetFullPath("../");
+		var sln = Directory.GetFiles(slnDir, "*.sln")[0];
+		var relGenPath = Path.GetFullPath(genpath)[slnDir.Length..];
+		Console.WriteLine(RunCommand("jb", "cleanupcode", sln, "--profile=Autogen Cleanup", "--include=" + relGenPath + "/*.cs"));
+	}
+
+	static string RunCommand(string command, params string[] args) {
+		var process = new Process {
+			StartInfo = {
+				FileName = command, 
+				RedirectStandardError = true,
+				RedirectStandardOutput = true
+			}
+		};
+		args.ForEach(process.StartInfo.ArgumentList.Add);
+
+		var ret = "";
+		void Capture(object sender, DataReceivedEventArgs evt) => ret += evt.Data + "\n";
+
+		process.OutputDataReceived += Capture;
+		process.ErrorDataReceived += Capture;
+
+		process.Start();
+		process.BeginOutputReadLine();
+		process.BeginErrorReadLine();
+		process.WaitForExit();
+
+		return ret;
+	}
 }
