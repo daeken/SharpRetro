@@ -5,6 +5,7 @@ namespace SharpStationGenerator;
 public class Expressions : Builtin {
 	public override void Define() {
 		Expression("pc", _ => new EInt(false, 32), _ => "pc").Interpret((_, state) => state.GetRegister("PC"));
+		Expression("pcd", _ => new EInt(false, 32), _ => "(pc + 4)").Interpret((_, state) => state.GetRegister("PC") + 4);
 
 		Expression("reg", _ => new EInt(false, 32).AsRuntime(),
 				list => {
@@ -27,13 +28,12 @@ public class Expressions : Builtin {
 				if(list[1] is PList sub)
 					switch(sub[0]) {
 						case PName("reg"):
-							c += $"switch({GenerateExpression(sub[1])}) {{";
+							var rtemp = TempName();
+							c += $"var {rtemp} = {GenerateExpression(sub[1])};";
+							c += $"if({rtemp} != 0)";
 							c++;
-							c += $"case 0: break;";
-							var tn = TempName();
-							c += $"case var {tn}: State->Registers[{tn}] = (uint) ({GenerateExpression(list[2])}); break;";
+							c += $"State->Registers[{rtemp}] = (uint) ({GenerateExpression(list[2])});";
 							c--;
-							c += "}";
 							return;
 						case PName("reg-hi") or PName("reg-lo"):
 							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (uint) ({GenerateExpression(list[2])};";

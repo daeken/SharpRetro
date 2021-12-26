@@ -10,21 +10,118 @@
 (defm check-overflow-add (lhs rhs)
     (block))
 
+(defm set-link () (= (reg 31) (+ (pc) 8)))
+(defm branch-default () (branch (+ (pc) 8)))
+
+(defm branch-if (cond target)
+    (if cond
+        (branch target)
+        (branch-default)))
+
 (defm itype (name op dasm decode eval)
     (block
-        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op) ('$op')")
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
         (def name
             "$op sssss ttttt iiiiiiiiiiiiiiii"
             dasm
             (names (rs s) (rt t) (imm i))
             decode
             eval)))
+(defm itype (name op dasm eval) (itype name op dasm (block) eval))
 
-(itype ADDI
-    "001000"
-    "addi %$rt, %$rs, $(hex imm)"
-    (block)
-    (mlet (eimm (u32 (signext imm i32))
-           lhs  (reg rs))
+(defm ritype (name op funct dasm decode eval)
+    (block
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "$op sssss $funct iiiiiiiiiiiiiiii"
+            dasm
+            (names (rs s) (imm i))
+            decode
+            eval)))
+(defm ritype (name op funct dasm eval) (ritype name op funct dasm (block) eval))
+
+(defm jtype (name op dasm decode eval)
+    (block
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "$op iiiiiiiiiiiiiiiiiiiiiiiiii"
+            dasm
+            (names (imm i))
+            decode
+            eval)))
+(defm jtype (name op dasm eval) (jtype name op dasm (block) eval))
+
+(defm rtype (name funct dasm decode eval)
+    (block
+        (assert (== (string-length funct) 6) "Expected 6 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "000000 sssss ttttt ddddd aaaaa $funct"
+            dasm
+            (names (rs s) (rt t) (rd d) (shamt a))
+            decode
+            eval)))
+(defm rtype (name funct dasm eval) (rtype name funct dasm (block) eval))
+
+(defm stype (name funct dasm decode eval)
+    (block
+        (assert (== (string-length funct) 6) "Expected 6 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "000000 cccccccccccccccccccc $funct"
+            dasm
+            (names (code c))
+            decode
+            eval)))
+(defm stype (name funct dasm eval) (stype name funct dasm (block) eval))
+
+(defm cftype (name op funct dasm decode eval)
+    (block
+        (assert (== (string-length op) 4) "Expected 4 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "$op cc $funct ttttt ddddd fffffffffff"
+            dasm
+            (names (cop c) (rt t) (rd d) (cofun f))
+            decode
+            eval)))
+(defm cftype (name op funct dasm eval) (cftype name op funct dasm (block) eval))
+
+(rtype ADD "100000" "add %$rd, %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt))
+        (check-overflow-add lhs rhs)
+        (= (reg rd) (+ lhs rhs))))
+
+(itype ADDI "001000" "addi %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (let lhs (reg rs)
         (check-overflow-add lhs eimm)
         (= (reg rt) (+ lhs eimm))))
+
+(itype ADDIU "001001" "addiu %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (= (reg rt) (+ (reg rs) eimm)))
+
+(rtype ADDU "100001" "addu %$rd, %$rs, %$rt"
+    (= (reg rd) (+ (reg rs) (reg rt))))
+
+(rtype AND "100100" "and %$rd, %$rs, %$rt"
+    (= (reg rd) (& (reg rs) (reg rt))))
+
+(itype ANDI "001100" "andi %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (= (reg rt) (& (reg rs) eimm)))
+
+(itype BEQ "000100" "beq %$rs, %$rt, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (== (reg rs) (reg rt)) target))
+
+(ritype BGEZ "000001" "0###1" "bgez %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (>= (i32 (reg rs)) 0) target))
+
+(ritype BGEZAL "000001" "1###1" "bgezal %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (block
+        (set-link)
+        (branch-if (>= (i32 (reg rs)) 0) target)))

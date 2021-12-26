@@ -3,6 +3,7 @@
 // ReSharper disable RedundantCast
 #pragma warning disable CS0164
 namespace SharpStationCore;
+using static LibSharpRetro.CpuHelpers.Math;
 
 public partial class Disassembler {
     public static string Disassemble(uint insn, uint pc) {
@@ -11,6 +12,7 @@ public partial class Disassembler {
     }
 
     public static string ClassifyInstruction(uint insn) {
+        var pc = 0xDEADBEEFU; // Should never be actually used
 /*%IC_CODE%*/
         return null;
     }

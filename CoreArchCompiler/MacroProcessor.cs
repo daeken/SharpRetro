@@ -8,12 +8,14 @@ namespace CoreArchCompiler;
 
 public class MacroProcessor {
 	public static PList Rewrite(PList top) {
-		var macros = new Dictionary<string, (List<string>, PTree)>();
+		var macros = new Dictionary<string, List<(List<string>, PTree)>>();
 		foreach(var elem in top) {
 			if(elem is not PList list || list[0] is not PName("defm")) continue;
 			if(list[1] is not PName(var name)) throw new Exception();
 			var varnames = ((PList) list[2]).Select(x => ((PName) x).Name).ToList();
-			macros[name] = (varnames, list[3]);
+			if(!macros.TryGetValue(name, out var mlist))
+				mlist = macros[name] = new();
+			mlist.Add((varnames, list[3]));
 		}
 
 		PTree Repl(string macroName, PTree elem, Dictionary<string, PTree> replacements) {
@@ -32,10 +34,13 @@ public class MacroProcessor {
 		PTree Sub(PTree elem) {
 			if(elem is PName(var pname)) return new PName(pname);
 			if(elem is not PList list) return elem;
-			if(list.Count == 0 || list[0] is not PName(var name) || !macros.TryGetValue(name, out var v)) return new PList(list.Select(Sub));
-			var (args, block) = v;
-			if(args.Count != list.Count - 1) throw new NotSupportedException($"Macro {name.ToPrettyString()} expects {args.Count} arguments, got {list.Count - 1}");
-			return Sub(Repl(name, block, args.Select((vn, i) => (vn, list[i + 1])).ToDictionary()));
+			if(list.Count == 0 || list[0] is not PName(var name) || !macros.TryGetValue(name, out var mlist)) return new PList(list.Select(Sub));
+			foreach(var (args, block) in mlist) {
+				if(args.Count != list.Count - 1) continue;
+				return Sub(Repl(name, block, args.Select((vn, i) => (vn, list[i + 1])).ToDictionary()));
+			}
+
+			throw new NotSupportedException($"No overload of macro {name.ToPrettyString()} takes {list.Count - 1} arguments");
 		}
 			
 		return (PList) Sub(top);

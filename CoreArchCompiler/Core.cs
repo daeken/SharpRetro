@@ -215,7 +215,17 @@ public class Core {
 	public static string GenerateExpression(PTree v, bool lhs = false) {
 		return v switch {
 			PName name => name.Name,
-			PInt value => ((EInt) value.Type).Signed ? ToHex(value.Value) : ToHex(value.Value) + "U",
+			PInt value => value.Type switch {
+				EInt(false, 8) => $"(byte) {ToHex(value.Value)}",
+				EInt(true, 8) => $"(sbyte) {ToHex(value.Value)}",
+				EInt(false, 16) => $"(ushort) {ToHex(value.Value)}",
+				EInt(true, 16) => $"(short) {ToHex(value.Value)}",
+				EInt(false, 32) => $"{ToHex(value.Value)}U",
+				EInt(true, 32) => $"{ToHex(value.Value)}",
+				EInt(false, 64) => ToHex(value.Value) + "UL", 
+				EInt(true, 64) => ToHex(value.Value) + "L", 
+				_ => throw new NotImplementedException()
+			}, 
 			PString str => str.String.ToPrettyString(),
 			PList list => GenerateListExpression(list, lhs: lhs),
 			_ => throw new NotImplementedException()

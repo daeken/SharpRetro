@@ -99,14 +99,27 @@ public class Logic : Builtin {
 				list => $"SignExtRuntime<{GenerateType(list.Type.AsCompiletime())}>({GenerateExpression(list[1])}, {((EInt) list[1].Type).Width})")
 			.Interpret((list, state) =>
 				TypeFromName(list[2]) switch {
-					EInt(true, 32) => SignExt<int>((ulong) state.Evaluate(list[1]), ((EInt) list[1].Type).Width), 
-					EInt(true, 64) => SignExt<long>((ulong) state.Evaluate(list[1]), ((EInt) list[1].Type).Width),
+					EInt(_, 32) => SignExt<int>((ulong) state.Evaluate(list[1]), ((EInt) list[1].Type).Width), 
+					EInt(_, 64) => SignExt<long>((ulong) state.Evaluate(list[1]), ((EInt) list[1].Type).Width),
 					{} type => throw new NotSupportedException($"SignExt on unsupported type {type}")
 				});
 
 		Expression(new[] { "==", "!=", ">", ">=", "<=", "<" },
 				list => new EInt(false, 1).AsRuntime(list.AnyRuntime),
-				list => $"(({GenerateExpression(list[1])}) {list[0]} ({GenerateExpression(list[2])})) ? 1U : 0U",
+				list => {
+					var lhs = list[1];
+					var rhs = list[2];
+					var lhe = GenerateExpression(lhs);
+					var rhe = GenerateExpression(rhs);
+					if(lhs.Type is EInt(var lsigned, var lsize) && rhs.Type is EInt(var rsigned, var rsize)) {
+						if(!lsigned && rsigned) lhe = $"({GenerateType(new EInt(true, lsize))}) ({lhe})";
+						if(lsigned && !rsigned) rhe = $"({GenerateType(new EInt(true, rsize))}) ({rhe})";
+						var signed = lsigned || rsigned;
+						if(lsize < rsize) lhe = $"({GenerateType(new EInt(signed, rsize))}) ({lhe})";
+						if(rsize < lsize) rhe = $"({GenerateType(new EInt(signed, lsize))}) ({rhe})";
+					}
+					return $"(({lhe}) {list[0]} ({rhe}) ? 1U : 0U)";
+				},
 				list => $"({GenerateExpression(list[1])}) {list[0]} ({GenerateExpression(list[2])})")
 			.Interpret(
 				(list, state) =>

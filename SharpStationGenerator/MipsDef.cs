@@ -53,6 +53,7 @@ public class MipsDef : Def {
 					mask |= 1;
 					match |= 1;
 					break;
+				case '#': break;
 				case char x:
 					var field = fieldNames[x.ToString()];
 					fields[field] = fields.ContainsKey(field) ? (fields[field].Item1 + 1, bit) : (1, bit);
