@@ -71,5 +71,39 @@ public class Expressions : Builtin {
 			(c, list) => {
 				c += $"/*UNIMPLEMENTED*/";
 			}).NoInterpret();
+
+		Statement("defer=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
+			(c, list) => {
+				if(list[1] is not PList sub) return;
+				switch(sub[0]) {
+					case PName("reg"):
+						c += $"State->LdWhich = (uint) ({GenerateExpression(sub[1])});";
+						c += $"State->LdValue = (uint) ({GenerateExpression(list[2])});";
+						break;
+					default:
+						throw new NotSupportedException($"Defer= used on non-reg argument {sub}");
+				}
+			},
+			(c, list) => {
+				c += $"/*UNIMPLEMENTED*/";
+			}).NoInterpret();
+		
+		Expression("load", list => TypeFromName(list[2]).AsRuntime(),
+				list => {
+					var type = GenerateType(list.Type);
+					return $"ReadMemory<{type}>({GenerateExpression(list[1])})";
+				},
+				list =>
+					$"((RuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value()")
+			.Interpret((list, state) => state.GetMemory(state.Evaluate(list[1]), list.Type));
+
+		Expression("store", _ => EType.Unit.AsRuntime(),
+				list => $"WriteMemory({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
+				list =>
+					$"((RuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value({GenerateExpression(list[2])})")
+			.Interpret((list, state) => {
+				state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
+				return null;
+			});
 	}
 }

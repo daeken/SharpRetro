@@ -7,7 +7,7 @@ public class Program : Core {
 		BuildDisassembler(defs);
 		BuildInterpreter(defs);
 		
-		CleanupCode("../SharpStationCore/Generated");
+		//CleanupCode("../SharpStationCore/Generated");
 	}
 	
 	static void BuildDisassembler(List<MipsDef> defs) {

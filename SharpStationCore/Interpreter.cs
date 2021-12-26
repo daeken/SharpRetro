@@ -13,4 +13,7 @@ public unsafe partial class Interpreter {
 	void Copcreg(uint cop, uint reg, uint value) {}
 	
 	void Copfun(uint cop, uint command) {}
+
+	T ReadMemory<T>(uint addr) => default;
+	void WriteMemory<T>(uint addr, T value) {}
 }

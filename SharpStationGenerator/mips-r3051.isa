@@ -212,3 +212,37 @@
         (= (reg rd) (+ (pc) 8))
         (check-load-alignment target u32)
         (branch target)))
+
+(rtype JR "001000" "jr %$rs"
+    (let target (reg rs)
+        (check-load-alignment target u32)
+        (branch target)))
+
+(itype LB "100000" "lb %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (defer= (reg rt) (load (+ (reg rs) offset) i8)))
+
+(itype LBU "100100" "lbu %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (defer= (reg rt) (load (+ (reg rs) offset) u8)))
+
+(itype LH "100001" "lh %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u16)
+        (defer= (reg rt) (load addr i16))))
+
+(itype LHU "100101" "lhu %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u16)
+        (defer= (reg rt) (load addr u16))))
+
+(itype LUI "001111" "lui %$rt, $(hex imm)"
+    (= (reg rt) (<< imm 16)))
+
+(itype LW "100011" "lw %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u32)
+        (defer= (reg rt) (load addr u32))))

@@ -15,7 +15,7 @@ using static Math;
 #endregion
 
 public class Disassembler {
-    public const int InstructionCount = 23 + 0;
+    public const int InstructionCount = 30 + 0;
 
     public static string Disassemble(uint insn, uint pc) {
         /* ADD */
@@ -190,16 +190,16 @@ public class Disassembler {
         /* J */
         if((insn & 0xFC000000) == 0x08000000) {
             var imm = (insn >> 0) & 0x3FFFFFFU;
-            var target = ((pc + 4) & 0xF0000000U) +
-                         (imm << 0x2);
+            var target =
+                ((pc + 4) & 0xF0000000U) + (imm << 0x2);
             return "j " + $"0x{target:x08}";
         }
 
         /* JAL */
         if((insn & 0xFC000000) == 0x0C000000) {
             var imm = (insn >> 0) & 0x3FFFFFFU;
-            var target = ((pc + 4) & 0xF0000000U) +
-                         (imm << 0x2);
+            var target =
+                ((pc + 4) & 0xF0000000U) + (imm << 0x2);
             return "jal " + $"0x{target:x08}";
         }
 
@@ -210,6 +210,68 @@ public class Disassembler {
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
             return "jalr %" + rd + ", %" + rs;
+        }
+
+        /* JR */
+        if((insn & 0xFC00003F) == 0x00000008) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "jr %" + rs;
+        }
+
+        /* LB */
+        if((insn & 0xFC000000) == 0x80000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lb %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* LBU */
+        if((insn & 0xFC000000) == 0x90000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lbu %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* LH */
+        if((insn & 0xFC000000) == 0x84000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lh %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* LHU */
+        if((insn & 0xFC000000) == 0x94000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lhu %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* LUI */
+        if((insn & 0xFC000000) == 0x3C000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            return "lui %" + rt + ", " + $"0x{imm:x04}";
+        }
+
+        /* LW */
+        if((insn & 0xFC000000) == 0x8C000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lw %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
         }
 
         return null;
@@ -368,15 +430,15 @@ public class Disassembler {
 
         if((insn & 0xFC000000) == 0x08000000) {
             var imm = (insn >> 0) & 0x3FFFFFFU;
-            var target = ((pc + 4) & 0xF0000000U) +
-                         (imm << 0x2);
+            var target =
+                ((pc + 4) & 0xF0000000U) + (imm << 0x2);
             return "J";
         }
 
         if((insn & 0xFC000000) == 0x0C000000) {
             var imm = (insn >> 0) & 0x3FFFFFFU;
-            var target = ((pc + 4) & 0xF0000000U) +
-                         (imm << 0x2);
+            var target =
+                ((pc + 4) & 0xF0000000U) + (imm << 0x2);
             return "JAL";
         }
 
@@ -386,6 +448,61 @@ public class Disassembler {
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
             return "JALR";
+        }
+
+        if((insn & 0xFC00003F) == 0x00000008) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "JR";
+        }
+
+        if((insn & 0xFC000000) == 0x80000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LB";
+        }
+
+        if((insn & 0xFC000000) == 0x90000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LBU";
+        }
+
+        if((insn & 0xFC000000) == 0x84000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LH";
+        }
+
+        if((insn & 0xFC000000) == 0x94000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LHU";
+        }
+
+        if((insn & 0xFC000000) == 0x3C000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            return "LUI";
+        }
+
+        if((insn & 0xFC000000) == 0x8C000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LW";
         }
 
         return null;

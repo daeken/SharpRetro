@@ -324,6 +324,110 @@ public unsafe partial class Interpreter {
             return true;
         }
 
+        /* JR */
+        if((insn & 0xFC00003F) == 0x00000008) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var target = rs switch { 0 => 0U, var temp_33 => State->Registers[temp_33] };
+            if((0x0 != (target &
+                        (32 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADEL, pc, insn);
+            Branch(target);
+            return true;
+        }
+
+        /* LB */
+        if((insn & 0xFC000000) == 0x80000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            State->LdWhich = rt;
+            State->LdValue =
+                (uint) ReadMemory<sbyte>(rs switch { 0 => 0U, var temp_34 => State->Registers[temp_34] } +
+                                         (uint) offset);
+            return true;
+        }
+
+        /* LBU */
+        if((insn & 0xFC000000) == 0x90000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            State->LdWhich = rt;
+            State->LdValue =
+                ReadMemory<byte>(rs switch { 0 => 0U, var temp_35 => State->Registers[temp_35] } +
+                                 (uint) offset);
+            return true;
+        }
+
+        /* LH */
+        if((insn & 0xFC000000) == 0x84000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_36 => State->Registers[temp_36] } + (uint) offset;
+            if((0x0 != (addr &
+                        (16 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADEL, pc, insn);
+            State->LdWhich = rt;
+            State->LdValue = (uint) ReadMemory<short>(addr);
+            return true;
+        }
+
+        /* LHU */
+        if((insn & 0xFC000000) == 0x94000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_37 => State->Registers[temp_37] } + (uint) offset;
+            if((0x0 != (addr &
+                        (16 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADEL, pc, insn);
+            State->LdWhich = rt;
+            State->LdValue = ReadMemory<ushort>(addr);
+            return true;
+        }
+
+        /* LUI */
+        if((insn & 0xFC000000) == 0x3C000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var temp_38 = rt;
+            if(temp_38 != 0)
+                State->Registers[temp_38] = (ushort) (imm << 0x10);
+            return true;
+        }
+
+        /* LW */
+        if((insn & 0xFC000000) == 0x8C000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_39 => State->Registers[temp_39] } + (uint) offset;
+            if((0x0 != (addr &
+                        (32 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADEL, pc, insn);
+            State->LdWhich = rt;
+            State->LdValue = ReadMemory<uint>(addr);
+            return true;
+        }
+
         return false;
     }
 }
