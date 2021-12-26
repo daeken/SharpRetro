@@ -11,12 +11,21 @@
     (block))
 
 (defm set-link () (= (reg 31) (+ (pc) 8)))
+(defm branch-with-link (target) (block (set-link) (branch target)))
 (defm branch-default () (branch (+ (pc) 8)))
 
 (defm branch-if (cond target)
     (if cond
         (branch target)
         (branch-default)))
+
+(defm check-load-alignment (addr type)
+    (when (!= 0 (& addr (- (/ (bitwidth type) 8) 1)))
+        (exception ADEL)))
+
+(defm check-store-alignment (addr type)
+    (when (!= 0 (& addr (- (/ (bitwidth type) 8) 1)))
+        (exception ADES)))
 
 (defm itype (name op dasm decode eval)
     (block
@@ -147,3 +156,59 @@
 (itype BNE "000101" "bne %$rs, %$rt, $(hex target)"
     (let target (+ (pcd) (<< (signext imm u32) 2)))
     (branch-if (!= (reg rs) (reg rt)) target))
+
+(stype BREAK "001101" "break $code"
+    (exception Break))
+
+(cftype CFC "0100" "00010" "cfc$cop %$rt, $rd"
+    (= (reg rt) (copcreg cop rd)))
+
+(def COP
+    "0100oo1 ccccccccccccccccccccccccc"
+    "cop$cop $(hex command)"
+    (names (cop o) (command c))
+    (block)
+    (copfun cop command))
+
+(cftype CTC "0100" "00110" "ctc$cop %$rt, $rd"
+    (= (copcreg cop rd) (reg rt)))
+
+(rtype DIV "011010" "div %$rs, %$rt"
+    (mlet (rsv (reg rs)
+           rtv (reg rt))
+        (if (== rtv 0)
+            (block
+                (= (reg-lo) (if (!= (& rsv 0x80000000) 0) 1 0xFFFFFFFF))
+                (= (reg-hi) rsv))
+            (if (& (== rsv 0x80000000) (== rtv 0xFFFFFFFF))
+                (block
+                    (= (reg-lo) 0x80000000)
+                    (= (reg-hi) 0))
+                (block
+                    (= (reg-lo) (/ (i32 rsv) (i32 rtv)))
+                    (= (reg-hi) (% (i32 rsv) (i32 rtv))))))))
+
+(rtype DIVU "011011" "divu %$rs, %$rt"
+    (mlet (rsv (reg rs)
+           rtv (reg rt))
+        (if (== rtv 0)
+            (block
+                (= (reg-lo) 0xFFFFFFFF)
+                (= (reg-hi) rsv))
+            (block
+                (= (reg-lo) (/ rsv rtv))
+                (= (reg-hi) (% rsv rtv))))))
+
+(jtype J "000010" "j $(hex target)"
+    (let target (+ (& (pcd) 0xF0000000) (<< (u32 imm) 2)))
+    (branch target))
+
+(jtype JAL "000011" "jal $(hex target)"
+    (let target (+ (& (pcd) 0xF0000000) (<< (u32 imm) 2)))
+    (branch-with-link target))
+
+(rtype JALR "001001" "jalr %$rd, %$rs"
+    (let target (reg rs)
+        (= (reg rd) (+ (pc) 8))
+        (check-load-alignment target u32)
+        (branch target)))

@@ -99,7 +99,13 @@ class ControlFlow : Builtin {
 			var b = GenerateExpression(list[3]);
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
-			var type = GenerateType(list[2].Type);
+			var at = list[2].Type;
+			var bt = list[3].Type;
+			string type;
+			if(at == bt || at is not EInt(var asigned, var asized) || bt is not EInt(var bsigned, var bsized))
+				type = GenerateType(at);
+			else
+				type = GenerateType(new EInt(asigned && bsigned, Math.Max(asized, bsized)));
 			return $"({GenerateExpression(list[1])} != 0) ? ({type}) ({a}) : ({type}) ({b})";
 		}, list => {
 			var a = GenerateExpression(list[2]);

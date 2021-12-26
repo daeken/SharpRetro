@@ -201,6 +201,129 @@ public unsafe partial class Interpreter {
             return true;
         }
 
+        /* BREAK */
+        if((insn & 0xFC00003F) == 0x0000000D) {
+            var code = (insn >> 6) & 0xFFFFFU;
+            throw new CpuException(ExceptionType.Break, pc, insn);
+            return true;
+        }
+
+        /* CFC */
+        if((insn & 0xF3E00000) == 0x40400000) {
+            var cop = (insn >> 26) & 0x3U;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var cofun = (insn >> 0) & 0x7FFU;
+            var temp_25 = rt;
+            if(temp_25 != 0)
+                State->Registers[temp_25] = Copcreg(cop, rd);
+            return true;
+        }
+
+        /* COP */
+        if((insn & 0xF2000000) == 0x42000000) {
+            var cop = (insn >> 26) & 0x3U;
+            var command = (insn >> 0) & 0x1FFFFFFU;
+            Copfun(cop, command);
+            return true;
+        }
+
+        /* CTC */
+        if((insn & 0xF3E00000) == 0x40C00000) {
+            var cop = (insn >> 26) & 0x3U;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var cofun = (insn >> 0) & 0x7FFU;
+            Copcreg(cop, rd, rt switch { 0 => 0U, var temp_26 => State->Registers[temp_26] });
+            return true;
+        }
+
+        /* DIV */
+        if((insn & 0xFC00003F) == 0x0000001A) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var rsv = rs switch { 0 => 0U, var temp_27 => State->Registers[temp_27] };
+            var rtv = rt switch { 0 => 0U, var temp_28 => State->Registers[temp_28] };
+            if((rtv == 0x0 ? 1U : 0U) != 0) {
+                State->Lo = (byte) (((rsv & 0x80000000U) != 0x0 ? 1U : 0U) != 0
+                    ? (uint) 0x1
+                    : 0xFFFFFFFFU);
+                State->Hi = rsv;
+            }
+            else {
+                if(((rsv == 0x80000000U ? 1U : 0U) & (rtv == 0xFFFFFFFFU ? 1U : 0U)) != 0) {
+                    State->Lo = 0x80000000U;
+                    State->Hi = 0x0;
+                }
+                else {
+                    State->Lo = (uint) ((int) rsv / (int) rtv);
+                    State->Hi = (uint) ((int) rsv % (int) rtv);
+                }
+            }
+
+            return true;
+        }
+
+        /* DIVU */
+        if((insn & 0xFC00003F) == 0x0000001B) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var rsv = rs switch { 0 => 0U, var temp_29 => State->Registers[temp_29] };
+            var rtv = rt switch { 0 => 0U, var temp_30 => State->Registers[temp_30] };
+            if((rtv == 0x0 ? 1U : 0U) != 0) {
+                State->Lo = 0xFFFFFFFFU;
+                State->Hi = rsv;
+            }
+            else {
+                State->Lo = rsv / rtv;
+                State->Hi = rsv % rtv;
+            }
+
+            return true;
+        }
+
+        /* J */
+        if((insn & 0xFC000000) == 0x08000000) {
+            var imm = (insn >> 0) & 0x3FFFFFFU;
+            var target = ((pc + 4) & 0xF0000000U) +
+                         (imm << 0x2);
+            Branch(target);
+            return true;
+        }
+
+        /* JAL */
+        if((insn & 0xFC000000) == 0x0C000000) {
+            var imm = (insn >> 0) & 0x3FFFFFFU;
+            var target = ((pc + 4) & 0xF0000000U) +
+                         (imm << 0x2);
+            State->Registers[31] = pc + 0x8;
+            Branch(target);
+            return true;
+        }
+
+        /* JALR */
+        if((insn & 0xFC00003F) == 0x00000009) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var target = rs switch { 0 => 0U, var temp_31 => State->Registers[temp_31] };
+            var temp_32 = rd;
+            if(temp_32 != 0)
+                State->Registers[temp_32] = pc + 0x8;
+            if((0x0 != (target &
+                        (32 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADEL, pc, insn);
+            Branch(target);
+            return true;
+        }
+
         return false;
     }
 }

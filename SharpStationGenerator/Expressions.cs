@@ -28,6 +28,18 @@ public class Expressions : Builtin {
 		Expression("reg-lo", _ => new EInt(false, 32).AsRuntime(), 
 			_ => "State->Lo").NoInterpret();
 
+		Expression("copfun", _ => EUnit.RuntimeType,
+				list => $"Copfun({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+			.NoInterpret();
+		
+		Expression("exception", _ => EUnit.RuntimeType, 
+				list => $"throw new CpuException(ExceptionType.{list[1]}, pc, insn)")
+			.NoInterpret();
+		
+		Expression("copcreg", _ => new EInt(false, 32).AsRuntime(), 
+				list => $"Copcreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+			.NoInterpret();
+
 		Statement("=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
 			(c, list) => {
 				if(list[1] is PList sub)
@@ -47,7 +59,10 @@ public class Expressions : Builtin {
 							c--;
 							return;
 						case PName("reg-hi") or PName("reg-lo"):
-							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (uint) ({GenerateExpression(list[2])};";
+							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (uint) ({GenerateExpression(list[2])});";
+							return;
+						case PName("copcreg"):
+							c += $"Copcreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";
 							return;
 					}
 
