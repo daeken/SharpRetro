@@ -10,10 +10,14 @@
 (defm i64 (v) (cast v i64))
 
 (defm check-overflow-add (lhs rhs)
-    (block))
+    (let r (u32 (+ lhs rhs))
+        (when (& (~ (^ lhs rhs)) (^ lhs r) 0x80000000)
+            (exception OV))))
 
 (defm check-overflow-sub (lhs rhs)
-    (block))
+    (let r (u32 (- lhs rhs))
+        (when (& (^ lhs rhs) (^ lhs r) 0x80000000)
+            (exception OV))))
 
 (defm set-link () (= (reg 31) (+ (pc) 8)))
 (defm branch-with-link (target) (block (set-link) (branch target)))
@@ -191,7 +195,8 @@
                     (= (reg-hi) 0))
                 (block
                     (= (reg-lo) (/ (i32 rsv) (i32 rtv)))
-                    (= (reg-hi) (% (i32 rsv) (i32 rtv))))))))
+                    (= (reg-hi) (% (i32 rsv) (i32 rtv)))
+                    (div-delay))))))
 
 (rtype DIVU "011011" "divu %$rs, %$rt"
     (mlet (rsv (reg rs)
@@ -202,7 +207,8 @@
                 (= (reg-hi) rsv))
             (block
                 (= (reg-lo) (/ rsv rtv))
-                (= (reg-hi) (% rsv rtv))))))
+                (= (reg-hi) (% rsv rtv))
+                (div-delay)))))
 
 (jtype J "000010" "j $(hex target)"
     (let target (+ (& (pcd) 0xF0000000) (<< (u32 imm) 2)))
@@ -254,25 +260,29 @@
 
 (itype LWL "100010" "lwl %$rt, $(hex offset)(%$rs)"
     (let offset (signext imm i32))
-    (mlet (addr (+ (reg rs) offset)
-           raddr (& addr 0xFFFFFFFC)
-           ert (reg rt))
-        (defer= (reg rt) (match (& addr 3)
-            0 (| (& ert 0x00FFFFFF) (<< (u32 (load raddr u8)) 24))
-            1 (| (& ert 0x0000FFFF) (<< (u32 (load raddr u16)) 16))
-            2 (| (& ert 0x000000FF) (<< (load raddr u32) 8))
-              (load raddr u32)))))
+    (block
+        (do-load rt)
+        (mlet (addr (+ (reg rs) offset)
+               raddr (& addr 0xFFFFFFFC)
+               ert (reg rt))
+            (defer= (reg rt) (match (& addr 3)
+                0 (| (& ert 0x00FFFFFF) (<< (u32 (load raddr u8)) 24))
+                1 (| (& ert 0x0000FFFF) (<< (u32 (load raddr u16)) 16))
+                2 (| (& ert 0x000000FF) (<< (load raddr u32) 8))
+                  (load raddr u32))))))
 
 (itype LWR "100110" "lwr %$rt, $(hex offset)(%$rs)"
     (let offset (signext imm i32))
-    (mlet (addr (+ (reg rs) offset)
-           raddr (& addr 0xFFFFFFFC)
-           ert (reg rt))
-        (defer= (reg rt) (match (& addr 3)
-            0 (load raddr u32)
-            1 (| (& ert 0xFF000000) (& (load addr u32) 0x00FFFFFF))
-            2 (| (& ert 0xFFFF0000) (load addr u16))
-              (| (& ert 0xFFFFFF00) (load addr u8))))))
+    (block
+        (do-load rt)
+        (mlet (addr (+ (reg rs) offset)
+               raddr (& addr 0xFFFFFFFC)
+               ert (reg rt))
+            (defer= (reg rt) (match (& addr 3)
+                0 (load raddr u32)
+                1 (| (& ert 0xFF000000) (& (load addr u32) 0x00FFFFFF))
+                2 (| (& ert 0xFFFF0000) (load addr u16))
+                  (| (& ert 0xFFFFFF00) (load addr u8)))))))
 
 (itype LWC2 "110010" "lwc2 $rt, $(hex offset)(%$rs)"
     (let offset (signext imm i32))

@@ -24,6 +24,9 @@ public unsafe partial class Interpreter {
             var shamt = (insn >> 6) & 0x1FU;
             var lhs = rs switch { 0 => 0U, var temp_0 => State->Registers[temp_0] };
             var rhs = rt switch { 0 => 0U, var temp_1 => State->Registers[temp_1] };
+            var r = lhs + rhs;
+            if((~(lhs ^ rhs) & (lhs ^ r) & 0x80000000U) != 0)
+                throw new CpuException(ExceptionType.OV, pc, insn);
             var temp_2 = rd;
             if(temp_2 != 0)
                 State->Registers[temp_2] = lhs + rhs;
@@ -37,6 +40,9 @@ public unsafe partial class Interpreter {
             var imm = (insn >> 0) & 0xFFFFU;
             var eimm = SignExt<uint>(imm, 16);
             var lhs = rs switch { 0 => 0U, var temp_3 => State->Registers[temp_3] };
+            var r = lhs + eimm;
+            if((~(lhs ^ eimm) & (lhs ^ r) & 0x80000000U) != 0)
+                throw new CpuException(ExceptionType.OV, pc, insn);
             var temp_4 = rt;
             if(temp_4 != 0)
                 State->Registers[temp_4] = lhs + eimm;
@@ -260,6 +266,7 @@ public unsafe partial class Interpreter {
                 else {
                     State->Lo = (uint) ((int) rsv / (int) rtv);
                     State->Hi = (uint) ((int) rsv % (int) rtv);
+                    DivDelay();
                 }
             }
 
@@ -281,6 +288,7 @@ public unsafe partial class Interpreter {
             else {
                 State->Lo = rsv / rtv;
                 State->Hi = rsv % rtv;
+                DivDelay();
             }
 
             return true;
@@ -796,6 +804,9 @@ public unsafe partial class Interpreter {
             var shamt = (insn >> 6) & 0x1FU;
             var lhs = rs switch { 0 => 0U, var temp_93 => State->Registers[temp_93] };
             var rhs = rt switch { 0 => 0U, var temp_94 => State->Registers[temp_94] };
+            var r = lhs - rhs;
+            if(((lhs ^ rhs) & (lhs ^ r) & 0x80000000U) != 0)
+                throw new CpuException(ExceptionType.OV, pc, insn);
             var temp_95 = rd;
             if(temp_95 != 0)
                 State->Registers[temp_95] = lhs - rhs;

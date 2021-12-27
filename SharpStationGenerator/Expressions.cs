@@ -52,6 +52,10 @@ public class Expressions : Builtin {
 				list => $"MulDelay({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])} != 0)")
 			.NoInterpret();
 
+		Expression("div-delay", _ => EUnit.RuntimeType,
+				_ => "DivDelay()")
+			.NoInterpret();
+
 		Statement("=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
 			(c, list) => {
 				if(list[1] is PList sub)
@@ -120,5 +124,7 @@ public class Expressions : Builtin {
 				state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
 				return null;
 			});
+		
+		Statement("do-load", _ => EType.Unit.AsRuntime(), (_, _) => {}).NoInterpret();
 	}
 }
