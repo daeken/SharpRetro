@@ -428,13 +428,58 @@ public unsafe partial class Interpreter {
             return true;
         }
 
+        /* LWL */
+        if((insn & 0xFC000000) == 0x88000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_40 => State->Registers[temp_40] } + (uint) offset;
+            var raddr = addr & 0xFFFFFFFCU;
+            var ert = rt switch { 0 => 0U, var temp_41 => State->Registers[temp_41] };
+            State->LdWhich = rt;
+            State->LdValue = (addr & 0x3) switch {
+                0x0 => (ert & 0xFFFFFFU) |
+                       ((uint) ReadMemory<byte>(raddr) <<
+                        0x18),
+                0x1 => (ert & 0xFFFF) |
+                       ((uint) ReadMemory<ushort>(raddr) <<
+                        0x10),
+                0x2 => (ert & 0xFF) |
+                       (ReadMemory<uint>(raddr) << 0x8),
+                _ => ReadMemory<uint>(raddr),
+            };
+            return true;
+        }
+
+        /* LWR */
+        if((insn & 0xFC000000) == 0x98000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_43 => State->Registers[temp_43] } + (uint) offset;
+            var raddr = addr & 0xFFFFFFFCU;
+            var ert = rt switch { 0 => 0U, var temp_44 => State->Registers[temp_44] };
+            State->LdWhich = rt;
+            State->LdValue = (addr & 0x3) switch {
+                0x0 => ReadMemory<uint>(raddr),
+                0x1 => (ert & 0xFF000000U) |
+                       (ReadMemory<uint>(addr) & 0xFFFFFFU),
+                0x2 => (ert & 0xFFFF0000U) |
+                       ReadMemory<ushort>(addr),
+                _ => (ert & 0xFFFFFF00U) | ReadMemory<byte>(addr),
+            };
+            return true;
+        }
+
         /* LWC2 */
         if((insn & 0xFC000000) == 0xC8000000) {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
-            var addr = rs switch { 0 => 0U, var temp_40 => State->Registers[temp_40] } + (uint) offset;
+            var addr = rs switch { 0 => 0U, var temp_46 => State->Registers[temp_46] } + (uint) offset;
             if((0x0 != (addr &
                         (32 / (uint) 0x8 -
                          0x1))
@@ -461,9 +506,9 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_41 = rd;
-            if(temp_41 != 0)
-                State->Registers[temp_41] = State->Hi;
+            var temp_47 = rd;
+            if(temp_47 != 0)
+                State->Registers[temp_47] = State->Hi;
             AbsorbMuldivDelay();
             return true;
         }
@@ -474,9 +519,9 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_42 = rd;
-            if(temp_42 != 0)
-                State->Registers[temp_42] = State->Lo;
+            var temp_48 = rd;
+            if(temp_48 != 0)
+                State->Registers[temp_48] = State->Lo;
             AbsorbMuldivDelay();
             return true;
         }
@@ -487,7 +532,7 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var cofun = (insn >> 0) & 0x7FFU;
-            Copreg(cop, rd, rt switch { 0 => 0U, var temp_43 => State->Registers[temp_43] });
+            Copreg(cop, rd, rt switch { 0 => 0U, var temp_49 => State->Registers[temp_49] });
             return true;
         }
 
@@ -497,7 +542,7 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            State->Hi = rs switch { 0 => 0U, var temp_44 => State->Registers[temp_44] };
+            State->Hi = rs switch { 0 => 0U, var temp_50 => State->Registers[temp_50] };
             return true;
         }
 
@@ -507,7 +552,7 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            State->Lo = rs switch { 0 => 0U, var temp_45 => State->Registers[temp_45] };
+            State->Lo = rs switch { 0 => 0U, var temp_51 => State->Registers[temp_51] };
             return true;
         }
 
@@ -517,8 +562,8 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var lhs = rs switch { 0 => 0U, var temp_46 => State->Registers[temp_46] };
-            var rhs = rt switch { 0 => 0U, var temp_47 => State->Registers[temp_47] };
+            var lhs = rs switch { 0 => 0U, var temp_52 => State->Registers[temp_52] };
+            var rhs = rt switch { 0 => 0U, var temp_53 => State->Registers[temp_53] };
             var result = (ulong) (lhs * (long) rhs);
             State->Lo = (uint) result;
             State->Hi = (uint) (result >> 0x20);
@@ -532,8 +577,8 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var lhs = rs switch { 0 => 0U, var temp_48 => State->Registers[temp_48] };
-            var rhs = rt switch { 0 => 0U, var temp_49 => State->Registers[temp_49] };
+            var lhs = rs switch { 0 => 0U, var temp_54 => State->Registers[temp_54] };
+            var rhs = rt switch { 0 => 0U, var temp_55 => State->Registers[temp_55] };
             var result = lhs * (ulong) rhs;
             State->Lo = (uint) result;
             State->Hi = (uint) (result >> 0x20);
@@ -547,11 +592,11 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_50 = rd;
-            if(temp_50 != 0)
-                State->Registers[temp_50] =
-                    ~(rs switch { 0 => 0U, var temp_51 => State->Registers[temp_51] } |
-                      rt switch { 0 => 0U, var temp_52 => State->Registers[temp_52] });
+            var temp_56 = rd;
+            if(temp_56 != 0)
+                State->Registers[temp_56] =
+                    ~(rs switch { 0 => 0U, var temp_57 => State->Registers[temp_57] } |
+                      rt switch { 0 => 0U, var temp_58 => State->Registers[temp_58] });
             return true;
         }
 
@@ -561,10 +606,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_53 = rd;
-            if(temp_53 != 0)
-                State->Registers[temp_53] = rs switch { 0 => 0U, var temp_54 => State->Registers[temp_54] } |
-                                            rt switch { 0 => 0U, var temp_55 => State->Registers[temp_55] };
+            var temp_59 = rd;
+            if(temp_59 != 0)
+                State->Registers[temp_59] = rs switch { 0 => 0U, var temp_60 => State->Registers[temp_60] } |
+                                            rt switch { 0 => 0U, var temp_61 => State->Registers[temp_61] };
             return true;
         }
 
@@ -573,10 +618,10 @@ public unsafe partial class Interpreter {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
-            var temp_56 = rt;
-            if(temp_56 != 0)
-                State->Registers[temp_56] =
-                    rs switch { 0 => 0U, var temp_57 => State->Registers[temp_57] } | imm;
+            var temp_62 = rt;
+            if(temp_62 != 0)
+                State->Registers[temp_62] =
+                    rs switch { 0 => 0U, var temp_63 => State->Registers[temp_63] } | imm;
             return true;
         }
 
@@ -586,8 +631,8 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
-            WriteMemory(rs switch { 0 => 0U, var temp_58 => State->Registers[temp_58] } + (uint) offset,
-                (byte) (rt switch { 0 => 0U, var temp_59 => State->Registers[temp_59] }));
+            WriteMemory(rs switch { 0 => 0U, var temp_64 => State->Registers[temp_64] } + (uint) offset,
+                (byte) (rt switch { 0 => 0U, var temp_65 => State->Registers[temp_65] }));
             return true;
         }
 
@@ -597,13 +642,13 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
-            var addr = rs switch { 0 => 0U, var temp_60 => State->Registers[temp_60] } + (uint) offset;
+            var addr = rs switch { 0 => 0U, var temp_66 => State->Registers[temp_66] } + (uint) offset;
             if((0x0 != (addr &
                         (16 / (uint) 0x8 -
                          0x1))
                    ? 1U
                    : 0U) != 0) throw new CpuException(ExceptionType.ADES, pc, insn);
-            WriteMemory(addr, (ushort) (rt switch { 0 => 0U, var temp_61 => State->Registers[temp_61] }));
+            WriteMemory(addr, (ushort) (rt switch { 0 => 0U, var temp_67 => State->Registers[temp_67] }));
             return true;
         }
 
@@ -613,10 +658,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_62 = rd;
-            if(temp_62 != 0)
-                State->Registers[temp_62] =
-                    rt switch { 0 => 0U, var temp_63 => State->Registers[temp_63] } << (int) shamt;
+            var temp_68 = rd;
+            if(temp_68 != 0)
+                State->Registers[temp_68] =
+                    rt switch { 0 => 0U, var temp_69 => State->Registers[temp_69] } << (int) shamt;
             return true;
         }
 
@@ -626,10 +671,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_64 = rd;
-            if(temp_64 != 0)
-                State->Registers[temp_64] = rt switch { 0 => 0U, var temp_65 => State->Registers[temp_65] } <<
-                                            (int) (rs switch { 0 => 0U, var temp_66 => State->Registers[temp_66] });
+            var temp_70 = rd;
+            if(temp_70 != 0)
+                State->Registers[temp_70] = rt switch { 0 => 0U, var temp_71 => State->Registers[temp_71] } <<
+                                            (int) (rs switch { 0 => 0U, var temp_72 => State->Registers[temp_72] });
             return true;
         }
 
@@ -639,11 +684,11 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_67 = rd;
-            if(temp_67 != 0)
-                State->Registers[temp_67] =
-                    (int) (rs switch { 0 => 0U, var temp_68 => State->Registers[temp_68] }) <
-                    (int) (rt switch { 0 => 0U, var temp_69 => State->Registers[temp_69] })
+            var temp_73 = rd;
+            if(temp_73 != 0)
+                State->Registers[temp_73] =
+                    (int) (rs switch { 0 => 0U, var temp_74 => State->Registers[temp_74] }) <
+                    (int) (rt switch { 0 => 0U, var temp_75 => State->Registers[temp_75] })
                         ? 1U
                         : 0U;
             return true;
@@ -655,10 +700,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var eimm = SignExt<int>(imm, 16);
-            var temp_70 = rt;
-            if(temp_70 != 0)
-                State->Registers[temp_70] =
-                    (int) (rs switch { 0 => 0U, var temp_71 => State->Registers[temp_71] }) < eimm ? 1U : 0U;
+            var temp_76 = rt;
+            if(temp_76 != 0)
+                State->Registers[temp_76] =
+                    (int) (rs switch { 0 => 0U, var temp_77 => State->Registers[temp_77] }) < eimm ? 1U : 0U;
             return true;
         }
 
@@ -668,10 +713,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var eimm = SignExt<uint>(imm, 16);
-            var temp_72 = rt;
-            if(temp_72 != 0)
-                State->Registers[temp_72] =
-                    rs switch { 0 => 0U, var temp_73 => State->Registers[temp_73] } < eimm ? 1U : 0U;
+            var temp_78 = rt;
+            if(temp_78 != 0)
+                State->Registers[temp_78] =
+                    rs switch { 0 => 0U, var temp_79 => State->Registers[temp_79] } < eimm ? 1U : 0U;
             return true;
         }
 
@@ -681,10 +726,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_74 = rd;
-            if(temp_74 != 0)
-                State->Registers[temp_74] = rs switch { 0 => 0U, var temp_75 => State->Registers[temp_75] } <
-                                            rt switch { 0 => 0U, var temp_76 => State->Registers[temp_76] }
+            var temp_80 = rd;
+            if(temp_80 != 0)
+                State->Registers[temp_80] = rs switch { 0 => 0U, var temp_81 => State->Registers[temp_81] } <
+                                            rt switch { 0 => 0U, var temp_82 => State->Registers[temp_82] }
                     ? 1U
                     : 0U;
             return true;
@@ -696,10 +741,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_77 = rd;
-            if(temp_77 != 0)
-                State->Registers[temp_77] =
-                    (uint) ((int) (rt switch { 0 => 0U, var temp_78 => State->Registers[temp_78] }) >> (int) shamt);
+            var temp_83 = rd;
+            if(temp_83 != 0)
+                State->Registers[temp_83] =
+                    (uint) ((int) (rt switch { 0 => 0U, var temp_84 => State->Registers[temp_84] }) >> (int) shamt);
             return true;
         }
 
@@ -709,11 +754,11 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_79 = rd;
-            if(temp_79 != 0)
-                State->Registers[temp_79] =
-                    (uint) ((int) (rt switch { 0 => 0U, var temp_80 => State->Registers[temp_80] }) >>
-                            (int) (rs switch { 0 => 0U, var temp_81 => State->Registers[temp_81] }));
+            var temp_85 = rd;
+            if(temp_85 != 0)
+                State->Registers[temp_85] =
+                    (uint) ((int) (rt switch { 0 => 0U, var temp_86 => State->Registers[temp_86] }) >>
+                            (int) (rs switch { 0 => 0U, var temp_87 => State->Registers[temp_87] }));
             return true;
         }
 
@@ -723,10 +768,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_82 = rd;
-            if(temp_82 != 0)
-                State->Registers[temp_82] =
-                    rt switch { 0 => 0U, var temp_83 => State->Registers[temp_83] } >> (int) shamt;
+            var temp_88 = rd;
+            if(temp_88 != 0)
+                State->Registers[temp_88] =
+                    rt switch { 0 => 0U, var temp_89 => State->Registers[temp_89] } >> (int) shamt;
             return true;
         }
 
@@ -736,10 +781,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_84 = rd;
-            if(temp_84 != 0)
-                State->Registers[temp_84] = rt switch { 0 => 0U, var temp_85 => State->Registers[temp_85] } >>
-                                            (int) (rs switch { 0 => 0U, var temp_86 => State->Registers[temp_86] });
+            var temp_90 = rd;
+            if(temp_90 != 0)
+                State->Registers[temp_90] = rt switch { 0 => 0U, var temp_91 => State->Registers[temp_91] } >>
+                                            (int) (rs switch { 0 => 0U, var temp_92 => State->Registers[temp_92] });
             return true;
         }
 
@@ -749,11 +794,11 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var lhs = rs switch { 0 => 0U, var temp_87 => State->Registers[temp_87] };
-            var rhs = rt switch { 0 => 0U, var temp_88 => State->Registers[temp_88] };
-            var temp_89 = rd;
-            if(temp_89 != 0)
-                State->Registers[temp_89] = lhs - rhs;
+            var lhs = rs switch { 0 => 0U, var temp_93 => State->Registers[temp_93] };
+            var rhs = rt switch { 0 => 0U, var temp_94 => State->Registers[temp_94] };
+            var temp_95 = rd;
+            if(temp_95 != 0)
+                State->Registers[temp_95] = lhs - rhs;
             return true;
         }
 
@@ -763,11 +808,11 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_90 = rd;
-            if(temp_90 != 0)
-                State->Registers[temp_90] =
-                    rs switch { 0 => 0U, var temp_91 => State->Registers[temp_91] } -
-                    rt switch { 0 => 0U, var temp_92 => State->Registers[temp_92] };
+            var temp_96 = rd;
+            if(temp_96 != 0)
+                State->Registers[temp_96] =
+                    rs switch { 0 => 0U, var temp_97 => State->Registers[temp_97] } -
+                    rt switch { 0 => 0U, var temp_98 => State->Registers[temp_98] };
             return true;
         }
 
@@ -777,13 +822,13 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
-            var addr = rs switch { 0 => 0U, var temp_93 => State->Registers[temp_93] } + (uint) offset;
+            var addr = rs switch { 0 => 0U, var temp_99 => State->Registers[temp_99] } + (uint) offset;
             if((0x0 != (addr &
                         (32 / (uint) 0x8 -
                          0x1))
                    ? 1U
                    : 0U) != 0) throw new CpuException(ExceptionType.ADES, pc, insn);
-            WriteMemory(addr, rt switch { 0 => 0U, var temp_94 => State->Registers[temp_94] });
+            WriteMemory(addr, rt switch { 0 => 0U, var temp_100 => State->Registers[temp_100] });
             return true;
         }
 
@@ -793,13 +838,77 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
-            var addr = rs switch { 0 => 0U, var temp_95 => State->Registers[temp_95] } + (uint) offset;
+            var addr = rs switch { 0 => 0U, var temp_101 => State->Registers[temp_101] } + (uint) offset;
             if((0x0 != (addr &
                         (32 / (uint) 0x8 -
                          0x1))
                    ? 1U
                    : 0U) != 0) throw new CpuException(ExceptionType.ADES, pc, insn);
             WriteMemory(addr, Copreg(0x2, rt));
+            return true;
+        }
+
+        /* SWL */
+        if((insn & 0xFC000000) == 0xA8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_102 => State->Registers[temp_102] } + (uint) offset;
+            var raddr = addr & 0xFFFFFFFCU;
+            var rtv = rt switch { 0 => 0U, var temp_103 => State->Registers[temp_103] };
+            switch(addr & 0x3) {
+                case 0x0: {
+                    WriteMemory(raddr, (byte) (rtv >> 0x18));
+                    break;
+                }
+                case 0x1: {
+                    WriteMemory(raddr, (ushort) (rtv >> 0x10));
+                    break;
+                }
+                case 0x3: {
+                    WriteMemory(raddr, rtv);
+                    break;
+                }
+                default: {
+                    WriteMemory(raddr, (ushort) (rtv >> 0x8));
+                    WriteMemory(raddr + 0x2, (byte) (rtv >> 0x18));
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        /* SWR */
+        if((insn & 0xFC000000) == 0xB8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_104 => State->Registers[temp_104] } + (uint) offset;
+            var raddr = addr & 0xFFFFFFFCU;
+            var rtv = rt switch { 0 => 0U, var temp_105 => State->Registers[temp_105] };
+            switch(addr & 0x3) {
+                case 0x0: {
+                    WriteMemory(raddr, rtv);
+                    break;
+                }
+                case 0x2: {
+                    WriteMemory(raddr, (ushort) rtv);
+                    break;
+                }
+                case 0x3: {
+                    WriteMemory(raddr, (byte) rtv);
+                    break;
+                }
+                default: {
+                    WriteMemory(raddr, (ushort) rtv);
+                    WriteMemory(raddr + 0x2, (byte) (rtv >> 0x10));
+                    break;
+                }
+            }
+
             return true;
         }
 
@@ -816,10 +925,10 @@ public unsafe partial class Interpreter {
             var rt = (insn >> 16) & 0x1FU;
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
-            var temp_96 = rd;
-            if(temp_96 != 0)
-                State->Registers[temp_96] = rs switch { 0 => 0U, var temp_97 => State->Registers[temp_97] } ^
-                                            rt switch { 0 => 0U, var temp_98 => State->Registers[temp_98] };
+            var temp_106 = rd;
+            if(temp_106 != 0)
+                State->Registers[temp_106] = rs switch { 0 => 0U, var temp_107 => State->Registers[temp_107] } ^
+                                             rt switch { 0 => 0U, var temp_108 => State->Registers[temp_108] };
             return true;
         }
 
@@ -828,10 +937,10 @@ public unsafe partial class Interpreter {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
-            var temp_99 = rt;
-            if(temp_99 != 0)
-                State->Registers[temp_99] =
-                    rs switch { 0 => 0U, var temp_100 => State->Registers[temp_100] } ^ imm;
+            var temp_109 = rt;
+            if(temp_109 != 0)
+                State->Registers[temp_109] =
+                    rs switch { 0 => 0U, var temp_110 => State->Registers[temp_110] } ^ imm;
             return true;
         }
 

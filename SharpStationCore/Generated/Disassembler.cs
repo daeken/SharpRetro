@@ -15,7 +15,7 @@ using static Math;
 #endregion
 
 public class Disassembler {
-    public const int InstructionCount = 61 + 0;
+    public const int InstructionCount = 65 + 0;
 
     public static string Disassemble(uint insn, uint pc) {
         /* ADD */
@@ -274,6 +274,24 @@ public class Disassembler {
             return "lw %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
         }
 
+        /* LWL */
+        if((insn & 0xFC000000) == 0x88000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lwl %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* LWR */
+        if((insn & 0xFC000000) == 0x98000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "lwr %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
         /* LWC2 */
         if((insn & 0xFC000000) == 0xC8000000) {
             var rs = (insn >> 21) & 0x1FU;
@@ -523,6 +541,24 @@ public class Disassembler {
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
             return "swc2 " + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* SWL */
+        if((insn & 0xFC000000) == 0xA8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "swl %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* SWR */
+        if((insn & 0xFC000000) == 0xB8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "swr %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
         }
 
         /* SYSCALL */
@@ -779,6 +815,22 @@ public class Disassembler {
             return "LW";
         }
 
+        if((insn & 0xFC000000) == 0x88000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LWL";
+        }
+
+        if((insn & 0xFC000000) == 0x98000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "LWR";
+        }
+
         if((insn & 0xFC000000) == 0xC8000000) {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
@@ -1000,6 +1052,22 @@ public class Disassembler {
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
             return "SWC2";
+        }
+
+        if((insn & 0xFC000000) == 0xA8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "SWL";
+        }
+
+        if((insn & 0xFC000000) == 0xB8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "SWR";
         }
 
         if((insn & 0xFC00003F) == 0x0000000C) {

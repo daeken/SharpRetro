@@ -252,6 +252,28 @@
         (check-load-alignment addr u32)
         (defer= (reg rt) (load addr u32))))
 
+(itype LWL "100010" "lwl %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (mlet (addr (+ (reg rs) offset)
+           raddr (& addr 0xFFFFFFFC)
+           ert (reg rt))
+        (defer= (reg rt) (match (& addr 3)
+            0 (| (& ert 0x00FFFFFF) (<< (u32 (load raddr u8)) 24))
+            1 (| (& ert 0x0000FFFF) (<< (u32 (load raddr u16)) 16))
+            2 (| (& ert 0x000000FF) (<< (load raddr u32) 8))
+              (load raddr u32)))))
+
+(itype LWR "100110" "lwr %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (mlet (addr (+ (reg rs) offset)
+           raddr (& addr 0xFFFFFFFC)
+           ert (reg rt))
+        (defer= (reg rt) (match (& addr 3)
+            0 (load raddr u32)
+            1 (| (& ert 0xFF000000) (& (load addr u32) 0x00FFFFFF))
+            2 (| (& ert 0xFFFF0000) (load addr u16))
+              (| (& ert 0xFFFFFF00) (load addr u8))))))
+
 (itype LWC2 "110010" "lwc2 $rt, $(hex offset)(%$rs)"
     (let offset (signext imm i32))
     (let addr (+ (reg rs) offset)
@@ -367,6 +389,32 @@
     (let addr (+ (reg rs) offset)
         (check-store-alignment addr u32)
         (store addr (copreg 2 rt))))
+
+(itype SWL "101010" "swl %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (mlet (addr (+ (reg rs) offset)
+           raddr (& addr 0xFFFFFFFC)
+           rtv (reg rt))
+        (match (& addr 3)
+            0 (store raddr (u8 (>> rtv 24)))
+            1 (store raddr (u16 (>> rtv 16)))
+            3 (store raddr rtv)
+              (block
+                (store raddr (u16 (>> rtv 8)))
+                (store (+ raddr 2) (u8 (>> rtv 24)))))))
+
+(itype SWR "101110" "swr %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (mlet (addr (+ (reg rs) offset)
+           raddr (& addr 0xFFFFFFFC)
+           rtv (reg rt))
+        (match (& addr 3)
+            0 (store raddr rtv)
+            2 (store raddr (u16 rtv))
+            3 (store raddr (u8 rtv))
+              (block
+                (store raddr (u16 rtv))
+                (store (+ raddr 2) (u8 (>> rtv 16)))))))
 
 (stype SYSCALL "001100" "syscall $code"
     (exception Syscall))
