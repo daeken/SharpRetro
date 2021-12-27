@@ -16,4 +16,8 @@ public unsafe partial class Interpreter {
 
 	T ReadMemory<T>(uint addr) => default;
 	void WriteMemory<T>(uint addr, T value) {}
+
+	void AbsorbMuldivDelay() {}
+	
+	void MulDelay(uint a, uint b, bool signed) {}
 }

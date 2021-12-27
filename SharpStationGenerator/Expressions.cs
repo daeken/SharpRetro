@@ -28,6 +28,10 @@ public class Expressions : Builtin {
 		Expression("reg-lo", _ => new EInt(false, 32).AsRuntime(), 
 			_ => "State->Lo").NoInterpret();
 
+		Expression("absorb-muldiv-delay", _ => EUnit.RuntimeType,
+				_ => "AbsorbMuldivDelay()")
+			.NoInterpret();
+		
 		Expression("copfun", _ => EUnit.RuntimeType,
 				list => $"Copfun({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
 			.NoInterpret();
@@ -36,8 +40,16 @@ public class Expressions : Builtin {
 				list => $"throw new CpuException(ExceptionType.{list[1]}, pc, insn)")
 			.NoInterpret();
 		
+		Expression("copreg", _ => new EInt(false, 32).AsRuntime(), 
+				list => $"Copreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+			.NoInterpret();
+
 		Expression("copcreg", _ => new EInt(false, 32).AsRuntime(), 
 				list => $"Copcreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+			.NoInterpret();
+
+		Expression("mul-delay", _ => EUnit.RuntimeType,
+				list => $"MulDelay({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])} != 0)")
 			.NoInterpret();
 
 		Statement("=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
@@ -60,6 +72,9 @@ public class Expressions : Builtin {
 							return;
 						case PName("reg-hi") or PName("reg-lo"):
 							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (uint) ({GenerateExpression(list[2])});";
+							return;
+						case PName("copreg"):
+							c += $"Copreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";
 							return;
 						case PName("copcreg"):
 							c += $"Copcreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";

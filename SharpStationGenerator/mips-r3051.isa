@@ -2,10 +2,12 @@
 (defm u8  (v) (cast v u8))
 (defm u16 (v) (cast v u16))
 (defm u32 (v) (cast v u32))
+(defm u64 (v) (cast v u64))
 
 (defm i8  (v) (cast v i8))
 (defm i16 (v) (cast v i16))
 (defm i32 (v) (cast v i32))
+(defm i64 (v) (cast v i64))
 
 (defm check-overflow-add (lhs rhs)
     (block))
@@ -41,7 +43,7 @@
 (defm ritype (name op funct dasm decode eval)
     (block
         (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
-        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length funct)")
         (def name
             "$op sssss $funct iiiiiiiiiiiiiiii"
             dasm
@@ -86,7 +88,7 @@
 (defm cftype (name op funct dasm decode eval)
     (block
         (assert (== (string-length op) 4) "Expected 4 opcode bits for instruction '$(as-string name)', got $(string-length op)")
-        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length funct)")
         (def name
             "$op cc $funct ttttt ddddd fffffffffff"
             dasm
@@ -246,3 +248,56 @@
     (let addr (+ (reg rs) offset)
         (check-load-alignment addr u32)
         (defer= (reg rt) (load addr u32))))
+
+(itype LWC2 "110010" "lwc2 %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u32)
+        (= (copreg 2 rt) (load addr u32))))
+
+(cftype MFC "0100" "00000" "mfc$cop %$rt, $rd"
+    (defer= (reg rt) (copreg cop rd)))
+
+(rtype MFHI "010000" "mfhi %$rd"
+    (block
+        (= (reg rd) (reg-hi))
+        (absorb-muldiv-delay)))
+
+(rtype MFLO "010010" "mflo %$rd"
+    (block
+        (= (reg rd) (reg-lo))
+        (absorb-muldiv-delay)))
+
+(cftype MTC "0100" "00100" "mtc$cop %$rt, $rd"
+    (= (copreg cop rd) (reg rt)))
+
+(rtype MTHI "010001" "mthi %$rs"
+    (= (reg-hi) (reg rs)))
+
+(rtype MTLO "010011" "mtlo %$rs"
+    (= (reg-lo) (reg rs)))
+
+(rtype MULT "011000" "mult %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt)
+           result (u64 (* (i64 lhs) (i64 rhs))))
+        (= (reg-lo) result)
+        (= (reg-hi) (>> result 32))
+        (mul-delay lhs rhs 1)))
+
+(rtype MULTU "011001" "multu %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt)
+           result (* (u64 lhs) (u64 rhs)))
+        (= (reg-lo) result)
+        (= (reg-hi) (>> result 32))
+        (mul-delay lhs rhs 0)))
+
+(rtype NOR "100111" "nor %$rd, %$rs, %$rt"
+    (= (reg rd) (~ (| (reg rs) (reg rt)))))
+
+(rtype OR "100101" "or %$rd, %$rs, %$rt"
+    (= (reg rd) (| (reg rs) (reg rt))))
+
+(itype ORI "001101" "ori %$rt, %$rs, $(hex imm)"
+    (= (reg rt) (| (reg rs) (u32 imm))))
