@@ -301,3 +301,45 @@
 
 (itype ORI "001101" "ori %$rt, %$rs, $(hex imm)"
     (= (reg rt) (| (reg rs) (u32 imm))))
+
+(itype SB "101000" "sb %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (store (+ (reg rs) offset) (u8 (reg rt))))
+
+(itype SH "101001" "sh %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-store-alignment addr u16)
+        (store addr (u16 (reg rt)))))
+
+(rtype SLL "000000" "sll %$rd, %$rt, $shamt"
+    (= (reg rd) (<< (reg rt) shamt)))
+
+(rtype SLLV "000100" "sllv %$rd, %$rt, %$rs"
+    (= (reg rd) (<< (reg rt) (reg rs))))
+
+(rtype SLT "101010" "slt %$rd, %$rs, %$rt"
+    (= (reg rd) (< (i32 (reg rs)) (i32 (reg rt)))))
+
+(itype SLTI "001010" "slti %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm i32))
+    (= (reg rt) (< (i32 (reg rs)) eimm)))
+
+(itype SLTIU "001011" "sltiu %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (= (reg rt) (< (reg rs) eimm)))
+
+(rtype SLTU "101011" "tltu %$rd, %$rs, %$rt"
+    (= (reg rd) (< (reg rs) (reg rt))))
+
+(rtype SRA "000011" "sra %$rd, %$rt, $shamt"
+    (= (reg rd) (>> (i32 (reg rt)) shamt)))
+
+(rtype SRAV "000111" "srav %$rd, %$rt, %$rs"
+    (= (reg rd) (>> (i32 (reg rt)) (i32 (reg rs)))))
+
+(rtype SRL "000010" "srl %$rd, %$rt, $shamt"
+    (= (reg rd) (>> (reg rt) shamt)))
+
+(rtype SRLV "000110" "srlv %$rd, %$rt, %$rs"
+    (= (reg rd) (>> (reg rt) (reg rs))))
