@@ -20,4 +20,8 @@ public unsafe partial class Interpreter {
 	void AbsorbMuldivDelay() {}
 	
 	void MulDelay(uint a, uint b, bool signed) {}
+	void DivDelay() {}
+	
+	void DoLds() {}
+	void DoLoad(uint reg, ref uint rval) {}
 }

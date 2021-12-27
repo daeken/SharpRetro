@@ -10,5 +10,6 @@ public unsafe struct CpuState {
 	[FieldOffset(12)] public uint LdWhich;
 	[FieldOffset(16)] public uint LdValue;
 	[FieldOffset(20)] public uint LdAbsorb;
-	[FieldOffset(24)] public fixed uint Registers[32];
+	[FieldOffset(24)] public fixed uint ReadAbsorb[36];
+	[FieldOffset(168)] public fixed uint Registers[32];
 }

@@ -54,7 +54,7 @@ public class MipsDef : Def {
 					match |= 1;
 					break;
 				case '#': break;
-				case char x:
+				case var x:
 					var field = fieldNames[x.ToString()];
 					fields[field] = fields.ContainsKey(field) ? (fields[field].Item1 + 1, bit) : (1, bit);
 					break;
@@ -65,6 +65,50 @@ public class MipsDef : Def {
 		foreach(var (fname, (bits, _)) in fields)
 			locals[fname] = new EInt(false, bits);
 		
-		return new MipsDef(name, mask, match, fields, disasm, decode, eval, locals);
+		return new MipsDef(name, mask, match, fields, disasm, decode, RewriteEval(eval), locals);
+	}
+
+	static PList RewriteEval(PList eval) {
+		var regRefs = new HashSet<PTree>();
+		var hasDoLoad = false;
+		eval.WalkLeaves(x => {
+			if(x is not PList pl) return;
+			if(pl[0] is PName("reg"))
+				regRefs.Add(pl[1]);
+			else if(pl[0] is PName("do-load"))
+				hasDoLoad = true;
+		});
+
+		var neval = new PList { new PName("block") };
+		foreach(var elem in regRefs)
+			neval.Add(new PList { new PName("read-absorb"), elem });
+
+		var tregs = new Dictionary<PTree, string>();
+		PTree RewriteRegs(PTree tl) {
+			if(tl is not PList list) return tl;
+
+			switch(list[0]) {
+				case PName("=") or PName("defer="):
+					return new PList { list[0], list[1], RewriteRegs(list[2]) };
+				case PName("reg"):
+					if(!tregs.TryGetValue(list, out var tn))
+						tregs[list] = tn = Core.TempName();
+					return new PName(tn);
+				case PName("do-load"):
+					return new PList { new PName("do-load"), list[1], RewriteRegs(new PList { new PName("reg"), list[1] })};
+				default:
+					return new PList(list.Select(RewriteRegs));
+			}
+		}
+		
+		eval = RewriteRegs(eval) as PList;
+		if(!hasDoLoad)
+			eval = new PList { new PName("block"), new PList { new PName("do-lds") }, eval };
+		if(tregs.Count != 0)
+			eval = new PList { new PName("mlet"), new PList(
+					tregs.Select(x => new[] { new PName(x.Value), x.Key }).SelectMany(x => x)
+				), eval };
+		neval.Add(eval);
+		return neval;
 	}
 }

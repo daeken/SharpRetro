@@ -71,6 +71,13 @@ public class EVector : EType {
 	
 public abstract class PTree {
 	public EType Type = EType.Undef;
+
+	public override bool Equals(object obj) => ToString() == obj?.ToString();
+	protected bool Equals(PTree other) => Equals(Type, other.Type) && ToString() == other.ToString();
+	public override int GetHashCode() => HashCode.Combine(
+		Type.GetHashCode(), 
+		ToString()?.GetHashCode()
+	);
 }
 
 public class PList : PTree, IEnumerable<PTree> {
@@ -129,6 +136,14 @@ public class PList : PTree, IEnumerable<PTree> {
 			}
 		}
 		return null;
+	}
+	
+	public void WalkLeaves(Action<PTree> mapper) {
+		foreach(var child in this) {
+			mapper(child);
+			if(child is PList list)
+				list.WalkLeaves(mapper);
+		}
 	}
 }
 

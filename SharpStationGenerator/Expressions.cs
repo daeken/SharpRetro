@@ -93,7 +93,7 @@ public class Expressions : Builtin {
 
 		Statement("defer=", list => list[2].Type?.AsRuntime(list.AnyRuntime) ?? throw new NotImplementedException(),
 			(c, list) => {
-				if(list[1] is not PList sub) return;
+				if(list[1] is not PList sub) throw new NotSupportedException();
 				switch(sub[0]) {
 					case PName("reg"):
 						c += $"State->LdWhich = (uint) ({GenerateExpression(sub[1])});";
@@ -125,6 +125,14 @@ public class Expressions : Builtin {
 				return null;
 			});
 		
-		Statement("do-load", _ => EType.Unit.AsRuntime(), (_, _) => {}).NoInterpret();
+		Expression("do-load", _ => EType.Unit.AsRuntime(), list => $"DoLoad({GenerateExpression(list[1])}, ref {GenerateExpression(list[2])})").NoInterpret();
+		
+		Statement("do-lds", _ => EType.Unit.AsRuntime(), (c, _) => {
+			c += "DoLds();";
+		}).NoInterpret();
+		
+		Statement("read-absorb", _ => EType.Unit.AsRuntime(), (c, list) => {
+			c += $"State->ReadAbsorb[{GenerateExpression(list[1])}] = 0;";
+		}).NoInterpret();
 	}
 }
