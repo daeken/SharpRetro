@@ -15,7 +15,7 @@ using static Math;
 #endregion
 
 public class Disassembler {
-    public const int InstructionCount = 54 + 0;
+    public const int InstructionCount = 61 + 0;
 
     public static string Disassemble(uint insn, uint pc) {
         /* ADD */
@@ -280,7 +280,7 @@ public class Disassembler {
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
             var offset = SignExt<int>(imm, 16);
-            return "lwc2 %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+            return "lwc2 " + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
         }
 
         /* MFC */
@@ -487,6 +487,65 @@ public class Disassembler {
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
             return "srlv %" + rd + ", %" + rt + ", %" + rs;
+        }
+
+        /* SUB */
+        if((insn & 0xFC00003F) == 0x00000022) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "sub %" + rd + ", %" + rs + ", %" + rt;
+        }
+
+        /* SUBU */
+        if((insn & 0xFC00003F) == 0x00000023) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "subu %" + rd + ", %" + rs + ", %" + rt;
+        }
+
+        /* SW */
+        if((insn & 0xFC000000) == 0xAC000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "sw %" + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* SWC2 */
+        if((insn & 0xFC000000) == 0xE8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "swc2 " + rt + ", " + $"0x{offset:x08}" + "(%" + rs + ")";
+        }
+
+        /* SYSCALL */
+        if((insn & 0xFC00003F) == 0x0000000C) {
+            var code = (insn >> 6) & 0xFFFFFU;
+            return "syscall " + code;
+        }
+
+        /* XOR */
+        if((insn & 0xFC00003F) == 0x00000026) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "xor %" + rd + ", %" + rs + ", %" + rt;
+        }
+
+        /* XORI */
+        if((insn & 0xFC000000) == 0x38000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            return "xori %" + rt + ", %" + rs + ", " + $"0x{imm:x04}";
         }
 
         return null;
@@ -909,6 +968,58 @@ public class Disassembler {
             var rd = (insn >> 11) & 0x1FU;
             var shamt = (insn >> 6) & 0x1FU;
             return "SRLV";
+        }
+
+        if((insn & 0xFC00003F) == 0x00000022) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "SUB";
+        }
+
+        if((insn & 0xFC00003F) == 0x00000023) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "SUBU";
+        }
+
+        if((insn & 0xFC000000) == 0xAC000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "SW";
+        }
+
+        if((insn & 0xFC000000) == 0xE8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            return "SWC2";
+        }
+
+        if((insn & 0xFC00003F) == 0x0000000C) {
+            var code = (insn >> 6) & 0xFFFFFU;
+            return "SYSCALL";
+        }
+
+        if((insn & 0xFC00003F) == 0x00000026) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            return "XOR";
+        }
+
+        if((insn & 0xFC000000) == 0x38000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            return "XORI";
         }
 
         return null;

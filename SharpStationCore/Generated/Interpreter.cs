@@ -743,6 +743,98 @@ public unsafe partial class Interpreter {
             return true;
         }
 
+        /* SUB */
+        if((insn & 0xFC00003F) == 0x00000022) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var lhs = rs switch { 0 => 0U, var temp_87 => State->Registers[temp_87] };
+            var rhs = rt switch { 0 => 0U, var temp_88 => State->Registers[temp_88] };
+            var temp_89 = rd;
+            if(temp_89 != 0)
+                State->Registers[temp_89] = lhs - rhs;
+            return true;
+        }
+
+        /* SUBU */
+        if((insn & 0xFC00003F) == 0x00000023) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var temp_90 = rd;
+            if(temp_90 != 0)
+                State->Registers[temp_90] =
+                    rs switch { 0 => 0U, var temp_91 => State->Registers[temp_91] } -
+                    rt switch { 0 => 0U, var temp_92 => State->Registers[temp_92] };
+            return true;
+        }
+
+        /* SW */
+        if((insn & 0xFC000000) == 0xAC000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_93 => State->Registers[temp_93] } + (uint) offset;
+            if((0x0 != (addr &
+                        (32 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADES, pc, insn);
+            WriteMemory(addr, rt switch { 0 => 0U, var temp_94 => State->Registers[temp_94] });
+            return true;
+        }
+
+        /* SWC2 */
+        if((insn & 0xFC000000) == 0xE8000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var offset = SignExt<int>(imm, 16);
+            var addr = rs switch { 0 => 0U, var temp_95 => State->Registers[temp_95] } + (uint) offset;
+            if((0x0 != (addr &
+                        (32 / (uint) 0x8 -
+                         0x1))
+                   ? 1U
+                   : 0U) != 0) throw new CpuException(ExceptionType.ADES, pc, insn);
+            WriteMemory(addr, Copreg(0x2, rt));
+            return true;
+        }
+
+        /* SYSCALL */
+        if((insn & 0xFC00003F) == 0x0000000C) {
+            var code = (insn >> 6) & 0xFFFFFU;
+            throw new CpuException(ExceptionType.Syscall, pc, insn);
+            return true;
+        }
+
+        /* XOR */
+        if((insn & 0xFC00003F) == 0x00000026) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var rd = (insn >> 11) & 0x1FU;
+            var shamt = (insn >> 6) & 0x1FU;
+            var temp_96 = rd;
+            if(temp_96 != 0)
+                State->Registers[temp_96] = rs switch { 0 => 0U, var temp_97 => State->Registers[temp_97] } ^
+                                            rt switch { 0 => 0U, var temp_98 => State->Registers[temp_98] };
+            return true;
+        }
+
+        /* XORI */
+        if((insn & 0xFC000000) == 0x38000000) {
+            var rs = (insn >> 21) & 0x1FU;
+            var rt = (insn >> 16) & 0x1FU;
+            var imm = (insn >> 0) & 0xFFFFU;
+            var temp_99 = rt;
+            if(temp_99 != 0)
+                State->Registers[temp_99] =
+                    rs switch { 0 => 0U, var temp_100 => State->Registers[temp_100] } ^ imm;
+            return true;
+        }
+
         return false;
     }
 }

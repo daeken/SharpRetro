@@ -12,6 +12,9 @@
 (defm check-overflow-add (lhs rhs)
     (block))
 
+(defm check-overflow-sub (lhs rhs)
+    (block))
+
 (defm set-link () (= (reg 31) (+ (pc) 8)))
 (defm branch-with-link (target) (block (set-link) (branch target)))
 (defm branch-default () (branch (+ (pc) 8)))
@@ -249,7 +252,7 @@
         (check-load-alignment addr u32)
         (defer= (reg rt) (load addr u32))))
 
-(itype LWC2 "110010" "lwc2 %$rt, $(hex offset)(%$rs)"
+(itype LWC2 "110010" "lwc2 $rt, $(hex offset)(%$rs)"
     (let offset (signext imm i32))
     (let addr (+ (reg rs) offset)
         (check-load-alignment addr u32)
@@ -343,3 +346,33 @@
 
 (rtype SRLV "000110" "srlv %$rd, %$rt, %$rs"
     (= (reg rd) (>> (reg rt) (reg rs))))
+
+(rtype SUB "100010" "sub %$rd, %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt))
+        (check-overflow-sub lhs rhs)
+        (= (reg rd) (- lhs rhs))))
+
+(rtype SUBU "100011" "subu %$rd, %$rs, %$rt"
+    (= (reg rd) (- (reg rs) (reg rt))))
+
+(itype SW "101011" "sw %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-store-alignment addr u32)
+        (store addr (reg rt))))
+
+(itype SWC2 "111010" "swc2 $rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-store-alignment addr u32)
+        (store addr (copreg 2 rt))))
+
+(stype SYSCALL "001100" "syscall $code"
+    (exception Syscall))
+
+(rtype XOR "100110" "xor %$rd, %$rs, %$rt"
+    (= (reg rd) (^ (reg rs) (reg rt))))
+
+(itype XORI "001110" "xori %$rt, %$rs, $(hex imm)"
+    (= (reg rt) (^ (reg rs) (u32 imm))))
