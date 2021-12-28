@@ -6,8 +6,11 @@ public static class Globals {
 	public static CoreCpu Cpu;
 	public static CoreMemory Memory;
 
+	public static Cop0 CP0;
+
 	public static void Reset() {
 		Cpu = new();
 		Memory = new();
+		CP0 = new();
 	}
 }

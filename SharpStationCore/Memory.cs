@@ -154,7 +154,7 @@ public class IoPorts : IMemory {
 						.FirstOrDefault(y => y.FieldType == x.DeclaringType)?.GetValue(null);
 				if(attr.Count == 0 && x is FieldInfo fi) {
 					if(!fi.IsStatic && instance == null)
-						throw new Exception($"Port {name} is not static and no instance available");
+						throw new($"Port {name} is not static and no instance available");
 					if(fi.FieldType == typeof(byte))
 						Add(new Port<byte>(addr, name, debug)
 							{ () => (byte) fi.GetValue(instance), v => fi.SetValue(instance, v) });
@@ -168,7 +168,7 @@ public class IoPorts : IMemory {
 						throw new NotImplementedException($"Field {x.DeclaringType.Name}.{x} not a supported type");
 				} else if(x is FieldInfo f) {
 					if(!f.IsStatic && instance == null)
-						throw new Exception($"Port {name} is not static and no instance available");
+						throw new($"Port {name} is not static and no instance available");
 					if(f.FieldType == typeof(byte[])) {
 						var arr = new byte[attr.Count];
 						f.SetValue(instance, arr);
@@ -188,16 +188,16 @@ public class IoPorts : IMemory {
 						throw new NotImplementedException($"Field {x.DeclaringType.Name}.{x} not a supported type");
 				} else if(x is PropertyInfo pi) {
 					if((pi.GetMethod != null && !pi.GetMethod.IsStatic || pi.SetMethod != null && !pi.SetMethod.IsStatic) && instance == null)
-						throw new Exception($"Port {name} is not static and no instance available");
+						throw new($"Port {name} is not static and no instance available");
 					if(attr.Count != 0)
-						throw new Exception($"Port {name} is multi-port but not a field");
+						throw new($"Port {name} is multi-port but not a field");
 					if(pi.PropertyType == typeof(byte)) Add(MapProperty<byte>(instance, addr, name, debug, pi));
 					else if(pi.PropertyType == typeof(ushort)) Add(MapProperty<ushort>(instance, addr, name, debug, pi));
 					else if(pi.PropertyType == typeof(uint)) Add(MapProperty<uint>(instance, addr, name, debug, pi));
 					else throw new NotImplementedException($"Property {x.DeclaringType.Name}.{x} not a supported type");
 				} else if(attr.Count != 0 && x is MethodInfo mi) {
 					if(!mi.IsStatic && instance == null)
-						throw new Exception($"Port {name} is not static and no instance available");
+						throw new($"Port {name} is not static and no instance available");
 					if(mi.ReturnType == typeof(void)) {
 						var t = mi.GetParameters()[1].ParameterType;
 						if(t == typeof(byte))
@@ -231,7 +231,7 @@ public class IoPorts : IMemory {
 					}
 				} else if(x is MethodInfo m) {
 					if(!m.IsStatic && instance == null)
-						throw new Exception($"Port {name} is not static and no instance available");
+						throw new($"Port {name} is not static and no instance available");
 					if(m.ReturnType == typeof(void)) {
 						var t = m.GetParameters()[0].ParameterType;
 						if(t == typeof(byte)) Add(new Port<byte>(addr, name, debug) { v => m.Invoke(instance, new[] { (object) v }) });
@@ -287,7 +287,7 @@ public class IoPorts : IMemory {
 			else if(cport._Store == null && port._Store != null)
 				cport._Store = port._Store;
 			else
-				throw new Exception($"Port {port.Name} assigned to already-occupied address 0x{port.Addr:X8}");
+				throw new($"Port {port.Name} assigned to already-occupied address 0x{port.Addr:X8}");
 			return;
 		}
 		Ports8[port.Addr] = port;
@@ -300,7 +300,7 @@ public class IoPorts : IMemory {
 			else if(cport._Store == null && port._Store != null)
 				cport._Store = port._Store;
 			else
-				throw new Exception($"Port {port.Name} assigned to already-occupied address 0x{port.Addr:X8}");
+				throw new($"Port {port.Name} assigned to already-occupied address 0x{port.Addr:X8}");
 			return;
 		}
 		Ports16[port.Addr] = port;
@@ -313,7 +313,7 @@ public class IoPorts : IMemory {
 			else if(cport._Store == null && port._Store != null)
 				cport._Store = port._Store;
 			else
-				throw new Exception($"Port {port.Name} assigned to already-occupied address 0x{port.Addr:X8}");
+				throw new($"Port {port.Name} assigned to already-occupied address 0x{port.Addr:X8}");
 			return;
 		}
 		Ports32[port.Addr] = port;

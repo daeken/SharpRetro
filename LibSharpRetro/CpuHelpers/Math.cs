@@ -20,14 +20,24 @@ public static class Math {
 	}
 
 	public static T SignExt<T>(uint imm, int size) {
-		T Conv(object value) => (T) Convert.ChangeType(value, typeof(T));
+		T Conv(int value) => (T) (object) (default(T) switch {
+			byte => (byte) (sbyte) value,
+			sbyte => (sbyte) value,
+			ushort => (ushort) (short) value,
+			short => (short) value,
+			uint => (uint) value,
+			int => value,
+			ulong => (ulong) value,
+			long => (long) value,
+			_ => throw new NotSupportedException(),
+		});
 		unchecked {
 			return Conv(size switch {
 				8 => (sbyte) (byte) imm,
 				16 => (short) (ushort) imm,
 				32 => (int) imm,
 				{} when (imm & (1 << (size - 1))) != 0 => (int) imm - (1 << size),
-				_ => (int) imm
+				_ => (int) imm,
 			});
 		}
 	}

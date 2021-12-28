@@ -2,8 +2,8 @@ using static SharpStationCore.Globals;
 
 namespace SharpStationCore; 
 
-public unsafe partial class Interpreter {
-	public CpuState* State;
+public unsafe partial class Interpreter : BaseCpu {
+	public readonly CpuState* State;
 
 	const uint NoBranch = ~0U;
 	uint BranchTo = NoBranch, DeferBranch = NoBranch;
@@ -18,7 +18,7 @@ public unsafe partial class Interpreter {
 		BranchTo = NoBranch;
 		Timestamp++;
 		if(!Interpret(insn, pc))
-			throw new Exception($"Unknown instruction 0x{insn:X8} @ {pc:X8}");
+			throw new($"Unknown instruction 0x{insn:X8} @ {pc:X8}");
 
 		State->PC += 4;
 
@@ -31,31 +31,6 @@ public unsafe partial class Interpreter {
 	}
 
 	void Branch(uint target) => BranchTo = target;
-
-	uint Copreg(uint cop, uint reg) => throw new NotImplementedException();
-	void Copreg(uint cop, uint reg, uint value) => throw new NotImplementedException();
-
-	uint Copcreg(uint cop, uint reg) => throw new NotImplementedException();
-	void Copcreg(uint cop, uint reg, uint value) => throw new NotImplementedException();
-
-	void Copfun(uint cop, uint command) => throw new NotImplementedException();
-
-	T ReadMemory<T>(uint addr) => throw new NotImplementedException();
-	void WriteMemory<T>(uint addr, T value) {
-		switch(value) {
-			case byte v:
-				Memory.Store8(addr, v);
-				break;
-			case ushort v:
-				Memory.Store16(addr, v);
-				break;
-			case uint v:
-				Memory.Store32(addr, v);
-				break;
-			default:
-				throw new NotImplementedException();
-		}
-	}
 
 	void AbsorbMuldivDelay() {}
 	

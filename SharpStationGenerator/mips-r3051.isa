@@ -250,7 +250,7 @@
         (defer= (reg rt) (load addr u16))))
 
 (itype LUI "001111" "lui %$rt, $(hex imm)"
-    (= (reg rt) (<< imm 16)))
+    (= (reg rt) (<< (u32 imm) 16)))
 
 (itype LW "100011" "lw %$rt, $(hex offset)(%$rs)"
     (let offset (signext imm i32))

@@ -506,7 +506,7 @@ public unsafe partial class Interpreter {
             DoLds();
             var temp_119 = rt;
             if(temp_119 != 0)
-                State->Registers[temp_119] = (ushort) (imm << 0x10);
+                State->Registers[temp_119] = imm << 0x10;
             return true;
         }
 
