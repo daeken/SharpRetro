@@ -362,12 +362,14 @@ public class CoreMemory {
 		});
 	}
 
-	CoreMemory LogLoad(uint addr, int size) =>
-		//WriteLine($"Load {size} bytes from {addr:X}");
-		this;
-	CoreMemory LogStore(uint addr, uint value, int size) =>
-		//WriteLine($"Store {size} bytes ({value:X}) to {addr:X}");
-		this;
+	CoreMemory LogLoad(uint addr, int size) {
+		Console.WriteLine($"Load {size} bytes from {addr:X}");
+		return this;
+	}
+	CoreMemory LogStore(uint addr, uint value, int size) {
+		Console.WriteLine($"Store {size} bytes ({value:X}) to {addr:X}");
+		return this;
+	}
 
 	public byte Load8(uint addr) => LogLoad(addr, 1).FindMemory(addr, (i, a) => i.Load8(a));
 	public void Store8(uint addr, byte value) => LogStore(addr, value, 1).FindMemory(addr, (i, a) => i.Store8(a, value));

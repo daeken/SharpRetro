@@ -14,9 +14,13 @@ public unsafe partial class Interpreter : BaseCpu {
 		var pc = State->PC;
 		var insn = Memory.Load32(pc);
 		$"{pc:X8}: {Disassembler.Disassemble(insn, pc)}".Debug();
+		/*for(var i = 1; i < 32; ++i)
+			Console.Write($"%{i} == 0x{State->Registers[i]:X}   ");
+		Console.WriteLine();*/
 		
 		BranchTo = NoBranch;
 		Timestamp++;
+		pc = Cpu.Intercept(pc);
 		if(!Interpret(insn, pc))
 			throw new($"Unknown instruction 0x{insn:X8} @ {pc:X8}");
 

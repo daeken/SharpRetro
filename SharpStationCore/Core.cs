@@ -15,7 +15,7 @@ public class Core : ICore {
 	public IFramebufferBackend FramebufferBackend;
 	public IAudioBackend AudioBackend;
 
-	public bool Running { get; private set; }
+	public static bool Running { get; private set; }
 
 	public bool CanLoad(string path) => path.ToLower().EndsWith(".cue");
 	public void Setup(IGraphicsBackend graphicsBackend, IAudioBackend audioBackend) {
@@ -41,7 +41,7 @@ public class Core : ICore {
 
 	public void Run() {
 		Running = true;
-		while(Running)
+		while(Running && (Timestamp < Events.NextTimestamp || Events.RunEvents()))
 			Cpu.Run();
 	}
 
