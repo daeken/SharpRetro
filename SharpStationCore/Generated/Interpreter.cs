@@ -116,14 +116,13 @@ public unsafe partial class Interpreter {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
-            var eimm = SignExt<uint>(imm, 16);
             State->ReadAbsorb[rt] = 0;
             State->ReadAbsorb[rs] = 0;
             var temp_8 = rs switch { 0 => 0U, var temp_94 => State->Registers[temp_94] };
             DoLds();
             var temp_95 = rt;
             if(temp_95 != 0)
-                State->Registers[temp_95] = temp_8 & eimm;
+                State->Registers[temp_95] = temp_8 & imm;
             return true;
         }
 

@@ -41,8 +41,7 @@ public class Core : ICore {
 
 	public void Run() {
 		Running = true;
-		while(Running && (Timestamp < Events.NextTimestamp || Events.RunEvents()))
-			Cpu.Run();
+		Cpu.Run();
 	}
 
 	public void Stop() => Running = false;

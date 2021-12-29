@@ -13,10 +13,10 @@ public unsafe partial class Interpreter : BaseCpu {
 	public void RunOne() {
 		var pc = State->PC;
 		var insn = Memory.Load32(pc);
-		$"{pc:X8}: {Disassembler.Disassemble(insn, pc)}".Debug();
 		/*for(var i = 1; i < 32; ++i)
 			Console.Write($"%{i} == 0x{State->Registers[i]:X}   ");
 		Console.WriteLine();*/
+		$"{pc:X8}: {Disassembler.Disassemble(insn, pc)}".Debug();
 		
 		BranchTo = NoBranch;
 		Timestamp++;

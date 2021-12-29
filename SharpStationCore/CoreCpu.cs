@@ -22,7 +22,42 @@ public unsafe class CoreCpu {
 	}
 	
 	public void Run() {
-		Interpreter.RunOne();
+		while(Core.Running && (Timestamp < Events.NextTimestamp || Events.RunEvents()))
+			try {
+				if(IPCache != 0) {
+					if(Halted) {
+					} else if((CP0.StatusRegister & 1) != 0) {
+						Dispatch(new CpuException(ExceptionType.INT, State->PC, 0));
+						continue;
+					}
+				}
+				Interpreter.RunOne();
+			} catch(CpuException ce) {
+				Dispatch(ce);
+			}
+	}
+
+	void Dispatch(CpuException exc) {
+		$"Dispatching exception -- {exc.Type} {exc.PC:X8}".Debug();
+		var handler = 0x80000080;
+
+		if((CP0.StatusRegister & (1 << 22)) != 0) // BEV
+			handler = 0xBFC00180;
+
+		CP0.EPC = exc.PC;
+
+		// "Push" IEc and KUc(so that the new IEc and KUc are 0)
+		CP0.StatusRegister = (CP0.StatusRegister & ~0x3FU) | ((CP0.StatusRegister << 2) & 0x3FU);
+			
+		// Setup cause register
+		CP0.Cause &= 0x0000FF00;
+		CP0.Cause |= (uint) exc.Type << 2;
+
+		CP0.Cause |= (exc.Inst << 2) & (3 << 28); // CE
+			
+		RecalcIPCache();
+
+		State->PC = handler;
 	}
 
 	public void Invalidate(uint addr) {

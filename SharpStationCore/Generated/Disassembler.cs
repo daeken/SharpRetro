@@ -68,8 +68,7 @@ public class Disassembler {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
-            var eimm = SignExt<uint>(imm, 16);
-            return "andi %" + rt + ", %" + rs + ", " + $"0x{eimm:x08}";
+            return "andi %" + rt + ", %" + rs + ", " + $"0x{imm:x04}";
         }
 
         /* BEQ */
@@ -633,7 +632,6 @@ public class Disassembler {
             var rs = (insn >> 21) & 0x1FU;
             var rt = (insn >> 16) & 0x1FU;
             var imm = (insn >> 0) & 0xFFFFU;
-            var eimm = SignExt<uint>(imm, 16);
             return "ANDI";
         }
 

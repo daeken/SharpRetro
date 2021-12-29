@@ -126,9 +126,8 @@
 (rtype AND "100100" "and %$rd, %$rs, %$rt"
     (= (reg rd) (& (reg rs) (reg rt))))
 
-(itype ANDI "001100" "andi %$rt, %$rs, $(hex eimm)"
-    (let eimm (signext imm u32))
-    (= (reg rt) (& (reg rs) eimm)))
+(itype ANDI "001100" "andi %$rt, %$rs, $(hex imm)"
+    (= (reg rt) (& (reg rs) imm)))
 
 (itype BEQ "000100" "beq %$rs, %$rt, $(hex target)"
     (let target (+ (pcd) (<< (signext imm u32) 2)))
