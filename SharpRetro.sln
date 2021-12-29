@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStationGenerator", "Sh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpStationCore", "SharpStationCore\SharpStationCore.csproj", "{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JitBase", "JitBase\JitBase.csproj", "{8AA9245D-267F-422D-9C6E-196665BB8C37}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{295B24D2-1A09-4375-9BD7-C0421BFEF8EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AA9245D-267F-422D-9C6E-196665BB8C37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AA9245D-267F-422D-9C6E-196665BB8C37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AA9245D-267F-422D-9C6E-196665BB8C37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AA9245D-267F-422D-9C6E-196665BB8C37}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
