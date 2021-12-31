@@ -1,6 +1,7 @@
 using System.Reflection.Emit;
 using JitBase;
 using Sigil;
+using static JitBase.Helpers;
 
 namespace CilJit; 
 
@@ -28,14 +29,14 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 	public IRuntimeValue<OT> Bitcast<OT>() where OT : struct => throw new NotImplementedException();
 	public IRuntimeValue<T> Store() => throw new NotImplementedException();
 	public IRuntimeValue<T> Add(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Add())));
-	public IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Subtract())));
+	public IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Multiply())));
+	public IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => IsSigned<T>(() => Ilg.Divide(), () => Ilg.UnsignedDivide()))));
+	public IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => IsSigned<T>(() => Ilg.Remainder(), () => Ilg.UnsignedRemainder()))));
 	public IRuntimeValue<T> Negate() => throw new NotImplementedException();
-	public IRuntimeValue<T> And(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Or(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Xor(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<T> And(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.And())));
+	public IRuntimeValue<T> Or(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Or())));
+	public IRuntimeValue<T> Xor(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Xor())));
 	public IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> Not() => throw new NotImplementedException();
