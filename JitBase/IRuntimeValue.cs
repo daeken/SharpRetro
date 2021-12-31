@@ -37,4 +37,16 @@ public interface IRuntimeValue<T> where T : struct {
 	
 	IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) where ElementT : struct;
 	IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct;
+
+	static IRuntimeValue<T> operator +(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
+	static IRuntimeValue<T> operator -(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Sub(rhs);
+	static IRuntimeValue<T> operator *(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Mul(rhs);
+	static IRuntimeValue<T> operator /(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Div(rhs);
+	static IRuntimeValue<T> operator %(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Mod(rhs);
+	static IRuntimeValue<T> operator -(IRuntimeValue<T> v) => v.Negate();
+
+	static IRuntimeValue<T> operator &(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.And(rhs);
+	static IRuntimeValue<T> operator |(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Or(rhs);
+	static IRuntimeValue<T> operator ^(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Xor(rhs);
+	static IRuntimeValue<T> operator ~(IRuntimeValue<T> v) => v.Not();
 }
