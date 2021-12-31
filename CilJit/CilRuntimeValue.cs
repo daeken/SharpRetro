@@ -23,7 +23,7 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 
 	static CilRuntimeValue<U, DelegateT> TT<U>(IRuntimeValue<U> v) where U : struct => v as CilRuntimeValue<U, DelegateT>;
 
-	IRuntimeValue<U> C<U>(Action gen) where U : struct => new CilRuntimeValue<U, DelegateT>(Ilg, Tb, gen);
+	CilRuntimeValue<U, DelegateT> C<U>(Action gen) where U : struct => new(Ilg, Tb, gen);
 
 	public IRuntimeValue<OT> Cast<OT>() where OT : struct => throw new NotImplementedException();
 	public IRuntimeValue<OT> Bitcast<OT>() where OT : struct => throw new NotImplementedException();
