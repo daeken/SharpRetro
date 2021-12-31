@@ -104,4 +104,72 @@ public class Tests {
 		Test(u64values, (a, b) => a ^ b, (a, b) => a ^ b);
 		Test(i64values, (a, b) => a ^ b, (a, b) => a ^ b);
 	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void ControlFlow(IJit<uint> jit) {
+		var ifTest = jit.CreateFunction<Func<uint, uint>>("ifTest", builder => {
+			var arg = builder.Argument<uint>(0);
+			builder.If(arg.EQ(builder.LiteralValue(25U)), () => builder.Return(arg), () => builder.Return(arg * arg));
+		});
+		
+		Assert.AreEqual(25, ifTest(25));
+		Assert.AreEqual(0, ifTest(0));
+		Assert.AreEqual(4, ifTest(2));
+	}
+	
+	[TestCaseSource(nameof(Jits32))]
+	public void NoReturnCalls(IJit<uint> jit) {
+		var temp = false;
+		void ActionTest() => temp = true;
+		var callAction = jit.CreateFunction<Action>("action", builder => builder.Call(ActionTest));
+		callAction();
+		Assert.True(temp);
+
+		temp = false;
+		void ActionTest1(int a) => temp = a == 15;
+		var callAction1 = jit.CreateFunction<Action>("action1", builder => builder.Call(ActionTest1, builder.LiteralValue(15)));
+		callAction1();
+		Assert.True(temp);
+
+		temp = false;
+		void ActionTest2(int a, int b) => temp = a == 15 && b == 27;
+		var callAction2 = jit.CreateFunction<Action>("action2", builder => builder.Call(ActionTest2, builder.LiteralValue(15), builder.LiteralValue(27)));
+		callAction2();
+		Assert.True(temp);
+
+		temp = false;
+		void ActionTest3(int a, int b, int c) => temp = a == 15 && b == 27 && c == 123;
+		var callAction3 = jit.CreateFunction<Action>("action3", builder => builder.Call(ActionTest3, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123)));
+		callAction3();
+		Assert.True(temp);
+
+		temp = false;
+		void ActionTest4(int a, int b, int c, int d) => temp = a == 15 && b == 27 && c == 123 && d == -1;
+		var callAction4 = jit.CreateFunction<Action>("action4", builder => builder.Call(ActionTest4, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123), builder.LiteralValue(-1)));
+		callAction4();
+		Assert.True(temp);
+	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void WithReturnCalls(IJit<uint> jit) {
+		int FuncTest() => 5;
+		var callFunc = jit.CreateFunction<Func<int>>("func", builder => builder.Return(builder.Call(FuncTest)));
+		Assert.AreEqual(5, callFunc());
+		
+		int FuncTest1(int a) => a;
+		var callFunc1 = jit.CreateFunction<Func<int>>("func1", builder => builder.Return(builder.Call(FuncTest1, builder.LiteralValue(123))));
+		Assert.AreEqual(123, callFunc1());
+		
+		int FuncTest2(int a, int b) => a + b;
+		var callFunc2 = jit.CreateFunction<Func<int>>("func2", builder => builder.Return(builder.Call(FuncTest2, builder.LiteralValue(123), builder.LiteralValue(-1))));
+		Assert.AreEqual(122, callFunc2());
+		
+		int FuncTest3(int a, int b, int c) => a + b + c;
+		var callFunc3 = jit.CreateFunction<Func<int>>("func3", builder => builder.Return(builder.Call(FuncTest3, builder.LiteralValue(123), builder.LiteralValue(-1), builder.LiteralValue(-2))));
+		Assert.AreEqual(120, callFunc3());
+		
+		int FuncTest4(int a, int b, int c, int d) => (a + b + c) * d;
+		var callFunc4 = jit.CreateFunction<Func<int>>("func4", builder => builder.Return(builder.Call(FuncTest4, builder.LiteralValue(123), builder.LiteralValue(-1), builder.LiteralValue(-2), builder.LiteralValue(2))));
+		Assert.AreEqual(240, callFunc4());
+	}
 }

@@ -12,10 +12,20 @@ public class CilJit<AddrT> : IJit<AddrT> where AddrT : struct {
 		var tb = mb.DefineType($"{name}_Type");
 		var ilg = Emit<DelegateT>.BuildMethod(tb, name, MethodAttributes.Static | MethodAttributes.Public, CallingConventions.Standard);
 
-		body(new CilBuilder<AddrT,DelegateT>(ilg, tb));
+		var builder = new CilBuilder<AddrT, DelegateT>(ilg, tb);
+		body(builder);
+
+		try {
+			ilg.Return();
+		} catch(SigilVerificationException) {
+		}
 		
 		ilg.CreateMethod();
 		var type = tb.CreateType() ?? throw new Exception();
+
+		foreach(var (obj, fb) in builder.Fields)
+			type.GetField(fb.Name)?.SetValue(null, obj);
+
 		return type.GetMethod(name)?.CreateDelegate<DelegateT>() ?? throw new Exception();
 	}
 }
