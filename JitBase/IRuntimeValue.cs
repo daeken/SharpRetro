@@ -49,4 +49,9 @@ public interface IRuntimeValue<T> where T : struct {
 	static IRuntimeValue<T> operator |(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Or(rhs);
 	static IRuntimeValue<T> operator ^(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Xor(rhs);
 	static IRuntimeValue<T> operator ~(IRuntimeValue<T> v) => v.Not();
+
+	static IRuntimeValue<bool> operator <(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LT(rhs);
+	static IRuntimeValue<bool> operator <=(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LTE(rhs);
+	static IRuntimeValue<bool> operator >=(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.GTE(rhs);
+	static IRuntimeValue<bool> operator >(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.GT(rhs);
 }

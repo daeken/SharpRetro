@@ -34,8 +34,9 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		_ => throw new NotImplementedException($"Unknown literal value type: {typeof(T).FullName}")
 	});
 	public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct => throw new NotImplementedException();
+	public ILocalVar<T> DefineLocal<T>() where T : struct => new CilLocalVar<T, DelegateT>(Ilg, Tb);
 
-	void Emit<T>(IRuntimeValue<T> value) where T : struct => TT(value).Emit();
+	static void Emit<T>(IRuntimeValue<T> value) where T : struct => TT(value).Emit();
 	
 	public void Sink<T>(IRuntimeValue<T> value) where T : struct {
 		Emit(value);
@@ -60,9 +61,23 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		Ilg.MarkLabel(endLabel);
 	}
 	public void While(IRuntimeValue<bool> cond, Action body) {
-		throw new NotImplementedException();
+		var start = Ilg.DefineLabel();
+		var end = Ilg.DefineLabel();
+		Ilg.MarkLabel(start);
+		Emit(cond);
+		Ilg.BranchIfFalse(end);
+		body();
+		Ilg.Branch(start);
+		Ilg.MarkLabel(end);
 	}
-	public IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct => throw new NotImplementedException();
+	public void DoWhile(Action body, IRuntimeValue<bool> cond) {
+		var start = Ilg.DefineLabel();
+		Ilg.MarkLabel(start);
+		body();
+		Emit(cond);
+		Ilg.BranchIfTrue(start);
+	}
+	public IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct => C<T>(() => If(cond, () => Emit(a), () => Emit(b)));
 
 	public readonly Dictionary<object, FieldBuilder> Fields = new();
 	void StoreValue<T>(T value) {

@@ -7,11 +7,14 @@ public interface IBuilder<AddrT> where AddrT : struct {
 	IRuntimeValue<T> LiteralValue<T>(T value) where T : struct;
 	IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct;
 
+	ILocalVar<T> DefineLocal<T>() where T : struct;
+
 	void Sink<T>(IRuntimeValue<T> value) where T : struct;
 	void Return<T>(IRuntimeValue<T> value) where T : struct;
 
 	void If(IRuntimeValue<bool> cond, Action if_, Action else_);
 	void While(IRuntimeValue<bool> cond, Action body);
+	void DoWhile(Action body, IRuntimeValue<bool> cond);
 	IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct;
 
 	void Call(Action func);

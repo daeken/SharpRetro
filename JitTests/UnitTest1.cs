@@ -11,17 +11,17 @@ public class Tests {
 		new CilJit<uint>()
 	};
 
-	[TestCaseSource(nameof(Jits32))]
-	public void Operations(IJit<uint> jit) {
-		var u8values = new byte[] { 0, 1, 2, 0xFF, 0xFE };
-		var i8values = new sbyte[] { 0, 1, 2, -1, -2 };
-		var u16values = new ushort[] { 0, 1, 2, 0xFFFF, 0xFFFE };
-		var i16values = new short[] { 0, 1, 2, -1, -2 };
-		var u32values = new uint[] { 0, 1, 2, 0xFFFFFFFF, 0xFFFFFFFE };
-		var i32values = new int[] { 0, 1, 2, -1, -2 };
-		var u64values = new ulong[] { 0, 1, 2, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE };
-		var i64values = new long[] { 0, 1, 2, -1, -2 };
+	static readonly byte[] U8values = { 0, 1, 2, 0xFF, 0xFE };
+	static readonly sbyte[] I8values = { 0, 1, 2, -1, -2 };
+	static readonly ushort[] U16values = { 0, 1, 2, 0xFFFF, 0xFFFE };
+	static readonly short[] I16values = { 0, 1, 2, -1, -2 };
+	static readonly uint[] U32values = { 0, 1, 2, 0xFFFFFFFF, 0xFFFFFFFE };
+	static readonly int[] I32values = { 0, 1, 2, -1, -2 };
+	static readonly ulong[] U64values = { 0, 1, 2, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE };
+	static readonly long[] I64values = { 0, 1, 2, -1, -2 };
 
+	[TestCaseSource(nameof(Jits32))]
+	public void MathOperations(IJit<uint> jit) {
 		void Test<T>(T[] values, Func<IRuntimeValue<T>, IRuntimeValue<T>, IRuntimeValue<T>> jitGen, Func<T, T, T> knownGood, bool isDivMod = false) where T : struct {
 			var jitFunc = jit.CreateFunction<Func<T, T, T>>("test", builder =>
 				builder.Return(jitGen(builder.Argument<T>(0), builder.Argument<T>(1))));
@@ -32,77 +32,142 @@ public class Tests {
 		}
 		
 		
-		Test(u8values, (a, b) => a + b, (a, b) => (byte) (a + b));
-		Test(i8values, (a, b) => a + b, (a, b) => (sbyte) (a + b));
-		Test(u16values, (a, b) => a + b, (a, b) => (ushort) (a + b));
-		Test(i16values, (a, b) => a + b, (a, b) => (short) (a + b));
-		Test(u32values, (a, b) => a + b, (a, b) => a + b);
-		Test(i32values, (a, b) => a + b, (a, b) => a + b);
-		Test(u64values, (a, b) => a + b, (a, b) => a + b);
-		Test(i64values, (a, b) => a + b, (a, b) => a + b);
+		Test(U8values, (a, b) => a + b, (a, b) => (byte) (a + b));
+		Test(I8values, (a, b) => a + b, (a, b) => (sbyte) (a + b));
+		Test(U16values, (a, b) => a + b, (a, b) => (ushort) (a + b));
+		Test(I16values, (a, b) => a + b, (a, b) => (short) (a + b));
+		Test(U32values, (a, b) => a + b, (a, b) => a + b);
+		Test(I32values, (a, b) => a + b, (a, b) => a + b);
+		Test(U64values, (a, b) => a + b, (a, b) => a + b);
+		Test(I64values, (a, b) => a + b, (a, b) => a + b);
 		
-		Test(u8values, (a, b) => a - b, (a, b) => (byte) (a - b));
-		Test(i8values, (a, b) => a - b, (a, b) => (sbyte) (a - b));
-		Test(u16values, (a, b) => a - b, (a, b) => (ushort) (a - b));
-		Test(i16values, (a, b) => a - b, (a, b) => (short) (a - b));
-		Test(u32values, (a, b) => a - b, (a, b) => a - b);
-		Test(i32values, (a, b) => a - b, (a, b) => a - b);
-		Test(u64values, (a, b) => a - b, (a, b) => a - b);
-		Test(i64values, (a, b) => a - b, (a, b) => a - b);
+		Test(U8values, (a, b) => a - b, (a, b) => (byte) (a - b));
+		Test(I8values, (a, b) => a - b, (a, b) => (sbyte) (a - b));
+		Test(U16values, (a, b) => a - b, (a, b) => (ushort) (a - b));
+		Test(I16values, (a, b) => a - b, (a, b) => (short) (a - b));
+		Test(U32values, (a, b) => a - b, (a, b) => a - b);
+		Test(I32values, (a, b) => a - b, (a, b) => a - b);
+		Test(U64values, (a, b) => a - b, (a, b) => a - b);
+		Test(I64values, (a, b) => a - b, (a, b) => a - b);
 		
-		Test(u8values, (a, b) => a * b, (a, b) => (byte) (a * b));
-		Test(i8values, (a, b) => a * b, (a, b) => (sbyte) (a * b));
-		Test(u16values, (a, b) => a * b, (a, b) => (ushort) (a * b));
-		Test(i16values, (a, b) => a * b, (a, b) => (short) (a * b));
-		Test(u32values, (a, b) => a * b, (a, b) => a * b);
-		Test(i32values, (a, b) => a * b, (a, b) => a * b);
-		Test(u64values, (a, b) => a * b, (a, b) => a * b);
-		Test(i64values, (a, b) => a * b, (a, b) => a * b);
+		Test(U8values, (a, b) => a * b, (a, b) => (byte) (a * b));
+		Test(I8values, (a, b) => a * b, (a, b) => (sbyte) (a * b));
+		Test(U16values, (a, b) => a * b, (a, b) => (ushort) (a * b));
+		Test(I16values, (a, b) => a * b, (a, b) => (short) (a * b));
+		Test(U32values, (a, b) => a * b, (a, b) => a * b);
+		Test(I32values, (a, b) => a * b, (a, b) => a * b);
+		Test(U64values, (a, b) => a * b, (a, b) => a * b);
+		Test(I64values, (a, b) => a * b, (a, b) => a * b);
 		
-		Test(u8values, (a, b) => a / b, (a, b) => (byte) (a / b), true);
-		Test(i8values, (a, b) => a / b, (a, b) => (sbyte) (a / b), true);
-		Test(u16values, (a, b) => a / b, (a, b) => (ushort) (a / b), true);
-		Test(i16values, (a, b) => a / b, (a, b) => (short) (a / b), true);
-		Test(u32values, (a, b) => a / b, (a, b) => a / b, true);
-		Test(i32values, (a, b) => a / b, (a, b) => a / b, true);
-		Test(u64values, (a, b) => a / b, (a, b) => a / b, true);
-		Test(i64values, (a, b) => a / b, (a, b) => a / b, true);
+		Test(U8values, (a, b) => a / b, (a, b) => (byte) (a / b), true);
+		Test(I8values, (a, b) => a / b, (a, b) => (sbyte) (a / b), true);
+		Test(U16values, (a, b) => a / b, (a, b) => (ushort) (a / b), true);
+		Test(I16values, (a, b) => a / b, (a, b) => (short) (a / b), true);
+		Test(U32values, (a, b) => a / b, (a, b) => a / b, true);
+		Test(I32values, (a, b) => a / b, (a, b) => a / b, true);
+		Test(U64values, (a, b) => a / b, (a, b) => a / b, true);
+		Test(I64values, (a, b) => a / b, (a, b) => a / b, true);
 		
-		Test(u8values, (a, b) => a % b, (a, b) => (byte) (a % b), true);
-		Test(i8values, (a, b) => a % b, (a, b) => (sbyte) (a % b), true);
-		Test(u16values, (a, b) => a % b, (a, b) => (ushort) (a % b), true);
-		Test(i16values, (a, b) => a % b, (a, b) => (short) (a % b), true);
-		Test(u32values, (a, b) => a % b, (a, b) => a % b, true);
-		Test(i32values, (a, b) => a % b, (a, b) => a % b, true);
-		Test(u64values, (a, b) => a % b, (a, b) => a % b, true);
-		Test(i64values, (a, b) => a % b, (a, b) => a % b, true);
+		Test(U8values, (a, b) => a % b, (a, b) => (byte) (a % b), true);
+		Test(I8values, (a, b) => a % b, (a, b) => (sbyte) (a % b), true);
+		Test(U16values, (a, b) => a % b, (a, b) => (ushort) (a % b), true);
+		Test(I16values, (a, b) => a % b, (a, b) => (short) (a % b), true);
+		Test(U32values, (a, b) => a % b, (a, b) => a % b, true);
+		Test(I32values, (a, b) => a % b, (a, b) => a % b, true);
+		Test(U64values, (a, b) => a % b, (a, b) => a % b, true);
+		Test(I64values, (a, b) => a % b, (a, b) => a % b, true);
 		
-		Test(u8values, (a, b) => a & b, (a, b) => (byte) (a & b));
-		Test(i8values, (a, b) => a & b, (a, b) => (sbyte) (a & b));
-		Test(u16values, (a, b) => a & b, (a, b) => (ushort) (a & b));
-		Test(i16values, (a, b) => a & b, (a, b) => (short) (a & b));
-		Test(u32values, (a, b) => a & b, (a, b) => a & b);
-		Test(i32values, (a, b) => a & b, (a, b) => a & b);
-		Test(u64values, (a, b) => a & b, (a, b) => a & b);
-		Test(i64values, (a, b) => a & b, (a, b) => a & b);
+		Test(U8values, (a, b) => a & b, (a, b) => (byte) (a & b));
+		Test(I8values, (a, b) => a & b, (a, b) => (sbyte) (a & b));
+		Test(U16values, (a, b) => a & b, (a, b) => (ushort) (a & b));
+		Test(I16values, (a, b) => a & b, (a, b) => (short) (a & b));
+		Test(U32values, (a, b) => a & b, (a, b) => a & b);
+		Test(I32values, (a, b) => a & b, (a, b) => a & b);
+		Test(U64values, (a, b) => a & b, (a, b) => a & b);
+		Test(I64values, (a, b) => a & b, (a, b) => a & b);
 		
-		Test(u8values, (a, b) => a | b, (a, b) => (byte) (a | b));
-		Test(i8values, (a, b) => a | b, (a, b) => (sbyte) (a | b));
-		Test(u16values, (a, b) => a | b, (a, b) => (ushort) (a | b));
-		Test(i16values, (a, b) => a | b, (a, b) => (short) (a | b));
-		Test(u32values, (a, b) => a | b, (a, b) => a | b);
-		Test(i32values, (a, b) => a | b, (a, b) => a | b);
-		Test(u64values, (a, b) => a | b, (a, b) => a | b);
-		Test(i64values, (a, b) => a | b, (a, b) => a | b);
+		Test(U8values, (a, b) => a | b, (a, b) => (byte) (a | b));
+		Test(I8values, (a, b) => a | b, (a, b) => (sbyte) (a | b));
+		Test(U16values, (a, b) => a | b, (a, b) => (ushort) (a | b));
+		Test(I16values, (a, b) => a | b, (a, b) => (short) (a | b));
+		Test(U32values, (a, b) => a | b, (a, b) => a | b);
+		Test(I32values, (a, b) => a | b, (a, b) => a | b);
+		Test(U64values, (a, b) => a | b, (a, b) => a | b);
+		Test(I64values, (a, b) => a | b, (a, b) => a | b);
 		
-		Test(u8values, (a, b) => a ^ b, (a, b) => (byte) (a ^ b));
-		Test(i8values, (a, b) => a ^ b, (a, b) => (sbyte) (a ^ b));
-		Test(u16values, (a, b) => a ^ b, (a, b) => (ushort) (a ^ b));
-		Test(i16values, (a, b) => a ^ b, (a, b) => (short) (a ^ b));
-		Test(u32values, (a, b) => a ^ b, (a, b) => a ^ b);
-		Test(i32values, (a, b) => a ^ b, (a, b) => a ^ b);
-		Test(u64values, (a, b) => a ^ b, (a, b) => a ^ b);
-		Test(i64values, (a, b) => a ^ b, (a, b) => a ^ b);
+		Test(U8values, (a, b) => a ^ b, (a, b) => (byte) (a ^ b));
+		Test(I8values, (a, b) => a ^ b, (a, b) => (sbyte) (a ^ b));
+		Test(U16values, (a, b) => a ^ b, (a, b) => (ushort) (a ^ b));
+		Test(I16values, (a, b) => a ^ b, (a, b) => (short) (a ^ b));
+		Test(U32values, (a, b) => a ^ b, (a, b) => a ^ b);
+		Test(I32values, (a, b) => a ^ b, (a, b) => a ^ b);
+		Test(U64values, (a, b) => a ^ b, (a, b) => a ^ b);
+		Test(I64values, (a, b) => a ^ b, (a, b) => a ^ b);
+	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void CompareOperations(IJit<uint> jit) {
+		void Test<T>(T[] values, Func<IRuntimeValue<T>, IRuntimeValue<T>, IRuntimeValue<bool>> jitGen, Func<T, T, bool> knownGood) where T : struct {
+			var jitFunc = jit.CreateFunction<Func<T, T, bool>>("test", builder =>
+				builder.Return(jitGen(builder.Argument<T>(0), builder.Argument<T>(1))));
+			foreach(var a in values)
+				foreach(var b in values)
+					Assert.AreEqual(knownGood(a, b), jitFunc(a, b));
+		}
+		
+		Test(U8values, (a, b) => a < b, (a, b) => a < b);
+		Test(I8values, (a, b) => a < b, (a, b) => a < b);
+		Test(U16values, (a, b) => a < b, (a, b) => a < b);
+		Test(I16values, (a, b) => a < b, (a, b) => a < b);
+		Test(U32values, (a, b) => a < b, (a, b) => a < b);
+		Test(I32values, (a, b) => a < b, (a, b) => a < b);
+		Test(U64values, (a, b) => a < b, (a, b) => a < b);
+		Test(I64values, (a, b) => a < b, (a, b) => a < b);
+
+		Test(U8values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(I8values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(U16values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(I16values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(U32values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(I32values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(U64values, (a, b) => a <= b, (a, b) => a <= b);
+		Test(I64values, (a, b) => a <= b, (a, b) => a <= b);
+
+		Test(U8values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(I8values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(U16values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(I16values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(U32values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(I32values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(U64values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(I64values, (a, b) => a.EQ(b), (a, b) => a == b);
+
+		Test(U8values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(I8values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(U16values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(I16values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(U32values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(I32values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(U64values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(I64values, (a, b) => a.NE(b), (a, b) => a != b);
+
+		Test(U8values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(I8values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(U16values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(I16values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(U32values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(I32values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(U64values, (a, b) => a >= b, (a, b) => a >= b);
+		Test(I64values, (a, b) => a >= b, (a, b) => a >= b);
+
+		Test(U8values, (a, b) => a > b, (a, b) => a > b);
+		Test(I8values, (a, b) => a > b, (a, b) => a > b);
+		Test(U16values, (a, b) => a > b, (a, b) => a > b);
+		Test(I16values, (a, b) => a > b, (a, b) => a > b);
+		Test(U32values, (a, b) => a > b, (a, b) => a > b);
+		Test(I32values, (a, b) => a > b, (a, b) => a > b);
+		Test(U64values, (a, b) => a > b, (a, b) => a > b);
+		Test(I64values, (a, b) => a > b, (a, b) => a > b);
 	}
 
 	[TestCaseSource(nameof(Jits32))]
@@ -115,6 +180,32 @@ public class Tests {
 		Assert.AreEqual(25, ifTest(25));
 		Assert.AreEqual(0, ifTest(0));
 		Assert.AreEqual(4, ifTest(2));
+
+		var ternaryTest = jit.CreateFunction<Func<bool, uint, uint, uint>>("ternaryTest", builder =>
+			builder.Return(builder.Ternary(builder.Argument<bool>(0), builder.Argument<uint>(1), builder.Argument<uint>(2))));
+		Assert.AreEqual(0, ternaryTest(true, 0, 0));
+		Assert.AreEqual(0, ternaryTest(false, 0, 0));
+		Assert.AreEqual(0, ternaryTest(true, 0, 1));
+		Assert.AreEqual(0, ternaryTest(false, 1, 0));
+		Assert.AreEqual(123, ternaryTest(true, 123, 321));
+		Assert.AreEqual(321, ternaryTest(false, 123, 321));
+
+		var i = 0;
+		var j = 0;
+		bool CondFunc() => i++ != 10;
+		void BodyFunc() => j++;
+		var whileTest = jit.CreateFunction<Action>("whileTest", builder =>
+			builder.While(builder.Call(CondFunc), () => builder.Call(BodyFunc)));
+		whileTest();
+		Assert.AreEqual(11, i);
+		Assert.AreEqual(10, j);
+
+		i = j = 0;
+		var doWhileTest = jit.CreateFunction<Action>("doWhileTest", builder =>
+			builder.DoWhile(() => builder.Call(BodyFunc), builder.Call(CondFunc)));
+		doWhileTest();
+		Assert.AreEqual(11, i);
+		Assert.AreEqual(11, j);
 	}
 	
 	[TestCaseSource(nameof(Jits32))]
@@ -171,5 +262,48 @@ public class Tests {
 		int FuncTest4(int a, int b, int c, int d) => (a + b + c) * d;
 		var callFunc4 = jit.CreateFunction<Func<int>>("func4", builder => builder.Return(builder.Call(FuncTest4, builder.LiteralValue(123), builder.LiteralValue(-1), builder.LiteralValue(-2), builder.LiteralValue(2))));
 		Assert.AreEqual(240, callFunc4());
+	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void LocalVars(IJit<uint> jit) {
+		void Test<T>(T[] values) where T : struct {
+			var func = jit.CreateFunction<Func<T, T>>("func", builder => {
+				var local = builder.DefineLocal<T>();
+				local.Value = builder.Argument<T>(0);
+				builder.Return(local.Value);
+			});
+			foreach(var a in values)
+				Assert.AreEqual(a, func(a));
+		}
+		
+		Test(U8values);
+		Test(I8values);
+		Test(U16values);
+		Test(I16values);
+		Test(U32values);
+		Test(I32values);
+		Test(U64values);
+		Test(I64values);
+	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void Store(IJit<uint> jit) {
+		var i = 0;
+		int Inc() => i++;
+		var func = jit.CreateFunction<Func<int>>("func", builder => {
+			var val = builder.Call(Inc);
+			builder.Return(val + val);
+		});
+		Assert.AreEqual(1, func());
+		Assert.AreEqual(2, i);
+
+		i = 0;
+		func = jit.CreateFunction<Func<int>>("func", builder => {
+			var val = builder.Call(Inc);
+			val = val.Store();
+			builder.Return(val + val);
+		});
+		Assert.AreEqual(0, func());
+		Assert.AreEqual(1, i);
 	}
 }
