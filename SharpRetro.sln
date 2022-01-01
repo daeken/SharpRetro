@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JitTests", "JitTests\JitTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleJitTest", "SimpleJitTest\SimpleJitTest.csproj", "{2D9294B9-5CCD-435F-9516-64730C8CC22A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlvmJit", "LlvmJit\LlvmJit.csproj", "{814961D5-CF4C-4905-BEC7-243C3D6A3EEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,9 @@ Global
 		{2D9294B9-5CCD-435F-9516-64730C8CC22A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D9294B9-5CCD-435F-9516-64730C8CC22A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D9294B9-5CCD-435F-9516-64730C8CC22A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{814961D5-CF4C-4905-BEC7-243C3D6A3EEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{814961D5-CF4C-4905-BEC7-243C3D6A3EEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{814961D5-CF4C-4905-BEC7-243C3D6A3EEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{814961D5-CF4C-4905-BEC7-243C3D6A3EEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

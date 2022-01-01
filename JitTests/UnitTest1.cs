@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using CilJit;
 using JitBase;
+using LlvmJit;
 using NUnit.Framework;
 
 namespace JitTests;
 
 public class Tests {
 	static IJit<uint>[] Jits32() => new IJit<uint>[] {
-		new CilJit<uint>()
+		new CilJit<uint>(), 
+		new LlvmJit<uint>(),
 	};
 
 	static readonly byte[] U8values = { 0, 1, 2, 0xFF, 0xFE };
@@ -20,6 +23,19 @@ public class Tests {
 	static readonly ulong[] U64values = { 0, 1, 2, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE };
 	static readonly long[] I64values = { 0, 1, 2, -1, -2 };
 
+	[TestCaseSource(nameof(Jits32))]
+	public void EmptyFunction(IJit<uint> jit) {
+		var func = jit.CreateFunction<Action>("empty", builder => {});
+		func();
+	}
+	
+	[TestCaseSource(nameof(Jits32))]
+	public void ReturnArgument(IJit<uint> jit) {
+		var func = jit.CreateFunction<Func<uint, uint>>("ret", builder => builder.Return(builder.Argument<uint>(0)));
+		Assert.AreEqual(0, func(0));
+		Assert.AreEqual(123, func(123));
+	}
+	
 	[TestCaseSource(nameof(Jits32))]
 	public void MathOperations(IJit<uint> jit) {
 		void Test<T>(T[] values, Func<IRuntimeValue<T>, IRuntimeValue<T>, IRuntimeValue<T>> jitGen, Func<T, T, T> knownGood, bool isDivMod = false) where T : struct {
