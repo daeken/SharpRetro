@@ -13,6 +13,10 @@
     <ItemGroup>
       <ProjectReference Include="..\CilJit\CilJit.csproj" />
       <ProjectReference Include="..\JitBase\JitBase.csproj" />
+      <ProjectReference Include="..\LlvmJit\LlvmJit.csproj" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">ubuntu.21.04-x64</RuntimeIdentifier>
+    </PropertyGroup>
 </Project>

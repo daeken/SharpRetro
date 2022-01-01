@@ -22,7 +22,7 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 	public IRuntimeValue<T> Zero<T>() where T : struct => throw new NotImplementedException();
 	public IRuntimeValue<T> LiteralValue<T>(T value) where T : struct => throw new NotImplementedException();
 	public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct => throw new NotImplementedException();
-	public ILocalVar<T> DefineLocal<T>() where T : struct => throw new NotImplementedException();
+	public ILocalVar<T> DefineLocal<T>() where T : struct => new LlvmLocalVar<T>(Builder);
 	public void Sink<T>(IRuntimeValue<T> value) where T : struct {
 		throw new NotImplementedException();
 	}

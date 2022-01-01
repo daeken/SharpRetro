@@ -1,6 +1,8 @@
 ﻿using CilJit;
+using LlvmJit;
 
-var jit = new CilJit<ulong>();
+//var jit = new CilJit<ulong>();
+var jit = new LlvmJit<ulong>();
 
 var add = jit.CreateFunction<Func<uint, uint, uint>>("add", b => {
 	b.Return(b.Argument<uint>(0) + b.Argument<uint>(1));

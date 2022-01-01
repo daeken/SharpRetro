@@ -1,5 +1,8 @@
+using System.Runtime.InteropServices;
 using JitBase;
 using LLVMSharp.Interop;
+using static JitBase.Helpers;
+using static LlvmJit.LlvmExtensions;
 
 namespace LlvmJit; 
 
@@ -13,19 +16,29 @@ public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
 	}
 
 	internal LLVMValueRef Emit() => Generate();
+	internal static LLVMValueRef Emit<U>(IRuntimeValue<U> rv) where U : struct => ((LlvmRuntimeValue<U>) rv).Emit();
+	IRuntimeValue<U> C<U>(Func<LLVMValueRef> gen) where U : struct => new LlvmRuntimeValue<U>(Builder, gen);
 
 	public IRuntimeValue<OT> Cast<OT>() where OT : struct => throw new NotImplementedException();
 	public IRuntimeValue<OT> Bitcast<OT>() where OT : struct => throw new NotImplementedException();
-	public IRuntimeValue<T> Store() => throw new NotImplementedException();
-	public IRuntimeValue<T> Add(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<T> Store() {
+		var val = Emit();
+		return C<T>(() => val);
+	}
+
+	public IRuntimeValue<T> Add(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildAdd(Builder, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildSub(Builder, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildMul(Builder, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => C<T>(() => IsSigned<T>()
+		? LLVM.BuildSDiv(Builder, Emit(), Emit(rhs), EmptyString)
+		: LLVM.BuildUDiv(Builder, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => C<T>(() => IsSigned<T>()
+		? LLVM.BuildSRem(Builder, Emit(), Emit(rhs), EmptyString)
+		: LLVM.BuildURem(Builder, Emit(), Emit(rhs), EmptyString));
 	public IRuntimeValue<T> Negate() => throw new NotImplementedException();
-	public IRuntimeValue<T> And(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Or(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<T> Xor(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<T> And(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildAnd(Builder, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<T> Or(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildOr(Builder, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<T> Xor(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildXor(Builder, Emit(), Emit(rhs), EmptyString));
 	public IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> Not() => throw new NotImplementedException();

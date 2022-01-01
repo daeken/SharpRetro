@@ -4,7 +4,14 @@ using LLVMSharp.Interop;
 
 namespace LlvmJit; 
 
-public static class LlvmExtensions {
+public static unsafe class LlvmExtensions {
+	public static readonly sbyte* EmptyString;
+
+	static LlvmExtensions() {
+		EmptyString = (sbyte*) Marshal.AllocHGlobal(1);
+		EmptyString[0] = 0;
+	}
+	
 	public static LLVMTypeRef ToLLVMType(this Type type) {
 		if(type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Vector128<>)) {
 			var et = type.GetGenericArguments()[0];
@@ -33,4 +40,6 @@ public static class LlvmExtensions {
 			_ => throw new NotSupportedException(type.Name)
 		};
 	}
+	
+	public static LLVMTypeRef LlvmType<T>() => typeof(T).ToLLVMType();
 }

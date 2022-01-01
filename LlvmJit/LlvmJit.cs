@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using JitBase;
 using LLVMSharp.Interop;
+using static LlvmJit.LlvmExtensions;
 
 namespace LlvmJit;
 
@@ -17,8 +18,6 @@ public unsafe class LlvmJit<AddrT> : IJit<AddrT> where AddrT : struct {
 		LLVM.InitializeMCJITCompilerOptions(&options, (UIntPtr) Marshal.SizeOf<LLVMMCJITCompilerOptions>());
 	}
 	
-	static LLVMTypeRef LlvmType<T>() => typeof(T).ToLLVMType();
-
 	public DelegateT CreateFunction<DelegateT>(string name, Action<IBuilder<AddrT>> body) where DelegateT : Delegate {
 		var module = LLVMModuleRef.CreateWithName("SupercellNXLLVM");
 		var builder = LLVM.CreateBuilder();
@@ -46,10 +45,12 @@ public unsafe class LlvmJit<AddrT> : IJit<AddrT> where AddrT : struct {
 		if(!lbuilder.ReturnedThisBlock)
 			LLVM.BuildRetVoid(builder);
 		
+		//LLVM.DumpValue(function);
 		LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
 		if(!function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
 			throw new Exception("Program verification failed");
 		LLVM.RunFunctionPassManager(passManager, function);
+		//LLVM.DumpValue(function);
 		
 		if(!module.TryCreateExecutionEngine(out var executionEngine, out var errorMessage))
 			throw new Exception(errorMessage);
