@@ -42,12 +42,12 @@ public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
 	public IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> Not() => throw new NotImplementedException();
-	public IRuntimeValue<bool> LT(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<bool> LT(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSLT : LLVMIntPredicate.LLVMIntULT, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSLE : LLVMIntPredicate.LLVMIntULE, Emit(), Emit(rhs), EmptyString));
 	public IRuntimeValue<bool> EQ(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, LLVMIntPredicate.LLVMIntEQ, Emit(), Emit(rhs), EmptyString));
 	public IRuntimeValue<bool> NE(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, LLVMIntPredicate.LLVMIntNE, Emit(), Emit(rhs), EmptyString));
-	public IRuntimeValue<bool> GTE(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<bool> GT(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<bool> GTE(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSGE : LLVMIntPredicate.LLVMIntUGE, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<bool> GT(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSGT : LLVMIntPredicate.LLVMIntUGT, Emit(), Emit(rhs), EmptyString));
 	public IRuntimeValue<T> Abs() => throw new NotImplementedException();
 	public IRuntimeValue<T> Sqrt() => throw new NotImplementedException();
 	public IRuntimeValue<T> Round() => throw new NotImplementedException();
