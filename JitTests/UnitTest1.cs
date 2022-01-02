@@ -149,23 +149,23 @@ public class Tests {
 		Test(U64values, (a, b) => a <= b, (a, b) => a <= b);
 		Test(I64values, (a, b) => a <= b, (a, b) => a <= b);
 
-		Test(U8values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(I8values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(U16values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(I16values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(U32values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(I32values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(U64values, (a, b) => a.EQ(b), (a, b) => a == b);
-		Test(I64values, (a, b) => a.EQ(b), (a, b) => a == b);
+		Test(U8values, (a, b) => a == b, (a, b) => a == b);
+		Test(I8values, (a, b) => a == b, (a, b) => a == b);
+		Test(U16values, (a, b) => a == b, (a, b) => a == b);
+		Test(I16values, (a, b) => a == b, (a, b) => a == b);
+		Test(U32values, (a, b) => a == b, (a, b) => a == b);
+		Test(I32values, (a, b) => a == b, (a, b) => a == b);
+		Test(U64values, (a, b) => a == b, (a, b) => a == b);
+		Test(I64values, (a, b) => a == b, (a, b) => a == b);
 
-		Test(U8values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(I8values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(U16values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(I16values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(U32values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(I32values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(U64values, (a, b) => a.NE(b), (a, b) => a != b);
-		Test(I64values, (a, b) => a.NE(b), (a, b) => a != b);
+		Test(U8values, (a, b) => a != b, (a, b) => a != b);
+		Test(I8values, (a, b) => a != b, (a, b) => a != b);
+		Test(U16values, (a, b) => a != b, (a, b) => a != b);
+		Test(I16values, (a, b) => a != b, (a, b) => a != b);
+		Test(U32values, (a, b) => a != b, (a, b) => a != b);
+		Test(I32values, (a, b) => a != b, (a, b) => a != b);
+		Test(U64values, (a, b) => a != b, (a, b) => a != b);
+		Test(I64values, (a, b) => a != b, (a, b) => a != b);
 
 		Test(U8values, (a, b) => a >= b, (a, b) => a >= b);
 		Test(I8values, (a, b) => a >= b, (a, b) => a >= b);
