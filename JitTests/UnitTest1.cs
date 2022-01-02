@@ -206,22 +206,21 @@ public class Tests {
 		Assert.AreEqual(123, ternaryTest(true, 123, 321));
 		Assert.AreEqual(321, ternaryTest(false, 123, 321));
 
-		var i = 0;
-		var j = 0;
-		bool CondFunc() => i++ != 10;
-		void BodyFunc() => j++;
-		var whileTest = jit.CreateFunction<Action>("whileTest", builder =>
-			builder.While(builder.Call(CondFunc), () => builder.Call(BodyFunc)));
-		whileTest();
-		Assert.AreEqual(11, i);
-		Assert.AreEqual(10, j);
+		var whileTest = jit.CreateFunction<Func<uint>>("whileTest", builder => {
+			var local = builder.DefineLocal<uint>();
+			local.Value = builder.LiteralValue(0U);
+			builder.While(local.Value.NE(builder.LiteralValue(5U)), () => local.Value += builder.LiteralValue(1U));
+			builder.Return(local.Value);
+		});
+		Assert.AreEqual(5, whileTest());
 
-		i = j = 0;
-		var doWhileTest = jit.CreateFunction<Action>("doWhileTest", builder =>
-			builder.DoWhile(() => builder.Call(BodyFunc), builder.Call(CondFunc)));
-		doWhileTest();
-		Assert.AreEqual(11, i);
-		Assert.AreEqual(11, j);
+		var doWhileTest = jit.CreateFunction<Func<uint>>("doWhileTest", builder => {
+			var local = builder.DefineLocal<uint>();
+			local.Value = builder.LiteralValue(0U);
+			builder.DoWhile(() => local.Value += builder.LiteralValue(1U), local.Value.NE(builder.LiteralValue(5U)));
+			builder.Return(local.Value);
+		});
+		Assert.AreEqual(5, doWhileTest());
 	}
 	
 	[TestCaseSource(nameof(Jits32))]

@@ -36,7 +36,7 @@ public static unsafe class LlvmExtensions {
 			ulong => LLVMTypeRef.Int64, 
 			float => LLVMTypeRef.Float, 
 			double => LLVMTypeRef.Double, 
-			bool => LLVMTypeRef.Int1, 
+			bool => LLVMTypeRef.Int32, 
 			_ => throw new NotSupportedException(type.Name)
 		};
 	}

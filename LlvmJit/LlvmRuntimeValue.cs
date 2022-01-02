@@ -44,8 +44,8 @@ public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
 	public IRuntimeValue<T> Not() => throw new NotImplementedException();
 	public IRuntimeValue<bool> LT(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<bool> EQ(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public IRuntimeValue<bool> NE(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public IRuntimeValue<bool> EQ(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, LLVMIntPredicate.LLVMIntEQ, Emit(), Emit(rhs), EmptyString));
+	public IRuntimeValue<bool> NE(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, LLVMIntPredicate.LLVMIntNE, Emit(), Emit(rhs), EmptyString));
 	public IRuntimeValue<bool> GTE(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<bool> GT(IRuntimeValue<T> rhs) => throw new NotImplementedException();
 	public IRuntimeValue<T> Abs() => throw new NotImplementedException();
