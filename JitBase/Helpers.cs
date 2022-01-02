@@ -60,4 +60,49 @@ public static class Helpers {
 		var (ttype, conv) = dt;
 		return (DelegateT) conv(Marshal.GetDelegateForFunctionPointer(ptr, ttype));
 	}
+	static readonly Dictionary<Type, object> InvDelegateTypeMap = new();
+	public static IntPtr GetFunctionPointerForAnyDelegate<DelegateT>(DelegateT func) {
+		if(!typeof(DelegateT).IsGenericType) return Marshal.GetFunctionPointerForDelegate(func);
+		if(!InvDelegateTypeMap.TryGetValue(typeof(DelegateT), out var conv)) {
+			var method = typeof(DelegateT).GetMethod("Invoke") ?? throw new Exception();
+			
+			var ab = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
+			var mb = ab.DefineDynamicModule("DelegateModule");
+			var tb = mb.DefineType("DelegateType", TypeAttributes.Sealed | TypeAttributes.Public, typeof(MulticastDelegate));
+			
+			var ctor = tb.DefineConstructor(
+				MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public,
+				CallingConventions.Standard, new[] { typeof(object), typeof(IntPtr) });
+			ctor.SetImplementationFlags(MethodImplAttributes.CodeTypeMask);
+
+			var parameters = method.GetParameters();
+
+			var invokeMethod = tb.DefineMethod(
+				"Invoke", MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.Public,
+				method.ReturnType, parameters.Select(p => p.ParameterType).ToArray());
+			invokeMethod.SetImplementationFlags(MethodImplAttributes.CodeTypeMask);
+
+			for(var i = 0; i < parameters.Length; i++) {
+				var parameter = parameters[i];
+				invokeMethod.DefineParameter(i + 1, ParameterAttributes.None, parameter.Name);
+			}
+
+			var bt = tb.CreateType() ?? throw new Exception();
+			var imi = bt.GetMethod("Invoke") ?? throw new Exception();
+
+			var del = Expression.Parameter(typeof(DelegateT));
+
+			var subparams = parameters.Select(x => Expression.Parameter(x.ParameterType)).ToArray();
+			
+			var et = Expression.Lambda<Func<DelegateT, Delegate>>(
+				Expression.Lambda(bt, 
+					Expression.Call(del, method, subparams.Select(x => (Expression) x)), 
+					subparams
+				),
+				del
+			);
+			InvDelegateTypeMap[typeof(DelegateT)] = conv = et.Compile();
+		}
+		return Marshal.GetFunctionPointerForDelegate(((Func<DelegateT, Delegate>) conv)(func));
+	}
 }

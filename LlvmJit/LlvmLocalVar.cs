@@ -5,11 +5,11 @@ using static LlvmJit.LlvmExtensions;
 namespace LlvmJit; 
 
 public unsafe class LlvmLocalVar<T> : ILocalVar<T> where T : struct {
-	readonly LLVMOpaqueBuilder* Builder;
+	readonly LLVMBuilderRef Builder;
 	readonly LLVMValueRef Pointer;
 	readonly LlvmRuntimeValue<T> Getter;
 
-	internal LlvmLocalVar(LLVMOpaqueBuilder* builder) {
+	internal LlvmLocalVar(LLVMBuilderRef builder) {
 		Builder = builder;
 		Pointer = LLVM.BuildAlloca(Builder, LlvmType<T>(), EmptyString);
 		Getter = new LlvmRuntimeValue<T>(Builder, () => LLVM.BuildLoad(Builder, Pointer, EmptyString));

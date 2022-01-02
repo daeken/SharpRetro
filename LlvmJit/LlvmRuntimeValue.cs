@@ -8,9 +8,9 @@ namespace LlvmJit;
 
 public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
 	readonly Func<LLVMValueRef> Generate;
-	readonly LLVMOpaqueBuilder* Builder;
+	readonly LLVMBuilderRef Builder;
 
-	internal LlvmRuntimeValue(LLVMOpaqueBuilder* builder, Func<LLVMValueRef> gen) {
+	internal LlvmRuntimeValue(LLVMBuilderRef builder, Func<LLVMValueRef> gen) {
 		Builder = builder;
 		Generate = gen;
 	}

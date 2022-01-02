@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using JitBase;
 using LLVMSharp;
 using LLVMSharp.Interop;
@@ -7,11 +8,11 @@ namespace LlvmJit;
 
 public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 	LLVMValueRef Function;
-	readonly LLVMOpaqueBuilder* Builder;
+	LLVMBuilderRef Builder;
 
 	internal bool ReturnedThisBlock;
 	
-	internal LlvmBuilder(LLVMValueRef function, LLVMOpaqueBuilder* builder) {
+	internal LlvmBuilder(LLVMValueRef function, LLVMBuilderRef builder) {
 		Function = function;
 		Builder = builder;
 	}
@@ -129,25 +130,39 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 		phi.AddIncoming(new[] { left, right }, new[] { ifLabel, elseLabel }, 2);
 		return phi;
 	});
-	
-	public void Call(Action func) {
-		throw new NotImplementedException();
+
+	LLVMValueRef DelegateToFP<DelegateT>(DelegateT del) {
+		var fptr = Helpers.GetFunctionPointerForAnyDelegate(del);
+		return Builder.BuildIntToPtr(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong) fptr), LLVMTypeRef.CreatePointer(LlvmType<DelegateT>(), 0));
 	}
-	public void Call<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct {
-		throw new NotImplementedException();
+
+	LLVMValueRef PrepArg<T>(IRuntimeValue<T> arg) where T : struct {
+		var ret = Emit(arg);
+		if(typeof(T) == typeof(bool))
+			ret = LLVM.BuildIntCast(Builder, ret, LlvmType<uint>(), EmptyString);
+		return ret;
 	}
-	public void Call<T1, T2>(Action<T1, T2> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct {
-		throw new NotImplementedException();
-	}
-	public void Call<T1, T2, T3>(Action<T1, T2, T3> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct {
-		throw new NotImplementedException();
-	}
-	public void Call<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct {
-		throw new NotImplementedException();
-	}
-	public IRuntimeValue<RetT> Call<RetT>(Func<RetT> func) where RetT : struct => throw new NotImplementedException();
-	public IRuntimeValue<RetT> Call<T1, RetT>(Func<T1, RetT> func, IRuntimeValue<T1> a1) where T1 : struct where RetT : struct => throw new NotImplementedException();
-	public IRuntimeValue<RetT> Call<T1, T2, RetT>(Func<T1, T2, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct where RetT : struct => throw new NotImplementedException();
-	public IRuntimeValue<RetT> Call<T1, T2, T3, RetT>(Func<T1, T2, T3, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct where RetT : struct => throw new NotImplementedException();
-	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, RetT>(Func<T1, T2, T3, T4, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where RetT : struct => throw new NotImplementedException();
+
+	LLVMValueRef PrepRet<T>(LLVMValueRef ret) where T : struct => typeof(T) == typeof(bool) ? LLVM.BuildIntCast(Builder, ret, LLVMTypeRef.Int1, EmptyString) : ret;
+
+	public void Call(Action func) => 
+		Builder.BuildCall(DelegateToFP(func), Array.Empty<LLVMValueRef>());
+	public void Call<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct => 
+		Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1) });
+	public void Call<T1, T2>(Action<T1, T2> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct => 
+		Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1), PrepArg(a2) });
+	public void Call<T1, T2, T3>(Action<T1, T2, T3> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct => 
+		Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1), PrepArg(a2), PrepArg(a3) });
+	public void Call<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct =>
+		Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4) });
+	public IRuntimeValue<RetT> Call<RetT>(Func<RetT> func) where RetT : struct =>
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall(DelegateToFP(func), Array.Empty<LLVMValueRef>())));
+	public IRuntimeValue<RetT> Call<T1, RetT>(Func<T1, RetT> func, IRuntimeValue<T1> a1) where T1 : struct where RetT : struct =>
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1) })));
+	public IRuntimeValue<RetT> Call<T1, T2, RetT>(Func<T1, T2, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct where RetT : struct => 
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1), PrepArg(a2) })));
+	public IRuntimeValue<RetT> Call<T1, T2, T3, RetT>(Func<T1, T2, T3, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct where RetT : struct =>
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1), PrepArg(a2), PrepArg(a3) })));
+	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, RetT>(Func<T1, T2, T3, T4, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where RetT : struct =>
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall(DelegateToFP(func), new[] { PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4) })));
 }

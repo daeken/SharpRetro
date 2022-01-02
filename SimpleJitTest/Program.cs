@@ -4,8 +4,20 @@ using LlvmJit;
 //var jit = new CilJit<ulong>();
 var jit = new LlvmJit<ulong>();
 
-var ternaryTest = jit.CreateFunction<Func<bool, uint, uint, uint>>("ternaryTest", builder =>
-	builder.Return(builder.Ternary(builder.Argument<bool>(0), builder.Argument<uint>(1), builder.Argument<uint>(2))));
+void Test() {
+	Console.WriteLine("Called!");
+}
 
-Console.WriteLine(ternaryTest(true, 1, 2));
-Console.WriteLine(ternaryTest(false, 1, 2));
+var test = jit.CreateFunction<Action>("test", builder => {
+	builder.Call(Test);
+});
+test();
+
+void Test2(int foo) {
+	Console.WriteLine($"Called with {foo}");
+}
+
+var test2 = jit.CreateFunction<Action>("test2", builder => {
+	builder.Call(Test2, builder.LiteralValue(123));
+});
+test2();
