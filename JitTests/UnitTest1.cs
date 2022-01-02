@@ -321,4 +321,86 @@ public class Tests {
 		Assert.AreEqual(0, func());
 		Assert.AreEqual(1, i);
 	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void Cast(IJit<uint> jit) {
+		void Test<T, OT>(T[] values, Func<T, OT> knownGood) where T : struct where OT : struct {
+			var jitFunc = jit.CreateFunction<Func<T, OT>>("test", builder =>
+				builder.Return(builder.Argument<T>(0).Cast<OT>()));
+			foreach(var a in values)
+				Assert.AreEqual(knownGood(a), jitFunc(a));
+		}
+		
+		Test(U8values, x => (byte) x);
+		Test(U8values, x => (sbyte) x);
+		Test(U8values, x => (ushort) x);
+		Test(U8values, x => (short) x);
+		Test(U8values, x => (uint) x);
+		Test(U8values, x => (int) x);
+		Test(U8values, x => (ulong) x);
+		Test(U8values, x => (long) x);
+
+		Test(I8values, x => (byte) x);
+		Test(I8values, x => (sbyte) x);
+		Test(I8values, x => (ushort) x);
+		Test(I8values, x => (short) x);
+		Test(I8values, x => (uint) x);
+		Test(I8values, x => (int) x);
+		Test(I8values, x => (ulong) x);
+		Test(I8values, x => (long) x);
+
+		Test(U16values, x => (byte) x);
+		Test(U16values, x => (sbyte) x);
+		Test(U16values, x => (ushort) x);
+		Test(U16values, x => (short) x);
+		Test(U16values, x => (uint) x);
+		Test(U16values, x => (int) x);
+		Test(U16values, x => (ulong) x);
+		Test(U16values, x => (long) x);
+
+		Test(I16values, x => (byte) x);
+		Test(I16values, x => (sbyte) x);
+		Test(I16values, x => (ushort) x);
+		Test(I16values, x => (short) x);
+		Test(I16values, x => (uint) x);
+		Test(I16values, x => (int) x);
+		Test(I16values, x => (ulong) x);
+		Test(I16values, x => (long) x);
+
+		Test(U32values, x => (byte) x);
+		Test(U32values, x => (sbyte) x);
+		Test(U32values, x => (ushort) x);
+		Test(U32values, x => (short) x);
+		Test(U32values, x => (uint) x);
+		Test(U32values, x => (int) x);
+		Test(U32values, x => (ulong) x);
+		Test(U32values, x => (long) x);
+
+		Test(I32values, x => (byte) x);
+		Test(I32values, x => (sbyte) x);
+		Test(I32values, x => (ushort) x);
+		Test(I32values, x => (short) x);
+		Test(I32values, x => (uint) x);
+		Test(I32values, x => (int) x);
+		Test(I32values, x => (ulong) x);
+		Test(I32values, x => (long) x);
+
+		Test(U64values, x => (byte) x);
+		Test(U64values, x => (sbyte) x);
+		Test(U64values, x => (ushort) x);
+		Test(U64values, x => (short) x);
+		Test(U64values, x => (uint) x);
+		Test(U64values, x => (int) x);
+		Test(U64values, x => (ulong) x);
+		Test(U64values, x => (long) x);
+
+		Test(I64values, x => (byte) x);
+		Test(I64values, x => (sbyte) x);
+		Test(I64values, x => (ushort) x);
+		Test(I64values, x => (short) x);
+		Test(I64values, x => (uint) x);
+		Test(I64values, x => (int) x);
+		Test(I64values, x => (ulong) x);
+		Test(I64values, x => (long) x);
+	}
 }

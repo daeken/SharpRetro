@@ -25,7 +25,19 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 
 	CilRuntimeValue<U, DelegateT> C<U>(Action gen) where U : struct => new(Ilg, Tb, gen);
 
-	public IRuntimeValue<OT> Cast<OT>() where OT : struct => throw new NotImplementedException();
+	public IRuntimeValue<OT> Cast<OT>() where OT : struct {
+		if(typeof(OT) == typeof(T)) return (IRuntimeValue<OT>) this;
+		return C<OT>(() => EmitThen(() => {
+			if(BitWidth<OT>() > BitWidth<T>()) {
+				if(IsSigned<T>() && !IsSigned<OT>())
+					Ilg.Convert(ToSigned<OT>());
+				else if(!IsSigned<T>() && IsSigned<OT>())
+					Ilg.Convert(ToUnsigned<OT>());
+			}
+
+			Ilg.Convert<OT>();
+		}));
+	}
 	public IRuntimeValue<OT> Bitcast<OT>() where OT : struct => throw new NotImplementedException();
 	public IRuntimeValue<T> Store() {
 		var local = Ilg.DeclareLocal<T>();

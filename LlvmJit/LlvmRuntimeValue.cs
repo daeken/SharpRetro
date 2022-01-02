@@ -19,7 +19,25 @@ public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
 	internal static LLVMValueRef Emit<U>(IRuntimeValue<U> rv) where U : struct => ((LlvmRuntimeValue<U>) rv).Emit();
 	IRuntimeValue<U> C<U>(Func<LLVMValueRef> gen) where U : struct => new LlvmRuntimeValue<U>(Builder, gen);
 
-	public IRuntimeValue<OT> Cast<OT>() where OT : struct => throw new NotImplementedException();
+	public IRuntimeValue<OT> Cast<OT>() where OT : struct {
+		if(typeof(OT) == typeof(T)) return (IRuntimeValue<OT>) this;
+		return C<OT>(() => {
+			var val = Emit();
+
+			var fw = BitWidth<T>();
+			var sw = BitWidth<OT>();
+			var fs = IsSigned<T>();
+			var ss = IsSigned<OT>();
+
+			var opcode = LLVMOpcode.LLVMTrunc;
+			if(fw == sw)
+				opcode = LLVMOpcode.LLVMBitCast;
+			else if(fw < sw)
+				opcode = (fs && !ss) || (fs && ss) ? LLVMOpcode.LLVMSExt : LLVMOpcode.LLVMZExt;
+
+			return LLVM.BuildCast(Builder, opcode, val, LlvmType<OT>(), EmptyString);
+		});
+	}
 	public IRuntimeValue<OT> Bitcast<OT>() where OT : struct => throw new NotImplementedException();
 	public IRuntimeValue<T> Store() {
 		var val = Emit();

@@ -14,6 +14,24 @@ public static class Helpers {
 			else_();
 	}
 
+	public static Type ToSigned<T>() => default(T) switch {
+		byte => typeof(sbyte),
+		ushort => typeof(short),
+		uint => typeof(int),
+		ulong => typeof(long),
+		_ => typeof(T)
+	};
+
+	public static Type ToUnsigned<T>() => default(T) switch {
+		sbyte => typeof(byte),
+		short => typeof(ushort),
+		int => typeof(uint),
+		long => typeof(ulong),
+		_ => typeof(T)
+	};
+
+	public static int BitWidth<T>() => Marshal.SizeOf<T>() * 8;
+
 	static readonly Dictionary<Type, (Type DelegateType, Func<Delegate, object> Converter)> DelegateTypeMap = new();
 	public static DelegateT GetAnyDelegateForFunctionPointer<DelegateT>(IntPtr ptr) {
 		if(!typeof(DelegateT).IsGenericType) return Marshal.GetDelegateForFunctionPointer<DelegateT>(ptr);
