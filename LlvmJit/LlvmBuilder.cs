@@ -21,13 +21,16 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
 	void PositionBuilderAtEnd(LLVMBasicBlockRef block) => Builder.PositionAtEnd(CurrentBlock = block);
 
-	IRuntimeValue<T> C<T>(Func<LLVMValueRef> gen) where T : struct => new LlvmRuntimeValue<AddrT, T>(Builder, this, gen);
-	static LLVMValueRef Emit<T>(IRuntimeValue<T> rv) where T : struct => ((LlvmRuntimeValue<AddrT, T>) rv).Emit();
+	public IRuntimeValue<T> C<T>(Func<LLVMValueRef> gen) where T : struct => new LlvmRuntimeValue<AddrT, T>(Builder, this, gen);
+	public LLVMValueRef Emit<T>(IRuntimeValue<T> rv) where T : struct => ((LlvmRuntimeValue<AddrT, T>) rv).Emit();
 
 	public IRuntimeValue<T> Argument<T>(int index) where T : struct => C<T>(() => {
 		var parm = LLVM.GetParam(Function, (uint) index);
 		return typeof(T) == typeof(bool) ? LLVM.BuildIntCast(Builder, parm, LLVMTypeRef.Int1, EmptyString) : parm;
 	});
+
+	public IStructRef<T> StructRefArgument<T>(int index) where T : IJitStruct => new LlvmStructRef<AddrT, T>(this, Builder, LLVM.GetParam(Function, (uint) index));
+
 	public IRuntimeValue<T> Zero<T>() where T : struct => LiteralValue(default(T));
 	public IRuntimeValue<T> LiteralValue<T>(T value) where T : struct => C<T>(() => value switch {
 		sbyte v => LLVMValueRef.CreateConstInt(LLVMTypeRef.Int8, (ulong) v),

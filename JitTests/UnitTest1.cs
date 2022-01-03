@@ -438,4 +438,30 @@ public class Tests {
 		TestRight(U64values, (a, b) => (ulong) (a >> (int) b));
 		TestRight(I64values, (a, b) => (long) (a >> (int) b));
 	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct FooStruct : IJitStruct {
+		[FieldOffset(0)] public uint Foo;
+		[FieldOffset(4)] public uint Bar;
+		[FieldOffset(8)] public uint Baz;
+		[FieldOffset(12)] public uint Hax;
+	}
+
+	delegate uint StructTest(ref FooStruct foo);
+	
+	[TestCaseSource(nameof(Jits32))]
+	public void Structs(IJit<uint> jit) {
+		var foo = new FooStruct { Foo = 1, Bar = 2, Baz = 3, Hax = 4 };
+		var func = jit.CreateFunction<StructTest>("test", builder => {
+			var foor = builder.StructRefArgument<FooStruct>(0);
+			foor.Foo(builder.LiteralValue(5U));
+			foor.Bar(builder.LiteralValue(6U));
+			foor.Baz(builder.LiteralValue(7U));
+			builder.Return(foor.Hax());
+		});
+		Assert.AreEqual(4, func(ref foo));
+		Assert.AreEqual(5, foo.Foo);
+		Assert.AreEqual(6, foo.Bar);
+		Assert.AreEqual(7, foo.Baz);
+	}
 }

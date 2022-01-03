@@ -16,9 +16,15 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 	
 	static CilRuntimeValue<U, DelegateT> TT<U>(IRuntimeValue<U> v) where U : struct => v as CilRuntimeValue<U, DelegateT>;
 	
-	CilRuntimeValue<U, DelegateT> C<U>(Action gen) where U : struct => new(Ilg, Tb, gen);
+	internal CilRuntimeValue<U, DelegateT> C<U>(Action gen) where U : struct => new(Ilg, Tb, gen);
 
 	public IRuntimeValue<T> Argument<T>(int index) where T : struct => C<T>(() => Ilg.LoadArgument((ushort) index));
+	
+	public IStructRef<T> StructRefArgument<T>(int index) where T : IJitStruct => new CilStructRef<AddrT, DelegateT, T>(this, Ilg, C<ulong>(() => {
+		Ilg.LoadArgument((ushort) index);
+		Ilg.Convert<ulong>();
+	}));
+	
 	public IRuntimeValue<T> Zero<T>() where T : struct => LiteralValue(default(T));
 	public IRuntimeValue<T> LiteralValue<T>(T value) where T : struct => C<T>(value switch {
 		byte v => () => Ilg.LoadConstant(v), 

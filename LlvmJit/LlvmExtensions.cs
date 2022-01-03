@@ -24,7 +24,7 @@ public static unsafe class LlvmExtensions {
 		}
 		if(type == typeof(void))
 			return LLVMTypeRef.Void;
-		if(type.IsPointer) return LLVMTypeRef.Int64;
+		if(type.IsPointer || type.IsByRef) return LLVMTypeRef.Int64;
 		return Activator.CreateInstance(type) switch {
 			sbyte => LLVMTypeRef.Int8, 
 			byte => LLVMTypeRef.Int8, 

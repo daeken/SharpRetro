@@ -2,6 +2,7 @@ namespace JitBase;
 
 public interface IBuilder<AddrT> where AddrT : struct {
 	IRuntimeValue<T> Argument<T>(int index) where T : struct;
+	IStructRef<T> StructRefArgument<T>(int index) where T : IJitStruct;
 
 	IRuntimeValue<T> Zero<T>() where T : struct;
 	IRuntimeValue<T> LiteralValue<T>(T value) where T : struct;
