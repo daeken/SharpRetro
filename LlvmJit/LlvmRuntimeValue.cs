@@ -6,18 +6,20 @@ using static LlvmJit.LlvmExtensions;
 
 namespace LlvmJit; 
 
-public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
+public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : struct where T : struct {
 	readonly Func<LLVMValueRef> Generate;
 	readonly LLVMBuilderRef Builder;
+	readonly LlvmBuilder<AddrT> JBuilder;
 
-	internal LlvmRuntimeValue(LLVMBuilderRef builder, Func<LLVMValueRef> gen) {
+	internal LlvmRuntimeValue(LLVMBuilderRef builder, LlvmBuilder<AddrT> jBuilder, Func<LLVMValueRef> gen) {
 		Builder = builder;
+		JBuilder = jBuilder;
 		Generate = gen;
 	}
 
 	internal LLVMValueRef Emit() => Generate();
-	internal static LLVMValueRef Emit<U>(IRuntimeValue<U> rv) where U : struct => ((LlvmRuntimeValue<U>) rv).Emit();
-	IRuntimeValue<U> C<U>(Func<LLVMValueRef> gen) where U : struct => new LlvmRuntimeValue<U>(Builder, gen);
+	internal static LLVMValueRef Emit<U>(IRuntimeValue<U> rv) where U : struct => ((LlvmRuntimeValue<AddrT, U>) rv).Emit();
+	IRuntimeValue<U> C<U>(Func<LLVMValueRef> gen) where U : struct => new LlvmRuntimeValue<AddrT, U>(Builder, JBuilder, gen);
 
 	public override IRuntimeValue<OT> Cast<OT>() where OT : struct {
 		if(typeof(OT) == typeof(T)) return (IRuntimeValue<OT>) (object) this;
@@ -57,12 +59,39 @@ public unsafe class LlvmRuntimeValue<T> : IRuntimeValue<T> where T : struct {
 	public override IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => C<T>(() => IsSigned<T>()
 		? LLVM.BuildSRem(Builder, Emit(), Emit(rhs), EmptyString)
 		: LLVM.BuildURem(Builder, Emit(), Emit(rhs), EmptyString));
-	public override IRuntimeValue<T> Negate() => throw new NotImplementedException();
+	public override IRuntimeValue<T> Negate() => !IsSigned<T>() ? throw new NotSupportedException() :
+		C<T>(() => LLVM.BuildNeg(Builder, Emit(), EmptyString));
 	public override IRuntimeValue<T> And(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildAnd(Builder, Emit(), Emit(rhs), EmptyString));
 	public override IRuntimeValue<T> Or(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildOr(Builder, Emit(), Emit(rhs), EmptyString));
 	public override IRuntimeValue<T> Xor(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildXor(Builder, Emit(), Emit(rhs), EmptyString));
-	public override IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public override IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public override IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) {
+		var bw = BitWidth<T>();
+		var shift = ((IRuntimeValue<int>) rhs).Store();
+		var doShift = C<T>(() => LLVM.BuildShl(Builder, Emit(), Emit(shift.Cast<T>()), EmptyString));
+		var negShift = JBuilder.LiteralValue(bw < 32 ? 32 : bw) + shift;
+		var doNegShift = C<T>(() => LLVM.BuildShl(Builder, Emit(), Emit(negShift.Cast<T>()), EmptyString));
+		return JBuilder.Ternary(
+			shift >= JBuilder.LiteralValue(bw), 
+			JBuilder.Zero<T>(), 
+			JBuilder.Ternary(shift < JBuilder.Zero<int>(), doNegShift, doShift)
+		);
+	}
+	public override IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) {
+		var bw = BitWidth<T>();
+		var shift = ((IRuntimeValue<int>) rhs).Store();
+		var doShift = C<T>(() => IsSigned<T>()
+			? LLVM.BuildAShr(Builder, Emit(), Emit(shift.Cast<T>()), EmptyString)
+			: LLVM.BuildLShr(Builder, Emit(), Emit(shift.Cast<T>()), EmptyString));
+		var negShift = JBuilder.LiteralValue(bw < 32 ? 32 : bw) + shift;
+		var doNegShift = C<T>(() =>  IsSigned<T>()
+			? LLVM.BuildAShr(Builder, Emit(), Emit(negShift.Cast<T>()), EmptyString)
+			: LLVM.BuildLShr(Builder, Emit(), Emit(negShift.Cast<T>()), EmptyString));
+		return JBuilder.Ternary(
+			shift >= JBuilder.LiteralValue(bw), 
+			JBuilder.Zero<T>(), 
+			JBuilder.Ternary(shift < JBuilder.Zero<int>(), doNegShift, doShift)
+		);
+	}
 	public override IRuntimeValue<T> Not() => throw new NotImplementedException();
 	public override IRuntimeValue<bool> LT(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSLT : LLVMIntPredicate.LLVMIntULT, Emit(), Emit(rhs), EmptyString));
 	public override IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSLE : LLVMIntPredicate.LLVMIntULE, Emit(), Emit(rhs), EmptyString));

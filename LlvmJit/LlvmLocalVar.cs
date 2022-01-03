@@ -4,16 +4,16 @@ using static LlvmJit.LlvmExtensions;
 
 namespace LlvmJit; 
 
-public unsafe class LlvmLocalVar<T> : ILocalVar<T> where T : struct {
+public unsafe class LlvmLocalVar<AddrT, T> : ILocalVar<T> where AddrT : struct where T : struct {
 	readonly LLVMBuilderRef Builder;
 	readonly LLVMValueRef Pointer;
-	readonly LlvmRuntimeValue<T> Getter;
+	readonly LlvmRuntimeValue<AddrT, T> Getter;
 
-	internal LlvmLocalVar(LLVMBuilderRef builder) {
+	internal LlvmLocalVar(LLVMBuilderRef builder, LlvmBuilder<AddrT> jBuilder) {
 		Builder = builder;
 		Pointer = LLVM.BuildAlloca(Builder, LlvmType<T>(), EmptyString);
-		Getter = new LlvmRuntimeValue<T>(Builder, () => LLVM.BuildLoad(Builder, Pointer, EmptyString));
+		Getter = new LlvmRuntimeValue<AddrT, T>(Builder, jBuilder, () => LLVM.BuildLoad(Builder, Pointer, EmptyString));
 	}
 
-	public IRuntimeValue<T> Value { get => Getter; set => LLVM.BuildStore(Builder, LlvmRuntimeValue<T>.Emit(value), Pointer); }
+	public IRuntimeValue<T> Value { get => Getter; set => LLVM.BuildStore(Builder, LlvmRuntimeValue<AddrT, T>.Emit(value), Pointer); }
 }

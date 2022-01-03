@@ -403,4 +403,39 @@ public class Tests {
 		Test(I64values, x => (ulong) x);
 		Test(I64values, x => (long) x);
 	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void Shift(IJit<uint> jit) {
+		void TestLeft<T>(T[] values, Func<T, T, T> knownGood) where T : struct {
+			var jitFunc = jit.CreateFunction<Func<T, T, T>>("test", builder => builder.Return(builder.Argument<T>(0).LeftShift(builder.Argument<T>(1))));
+			foreach(var a in values)
+				foreach(var b in values)
+					Assert.AreEqual(knownGood(a, b), jitFunc(a, b), $"{a} << {b}");
+		}
+		
+		TestLeft(U8values, (a, b) => (byte) (a << (int) b));
+		TestLeft(I8values, (a, b) => (sbyte) (a << (int) b));
+		TestLeft(U16values, (a, b) => (ushort) (a << (int) b));
+		TestLeft(I16values, (a, b) => (short) (a << (int) b));
+		TestLeft(U32values, (a, b) => (uint) (a << (int) b));
+		TestLeft(I32values, (a, b) => (int) (a << (int) b));
+		TestLeft(U64values, (a, b) => (ulong) (a << (int) b));
+		TestLeft(I64values, (a, b) => (long) (a << (int) b));
+		
+		void TestRight<T>(T[] values, Func<T, T, T> knownGood) where T : struct {
+			var jitFunc = jit.CreateFunction<Func<T, T, T>>("test", builder => builder.Return(builder.Argument<T>(0).RightShift(builder.Argument<T>(1))));
+			foreach(var a in values)
+				foreach(var b in values)
+					Assert.AreEqual(knownGood(a, b), jitFunc(a, b), $"{a} >> {b}");
+		}
+		
+		TestRight(U8values, (a, b) => (byte) (a >> (int) b));
+		TestRight(I8values, (a, b) => (sbyte) (a >> (int) b));
+		TestRight(U16values, (a, b) => (ushort) (a >> (int) b));
+		TestRight(I16values, (a, b) => (short) (a >> (int) b));
+		TestRight(U32values, (a, b) => (uint) (a >> (int) b));
+		TestRight(I32values, (a, b) => (int) (a >> (int) b));
+		TestRight(U64values, (a, b) => (ulong) (a >> (int) b));
+		TestRight(I64values, (a, b) => (long) (a >> (int) b));
+	}
 }

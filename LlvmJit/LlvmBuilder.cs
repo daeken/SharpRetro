@@ -10,6 +10,8 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 	LLVMValueRef Function;
 	LLVMBuilderRef Builder;
 
+	LLVMBasicBlockRef CurrentBlock;
+
 	internal bool ReturnedThisBlock;
 	
 	internal LlvmBuilder(LLVMValueRef function, LLVMBuilderRef builder) {
@@ -17,14 +19,16 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 		Builder = builder;
 	}
 
-	IRuntimeValue<T> C<T>(Func<LLVMValueRef> gen) where T : struct => new LlvmRuntimeValue<T>(Builder, gen);
-	static LLVMValueRef Emit<T>(IRuntimeValue<T> rv) where T : struct => ((LlvmRuntimeValue<T>) rv).Emit();
+	void PositionBuilderAtEnd(LLVMBasicBlockRef block) => Builder.PositionAtEnd(CurrentBlock = block);
+
+	IRuntimeValue<T> C<T>(Func<LLVMValueRef> gen) where T : struct => new LlvmRuntimeValue<AddrT, T>(Builder, this, gen);
+	static LLVMValueRef Emit<T>(IRuntimeValue<T> rv) where T : struct => ((LlvmRuntimeValue<AddrT, T>) rv).Emit();
 
 	public IRuntimeValue<T> Argument<T>(int index) where T : struct => C<T>(() => {
 		var parm = LLVM.GetParam(Function, (uint) index);
 		return typeof(T) == typeof(bool) ? LLVM.BuildIntCast(Builder, parm, LLVMTypeRef.Int1, EmptyString) : parm;
 	});
-	public IRuntimeValue<T> Zero<T>() where T : struct => throw new NotImplementedException();
+	public IRuntimeValue<T> Zero<T>() where T : struct => LiteralValue(default(T));
 	public IRuntimeValue<T> LiteralValue<T>(T value) where T : struct => C<T>(() => value switch {
 		sbyte v => LLVMValueRef.CreateConstInt(LLVMTypeRef.Int8, (ulong) v),
 		byte v => LLVMValueRef.CreateConstInt(LLVMTypeRef.Int8, v),
@@ -37,7 +41,7 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 		_ => throw new NotImplementedException(typeof(T).FullName)
 	});
 	public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct => throw new NotImplementedException();
-	public ILocalVar<T> DefineLocal<T>() where T : struct => new LlvmLocalVar<T>(Builder);
+	public ILocalVar<T> DefineLocal<T>() where T : struct => new LlvmLocalVar<AddrT, T>(Builder, this);
 	public void Sink<T>(IRuntimeValue<T> value) where T : struct {
 		throw new NotImplementedException();
 	}
@@ -57,17 +61,17 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 		LLVMBasicBlockRef? endLabel = null;
 
 		LLVM.BuildCondBr(Builder, Emit(cond), ifLabel, elseLabel);
-		LLVM.PositionBuilderAtEnd(Builder, ifLabel);
+		PositionBuilderAtEnd(ifLabel);
 		if_();
 		if(!ReturnedThisBlock)
 			LLVM.BuildBr(Builder, (endLabel = Function.AppendBasicBlock("")).Value);
-		LLVM.PositionBuilderAtEnd(Builder, elseLabel);
+		PositionBuilderAtEnd(elseLabel);
 		ReturnedThisBlock = false;
 		else_();
 		if(!ReturnedThisBlock)
 			LLVM.BuildBr(Builder, endLabel ??= Function.AppendBasicBlock(""));
 		if(endLabel != null) {
-			LLVM.PositionBuilderAtEnd(Builder, endLabel.Value);
+			PositionBuilderAtEnd(endLabel.Value);
 			ReturnedThisBlock = false;
 		}
 	}
@@ -81,14 +85,14 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
 		LLVM.BuildBr(Builder, startLabel);
 		
-		LLVM.PositionBuilderAtEnd(Builder, startLabel);
+		PositionBuilderAtEnd(startLabel);
 		LLVM.BuildCondBr(Builder, Emit(cond), bodyLabel, endLabel);
-		LLVM.PositionBuilderAtEnd(Builder, bodyLabel);
+		PositionBuilderAtEnd(bodyLabel);
 		body();
 		if(!ReturnedThisBlock)
 			LLVM.BuildBr(Builder, startLabel);
 		
-		LLVM.PositionBuilderAtEnd(Builder, endLabel);
+		PositionBuilderAtEnd(endLabel);
 		ReturnedThisBlock = false;
 	}
 	public void DoWhile(Action body, IRuntimeValue<bool> cond) {
@@ -99,7 +103,7 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
 		LLVM.BuildBr(Builder, bodyLabel);
 		
-		LLVM.PositionBuilderAtEnd(Builder, bodyLabel);
+		PositionBuilderAtEnd(bodyLabel);
 		body();
 		if(ReturnedThisBlock)
 			return;
@@ -107,27 +111,28 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 		var endLabel = Function.AppendBasicBlock("");
 		LLVM.BuildCondBr(Builder, Emit(cond), bodyLabel, endLabel);
 		
-		LLVM.PositionBuilderAtEnd(Builder, endLabel);
+		PositionBuilderAtEnd(endLabel);
 	}
 	public IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct => C<T>(() => {
 		var ifLabel = Function.AppendBasicBlock("");
 		var elseLabel = Function.AppendBasicBlock("");
 		var endLabel = Function.AppendBasicBlock("");
 
-		Emit(cond);
 		LLVM.BuildCondBr(Builder, Emit(cond), ifLabel, elseLabel);
 		
-		LLVM.PositionBuilderAtEnd(Builder, ifLabel);
+		PositionBuilderAtEnd(ifLabel);
 		var left = Emit(a);
+		var leftBlockEnd = CurrentBlock;
 		LLVM.BuildBr(Builder, endLabel);
-		
-		LLVM.PositionBuilderAtEnd(Builder, elseLabel);
+
+		PositionBuilderAtEnd(elseLabel);
 		var right = Emit(b);
+		var rightBlockEnd = CurrentBlock;
 		LLVM.BuildBr(Builder, endLabel);
 		
-		LLVM.PositionBuilderAtEnd(Builder, endLabel);
+		PositionBuilderAtEnd(endLabel);
 		var phi = (LLVMValueRef) LLVM.BuildPhi(Builder, LlvmType<T>(), EmptyString);
-		phi.AddIncoming(new[] { left, right }, new[] { ifLabel, elseLabel }, 2);
+		phi.AddIncoming(new[] { left, right }, new[] { leftBlockEnd, rightBlockEnd }, 2);
 		return phi;
 	});
 

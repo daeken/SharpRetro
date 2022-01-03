@@ -4,20 +4,7 @@ using LlvmJit;
 //var jit = new CilJit<ulong>();
 var jit = new LlvmJit<ulong>();
 
-void Test() {
-	Console.WriteLine("Called!");
-}
-
-var test = jit.CreateFunction<Action>("test", builder => {
-	builder.Call(Test);
+var test = jit.CreateFunction<Func<sbyte, sbyte, sbyte>>("test2", builder => {
+	builder.Return(builder.Argument<sbyte>(0).LeftShift(builder.Argument<sbyte>(1)));
 });
-test();
-
-void Test2(int foo) {
-	Console.WriteLine($"Called with {foo}");
-}
-
-var test2 = jit.CreateFunction<Action>("test2", builder => {
-	builder.Call(Test2, builder.LiteralValue(123));
-});
-test2();
+Console.WriteLine(test(-1, -1));
