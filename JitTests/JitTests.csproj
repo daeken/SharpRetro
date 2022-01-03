@@ -5,6 +5,7 @@
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
         <EnablePreviewFeatures>True</EnablePreviewFeatures>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,6 +32,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SourceGenerators\SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\SourceGenerators\SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 </Project>

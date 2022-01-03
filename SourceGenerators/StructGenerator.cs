@@ -15,7 +15,8 @@ public class StructGenerator : ISourceGenerator {
 		var errorI = 0;
 		void Error(string message) => context.AddSource($"error{errorI++}.cs", $"#error {message}");
 
-		var fields = new List<(string StructName, string FieldName, string FieldType, int Offset)>();
+		var fields = new List<(string StructName, string FieldName, string FieldType, string Offset)>();
+		var arrFields = new List<(string StructName, string FieldName, string FieldType, string Offset)>();
 		
 		foreach(var sds in sr.Structs) {
 			if(sds.BaseList == null || !sds.BaseList.Types.Any()) continue;
@@ -27,24 +28,31 @@ public class StructGenerator : ISourceGenerator {
 			
 			foreach(var member in sds.Members) {
 				if(member is FieldDeclarationSyntax fds) {
+					var fld = fds.Declaration.Variables.First();
+					var isArr = fld.ArgumentList != null;
 					var type = fds.Declaration.Type.ToFullString();
-					var name = fds.Declaration.Variables.First().Identifier.ValueText;
+					var name = fld.Identifier.ValueText;
 					var attr = fds.AttributeLists.SelectMany(x => x.Attributes).First(y => y.Name.ToString() == "FieldOffset");
-					var offset = int.Parse(attr.ArgumentList?.Arguments[0].ToFullString() ?? throw new Exception());
-					fields.Add((sn, name, type, offset));
+					var arg = attr.ArgumentList?.Arguments[0];
+					var offset = attr.ArgumentList?.Arguments[0].ToFullString();
+					(isArr ? arrFields : fields).Add((sn, name, type, offset));
 				}
 			}
 		}
 
 		var members = "";
 		foreach(var (sn, fn, ft, offset) in fields) {
-			members += $"\t\tpublic static IRuntimeValue<{ft}> {fn}(this JitBase.IStructRef<{sn}> sr) => sr.GetField<{ft}>({offset}UL);\n";
-			members += $"\t\tpublic static void {fn}(this JitBase.IStructRef<{sn}> sr, IRuntimeValue<{ft}> value) => sr.SetField({offset}UL, value);\n";
+			members += $"\t\tpublic static IRuntimeValue<{ft}> {fn}(this JitBase.IStructRef<{sn}> sr) => sr.GetField<{ft}>((ulong) ({offset}));\n";
+			members += $"\t\tpublic static void {fn}(this JitBase.IStructRef<{sn}> sr, IRuntimeValue<{ft}> value) => sr.SetField((ulong) ({offset}), value);\n";
+		}
+		foreach(var (sn, fn, ft, offset) in arrFields) {
+			members += $"\t\tpublic static IRuntimeValue<{ft}> {fn}(this JitBase.IStructRef<{sn}> sr, IRuntimeValue<int> index) => sr.GetFieldElement<{ft}>((ulong) ({offset}), index);\n";
+			members += $"\t\tpublic static void {fn}(this JitBase.IStructRef<{sn}> sr, IRuntimeValue<int> index, IRuntimeValue<{ft}> value) => sr.SetFieldElement((ulong) ({offset}), index, value);\n";
 		}
 		
-		context.AddSource("Test.g.cs", $@"
+		context.AddSource("JitStructExtensions.g.cs", $@"
 namespace JitBase {{
-	public static class StructExtensions {{
+	public static class JitStructExtensions {{
 {members}	}}
 }}
 ");

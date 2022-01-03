@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using JitBase;
 using Sigil;
 
@@ -20,6 +21,17 @@ public class CilStructRef<AddrT, DelegateT, T> : IStructRef<T> where AddrT : str
 	});
 	public override void SetField<U>(ulong offset, IRuntimeValue<U> value) {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset));
+		Ilg.Convert<IntPtr>();
+		JBuilder.Emit(value);
+		Ilg.StoreIndirect<U>();
+	}
+	public override IRuntimeValue<U> GetFieldElement<U>(ulong offset, IRuntimeValue<int> index) => JBuilder.C<U>(() => {
+		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset) + (IRuntimeValue<ulong>) index * JBuilder.LiteralValue((ulong) Marshal.SizeOf<U>()));
+		Ilg.Convert<IntPtr>();
+		Ilg.LoadIndirect<U>();
+	});
+	public override void SetFieldElement<U>(ulong offset, IRuntimeValue<int> index, IRuntimeValue<U> value) {
+		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset) + (IRuntimeValue<ulong>) index * JBuilder.LiteralValue((ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();
 		JBuilder.Emit(value);
 		Ilg.StoreIndirect<U>();

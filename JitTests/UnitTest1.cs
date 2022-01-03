@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace JitTests;
 
-public class Tests {
+public unsafe class Tests {
 	static IJit<uint>[] Jits32() => new IJit<uint>[] {
 		new CilJit<uint>(), 
 		new LlvmJit<uint>(),
@@ -440,11 +440,12 @@ public class Tests {
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
-	public struct FooStruct : IJitStruct {
+	public unsafe struct FooStruct : IJitStruct {
 		[FieldOffset(0)] public uint Foo;
 		[FieldOffset(4)] public uint Bar;
 		[FieldOffset(8)] public uint Baz;
 		[FieldOffset(12)] public uint Hax;
+		[FieldOffset(16)] public fixed uint Arr[16];
 	}
 
 	delegate uint StructTest(ref FooStruct foo);
@@ -452,16 +453,26 @@ public class Tests {
 	[TestCaseSource(nameof(Jits32))]
 	public void Structs(IJit<uint> jit) {
 		var foo = new FooStruct { Foo = 1, Bar = 2, Baz = 3, Hax = 4 };
+		for(var i = 0; i < 16; ++i)
+			foo.Arr[i] = (uint) i;
 		var func = jit.CreateFunction<StructTest>("test", builder => {
 			var foor = builder.StructRefArgument<FooStruct>(0);
 			foor.Foo(builder.LiteralValue(5U));
 			foor.Bar(builder.LiteralValue(6U));
 			foor.Baz(builder.LiteralValue(7U));
+			foor.Arr(builder.LiteralValue(0), builder.LiteralValue(123U));
+			foor.Arr(builder.LiteralValue(6), builder.LiteralValue(321U));
 			builder.Return(foor.Hax());
 		});
 		Assert.AreEqual(4, func(ref foo));
 		Assert.AreEqual(5, foo.Foo);
 		Assert.AreEqual(6, foo.Bar);
 		Assert.AreEqual(7, foo.Baz);
+		for(var i = 0; i < 16; ++i)
+			Assert.AreEqual(i switch {
+				0 => 123U, 
+				6 => 321U, 
+				_ => i
+			}, foo.Arr[i]);
 	}
 }
