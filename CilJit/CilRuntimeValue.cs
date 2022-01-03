@@ -57,8 +57,8 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 	public override IRuntimeValue<T> And(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.And())));
 	public override IRuntimeValue<T> Or(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Or())));
 	public override IRuntimeValue<T> Xor(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Xor())));
-	public override IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
-	public override IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) => throw new NotImplementedException();
+	public override IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT((IRuntimeValue<int>) rhs).EmitThen(() => Ilg.ShiftLeft())));
+	public override IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT((IRuntimeValue<int>) rhs).EmitThen(() => IsSigned<T>(() => Ilg.ShiftRight(), () => Ilg.UnsignedShiftRight()))));
 	public override IRuntimeValue<T> Not() => default(T) switch {
 		bool => C<T>(() => EmitThen(() => {
 			Ilg.LoadConstant(0);
