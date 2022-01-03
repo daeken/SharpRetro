@@ -14,7 +14,7 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		Tb = tb;
 	}
 	
-	static CilRuntimeValue<U, DelegateT> TT<U>(IRuntimeValue<U> v) where U : struct => v as CilRuntimeValue<U, DelegateT>;
+	internal CilRuntimeValue<U, DelegateT> TT<U>(IRuntimeValue<U> v) where U : struct => v as CilRuntimeValue<U, DelegateT>;
 	
 	internal CilRuntimeValue<U, DelegateT> C<U>(Action gen) where U : struct => new(Ilg, Tb, gen);
 
@@ -42,7 +42,7 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 	public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct => throw new NotImplementedException();
 	public ILocalVar<T> DefineLocal<T>() where T : struct => new CilLocalVar<T, DelegateT>(Ilg, Tb);
 
-	static void Emit<T>(IRuntimeValue<T> value) where T : struct => TT(value).Emit();
+	internal void Emit<T>(IRuntimeValue<T> value) where T : struct => TT(value).Emit();
 	
 	public void Sink<T>(IRuntimeValue<T> value) where T : struct {
 		Emit(value);

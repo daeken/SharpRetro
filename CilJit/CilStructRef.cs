@@ -13,17 +13,15 @@ public class CilStructRef<AddrT, DelegateT, T> : IStructRef<T> where AddrT : str
 		Pointer = ptr;
 	}
 	
-	static CilRuntimeValue<U, DelegateT> TT<U>(IRuntimeValue<U> v) where U : struct => v as CilRuntimeValue<U, DelegateT>;
-
 	public override IRuntimeValue<U> GetField<U>(ulong offset) => JBuilder.C<U>(() => {
-		TT(Pointer + JBuilder.LiteralValue(offset)).Emit();
+		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset));
 		Ilg.Convert<IntPtr>();
 		Ilg.LoadIndirect<U>();
 	});
 	public override void SetField<U>(ulong offset, IRuntimeValue<U> value) {
-		TT(Pointer + JBuilder.LiteralValue(offset)).Emit();
+		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset));
 		Ilg.Convert<IntPtr>();
-		TT(value).Emit();
+		JBuilder.Emit(value);
 		Ilg.StoreIndirect<U>();
 	}
 }
