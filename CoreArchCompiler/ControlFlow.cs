@@ -82,6 +82,7 @@ class ControlFlow : Builtin {
 					GenerateStatement(c, (PList) list[3]);
 					c--;
 					c += "});";
+					c--;
 				} else {
 					c += $"if(({GenerateExpression(list[1])}) != 0) {{";
 					c++;
@@ -195,6 +196,7 @@ class ControlFlow : Builtin {
 					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
 					c--;
 					c += "});";
+					c--;
 				} else {
 					c += $"if(({GenerateExpression(list[1])}) != 0) {{";
 					c++;
