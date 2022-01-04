@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
@@ -12,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\JitBase\JitBase.csproj" />
       <ProjectReference Include="..\LibSharpRetro\LibSharpRetro.csproj" />
     </ItemGroup>
 
@@ -19,4 +21,7 @@
       <PackageReference Include="PrettyPrinter" Version="1.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\SourceGenerators\SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
 </Project>

@@ -1,9 +1,10 @@
 using System.Runtime.InteropServices;
+using JitBase;
 
 namespace SharpStationCore; 
 
 [StructLayout(LayoutKind.Explicit)]
-public unsafe struct CpuState {
+public unsafe struct CpuState : IJitStruct {
 	[FieldOffset(0)] public uint PC;
 	[FieldOffset(4)] public uint Hi;
 	[FieldOffset(8)] public uint Lo;

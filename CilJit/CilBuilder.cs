@@ -66,6 +66,28 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		else_();
 		Ilg.MarkLabel(endLabel);
 	}
+	public void When(IRuntimeValue<bool> cond, Action when) {
+		var endLabel = Ilg.DefineLabel();
+		Emit(cond);
+		Ilg.BranchIfFalse(endLabel);
+		when();
+		try {
+			Ilg.Branch(endLabel);
+		} catch(SigilVerificationException) {
+		}
+		Ilg.MarkLabel(endLabel);
+	}
+	public void Unless(IRuntimeValue<bool> cond, Action unless) {
+		var endLabel = Ilg.DefineLabel();
+		Emit(cond);
+		Ilg.BranchIfTrue(endLabel);
+		unless();
+		try {
+			Ilg.Branch(endLabel);
+		} catch(SigilVerificationException) {
+		}
+		Ilg.MarkLabel(endLabel);
+	}
 	public void While(IRuntimeValue<bool> cond, Action body) {
 		var start = Ilg.DefineLabel();
 		var end = Ilg.DefineLabel();

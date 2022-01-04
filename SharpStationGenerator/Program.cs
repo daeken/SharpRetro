@@ -6,8 +6,9 @@ public class Program : Core {
 		var defs = Core.ParseSpec(File.ReadAllText("mips-r3051.isa"), new ExecutionState(), MipsDef.Parse).Select(x => (MipsDef) x).ToList();
 		BuildDisassembler(defs);
 		BuildInterpreter(defs);
+		BuildRecompiler(defs);
 		
-		CleanupCode("../SharpStationCore/Generated");
+		//CleanupCode("../SharpStationCore/Generated");
 	}
 	
 	static void BuildDisassembler(List<MipsDef> defs) {
@@ -73,6 +74,32 @@ public class Program : Core {
 		using var fp = File.Open("../SharpStationCore/Generated/Interpreter.cs", FileMode.Create);
 		using var sw = new StreamWriter(fp);
 		sw.Write(File.ReadAllText("InterpreterStub.cs.skip").Replace("/*%CODE%*/", c.Code));
+	}
+
+	static void BuildRecompiler(List<MipsDef> defs) {
+		Context = ContextTypes.Recompiler;
+
+		var c = new CodeBuilder();
+		c += 2;
+		var labelNum = 0;
+
+		foreach(var def in defs) {
+			NextLabel = $"insn_{++labelNum}";
+			c += $"/* {def.Name} */";
+			c += $"if((insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}) {{";
+			c++;
+			GenerateFields(c, def);
+			GenerateStatement(c, def.Decode);
+			GenerateStatement(c, def.Eval);
+			c += "return true;";
+			c--;
+			c += "}";
+			c += $"{NextLabel}:";
+		}
+
+		using var fp = File.Open("../SharpStationCore/Generated/Recompiler.cs", FileMode.Create);
+		using var sw = new StreamWriter(fp);
+		sw.Write(File.ReadAllText("RecompilerStub.cs.skip").Replace("/*%CODE%*/", c.Code));
 	}
 
 	static void GenerateFields(CodeBuilder c, MipsDef def) {

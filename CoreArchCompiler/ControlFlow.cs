@@ -69,18 +69,19 @@ class ControlFlow : Builtin {
 				c += "}";
 			}, (c, list) => {
 				if(list[1].Type.Runtime) {
-					var if_label = TempName();
-					var end_label = TempName();
-					var else_label = TempName();
-					c += $"LabelTag {if_label} = DefineLabel(), {else_label} = DefineLabel(), {end_label} = DefineLabel();";
-					c += $"BranchIf({GenerateExpression(list[1])}, {if_label}, {else_label});";
-					c += $"Label({if_label});";
+					c += "builder.If(";
+					c++;
+					c += $"{GenerateExpression(list[1])}, ";
+					c += "() => {";
+					c++;
 					GenerateStatement(c, (PList) list[2]);
-					c += $"Branch({end_label});";
-					c += $"Label({else_label});";
+					c--;
+					c += "}, ";
+					c += "() => {";
+					c++;
 					GenerateStatement(c, (PList) list[3]);
-					c += $"Branch({end_label});";
-					c += $"Label({end_label});";
+					c--;
+					c += "});";
 				} else {
 					c += $"if(({GenerateExpression(list[1])}) != 0) {{";
 					c++;
@@ -114,7 +115,7 @@ class ControlFlow : Builtin {
 			if(list[1].Type.Runtime) {
 				if(a.StartsWith("throw")) a = "null";
 				if(b.StartsWith("throw")) b = "null";
-				return $"Ternary<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[2].Type.AsCompiletime())}>((LlvmRuntimeValue<{GenerateType(list[1].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {a}, {b})";
+				return $"Ternary<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[2].Type.AsCompiletime())}>((IRuntimeValue<{GenerateType(list[1].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {a}, {b})";
 			}
 				
 			if(!a.StartsWith("throw")) a = $"({a})";
@@ -186,14 +187,14 @@ class ControlFlow : Builtin {
 				c += "}";
 			}, (c, list) => {
 				if(list[1].Type.Runtime) {
-					var if_label = TempName();
-					var end_label = TempName();
-					c += $"LabelTag {if_label} = DefineLabel(), {end_label} = DefineLabel();";
-					c += $"BranchIf({GenerateExpression(list[1])}, {if_label}, {end_label});";
-					c += $"Label({if_label});";
+					c += "builder.When(";
+					c++;
+					c += $"{GenerateExpression(list[1])}, ";
+					c += "() => {";
+					c++;
 					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
-					c += $"Branch({end_label});";
-					c += $"Label({end_label});";
+					c--;
+					c += "});";
 				} else {
 					c += $"if(({GenerateExpression(list[1])}) != 0) {{";
 					c++;

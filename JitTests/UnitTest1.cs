@@ -221,6 +221,22 @@ public unsafe class Tests {
 			builder.Return(local.Value);
 		});
 		Assert.AreEqual(5, doWhileTest());
+
+		var whenTest = jit.CreateFunction<Func<uint, uint>>("whenTest", builder => {
+			builder.When(builder.Argument<uint>(0) == builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U)));
+			builder.Return(builder.Argument<uint>(0));
+		});
+		Assert.AreEqual(123, whenTest(0));
+		Assert.AreEqual(1, whenTest(1));
+		Assert.AreEqual(3, whenTest(3));
+
+		var unlessTest = jit.CreateFunction<Func<uint, uint>>("unlessTest", builder => {
+			builder.Unless(builder.Argument<uint>(0) == builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U)));
+			builder.Return(builder.Argument<uint>(0));
+		});
+		Assert.AreEqual(0, unlessTest(0));
+		Assert.AreEqual(123, unlessTest(1));
+		Assert.AreEqual(123, unlessTest(3));
 	}
 	
 	[TestCaseSource(nameof(Jits32))]

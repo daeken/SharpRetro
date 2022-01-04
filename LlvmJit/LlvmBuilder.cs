@@ -78,6 +78,36 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 			ReturnedThisBlock = false;
 		}
 	}
+	public void When(IRuntimeValue<bool> cond, Action when) {
+		if(ReturnedThisBlock)
+			return;
+		
+		var ifLabel = Function.AppendBasicBlock("");
+		var endLabel = Function.AppendBasicBlock("");
+
+		LLVM.BuildCondBr(Builder, Emit(cond), ifLabel, endLabel);
+		PositionBuilderAtEnd(ifLabel);
+		when();
+		if(!ReturnedThisBlock)
+			LLVM.BuildBr(Builder, endLabel);
+		PositionBuilderAtEnd(endLabel);
+		ReturnedThisBlock = false;
+	}
+	public void Unless(IRuntimeValue<bool> cond, Action unless) {
+		if(ReturnedThisBlock)
+			return;
+		
+		var ifLabel = Function.AppendBasicBlock("");
+		var endLabel = Function.AppendBasicBlock("");
+
+		LLVM.BuildCondBr(Builder, Emit(cond), endLabel, ifLabel);
+		PositionBuilderAtEnd(ifLabel);
+		unless();
+		if(!ReturnedThisBlock)
+			LLVM.BuildBr(Builder, endLabel);
+		PositionBuilderAtEnd(endLabel);
+		ReturnedThisBlock = false;
+	}
 	public void While(IRuntimeValue<bool> cond, Action body) {
 		if(ReturnedThisBlock)
 			return;

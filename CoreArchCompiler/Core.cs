@@ -258,7 +258,7 @@ public class Core {
 		}
 
 		return Context == ContextTypes.Recompiler && type.Runtime
-			? $"LlvmRuntimeValue<{__GenerateType()}>"
+			? $"IRuntimeValue<{__GenerateType()}>"
 			: __GenerateType();
 	}
 

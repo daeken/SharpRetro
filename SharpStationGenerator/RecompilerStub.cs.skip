@@ -1,0 +1,11 @@
+// ReSharper disable CheckNamespace
+namespace SharpStationCore;
+using JitBase;
+using static LibSharpRetro.CpuHelpers.Math;
+
+public unsafe partial class Recompiler {
+    public bool RecompileOne(IBuilder<uint> builder, IStructRef<CpuState> state, uint insn, uint pc) {
+/*%CODE%*/
+        return false;
+    }
+}

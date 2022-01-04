@@ -131,7 +131,7 @@ class VectorMath : Builtin {
 			}, 
 			list => list[3] switch {
 				PInt(32) => $"({GenerateExpression(list[1])}) + ({GenerateExpression(list[2])})", 
-				PInt(64) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) + (LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) + (IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
 			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) + Vector128<byte>.Ensure(state.Evaluate(list[2])), 
@@ -149,7 +149,7 @@ class VectorMath : Builtin {
 			}, 
 			list => list[3] switch {
 				PInt(32) => $"({GenerateExpression(list[1])}) - ({GenerateExpression(list[2])})", 
-				PInt(64) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) - (LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) - (IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
 			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) - Vector128<byte>.Ensure(state.Evaluate(list[2])), 
@@ -167,7 +167,7 @@ class VectorMath : Builtin {
 			}, 
 			list => list[3] switch {
 				PInt(32) => $"({GenerateExpression(list[1])}) * ({GenerateExpression(list[2])})", 
-				PInt(64) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) * (LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) * (IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
 			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) * Vector128<byte>.Ensure(state.Evaluate(list[2])), 
@@ -183,7 +183,7 @@ class VectorMath : Builtin {
 				: $"({GenerateExpression(elem)})";
 		string RuntimeCastVector(PTree elem, string type) =>
 			elem.Type is EVector
-				? $"((LlvmRuntimeValue<Vector128<{type}>>) ({GenerateExpression(elem)}))"
+				? $"((IRuntimeValue<Vector128<{type}>>) ({GenerateExpression(elem)}))"
 				: $"({GenerateExpression(elem)})";
 			
 		Expression("vec-uint+", list => EType.Vector.AsRuntime(list.AnyRuntime), 
@@ -195,10 +195,10 @@ class VectorMath : Builtin {
 				_ => throw new NotSupportedException()
 			}, 
 			list => list[3] switch {
-				PInt(8) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint8_t")})",
-				PInt(16) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint16_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint16_t")})",
-				PInt(32) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint32_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint32_t")})",
-				PInt(64) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint64_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint64_t")})",
+				PInt(8) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint8_t")})",
+				PInt(16) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint16_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint16_t")})",
+				PInt(32) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint32_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint32_t")})",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint64_t>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "uint64_t")})",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
 			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) + Vector128<byte>.Ensure(state.Evaluate(list[2])), 
@@ -217,10 +217,10 @@ class VectorMath : Builtin {
 				_ => throw new NotSupportedException()
 			}, 
 			list => list[3] switch {
-				PInt(8) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint8_t")})",
-				PInt(16) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint16_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint16_t")})",
-				PInt(32) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint32_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint32_t")})",
-				PInt(64) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<uint64_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint64_t")})",
+				PInt(8) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint8_t")})",
+				PInt(16) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint16_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint16_t")})",
+				PInt(32) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint32_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint32_t")})",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint64_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint64_t")})",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
 			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) * Vector128<byte>.Ensure(state.Evaluate(list[2])), 
@@ -238,7 +238,7 @@ class VectorMath : Builtin {
 			}, 
 			list => list[3] switch {
 				PInt(32) => $"({GenerateExpression(list[1])}) / ({GenerateExpression(list[2])})", 
-				PInt(64) => $"(LlvmRuntimeValue<Vector128<float>>) ((LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) / (LlvmRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[1])}) / (IRuntimeValue<Vector128<double>>) ({GenerateExpression(list[2])}))",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
 			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) / Vector128<byte>.Ensure(state.Evaluate(list[2])), 
@@ -250,22 +250,22 @@ class VectorMath : Builtin {
 			
 		Expression("vec&", list => list[1].Type, 
 				list => $"reinterpret_cast<Vector128<float>>((reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) & reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])})))",
-				list => $"(LlvmRuntimeValue<Vector128<float>>) ((((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) & ((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
+				list => $"(IRuntimeValue<Vector128<float>>) ((((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) & ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) & Vector128<byte>.Ensure(state.Evaluate(list[2])));
 			
 		Expression("vec&~", list => list[1].Type, 
 				list => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) & ~reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])}))",
-				list => $"(LlvmRuntimeValue<Vector128<float>>) (((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) & ~((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])})))")
+				list => $"(IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) & ~((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])})))")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) & ~Vector128<byte>.Ensure(state.Evaluate(list[2])));
 			
 		Expression("vec|", list => list[1].Type, 
 				list => $"reinterpret_cast<Vector128<float>>((reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) | reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])})))",
-				list => $"(LlvmRuntimeValue<Vector128<float>>) ((((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) | ((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
+				list => $"(IRuntimeValue<Vector128<float>>) ((((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) | ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) | Vector128<byte>.Ensure(state.Evaluate(list[2])));
 		
 		Expression("vec^", list => list[1].Type, 
 				list => $"reinterpret_cast<Vector128<float>>((reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) ^ reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])})))",
-				list => $"(LlvmRuntimeValue<Vector128<float>>) ((((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) ^ ((LlvmRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
+				list => $"(IRuntimeValue<Vector128<float>>) ((((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) ^ ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) ^ Vector128<byte>.Ensure(state.Evaluate(list[2])));
 	}
 }

@@ -115,7 +115,7 @@ class ScalarMath : Builtin {
 			}, list => {
 				if(list[1].Type is not EInt(false, var bs)) throw new NotSupportedException();
 				return
-					$"(({GenerateExpression(list[1])}) << ((LlvmRuntimeValue<uint>) ({bs} - ({GenerateExpression(list[2])})))) | (({GenerateExpression(list[1])}) >> ((LlvmRuntimeValue<uint>) ({GenerateExpression(list[2])})))";
+					$"(({GenerateExpression(list[1])}) << ((IRuntimeValue<uint>) ({bs} - ({GenerateExpression(list[2])})))) | (({GenerateExpression(list[1])}) >> ((IRuntimeValue<uint>) ({GenerateExpression(list[2])})))";
 			}).Interpret((list, state) => {
 			var left = state.Evaluate(list[1]);
 			var right = (int) state.Evaluate(list[2]);

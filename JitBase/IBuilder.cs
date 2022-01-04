@@ -6,6 +6,8 @@ public interface IBuilder<AddrT> where AddrT : struct {
 
 	IRuntimeValue<T> Zero<T>() where T : struct;
 	IRuntimeValue<T> LiteralValue<T>(T value) where T : struct;
+	IRuntimeValue<T> EnsureRuntime<T>(T value) where T : struct => LiteralValue(value);
+	IRuntimeValue<T> EnsureRuntime<T>(IRuntimeValue<T> value) where T : struct => value;
 	IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct;
 
 	ILocalVar<T> DefineLocal<T>() where T : struct;
@@ -14,6 +16,8 @@ public interface IBuilder<AddrT> where AddrT : struct {
 	void Return<T>(IRuntimeValue<T> value) where T : struct;
 
 	void If(IRuntimeValue<bool> cond, Action if_, Action else_);
+	void When(IRuntimeValue<bool> cond, Action when);
+	void Unless(IRuntimeValue<bool> cond, Action unless);
 	void While(IRuntimeValue<bool> cond, Action body);
 	void DoWhile(Action body, IRuntimeValue<bool> cond);
 	IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct;
