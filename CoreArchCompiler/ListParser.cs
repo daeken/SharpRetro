@@ -78,6 +78,33 @@ public abstract class PTree {
 		Type.GetHashCode(), 
 		ToString()?.GetHashCode()
 	);
+
+	public PTree Cast<T>() {
+		var et = (EType) (default(T) switch {
+			bool => new EInt(false, 1), 
+			byte => new EInt(false, 8), 
+			ushort => new EInt(false, 16), 
+			uint => new EInt(false, 32), 
+			ulong => new EInt(false, 64), 
+			sbyte => new EInt(true, 8), 
+			short => new EInt(true, 16), 
+			int => new EInt(true, 32), 
+			long => new EInt(true, 64), 
+			_ => throw new NotImplementedException()
+		});
+		et = et.AsRuntime(Type.Runtime);
+
+		var tn = et switch {
+			EInt(false, var width) => $"u{width}", 
+			EInt(true, var width) => $"i{width}", 
+			_ => throw new NotImplementedException()
+		};
+		
+		if(Type == et) return this;
+		var tree = new PList { new PName("cast"), this, new PName(tn) };
+		tree.Type = et;
+		return tree;
+	}
 }
 
 public class PList : PTree, IEnumerable<PTree> {
@@ -104,6 +131,11 @@ public class PList : PTree, IEnumerable<PTree> {
 			!AnyRuntime
 				? this
 				: new PList(this.Select(x => x is PList sl ? sl.AsCompiletime() : x)) {Type = Type.AsCompiletime()};
+
+	public PList HomogeneousRuntime() {
+		if(!AnyRuntime) return this;
+		return new PList(this.Take(1).Concat(this.Skip(1).Select(x => new PList(new[] { new PName("ensure-runtime"), x }) { Type = x.Type.AsRuntime() })));
+	}
 
 	public PList MapLeaves(Func<PTree, PTree> mapper) {
 		var c = new List<PTree>();

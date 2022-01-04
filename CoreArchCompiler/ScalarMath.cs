@@ -31,6 +31,7 @@ class ScalarMath : Builtin {
 			new[] {"+", "-", "*", "/", "%"}, LogicalType,
 			list => {
 				Debug.Assert(list.Count == 3);
+				list = list.HomogeneousRuntime();
 				if(list[1].Type is EInt(var sa, var ba) && list[2].Type is EInt(var sb, var bb)) {
 					var stype = new EInt(sa && sb, Math.Max(ba, bb))
 						{Runtime = list[1].Type.Runtime || list[2].Type.Runtime};
@@ -59,6 +60,7 @@ class ScalarMath : Builtin {
 		Expression(
 			new[] { "|", "&", "^" }, FirstType,
 			list => {
+				list = list.HomogeneousRuntime();
 				var signed = true;
 				var size = 0;
 				foreach(var elem in list.Skip(1)) {
@@ -85,12 +87,12 @@ class ScalarMath : Builtin {
 		Expression("~", FirstType, list => $"~({GenerateExpression(list[1])})").Interpret((list, state) => ~state.Evaluate(list[1]));
 		Expression("-!", FirstType, list => $"-({GenerateExpression(list[1])})").Interpret((list, state) => -state.Evaluate(list[1]));
 		Expression("!", list => new EInt(false, 1).AsRuntime(list[1].Type.Runtime), 
-				list => $"({GenerateExpression(list[1])}) != 0 ? 0U : 1U", list => $"!({GenerateExpression(list[1])})")
+				list => $"!({GenerateExpression(list[1])})", list => $"!({GenerateExpression(list[1])})")
 			.Interpret((list, state) => !Extensions.AsBool(state.Evaluate(list[1])));
 			
 		Expression("<<", FirstType, 
 				list => $"({GenerateExpression(list[1])}) << (int) ({GenerateExpression(list[2])})", 
-				list => $"({GenerateExpression(list[1])}) << ({GenerateExpression(list[2])})")
+				list => $"({GenerateExpression(list[1])}).LeftShift(({GenerateType(list[1].Type)}) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.Interpret((list, state) => {
 				var shift = (int) state.Evaluate(list[2]);
 				if(list[1].Type is EInt(_, var size) && shift >= size) return 0;
@@ -99,7 +101,7 @@ class ScalarMath : Builtin {
 			
 		Expression(">>", FirstType, 
 				list => $"({GenerateExpression(list[1])}) >> (int) ({GenerateExpression(list[2])})", 
-				list => $"({GenerateExpression(list[1])}) >> ({GenerateExpression(list[2])})")
+				list => $"({GenerateExpression(list[1])}).RightShift(({GenerateType(list[1].Type)}) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.Interpret((list, state) => {
 				var shift = (int) state.Evaluate(list[2]);
 				if(list[1].Type is EInt(var signed, var size) && shift >= size)

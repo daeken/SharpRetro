@@ -7,9 +7,11 @@ namespace CoreArchCompiler;
 
 class ControlFlow : Builtin {
 	public override void Define() {
+		PTree EnsureBool(PTree tree) => tree.Cast<bool>();
+		
 		Statement("requires", list => EType.Unit,
 			(c, list) => {
-				c += $"if({string.Join(" || ", list.Skip(1).Select(x => $"({GenerateExpression(x)}) == 0"))})";
+				c += $"if({string.Join(" || ", list.Skip(1).Select(x => $"!({GenerateExpression(EnsureBool(x))})"))})";
 				c++;
 				c += $"goto {Core.NextLabel};";
 				c--;
@@ -58,7 +60,7 @@ class ControlFlow : Builtin {
 			                               list[2].Type is not EUnit && list[2].Type.Runtime ||
 			                               list[3].Type is not EUnit && list[3].Type.Runtime),
 			(c, list) => {
-				c += $"if(({GenerateExpression(list[1])}) != 0) {{";
+				c += $"if({GenerateExpression(EnsureBool(list[1]))}) {{";
 				c++;
 				GenerateStatement(c, (PList) list[2]);
 				c--;
@@ -71,7 +73,7 @@ class ControlFlow : Builtin {
 				if(list[1].Type.Runtime) {
 					c += "builder.If(";
 					c++;
-					c += $"{GenerateExpression(list[1])}, ";
+					c += $"{GenerateExpression(EnsureBool(list[1]))}, ";
 					c += "() => {";
 					c++;
 					GenerateStatement(c, (PList) list[2]);
@@ -84,7 +86,7 @@ class ControlFlow : Builtin {
 					c += "});";
 					c--;
 				} else {
-					c += $"if(({GenerateExpression(list[1])}) != 0) {{";
+					c += $"if({GenerateExpression(EnsureBool(list[1]))}) {{";
 					c++;
 					GenerateStatement(c, (PList) list[2]);
 					c--;
@@ -108,20 +110,31 @@ class ControlFlow : Builtin {
 				type = GenerateType(at);
 			else
 				type = GenerateType(new EInt(asigned && bsigned, Math.Max(asized, bsized)));
-			return $"({GenerateExpression(list[1])} != 0) ? ({type}) ({a}) : ({type}) ({b})";
+			return $"({GenerateExpression(EnsureBool(list[1]))}) ? ({type}) ({a}) : ({type}) ({b})";
 		}, list => {
 			var a = GenerateExpression(list[2]);
 			var b = GenerateExpression(list[3]);
+			var at = list[2].Type;
+			var bt = list[3].Type;
+			string type;
+			if(at == bt || at is not EInt(var asigned, var asized) || bt is not EInt(var bsigned, var bsized))
+				type = GenerateType(at);
+			else
+				type = GenerateType(new EInt(asigned && bsigned, Math.Max(asized, bsized)));
 				
 			if(list[1].Type.Runtime) {
 				if(a.StartsWith("throw")) a = "null";
 				if(b.StartsWith("throw")) b = "null";
-				return $"Ternary<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[2].Type.AsCompiletime())}>((IRuntimeValue<{GenerateType(list[1].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {a}, {b})";
+
+				if(!type.StartsWith("IRuntimeValue"))
+					type = $"IRuntimeValue<{type}>";
+				
+				return $"builder.Ternary({GenerateExpression(EnsureBool(list[1]))}, ({type}) builder.EnsureRuntime({a}), ({type}) builder.EnsureRuntime({b}))";
 			}
 				
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
-			return $"({GenerateExpression(list[1])}) != 0 ? {a} : {b}";
+			return $"({GenerateExpression(list[1])}) ? ({type}) ({a}) : ({type}) ({b})";
 		});
 
 		Interpret("if", (list, state) => Extensions.AsBool(state.Evaluate(list[1])) ? state.Evaluate(list[2]) : state.Evaluate(list[3]));
@@ -181,7 +194,7 @@ class ControlFlow : Builtin {
 			
 		Statement("when", list => EType.Unit.AsRuntime(list[1].Type.Runtime),
 			(c, list) => {
-				c += $"if(({GenerateExpression(list[1])}) != 0) {{";
+				c += $"if({GenerateExpression(EnsureBool(list[1]))}) {{";
 				c++;
 				list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
 				c--;
@@ -190,7 +203,7 @@ class ControlFlow : Builtin {
 				if(list[1].Type.Runtime) {
 					c += "builder.When(";
 					c++;
-					c += $"{GenerateExpression(list[1])}, ";
+					c += $"{GenerateExpression(EnsureBool(list[1]))}, ";
 					c += "() => {";
 					c++;
 					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
@@ -198,7 +211,7 @@ class ControlFlow : Builtin {
 					c += "});";
 					c--;
 				} else {
-					c += $"if(({GenerateExpression(list[1])}) != 0) {{";
+					c += $"if({GenerateExpression(EnsureBool(list[1]))}) {{";
 					c++;
 					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
 					c--;

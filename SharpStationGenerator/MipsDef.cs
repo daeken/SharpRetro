@@ -63,7 +63,7 @@ public class MipsDef : Def {
 		
 		var locals = new Dictionary<string, EType>();
 		foreach(var (fname, (bits, _)) in fields)
-			locals[fname] = new EInt(false, bits);
+			locals[fname] = new EInt(false, bits).AsCompiletime();
 		
 		return new MipsDef(name, mask, match, fields, disasm, decode, RewriteEval(eval), locals);
 	}

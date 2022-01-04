@@ -18,13 +18,13 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var lhs = temp_0;
 			var rhs = temp_1;
-			var r = (uint) ((uint) ((uint) (((uint) (uint) (lhs)) + ((uint) (uint) (rhs)))));
-			if(((uint) (((((uint) ((uint) (~((uint) ((((uint) (lhs)) ^ ((uint) (rhs)))))))) & ((uint) ((uint) ((((uint) (lhs)) ^ ((uint) (r))))))) & ((uint) (0x80000000U))))) != 0) {
+			var r = (uint) ((uint) (((uint) (uint) ((uint) (lhs))) + ((uint) (uint) ((uint) (rhs)))));
+			if((bool) (((uint) (((((uint) ((uint) ((uint) (~((uint) ((((uint) ((uint) (lhs))) ^ ((uint) ((uint) (rhs)))))))))) & ((uint) ((uint) ((uint) ((((uint) ((uint) (lhs))) ^ ((uint) ((uint) (r))))))))) & ((uint) ((uint) (0x80000000U)))))) != 0)) {
 				throw new CpuException(ExceptionType.OV, pc, insn);
 			}
 			var temp_83 = rd;
 			if(temp_83 != 0)
-				State->Registers[temp_83] = (uint) ((uint) (((uint) (uint) (lhs)) + ((uint) (uint) (rhs))));
+				State->Registers[temp_83] = (uint) ((uint) (((uint) (uint) ((uint) (lhs))) + ((uint) (uint) ((uint) (rhs)))));
 			return true;
 		}
 		insn_1:
@@ -39,13 +39,13 @@ public unsafe partial class Interpreter {
 			var temp_2 = (uint) ((rs) switch { 0 => 0U, var temp_84 => State->Registers[temp_84] });
 			DoLds();
 			var lhs = temp_2;
-			var r = (uint) ((uint) ((uint) (((uint) (uint) (lhs)) + ((uint) (uint) (eimm)))));
-			if(((uint) (((((uint) ((uint) (~((uint) ((((uint) (lhs)) ^ ((uint) (eimm)))))))) & ((uint) ((uint) ((((uint) (lhs)) ^ ((uint) (r))))))) & ((uint) (0x80000000U))))) != 0) {
+			var r = (uint) ((uint) (((uint) (uint) ((uint) (lhs))) + ((uint) (uint) ((uint) (eimm)))));
+			if((bool) (((uint) (((((uint) ((uint) ((uint) (~((uint) ((((uint) ((uint) (lhs))) ^ ((uint) ((uint) (eimm)))))))))) & ((uint) ((uint) ((uint) ((((uint) ((uint) (lhs))) ^ ((uint) ((uint) (r))))))))) & ((uint) ((uint) (0x80000000U)))))) != 0)) {
 				throw new CpuException(ExceptionType.OV, pc, insn);
 			}
 			var temp_85 = rt;
 			if(temp_85 != 0)
-				State->Registers[temp_85] = (uint) ((uint) (((uint) (uint) (lhs)) + ((uint) (uint) (eimm))));
+				State->Registers[temp_85] = (uint) ((uint) (((uint) (uint) ((uint) (lhs))) + ((uint) (uint) ((uint) (eimm)))));
 			return true;
 		}
 		insn_2:
@@ -61,7 +61,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_87 = rt;
 			if(temp_87 != 0)
-				State->Registers[temp_87] = (uint) ((uint) (((uint) (uint) (temp_3)) + ((uint) (uint) (eimm))));
+				State->Registers[temp_87] = (uint) ((uint) (((uint) (uint) ((uint) (temp_3))) + ((uint) (uint) ((uint) (eimm)))));
 			return true;
 		}
 		insn_3:
@@ -79,7 +79,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_90 = rd;
 			if(temp_90 != 0)
-				State->Registers[temp_90] = (uint) ((uint) (((uint) (uint) (temp_4)) + ((uint) (uint) (temp_5))));
+				State->Registers[temp_90] = (uint) ((uint) (((uint) (uint) ((uint) (temp_4))) + ((uint) (uint) ((uint) (temp_5)))));
 			return true;
 		}
 		insn_4:
@@ -97,7 +97,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_93 = rd;
 			if(temp_93 != 0)
-				State->Registers[temp_93] = (uint) ((uint) ((((uint) (temp_6)) & ((uint) (temp_7)))));
+				State->Registers[temp_93] = (uint) ((uint) ((((uint) ((uint) (temp_6))) & ((uint) ((uint) (temp_7))))));
 			return true;
 		}
 		insn_5:
@@ -112,7 +112,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_95 = rt;
 			if(temp_95 != 0)
-				State->Registers[temp_95] = (uint) ((uint) ((((uint) (temp_8)) & ((uint) (imm)))));
+				State->Registers[temp_95] = (uint) ((uint) ((((uint) ((uint) (temp_8))) & ((uint) ((ushort) (imm))))));
 			return true;
 		}
 		insn_6:
@@ -127,7 +127,7 @@ public unsafe partial class Interpreter {
 			var temp_9 = (uint) ((rs) switch { 0 => 0U, var temp_96 => State->Registers[temp_96] });
 			var temp_10 = (uint) ((rt) switch { 0 => 0U, var temp_97 => State->Registers[temp_97] });
 			DoLds();
-			if(((uint) (((temp_9) == (temp_10) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((uint) (temp_9)) == ((uint) (temp_10))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -143,7 +143,7 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_11 = (uint) ((rs) switch { 0 => 0U, var temp_98 => State->Registers[temp_98] });
 			DoLds();
-			if(((uint) ((((int) ((int) (temp_11))) >= ((int) ((sbyte) ((byte) 0x0))) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((int) ((int) ((int) (temp_11)))) >= ((int) ((sbyte) ((byte) ((byte) 0x0))))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -160,8 +160,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_12 = (uint) ((rs) switch { 0 => 0U, var temp_99 => State->Registers[temp_99] });
 			DoLds();
-			State->Registers[31] = (uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8)));
-			if(((uint) ((((int) ((int) (temp_12))) >= ((int) ((sbyte) ((byte) 0x0))) ? 1U : 0U))) != 0) {
+			State->Registers[31] = (uint) ((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
+			if((bool) ((bool) (((int) ((int) ((int) (temp_12)))) >= ((int) ((sbyte) ((byte) ((byte) 0x0))))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -177,7 +177,7 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_13 = (uint) ((rs) switch { 0 => 0U, var temp_100 => State->Registers[temp_100] });
 			DoLds();
-			if(((uint) ((((int) ((int) (temp_13))) > ((int) ((sbyte) ((byte) 0x0))) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((int) ((int) ((int) (temp_13)))) > ((int) ((sbyte) ((byte) ((byte) 0x0))))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -193,7 +193,7 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_14 = (uint) ((rs) switch { 0 => 0U, var temp_101 => State->Registers[temp_101] });
 			DoLds();
-			if(((uint) ((((int) ((int) (temp_14))) <= ((int) ((sbyte) ((byte) 0x0))) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((int) ((int) ((int) (temp_14)))) <= ((int) ((sbyte) ((byte) ((byte) 0x0))))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -209,7 +209,7 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_15 = (uint) ((rs) switch { 0 => 0U, var temp_102 => State->Registers[temp_102] });
 			DoLds();
-			if(((uint) ((((int) ((int) (temp_15))) < ((int) ((sbyte) ((byte) 0x0))) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((int) ((int) ((int) (temp_15)))) < ((int) ((sbyte) ((byte) ((byte) 0x0))))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -226,8 +226,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_16 = (uint) ((rs) switch { 0 => 0U, var temp_103 => State->Registers[temp_103] });
 			DoLds();
-			State->Registers[31] = (uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8)));
-			if(((uint) ((((int) ((int) (temp_16))) < ((int) ((sbyte) ((byte) 0x0))) ? 1U : 0U))) != 0) {
+			State->Registers[31] = (uint) ((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
+			if((bool) ((bool) (((int) ((int) ((int) (temp_16)))) < ((int) ((sbyte) ((byte) ((byte) 0x0))))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -246,7 +246,7 @@ public unsafe partial class Interpreter {
 			var temp_17 = (uint) ((rs) switch { 0 => 0U, var temp_104 => State->Registers[temp_104] });
 			var temp_18 = (uint) ((rt) switch { 0 => 0U, var temp_105 => State->Registers[temp_105] });
 			DoLds();
-			if(((uint) (((temp_17) != (temp_18) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((uint) (temp_17)) != ((uint) (temp_18))))) {
 				Branch(target);
 			} else {
 				Branch((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
@@ -311,16 +311,16 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var rsv = temp_20;
 			var rtv = temp_21;
-			if(((uint) (((rtv) == ((uint) ((byte) 0x0)) ? 1U : 0U))) != 0) {
-				State->Lo = (uint) ((byte) (((uint) ((((uint) ((((uint) (rsv)) & ((uint) (0x80000000U))))) != ((uint) ((byte) 0x0)) ? 1U : 0U)) != 0) ? (uint) (((byte) 0x1)) : (uint) ((0xFFFFFFFFU))));
+			if((bool) ((bool) (((uint) (rtv)) == ((uint) ((byte) ((byte) 0x0)))))) {
+				State->Lo = (uint) ((uint) ((byte) (((bool) ((bool) (((uint) ((uint) ((((uint) ((uint) (rsv))) & ((uint) ((uint) (0x80000000U))))))) != ((uint) ((byte) ((byte) 0x0)))))) ? (uint) (((byte) 0x1)) : (uint) ((0xFFFFFFFFU)))));
 				State->Hi = (uint) (rsv);
 			} else {
-				if(((uint) ((((uint) ((uint) (((rsv) == (0x80000000U) ? 1U : 0U)))) & ((uint) ((uint) (((rtv) == (0xFFFFFFFFU) ? 1U : 0U))))))) != 0) {
+				if((bool) ((bool) ((((bool) ((bool) ((bool) (((uint) (rsv)) == ((uint) (0x80000000U)))))) & ((bool) ((bool) ((bool) (((uint) (rtv)) == ((uint) (0xFFFFFFFFU)))))))))) {
 					State->Lo = (uint) (0x80000000U);
-					State->Hi = (uint) ((byte) 0x0);
+					State->Hi = (uint) ((uint) ((byte) 0x0));
 				} else {
-					State->Lo = (uint) ((int) (((int) (int) ((int) ((int) (rsv)))) / ((int) (int) ((int) ((int) (rtv))))));
-					State->Hi = (uint) ((int) (((int) (int) ((int) ((int) (rsv)))) % ((int) (int) ((int) ((int) (rtv))))));
+					State->Lo = (uint) ((uint) ((int) (((int) (int) ((int) ((int) ((int) (rsv))))) / ((int) (int) ((int) ((int) ((int) (rtv))))))));
+					State->Hi = (uint) ((uint) ((int) (((int) (int) ((int) ((int) ((int) (rsv))))) % ((int) (int) ((int) ((int) ((int) (rtv))))))));
 					DivDelay();
 				}
 			}
@@ -340,12 +340,12 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var rsv = temp_22;
 			var rtv = temp_23;
-			if(((uint) (((rtv) == ((uint) ((byte) 0x0)) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((uint) (rtv)) == ((uint) ((byte) ((byte) 0x0)))))) {
 				State->Lo = (uint) (0xFFFFFFFFU);
 				State->Hi = (uint) (rsv);
 			} else {
-				State->Lo = (uint) ((uint) (((uint) (uint) (rsv)) / ((uint) (uint) (rtv))));
-				State->Hi = (uint) ((uint) (((uint) (uint) (rsv)) % ((uint) (uint) (rtv))));
+				State->Lo = (uint) ((uint) (((uint) (uint) ((uint) (rsv))) / ((uint) (uint) ((uint) (rtv)))));
+				State->Hi = (uint) ((uint) (((uint) (uint) ((uint) (rsv))) % ((uint) (uint) ((uint) (rtv)))));
 				DivDelay();
 			}
 			return true;
@@ -366,7 +366,7 @@ public unsafe partial class Interpreter {
 			var target = (uint) (((uint) (uint) ((uint) ((((uint) ((uint) ((pc + 4)))) & ((uint) (0xF0000000U)))))) + ((uint) (uint) ((uint) (((uint) ((uint) (imm))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[(byte) 0x1F] = 0;
 			DoLds();
-			State->Registers[31] = (uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8)));
+			State->Registers[31] = (uint) ((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
 			Branch(target);
 			return true;
 		}
@@ -385,7 +385,7 @@ public unsafe partial class Interpreter {
 			var temp_113 = rd;
 			if(temp_113 != 0)
 				State->Registers[temp_113] = (uint) ((uint) (((uint) (uint) ((uint) (pc))) + ((uint) (byte) ((byte) 0x8))));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (target)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (target))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADEL, pc, insn);
 			}
 			Branch(target);
@@ -402,7 +402,7 @@ public unsafe partial class Interpreter {
 			var temp_25 = (uint) ((rs) switch { 0 => 0U, var temp_114 => State->Registers[temp_114] });
 			DoLds();
 			var target = temp_25;
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (target)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (target))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADEL, pc, insn);
 			}
 			Branch(target);
@@ -420,7 +420,7 @@ public unsafe partial class Interpreter {
 			var temp_26 = (uint) ((rs) switch { 0 => 0U, var temp_115 => State->Registers[temp_115] });
 			DoLds();
 			State->LdWhich = (uint) (rt);
-			State->LdValue = (uint) ((sbyte) (ReadMemory<sbyte>((uint) (((uint) (uint) (temp_26)) + ((uint) (int) (offset))))));
+			State->LdValue = (uint) ((sbyte) (ReadMemory<sbyte>((uint) (((uint) (uint) ((uint) (temp_26))) + ((uint) (int) ((int) (offset)))))));
 			return true;
 		}
 		insn_25:
@@ -435,7 +435,7 @@ public unsafe partial class Interpreter {
 			var temp_27 = (uint) ((rs) switch { 0 => 0U, var temp_116 => State->Registers[temp_116] });
 			DoLds();
 			State->LdWhich = (uint) (rt);
-			State->LdValue = (uint) ((byte) (ReadMemory<byte>((uint) (((uint) (uint) (temp_27)) + ((uint) (int) (offset))))));
+			State->LdValue = (uint) ((byte) (ReadMemory<byte>((uint) (((uint) (uint) ((uint) (temp_27))) + ((uint) (int) ((int) (offset)))))));
 			return true;
 		}
 		insn_26:
@@ -449,8 +449,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rt] = 0;
 			var temp_28 = (uint) ((rs) switch { 0 => 0U, var temp_117 => State->Registers[temp_117] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_28)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_28))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADEL, pc, insn);
 			}
 			State->LdWhich = (uint) (rt);
@@ -468,8 +468,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rt] = 0;
 			var temp_29 = (uint) ((rs) switch { 0 => 0U, var temp_118 => State->Registers[temp_118] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_29)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_29))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADEL, pc, insn);
 			}
 			State->LdWhich = (uint) (rt);
@@ -500,8 +500,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rt] = 0;
 			var temp_30 = (uint) ((rs) switch { 0 => 0U, var temp_120 => State->Registers[temp_120] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_30)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_30))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADEL, pc, insn);
 			}
 			State->LdWhich = (uint) (rt);
@@ -520,11 +520,11 @@ public unsafe partial class Interpreter {
 			var temp_31 = (uint) ((rt) switch { 0 => 0U, var temp_121 => State->Registers[temp_121] });
 			var temp_32 = (uint) ((rs) switch { 0 => 0U, var temp_122 => State->Registers[temp_122] });
 			DoLoad(rt, ref temp_31);
-			var addr = (uint) (((uint) (uint) (temp_32)) + ((uint) (int) (offset)));
-			var raddr = (uint) ((((uint) (addr)) & ((uint) (0xFFFFFFFCU))));
+			var addr = (uint) (((uint) (uint) ((uint) (temp_32))) + ((uint) (int) ((int) (offset))));
+			var raddr = (uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) (0xFFFFFFFCU)))));
 			var ert = temp_31;
 			State->LdWhich = (uint) (rt);
-			State->LdValue = (uint) ((uint) ((uint) ((((uint) (addr)) & ((uint) ((byte) 0x3)))) switch { (uint) ((byte) 0x0) => (uint) ((((uint) ((uint) ((((uint) (ert)) & ((uint) (0xFFFFFFU)))))) | ((uint) ((uint) (((uint) ((uint) ((byte) (ReadMemory<byte>(raddr))))) << (int) ((byte) 0x18)))))), (uint) ((byte) 0x1) => (uint) ((((uint) ((uint) ((((uint) (ert)) & ((uint) ((ushort) 0xFFFF)))))) | ((uint) ((uint) (((uint) ((uint) ((ushort) (ReadMemory<ushort>(raddr))))) << (int) ((byte) 0x10)))))), (uint) ((byte) 0x2) => (uint) ((((uint) ((uint) ((((uint) (ert)) & ((uint) ((byte) 0xFF)))))) | ((uint) ((uint) (((uint) (ReadMemory<uint>(raddr))) << (int) ((byte) 0x8)))))), _ => (uint) (ReadMemory<uint>(raddr)) }));
+			State->LdValue = (uint) ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((byte) ((byte) 0x3))))) switch { (uint) ((byte) 0x0) => (uint) ((((uint) ((uint) ((uint) ((((uint) ((uint) (ert))) & ((uint) ((uint) (0xFFFFFFU)))))))) | ((uint) ((uint) ((uint) (((uint) ((uint) ((byte) (ReadMemory<byte>(raddr))))) << (int) ((byte) 0x18))))))), (uint) ((byte) 0x1) => (uint) ((((uint) ((uint) ((uint) ((((uint) ((uint) (ert))) & ((uint) ((ushort) ((ushort) 0xFFFF)))))))) | ((uint) ((uint) ((uint) (((uint) ((uint) ((ushort) (ReadMemory<ushort>(raddr))))) << (int) ((byte) 0x10))))))), (uint) ((byte) 0x2) => (uint) ((((uint) ((uint) ((uint) ((((uint) ((uint) (ert))) & ((uint) ((byte) ((byte) 0xFF)))))))) | ((uint) ((uint) ((uint) (((uint) (ReadMemory<uint>(raddr))) << (int) ((byte) 0x8))))))), _ => (uint) (ReadMemory<uint>(raddr)) }));
 			return true;
 		}
 		insn_31:
@@ -539,11 +539,11 @@ public unsafe partial class Interpreter {
 			var temp_33 = (uint) ((rt) switch { 0 => 0U, var temp_124 => State->Registers[temp_124] });
 			var temp_34 = (uint) ((rs) switch { 0 => 0U, var temp_125 => State->Registers[temp_125] });
 			DoLoad(rt, ref temp_33);
-			var addr = (uint) (((uint) (uint) (temp_34)) + ((uint) (int) (offset)));
-			var raddr = (uint) ((((uint) (addr)) & ((uint) (0xFFFFFFFCU))));
+			var addr = (uint) (((uint) (uint) ((uint) (temp_34))) + ((uint) (int) ((int) (offset))));
+			var raddr = (uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) (0xFFFFFFFCU)))));
 			var ert = temp_33;
 			State->LdWhich = (uint) (rt);
-			State->LdValue = (uint) ((uint) ((uint) ((((uint) (addr)) & ((uint) ((byte) 0x3)))) switch { (uint) ((byte) 0x0) => (uint) (ReadMemory<uint>(raddr)), (uint) ((byte) 0x1) => (uint) ((((uint) ((uint) ((((uint) (ert)) & ((uint) (0xFF000000U)))))) | ((uint) ((uint) ((((uint) ((uint) (ReadMemory<uint>(addr)))) & ((uint) (0xFFFFFFU)))))))), (uint) ((byte) 0x2) => (uint) ((((uint) ((uint) ((((uint) (ert)) & ((uint) (0xFFFF0000U)))))) | ((uint) ((ushort) (ReadMemory<ushort>(addr)))))), _ => (uint) ((((uint) ((uint) ((((uint) (ert)) & ((uint) (0xFFFFFF00U)))))) | ((uint) ((byte) (ReadMemory<byte>(addr)))))) }));
+			State->LdValue = (uint) ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((byte) ((byte) 0x3))))) switch { (uint) ((byte) 0x0) => (uint) (ReadMemory<uint>(raddr)), (uint) ((byte) 0x1) => (uint) ((((uint) ((uint) ((uint) ((((uint) ((uint) (ert))) & ((uint) ((uint) (0xFF000000U)))))))) | ((uint) ((uint) ((uint) ((((uint) ((uint) ((uint) (ReadMemory<uint>(addr))))) & ((uint) ((uint) (0xFFFFFFU)))))))))), (uint) ((byte) 0x2) => (uint) ((((uint) ((uint) ((uint) ((((uint) ((uint) (ert))) & ((uint) ((uint) (0xFFFF0000U)))))))) | ((uint) ((ushort) ((ushort) (ReadMemory<ushort>(addr))))))), _ => (uint) ((((uint) ((uint) ((uint) ((((uint) ((uint) (ert))) & ((uint) ((uint) (0xFFFFFF00U)))))))) | ((uint) ((byte) ((byte) (ReadMemory<byte>(addr))))))) }));
 			return true;
 		}
 		insn_32:
@@ -556,8 +556,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_35 = (uint) ((rs) switch { 0 => 0U, var temp_127 => State->Registers[temp_127] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_35)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_35))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADEL, pc, insn);
 			}
 			Copreg((byte) 0x2, rt, (uint) (ReadMemory<uint>(addr)));
@@ -659,9 +659,9 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var lhs = temp_39;
 			var rhs = temp_40;
-			var result = (ulong) ((ulong) ((long) (((long) (long) ((long) ((long) (lhs)))) * ((long) (long) ((long) ((long) (rhs)))))));
-			State->Lo = (uint) (result);
-			State->Hi = (uint) ((ulong) ((result) >> (int) ((byte) 0x20)));
+			var result = (ulong) ((ulong) ((long) (((long) (long) ((long) ((long) ((long) (lhs))))) * ((long) (long) ((long) ((long) ((long) (rhs))))))));
+			State->Lo = (uint) ((uint) (result));
+			State->Hi = (uint) ((uint) ((ulong) ((result) >> (int) ((byte) 0x20))));
 			MulDelay(lhs, rhs, (byte) 0x1 != 0);
 			return true;
 		}
@@ -679,9 +679,9 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var lhs = temp_41;
 			var rhs = temp_42;
-			var result = (ulong) (((ulong) (ulong) ((ulong) ((ulong) (lhs)))) * ((ulong) (ulong) ((ulong) ((ulong) (rhs)))));
-			State->Lo = (uint) (result);
-			State->Hi = (uint) ((ulong) ((result) >> (int) ((byte) 0x20)));
+			var result = (ulong) (((ulong) (ulong) ((ulong) ((ulong) ((ulong) (lhs))))) * ((ulong) (ulong) ((ulong) ((ulong) ((ulong) (rhs))))));
+			State->Lo = (uint) ((uint) (result));
+			State->Hi = (uint) ((uint) ((ulong) ((result) >> (int) ((byte) 0x20))));
 			MulDelay(lhs, rhs, (byte) 0x0 != 0);
 			return true;
 		}
@@ -700,7 +700,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_139 = rd;
 			if(temp_139 != 0)
-				State->Registers[temp_139] = (uint) ((uint) (~((uint) ((((uint) (temp_43)) | ((uint) (temp_44)))))));
+				State->Registers[temp_139] = (uint) ((uint) (~((uint) ((((uint) ((uint) (temp_43))) | ((uint) ((uint) (temp_44))))))));
 			return true;
 		}
 		insn_42:
@@ -718,7 +718,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_142 = rd;
 			if(temp_142 != 0)
-				State->Registers[temp_142] = (uint) ((uint) ((((uint) (temp_45)) | ((uint) (temp_46)))));
+				State->Registers[temp_142] = (uint) ((uint) ((((uint) ((uint) (temp_45))) | ((uint) ((uint) (temp_46))))));
 			return true;
 		}
 		insn_43:
@@ -733,7 +733,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_144 = rt;
 			if(temp_144 != 0)
-				State->Registers[temp_144] = (uint) ((uint) ((((uint) (temp_47)) | ((uint) ((uint) ((uint) (imm)))))));
+				State->Registers[temp_144] = (uint) ((uint) ((((uint) ((uint) (temp_47))) | ((uint) ((uint) ((uint) ((uint) (imm))))))));
 			return true;
 		}
 		insn_44:
@@ -748,7 +748,7 @@ public unsafe partial class Interpreter {
 			var temp_48 = (uint) ((rs) switch { 0 => 0U, var temp_145 => State->Registers[temp_145] });
 			var temp_49 = (uint) ((rt) switch { 0 => 0U, var temp_146 => State->Registers[temp_146] });
 			DoLds();
-			WriteMemory((uint) (((uint) (uint) (temp_48)) + ((uint) (int) (offset))), (byte) ((byte) (temp_49)));
+			WriteMemory((uint) (((uint) (uint) ((uint) (temp_48))) + ((uint) (int) ((int) (offset)))), (byte) ((byte) (temp_49)));
 			return true;
 		}
 		insn_45:
@@ -763,8 +763,8 @@ public unsafe partial class Interpreter {
 			var temp_50 = (uint) ((rs) switch { 0 => 0U, var temp_147 => State->Registers[temp_147] });
 			var temp_51 = (uint) ((rt) switch { 0 => 0U, var temp_148 => State->Registers[temp_148] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_50)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_50))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADES, pc, insn);
 			}
 			WriteMemory(addr, (ushort) ((ushort) (temp_51)));
@@ -819,7 +819,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_156 = rd;
 			if(temp_156 != 0)
-				State->Registers[temp_156] = (uint) ((uint) ((((int) ((int) (temp_55))) < ((int) ((int) (temp_56))) ? 1U : 0U)));
+				State->Registers[temp_156] = (uint) ((uint) (((bool) (((int) ((int) ((int) (temp_55)))) < ((int) ((int) ((int) (temp_56)))))) ? 1U : 0U));
 			return true;
 		}
 		insn_49:
@@ -835,7 +835,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_158 = rt;
 			if(temp_158 != 0)
-				State->Registers[temp_158] = (uint) ((uint) ((((int) ((int) (temp_57))) < (eimm) ? 1U : 0U)));
+				State->Registers[temp_158] = (uint) ((uint) (((bool) (((int) ((int) ((int) (temp_57)))) < ((int) (eimm)))) ? 1U : 0U));
 			return true;
 		}
 		insn_50:
@@ -851,7 +851,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_160 = rt;
 			if(temp_160 != 0)
-				State->Registers[temp_160] = (uint) ((uint) (((temp_58) < (eimm) ? 1U : 0U)));
+				State->Registers[temp_160] = (uint) ((uint) (((bool) (((uint) (temp_58)) < ((uint) (eimm)))) ? 1U : 0U));
 			return true;
 		}
 		insn_51:
@@ -869,7 +869,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_163 = rd;
 			if(temp_163 != 0)
-				State->Registers[temp_163] = (uint) ((uint) (((temp_59) < (temp_60) ? 1U : 0U)));
+				State->Registers[temp_163] = (uint) ((uint) (((bool) (((uint) (temp_59)) < ((uint) (temp_60)))) ? 1U : 0U));
 			return true;
 		}
 		insn_52:
@@ -885,7 +885,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_165 = rd;
 			if(temp_165 != 0)
-				State->Registers[temp_165] = (uint) ((int) (((int) ((int) (temp_61))) >> (int) (shamt)));
+				State->Registers[temp_165] = (uint) ((uint) ((int) (((int) ((int) (temp_61))) >> (int) (shamt))));
 			return true;
 		}
 		insn_53:
@@ -903,7 +903,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_168 = rd;
 			if(temp_168 != 0)
-				State->Registers[temp_168] = (uint) ((int) (((int) ((int) (temp_62))) >> (int) ((int) ((int) (temp_63)))));
+				State->Registers[temp_168] = (uint) ((uint) ((int) (((int) ((int) (temp_62))) >> (int) ((int) ((int) (temp_63))))));
 			return true;
 		}
 		insn_54:
@@ -955,13 +955,13 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var lhs = temp_67;
 			var rhs = temp_68;
-			var r = (uint) ((uint) ((uint) (((uint) (uint) (lhs)) - ((uint) (uint) (rhs)))));
-			if(((uint) (((((uint) ((uint) ((((uint) (lhs)) ^ ((uint) (rhs)))))) & ((uint) ((uint) ((((uint) (lhs)) ^ ((uint) (r))))))) & ((uint) (0x80000000U))))) != 0) {
+			var r = (uint) ((uint) (((uint) (uint) ((uint) (lhs))) - ((uint) (uint) ((uint) (rhs)))));
+			if((bool) (((uint) (((((uint) ((uint) ((uint) ((((uint) ((uint) (lhs))) ^ ((uint) ((uint) (rhs)))))))) & ((uint) ((uint) ((uint) ((((uint) ((uint) (lhs))) ^ ((uint) ((uint) (r))))))))) & ((uint) ((uint) (0x80000000U)))))) != 0)) {
 				throw new CpuException(ExceptionType.OV, pc, insn);
 			}
 			var temp_176 = rd;
 			if(temp_176 != 0)
-				State->Registers[temp_176] = (uint) ((uint) (((uint) (uint) (lhs)) - ((uint) (uint) (rhs))));
+				State->Registers[temp_176] = (uint) ((uint) (((uint) (uint) ((uint) (lhs))) - ((uint) (uint) ((uint) (rhs)))));
 			return true;
 		}
 		insn_57:
@@ -979,7 +979,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_179 = rd;
 			if(temp_179 != 0)
-				State->Registers[temp_179] = (uint) ((uint) (((uint) (uint) (temp_69)) - ((uint) (uint) (temp_70))));
+				State->Registers[temp_179] = (uint) ((uint) (((uint) (uint) ((uint) (temp_69))) - ((uint) (uint) ((uint) (temp_70)))));
 			return true;
 		}
 		insn_58:
@@ -994,8 +994,8 @@ public unsafe partial class Interpreter {
 			var temp_71 = (uint) ((rs) switch { 0 => 0U, var temp_180 => State->Registers[temp_180] });
 			var temp_72 = (uint) ((rt) switch { 0 => 0U, var temp_181 => State->Registers[temp_181] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_71)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_71))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADES, pc, insn);
 			}
 			WriteMemory(addr, temp_72);
@@ -1011,8 +1011,8 @@ public unsafe partial class Interpreter {
 			State->ReadAbsorb[rs] = 0;
 			var temp_73 = (uint) ((rs) switch { 0 => 0U, var temp_182 => State->Registers[temp_182] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_73)) + ((uint) (int) (offset)));
-			if(((uint) ((((uint) ((byte) 0x0)) != ((uint) ((((uint) (addr)) & ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))) ? 1U : 0U))) != 0) {
+			var addr = (uint) (((uint) (uint) ((uint) (temp_73))) + ((uint) (int) ((int) (offset))));
+			if((bool) ((bool) (((uint) ((byte) ((byte) 0x0))) != ((uint) ((uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) ((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1))))))))))))) {
 				throw new CpuException(ExceptionType.ADES, pc, insn);
 			}
 			WriteMemory(addr, (uint) (Copreg((byte) 0x2, rt)));
@@ -1030,10 +1030,10 @@ public unsafe partial class Interpreter {
 			var temp_74 = (uint) ((rs) switch { 0 => 0U, var temp_183 => State->Registers[temp_183] });
 			var temp_75 = (uint) ((rt) switch { 0 => 0U, var temp_184 => State->Registers[temp_184] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_74)) + ((uint) (int) (offset)));
-			var raddr = (uint) ((((uint) (addr)) & ((uint) (0xFFFFFFFCU))));
+			var addr = (uint) (((uint) (uint) ((uint) (temp_74))) + ((uint) (int) ((int) (offset))));
+			var raddr = (uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) (0xFFFFFFFCU)))));
 			var rtv = temp_75;
-			switch((uint) ((((uint) (addr)) & ((uint) ((byte) 0x3))))) {
+			switch((uint) ((((uint) ((uint) (addr))) & ((uint) ((byte) ((byte) 0x3)))))) {
 				case (uint) ((byte) 0x0): {
 					WriteMemory(raddr, (byte) ((byte) ((uint) ((rtv) >> (int) ((byte) 0x18)))));
 					break;
@@ -1048,7 +1048,7 @@ public unsafe partial class Interpreter {
 				}
 				default: {
 					WriteMemory(raddr, (ushort) ((ushort) ((uint) ((rtv) >> (int) ((byte) 0x8)))));
-					WriteMemory((uint) (((uint) (uint) (raddr)) + ((uint) (byte) ((byte) 0x2))), (byte) ((byte) ((uint) ((rtv) >> (int) ((byte) 0x18)))));
+					WriteMemory((uint) (((uint) (uint) ((uint) (raddr))) + ((uint) (byte) ((byte) ((byte) 0x2)))), (byte) ((byte) ((uint) ((rtv) >> (int) ((byte) 0x18)))));
 					break;
 				}
 			}
@@ -1066,10 +1066,10 @@ public unsafe partial class Interpreter {
 			var temp_76 = (uint) ((rs) switch { 0 => 0U, var temp_185 => State->Registers[temp_185] });
 			var temp_77 = (uint) ((rt) switch { 0 => 0U, var temp_186 => State->Registers[temp_186] });
 			DoLds();
-			var addr = (uint) (((uint) (uint) (temp_76)) + ((uint) (int) (offset)));
-			var raddr = (uint) ((((uint) (addr)) & ((uint) (0xFFFFFFFCU))));
+			var addr = (uint) (((uint) (uint) ((uint) (temp_76))) + ((uint) (int) ((int) (offset))));
+			var raddr = (uint) ((((uint) ((uint) (addr))) & ((uint) ((uint) (0xFFFFFFFCU)))));
 			var rtv = temp_77;
-			switch((uint) ((((uint) (addr)) & ((uint) ((byte) 0x3))))) {
+			switch((uint) ((((uint) ((uint) (addr))) & ((uint) ((byte) ((byte) 0x3)))))) {
 				case (uint) ((byte) 0x0): {
 					WriteMemory(raddr, rtv);
 					break;
@@ -1084,7 +1084,7 @@ public unsafe partial class Interpreter {
 				}
 				default: {
 					WriteMemory(raddr, (ushort) ((ushort) (rtv)));
-					WriteMemory((uint) (((uint) (uint) (raddr)) + ((uint) (byte) ((byte) 0x2))), (byte) ((byte) ((uint) ((rtv) >> (int) ((byte) 0x10)))));
+					WriteMemory((uint) (((uint) (uint) ((uint) (raddr))) + ((uint) (byte) ((byte) ((byte) 0x2)))), (byte) ((byte) ((uint) ((rtv) >> (int) ((byte) 0x10)))));
 					break;
 				}
 			}
@@ -1113,7 +1113,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_189 = rd;
 			if(temp_189 != 0)
-				State->Registers[temp_189] = (uint) ((uint) ((((uint) (temp_78)) ^ ((uint) (temp_79)))));
+				State->Registers[temp_189] = (uint) ((uint) ((((uint) ((uint) (temp_78))) ^ ((uint) ((uint) (temp_79))))));
 			return true;
 		}
 		insn_64:
@@ -1128,7 +1128,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_191 = rt;
 			if(temp_191 != 0)
-				State->Registers[temp_191] = (uint) ((uint) ((((uint) (temp_80)) ^ ((uint) ((uint) ((uint) (imm)))))));
+				State->Registers[temp_191] = (uint) ((uint) ((((uint) ((uint) (temp_80))) ^ ((uint) ((uint) ((uint) ((uint) (imm))))))));
 			return true;
 		}
 		insn_65:

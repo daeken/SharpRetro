@@ -48,8 +48,27 @@ public class Logic : Builtin {
 			return state.Evaluate(list.Skip(2));
 		});
 
+		Expression("ensure-runtime", list => list[1].Type.AsRuntime(),
+			list => GenerateExpression(list[1]),
+			list => $"builder.EnsureRuntime({GenerateExpression(list[1])})")
+			.NoInterpret();
+
 		Expression("cast", list => TypeFromName(list[2]).AsRuntime(list.AnyRuntime), 
-				list => $"({GenerateType(list.Type)}) ({GenerateExpression(list[1])})")
+				list => {
+					if(list[1].Type.ToString() == list.Type.ToString()) return GenerateExpression(list[1]);
+					if(Core.Context == ContextTypes.Recompiler && list[1].Type.Runtime) {
+						if(list.Type is EInt(false, 1))
+							return $"({GenerateExpression(list[1])}) != builder.Zero<{GenerateType(list[1].Type.AsCompiletime())}>()";
+						if(list[1].Type is EInt(false, 1))
+							return $"({GenerateType(list.Type)}) builder.Ternary({GenerateExpression(list[1])}, builder.LiteralValue(1U), builder.Zero<uint>())";
+					} else {
+						if(list.Type is EInt(false, 1))
+							return $"({GenerateExpression(list[1])}) != 0";
+						if(list[1].Type is EInt(false, 1))
+							return $"({GenerateType(list.Type)}) (({GenerateExpression(list[1])}) ? 1U : 0U)";
+					}
+					return $"({GenerateType(list.Type)}) ({GenerateExpression(list[1])})";
+				})
 			.Interpret((list, state) => TypeFromName(list[2]) switch {
 				EInt(true, <= 8) => (dynamic) (sbyte) Extensions.AsNonBool(state.Evaluate(list[1])), 
 				EInt(true, <= 16) => (short) Extensions.AsNonBool(state.Evaluate(list[1])), 
@@ -107,20 +126,21 @@ public class Logic : Builtin {
 		Expression(new[] { "==", "!=", ">", ">=", "<=", "<" },
 				list => new EInt(false, 1).AsRuntime(list.AnyRuntime),
 				list => {
+					list = list.HomogeneousRuntime();
+					var runtime = list.AnyRuntime;
 					var lhs = list[1];
 					var rhs = list[2];
 					var lhe = GenerateExpression(lhs);
 					var rhe = GenerateExpression(rhs);
 					if(lhs.Type is EInt(var lsigned, var lsize) && rhs.Type is EInt(var rsigned, var rsize)) {
-						if(!lsigned && rsigned) lhe = $"({GenerateType(new EInt(true, lsize))}) ({lhe})";
-						if(lsigned && !rsigned) rhe = $"({GenerateType(new EInt(true, rsize))}) ({rhe})";
+						if(!lsigned && rsigned) lhe = $"({GenerateType(new EInt(true, lsize).AsRuntime(runtime))}) ({lhe})";
+						if(lsigned && !rsigned) rhe = $"({GenerateType(new EInt(true, rsize).AsRuntime(runtime))}) ({rhe})";
 						var signed = lsigned || rsigned;
-						if(lsize < rsize) lhe = $"({GenerateType(new EInt(signed, rsize))}) ({lhe})";
-						if(rsize < lsize) rhe = $"({GenerateType(new EInt(signed, lsize))}) ({rhe})";
+						if(lsize < rsize) lhe = $"({GenerateType(new EInt(signed, rsize).AsRuntime(runtime))}) ({lhe})";
+						if(rsize < lsize) rhe = $"({GenerateType(new EInt(signed, lsize).AsRuntime(runtime))}) ({rhe})";
 					}
-					return $"(({lhe}) {list[0]} ({rhe}) ? 1U : 0U)";
-				},
-				list => $"({GenerateExpression(list[1])}) {list[0]} ({GenerateExpression(list[2])})")
+					return $"({lhe}) {list[0]} ({rhe})";
+				})
 			.Interpret(
 				(list, state) =>
 					(state.Evaluate(list[1]), state.Evaluate(list[2])).WithCommonType((a, b) =>

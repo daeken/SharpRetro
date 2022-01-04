@@ -73,18 +73,18 @@ public class Expressions : Builtin {
 							try {
 								var rnum = new ExecutionState().Evaluate(sub[1]);
 								if(rnum != 0)
-									c += $"State->Registers[{rnum}] = {GenerateExpression(list[2])};";
+									c += $"State->Registers[{rnum}] = {GenerateExpression(list[2].Cast<uint>())};";
 								return;
 							} catch(Exception) {}
 							var rtemp = TempName();
 							c += $"var {rtemp} = {GenerateExpression(sub[1])};";
 							c += $"if({rtemp} != 0)";
 							c++;
-							c += $"State->Registers[{rtemp}] = (uint) ({GenerateExpression(list[2])});";
+							c += $"State->Registers[{rtemp}] = {GenerateExpression(list[2].Cast<uint>())};";
 							c--;
 							return;
 						case PName("reg-hi") or PName("reg-lo"):
-							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (uint) ({GenerateExpression(list[2])});";
+							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = {GenerateExpression(list[2].Cast<uint>())};";
 							return;
 						case PName("copreg"):
 							c += $"Copreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";
@@ -108,13 +108,20 @@ public class Expressions : Builtin {
 							} catch(Exception) {}
 							var rtemp = TempName();
 							c += $"var {rtemp} = {GenerateExpression(sub[1])};";
-							c += $"builder.When({rtemp} != builder.LiteralValue(0),";
-							c++;
-							c += $"() => state.Registers({rtemp}, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])})));";
-							c--;
+							if(sub[1].Type.Runtime) {
+								c += $"builder.When((IRuntimeValue<uint>) builder.EnsureRuntime({rtemp}) != builder.LiteralValue(0U),";
+								c++;
+								c += $"() => state.Registers((IRuntimeValue<int>) builder.EnsureRuntime({rtemp}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])})));";
+								c--;
+							} else {
+								c += $"if({rtemp} != 0)";
+								c++;
+								c += $"state.Registers((IRuntimeValue<int>) builder.EnsureRuntime({rtemp}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+								c--;
+							}
 							return;
 						case PName("reg-hi") or PName("reg-lo"):
-							c += $"State->{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (uint) ({GenerateExpression(list[2])});";
+							c += $"state.{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")}((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 						case PName("copreg"):
 							c += $"Copreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";

@@ -239,7 +239,7 @@ public class Core {
 				case EString: return "string";
 				case EInt i:
 					switch(i.Width) {
-						case 1: return "uint"; // TODO: Figure out how to use real bools here!
+						case 1: return "bool";
 						case > 64: return i.Signed ? "Int128" : "UInt128";
 						case > 32: return i.Signed ? "long" : "ulong";
 						case > 16: return i.Signed ? "int" : "uint";
