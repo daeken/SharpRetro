@@ -15,10 +15,10 @@
 (defm reg-l () (reg 0b101))
 (defm reg-a () (reg 0b111))
 
-(defm reg-flag-z () (u1 (>> (reg-flags) 7)))
-(defm reg-flag-n () (u1 (& (>> (reg-flags) 6) 1)))
-(defm reg-flag-h () (u1 (& (>> (reg-flags) 5) 1)))
-(defm reg-flag-c () (u1 (& (>> (reg-flags) 4) 1)))
+(defm reg-flag-z () (>> (reg-flags) 7))
+(defm reg-flag-n () (& (>> (reg-flags) 6) 1))
+(defm reg-flag-h () (& (>> (reg-flags) 5) 1))
+(defm reg-flag-c () (& (>> (reg-flags) 4) 1))
 
 (defm reg-name (r)
     (match r

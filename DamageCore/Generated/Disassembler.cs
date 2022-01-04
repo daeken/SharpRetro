@@ -10,7 +10,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xC0) == 0x40) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-            if(((rd != 0x6 ? 1U : 0U) & (rs != 0x6 ? 1U : 0U)) == 0)
+            if(!((rd != 0x6) & (rs != 0x6)))
                 goto insn_1;
             return "ld " +
                    rd switch {
@@ -29,7 +29,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xC7) == 0x6) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-            if((rd != 0x6 ? 1U : 0U) == 0)
+            if(!(rd != 0x6))
                 goto insn_2;
             return "ld " +
                    rd switch {
@@ -43,7 +43,7 @@ public class Disassembler {
         /* LD-rd-HL */
         if((insnBytes[0] & 0xC7) == 0x46) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-            if((rd != 0x6 ? 1U : 0U) == 0)
+            if(!(rd != 0x6))
                 goto insn_3;
             return "ld " + rd switch {
                 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
@@ -55,7 +55,7 @@ public class Disassembler {
         /* LD-HL-rs */
         if((insnBytes[0] & 0xF8) == 0x70) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-            if((rs != 0x6 ? 1U : 0U) == 0)
+            if(!(rs != 0x6))
                 goto insn_4;
             return "ld (HL), " + rs switch {
                 0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
@@ -143,7 +143,7 @@ public class Disassembler {
         /* PUSH-rr */
         if((insnBytes[0] & 0xCF) == 0xC5) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
-            return "push " + ((r == 0x3 ? 1U : 0U) != 0
+            return "push " + (r == 0x3
                 ? "AF"
                 : r switch {
                     0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP",
@@ -153,7 +153,7 @@ public class Disassembler {
         /* POP-rr */
         if((insnBytes[0] & 0xCF) == 0xC1) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
-            return "pop " + ((r == 0x3 ? 1U : 0U) != 0
+            return "pop " + (r == 0x3
                 ? "AF"
                 : r switch {
                     0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP",
@@ -539,7 +539,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xC0) == 0x40) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-            if(((rd != 0x6 ? 1U : 0U) & (rs != 0x6 ? 1U : 0U)) == 0)
+            if(!((rd != 0x6) & (rs != 0x6)))
                 goto insn_1;
             return "LD-rd-rs";
         }
@@ -548,7 +548,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xC7) == 0x6) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
-            if((rd != 0x6 ? 1U : 0U) == 0)
+            if(!(rd != 0x6))
                 goto insn_2;
             return "LD-rd-imm8";
         }
@@ -556,7 +556,7 @@ public class Disassembler {
         insn_2:
         if((insnBytes[0] & 0xC7) == 0x46) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
-            if((rd != 0x6 ? 1U : 0U) == 0)
+            if(!(rd != 0x6))
                 goto insn_3;
             return "LD-rd-HL";
         }
@@ -564,7 +564,7 @@ public class Disassembler {
         insn_3:
         if((insnBytes[0] & 0xF8) == 0x70) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-            if((rs != 0x6 ? 1U : 0U) == 0)
+            if(!(rs != 0x6))
                 goto insn_4;
             return "LD-HL-rs";
         }

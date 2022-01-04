@@ -70,8 +70,8 @@ class ScalarMath : Builtin {
 					size = Math.Max(size, ba);
 				}
 
-				var stype = GenerateType(new EInt(signed, size).AsRuntime(list.AnyRuntime));
-				return list.Skip(1).Select(x => $"(({stype}) ({GenerateExpression(x)}))")
+				var etype = new EInt(signed, size).AsRuntime(list.AnyRuntime);
+				return list.Skip(1).Select(x => $"({GenerateExpression(x.Cast(etype))})")
 					.Aggregate((x1, x2) => $"({x1} {list[0]} {x2})");
 			}).Interpret(
 			(list, state) =>

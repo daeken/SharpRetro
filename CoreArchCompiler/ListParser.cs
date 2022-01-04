@@ -100,7 +100,19 @@ public abstract class PTree {
 			_ => throw new NotImplementedException()
 		};
 		
-		if(Type == et) return this;
+		if(Type.ToString() == et.ToString() && et.Runtime == Type.Runtime) return this;
+		var tree = new PList { new PName("cast"), this, new PName(tn) };
+		tree.Type = et;
+		return tree;
+	}
+
+	public PTree Cast(EType et) {
+		if(Type.ToString() == et.ToString() && et.Runtime == Type.Runtime) return this;
+		var tn = et switch {
+			EInt(false, var width) => $"u{width}", 
+			EInt(true, var width) => $"i{width}", 
+			_ => throw new NotImplementedException()
+		};
 		var tree = new PList { new PName("cast"), this, new PName(tn) };
 		tree.Type = et;
 		return tree;
