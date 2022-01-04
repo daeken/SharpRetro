@@ -42,19 +42,23 @@ public class Expressions : Builtin {
 			.NoInterpret();
 		
 		Expression("copfun", _ => EUnit.RuntimeType,
-				list => $"Copfun({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+				list => $"Copfun({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
+				list => $"builder.Call(Copfun, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret();
 		
 		Expression("exception", _ => EUnit.RuntimeType, 
-				list => $"throw new CpuException(ExceptionType.{list[1]}, pc, insn)")
+				list => $"throw new CpuException(ExceptionType.{list[1]}, pc, insn)", 
+				list => $"builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.{list[1]}), builder.LiteralValue(pc), builder.LiteralValue(insn))")
 			.NoInterpret();
 		
 		Expression("copreg", _ => new EInt(false, 32).AsRuntime(), 
-				list => $"Copreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+				list => $"Copreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
+				list => $"builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret();
 
 		Expression("copcreg", _ => new EInt(false, 32).AsRuntime(), 
-				list => $"Copcreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+				list => $"Copcreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
+				list => $"builder.Call(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret();
 
 		Expression("mul-delay", _ => EUnit.RuntimeType,
@@ -124,10 +128,10 @@ public class Expressions : Builtin {
 							c += $"state.{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")}((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 						case PName("copreg"):
-							c += $"Copreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";
+							c += $"builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 						case PName("copcreg"):
-							c += $"Copcreg({GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(list[2])});";
+							c += $"builder.Call(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 					}
 
@@ -147,7 +151,15 @@ public class Expressions : Builtin {
 				}
 			},
 			(c, list) => {
-				c += $"/*UNIMPLEMENTED*/";
+				if(list[1] is not PList sub) throw new NotSupportedException();
+				switch(sub[0]) {
+					case PName("reg"):
+						c += $"state.LdWhich((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}));";
+						c += $"state.LdValue((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+						break;
+					default:
+						throw new NotSupportedException($"Defer= used on non-reg argument {sub}");
+				}
 			}).NoInterpret();
 		
 		Expression("load", list => TypeFromName(list[2]).AsRuntime(),
@@ -156,13 +168,13 @@ public class Expressions : Builtin {
 					return $"ReadMemory<{type}>({GenerateExpression(list[1])})";
 				},
 				list =>
-					$"((RuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value()")
+					$"builder.Pointer<{GenerateType(list.Type.AsCompiletime())}>({GenerateExpression(list[1])}).Value")
 			.Interpret((list, state) => state.GetMemory(state.Evaluate(list[1]), list.Type));
 
 		Expression("store", _ => EType.Unit.AsRuntime(),
 				list => $"WriteMemory({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
 				list =>
-					$"((RuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value({GenerateExpression(list[2])})")
+					$"builder.Pointer<{GenerateType(list[2].Type.AsCompiletime())}>({GenerateExpression(list[1])}).Value = {GenerateExpression(list[2])}")
 			.Interpret((list, state) => {
 				state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
 				return null;
