@@ -13,6 +13,7 @@ public unsafe struct CpuState : IJitStruct {
 	[FieldOffset(20)] public uint LdAbsorb;
 	[FieldOffset(24)] public uint ReadAbsorbWhich;
 	[FieldOffset(28)] public uint ReadFudge;
-	[FieldOffset(32)] public fixed uint ReadAbsorb[36];
-	[FieldOffset(176)] public fixed uint Registers[36];
+	[FieldOffset(32)] public ulong Timestamp;
+	[FieldOffset(40)] public fixed uint ReadAbsorb[36];
+	[FieldOffset(184)] public fixed uint Registers[36];
 }

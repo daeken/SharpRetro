@@ -1,7 +1,7 @@
 namespace SharpStationCore; 
 
-public static class Globals {
-	public static ulong Timestamp;
+public static unsafe class Globals {
+	public static ulong Timestamp => Cpu.State->Timestamp;
 
 	public static EventSystem Events;
 	public static CoreCpu Cpu;

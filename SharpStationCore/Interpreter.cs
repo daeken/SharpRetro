@@ -19,7 +19,7 @@ public unsafe partial class Interpreter : BaseCpu {
 		$"{pc:X8}: {Disassembler.Disassemble(insn, pc)}".Debug();
 		
 		BranchTo = NoBranch;
-		Timestamp++;
+		State->Timestamp++;
 		pc = Cpu.Intercept(pc);
 		if(!Interpret(insn, pc))
 			throw new($"Unknown instruction 0x{insn:X8} @ {pc:X8}");
