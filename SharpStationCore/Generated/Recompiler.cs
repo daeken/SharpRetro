@@ -664,45 +664,36 @@ public partial class Recompiler {
             var raddr = (builder.EnsureRuntime(addr) & builder.EnsureRuntime(0xFFFFFFFCU)).Store();
             var ert = temp_31.Store();
             state.LdWhich(builder.EnsureRuntime(rt));
-            state.LdValue(builder.EnsureRuntime(
-                (builder.EnsureRuntime(addr) & (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)) switch {
-                    (IRuntimeValue<uint>) (byte) 0x0 => (IRuntimeValue<uint>) (builder.EnsureRuntime(
-                                                                                   builder.EnsureRuntime(ert) &
-                                                                                   builder.EnsureRuntime(0xFFFFFFU)) |
-                                                                               builder.EnsureRuntime(
-                                                                                   ((IRuntimeValue<uint>) builder
-                                                                                       .Pointer<byte>(raddr).Value)
-                                                                                   .LeftShift(
-                                                                                       (IRuntimeValue<uint>) builder
-                                                                                           .EnsureRuntime(
-                                                                                               (byte) 0x18))))(
-                        IRuntimeValue<uint>)((byte) 0x1)
-                    
-                    => (IRuntimeValue<uint>) (builder.EnsureRuntime(
-                                                  builder
-                                                      .EnsureRuntime(ert) &
-                                                  (
-                                                      IRuntimeValue<uint>) builder
-                                                      .EnsureRuntime(
-                                                          (ushort) 0xFFFF)) |
-                                              builder.EnsureRuntime(
-                                                  ((
-                                                      IRuntimeValue<uint>) builder
-                                                      .Pointer<ushort>(raddr).Value)
-                                                  .LeftShift((IRuntimeValue<uint>) builder
-                                                      .EnsureRuntime((byte) 0x10))))(
-                        IRuntimeValue<uint>)((byte) 0x2)
-                    
-                    => builder.EnsureRuntime(
-                           builder.EnsureRuntime(ert) &
-                           (IRuntimeValue<uint>)
-                           builder.EnsureRuntime((byte) 0xFF)) |
-                       builder.EnsureRuntime(
-                           builder.Pointer<uint>(raddr).Value
-                               .LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(
-                                   (byte) 0x8)))
-                    _ => builder.Pointer<uint>(raddr).Value,
-                }));
+            state.LdValue(builder.EnsureRuntime(builder.Switch(
+                builder.EnsureRuntime(builder.EnsureRuntime(addr) &
+                                      (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0),
+                    () => builder.EnsureRuntime(builder.EnsureRuntime(ert) &
+                                                builder.EnsureRuntime(0xFFFFFFU)) |
+                          builder.EnsureRuntime(
+                              ((IRuntimeValue<uint>) builder
+                                  .Pointer<byte>(raddr).Value)
+                              .LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x18)))),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x1),
+                    () => builder.EnsureRuntime(
+                              builder.EnsureRuntime(ert) &
+                              (IRuntimeValue<uint>) builder.EnsureRuntime(
+                                  (ushort) 0xFFFF)) |
+                          builder.EnsureRuntime(
+                              ((IRuntimeValue<uint>) builder
+                                  .Pointer<ushort>(raddr).Value)
+                              .LeftShift(
+                                  (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x10)))),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2),
+                    () => builder.EnsureRuntime(
+                              builder.EnsureRuntime(ert) &
+                              (IRuntimeValue<uint>) builder
+                                  .EnsureRuntime((byte) 0xFF)) |
+                          builder.EnsureRuntime(
+                              builder
+                                  .Pointer<uint>(raddr).Value.LeftShift(
+                                      (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x8)))),
+                (null, () => builder.Pointer<uint>(raddr).Value))));
             return true;
         }
 
@@ -723,38 +714,29 @@ public partial class Recompiler {
             var raddr = (builder.EnsureRuntime(addr) & builder.EnsureRuntime(0xFFFFFFFCU)).Store();
             var ert = temp_33.Store();
             state.LdWhich(builder.EnsureRuntime(rt));
-            state.LdValue(builder.EnsureRuntime(
-                (builder.EnsureRuntime(addr) & (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)) switch {
-                    (IRuntimeValue<uint>) (byte) 0x0 => (IRuntimeValue<uint>) builder.Pointer<uint>(raddr)
-                        .Value(IRuntimeValue<uint>)((byte) 0x1)
-                    
-                    => (IRuntimeValue<uint>) (builder.EnsureRuntime(
-                                                  builder.EnsureRuntime(ert) &
-                                                  builder.EnsureRuntime(0xFF000000U)) |
-                                              builder.EnsureRuntime(
-                                                  builder.EnsureRuntime(
-                                                      builder.Pointer<uint>(addr).Value) &
-                                                  builder.EnsureRuntime(0xFFFFFFU)))(
-                        IRuntimeValue<uint>)(
-                        (byte) 0x2)
-                    
-                    => builder.EnsureRuntime(
-                           builder
-                               .EnsureRuntime(ert) &
-                           builder
-                               .EnsureRuntime(0xFFFF0000U)) |
-                       (IRuntimeValue<uint>) builder
-                           .EnsureRuntime(
-                               builder
-                                   .Pointer<ushort>(addr).Value)
-                    _ => builder.EnsureRuntime(
-                             builder
-                                 .EnsureRuntime(ert) &
-                             builder
-                                 .EnsureRuntime(0xFFFFFF00U)) |
-                         (IRuntimeValue<uint>) builder.EnsureRuntime(
-                             builder.Pointer<byte>(addr).Value),
-                }));
+            state.LdValue(builder.EnsureRuntime(builder.Switch(
+                builder.EnsureRuntime(builder.EnsureRuntime(addr) &
+                                      (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0), () => builder.Pointer<uint>(raddr).Value),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x1),
+                    () => builder.EnsureRuntime(
+                              builder.EnsureRuntime(ert) & builder.EnsureRuntime(0xFF000000U)) |
+                          builder.EnsureRuntime(
+                              builder.EnsureRuntime(
+                                  builder.Pointer<uint>(addr).Value) &
+                              builder.EnsureRuntime(0xFFFFFFU))),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2),
+                    () => builder.EnsureRuntime(
+                              builder.EnsureRuntime(ert) &
+                              builder.EnsureRuntime(0xFFFF0000U)) |
+                          (IRuntimeValue<uint>) builder.EnsureRuntime(
+                              builder.Pointer<ushort>(addr).Value)),
+                (null,
+                    () => builder.EnsureRuntime(
+                              builder.EnsureRuntime(ert) &
+                              builder.EnsureRuntime(0xFFFFFF00U)) |
+                          (IRuntimeValue<uint>) builder.EnsureRuntime(
+                              builder.Pointer<byte>(addr).Value)))));
             return true;
         }
 
@@ -807,9 +789,9 @@ public partial class Recompiler {
             var shamt = (insn >> 6) & 0x1FU;
             state.ReadAbsorb((IRuntimeValue<int>) builder.EnsureRuntime(rd), builder.LiteralValue(0U));
             DoLds();
-            var temp_203 = rd;
-            if(temp_203 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_203),
+            var temp_201 = rd;
+            if(temp_201 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_201),
                     builder.EnsureRuntime((IRuntimeValue<uint>) state.Hi()));
             AbsorbMuldivDelay();
             return true;
@@ -823,9 +805,9 @@ public partial class Recompiler {
             var shamt = (insn >> 6) & 0x1FU;
             state.ReadAbsorb((IRuntimeValue<int>) builder.EnsureRuntime(rd), builder.LiteralValue(0U));
             DoLds();
-            var temp_204 = rd;
-            if(temp_204 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_204),
+            var temp_202 = rd;
+            if(temp_202 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_202),
                     builder.EnsureRuntime((IRuntimeValue<uint>) state.Lo()));
             AbsorbMuldivDelay();
             return true;
@@ -937,9 +919,9 @@ public partial class Recompiler {
             var temp_44 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_205 = rd;
-            if(temp_205 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_205),
+            var temp_203 = rd;
+            if(temp_203 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_203),
                     builder.EnsureRuntime(~(builder.EnsureRuntime(temp_43) | builder.EnsureRuntime(temp_44))));
             return true;
         }
@@ -958,9 +940,9 @@ public partial class Recompiler {
             var temp_46 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_206 = rd;
-            if(temp_206 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_206),
+            var temp_204 = rd;
+            if(temp_204 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_204),
                     builder.EnsureRuntime(builder.EnsureRuntime(temp_45) | builder.EnsureRuntime(temp_46)));
             return true;
         }
@@ -975,9 +957,9 @@ public partial class Recompiler {
             var temp_47 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_207 = rt;
-            if(temp_207 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_207),
+            var temp_205 = rt;
+            if(temp_205 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_205),
                     builder.EnsureRuntime(builder.EnsureRuntime(temp_47) | builder.EnsureRuntime(imm)));
             return true;
         }
@@ -1040,9 +1022,9 @@ public partial class Recompiler {
             var temp_52 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_208 = rd;
-            if(temp_208 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_208),
+            var temp_206 = rd;
+            if(temp_206 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_206),
                     builder.EnsureRuntime(temp_52.LeftShift(builder.EnsureRuntime(shamt))));
             return true;
         }
@@ -1061,9 +1043,9 @@ public partial class Recompiler {
             var temp_54 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_209 = rd;
-            if(temp_209 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_209),
+            var temp_207 = rd;
+            if(temp_207 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_207),
                     builder.EnsureRuntime(temp_53.LeftShift(builder.EnsureRuntime(temp_54))));
             return true;
         }
@@ -1082,9 +1064,9 @@ public partial class Recompiler {
             var temp_56 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_210 = rd;
-            if(temp_210 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_210),
+            var temp_208 = rd;
+            if(temp_208 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_208),
                     (IRuntimeValue<uint>) builder.EnsureRuntime(builder.EnsureRuntime((IRuntimeValue<int>) temp_55) <
                                                                 builder.EnsureRuntime((IRuntimeValue<int>) temp_56)));
             return true;
@@ -1101,9 +1083,9 @@ public partial class Recompiler {
             var temp_57 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_211 = rt;
-            if(temp_211 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_211),
+            var temp_209 = rt;
+            if(temp_209 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_209),
                     (IRuntimeValue<uint>) builder.EnsureRuntime(builder.EnsureRuntime((IRuntimeValue<int>) temp_57) <
                                                                 builder.EnsureRuntime(eimm)));
             return true;
@@ -1120,9 +1102,9 @@ public partial class Recompiler {
             var temp_58 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_212 = rt;
-            if(temp_212 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_212),
+            var temp_210 = rt;
+            if(temp_210 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_210),
                     (IRuntimeValue<uint>) builder.EnsureRuntime(builder.EnsureRuntime(temp_58) <
                                                                 builder.EnsureRuntime(eimm)));
             return true;
@@ -1142,9 +1124,9 @@ public partial class Recompiler {
             var temp_60 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_213 = rd;
-            if(temp_213 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_213),
+            var temp_211 = rd;
+            if(temp_211 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_211),
                     (IRuntimeValue<uint>) builder.EnsureRuntime(builder.EnsureRuntime(temp_59) <
                                                                 builder.EnsureRuntime(temp_60)));
             return true;
@@ -1161,9 +1143,9 @@ public partial class Recompiler {
             var temp_61 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_214 = rd;
-            if(temp_214 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_214),
+            var temp_212 = rd;
+            if(temp_212 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_212),
                     (IRuntimeValue<uint>) builder.EnsureRuntime(
                         ((IRuntimeValue<int>) temp_61).RightShift((IRuntimeValue<int>) builder.EnsureRuntime(shamt))));
             return true;
@@ -1183,9 +1165,9 @@ public partial class Recompiler {
             var temp_63 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_215 = rd;
-            if(temp_215 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_215),
+            var temp_213 = rd;
+            if(temp_213 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_213),
                     (IRuntimeValue<uint>) builder.EnsureRuntime(
                         ((IRuntimeValue<int>) temp_62).RightShift(
                             builder.EnsureRuntime((IRuntimeValue<int>) temp_63))));
@@ -1203,9 +1185,9 @@ public partial class Recompiler {
             var temp_64 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_216 = rd;
-            if(temp_216 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_216),
+            var temp_214 = rd;
+            if(temp_214 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_214),
                     builder.EnsureRuntime(temp_64.RightShift(builder.EnsureRuntime(shamt))));
             return true;
         }
@@ -1224,9 +1206,9 @@ public partial class Recompiler {
             var temp_66 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_217 = rd;
-            if(temp_217 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_217),
+            var temp_215 = rd;
+            if(temp_215 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_215),
                     builder.EnsureRuntime(temp_65.RightShift(builder.EnsureRuntime(temp_66))));
             return true;
         }
@@ -1256,9 +1238,9 @@ public partial class Recompiler {
                     builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc),
                         builder.LiteralValue(insn));
                 });
-            var temp_218 = rd;
-            if(temp_218 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_218),
+            var temp_216 = rd;
+            if(temp_216 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_216),
                     builder.EnsureRuntime(builder.EnsureRuntime(lhs) -
                                           builder.EnsureRuntime(rhs)));
             return true;
@@ -1278,9 +1260,9 @@ public partial class Recompiler {
             var temp_70 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_219 = rd;
-            if(temp_219 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_219),
+            var temp_217 = rd;
+            if(temp_217 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_217),
                     builder.EnsureRuntime(builder.EnsureRuntime(temp_69) -
                                           builder.EnsureRuntime(temp_70)));
             return true;
@@ -1358,33 +1340,32 @@ public partial class Recompiler {
             var addr = (builder.EnsureRuntime(temp_74) + (IRuntimeValue<uint>) builder.EnsureRuntime(offset)).Store();
             var raddr = (builder.EnsureRuntime(addr) & builder.EnsureRuntime(0xFFFFFFFCU)).Store();
             var rtv = temp_75.Store();
-            switch(builder.EnsureRuntime(addr) & (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)) {
-                case (IRuntimeValue<uint>) (byte) 0x0: {
-                    builder.Pointer<byte>(raddr).Value =
-                        (IRuntimeValue<byte>) rtv.RightShift((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x18));
-                    break;
-                }
-                case (IRuntimeValue<uint>) (byte) 0x1: {
-                    builder.Pointer<ushort>(raddr).Value =
-                        (IRuntimeValue<ushort>) rtv.RightShift(
-                            (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x10));
-                    break;
-                }
-                case (IRuntimeValue<uint>) (byte) 0x3: {
-                    builder.Pointer<uint>(raddr).Value = rtv;
-                    break;
-                }
-                default: {
+            builder.Switch(
+                builder.EnsureRuntime(builder.EnsureRuntime(addr) &
+                                      (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0),
+                    () => {
+                        builder.Pointer<byte>(raddr).Value =
+                            (IRuntimeValue<byte>) rtv.RightShift(
+                                (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x18));
+                    }),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x1),
+                    () => {
+                        builder.Pointer<ushort>(raddr).Value =
+                            (IRuntimeValue<ushort>) rtv.RightShift(
+                                (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x10));
+                    }),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3),
+                    () => { builder.Pointer<uint>(raddr).Value = rtv; }),
+                (null, () => {
                     builder.Pointer<ushort>(raddr).Value =
                         (IRuntimeValue<ushort>) rtv.RightShift((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x8));
                     builder.Pointer<byte>(builder.EnsureRuntime(raddr) +
                                           (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2)).Value =
                         (IRuntimeValue<byte>) rtv.RightShift(
                             (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x18));
-                    break;
-                }
-            }
-
+                })
+            );
             return true;
         }
 
@@ -1404,29 +1385,23 @@ public partial class Recompiler {
             var addr = (builder.EnsureRuntime(temp_76) + (IRuntimeValue<uint>) builder.EnsureRuntime(offset)).Store();
             var raddr = (builder.EnsureRuntime(addr) & builder.EnsureRuntime(0xFFFFFFFCU)).Store();
             var rtv = temp_77.Store();
-            switch(builder.EnsureRuntime(addr) & (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)) {
-                case (IRuntimeValue<uint>) (byte) 0x0: {
-                    builder.Pointer<uint>(raddr).Value = rtv;
-                    break;
-                }
-                case (IRuntimeValue<uint>) (byte) 0x2: {
-                    builder.Pointer<ushort>(raddr).Value = (IRuntimeValue<ushort>) rtv;
-                    break;
-                }
-                case (IRuntimeValue<uint>) (byte) 0x3: {
-                    builder.Pointer<byte>(raddr).Value = (IRuntimeValue<byte>) rtv;
-                    break;
-                }
-                default: {
+            builder.Switch(
+                builder.EnsureRuntime(builder.EnsureRuntime(addr) &
+                                      (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3)),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0),
+                    () => { builder.Pointer<uint>(raddr).Value = rtv; }),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2),
+                    () => { builder.Pointer<ushort>(raddr).Value = (IRuntimeValue<ushort>) rtv; }),
+                ((IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x3),
+                    () => { builder.Pointer<byte>(raddr).Value = (IRuntimeValue<byte>) rtv; }),
+                (null, () => {
                     builder.Pointer<ushort>(raddr).Value = (IRuntimeValue<ushort>) rtv;
                     builder.Pointer<byte>(builder.EnsureRuntime(raddr) +
                                           (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2)).Value =
                         (IRuntimeValue<byte>) rtv.RightShift(
                             (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x10));
-                    break;
-                }
-            }
-
+                })
+            );
             return true;
         }
 
@@ -1453,9 +1428,9 @@ public partial class Recompiler {
             var temp_79 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rt))).Store();
             DoLds();
-            var temp_220 = rd;
-            if(temp_220 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_220),
+            var temp_218 = rd;
+            if(temp_218 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_218),
                     builder.EnsureRuntime(builder.EnsureRuntime(temp_78) ^ builder.EnsureRuntime(temp_79)));
             return true;
         }
@@ -1470,9 +1445,9 @@ public partial class Recompiler {
             var temp_80 =
                 ((IRuntimeValue<uint>) state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(rs))).Store();
             DoLds();
-            var temp_221 = rt;
-            if(temp_221 != 0)
-                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_221),
+            var temp_219 = rt;
+            if(temp_219 != 0)
+                state.Registers((IRuntimeValue<int>) builder.EnsureRuntime(temp_219),
                     builder.EnsureRuntime(builder.EnsureRuntime(temp_80) ^ builder.EnsureRuntime(imm)));
             return true;
         }

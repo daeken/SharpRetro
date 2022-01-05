@@ -218,52 +218,79 @@ class ControlFlow : Builtin {
 					c += "}";
 				}
 			}).Interpret((list, state) => Extensions.AsBool(state.Evaluate(list[1])) ? list.Skip(1).Select(x => state.Evaluate(x)).ToList() : null);
-			
+
+		void SwitchGen(CodeBuilder c, PList list) {
+			c += $"switch({GenerateExpression(list[1])}) {{";
+			c++;
+			for(var i = 2; i < list.Count; i += 2)
+				if(i + 1 == list.Count) {
+					c += "default: {";
+					c++;
+					GenerateStatement(c, (PList) list[i]);
+					c += "break;";
+					c--;
+					c += "}";
+				} else {
+					c += $"case ({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}): {{";
+					c++;
+					GenerateStatement(c, (PList) list[i + 1]);
+					c += "break;";
+					c--;
+					c += "}";
+				}
+			c--;
+			c += "}";
+		}
 		Statement("match", list => list.Count == 3 ? list[2].Type : list[3].Type,
+			SwitchGen, 
 			(c, list) => {
-				c += $"switch({GenerateExpression(list[1])}) {{";
-				c++;
-				for(var i = 2; i < list.Count; i += 2)
-					if(i + 1 == list.Count) {
-						c += "default: {";
-						c++;
-						GenerateStatement(c, (PList) list[i]);
-						c += "break;";
-						c--;
-						c += "}";
-					} else {
-						c += $"case ({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}): {{";
-						c++;
-						GenerateStatement(c, (PList) list[i + 1]);
-						c += "break;";
-						c--;
-						c += "}";
-					}
+				if(Core.Context != ContextTypes.Recompiler || (!list[1].Type.Runtime && !list.Skip(2).TakeEvery(2).Any(x => x.Type.Runtime))) {
+					SwitchGen(c, list);
+					return;
+				}
+
+				var mtype = $"IRuntimeValue<{GenerateType(list[1].Type.AsCompiletime())}>";
+				c += $"builder.Switch(builder.EnsureRuntime({GenerateExpression(list[1])}), ";
+				c += 2;
+				for(var i = 2; i < list.Count; i += 2) {
+					var isDefault = i + 1 == list.Count;
+					c += $"({(isDefault ? "null" : $"({mtype}) builder.EnsureRuntime({GenerateExpression(list[i])})")}, () => {{";
+					c++;
+					GenerateStatement(c, (PList) list[i + (isDefault ? 0 : 1)]);
+					c--;
+					c += $"}}){(i + 2 >= list.Count ? "" : ",")}";
+				}
 				c--;
-				c += "}";
+				c += ");";
+				c--;
 			});
 
+		string MatchGen(PList list) {
+			var opts = new List<string>();
+			for(var i = 2; i < list.Count; i += 2)
+				opts.Add(i + 1 == list.Count
+					? $"_ => {GenerateExpression(list[i])}"
+					: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {GenerateExpression(list[i + 1])}");
+			var tn = TempName();
+			return $"{GenerateExpression(list[1])} switch {{ {string.Join(", ", opts)} }}";
+		}
+
 		Expression("match", list => list.Count == 3 ? list[2].Type : list[3].Type,
+			MatchGen, 
 			list => {
-				var opts = new List<string>();
-				for(var i = 2; i < list.Count; i += 2)
-					opts.Add(i + 1 == list.Count
-						? $"_ => {GenerateExpression(list[i])}"
-						: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {GenerateExpression(list[i + 1])}");
-				var tn = TempName();
-				return $"{GenerateExpression(list[1])} switch {{ {string.Join(", ", opts)} }}";
-			}, list => {
-				string Expr(PTree expr) {
-					var str = GenerateExpression(expr);
-					return str.StartsWith("throw ") ? str : $"({GenerateType(list.Type)}) ({str})";
+				if(Core.Context != ContextTypes.Recompiler || (!list[1].Type.Runtime && !list.Skip(2).TakeEvery(2).Any(x => x.Type.Runtime)))
+					return MatchGen(list);
+
+				var mtype = $"IRuntimeValue<{GenerateType(list[1].Type.AsCompiletime())}>";
+				var c = $"builder.Switch(builder.EnsureRuntime({GenerateExpression(list[1])}), ";
+				for(var i = 2; i < list.Count; i += 2) {
+					var isDefault = i + 1 == list.Count;
+					c += $"({(isDefault ? "null" : $"({mtype}) builder.EnsureRuntime({GenerateExpression(list[i])})")}, () => ";
+					c += GenerateExpression((PList) list[i + (isDefault ? 0 : 1)]);
+					c += $"){(i + 2 >= list.Count ? "" : ", ")}";
 				}
-				var opts = new List<string>();
-				for(var i = 2; i < list.Count; i += 2)
-					opts.Add(i + 1 == list.Count
-						? $"_ => {GenerateExpression(list[i])}"
-						: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {Expr(list[i + 1])}");
-				var tn = TempName();
-				return $"{GenerateExpression(list[1])} switch {{ {string.Join(" ", opts)} }}";
+				c += ")";
+				return c;
 			});
 
 		Interpret("match", (list, state) => {
