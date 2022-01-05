@@ -491,4 +491,55 @@ public unsafe class Tests {
 				_ => i
 			}, foo.Arr[i]);
 	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void SwitchStmt(IJit<uint> jit) {
+		var func = jit.CreateFunction<Func<uint, uint>>("func", builder => {
+			builder.Switch(builder.Argument<uint>(0), 
+				(builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U))),
+				(builder.LiteralValue(1U), () => builder.Return(builder.LiteralValue(7U))) 
+			);
+			builder.Return(builder.Zero<uint>());
+		});
+		Assert.AreEqual(123, func(0));
+		Assert.AreEqual(7, func(1));
+		Assert.AreEqual(0, func(2));
+		Assert.AreEqual(0, func(3));
+		
+		var funcwd = jit.CreateFunction<Func<uint, uint>>("func", builder => {
+			builder.Switch(builder.Argument<uint>(0), 
+				(builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U))),
+				(builder.LiteralValue(1U), () => builder.Return(builder.LiteralValue(7U))), 
+				(null, () => builder.Return(builder.Zero<uint>()))
+			);
+		});
+		Assert.AreEqual(123, funcwd(0));
+		Assert.AreEqual(7, funcwd(1));
+		Assert.AreEqual(0, funcwd(2));
+		Assert.AreEqual(0, funcwd(3));
+
+		Assert.Catch(() =>
+			jit.CreateFunction<Func<uint, uint>>("func", builder => {
+				builder.Switch(builder.Argument<uint>(0),
+					(builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U))),
+					(null, () => builder.Return(builder.Zero<uint>())), 
+					(builder.LiteralValue(1U), () => builder.Return(builder.LiteralValue(7U)))
+				);
+			}));
+	}
+
+	[TestCaseSource(nameof(Jits32))]
+	public void SwitchExpr(IJit<uint> jit) {
+		var func = jit.CreateFunction<Func<uint, uint>>("func", builder => {
+			builder.Return(builder.Switch(builder.Argument<uint>(0), 
+				(builder.LiteralValue(0U), () => builder.LiteralValue(123U)),
+				(builder.LiteralValue(1U), () => builder.LiteralValue(7U)), 
+				(null, () => builder.LiteralValue(0U))
+			));
+		});
+		Assert.AreEqual(123, func(0));
+		Assert.AreEqual(7, func(1));
+		Assert.AreEqual(0, func(2));
+		Assert.AreEqual(0, func(3));
+	}
 }

@@ -21,6 +21,35 @@ public interface IBuilder<AddrT> where AddrT : struct {
 	void While(IRuntimeValue<bool> cond, Action body);
 	void DoWhile(Action body, IRuntimeValue<bool> cond);
 	IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct;
+	public void Switch<T>(IRuntimeValue<T> matchee, params (IRuntimeValue<T> Match, Action Body)[] matchers) where T : struct {
+		matchee = matchee.Store();
+		void Recur(Queue<(IRuntimeValue<T> Match, Action Body)> elems) {
+			if(elems.Count == 0) return;
+			var (match, body) = elems.Dequeue();
+			if(match == (object) null) {
+				if(elems.Count != 0) throw new Exception();
+				body();
+			} else
+				If(matchee == match, 
+					body,
+					() => Recur(elems));
+		}
+		Recur(new(matchers));
+	}
+	IRuntimeValue<U> Switch<T, U>(IRuntimeValue<T> matchee, params (IRuntimeValue<T> Match, Func<IRuntimeValue<U>> Body)[] matchers) where T : struct where U : struct {
+		matchee = matchee.Store();
+		IRuntimeValue<U> Recur(Queue<(IRuntimeValue<T> Match, Func<IRuntimeValue<U>> Body)> elems) {
+			var (match, body) = elems.Dequeue();
+			if(match == (object) null) {
+				if(elems.Count != 0) throw new Exception();
+				return body();
+			}
+			return Ternary(matchee == match, 
+				body(),
+				Recur(elems));
+		}
+		return Recur(new(matchers));
+	}
 
 	void Call(Action func);
 	void Call<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct;
