@@ -12,7 +12,7 @@ public unsafe class LlvmLocalVar<AddrT, T> : ILocalVar<T> where AddrT : struct w
 	internal LlvmLocalVar(LLVMBuilderRef builder, LlvmBuilder<AddrT> jBuilder) {
 		Builder = builder;
 		Pointer = LLVM.BuildAlloca(Builder, LlvmType<T>(), EmptyString);
-		Getter = new LlvmRuntimeValue<AddrT, T>(Builder, jBuilder, () => LLVM.BuildLoad(Builder, Pointer, EmptyString));
+		Getter = new(Builder, jBuilder, () => LLVM.BuildLoad2(Builder, LlvmType<T>(), Pointer, EmptyString));
 	}
 
 	public IRuntimeValue<T> Value { get => Getter; set => LLVM.BuildStore(Builder, LlvmRuntimeValue<AddrT, T>.Emit(value), Pointer); }

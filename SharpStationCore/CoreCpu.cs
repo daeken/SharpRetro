@@ -27,7 +27,7 @@ public unsafe class CoreCpu {
 				if(IPCache != 0) {
 					if(Halted) {
 					} else if((CP0.StatusRegister & 1) != 0) {
-						Dispatch(new CpuException(ExceptionType.INT, State->PC, 0));
+						Dispatch(new(ExceptionType.INT, State->PC, 0));
 						continue;
 					}
 				}

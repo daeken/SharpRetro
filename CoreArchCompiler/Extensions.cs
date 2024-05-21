@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CoreArchCompiler; 
@@ -42,4 +43,6 @@ public static class Extensions {
     public static object If<T>(this object value, Func<T, dynamic> func) => value is T tvalue ? func(tvalue) : value;
     public static object IfNot<T>(this object value, Func<dynamic, dynamic> func)
         => value is T ? value : func(value);
+
+    public static IEnumerable<T> TakeEvery<T>(this IEnumerable<T> col, int step) => col.Where((_, i) => i % step == 0);
 }

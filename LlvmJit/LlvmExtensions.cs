@@ -18,7 +18,7 @@ public static unsafe class LlvmExtensions {
 			return LLVMTypeRef.CreateVector(et.ToLLVMType(), 16U / (uint) Marshal.SizeOf(et));
 		}
 		if(typeof(MulticastDelegate).IsAssignableFrom(type)) {
-			var mi = type.GetMethod("Invoke") ?? throw new Exception();
+			var mi = type.GetMethod("Invoke") ?? throw new();
 			return LLVMTypeRef.CreateFunction(mi.ReturnType.ToLLVMType(),
 				mi.GetParameters().Select(x => x.ParameterType.ToLLVMType()).ToArray(), false);
 		}

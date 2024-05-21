@@ -3,7 +3,7 @@ using CoreArchCompiler;
 
 public class Program : Core {
 	public static void Main(string[] args) {
-		var defs = Core.ParseSpec(File.ReadAllText("mips-r3051.isa"), new ExecutionState(), MipsDef.Parse).Select(x => (MipsDef) x).ToList();
+		var defs = Core.ParseSpec(File.ReadAllText("mips-r3051.isa"), new(), MipsDef.Parse).Select(x => (MipsDef) x).ToList();
 		BuildDisassembler(defs);
 		BuildInterpreter(defs);
 		BuildRecompiler(defs);

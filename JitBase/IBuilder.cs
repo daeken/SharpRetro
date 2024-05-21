@@ -27,7 +27,7 @@ public interface IBuilder<AddrT> where AddrT : struct {
 			if(elems.Count == 0) return;
 			var (match, body) = elems.Dequeue();
 			if(match == (object) null) {
-				if(elems.Count != 0) throw new Exception();
+				if(elems.Count != 0) throw new();
 				body();
 			} else
 				If(matchee == match, 
@@ -41,7 +41,7 @@ public interface IBuilder<AddrT> where AddrT : struct {
 		IRuntimeValue<U> Recur(Queue<(IRuntimeValue<T> Match, Func<IRuntimeValue<U>> Body)> elems) {
 			var (match, body) = elems.Dequeue();
 			if(match == (object) null) {
-				if(elems.Count != 0) throw new Exception();
+				if(elems.Count != 0) throw new();
 				return body();
 			}
 			return Ternary(matchee == match, 

@@ -6,7 +6,7 @@
         <Nullable>disable</Nullable>
         <AssemblyName>LibSharpRetro</AssemblyName>
         <RootNamespace>LibSharpRetro</RootNamespace>
-        <LangVersion>10</LangVersion>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
 </Project>

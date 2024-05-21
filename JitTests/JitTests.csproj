@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
         <EnablePreviewFeatures>True</EnablePreviewFeatures>
@@ -9,15 +10,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
-        <PackageReference Include="NUnit" Version="3.13.2" />
-        <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0-release-24177-07" />
+        <PackageReference Include="NUnit" Version="4.1.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
         <PackageReference Include="coverlet.collector" Version="3.1.0" />
         <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
         <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
         <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
         <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.1.0-1.final">
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.10.0-3.final">
         </PackageReference>
     </ItemGroup>
 
@@ -28,7 +29,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">ubuntu.21.04-x64</RuntimeIdentifier>
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
     </PropertyGroup>
 
     <ItemGroup>

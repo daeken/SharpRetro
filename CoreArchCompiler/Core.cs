@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using MoreLinq;
 using PrettyPrinter;
+using DoubleSharp.Linq;
 
 namespace CoreArchCompiler; 
 
@@ -15,14 +15,14 @@ public enum ContextTypes {
 }
 	
 public class Capture {
-	public static readonly List<Capture> UnassignedCaptures = new();
+	public static readonly List<Capture> UnassignedCaptures = [];
 	public readonly string Name, RawName;
 	readonly Action<Func<PList, ExecutionState, dynamic>> Assign;
 
 	public Capture(string type, string name, Action<Func<PList, ExecutionState, dynamic>> assign) {
 		var st = new StackTrace();
 		var frame = st.GetFrame(2);
-		var method = frame?.GetMethod() ?? throw new Exception();
+		var method = frame?.GetMethod() ?? throw new();
 		RawName = name;
 		Name = type + " " + name + " in " + method.DeclaringType.Name;
 		Assign = assign;
@@ -47,19 +47,19 @@ public abstract class Builtin {
 		var ns = name.Name;
 		if(ns[0] == 'f') return new EFloat(int.Parse(ns[1..]));
 		if(ns == "vec") return EType.Vector;
-		return ns[0] == 'i' ? new EInt(true, int.Parse(ns[1..])) : new EInt(false, int.Parse(ns[1..]));
+		return ns[0] == 'i' ? new(true, int.Parse(ns[1..])) : new EInt(false, int.Parse(ns[1..]));
 	}
 		
 	public static Capture Statement(string name, Func<PList, EType> signature, Action<CodeBuilder, PList> compiletime, Action<CodeBuilder, PList> runtime = null) {
-		if(Core.Statements.ContainsKey(name)) throw new Exception();
-		return new Capture("Statement", name, func => Core.Statements[name] = (signature, compiletime, runtime ?? compiletime, func));
+		if(Core.Statements.ContainsKey(name)) throw new();
+		return new("Statement", name, func => Core.Statements[name] = (signature, compiletime, runtime ?? compiletime, func));
 	}
 	public static Capture Expression(string name, Func<PList, EType> signature, Func<PList, string> compiletime, Func<PList, string> runtime = null) {
-		if(Core.Expressions.ContainsKey(name)) throw new Exception();
-		return new Capture("Expression", name, func => Core.Expressions[name] = (signature, compiletime, runtime ?? compiletime, func));
+		if(Core.Expressions.ContainsKey(name)) throw new();
+		return new("Expression", name, func => Core.Expressions[name] = (signature, compiletime, runtime ?? compiletime, func));
 	}
 	public static Capture BranchExpression(string name, Func<PList, EType> signature, Func<PList, string> compiletime, Func<PList, string> runtime = null) {
-		if(Core.Expressions.ContainsKey(name)) throw new Exception();
+		if(Core.Expressions.ContainsKey(name)) throw new();
 		var oc = compiletime;
 		compiletime = list => {
 			Core.HasBranch = true;
@@ -70,12 +70,12 @@ public abstract class Builtin {
 			Core.HasBranch = true;
 			return or(list);
 		};
-		return new Capture("Expression", name, func => Core.Expressions[name] = (signature, compiletime, runtime, func));
+		return new("Expression", name, func => Core.Expressions[name] = (signature, compiletime, runtime, func));
 	}
 	public static Capture Expression(IEnumerable<string> names, Func<PList, EType> signature, Func<PList, string> compiletime, Func<PList, string> runtime = null) {
 		var nameList = names.ToList();
-		return new Capture("Expressions", $"[ {string.Join(" ", nameList)} ]",
-			func => MoreEnumerable.ForEach(nameList, name => Expression(name, signature, compiletime, runtime).Interpret(func)));
+		return new("Expressions", $"[ {string.Join(" ", nameList)} ]",
+			func => nameList.ForEach(name => Expression(name, signature, compiletime, runtime).Interpret(func)));
 	}
 
 	public static void Interpret(string name, Func<PList, ExecutionState, dynamic> func) {
@@ -144,8 +144,8 @@ public class Core {
 	}
 
 	static Core() {
-		MoreEnumerable.ForEach(AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-			.Where(x => x.IsSubclassOf(typeof(Builtin))), x => ((Builtin) Activator.CreateInstance(x)).Define());
+		AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+			.Where(x => x.IsSubclassOf(typeof(Builtin))).ForEach(x => ((Builtin) Activator.CreateInstance(x)).Define());
 
 		if(Capture.UnassignedCaptures.Count != 0) {
 			Console.WriteLine("The following captures have not been assigned:");

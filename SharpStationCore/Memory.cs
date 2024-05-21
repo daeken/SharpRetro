@@ -203,30 +203,30 @@ public class IoPorts : IMemory {
 						if(t == typeof(byte))
 							Enumerable.Range(0, attr.Count).ForEach(
 								i => Add(new Port<byte>(addr + (uint) (attr.Stride * i), name, debug)
-									{ v => mi.Invoke(instance, new object[] { i, v }) }));
+									{ v => mi.Invoke(instance, [i, v]) }));
 						else if(t == typeof(ushort))
 							Enumerable.Range(0, attr.Count).ForEach(i =>
 								Add(new Port<ushort>(addr + (uint) (attr.Stride * i), name, debug)
-									{ v => mi.Invoke(instance, new object[] { i, v }) }));
+									{ v => mi.Invoke(instance, [i, v]) }));
 						else if(t == typeof(uint))
 							Enumerable.Range(0, attr.Count).ForEach(i =>
 								Add(new Port<uint>(addr + (uint) (attr.Stride * i), name, debug)
-									{ v => mi.Invoke(instance, new object[] { i, v }) }));
+									{ v => mi.Invoke(instance, [i, v]) }));
 						else throw new NotImplementedException($"Method {x.DeclaringType.Name}.{x} not a supported type");
 					} else {
 						var t = mi.ReturnType;
 						if(t == typeof(byte))
 							Enumerable.Range(0, attr.Count).ForEach(i =>
 								Add(new Port<byte>(addr + (uint) (attr.Stride * i), name, debug)
-									{ () => (byte) mi.Invoke(instance, new object[] { i }) }));
+									{ () => (byte) mi.Invoke(instance, [i]) }));
 						else if(t == typeof(ushort))
 							Enumerable.Range(0, attr.Count).ForEach(i =>
 								Add(new Port<ushort>(addr + (uint) (attr.Stride * i), name, debug)
-									{ () => (ushort) mi.Invoke(instance, new object[] { i }) }));
+									{ () => (ushort) mi.Invoke(instance, [i]) }));
 						else if(t == typeof(uint))
 							Enumerable.Range(0, attr.Count).ForEach(i =>
 								Add(new Port<uint>(addr + (uint) (attr.Stride * i), name, debug)
-									{ () => (uint) mi.Invoke(instance, new object[] { i }) }));
+									{ () => (uint) mi.Invoke(instance, [i]) }));
 						else throw new NotImplementedException($"Method {x.DeclaringType.Name}.{x} not a supported type");
 					}
 				} else if(x is MethodInfo m) {
@@ -234,9 +234,12 @@ public class IoPorts : IMemory {
 						throw new($"Port {name} is not static and no instance available");
 					if(m.ReturnType == typeof(void)) {
 						var t = m.GetParameters()[0].ParameterType;
-						if(t == typeof(byte)) Add(new Port<byte>(addr, name, debug) { v => m.Invoke(instance, new[] { (object) v }) });
-						else if(t == typeof(ushort)) Add(new Port<ushort>(addr, name, debug) { v => m.Invoke(instance, new[] { (object) v }) });
-						else if(t == typeof(uint)) Add(new Port<uint>(addr, name, debug) { v => m.Invoke(instance, new[] { (object) v }) });
+						if(t == typeof(byte)) Add(new Port<byte>(addr, name, debug) { v => m.Invoke(instance, [(object) v,
+						]) });
+						else if(t == typeof(ushort)) Add(new Port<ushort>(addr, name, debug) { v => m.Invoke(instance,
+							[(object) v]) });
+						else if(t == typeof(uint)) Add(new Port<uint>(addr, name, debug) { v => m.Invoke(instance, [(object) v,
+						]) });
 						else throw new NotImplementedException($"Method {x.DeclaringType.Name}.{x} not a supported type");
 					} else {
 						var t = m.ReturnType;

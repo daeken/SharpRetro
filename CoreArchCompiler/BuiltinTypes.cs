@@ -10,7 +10,7 @@ public class BuiltinTypes {
 		var ns = name.Name;
 		if(ns[0] == 'f') return new EFloat(int.Parse(ns[1..]));
 		if(ns == "vec") return EType.Vector;
-		return ns[0] == 'i' ? new EInt(true, int.Parse(ns[1..])) : new EInt(false, int.Parse(ns[1..]));
+		return ns[0] == 'i' ? new(true, int.Parse(ns[1..])) : new EInt(false, int.Parse(ns[1..]));
 	}
 
 	static EType LogicalType(EType a, EType b) {

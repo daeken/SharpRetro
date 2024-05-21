@@ -22,7 +22,7 @@ public class AsyncTimer {
 
 public class Timing {
 	ulong Cycles;
-	readonly List<AsyncTimer> Timers = new();
+	readonly List<AsyncTimer> Timers = [];
 	
 	public void AddCycles(ulong count) {
 		Cycles += count;
@@ -30,7 +30,7 @@ public class Timing {
 			timer.Update(Cycles);
 	}
 
-	public void TimeSync(IEnumerable<ulong> runner) => Timers.Add(new AsyncTimer(runner));
+	public void TimeSync(IEnumerable<ulong> runner) => Timers.Add(new(runner));
 
 	public void WarpToNextWait() {
 		var waitingFor = Timers.Select(x => x.WaitingFor).Where(x => x != ulong.MaxValue).Min();

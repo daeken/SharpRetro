@@ -43,7 +43,7 @@ public unsafe class LlvmJit<AddrT> : IJit<AddrT> where AddrT : struct {
 		body(lbuilder);
 
 		if(!lbuilder.ReturnedThisBlock) {
-			var im = typeof(DelegateT).GetMethod("Invoke") ?? throw new Exception();
+			var im = typeof(DelegateT).GetMethod("Invoke") ?? throw new();
 			var rt = im.ReturnType;
 			if(rt == typeof(void))
 				LLVM.BuildRetVoid(builder);
@@ -54,12 +54,12 @@ public unsafe class LlvmJit<AddrT> : IJit<AddrT> where AddrT : struct {
 		LLVM.DumpValue(function);
 		LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
 		if(!function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
-			throw new Exception("Program verification failed");
+			throw new("Program verification failed");
 		LLVM.RunFunctionPassManager(passManager, function);
 		LLVM.DumpValue(function);
 		
 		if(!module.TryCreateExecutionEngine(out var executionEngine, out var errorMessage))
-			throw new Exception(errorMessage);
+			throw new(errorMessage);
 		
 		return Helpers.GetAnyDelegateForFunctionPointer<DelegateT>(executionEngine.GetPointerToGlobal(function));
 	}

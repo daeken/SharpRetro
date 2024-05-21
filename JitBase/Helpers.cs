@@ -36,15 +36,15 @@ public static class Helpers {
 	public static DelegateT GetAnyDelegateForFunctionPointer<DelegateT>(IntPtr ptr) {
 		if(!typeof(DelegateT).IsGenericType) return Marshal.GetDelegateForFunctionPointer<DelegateT>(ptr);
 		if(!DelegateTypeMap.TryGetValue(typeof(DelegateT), out var dt)) {
-			var method = typeof(DelegateT).GetMethod("Invoke") ?? throw new Exception();
+			var method = typeof(DelegateT).GetMethod("Invoke") ?? throw new();
 			
-			var ab = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
+			var ab = AssemblyBuilder.DefineDynamicAssembly(new(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
 			var mb = ab.DefineDynamicModule("DelegateModule");
 			var tb = mb.DefineType("DelegateType", TypeAttributes.Sealed | TypeAttributes.Public, typeof(MulticastDelegate));
 			
 			var ctor = tb.DefineConstructor(
 				MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public,
-				CallingConventions.Standard, new[] { typeof(object), typeof(IntPtr) });
+				CallingConventions.Standard, [typeof(object), typeof(IntPtr)]);
 			ctor.SetImplementationFlags(MethodImplAttributes.CodeTypeMask);
 
 			var parameters = method.GetParameters();
@@ -59,8 +59,8 @@ public static class Helpers {
 				invokeMethod.DefineParameter(i + 1, ParameterAttributes.None, parameter.Name);
 			}
 
-			var bt = tb.CreateType() ?? throw new Exception();
-			var imi = bt.GetMethod("Invoke") ?? throw new Exception();
+			var bt = tb.CreateType() ?? throw new();
+			var imi = bt.GetMethod("Invoke") ?? throw new();
 
 			var del = Expression.Parameter(typeof(Delegate));
 
@@ -82,15 +82,15 @@ public static class Helpers {
 	public static IntPtr GetFunctionPointerForAnyDelegate<DelegateT>(DelegateT func) {
 		if(!typeof(DelegateT).IsGenericType) return Marshal.GetFunctionPointerForDelegate(func);
 		if(!InvDelegateTypeMap.TryGetValue(typeof(DelegateT), out var conv)) {
-			var method = typeof(DelegateT).GetMethod("Invoke") ?? throw new Exception();
+			var method = typeof(DelegateT).GetMethod("Invoke") ?? throw new();
 			
-			var ab = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
+			var ab = AssemblyBuilder.DefineDynamicAssembly(new(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
 			var mb = ab.DefineDynamicModule("DelegateModule");
 			var tb = mb.DefineType("DelegateType", TypeAttributes.Sealed | TypeAttributes.Public, typeof(MulticastDelegate));
 			
 			var ctor = tb.DefineConstructor(
 				MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public,
-				CallingConventions.Standard, new[] { typeof(object), typeof(IntPtr) });
+				CallingConventions.Standard, [typeof(object), typeof(IntPtr)]);
 			ctor.SetImplementationFlags(MethodImplAttributes.CodeTypeMask);
 
 			var parameters = method.GetParameters();
@@ -105,8 +105,8 @@ public static class Helpers {
 				invokeMethod.DefineParameter(i + 1, ParameterAttributes.None, parameter.Name);
 			}
 
-			var bt = tb.CreateType() ?? throw new Exception();
-			var imi = bt.GetMethod("Invoke") ?? throw new Exception();
+			var bt = tb.CreateType() ?? throw new();
+			var imi = bt.GetMethod("Invoke") ?? throw new();
 
 			var del = Expression.Parameter(typeof(DelegateT));
 

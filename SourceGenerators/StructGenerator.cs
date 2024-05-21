@@ -10,7 +10,7 @@ public class StructGenerator : ISourceGenerator {
 		context.RegisterForSyntaxNotifications(() => new MyReceiver());
 	
 	public void Execute(GeneratorExecutionContext context) {
-		var sr = (MyReceiver) context.SyntaxContextReceiver ?? throw new Exception();
+		var sr = (MyReceiver) context.SyntaxContextReceiver ?? throw new();
 
 		var errorI = 0;
 		void Error(string message) => context.AddSource($"error{errorI++}.cs", $"#error {message}");
@@ -59,7 +59,7 @@ namespace JitBase {{
 	}
 
 	class MyReceiver : ISyntaxContextReceiver {
-		internal readonly List<TypeDeclarationSyntax> Structs = new();
+		internal readonly List<TypeDeclarationSyntax> Structs = [];
 
 		public void OnVisitSyntaxNode(GeneratorSyntaxContext context) {
 			if(context.Node is TypeDeclarationSyntax tds) {

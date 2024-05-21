@@ -3,7 +3,7 @@ using CoreArchCompiler;
 
 public class Program : Core {
 	public static void Main(string[] args) {
-		var defs = Core.ParseSpec(File.ReadAllText("sm83.isa"), new ExecutionState(), DmgDef.Parse).Select(x => (DmgDef) x).ToList();
+		var defs = Core.ParseSpec(File.ReadAllText("sm83.isa"), new(), DmgDef.Parse).Select(x => (DmgDef) x).ToList();
 		BuildDisassembler(defs);
 		BuildInterpreter(defs);
 		CleanupCode("../DamageCore/Generated");

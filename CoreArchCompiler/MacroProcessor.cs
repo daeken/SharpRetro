@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MoreLinq.Extensions;
 using PrettyPrinter;
 
 namespace CoreArchCompiler; 
@@ -11,10 +10,10 @@ public class MacroProcessor {
 		var macros = new Dictionary<string, List<(List<string>, PTree)>>();
 		foreach(var elem in top) {
 			if(elem is not PList list || list[0] is not PName("defm")) continue;
-			if(list[1] is not PName(var name)) throw new Exception();
+			if(list[1] is not PName(var name)) throw new();
 			var varnames = ((PList) list[2]).Select(x => ((PName) x).Name).ToList();
 			if(!macros.TryGetValue(name, out var mlist))
-				mlist = macros[name] = new();
+				mlist = macros[name] = [];
 			mlist.Add((varnames, list[3]));
 		}
 

@@ -45,7 +45,7 @@ public class Core : ICore {
 	public bool Load(string path) {
 		var cartridge = ICartridge.Load(File.ReadAllBytes(path));
 		if(cartridge == null) return false;
-		Timing = new Timing();
+		Timing = new();
 		Cpu = new(this, cartridge);
 		Memory = Cpu.Memory;
 		Ppu = new(this);

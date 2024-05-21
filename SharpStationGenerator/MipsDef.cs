@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using CoreArchCompiler;
-using MoreLinq.Extensions;
 
 namespace SharpStationGenerator; 
 
@@ -19,17 +18,17 @@ public class MipsDef : Def {
 	}
 
 	public static MipsDef Parse(PList def) {
-		if(def[0] is not PName("def")) throw new Exception();
-		if(def[1] is not PTree _name) throw new Exception();
-		if(def[2] is not PTree _bitstr) throw new Exception();
-		if(def[3] is not PTree disasm) throw new Exception();
-		if(def[4] is not PList names) throw new Exception();
-		if(def[5] is not PList decode) throw new Exception();
-		if(def[6] is not PList eval) throw new Exception();
+		if(def[0] is not PName("def")) throw new();
+		if(def[1] is not PTree _name) throw new();
+		if(def[2] is not PTree _bitstr) throw new();
+		if(def[3] is not PTree disasm) throw new();
+		if(def[4] is not PList names) throw new();
+		if(def[5] is not PList decode) throw new();
+		if(def[6] is not PList eval) throw new();
 
 		var name = _name switch {
 			PName(var x) => x, 
-			var x => (string) new ExecutionState().Evaluate(x)
+			_ => (string) new ExecutionState().Evaluate(_name)
 		};
 		Console.WriteLine(name);
 
@@ -65,7 +64,7 @@ public class MipsDef : Def {
 		foreach(var (fname, (bits, _)) in fields)
 			locals[fname] = new EInt(false, bits).AsCompiletime();
 		
-		return new MipsDef(name, mask, match, fields, disasm, decode, RewriteEval(eval), locals);
+		return new(name, mask, match, fields, disasm, decode, RewriteEval(eval), locals);
 	}
 
 	static PList RewriteEval(PList eval) {
@@ -103,11 +102,14 @@ public class MipsDef : Def {
 		
 		eval = RewriteRegs(eval) as PList;
 		if(!hasDoLoad)
-			eval = new PList { new PName("block"), new PList { new PName("do-lds") }, eval };
+			eval = [new PName("block"), new PList { new PName("do-lds") }, eval];
 		if(tregs.Count != 0)
-			eval = new PList { new PName("mlet"), new PList(
+			eval = [
+				new PName("mlet"), new PList(
 					tregs.Select(x => new[] { new PName(x.Value), x.Key }).SelectMany(x => x)
-				), eval };
+				),
+				eval,
+			];
 		neval.Add(eval);
 		return neval;
 	}

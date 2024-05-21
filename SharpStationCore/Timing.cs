@@ -19,13 +19,13 @@ public enum Clock {
 
 public struct FracCycles {
 	const int FracBits = 16;
-	public static FracCycles FromCycles(ulong cycles) => new FracCycles { FP = cycles << FracBits };
-	public static FracCycles FromDouble(double cycles) => new FracCycles { FP = (ulong) (cycles * (1UL << FracBits)) };
+	public static FracCycles FromCycles(ulong cycles) => new() { FP = cycles << FracBits };
+	public static FracCycles FromDouble(double cycles) => new() { FP = (ulong) (cycles * (1UL << FracBits)) };
 	
 	public ulong FP;
 	
-	public static FracCycles operator +(FracCycles a, FracCycles b) => new FracCycles { FP = a.FP + b.FP };
-	public static FracCycles operator /(FracCycles a, FracCycles b) => new FracCycles { FP = (a.FP << FracBits) / b.FP };
+	public static FracCycles operator +(FracCycles a, FracCycles b) => new() { FP = a.FP + b.FP };
+	public static FracCycles operator /(FracCycles a, FracCycles b) => new() { FP = (a.FP << FracBits) / b.FP };
 
 	public uint Ceil() => (uint) ((FP + ((1UL << FracBits) - 1)) >> FracBits);
 }
@@ -120,7 +120,7 @@ public class Timer {
 		var delta = FracCycles.FromCycles(Timestamp - LastTimestamp);
 		var ticks = delta + Phase;
 		var count = ticks.FP / Period.FP;
-		Phase = new FracCycles { FP = ticks.FP % Period.FP };
+		Phase = new() { FP = ticks.FP % Period.FP };
 		count += Counter;
 
 		var targetPassed = false;
@@ -155,7 +155,7 @@ public class Timer {
 }
 
 public static class Timing {
-	static readonly Timer[] Timers = { new Timer(0), new Timer(1), new Timer(2) };
+	static readonly Timer[] Timers = [new(0), new(1), new(2)];
 	
 	[Port(0x1F801100, 3, 0x10)]
 	static uint CurrentValue(int timer) => Timers[timer].UpdateThen(x => x.Counter);

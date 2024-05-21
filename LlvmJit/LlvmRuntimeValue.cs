@@ -42,7 +42,7 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 	}
 	public override IRuntimeValue<OT> Bitcast<OT>() where OT : struct {
 		if(typeof(OT) == typeof(T)) return (IRuntimeValue<OT>) (object) this;
-		if(BitWidth<OT>() != BitWidth<T>()) throw new Exception();
+		if(BitWidth<OT>() != BitWidth<T>()) throw new();
 		return C<OT>(() => LLVM.BuildBitCast(Builder, Emit(), LlvmType<OT>(), EmptyString));
 	}
 	public override IRuntimeValue<T> Store() {

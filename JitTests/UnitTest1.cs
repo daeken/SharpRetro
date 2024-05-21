@@ -5,23 +5,24 @@ using CilJit;
 using JitBase;
 using LlvmJit;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace JitTests;
 
 public unsafe class Tests {
-	static IJit<uint>[] Jits32() => new IJit<uint>[] {
+	static IJit<uint>[] Jits32() => [
 		new CilJit<uint>(), 
 		new LlvmJit<uint>(),
-	};
+	];
 
-	static readonly byte[] U8values = { 0, 1, 2, 0xFF, 0xFE };
-	static readonly sbyte[] I8values = { 0, 1, 2, -1, -2 };
-	static readonly ushort[] U16values = { 0, 1, 2, 0xFFFF, 0xFFFE };
-	static readonly short[] I16values = { 0, 1, 2, -1, -2 };
-	static readonly uint[] U32values = { 0, 1, 2, 0xFFFFFFFF, 0xFFFFFFFE };
-	static readonly int[] I32values = { 0, 1, 2, -1, -2 };
-	static readonly ulong[] U64values = { 0, 1, 2, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE };
-	static readonly long[] I64values = { 0, 1, 2, -1, -2 };
+	static readonly byte[] U8values = [0, 1, 2, 0xFF, 0xFE];
+	static readonly sbyte[] I8values = [0, 1, 2, -1, -2];
+	static readonly ushort[] U16values = [0, 1, 2, 0xFFFF, 0xFFFE];
+	static readonly short[] I16values = [0, 1, 2, -1, -2];
+	static readonly uint[] U32values = [0, 1, 2, 0xFFFFFFFF, 0xFFFFFFFE];
+	static readonly int[] I32values = [0, 1, 2, -1, -2];
+	static readonly ulong[] U64values = [0, 1, 2, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE];
+	static readonly long[] I64values = [0, 1, 2, -1, -2];
 
 	[TestCaseSource(nameof(Jits32))]
 	public void EmptyFunction(IJit<uint> jit) {
@@ -32,8 +33,8 @@ public unsafe class Tests {
 	[TestCaseSource(nameof(Jits32))]
 	public void ReturnArgument(IJit<uint> jit) {
 		var func = jit.CreateFunction<Func<uint, uint>>("ret", builder => builder.Return(builder.Argument<uint>(0)));
-		Assert.AreEqual(0, func(0));
-		Assert.AreEqual(123, func(123));
+		ClassicAssert.AreEqual(0, func(0));
+		ClassicAssert.AreEqual(123, func(123));
 	}
 	
 	[TestCaseSource(nameof(Jits32))]
@@ -44,7 +45,7 @@ public unsafe class Tests {
 			foreach(var a in values)
 				foreach(var b in values)
 					if(!EqualityComparer<T>.Default.Equals(b, default) || !isDivMod)
-						Assert.AreEqual(knownGood(a, b), jitFunc(a, b));
+						ClassicAssert.AreEqual(knownGood(a, b), jitFunc(a, b));
 		}
 		
 		
@@ -128,7 +129,7 @@ public unsafe class Tests {
 				builder.Return(jitGen(builder.Argument<T>(0), builder.Argument<T>(1))));
 			foreach(var a in values)
 				foreach(var b in values)
-					Assert.AreEqual(knownGood(a, b), jitFunc(a, b));
+					ClassicAssert.AreEqual(knownGood(a, b), jitFunc(a, b));
 		}
 		
 		Test(U8values, (a, b) => a < b, (a, b) => a < b);
@@ -193,18 +194,18 @@ public unsafe class Tests {
 			builder.If(arg.EQ(builder.LiteralValue(25U)), () => builder.Return(arg), () => builder.Return(arg * arg));
 		});
 		
-		Assert.AreEqual(25, ifTest(25));
-		Assert.AreEqual(0, ifTest(0));
-		Assert.AreEqual(4, ifTest(2));
+		ClassicAssert.AreEqual(25, ifTest(25));
+		ClassicAssert.AreEqual(0, ifTest(0));
+		ClassicAssert.AreEqual(4, ifTest(2));
 
 		var ternaryTest = jit.CreateFunction<Func<bool, uint, uint, uint>>("ternaryTest", builder =>
 			builder.Return(builder.Ternary(builder.Argument<bool>(0), builder.Argument<uint>(1), builder.Argument<uint>(2))));
-		Assert.AreEqual(0, ternaryTest(true, 0, 0));
-		Assert.AreEqual(0, ternaryTest(false, 0, 0));
-		Assert.AreEqual(0, ternaryTest(true, 0, 1));
-		Assert.AreEqual(0, ternaryTest(false, 1, 0));
-		Assert.AreEqual(123, ternaryTest(true, 123, 321));
-		Assert.AreEqual(321, ternaryTest(false, 123, 321));
+		ClassicAssert.AreEqual(0, ternaryTest(true, 0, 0));
+		ClassicAssert.AreEqual(0, ternaryTest(false, 0, 0));
+		ClassicAssert.AreEqual(0, ternaryTest(true, 0, 1));
+		ClassicAssert.AreEqual(0, ternaryTest(false, 1, 0));
+		ClassicAssert.AreEqual(123, ternaryTest(true, 123, 321));
+		ClassicAssert.AreEqual(321, ternaryTest(false, 123, 321));
 
 		var whileTest = jit.CreateFunction<Func<uint>>("whileTest", builder => {
 			var local = builder.DefineLocal<uint>();
@@ -212,7 +213,7 @@ public unsafe class Tests {
 			builder.While(local.Value.NE(builder.LiteralValue(5U)), () => local.Value += builder.LiteralValue(1U));
 			builder.Return(local.Value);
 		});
-		Assert.AreEqual(5, whileTest());
+		ClassicAssert.AreEqual(5, whileTest());
 
 		var doWhileTest = jit.CreateFunction<Func<uint>>("doWhileTest", builder => {
 			var local = builder.DefineLocal<uint>();
@@ -220,23 +221,23 @@ public unsafe class Tests {
 			builder.DoWhile(() => local.Value += builder.LiteralValue(1U), local.Value.NE(builder.LiteralValue(5U)));
 			builder.Return(local.Value);
 		});
-		Assert.AreEqual(5, doWhileTest());
+		ClassicAssert.AreEqual(5, doWhileTest());
 
 		var whenTest = jit.CreateFunction<Func<uint, uint>>("whenTest", builder => {
 			builder.When(builder.Argument<uint>(0) == builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U)));
 			builder.Return(builder.Argument<uint>(0));
 		});
-		Assert.AreEqual(123, whenTest(0));
-		Assert.AreEqual(1, whenTest(1));
-		Assert.AreEqual(3, whenTest(3));
+		ClassicAssert.AreEqual(123, whenTest(0));
+		ClassicAssert.AreEqual(1, whenTest(1));
+		ClassicAssert.AreEqual(3, whenTest(3));
 
 		var unlessTest = jit.CreateFunction<Func<uint, uint>>("unlessTest", builder => {
 			builder.Unless(builder.Argument<uint>(0) == builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U)));
 			builder.Return(builder.Argument<uint>(0));
 		});
-		Assert.AreEqual(0, unlessTest(0));
-		Assert.AreEqual(123, unlessTest(1));
-		Assert.AreEqual(123, unlessTest(3));
+		ClassicAssert.AreEqual(0, unlessTest(0));
+		ClassicAssert.AreEqual(123, unlessTest(1));
+		ClassicAssert.AreEqual(123, unlessTest(3));
 	}
 	
 	[TestCaseSource(nameof(Jits32))]
@@ -245,54 +246,54 @@ public unsafe class Tests {
 		void ActionTest() => temp = true;
 		var callAction = jit.CreateFunction<Action>("action", builder => builder.Call(ActionTest));
 		callAction();
-		Assert.True(temp);
+		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest1(int a) => temp = a == 15;
 		var callAction1 = jit.CreateFunction<Action>("action1", builder => builder.Call(ActionTest1, builder.LiteralValue(15)));
 		callAction1();
-		Assert.True(temp);
+		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest2(int a, int b) => temp = a == 15 && b == 27;
 		var callAction2 = jit.CreateFunction<Action>("action2", builder => builder.Call(ActionTest2, builder.LiteralValue(15), builder.LiteralValue(27)));
 		callAction2();
-		Assert.True(temp);
+		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest3(int a, int b, int c) => temp = a == 15 && b == 27 && c == 123;
 		var callAction3 = jit.CreateFunction<Action>("action3", builder => builder.Call(ActionTest3, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123)));
 		callAction3();
-		Assert.True(temp);
+		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest4(int a, int b, int c, int d) => temp = a == 15 && b == 27 && c == 123 && d == -1;
 		var callAction4 = jit.CreateFunction<Action>("action4", builder => builder.Call(ActionTest4, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123), builder.LiteralValue(-1)));
 		callAction4();
-		Assert.True(temp);
+		ClassicAssert.True(temp);
 	}
 
 	[TestCaseSource(nameof(Jits32))]
 	public void WithReturnCalls(IJit<uint> jit) {
 		int FuncTest() => 5;
 		var callFunc = jit.CreateFunction<Func<int>>("func", builder => builder.Return(builder.Call(FuncTest)));
-		Assert.AreEqual(5, callFunc());
+		ClassicAssert.AreEqual(5, callFunc());
 		
 		int FuncTest1(int a) => a;
 		var callFunc1 = jit.CreateFunction<Func<int>>("func1", builder => builder.Return(builder.Call(FuncTest1, builder.LiteralValue(123))));
-		Assert.AreEqual(123, callFunc1());
+		ClassicAssert.AreEqual(123, callFunc1());
 		
 		int FuncTest2(int a, int b) => a + b;
 		var callFunc2 = jit.CreateFunction<Func<int>>("func2", builder => builder.Return(builder.Call(FuncTest2, builder.LiteralValue(123), builder.LiteralValue(-1))));
-		Assert.AreEqual(122, callFunc2());
+		ClassicAssert.AreEqual(122, callFunc2());
 		
 		int FuncTest3(int a, int b, int c) => a + b + c;
 		var callFunc3 = jit.CreateFunction<Func<int>>("func3", builder => builder.Return(builder.Call(FuncTest3, builder.LiteralValue(123), builder.LiteralValue(-1), builder.LiteralValue(-2))));
-		Assert.AreEqual(120, callFunc3());
+		ClassicAssert.AreEqual(120, callFunc3());
 		
 		int FuncTest4(int a, int b, int c, int d) => (a + b + c) * d;
 		var callFunc4 = jit.CreateFunction<Func<int>>("func4", builder => builder.Return(builder.Call(FuncTest4, builder.LiteralValue(123), builder.LiteralValue(-1), builder.LiteralValue(-2), builder.LiteralValue(2))));
-		Assert.AreEqual(240, callFunc4());
+		ClassicAssert.AreEqual(240, callFunc4());
 	}
 
 	[TestCaseSource(nameof(Jits32))]
@@ -304,7 +305,7 @@ public unsafe class Tests {
 				builder.Return(local.Value);
 			});
 			foreach(var a in values)
-				Assert.AreEqual(a, func(a));
+				ClassicAssert.AreEqual(a, func(a));
 		}
 		
 		Test(U8values);
@@ -325,8 +326,8 @@ public unsafe class Tests {
 			var val = builder.Call(Inc);
 			builder.Return(val + val);
 		});
-		Assert.AreEqual(1, func());
-		Assert.AreEqual(2, i);
+		ClassicAssert.AreEqual(1, func());
+		ClassicAssert.AreEqual(2, i);
 
 		i = 0;
 		func = jit.CreateFunction<Func<int>>("func", builder => {
@@ -334,8 +335,8 @@ public unsafe class Tests {
 			val = val.Store();
 			builder.Return(val + val);
 		});
-		Assert.AreEqual(0, func());
-		Assert.AreEqual(1, i);
+		ClassicAssert.AreEqual(0, func());
+		ClassicAssert.AreEqual(1, i);
 	}
 
 	[TestCaseSource(nameof(Jits32))]
@@ -344,7 +345,7 @@ public unsafe class Tests {
 			var jitFunc = jit.CreateFunction<Func<T, OT>>("test", builder =>
 				builder.Return(builder.Argument<T>(0).Cast<OT>()));
 			foreach(var a in values)
-				Assert.AreEqual(knownGood(a), jitFunc(a));
+				ClassicAssert.AreEqual(knownGood(a), jitFunc(a));
 		}
 		
 		Test(U8values, x => (byte) x);
@@ -426,7 +427,7 @@ public unsafe class Tests {
 			var jitFunc = jit.CreateFunction<Func<T, T, T>>("test", builder => builder.Return(builder.Argument<T>(0).LeftShift(builder.Argument<T>(1))));
 			foreach(var a in values)
 				foreach(var b in values)
-					Assert.AreEqual(knownGood(a, b), jitFunc(a, b), $"{a} << {b}");
+					ClassicAssert.AreEqual(knownGood(a, b), jitFunc(a, b), $"{a} << {b}");
 		}
 		
 		TestLeft(U8values, (a, b) => (byte) (a << (int) b));
@@ -442,7 +443,7 @@ public unsafe class Tests {
 			var jitFunc = jit.CreateFunction<Func<T, T, T>>("test", builder => builder.Return(builder.Argument<T>(0).RightShift(builder.Argument<T>(1))));
 			foreach(var a in values)
 				foreach(var b in values)
-					Assert.AreEqual(knownGood(a, b), jitFunc(a, b), $"{a} >> {b}");
+					ClassicAssert.AreEqual(knownGood(a, b), jitFunc(a, b), $"{a} >> {b}");
 		}
 		
 		TestRight(U8values, (a, b) => (byte) (a >> (int) b));
@@ -480,12 +481,12 @@ public unsafe class Tests {
 			foor.Arr(builder.LiteralValue(6), builder.LiteralValue(321U));
 			builder.Return(foor.Hax());
 		});
-		Assert.AreEqual(4, func(ref foo));
-		Assert.AreEqual(5, foo.Foo);
-		Assert.AreEqual(6, foo.Bar);
-		Assert.AreEqual(7, foo.Baz);
+		ClassicAssert.AreEqual(4, func(ref foo));
+		ClassicAssert.AreEqual(5, foo.Foo);
+		ClassicAssert.AreEqual(6, foo.Bar);
+		ClassicAssert.AreEqual(7, foo.Baz);
 		for(var i = 0; i < 16; ++i)
-			Assert.AreEqual(i switch {
+			ClassicAssert.AreEqual(i switch {
 				0 => 123U, 
 				6 => 321U, 
 				_ => i
@@ -501,10 +502,10 @@ public unsafe class Tests {
 			);
 			builder.Return(builder.Zero<uint>());
 		});
-		Assert.AreEqual(123, func(0));
-		Assert.AreEqual(7, func(1));
-		Assert.AreEqual(0, func(2));
-		Assert.AreEqual(0, func(3));
+		ClassicAssert.AreEqual(123, func(0));
+		ClassicAssert.AreEqual(7, func(1));
+		ClassicAssert.AreEqual(0, func(2));
+		ClassicAssert.AreEqual(0, func(3));
 		
 		var funcwd = jit.CreateFunction<Func<uint, uint>>("func", builder => {
 			builder.Switch(builder.Argument<uint>(0), 
@@ -513,12 +514,12 @@ public unsafe class Tests {
 				(null, () => builder.Return(builder.Zero<uint>()))
 			);
 		});
-		Assert.AreEqual(123, funcwd(0));
-		Assert.AreEqual(7, funcwd(1));
-		Assert.AreEqual(0, funcwd(2));
-		Assert.AreEqual(0, funcwd(3));
+		ClassicAssert.AreEqual(123, funcwd(0));
+		ClassicAssert.AreEqual(7, funcwd(1));
+		ClassicAssert.AreEqual(0, funcwd(2));
+		ClassicAssert.AreEqual(0, funcwd(3));
 
-		Assert.Catch(() =>
+		ClassicAssert.Catch(() =>
 			jit.CreateFunction<Func<uint, uint>>("func", builder => {
 				builder.Switch(builder.Argument<uint>(0),
 					(builder.LiteralValue(0U), () => builder.Return(builder.LiteralValue(123U))),
@@ -537,9 +538,9 @@ public unsafe class Tests {
 				(null, () => builder.LiteralValue(0U))
 			));
 		});
-		Assert.AreEqual(123, func(0));
-		Assert.AreEqual(7, func(1));
-		Assert.AreEqual(0, func(2));
-		Assert.AreEqual(0, func(3));
+		ClassicAssert.AreEqual(123, func(0));
+		ClassicAssert.AreEqual(7, func(1));
+		ClassicAssert.AreEqual(0, func(2));
+		ClassicAssert.AreEqual(0, func(3));
 	}
 }

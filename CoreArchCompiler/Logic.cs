@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using MoreLinq.Extensions;
+using DoubleSharp.Linq;
 
 namespace CoreArchCompiler; 
 

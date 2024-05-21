@@ -4,21 +4,21 @@ using static SDL2.SDL;
 
 var core = ICore.LoadCore(args[0]);
 if(core == null)
-	throw new Exception("Failed to load core");
+	throw new("Failed to load core");
 Console.WriteLine($"Core name: {core.Name}");
 Console.WriteLine($"Core short description: {core.ShortDescription}");
 Console.WriteLine($"Core long description: {core.LongDescription}");
 if(!core.CanLoad(args[1]))
-	throw new Exception("Core CanLoad file returned false!");
+	throw new("Core CanLoad file returned false!");
 
 if(!core.GraphicsBackends.HasFlag(GraphicsBackend.Framebuffer))
-	throw new Exception("Core doesn't support framebuffer backend");
+	throw new("Core doesn't support framebuffer backend");
 
 var fb = new SdlFramebuffer();
 var ab = new SdlAudio();
 core.Setup(fb, ab);
 if(!core.Load(args[1]))
-	throw new Exception("Failed to load file");
+	throw new("Failed to load file");
 
 SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -98,7 +98,7 @@ class SdlAudio : IAudioBackend {
 	bool Playing;
 
 	public SdlAudio() {
-		Requested = new SDL_AudioSpec {
+		Requested = new() {
 			freq = 44100, 
 			format = AUDIO_S16SYS, 
 			channels = 2, 

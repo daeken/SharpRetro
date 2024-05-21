@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>CoreArchCompiler</AssemblyName>
         <RootNamespace>CoreArchCompiler</RootNamespace>
-        <LangVersion>10</LangVersion>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -16,7 +16,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="morelinq" Version="3.3.2" />
+      <PackageReference Include="DoubleSharp" Version="0.0.3" />
       <PackageReference Include="PrettyPrinter" Version="1.0.0" />
       <PackageReference Include="UltimateOrb.Int128" Version="1.0.8" />
     </ItemGroup>

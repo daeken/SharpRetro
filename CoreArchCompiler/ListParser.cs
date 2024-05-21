@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using MoreLinq.Extensions;
+using DoubleSharp.Linq;
 using PrettyPrinter;
 
 namespace CoreArchCompiler; 
@@ -27,8 +27,8 @@ public class EInt : EType {
 		Width = width;
 	}
 
-	public override EType AsCompiletime() => Runtime ? new EInt(Signed, Width) { Runtime = false } : this;
-	public override EType AsRuntime() => Runtime ? this : new EInt(Signed, Width) { Runtime = true };
+	public override EType AsCompiletime() => Runtime ? new(Signed, Width) { Runtime = false } : this;
+	public override EType AsRuntime() => Runtime ? this : new(Signed, Width) { Runtime = true };
 	public override string ToString() => $"EInt({(Signed ? "i" : "u")}{Width})";
 
 	public void Deconstruct(out bool signed, out int width) {
@@ -40,14 +40,14 @@ public class EFloat : EType {
 	public readonly int Width;
 	public EFloat(int width) => Width = width;
 
-	public override EType AsRuntime() => Runtime ? this : new EFloat(Width) { Runtime = true };
-	public override EType AsCompiletime() => Runtime ? new EFloat(Width) { Runtime = false } : this;
+	public override EType AsRuntime() => Runtime ? this : new(Width) { Runtime = true };
+	public override EType AsCompiletime() => Runtime ? new(Width) { Runtime = false } : this;
 	public override string ToString() => $"EFloat({Width})";
 
 	public void Deconstruct(out int width) => width = Width;
 }
 public class EUndef : EType {
-	public override EType AsRuntime() => Runtime ? this : new EUndef { Runtime = true };
+	public override EType AsRuntime() => Runtime ? this : new() { Runtime = true };
 	public override EType AsCompiletime() => Runtime ? Undef : this;
 }
 public class EString : EType {
@@ -81,14 +81,14 @@ public abstract class PTree {
 
 	public PTree Cast<T>() {
 		var et = (EType) (default(T) switch {
-			bool => new EInt(false, 1), 
-			byte => new EInt(false, 8), 
-			ushort => new EInt(false, 16), 
-			uint => new EInt(false, 32), 
-			ulong => new EInt(false, 64), 
-			sbyte => new EInt(true, 8), 
-			short => new EInt(true, 16), 
-			int => new EInt(true, 32), 
+			bool => new(false, 1), 
+			byte => new(false, 8), 
+			ushort => new(false, 16), 
+			uint => new(false, 32), 
+			ulong => new(false, 64), 
+			sbyte => new(true, 8), 
+			short => new(true, 16), 
+			int => new(true, 32), 
 			long => new EInt(true, 64), 
 			_ => throw new NotImplementedException()
 		});
@@ -120,7 +120,7 @@ public abstract class PTree {
 }
 
 public class PList : PTree, IEnumerable<PTree> {
-	public readonly List<PTree> Children = new();
+	public readonly List<PTree> Children = [];
 	public PTree Head => Children.First();
 	public int Count => Children.Count;
 		
@@ -142,11 +142,11 @@ public class PList : PTree, IEnumerable<PTree> {
 		=>
 			!AnyRuntime
 				? this
-				: new PList(this.Select(x => x is PList sl ? sl.AsCompiletime() : x)) {Type = Type.AsCompiletime()};
+				: new(this.Select(x => x is PList sl ? sl.AsCompiletime() : x)) {Type = Type.AsCompiletime()};
 
 	public PList HomogeneousRuntime() {
 		if(!AnyRuntime) return this;
-		return new PList(this.Take(1).Concat(this.Skip(1).Select(x => new PList(new[] { new PName("ensure-runtime"), x }) { Type = x.Type.AsRuntime() })));
+		return new(this.Take(1).Concat(this.Skip(1).Select(x => new PList(new[] { new PName("ensure-runtime"), x }) { Type = x.Type.AsRuntime() })));
 	}
 
 	public PList MapLeaves(Func<PTree, PTree> mapper) {
@@ -167,7 +167,7 @@ public class PList : PTree, IEnumerable<PTree> {
 			}
 		}
 			
-		return modified ? new PList(c) { Type = Type } : this;
+		return modified ? new(c) { Type = Type } : this;
 	}
 
 	public T WalkLeaves<T>(Func<PTree, T> mapper) where T : class {
@@ -249,7 +249,7 @@ public static class ListParser {
 		}
 			
 		if(!top)
-			throw new Exception("Reached end of file parsing non-top list");
+			throw new("Reached end of file parsing non-top list");
 			
 		return list;
 	}
@@ -296,7 +296,7 @@ public static class ListParser {
 					value = value * 10 + (uint) (code[i++] - '0');
 			}
 		}
-		return new PInt(negative ? -value : value);
+		return new(negative ? -value : value);
 	}
 
 	static PTree ParseString(string code, ref int i) {
@@ -346,7 +346,7 @@ public static class ListParser {
 				case ' ': case '\t': case '\n': case '\r': case '(': case ')': case ',':
 				case '\'' when inString: case '"' when inString:
 					i--;
-					return new PName(name);
+					return new(name);
 				case char x:
 					name += x;
 					break;

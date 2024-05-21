@@ -1,5 +1,3 @@
-using Microsoft.CodeAnalysis;
-
 namespace JitBase; 
 
 public interface IJitStruct {}

@@ -34,8 +34,8 @@ public interface ISyncable {
 }
 
 public class EventSystem {
-	readonly SortedList<ulong, List<Action>> Upcoming = new SortedList<ulong, List<Action>>();
-	public readonly List<Syncer> Syncers = new List<Syncer>();
+	readonly SortedList<ulong, List<Action>> Upcoming = new();
+	public readonly List<Syncer> Syncers = [];
 	public ulong NextTimestamp = 0xFFFFFFFFFFFFFFFF;
 
 	public void UpdateNext() {
@@ -51,7 +51,7 @@ public class EventSystem {
 		if(Upcoming.TryGetValue(time, out var list))
 			list.Add(func);
 		else
-			Upcoming[time] = new List<Action> { func };
+			Upcoming[time] = [func];
 		if(NextTimestamp > time)
 			NextTimestamp = time;
 	}
