@@ -5,7 +5,7 @@ using PrettyPrinter;
 
 namespace CoreArchCompiler; 
 
-public class MacroProcessor {
+public static class MacroProcessor {
 	public static PList Rewrite(PList top) {
 		var macros = new Dictionary<string, List<(List<string>, PTree)>>();
 		foreach(var elem in top) {

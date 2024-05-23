@@ -1,0 +1,22 @@
+﻿(define-feature x86-16)
+(define-feature ia32)
+(define-feature x86-64)
+(define-feature mmx)
+(define-feature 3dnow)
+(define-feature sse)
+(define-feature sse2)
+(define-feature sse3)
+(define-feature ssse3)
+(define-feature sse4.1)
+(define-feature sse4.2)
+(define-feature avx)
+(define-feature avx2)
+(define-feature avx512)
+
+(defm featuring (flag ...body)
+    (if (has-feature flag)
+        ...body))
+
+(include "cpuid.isa")
+(featuring ia32
+    (include "ia32-base.isa"))

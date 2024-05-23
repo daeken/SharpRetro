@@ -1,3 +1,4 @@
+// ReSharper disable MemberCanBeProtected.Global
 #pragma warning disable CS0660, CS0661
 namespace JitBase;
 
