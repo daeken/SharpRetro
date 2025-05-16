@@ -98,19 +98,22 @@ class ControlFlow : Builtin {
 				}
 			});
 			
-		Expression("if", list => list[2].Type, list => {
+		Expression("if", list => list[2].Type is not EUnit ? list[2].Type : list[3].Type, list => {
 			var a = GenerateExpression(list[2]);
 			var b = GenerateExpression(list[3]);
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
 			var at = list[2].Type;
 			var bt = list[3].Type;
+			// Special cases for undefined -- void
+			if(at is EUnit || bt is EUnit)
+				return $"({GenerateExpression(EnsureBool(list[1]))}) ? {a} : {b}";
 			string type;
 			if(at == bt || at is not EInt(var asigned, var asized) || bt is not EInt(var bsigned, var bsized))
 				type = GenerateType(at);
 			else
 				type = GenerateType(new EInt(asigned && bsigned, Math.Max(asized, bsized)));
-			return $"({GenerateExpression(EnsureBool(list[1]))}) ? ({type}) ({a}) : ({type}) ({b})";
+			return $"({GenerateExpression(EnsureBool(list[1]))}) ? ({type}) {a} : ({type}) {b}";
 		}, list => {
 			var a = GenerateExpression(list[2]);
 			var b = GenerateExpression(list[3]);
@@ -134,7 +137,7 @@ class ControlFlow : Builtin {
 				
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
-			return $"({GenerateExpression(list[1])}) ? ({type}) ({a}) : ({type}) ({b})";
+			return $"({GenerateExpression(list[1])}) ? ({type}) {a} : ({type}) {b}";
 		});
 
 		Interpret("if", (list, state) => Extensions.AsBool(state.Evaluate(list[1])) ? state.Evaluate(list[2]) : state.Evaluate(list[3]));

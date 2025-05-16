@@ -24,6 +24,8 @@ public class ExecutionState {
     public readonly Dictionary<string, dynamic> Locals = new();
     public readonly Dictionary<string, dynamic> Registers = new();
     public readonly Dictionary<ulong, byte[]> Memory = new();
+    
+    public static ExecutionState Cleanroom() => new();
         
     dynamic Clamp(EType type, dynamic value) => type switch {
         EInt(true, <= 8) => (sbyte) Extensions.AsNonBool(value),

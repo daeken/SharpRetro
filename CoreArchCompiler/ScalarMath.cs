@@ -6,6 +6,11 @@ namespace CoreArchCompiler;
 
 class ScalarMath : Builtin {
 	static EType FirstType(PList list) => list[1].Type.AsRuntime(list.AnyRuntime);
+	static EType FirstNonBoolType(PList list) => 
+		(list[1].Type is EBool
+			? new EInt(false, 1)
+			: list[1].Type)
+		.AsRuntime(list.AnyRuntime);
 		
 	static EType LogicalType(EType a, EType b) {
 		if(a is EInt || b is EInt) {
@@ -58,12 +63,15 @@ class ScalarMath : Builtin {
 					}));
 
 		Expression(
-			new[] { "|", "&", "^" }, FirstType,
+			new[] { "|", "&", "^" }, FirstNonBoolType,
 			list => {
 				list = list.HomogeneousRuntime();
 				var signed = true;
 				var size = 0;
-				foreach(var elem in list.Skip(1)) {
+				foreach(var _elem in list.Skip(1)) {
+					var elem = _elem;
+					if(elem.Type is EBool)
+						elem = elem.Cast<sbyte>();
 					if(elem.Type is not EInt(var s, var ba))
 						throw new NotImplementedException();
 					signed = signed && s;
@@ -86,8 +94,8 @@ class ScalarMath : Builtin {
 			
 		Expression("~", FirstType, list => $"~({GenerateExpression(list[1])})").Interpret((list, state) => ~state.Evaluate(list[1]));
 		Expression("-!", FirstType, list => $"-({GenerateExpression(list[1])})").Interpret((list, state) => -state.Evaluate(list[1]));
-		Expression("!", list => new EInt(false, 1).AsRuntime(list[1].Type.Runtime), 
-				list => $"!({GenerateExpression(list[1])})", list => $"!({GenerateExpression(list[1])})")
+		Expression("!", list => new EBool().AsRuntime(list[1].Type.Runtime), 
+				list => $"!({GenerateExpression(list[1].Cast<bool>())})", list => $"!({GenerateExpression(list[1].Cast<bool>())})")
 			.Interpret((list, state) => !Extensions.AsBool(state.Evaluate(list[1])));
 			
 		Expression("<<", FirstType, 
@@ -136,11 +144,19 @@ class ScalarMath : Builtin {
 			.NoInterpret(); // TODO: Implement
 
 		Expression(":", list => new EInt(false,
-				list.Skip(1).Select(y => y.Type is EInt(_, var width) ? width : throw new NotSupportedException())
-					.Sum()).AsRuntime(list.AnyRuntime),
+				list.Skip(1).Select(y => y.Type switch {
+						EInt(_, var width) => width,
+						EBool => 1,
+						_ => throw new NotSupportedException()
+					}).Sum()).AsRuntime(list.AnyRuntime),
 			list => {
 				var offset = 0;
 				return list.Skip(1).Reverse().Select(x => {
+					if(x.Type is EBool) {
+						var bret = $"((({GenerateType(list.Type)}) (({GenerateExpression(x)}) ? 1U : 0U)) << {offset})";
+						offset++;
+						return bret;
+					}
 					if(x.Type is not EInt(_, var width)) throw new NotSupportedException();
 					var ret = $"((({GenerateType(list.Type)}) ({GenerateExpression(x)})) << {offset})";
 					offset += width;

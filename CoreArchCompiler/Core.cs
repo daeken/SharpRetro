@@ -51,15 +51,15 @@ public abstract class Builtin {
 	}
 		
 	public static Capture Statement(string name, Func<PList, EType> signature, Action<CodeBuilder, PList> compiletime, Action<CodeBuilder, PList> runtime = null) {
-		if(Core.Statements.ContainsKey(name)) throw new();
+		if(Core.Statements.ContainsKey(name)) throw new NotSupportedException($"Statement '{name}' already exists");
 		return new("Statement", name, func => Core.Statements[name] = (signature, compiletime, runtime ?? compiletime, func));
 	}
 	public static Capture Expression(string name, Func<PList, EType> signature, Func<PList, string> compiletime, Func<PList, string> runtime = null) {
-		if(Core.Expressions.ContainsKey(name)) throw new();
+		if(Core.Expressions.ContainsKey(name)) throw new NotSupportedException($"Expression '{name}' already exists");
 		return new("Expression", name, func => Core.Expressions[name] = (signature, compiletime, runtime ?? compiletime, func));
 	}
 	public static Capture BranchExpression(string name, Func<PList, EType> signature, Func<PList, string> compiletime, Func<PList, string> runtime = null) {
-		if(Core.Expressions.ContainsKey(name)) throw new();
+		if(Core.Expressions.ContainsKey(name)) throw new NotSupportedException($"Expression '{name}' already exists");
 		var oc = compiletime;
 		compiletime = list => {
 			Core.HasBranch = true;
@@ -144,8 +144,13 @@ public class Core {
 	}
 
 	static Core() {
-		AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-			.Where(x => x.IsSubclassOf(typeof(Builtin))).ForEach(x => ((Builtin) Activator.CreateInstance(x)).Define());
+		try {
+			AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+				.Where(x => x.IsSubclassOf(typeof(Builtin)))
+				.ForEach(x => ((Builtin) Activator.CreateInstance(x)).Define());
+		} catch(Exception e) {
+			Console.WriteLine(e);
+		}
 
 		if(Capture.UnassignedCaptures.Count != 0) {
 			Console.WriteLine("The following captures have not been assigned:");
@@ -215,14 +220,14 @@ public class Core {
 		return v switch {
 			PName name => name.Name,
 			PInt value => value.Type switch {
-				EInt(false, 8) => $"(byte) {ToHex(value.Value)}",
-				EInt(true, 8) => $"(sbyte) {ToHex(value.Value)}",
-				EInt(false, 16) => $"(ushort) {ToHex(value.Value)}",
-				EInt(true, 16) => $"(short) {ToHex(value.Value)}",
-				EInt(false, 32) => $"{ToHex(value.Value)}U",
-				EInt(true, 32) => $"{ToHex(value.Value)}",
-				EInt(false, 64) => ToHex(value.Value) + "UL", 
-				EInt(true, 64) => ToHex(value.Value) + "L", 
+				EInt(false, <= 8) => $"(byte) {ToHex(value.Value)}",
+				EInt(true, <= 8) => $"(sbyte) {ToHex(value.Value)}",
+				EInt(false, <= 16) => $"(ushort) {ToHex(value.Value)}",
+				EInt(true, <= 16) => $"(short) {ToHex(value.Value)}",
+				EInt(false, <= 32) => $"{ToHex(value.Value)}U",
+				EInt(true, <= 32) => $"{ToHex(value.Value)}",
+				EInt(false, <= 64) => ToHex(value.Value) + "UL", 
+				EInt(true, <= 64) => ToHex(value.Value) + "L", 
 				_ => throw new NotImplementedException()
 			}, 
 			PString str => str.String.ToPrettyString(),
@@ -236,10 +241,11 @@ public class Core {
 			switch(type) {
 				case null: return "void";
 				case EUnit: return "void";
+				case EBool: return "bool";
 				case EString: return "string";
 				case EInt i:
 					switch(i.Width) {
-						case 1: return "bool";
+						//case 1: return "bool";
 						case > 64: return i.Signed ? "Int128" : "UInt128";
 						case > 32: return i.Signed ? "long" : "ulong";
 						case > 16: return i.Signed ? "int" : "uint";
@@ -308,26 +314,30 @@ public class Core {
 	}
 
 	static string RunCommand(string command, params string[] args) {
-		var process = new Process {
-			StartInfo = {
-				FileName = command, 
-				RedirectStandardError = true,
-				RedirectStandardOutput = true
-			}
-		};
-		args.ForEach(process.StartInfo.ArgumentList.Add);
+		try {
+			var process = new Process {
+				StartInfo = {
+					FileName = command,
+					RedirectStandardError = true,
+					RedirectStandardOutput = true
+				}
+			};
+			args.ForEach(process.StartInfo.ArgumentList.Add);
 
-		var ret = "";
-		void Capture(object sender, DataReceivedEventArgs evt) => ret += evt.Data + "\n";
+			var ret = "";
+			void Capture(object sender, DataReceivedEventArgs evt) => ret += evt.Data + "\n";
 
-		process.OutputDataReceived += Capture;
-		process.ErrorDataReceived += Capture;
+			process.OutputDataReceived += Capture;
+			process.ErrorDataReceived += Capture;
 
-		process.Start();
-		process.BeginOutputReadLine();
-		process.BeginErrorReadLine();
-		process.WaitForExit();
+			process.Start();
+			process.BeginOutputReadLine();
+			process.BeginErrorReadLine();
+			process.WaitForExit();
 
-		return ret;
+			return ret;
+		} catch(Exception) {
+			return "";
+		}
 	}
 }

@@ -41,4 +41,29 @@ public static class Math {
 			});
 		}
 	}
+
+	public static T SignExt<T>(ulong imm, int size) {
+		T Conv(long value) => (T) (object) (default(T) switch {
+			byte => (byte) (sbyte) value,
+			sbyte => (sbyte) value,
+			ushort => (ushort) (short) value,
+			short => (short) value,
+			uint => (uint) value,
+			int => (int) value,
+			ulong => (ulong) value,
+			long => value,
+			_ => throw new NotSupportedException(),
+		});
+		unchecked {
+			return Conv(size switch {
+				8 => (sbyte) (byte) imm,
+				16 => (short) (ushort) imm,
+				32 => (int) imm,
+				{} when (imm & (1UL << (size - 1))) != 0 => (int) imm - (1 << size),
+				_ => (long) imm,
+			});
+		}
+	}
+
+	public static unsafe U Bitcast<T, U>(T v) where T : unmanaged where U : unmanaged => *(U*) &v;
 }

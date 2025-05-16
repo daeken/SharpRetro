@@ -57,14 +57,14 @@ public class Logic : Builtin {
 				list => {
 					if(list[1].Type.ToString() == list.Type.ToString()) return GenerateExpression(list[1]);
 					if(Core.Context == ContextTypes.Recompiler && list[1].Type.Runtime) {
-						if(list.Type is EInt(false, 1))
+						if(list.Type is EBool)
 							return $"({GenerateExpression(list[1])}) != builder.Zero<{GenerateType(list[1].Type.AsCompiletime())}>()";
-						if(list[1].Type is EInt(false, 1))
+						if(list[1].Type is EBool)
 							return $"({GenerateType(list.Type)}) builder.Ternary({GenerateExpression(list[1])}, builder.LiteralValue(1U), builder.Zero<uint>())";
 					} else {
-						if(list.Type is EInt(false, 1))
+						if(list.Type is EBool)
 							return $"({GenerateExpression(list[1])}) != 0";
-						if(list[1].Type is EInt(false, 1))
+						if(list[1].Type is EBool)
 							return $"({GenerateType(list.Type)}) (({GenerateExpression(list[1])}) ? 1U : 0U)";
 					}
 					return $"({GenerateType(list.Type)}) ({GenerateExpression(list[1])})";
@@ -124,7 +124,7 @@ public class Logic : Builtin {
 				});
 
 		Expression(new[] { "==", "!=", ">", ">=", "<=", "<" },
-				list => new EInt(false, 1).AsRuntime(list.AnyRuntime),
+				list => new EBool().AsRuntime(list.AnyRuntime),
 				list => {
 					list = list.HomogeneousRuntime();
 					var runtime = list.AnyRuntime;

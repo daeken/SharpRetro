@@ -62,6 +62,12 @@ public class EUnit : EType {
 	public override EType AsRuntime() => RuntimeType;
 	public override EType AsCompiletime() => CompiletimeType;
 }
+public class EBool : EType {
+	public static readonly EType RuntimeType = new EUnit { Runtime = true };
+	public static readonly EType CompiletimeType = new EUnit { Runtime = false };
+	public override EType AsRuntime() => RuntimeType;
+	public override EType AsCompiletime() => CompiletimeType;
+}
 public class EVector : EType {
 	public static readonly EType RuntimeType = new EVector { Runtime = true };
 	public static readonly EType CompiletimeType = new EVector { Runtime = false };
@@ -81,26 +87,34 @@ public abstract class PTree {
 
 	public PTree Cast<T>() {
 		var et = (EType) (default(T) switch {
-			bool => new(false, 1), 
-			byte => new(false, 8), 
-			ushort => new(false, 16), 
-			uint => new(false, 32), 
-			ulong => new(false, 64), 
-			sbyte => new(true, 8), 
-			short => new(true, 16), 
-			int => new(true, 32), 
+			bool => new EBool(), 
+			byte when Type is not EBool => new EInt(false, 8),
+			byte when Type is EBool => new EInt(false, 1),
+			ushort => new EInt(false, 16), 
+			uint => new EInt(false, 32), 
+			ulong => new EInt(false, 64), 
+			sbyte => new EInt(true, 8), 
+			short => new EInt(true, 16), 
+			int => new EInt(true, 32), 
 			long => new EInt(true, 64), 
 			_ => throw new NotImplementedException()
 		});
 		et = et.AsRuntime(Type.Runtime);
 
+		if(typeof(T) == typeof(bool) && Type is not EBool) {
+			if(Type is not EInt)
+				throw new NotSupportedException($"Attempted to cast {Type} to bool");
+			var itree = new PList { new PName("!="), this, new PInt(0) { Type = Type } };
+			itree.Type = et;
+			return itree;
+		}
+		
+		if(Type.ToString() == et.ToString() && et.Runtime == Type.Runtime) return this;
 		var tn = et switch {
 			EInt(false, var width) => $"u{width}", 
 			EInt(true, var width) => $"i{width}", 
 			_ => throw new NotImplementedException()
 		};
-		
-		if(Type.ToString() == et.ToString() && et.Runtime == Type.Runtime) return this;
 		var tree = new PList { new PName("cast"), this, new PName(tn) };
 		tree.Type = et;
 		return tree;
@@ -344,6 +358,8 @@ public static class ListParser {
 		while(true) {
 			switch(code[i++]) {
 				case ' ': case '\t': case '\n': case '\r': case '(': case ')': case ',':
+				case '.' when inString: case '[' when inString: case ']' when inString:
+				case '$' when name.Length > 0:
 				case '\'' when inString: case '"' when inString:
 					i--;
 					return new(name);
