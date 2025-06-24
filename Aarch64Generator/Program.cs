@@ -7,7 +7,7 @@ public class Program : Core {
 		var defs = Core.ParseSpec(File.ReadAllText("aarch64.isa"), new(), Aarch64Def.Parse).Select(x => (Aarch64Def) x).ToList();
 		BuildDisassembler(defs);
 		//BuildInterpreter(defs);
-		//BuildRecompiler(defs);
+		BuildRecompiler(defs);
 		
 		//CleanupCode("../Aarch64Cpu/Generated");
 	}
