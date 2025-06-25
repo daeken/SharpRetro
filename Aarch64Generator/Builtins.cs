@@ -96,6 +96,9 @@ public class Builtins : Builtin {
 						case PName("nzcv") when sub.Count == 1:
 							c += $"state.NZCV = {GenerateExpression(list[2])};";
 							return;
+						case PName("nzcv"):
+							c += $"{GenerateExpression(list[1], lhs: true)} = (IRuntimeValue<ulong>) {GenerateExpression(list[2])};";
+							return;
 					}
 
 				c += $"{GenerateExpression(list[1], lhs: true)} = {GenerateExpression(list[2])};";
@@ -262,7 +265,7 @@ public class Builtins : Builtin {
 
 				Expression("vector-insert", _ => EType.Unit,
 						list => $"reinterpret_cast<Vector128<{GenerateType(list[3].Type)}>*>(&(state->V[(int) ({GenerateExpression(list[1])})]))[0][{GenerateExpression(list[2])}] = {GenerateExpression(list[3])}",
-						list => $"state.V[(int) ({GenerateExpression(list[1])})] = state.V[(int) ({GenerateExpression(list[1])})].Insert({GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+						list => $"state.V[(int) ({GenerateExpression(list[1])})] = state.V[(int) ({GenerateExpression(list[1])})].Element({GenerateExpression(list[2].Cast<int>())}, {GenerateExpression(list[3])})")
 					.Interpret((list, state) => {
 						var name = $"V{state.Evaluate(list[1])}";
 						var vector = state.GetRegister(name).As(list[3].Type).Copy();

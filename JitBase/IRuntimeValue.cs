@@ -61,4 +61,8 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public static explicit operator IRuntimeValue<int>(IRuntimeValue<T> val) => val.Cast<int>();
 	public static explicit operator IRuntimeValue<ulong>(IRuntimeValue<T> val) => val.Cast<ulong>();
 	public static explicit operator IRuntimeValue<long>(IRuntimeValue<T> val) => val.Cast<long>();
+	public static explicit operator IRuntimeValue<UInt128>(IRuntimeValue<T> val) => val.Cast<UInt128>();
+	public static explicit operator IRuntimeValue<Int128>(IRuntimeValue<T> val) => val.Cast<Int128>();
+	public static explicit operator IRuntimeValue<float>(IRuntimeValue<T> val) => val.Cast<float>();
+	public static explicit operator IRuntimeValue<double>(IRuntimeValue<T> val) => val.Cast<double>();
 }
