@@ -51,6 +51,7 @@ public class StructGenerator : ISourceGenerator {
 		}
 		
 		context.AddSource("JitStructExtensions.g.cs", $@"
+using System.Runtime.Intrinsics;
 namespace JitBase {{
 	public static class JitStructExtensions {{
 {members}	}}

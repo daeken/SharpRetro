@@ -1,10 +1,11 @@
 // ReSharper disable CheckNamespace
 #pragma warning disable 162, 1633, 164, 219
 namespace Aarch64Cpu;
-using static LibSharpRetro.CpuHelpers.Math;
-using static Aarch64Common.Common;
+using System.Runtime.Intrinsics;
+using JitBase;
+using Math = LibSharpRetro.CpuHelpers.Math;
 
-public unsafe partial class Recompiler {
+public partial class Recompiler {
     public bool RecompileOne(IBuilder<uint> builder, IStructRef<CpuState> state, uint insn, uint pc) {
 /*%CODE%*/
         return false;

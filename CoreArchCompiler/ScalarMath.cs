@@ -73,7 +73,7 @@ class ScalarMath : Builtin {
 					if(elem.Type is EBool)
 						elem = elem.Cast<sbyte>();
 					if(elem.Type is not EInt(var s, var ba))
-						throw new NotImplementedException();
+						throw new NotImplementedException($"Expression {list} should not see type {elem.Type} in {elem}");
 					signed = signed && s;
 					size = Math.Max(size, ba);
 				}

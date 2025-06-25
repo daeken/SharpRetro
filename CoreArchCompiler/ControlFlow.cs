@@ -40,7 +40,7 @@ class ControlFlow : Builtin {
 	return $"\t\t{code.Trim()}";
 }))}
 	}})()", 
-			list => $@"(() => {GenerateType(list.Type)} {{
+			list => $@"LibSharpRetro.FunctionalHelpers.Funcify(() => {{
 {string.Join('\n', list.Skip(1).Select((x, i) => {
 	string code;
 	if(x is PList xl) {
@@ -105,7 +105,7 @@ class ControlFlow : Builtin {
 			if(!b.StartsWith("throw")) b = $"({b})";
 			var at = list[2].Type;
 			var bt = list[3].Type;
-			// Special cases for undefined -- void
+			// Special cases for unimplemented -- void
 			if(at is EUnit || bt is EUnit)
 				return $"({GenerateExpression(EnsureBool(list[1]))}) ? {a} : {b}";
 			string type;
@@ -119,6 +119,12 @@ class ControlFlow : Builtin {
 			var b = GenerateExpression(list[3]);
 			var at = list[2].Type;
 			var bt = list[3].Type;
+			// Special cases for unimplemented -- void
+			if(at is EUnit || bt is EUnit) {
+				if(list[1].Type.Runtime) throw new NotImplementedException();
+				return $"({GenerateExpression(EnsureBool(list[1]))}) ? {a} : {b}";
+			}
+
 			string type;
 			if(at == bt || at is not EInt(var asigned, var asized) || bt is not EInt(var bsigned, var bsized))
 				type = GenerateType(at);
@@ -289,7 +295,7 @@ class ControlFlow : Builtin {
 				for(var i = 2; i < list.Count; i += 2) {
 					var isDefault = i + 1 == list.Count;
 					c += $"({(isDefault ? "null" : $"({mtype}) builder.EnsureRuntime({GenerateExpression(list[i])})")}, () => ";
-					c += GenerateExpression((PList) list[i + (isDefault ? 0 : 1)]);
+					c += GenerateExpression(list[i + (isDefault ? 0 : 1)]);
 					c += $"){(i + 2 >= list.Count ? "" : ", ")}";
 				}
 				c += ")";

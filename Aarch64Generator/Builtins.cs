@@ -65,16 +65,16 @@ public class Builtins : Builtin {
 				if(list[1] is PList sub)
 					switch(sub[0]) {
 						case PName("gpr32"):
-							c += $"XR[(int) {GenerateExpression(sub[1])}] = (LlvmRuntimeValue<uint64_t>) (LlvmRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
+							c += $"XR[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<uint64_t>) (IRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
 							return;
 						case PName("gpr-or-sp32"):
 							c += $"if({GenerateExpression(sub[1])} == 31)";
 							c++;
-							c += $"SPR = (LlvmRuntimeValue<uint64_t>) (LlvmRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
+							c += $"SPR = (IRuntimeValue<uint64_t>) (IRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
 							c--;
 							c += "else";
 							c++;
-							c += $"XR[(int) {GenerateExpression(sub[1])}] = (LlvmRuntimeValue<uint64_t>) (LlvmRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
+							c += $"XR[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<uint64_t>) (IRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
 							c--;
 							return;
 						case PName("gpr64"):
@@ -91,7 +91,7 @@ public class Builtins : Builtin {
 							c--;
 							return;
 						case PName("sr"):
-							c += $"Call<void, ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
+							//c += $"Call<void, ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
 							return;
 						case PName("nzcv") when sub.Count == 1:
 							c += $"NZCVR = {GenerateExpression(list[2])};";
@@ -178,7 +178,7 @@ public class Builtins : Builtin {
 			
 			Expression("gpr32", _ => new EInt(false, 32).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? 0U : (uint) state->X[(int) {GenerateExpression(list[1])}]",
-				list => $"({GenerateExpression(list[1])}) == 31 ? (LlvmRuntimeValue<uint>) 0U : (LlvmRuntimeValue<uint>) (XR[(int) {GenerateExpression(list[1])}]())")
+				list => $"({GenerateExpression(list[1])}) == 31 ? (IRuntimeValue<uint>) 0U : (IRuntimeValue<uint>) (XR[(int) {GenerateExpression(list[1])}]())")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					if(reg == 31)
@@ -194,7 +194,7 @@ public class Builtins : Builtin {
 				});
 			Expression("gpr64", _ => new EInt(false, 64).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? 0UL : state->X[(int) {GenerateExpression(list[1])}]",
-				list => $"({GenerateExpression(list[1])}) == 31 ? (LlvmRuntimeValue<ulong>) 0UL : XR[(int) {GenerateExpression(list[1])}]()")
+				list => $"({GenerateExpression(list[1])}) == 31 ? (IRuntimeValue<ulong>) 0UL : XR[(int) {GenerateExpression(list[1])}]()")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					if(reg == 31)
@@ -267,7 +267,7 @@ public class Builtins : Builtin {
 			
 			Expression("float-to-fixed-point", list => TypeFromName(list[2]).AsRuntime(list[1].Type.Runtime || list[3].Type.Runtime), 
 				list => $"FloatToFixed{((EInt) list.Type).Width}({GenerateExpression(list[1])}, (int) ({GenerateExpression(list[3])}))", 
-				list => $"Call<{(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}, {GenerateType(list[1].Type.AsCompiletime())}, int>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (LlvmRuntimeValue<int>) ({GenerateExpression(list[3])}))")
+				list => $"Call<{(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}, {GenerateType(list[1].Type.AsCompiletime())}, int>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (IRuntimeValue<int>) ({GenerateExpression(list[3])}))")
 				.Interpret((list, state) => {
 					var width = ((EInt) list.Type).Width;
 					var swidth = ((EFloat) list[1].Type).Width;

@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,7 +14,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Aarch64Common\Aarch64Common.csproj" />
+      <ProjectReference Include="..\JitBase\JitBase.csproj" />
       <ProjectReference Include="..\LibSharpRetro\LibSharpRetro.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\SourceGenerators\SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
 </Project>

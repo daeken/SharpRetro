@@ -47,24 +47,27 @@ public class EFloat : EType {
 	public void Deconstruct(out int width) => width = Width;
 }
 public class EUndef : EType {
+	public override string  ToString() => "EUndef";
 	public override EType AsRuntime() => Runtime ? this : new() { Runtime = true };
 	public override EType AsCompiletime() => Runtime ? Undef : this;
 }
 public class EString : EType {
+	public override string  ToString() => "EString";
 	public static readonly EType RuntimeType = new EString { Runtime = true };
 	public static readonly EType CompiletimeType = new EString { Runtime = false };
 	public override EType AsRuntime() => RuntimeType;
 	public override EType AsCompiletime() => CompiletimeType;
 }
 public class EUnit : EType {
+	public override string  ToString() => "EUnit";
 	public static readonly EType RuntimeType = new EUnit { Runtime = true };
 	public static readonly EType CompiletimeType = new EUnit { Runtime = false };
 	public override EType AsRuntime() => RuntimeType;
 	public override EType AsCompiletime() => CompiletimeType;
 }
 public class EBool : EType {
-	public static readonly EType RuntimeType = new EUnit { Runtime = true };
-	public static readonly EType CompiletimeType = new EUnit { Runtime = false };
+	public static readonly EType RuntimeType = new EBool { Runtime = true };
+	public static readonly EType CompiletimeType = new EBool { Runtime = false };
 	public override EType AsRuntime() => RuntimeType;
 	public override EType AsCompiletime() => CompiletimeType;
 }
@@ -148,7 +151,7 @@ public class PList : PTree, IEnumerable<PTree> {
 	public IEnumerator<PTree> GetEnumerator() => Children.GetEnumerator();
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-	public override string ToString() => $"({(Type.Runtime ? "~runtime~ " : "")}{string.Join(' ', Children.Select(x => x.ToString()))})";
+	public override string ToString() => $"[{Type}] ({(Type.Runtime ? "~runtime~ " : "")}{string.Join(' ', Children.Select(x => x.ToString()))})";
 
 	public bool AnyRuntime => Type.Runtime || Children.Any(x => x.Type.Runtime);
 
@@ -160,7 +163,7 @@ public class PList : PTree, IEnumerable<PTree> {
 
 	public PList HomogeneousRuntime() {
 		if(!AnyRuntime) return this;
-		return new(this.Take(1).Concat(this.Skip(1).Select(x => new PList(new[] { new PName("ensure-runtime"), x }) { Type = x.Type.AsRuntime() })));
+		return new(this.Take(1).Concat(this.Skip(1).Select(x => new PList(new[] { new PName("ensure-runtime"), x }) { Type = x.Type.AsRuntime() }))) { Type = Type.AsRuntime() };
 	}
 
 	public PList MapLeaves(Func<PTree, PTree> mapper) {
