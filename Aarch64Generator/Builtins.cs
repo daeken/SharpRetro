@@ -65,36 +65,36 @@ public class Builtins : Builtin {
 				if(list[1] is PList sub)
 					switch(sub[0]) {
 						case PName("gpr32"):
-							c += $"XR[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<uint64_t>) (IRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) ({GenerateExpression(list[2])});";
 							return;
 						case PName("gpr-or-sp32"):
 							c += $"if({GenerateExpression(sub[1])} == 31)";
 							c++;
-							c += $"SPR = (IRuntimeValue<uint64_t>) (IRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
+							c += $"state.SP = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) ({GenerateExpression(list[2])});";
 							c--;
 							c += "else";
 							c++;
-							c += $"XR[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<uint64_t>) (IRuntimeValue<uint32_t>) ({GenerateExpression(list[2])});";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) ({GenerateExpression(list[2])});";
 							c--;
 							return;
 						case PName("gpr64"):
-							c += $"XR[(int) {GenerateExpression(sub[1])}] = {GenerateExpression(list[2])};";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = {GenerateExpression(list[2])};";
 							return;
 						case PName("gpr-or-sp64"):
 							c += $"if({GenerateExpression(sub[1])} == 31)";
 							c++;
-							c += $"SPR = {GenerateExpression(list[2])};";
+							c += $"state.SP = {GenerateExpression(list[2])};";
 							c--;
 							c += "else";
 							c++;
-							c += $"XR[(int) {GenerateExpression(sub[1])}] = {GenerateExpression(list[2])};";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = {GenerateExpression(list[2])};";
 							c--;
 							return;
 						case PName("sr"):
 							//c += $"Call<void, ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
 							return;
 						case PName("nzcv") when sub.Count == 1:
-							c += $"NZCVR = {GenerateExpression(list[2])};";
+							c += $"state.NZCV = {GenerateExpression(list[2])};";
 							return;
 					}
 
@@ -178,7 +178,7 @@ public class Builtins : Builtin {
 			
 			Expression("gpr32", _ => new EInt(false, 32).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? 0U : (uint) state->X[(int) {GenerateExpression(list[1])}]",
-				list => $"({GenerateExpression(list[1])}) == 31 ? (IRuntimeValue<uint>) 0U : (IRuntimeValue<uint>) (XR[(int) {GenerateExpression(list[1])}]())")
+				list => $"({GenerateExpression(list[1])}) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) {GenerateExpression(list[1])}])")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					if(reg == 31)
@@ -187,14 +187,14 @@ public class Builtins : Builtin {
 				});
 			Expression("gpr-or-sp32", _ => new EInt(false, 32).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? state->SP : (state->X[(int) {GenerateExpression(list[1])}] & 0xFFFFFFFFUL)",
-				list => $"({GenerateExpression(list[1])}) == 31 ? SPR() : XR[(int) {GenerateExpression(list[1])}]()")
+				list => $"({GenerateExpression(list[1])}) == 31 ? state.SP : state.X[(int) {GenerateExpression(list[1])}]")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					return (uint) state.GetRegister(reg == 31 ? "SP" : $"X{reg}");
 				});
 			Expression("gpr64", _ => new EInt(false, 64).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? 0UL : state->X[(int) {GenerateExpression(list[1])}]",
-				list => $"({GenerateExpression(list[1])}) == 31 ? (IRuntimeValue<ulong>) 0UL : XR[(int) {GenerateExpression(list[1])}]()")
+				list => $"({GenerateExpression(list[1])}) == 31 ? builder.Zero<uint>() : state.X[(int) {GenerateExpression(list[1])}]")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					if(reg == 31)
@@ -203,7 +203,7 @@ public class Builtins : Builtin {
 				});
 			Expression("gpr-or-sp64", _ => new EInt(false, 64).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? state->SP : state->X[(int) {GenerateExpression(list[1])}]",
-				list => $"({GenerateExpression(list[1])}) == 31 ? SPR() : XR[(int) {GenerateExpression(list[1])}]()")
+				list => $"({GenerateExpression(list[1])}) == 31 ? state.SP : state.X[(int) {GenerateExpression(list[1])}]")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					return (ulong) state.GetRegister(reg == 31 ? "SP" : $"X{reg}");
@@ -211,23 +211,23 @@ public class Builtins : Builtin {
 			
 			Expression("vec", _ => EType.Vector.AsRuntime(), 
 				list => $"state->V[{GenerateExpression(list[1])}]", 
-				list => $"VR[(int) ({GenerateExpression(list[1])})]")
+				list => $"state.V[(int) ({GenerateExpression(list[1])})]")
 				.Interpret((list, state) => state.GetRegister($"V{state.Evaluate(list[1])}"));
 			Expression("vec-b", _ => new EFloat(8).AsRuntime(),
 				list => $"reinterpret_cast<Vector128<uint8_t>>(state->V[{GenerateExpression(list[1])}])[0]",
-				list => $"VBR[(int) ({GenerateExpression(list[1])})]")
+				list => $"state.VB[(int) ({GenerateExpression(list[1])})]")
 				.Interpret((list, state) => state.GetRegister($"V{state.Evaluate(list[1])}").As<byte>()[0]);
 			Expression("vec-h", _ => new EInt(false, 16).AsRuntime(),
 				list => $"reinterpret_cast<Vector128<uint16_t>>(state->V[{GenerateExpression(list[1])}])[0]",
-				list => $"VHR[(int) ({GenerateExpression(list[1])})]")
+				list => $"state.VH[(int) ({GenerateExpression(list[1])})]")
 				.Interpret((list, state) => state.GetRegister($"V{state.Evaluate(list[1])}").As<ushort>()[0]);
 			Expression("vec-s", _ => new EFloat(32).AsRuntime(),
 				list => $"state->V[{GenerateExpression(list[1])}][0]",
-				list => $"VSR[(int) ({GenerateExpression(list[1])})]")
+				list => $"state.VS[(int) ({GenerateExpression(list[1])})]")
 				.Interpret((list, state) => state.GetRegister($"V{state.Evaluate(list[1])}").As<float>()[0]);
 			Expression("vec-d", _ => new EFloat(64).AsRuntime(),
 				list => $"reinterpret_cast<Vector128<double>>(state->V[{GenerateExpression(list[1])}])[0]",
-				list => $"VDR[(int) ({GenerateExpression(list[1])})]")
+				list => $"state.VD[(int) ({GenerateExpression(list[1])})]")
 				.Interpret((list, state) => state.GetRegister($"V{state.Evaluate(list[1])}").As<double>()[0]);
 			
 			Expression("nzcv", list => new EInt(false, list.Count == 1 ? 32 : 1).AsRuntime(),
@@ -243,10 +243,10 @@ public class Builtins : Builtin {
 				}, list => {
 					if(list.Count == 1) throw new NotSupportedException();
 					switch(list[1]) {
-						case PName("n"): return "NZCV_NR";
-						case PName("z"): return "NZCV_ZR";
-						case PName("c"): return "NZCV_CR";
-						case PName("v"): return "NZCV_VR";
+						case PName("n"): return "state.NZCV_N";
+						case PName("z"): return "state.NZCV_Z";
+						case PName("c"): return "state.NZCV_C";
+						case PName("v"): return "state.NZCV_V";
 						default: throw new NotSupportedException($"Unknown field of NZCV: {list[1]}");
 					}
 				}).Interpret((list, state) => {
@@ -259,7 +259,32 @@ public class Builtins : Builtin {
 						_ => throw new NotSupportedException()
 					};
 				});
-			
+
+				Expression("vector-insert", _ => EType.Unit,
+						list => $"reinterpret_cast<Vector128<{GenerateType(list[3].Type)}>*>(&(state->V[(int) ({GenerateExpression(list[1])})]))[0][{GenerateExpression(list[2])}] = {GenerateExpression(list[3])}",
+						list => $"state.V[(int) ({GenerateExpression(list[1])})] = state.V[(int) ({GenerateExpression(list[1])})].Insert({GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+					.Interpret((list, state) => {
+						var name = $"V{state.Evaluate(list[1])}";
+						var vector = state.GetRegister(name).As(list[3].Type).Copy();
+						var value = state.Evaluate(list[3]);
+						value = list[3].Type switch {
+							EInt(false, 8) => (byte) value, 
+							EInt(true, 8) => (sbyte) value, 
+							EInt(false, 16) => (ushort) value, 
+							EInt(true, 16) => (short) value, 
+							EInt(false, 32) => (uint) value, 
+							EInt(true, 32) => (int) value, 
+							EInt(false, 64) => (ulong) value, 
+							EInt(true, 64) => (long) value,
+							EFloat(32) => (float) value, 
+							EFloat(64) => (double) value, 
+							_ => throw new NotSupportedException()
+						};
+						vector[(int) state.Evaluate(list[2])] = value;
+						state.Registers[name] = vector;
+						return null;
+					});
+		
 			Expression("sr", _ => new EInt(false, 64).AsRuntime(), 
 				list => $"SR({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})", 
 				list => $"Call<ulong, ulong, uint, uint, uint, uint, uint>(SR, (ulong) this, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})")

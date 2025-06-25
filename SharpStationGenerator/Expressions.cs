@@ -21,9 +21,9 @@ public class Expressions : Builtin {
 					try {
 						var rnum = new ExecutionState().Evaluate(list[1]);
 						if(rnum == 0) return "builder.Zero<uint>()";
-						return $"state.Registers(builder.LiteralValue<int>({rnum}))";
+						return $"state.Registers[builder.LiteralValue<int>({rnum})]";
 					} catch(Exception) {}
-					return $"state.Registers((IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[1])}))";
+					return $"state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[1])})]";
 				})
 			.Interpret((list, state) => {
 				var reg = state.Evaluate(list[1]);
@@ -32,10 +32,10 @@ public class Expressions : Builtin {
 		
 		Expression("reg-hi", _ => new EInt(false, 32).AsRuntime(), 
 			_ => "State->Hi", 
-			_ => "state.Hi()").NoInterpret();
+			_ => "state.Hi").NoInterpret();
 		Expression("reg-lo", _ => new EInt(false, 32).AsRuntime(), 
 			_ => "State->Lo", 
-			_ => "state.Lo()").NoInterpret();
+			_ => "state.Lo").NoInterpret();
 
 		Expression("absorb-muldiv-delay", _ => EUnit.RuntimeType,
 				_ => "AbsorbMuldivDelay()")
@@ -107,7 +107,7 @@ public class Expressions : Builtin {
 							try {
 								var rnum = new ExecutionState().Evaluate(sub[1]);
 								if(rnum != 0)
-									c += $"state.Registers(builder.LiteralValue({rnum}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+									c += $"state.Registers[builder.LiteralValue({rnum})] = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 								return;
 							} catch(Exception) {}
 							var rtemp = TempName();
@@ -115,17 +115,17 @@ public class Expressions : Builtin {
 							if(sub[1].Type.Runtime) {
 								c += $"builder.When((IRuntimeValue<uint>) builder.EnsureRuntime({rtemp}) != builder.LiteralValue(0U),";
 								c++;
-								c += $"() => state.Registers((IRuntimeValue<int>) builder.EnsureRuntime({rtemp}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])})));";
+								c += $"() => state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime({rtemp})] = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 								c--;
 							} else {
 								c += $"if({rtemp} != 0)";
 								c++;
-								c += $"state.Registers((IRuntimeValue<int>) builder.EnsureRuntime({rtemp}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+								c += $"state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime({rtemp})] = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 								c--;
 							}
 							return;
 						case PName("reg-hi") or PName("reg-lo"):
-							c += $"state.{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")}((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+							c += $"state.{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("copreg"):
 							c += $"builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
@@ -154,8 +154,8 @@ public class Expressions : Builtin {
 				if(list[1] is not PList sub) throw new NotSupportedException();
 				switch(sub[0]) {
 					case PName("reg"):
-						c += $"state.LdWhich((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}));";
-						c += $"state.LdValue((IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+						c += $"state.LdWhich = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])});";
+						c += $"state.LdValue = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 						break;
 					default:
 						throw new NotSupportedException($"Defer= used on non-reg argument {sub}");
@@ -189,7 +189,7 @@ public class Expressions : Builtin {
 		Statement("read-absorb", _ => EType.Unit.AsRuntime(), (c, list) => {
 			c += $"State->ReadAbsorb[{GenerateExpression(list[1])}] = 0;";
 		}, (c, list) => {
-			c += $"state.ReadAbsorb((IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[1])}), builder.LiteralValue(0U));";
+			c += $"state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[1])})] = builder.LiteralValue(0U);";
 		}).NoInterpret();
 	}
 }

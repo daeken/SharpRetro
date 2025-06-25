@@ -5,10 +5,11 @@ using JitBase;
 namespace Aarch64Cpu;
 
 [StructLayout(LayoutKind.Explicit)]
-public struct CpuState : IJitStruct {
+public unsafe struct CpuState : IJitStruct {
     [FieldOffset(0x0000)] public ulong PC;
     [FieldOffset(0x0008)] public ulong SP;
 
+    [FieldOffset(0x0010)] public fixed uint X[32];
     [FieldOffset(0x0010)] public ulong X0;
     [FieldOffset(0x0018)] public ulong X1;
     [FieldOffset(0x0020)] public ulong X2;
@@ -42,6 +43,8 @@ public struct CpuState : IJitStruct {
     [FieldOffset(0x0100)] public ulong X30;
     [FieldOffset(0x0108)] public ulong X31;
 
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+    [FieldOffset(0x0110)] public Vector128<float>[] V;
     [FieldOffset(0x0110)] public Vector128<float> V0;
     [FieldOffset(0x0120)] public Vector128<float> V1;
     [FieldOffset(0x0130)] public Vector128<float> V2;

@@ -25,11 +25,22 @@ public class CilStructRef<AddrT, DelegateT, T> : IStructRef<T> where AddrT : str
 		JBuilder.Emit(value);
 		Ilg.StoreIndirect<U>();
 	}
+	public override IRuntimeValue<U> GetFieldElement<U>(ulong offset, int index) => JBuilder.C<U>(() => {
+		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset + (ulong) index * (ulong) Marshal.SizeOf<U>()));
+		Ilg.Convert<IntPtr>();
+		Ilg.LoadIndirect<U>();
+	});
 	public override IRuntimeValue<U> GetFieldElement<U>(ulong offset, IRuntimeValue<int> index) => JBuilder.C<U>(() => {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset) + (IRuntimeValue<ulong>) index * JBuilder.LiteralValue((ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();
 		Ilg.LoadIndirect<U>();
 	});
+	public override void SetFieldElement<U>(ulong offset, int index, IRuntimeValue<U> value) {
+		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset + (ulong) index * (ulong) Marshal.SizeOf<U>()));
+		Ilg.Convert<IntPtr>();
+		JBuilder.Emit(value);
+		Ilg.StoreIndirect<U>();
+	}
 	public override void SetFieldElement<U>(ulong offset, IRuntimeValue<int> index, IRuntimeValue<U> value) {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset) + (IRuntimeValue<ulong>) index * JBuilder.LiteralValue((ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();

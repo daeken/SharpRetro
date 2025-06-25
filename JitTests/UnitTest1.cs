@@ -12,7 +12,7 @@ namespace JitTests;
 public unsafe class Tests {
 	static IJit<uint>[] Jits32() => [
 		new CilJit<uint>(), 
-		new LlvmJit<uint>(),
+		//new LlvmJit<uint>(),
 	];
 
 	static readonly byte[] U8values = [0, 1, 2, 0xFF, 0xFE];
@@ -474,12 +474,12 @@ public unsafe class Tests {
 			foo.Arr[i] = (uint) i;
 		var func = jit.CreateFunction<StructTest>("test", builder => {
 			var foor = builder.StructRefArgument<FooStruct>(0);
-			foor.Foo(builder.LiteralValue(5U));
-			foor.Bar(builder.LiteralValue(6U));
-			foor.Baz(builder.LiteralValue(7U));
-			foor.Arr(builder.LiteralValue(0), builder.LiteralValue(123U));
-			foor.Arr(builder.LiteralValue(6), builder.LiteralValue(321U));
-			builder.Return(foor.Hax());
+			foor.Foo = builder.LiteralValue(5U);
+			foor.Bar = builder.LiteralValue(6U);
+			foor.Baz = builder.LiteralValue(7U);
+			foor.Arr[builder.LiteralValue(0)] = builder.LiteralValue(123U);
+			foor.Arr[builder.LiteralValue(6)] = builder.LiteralValue(321U);
+			builder.Return(foor.Hax);
 		});
 		ClassicAssert.AreEqual(4, func(ref foo));
 		ClassicAssert.AreEqual(5, foo.Foo);

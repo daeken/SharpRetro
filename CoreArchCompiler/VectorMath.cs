@@ -29,30 +29,6 @@ class VectorMath : Builtin {
 				list => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint64_t>>({GenerateExpression(list[1])})[0] - (Vector128<uint64_t>) {{}})", 
 				list => $"({GenerateExpression(list[1])}).ZeroTop()")
 			.Interpret((list, state) => state.Evaluate(list[1]).ZeroTop());
-		Expression("vector-insert", _ => EType.Unit,
-				list => $"reinterpret_cast<Vector128<{GenerateType(list[3].Type)}>*>(&(state->V[(int) ({GenerateExpression(list[1])})]))[0][{GenerateExpression(list[2])}] = {GenerateExpression(list[3])}",
-				list => $"VR[(int) ({GenerateExpression(list[1])})] = VR[(int) ({GenerateExpression(list[1])})]().Insert({GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
-			.Interpret((list, state) => {
-				var name = $"V{state.Evaluate(list[1])}";
-				var vector = state.GetRegister(name).As(list[3].Type).Copy();
-				var value = state.Evaluate(list[3]);
-				value = list[3].Type switch {
-					EInt(false, 8) => (byte) value, 
-					EInt(true, 8) => (sbyte) value, 
-					EInt(false, 16) => (ushort) value, 
-					EInt(true, 16) => (short) value, 
-					EInt(false, 32) => (uint) value, 
-					EInt(true, 32) => (int) value, 
-					EInt(false, 64) => (ulong) value, 
-					EInt(true, 64) => (long) value,
-					EFloat(32) => (float) value, 
-					EFloat(64) => (double) value, 
-					_ => throw new NotSupportedException()
-				};
-				vector[(int) state.Evaluate(list[2])] = value;
-				state.Registers[name] = vector;
-				return null;
-			});
 		Expression("vector-element", list => TypeFromName(list[3]).AsRuntime(),
 				list => $"reinterpret_cast<Vector128<{GenerateType(list.Type.AsCompiletime())}>>({GenerateExpression(list[1])})[{GenerateExpression(list[2])}]",
 				list => $"({GenerateExpression(list[1])}).Element<{GenerateType(list.Type.AsCompiletime())}>({GenerateExpression(list[2])})")

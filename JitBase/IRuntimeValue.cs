@@ -32,7 +32,9 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> Ceil();
 	public abstract IRuntimeValue<T> Floor();
 	public abstract IRuntimeValue<bool> IsNaN();
+	public abstract IRuntimeValue<ElementT> Element<ElementT>(int index) where ElementT : struct;
 	public abstract IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) where ElementT : struct;
+	public abstract IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) where ElementT : struct;
 	public abstract IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct;
 	public static IRuntimeValue<T> operator +(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
 	public static IRuntimeValue<T> operator -(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Sub(rhs);

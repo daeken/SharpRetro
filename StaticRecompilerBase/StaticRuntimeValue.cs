@@ -48,8 +48,12 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     public override IRuntimeValue<T> Floor() => W(new StaticIRValue.Floor(this));
     public override IRuntimeValue<bool> IsNaN() => W<bool>(new StaticIRValue.IsNaN(this));
 
+    public override IRuntimeValue<ElementT> Element<ElementT>(int index) => throw new NotImplementedException();
     public override IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) =>
         W<ElementT>(new StaticIRValue.GetElement(this, W(index), typeof(ElementT)));
+
+    public override IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) =>
+        throw new NotImplementedException();
     public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) =>
         W(new StaticIRValue.SetElement(this, W(index), W(value)));
 }
