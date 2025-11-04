@@ -12,6 +12,8 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     static StaticRuntimeValue<T> W(StaticIRValue siv) => new(siv);
     static StaticRuntimeValue<OT> W<OT>(StaticIRValue siv) where OT : struct => new(siv);
     
+    public override IRuntimeValue<T> ToConstant(T value) => throw new NotImplementedException();
+    
     public override IRuntimeValue<OT> Cast<OT>() => W<OT>(new StaticIRValue.Cast(this, typeof(OT)));
     public override IRuntimeValue<OT> Bitcast<OT>() => W<OT>(new StaticIRValue.Bitcast(this, typeof(OT)));
     public override IRuntimeValue<T> Store() => W(new StaticIRValue.Store(this));
@@ -47,6 +49,7 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     public override IRuntimeValue<T> Ceil() => W(new StaticIRValue.Ceil(this));
     public override IRuntimeValue<T> Floor() => W(new StaticIRValue.Floor(this));
     public override IRuntimeValue<bool> IsNaN() => W<bool>(new StaticIRValue.IsNaN(this));
+    public override IRuntimeValue<U> SignExt<U>(int width) => throw new NotImplementedException();
 
     public override IRuntimeValue<ElementT> Element<ElementT>(int index) => throw new NotImplementedException();
     public override IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) =>
@@ -56,4 +59,6 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
         throw new NotImplementedException();
     public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) =>
         W(new StaticIRValue.SetElement(this, W(index), W(value)));
+
+    public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
 }

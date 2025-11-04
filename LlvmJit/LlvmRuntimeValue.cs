@@ -20,6 +20,10 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 	internal LLVMValueRef Emit() => Generate();
 	internal static LLVMValueRef Emit<U>(IRuntimeValue<U> rv) where U : struct => ((LlvmRuntimeValue<AddrT, U>) rv).Emit();
 	IRuntimeValue<U> C<U>(Func<LLVMValueRef> gen) where U : struct => new LlvmRuntimeValue<AddrT, U>(Builder, JBuilder, gen);
+	
+	public override IRuntimeValue<T> ToConstant(T value) => C<T>(() => {
+		throw new NotImplementedException();
+	});
 
 	public override IRuntimeValue<OT> Cast<OT>() where OT : struct {
 		if(typeof(OT) == typeof(T)) return (IRuntimeValue<OT>) (object) this;
@@ -88,8 +92,10 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 	public override IRuntimeValue<T> Ceil() => throw new NotImplementedException();
 	public override IRuntimeValue<T> Floor() => throw new NotImplementedException();
 	public override IRuntimeValue<bool> IsNaN() => throw new NotImplementedException();
+	public override IRuntimeValue<U> SignExt<U>(int width) => throw new NotImplementedException();
 	public override IRuntimeValue<ElementT> Element<ElementT>(int index) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
+	public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
 }

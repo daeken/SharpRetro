@@ -1,8 +1,13 @@
 // ReSharper disable MemberCanBeProtected.Global
+
+using System.Runtime.Intrinsics;
+
 #pragma warning disable CS0660, CS0661
 namespace JitBase;
 
 public abstract class IRuntimeValue<T> where T : struct {
+	public virtual IRuntimeValue<T> ToZero() => ToConstant(default);
+	public abstract IRuntimeValue<T> ToConstant(T value);
 	public abstract IRuntimeValue<OT> Cast<OT>() where OT : struct;
 	public abstract IRuntimeValue<OT> Bitcast<OT>() where OT : struct;
 	public abstract IRuntimeValue<T> Store();
@@ -32,10 +37,12 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> Ceil();
 	public abstract IRuntimeValue<T> Floor();
 	public abstract IRuntimeValue<bool> IsNaN();
+	public abstract IRuntimeValue<U> SignExt<U>(int width) where U : struct;
 	public abstract IRuntimeValue<ElementT> Element<ElementT>(int index) where ElementT : struct;
 	public abstract IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) where ElementT : struct;
 	public abstract IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) where ElementT : struct;
 	public abstract IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct;
+	public abstract IRuntimeValue<T> ZeroTop();
 	public static IRuntimeValue<T> operator +(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
 	public static IRuntimeValue<T> operator -(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Sub(rhs);
 	public static IRuntimeValue<T> operator *(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Mul(rhs);
@@ -45,6 +52,8 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public static IRuntimeValue<T> operator &(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.And(rhs);
 	public static IRuntimeValue<T> operator |(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Or(rhs);
 	public static IRuntimeValue<T> operator ^(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Xor(rhs);
+	public static IRuntimeValue<T> operator <<(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LeftShift(rhs);
+	public static IRuntimeValue<T> operator >>(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.RightShift(rhs);
 	public static IRuntimeValue<T> operator ~(IRuntimeValue<T> v) => v.Not();
 	public static IRuntimeValue<bool> operator <(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LT(rhs);
 	public static IRuntimeValue<bool> operator <=(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LTE(rhs);
@@ -65,4 +74,10 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public static explicit operator IRuntimeValue<Int128>(IRuntimeValue<T> val) => val.Cast<Int128>();
 	public static explicit operator IRuntimeValue<float>(IRuntimeValue<T> val) => val.Cast<float>();
 	public static explicit operator IRuntimeValue<double>(IRuntimeValue<T> val) => val.Cast<double>();
+	public static explicit operator IRuntimeValue<Vector128<byte>>(IRuntimeValue<T> val) => val.Cast<Vector128<byte>>();
+	public static explicit operator IRuntimeValue<Vector128<ushort>>(IRuntimeValue<T> val) => val.Cast<Vector128<ushort>>();
+	public static explicit operator IRuntimeValue<Vector128<uint>>(IRuntimeValue<T> val) => val.Cast<Vector128<uint>>();
+	public static explicit operator IRuntimeValue<Vector128<ulong>>(IRuntimeValue<T> val) => val.Cast<Vector128<ulong>>();
+	public static explicit operator IRuntimeValue<Vector128<float>>(IRuntimeValue<T> val) => val.Cast<Vector128<float>>();
+	public static explicit operator IRuntimeValue<Vector128<double>>(IRuntimeValue<T> val) => val.Cast<Vector128<double>>();
 }

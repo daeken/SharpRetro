@@ -210,7 +210,7 @@
                 m) imm) 0)))
         (if (== (& option 0b011) 0b011)
             (= (gpr64 rd) (add-with-carry-set-nzcv64 (gpr-or-sp64 rn) (<< (gpr64 rm) imm) 0))
-            (let m (gpr32 rm)
+            (let m (u64 (gpr32 rm))
                 (= (gpr64 rd) (add-with-carry-set-nzcv64 (gpr-or-sp64 rn) (<< (u64 (match option
                     0b000 (& m 0xFF)
                     0b001 (& m 0xFFFF)

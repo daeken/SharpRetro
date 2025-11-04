@@ -85,7 +85,7 @@ public class Logic : Builtin {
 				{} type => throw new NotSupportedException($"Cannot cast to type {type}")
 			});
 		Expression("bitcast", list => TypeFromName(list[2]).AsRuntime(list.AnyRuntime), 
-				list => $"Bitcast<{GenerateType(list[1].Type)}, {GenerateType(list.Type)}>({GenerateExpression(list[1])})", 
+				list => $"Math.Bitcast<{GenerateType(list[1].Type)}, {GenerateType(list.Type)}>({GenerateExpression(list[1])})", 
 				list => $"({GenerateExpression(list[1])}).Bitcast<{GenerateType(list.Type.AsCompiletime())}>()")
 			.Interpret((list, state) => {
 				var bytes = ((byte[]) BitConverter.GetBytes(state.Evaluate(list[1]))).Concat(new byte[8]).ToArray();
@@ -114,8 +114,8 @@ public class Logic : Builtin {
 		}
 
 		Expression("signext", list => TypeFromName(list[2]).AsRuntime(list.AnyRuntime), 
-				list => $"SignExt<{GenerateType(list.Type)}>({GenerateExpression(list[1])}, {((EInt) list[1].Type).Width})", 
-				list => $"SignExtRuntime<{GenerateType(list.Type.AsCompiletime())}>({GenerateExpression(list[1])}, {((EInt) list[1].Type).Width})")
+				list => $"Math.SignExt<{GenerateType(list.Type)}>({GenerateExpression(list[1])}, {((EInt) list[1].Type).Width})", 
+				list => $"({GenerateExpression(list[1])}).SignExt<{GenerateType(list.Type.AsCompiletime())}>({((EInt) list[1].Type).Width})")
 			.Interpret((list, state) =>
 				TypeFromName(list[2]) switch {
 					EInt(_, 32) => SignExt<int>((ulong) state.Evaluate(list[1]), ((EInt) list[1].Type).Width), 

@@ -3,6 +3,7 @@
 namespace Aarch64Cpu;
 using System.Runtime.Intrinsics;
 using JitBase;
+using static Aarch64Common.Common;
 using Math = LibSharpRetro.CpuHelpers.Math;
 
 public partial class Recompiler {

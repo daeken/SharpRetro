@@ -143,7 +143,7 @@ class ControlFlow : Builtin {
 				
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
-			return $"({GenerateExpression(list[1])}) ? ({type}) {a} : ({type}) {b}";
+			return $"({GenerateExpression(EnsureBool(list[1]))}) ? ({type}) {a} : ({type}) {b}";
 		});
 
 		Interpret("if", (list, state) => Extensions.AsBool(state.Evaluate(list[1])) ? state.Evaluate(list[2]) : state.Evaluate(list[3]));
@@ -253,7 +253,12 @@ class ControlFlow : Builtin {
 		Statement("match", list => list.Count == 3 ? list[2].Type : list[3].Type,
 			SwitchGen, 
 			(c, list) => {
-				if(Core.Context != ContextTypes.Recompiler || (!list[1].Type.Runtime && !list.Skip(2).TakeEvery(2).Any(x => x.Type.Runtime))) {
+				var isRuntime = list[1].Type.Runtime;
+				for(var i = 2; !isRuntime && i < list.Count; i += 2) {
+					if(list.Count - 1 == i) break;
+					isRuntime = list[i].Type.Runtime;
+				}
+				if(Core.Context != ContextTypes.Recompiler || !isRuntime) {
 					SwitchGen(c, list);
 					return;
 				}
@@ -287,7 +292,12 @@ class ControlFlow : Builtin {
 		Expression("match", list => list.Count == 3 ? list[2].Type : list[3].Type,
 			MatchGen, 
 			list => {
-				if(Core.Context != ContextTypes.Recompiler || (!list[1].Type.Runtime && !list.Skip(2).TakeEvery(2).Any(x => x.Type.Runtime)))
+				var isRuntime = list[1].Type.Runtime;
+				for(var i = 2; !isRuntime && i < list.Count; i += 2) {
+					if(list.Count - 1 == i) break;
+					isRuntime = list[i].Type.Runtime;
+				}
+				if(Core.Context != ContextTypes.Recompiler || !isRuntime)
 					return MatchGen(list);
 
 				var mtype = $"IRuntimeValue<{GenerateType(list[1].Type.AsCompiletime())}>";

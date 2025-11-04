@@ -65,29 +65,29 @@ public class Builtins : Builtin {
 				if(list[1] is PList sub)
 					switch(sub[0]) {
 						case PName("gpr32"):
-							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) ({GenerateExpression(list[2])});";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("gpr-or-sp32"):
 							c += $"if({GenerateExpression(sub[1])} == 31)";
 							c++;
-							c += $"state.SP = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) ({GenerateExpression(list[2])});";
+							c += $"state.SP = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							c--;
 							c += "else";
 							c++;
-							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) ({GenerateExpression(list[2])});";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							c--;
 							return;
 						case PName("gpr64"):
-							c += $"state.X[(int) {GenerateExpression(sub[1])}] = {GenerateExpression(list[2])};";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("gpr-or-sp64"):
 							c += $"if({GenerateExpression(sub[1])} == 31)";
 							c++;
-							c += $"state.SP = {GenerateExpression(list[2])};";
+							c += $"state.SP = builder.EnsureRuntime({GenerateExpression(list[2])});";
 							c--;
 							c += "else";
 							c++;
-							c += $"state.X[(int) {GenerateExpression(sub[1])}] = {GenerateExpression(list[2])};";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = builder.EnsureRuntime({GenerateExpression(list[2])});";
 							c--;
 							return;
 						case PName("sr"):
@@ -197,7 +197,7 @@ public class Builtins : Builtin {
 				});
 			Expression("gpr64", _ => new EInt(false, 64).AsRuntime(),
 				list => $"({GenerateExpression(list[1])}) == 31 ? 0UL : state->X[(int) {GenerateExpression(list[1])}]",
-				list => $"({GenerateExpression(list[1])}) == 31 ? builder.Zero<uint>() : state.X[(int) {GenerateExpression(list[1])}]")
+				list => $"({GenerateExpression(list[1])}) == 31 ? builder.Zero<ulong>() : state.X[(int) {GenerateExpression(list[1])}]")
 				.Interpret((list, state) => {
 					var reg = state.Evaluate(list[1]);
 					if(reg == 31)
@@ -352,14 +352,14 @@ public class Builtins : Builtin {
 #endif
 				},
 				list =>
-					$"((RuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value()")
+					$"((IRuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
 				.Interpret((list, state) => state.GetMemory(state.Evaluate(list[1]), list.Type));
 
 			Expression("load-exclusive", list => TypeFromName(list[2]).AsRuntime(),
 				list =>
 					$"state->Exclusive{(list.Type is EInt(_, var ewidth) ? ewidth : throw new NotSupportedException())} = *({GenerateType(list.Type)}*) ({GenerateExpression(list[1])})",
 				list =>
-					$"Exclusive{(list.Type is EInt(_, var width) ? width : throw new NotSupportedException())}R = ((RuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value()")
+					$"Exclusive{(list.Type is EInt(_, var width) ? width : throw new NotSupportedException())}R = ((IRuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
 				.NoInterpret(); // TODO: Implement
 			
 			Expression("store", _ => EType.Unit.AsRuntime(),
@@ -374,7 +374,7 @@ public class Builtins : Builtin {
 #endif
 				},
 				list =>
-					$"((RuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).value({GenerateExpression(list[2])})")
+					$"((IRuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value = {GenerateExpression(list[2])}")
 				.Interpret((list, state) => {
 					state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
 					return null;
@@ -382,7 +382,7 @@ public class Builtins : Builtin {
 			
 			Expression("store-exclusive", _ => new EInt(false, 1).AsRuntime(), 
 				list => $"CompareAndSwap(({GenerateType(list[2].Type)}*) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state->Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})", 
-				list => $"CompareAndSwap((RuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())}R())")
+				list => $"CompareAndSwap((IRuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())}R())")
 				.NoInterpret(); // TODO: Implement
 	}
 }

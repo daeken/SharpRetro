@@ -9,7 +9,7 @@ public unsafe struct CpuState : IJitStruct {
     [FieldOffset(0x0000)] public ulong PC;
     [FieldOffset(0x0008)] public ulong SP;
 
-    [FieldOffset(0x0010)] public fixed uint X[32];
+    [FieldOffset(0x0010)] public fixed ulong X[32];
     [FieldOffset(0x0010)] public ulong X0;
     [FieldOffset(0x0018)] public ulong X1;
     [FieldOffset(0x0020)] public ulong X2;

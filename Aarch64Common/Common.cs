@@ -4,7 +4,7 @@ namespace Aarch64Common;
 
 using CoreArchCompiler;
 
-public class Common {
+public static class Common {
     static int HighestSetBit(ulong v, int bits) {
         for(var i = bits - 1; i >= 0; --i)
             if((v & (1UL << i)) != 0)

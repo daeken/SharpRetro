@@ -23,6 +23,10 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 
 	static CilRuntimeValue<U, DelegateT> TT<U>(IRuntimeValue<U> v) where U : struct => v as CilRuntimeValue<U, DelegateT>;
 
+	public override IRuntimeValue<T> ToConstant(T value) => C<T>(() => {
+		throw new NotImplementedException();
+	});
+
 	CilRuntimeValue<U, DelegateT> C<U>(Action gen) where U : struct => new(Ilg, Tb, gen);
 
 	public override IRuntimeValue<OT> Cast<OT>() where OT : struct {
@@ -80,8 +84,11 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 	public override IRuntimeValue<T> Ceil() => throw new NotImplementedException();
 	public override IRuntimeValue<T> Floor() => throw new NotImplementedException();
 	public override IRuntimeValue<bool> IsNaN() => throw new NotImplementedException();
+	public override IRuntimeValue<U> SignExt<U>(int width) => throw new NotImplementedException();
 	public override IRuntimeValue<ElementT> Element<ElementT>(int index) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<ElementT> Element<ElementT>(IRuntimeValue<int> index) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
+
+	public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
 }

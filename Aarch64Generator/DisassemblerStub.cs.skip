@@ -1,7 +1,7 @@
 // ReSharper disable CheckNamespace
 #pragma warning disable 162, 1633, 164, 219
 namespace Aarch64Cpu;
-using static LibSharpRetro.CpuHelpers.Math;
+using Math = LibSharpRetro.CpuHelpers.Math;
 using static Aarch64Common.Common;
 
 public partial class Disassembler {
