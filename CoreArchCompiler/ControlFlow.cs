@@ -295,7 +295,7 @@ class ControlFlow : Builtin {
 				var isRuntime = list[1].Type.Runtime;
 				for(var i = 2; !isRuntime && i < list.Count; i += 2) {
 					if(list.Count - 1 == i) break;
-					isRuntime = list[i].Type.Runtime;
+					isRuntime |= list[i].Type.Runtime;
 				}
 				if(Core.Context != ContextTypes.Recompiler || !isRuntime)
 					return MatchGen(list);

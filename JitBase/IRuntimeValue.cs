@@ -43,6 +43,7 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) where ElementT : struct;
 	public abstract IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct;
 	public abstract IRuntimeValue<T> ZeroTop();
+	public abstract IRuntimeValue<Vector128<T>> CreateVector();
 	public static IRuntimeValue<T> operator +(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
 	public static IRuntimeValue<T> operator -(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Sub(rhs);
 	public static IRuntimeValue<T> operator *(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Mul(rhs);
@@ -55,6 +56,7 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public static IRuntimeValue<T> operator <<(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LeftShift(rhs);
 	public static IRuntimeValue<T> operator >>(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.RightShift(rhs);
 	public static IRuntimeValue<T> operator ~(IRuntimeValue<T> v) => v.Not();
+	public static IRuntimeValue<T> operator !(IRuntimeValue<T> v) => v.Negate();
 	public static IRuntimeValue<bool> operator <(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LT(rhs);
 	public static IRuntimeValue<bool> operator <=(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LTE(rhs);
 	public static IRuntimeValue<bool> operator ==(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs?.EQ(rhs);

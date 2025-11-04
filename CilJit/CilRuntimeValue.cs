@@ -1,4 +1,5 @@
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics;
 using JitBase;
 using Sigil;
 using static JitBase.Helpers;
@@ -91,4 +92,5 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 	public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
 
 	public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
+	public override IRuntimeValue<Vector128<T>> CreateVector() => throw new NotImplementedException();
 }

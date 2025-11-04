@@ -23,7 +23,7 @@ class VectorMath : Builtin {
 	public override void Define() {
 		Expression("vector-all", list => EType.Vector.AsRuntime(),
 				list => $"reinterpret_cast<Vector128<float>>(({GenerateExpression(list[1])}) - (Vector128<{GenerateType(list[1].Type)}>) {{}})",
-				list => $"(({GenerateType(list[1].Type.AsRuntime())}) ({GenerateExpression(list[1])})).CreateVector()")
+				list => $"(({GenerateType(list[1].Type.AsRuntime())}) builder.EnsureRuntime({GenerateExpression(list[1])})).CreateVector()")
 			.Interpret((list, state) => Vector128<byte>.FromDynamic(state.Evaluate(list[1])));
 		Expression("vector-zero-top", list => EType.Vector.AsRuntime(), 
 				list => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint64_t>>({GenerateExpression(list[1])})[0] - (Vector128<uint64_t>) {{}})", 
@@ -230,18 +230,18 @@ class VectorMath : Builtin {
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) & Vector128<byte>.Ensure(state.Evaluate(list[2])));
 			
 		Expression("vec&~", list => list[1].Type, 
-				list => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) & ~reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])}))",
-				list => $"(IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) & ~((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])})))")
+				list => $"Vector128.AndNot({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
+				list => $"({GenerateExpression(list[1])}) & ~({GenerateExpression(list[2])})")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) & ~Vector128<byte>.Ensure(state.Evaluate(list[2])));
 			
 		Expression("vec|", list => list[1].Type, 
-				list => $"reinterpret_cast<Vector128<float>>((reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) | reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])})))",
-				list => $"(IRuntimeValue<Vector128<float>>) ((((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) | ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
+				list => $"Vector128.BitwiseOr({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
+				list => $"({GenerateExpression(list[1])}) | ({GenerateExpression(list[2])})")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) | Vector128<byte>.Ensure(state.Evaluate(list[2])));
 		
 		Expression("vec^", list => list[1].Type, 
-				list => $"reinterpret_cast<Vector128<float>>((reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) ^ reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[2])})))",
-				list => $"(IRuntimeValue<Vector128<float>>) ((((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])})) ^ ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[2])}))))")
+				list => $"Vector128.Xor({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
+				list => $"({GenerateExpression(list[1])}) ^ ({GenerateExpression(list[2])})")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) ^ Vector128<byte>.Ensure(state.Evaluate(list[2])));
 	}
 }

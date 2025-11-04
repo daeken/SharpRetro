@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using JitBase;
 using LLVMSharp.Interop;
 using static JitBase.Helpers;
@@ -98,4 +99,5 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 	public override IRuntimeValue<T> Element<ElementT>(int index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
+	public override IRuntimeValue<Vector128<T>> CreateVector() => throw new NotImplementedException();
 }

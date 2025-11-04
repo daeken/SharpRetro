@@ -94,10 +94,10 @@ public class Builtins : Builtin {
 							//c += $"Call<void, ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
 							return;
 						case PName("nzcv") when sub.Count == 1:
-							c += $"state.NZCV = {GenerateExpression(list[2])};";
+							c += $"state.NZCV = builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("nzcv"):
-							c += $"{GenerateExpression(list[1], lhs: true)} = (IRuntimeValue<ulong>) {GenerateExpression(list[2])};";
+							c += $"{GenerateExpression(list[1], lhs: true)} = (IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 					}
 
@@ -352,14 +352,14 @@ public class Builtins : Builtin {
 #endif
 				},
 				list =>
-					$"((IRuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
+					$"((IRuntimePointer<ulong, {GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
 				.Interpret((list, state) => state.GetMemory(state.Evaluate(list[1]), list.Type));
 
 			Expression("load-exclusive", list => TypeFromName(list[2]).AsRuntime(),
 				list =>
 					$"state->Exclusive{(list.Type is EInt(_, var ewidth) ? ewidth : throw new NotSupportedException())} = *({GenerateType(list.Type)}*) ({GenerateExpression(list[1])})",
 				list =>
-					$"Exclusive{(list.Type is EInt(_, var width) ? width : throw new NotSupportedException())}R = ((IRuntimePointer<{GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
+					$"Exclusive{(list.Type is EInt(_, var width) ? width : throw new NotSupportedException())}R = ((IRuntimePointer<ulong, {GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
 				.NoInterpret(); // TODO: Implement
 			
 			Expression("store", _ => EType.Unit.AsRuntime(),
@@ -374,7 +374,7 @@ public class Builtins : Builtin {
 #endif
 				},
 				list =>
-					$"((IRuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value = {GenerateExpression(list[2])}")
+					$"((IRuntimePointer<ulong, {GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value = {GenerateExpression(list[2])}")
 				.Interpret((list, state) => {
 					state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
 					return null;
@@ -382,7 +382,7 @@ public class Builtins : Builtin {
 			
 			Expression("store-exclusive", _ => new EInt(false, 1).AsRuntime(), 
 				list => $"CompareAndSwap(({GenerateType(list[2].Type)}*) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state->Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})", 
-				list => $"CompareAndSwap((IRuntimePointer<{GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())}R())")
+				list => $"CompareAndSwap((IRuntimePointer<ulong, {GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())}R())")
 				.NoInterpret(); // TODO: Implement
 	}
 }

@@ -1,4 +1,5 @@
-﻿using JitBase;
+﻿using System.Runtime.Intrinsics;
+using JitBase;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace StaticRecompilerBase;
@@ -61,4 +62,6 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
         W(new StaticIRValue.SetElement(this, W(index), W(value)));
 
     public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
+    
+    public override IRuntimeValue<Vector128<T>> CreateVector() => throw new NotImplementedException();
 }
