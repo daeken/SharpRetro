@@ -477,14 +477,14 @@
     "blr X$rn"
     (names (rn n))
     (block)
-    (branch-linked-register rn))
+    (branch-linked (gpr64 rn)))
 
 (def BR
     "1101011 0 0 00 11111 0000 0 0 nnnnn 00000"
     "br X$rn"
     (names (rn n))
     (block)
-    (branch-register rn))
+    (branch (gpr64 rn)))
 
 (def BRK
     "11010100 001 iiiiiiiiiiiiiiii 000 00"
@@ -3728,8 +3728,8 @@
         (let r (if (== size 0) "W" "X"))
         (let shift (<< (u32 hw) 4)))
     (if (== size 0)
-        (= (gpr32 rd) (| (& (gpr32 rd) (^ (u32 -1) (<< (u32 0xFFFF) shift))) (<< (u32 imm) shift)))
-        (= (gpr64 rd) (| (& (gpr64 rd) (^ (u64 -1) (<< (u64 0xFFFF) shift))) (<< (u64 imm) shift)))))
+        (= (gpr32 rd) (| (& (gpr32 rd) (^ (u32 0xFFFFFFFF) (<< (u32 0xFFFF) shift))) (<< (u32 imm) shift)))
+        (= (gpr64 rd) (| (& (gpr64 rd) (^ (u64 0xFFFFFFFFFFFFFFFF) (<< (u64 0xFFFF) shift))) (<< (u64 imm) shift)))))
 
 (def MOVN
     "s 00 100101 hh iiiiiiiiiiiiiiii ddddd"
@@ -4022,7 +4022,7 @@
     "ret X$rn"
     (names (rn n))
     (block)
-    (branch-register rn))
+    (branch (gpr64 rn)))
 
 (def REV
     "s 1 0 11010110 00000 0000 1o nnnnn ddddd"

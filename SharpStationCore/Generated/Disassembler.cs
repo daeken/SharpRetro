@@ -1,6 +1,6 @@
 // ReSharper disable CheckNamespace
 namespace SharpStationCore;
-using static LibSharpRetro.CpuHelpers.Math;
+using Math = LibSharpRetro.CpuHelpers.Math;
 
 public partial class Disassembler {
     public static string Disassemble(uint insn, uint pc) {
@@ -18,7 +18,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			return (string) ("addi %" + (rt).ToString() + ", %" + (rs).ToString() + ", " + (string) ($"0x{(eimm):x08}"));
 		}
 		insn_2:
@@ -27,7 +27,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			return (string) ("addiu %" + (rt).ToString() + ", %" + (rs).ToString() + ", " + (string) ($"0x{(eimm):x08}"));
 		}
 		insn_3:
@@ -62,7 +62,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("beq %" + (rs).ToString() + ", %" + (rt).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_7:
@@ -70,7 +70,7 @@ public partial class Disassembler {
 		if((insn & 0xFC110000) == 0x04010000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("bgez %" + (rs).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_8:
@@ -78,7 +78,7 @@ public partial class Disassembler {
 		if((insn & 0xFC110000) == 0x04110000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("bgezal %" + (rs).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_9:
@@ -86,7 +86,7 @@ public partial class Disassembler {
 		if((insn & 0xFC1F0000) == 0x1C000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("bgtz %" + (rs).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_10:
@@ -94,7 +94,7 @@ public partial class Disassembler {
 		if((insn & 0xFC1F0000) == 0x18000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("blez %" + (rs).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_11:
@@ -102,7 +102,7 @@ public partial class Disassembler {
 		if((insn & 0xFC110000) == 0x04000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("bltz %" + (rs).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_12:
@@ -110,7 +110,7 @@ public partial class Disassembler {
 		if((insn & 0xFC110000) == 0x04100000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("bltzal %" + (rs).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_13:
@@ -119,7 +119,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return (string) ("bne %" + (rs).ToString() + ", %" + (rt).ToString() + ", " + (string) ($"0x{(target):x08}"));
 		}
 		insn_14:
@@ -209,7 +209,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lb %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_25:
@@ -218,7 +218,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lbu %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_26:
@@ -227,7 +227,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lh %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_27:
@@ -236,7 +236,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lhu %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_28:
@@ -253,7 +253,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lw %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_30:
@@ -262,7 +262,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lwl %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_31:
@@ -271,7 +271,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lwr %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_32:
@@ -280,7 +280,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("lwc2 " + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_33:
@@ -387,7 +387,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("sb %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_45:
@@ -396,7 +396,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("sh %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_46:
@@ -432,7 +432,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (int) (SignExt<int>(imm, 16));
+			var eimm = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("slti %" + (rt).ToString() + ", %" + (rs).ToString() + ", " + (string) ($"0x{(eimm):x08}"));
 		}
 		insn_50:
@@ -441,7 +441,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			return (string) ("sltiu %" + (rt).ToString() + ", %" + (rs).ToString() + ", " + (string) ($"0x{(eimm):x08}"));
 		}
 		insn_51:
@@ -513,7 +513,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("sw %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_59:
@@ -522,7 +522,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("swc2 " + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_60:
@@ -531,7 +531,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("swl %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_61:
@@ -540,7 +540,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return (string) ("swr %" + (rt).ToString() + ", " + (string) ($"0x{(offset):x08}") + "(%" + (rs).ToString() + ")");
 		}
 		insn_62:
@@ -585,7 +585,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			return "ADDI";
 		}
 		insn_2:
@@ -593,7 +593,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			return "ADDIU";
 		}
 		insn_3:
@@ -624,49 +624,49 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BEQ";
 		}
 		insn_7:
 		if((insn & 0xFC110000) == 0x04010000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BGEZ";
 		}
 		insn_8:
 		if((insn & 0xFC110000) == 0x04110000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BGEZAL";
 		}
 		insn_9:
 		if((insn & 0xFC1F0000) == 0x1C000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BGTZ";
 		}
 		insn_10:
 		if((insn & 0xFC1F0000) == 0x18000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BLEZ";
 		}
 		insn_11:
 		if((insn & 0xFC110000) == 0x04000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BLTZ";
 		}
 		insn_12:
 		if((insn & 0xFC110000) == 0x04100000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BLTZAL";
 		}
 		insn_13:
@@ -674,7 +674,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			return "BNE";
 		}
 		insn_14:
@@ -753,7 +753,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LB";
 		}
 		insn_25:
@@ -761,7 +761,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LBU";
 		}
 		insn_26:
@@ -769,7 +769,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LH";
 		}
 		insn_27:
@@ -777,7 +777,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LHU";
 		}
 		insn_28:
@@ -792,7 +792,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LW";
 		}
 		insn_30:
@@ -800,7 +800,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LWL";
 		}
 		insn_31:
@@ -808,7 +808,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LWR";
 		}
 		insn_32:
@@ -816,7 +816,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "LWC2";
 		}
 		insn_33:
@@ -911,7 +911,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "SB";
 		}
 		insn_45:
@@ -919,7 +919,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "SH";
 		}
 		insn_46:
@@ -951,7 +951,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (int) (SignExt<int>(imm, 16));
+			var eimm = (int) (Math.SignExt<int>(imm, 16));
 			return "SLTI";
 		}
 		insn_50:
@@ -959,7 +959,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			return "SLTIU";
 		}
 		insn_51:
@@ -1023,7 +1023,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "SW";
 		}
 		insn_59:
@@ -1031,7 +1031,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "SWC2";
 		}
 		insn_60:
@@ -1039,7 +1039,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "SWL";
 		}
 		insn_61:
@@ -1047,7 +1047,7 @@ public partial class Disassembler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			return "SWR";
 		}
 		insn_62:

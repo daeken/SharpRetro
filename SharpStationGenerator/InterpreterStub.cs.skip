@@ -1,6 +1,6 @@
 // ReSharper disable CheckNamespace
 namespace SharpStationCore;
-using static LibSharpRetro.CpuHelpers.Math;
+using Math = LibSharpRetro.CpuHelpers.Math;
 
 public unsafe partial class Interpreter {
     public bool Interpret(uint insn, uint pc) {

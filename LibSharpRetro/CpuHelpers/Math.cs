@@ -1,5 +1,7 @@
 namespace LibSharpRetro.CpuHelpers; 
 
+using System.Runtime.Intrinsics;
+
 public static class Math {
 	public static int CountLeadingZeros(this ushort v) {
 		var c = 0;
@@ -66,4 +68,17 @@ public static class Math {
 	}
 
 	public static unsafe U Bitcast<T, U>(T v) where T : unmanaged where U : unmanaged => *(U*) &v;
+	
+	public static ulong VectorSumUnsigned(Vector128<float> vec, long esize, long count) {
+		switch(esize) {
+			case 8: {
+				var bvec = vec.As<float, byte>();
+				var sum = 0UL;
+				for(var i = 0; i < count; ++i)
+					sum += bvec.GetElement(i);
+				return sum;
+			}
+			default: throw new NotSupportedException($"Unknown size for VectorSumUnsigned: {esize}");
+		}
+	}
 }

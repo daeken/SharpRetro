@@ -8,7 +8,9 @@ using Math = LibSharpRetro.CpuHelpers.Math;
 
 public partial class Recompiler {
     public bool RecompileOne(IBuilder<uint> builder, IStructRef<CpuState> state, uint insn, uint pc) {
+        unchecked {
 /*%CODE%*/
-        return false;
+            return false;
+        }
     }
 }

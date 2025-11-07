@@ -1,6 +1,6 @@
 // ReSharper disable CheckNamespace
 namespace SharpStationCore;
-using static LibSharpRetro.CpuHelpers.Math;
+using Math = LibSharpRetro.CpuHelpers.Math;
 
 public partial class Disassembler {
     public static string Disassemble(uint insn, uint pc) {

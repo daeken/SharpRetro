@@ -91,7 +91,7 @@ public class Builtins : Builtin {
 							c--;
 							return;
 						case PName("sr"):
-							//c += $"Call<void, ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
+							c += $"builder.Call<ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
 							return;
 						case PName("nzcv") when sub.Count == 1:
 							c += $"state.NZCV = builder.EnsureRuntime({GenerateExpression(list[2])});";
@@ -290,12 +290,12 @@ public class Builtins : Builtin {
 		
 			Expression("sr", _ => new EInt(false, 64).AsRuntime(), 
 				list => $"SR({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})", 
-				list => $"Call<ulong, ulong, uint, uint, uint, uint, uint>(SR, (ulong) this, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})")
+				list => $"builder.Call<ulong, ulong, uint, uint, uint, uint, uint>(SR, (ulong) this, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})")
 				.NoInterpret();
 			
 			Expression("float-to-fixed-point", list => TypeFromName(list[2]).AsRuntime(list[1].Type.Runtime || list[3].Type.Runtime), 
 				list => $"FloatToFixed{((EInt) list.Type).Width}({GenerateExpression(list[1])}, (int) ({GenerateExpression(list[3])}))", 
-				list => $"Call<{(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}, {GenerateType(list[1].Type.AsCompiletime())}, int>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (IRuntimeValue<int>) ({GenerateExpression(list[3])}))")
+				list => $"builder.Call<{(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}, {GenerateType(list[1].Type.AsCompiletime())}, int>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (IRuntimeValue<int>) ({GenerateExpression(list[3])}))")
 				.Interpret((list, state) => {
 					var width = ((EInt) list.Type).Width;
 					var swidth = ((EFloat) list[1].Type).Width;
@@ -330,17 +330,10 @@ public class Builtins : Builtin {
 					state.Registers["X30"] = state.GetRegister("PC") + 4;
 					return state.Registers["PC"] = state.Evaluate(list[1]);
 				});
-			BranchExpression("branch-linked-register", _ => EType.Unit.AsRuntime(), list => $"BranchLinkedRegister({GenerateExpression(list[1])})")
-				.Interpret((list, state) => {
-					state.Registers["X30"] = state.GetRegister("PC") + 4;
-					return state.Registers["PC"] = state.GetRegister($"X{state.Evaluate(list[1])}");
-				});
-			BranchExpression("branch-register", _ => EType.Unit.AsRuntime(), list => $"BranchRegister({GenerateExpression(list[1])})")
-				.Interpret((list, state) => state.Registers["PC"] = state.GetRegister($"X{state.Evaluate(list[1])}"));
 			BranchExpression("branch-default", _ => EType.Unit.AsRuntime(), list => "Branch(pc + 4)")
 				.Interpret((list, state) => state.Registers["PC"] = state.GetRegister("PC") + 4);
 			
-						Expression("load", list => TypeFromName(list[2]).AsRuntime(),
+			Expression("load", list => TypeFromName(list[2]).AsRuntime(),
 				list => {
 					var type = GenerateType(list.Type);
 #if USE_SYSTEM_MEMORY

@@ -67,23 +67,23 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
     public IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct => throw new NotImplementedException();
 
-    public void Call(Action func) {
+    public void CallVoid(Action func) {
         throw new NotImplementedException();
     }
 
-    public void Call<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct {
+    public void CallVoid<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct {
         throw new NotImplementedException();
     }
 
-    public void Call<T1, T2>(Action<T1, T2> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct {
+    public void CallVoid<T1, T2>(Action<T1, T2> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct {
         throw new NotImplementedException();
     }
 
-    public void Call<T1, T2, T3>(Action<T1, T2, T3> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct {
+    public void CallVoid<T1, T2, T3>(Action<T1, T2, T3> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct {
         throw new NotImplementedException();
     }
 
-    public void Call<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct {
+    public void CallVoid<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct {
         throw new NotImplementedException();
     }
 

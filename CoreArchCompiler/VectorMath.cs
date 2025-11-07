@@ -35,17 +35,17 @@ class VectorMath : Builtin {
 			.Interpret((list, state) => state.Evaluate(list[1]).As(TypeFromName(list[3]))[(int) state.Evaluate(list[2])]);
 		Expression("vector-extract", list => EType.Vector.AsRuntime(list[1].Type.Runtime || list[2].Type.Runtime), 
 				list => $"VectorExtract({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})", 
-				list => $"Call<Vector128<float>, Vector128<float>, Vector128<float>, uint, uint>(VectorExtract, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})")
+				list => $"builder.Call<Vector128<float>, Vector128<float>, Vector128<float>, uint, uint>(VectorExtract, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("vector-count-bits", _ => EType.Vector, 
 				list => $"VectorCountBits({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
-				list => $"Call<Vector128<float>, Vector128<float>, long>(VectorCountBits, {GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+				list => $"builder.Call<Vector128<float>, Vector128<float>, long>(VectorCountBits, {GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("vector-sum-unsigned", _ => new EInt(false, 64),
-				list => $"VectorSumUnsigned({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"Call<ulong, Vector128<float>, long, long>(VectorSumUnsigned, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+				list => $"Math.VectorSumUnsigned({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
+				list => $"builder.Call<ulong, Vector128<float>, long, long>(Math.VectorSumUnsigned, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
 			.Interpret((list, state) => {
 				var esize = (int) state.Evaluate(list[2]);
 				var count = (int) state.Evaluate(list[3]);
@@ -85,7 +85,7 @@ class VectorMath : Builtin {
 
 		Expression("vec-frsqrte", list => EType.Vector.AsRuntime(list.AnyRuntime), 
 				list => $"VectorFrsqrte({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"Call<Vector128<float>, Vector128<float>, int, int>(VectorFrsqrte, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+				list => $"builder.Call<Vector128<float>, Vector128<float>, int, int>(VectorFrsqrte, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
 			.Interpret((list, state) => {
 				var vector = state.Evaluate(list[1]);
 				switch((int) state.Evaluate(list[2])) {
@@ -155,7 +155,7 @@ class VectorMath : Builtin {
 
 		string CastVector(PTree elem, string type) =>
 			elem.Type is EVector
-				? $"reinterpret_cast<Vector128<{type}>>({GenerateExpression(elem)})"
+				? $"(IRuntimeValue<Vector128<{type}>>) ({GenerateExpression(elem)})"
 				: $"({GenerateExpression(elem)})";
 		string RuntimeCastVector(PTree elem, string type) =>
 			elem.Type is EVector
@@ -164,10 +164,10 @@ class VectorMath : Builtin {
 			
 		Expression("vec-uint+", list => EType.Vector.AsRuntime(list.AnyRuntime), 
 			list => list[3] switch {
-				PInt(8) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) + ({CastVector(list[2], "uint8_t")}))",
-				PInt(16) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint16_t>>({GenerateExpression(list[1])}) + ({CastVector(list[2], "uint16_t")}))",
-				PInt(32) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint32_t>>({GenerateExpression(list[1])}) + ({CastVector(list[2], "uint32_t")}))",
-				PInt(64) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint64_t>>({GenerateExpression(list[1])}) + ({CastVector(list[2], "uint64_t")}))",
+				PInt(8) => $"(({GenerateExpression(list[1])}).As<float, byte>() + ({CastVector(list[2], "byte")})).As<byte, float>()",
+				PInt(16) => $"(({GenerateExpression(list[1])}).As<float, ushort>() + ({CastVector(list[2], "ushort")})).As<ushort, float>()",
+				PInt(32) => $"(({GenerateExpression(list[1])}).As<float, uint>() + ({CastVector(list[2], "uint")})).As<uint, float>()",
+				PInt(64) => $"(({GenerateExpression(list[1])}).As<float, ulong>() + ({CastVector(list[2], "ulong")})).As<ulong, float>()",
 				_ => throw new NotSupportedException()
 			}, 
 			list => list[3] switch {
@@ -177,39 +177,39 @@ class VectorMath : Builtin {
 				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<ulong>>) ({GenerateExpression(list[1])}) + {RuntimeCastVector(list[2], "ulong")})",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
-			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) + Vector128<byte>.Ensure(state.Evaluate(list[2])), 
-			16 => Vector128<ushort>.Ensure(state.Evaluate(list[1])) + Vector128<ushort>.Ensure(state.Evaluate(list[2])), 
-			32 => Vector128<uint>.Ensure(state.Evaluate(list[1])) + Vector128<uint>.Ensure(state.Evaluate(list[2])), 
-			64 => Vector128<ulong>.Ensure(state.Evaluate(list[1])) + Vector128<ulong>.Ensure(state.Evaluate(list[2])), 
-			{} value => throw new NotSupportedException($"Size not supported in vec-uint+: {value}")
-		});
+				8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) + Vector128<byte>.Ensure(state.Evaluate(list[2])), 
+				16 => Vector128<ushort>.Ensure(state.Evaluate(list[1])) + Vector128<ushort>.Ensure(state.Evaluate(list[2])), 
+				32 => Vector128<uint>.Ensure(state.Evaluate(list[1])) + Vector128<uint>.Ensure(state.Evaluate(list[2])), 
+				64 => Vector128<ulong>.Ensure(state.Evaluate(list[1])) + Vector128<ulong>.Ensure(state.Evaluate(list[2])), 
+				{} value => throw new NotSupportedException($"Size not supported in vec-uint+: {value}")
+			});
 			
 		Expression("vec-uint*", list => EType.Vector.AsRuntime(list.AnyRuntime), 
 			list => list[3] switch {
-				PInt(8) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint8_t>>({GenerateExpression(list[1])}) * ({CastVector(list[2], "uint8_t")}))",
-				PInt(16) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint16_t>>({GenerateExpression(list[1])}) * ({CastVector(list[2], "uint16_t")}))",
-				PInt(32) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint32_t>>({GenerateExpression(list[1])}) * ({CastVector(list[2], "uint32_t")}))",
-				PInt(64) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<uint64_t>>({GenerateExpression(list[1])}) * ({CastVector(list[2], "uint64_t")}))",
+				PInt(8) => $"(({GenerateExpression(list[1])}).As<float, byte>() * ({CastVector(list[2], "byte")})).As<byte, float>()",
+				PInt(16) => $"(({GenerateExpression(list[1])}).As<float, ushort>() * ({CastVector(list[2], "ushort")})).As<ushort, float>()",
+				PInt(32) => $"(({GenerateExpression(list[1])}).As<float, uint>() * ({CastVector(list[2], "uint")})).As<uint, float>()",
+				PInt(64) => $"(({GenerateExpression(list[1])}).As<float, ulong>() * ({CastVector(list[2], "ulong")})).As<ulong, float>()",
 				_ => throw new NotSupportedException()
 			}, 
 			list => list[3] switch {
-				PInt(8) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint8_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint8_t")})",
-				PInt(16) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint16_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint16_t")})",
-				PInt(32) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint32_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint32_t")})",
-				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint64_t>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint64_t")})",
+				PInt(8) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<byte>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "byte")})",
+				PInt(16) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<ushort>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "ushort")})",
+				PInt(32) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<uint>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "uint")})",
+				PInt(64) => $"(IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<ulong>>) ({GenerateExpression(list[1])}) * {RuntimeCastVector(list[2], "ulong")})",
 				_ => throw new NotSupportedException()
 			}).Interpret((list, state) => (int) state.Evaluate(list[3]) switch {
-			8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) * Vector128<byte>.Ensure(state.Evaluate(list[2])), 
-			16 => Vector128<ushort>.Ensure(state.Evaluate(list[1])) * Vector128<ushort>.Ensure(state.Evaluate(list[2])), 
-			32 => Vector128<uint>.Ensure(state.Evaluate(list[1])) * Vector128<uint>.Ensure(state.Evaluate(list[2])), 
-			64 => Vector128<ulong>.Ensure(state.Evaluate(list[1])) * Vector128<ulong>.Ensure(state.Evaluate(list[2])), 
+				8 => Vector128<byte>.Ensure(state.Evaluate(list[1])) * Vector128<byte>.Ensure(state.Evaluate(list[2])), 
+				16 => Vector128<ushort>.Ensure(state.Evaluate(list[1])) * Vector128<ushort>.Ensure(state.Evaluate(list[2])), 
+				32 => Vector128<uint>.Ensure(state.Evaluate(list[1])) * Vector128<uint>.Ensure(state.Evaluate(list[2])), 
+				64 => Vector128<ulong>.Ensure(state.Evaluate(list[1])) * Vector128<ulong>.Ensure(state.Evaluate(list[2])), 
 			{} value => throw new NotSupportedException($"Size not supported in vec-uint*: {value}")
 		});
 			
 		Expression("vec/", list => EType.Vector.AsRuntime(list.AnyRuntime), 
 			list => list[3] switch {
 				PInt(32) => $"({GenerateExpression(list[1])}) / ({GenerateExpression(list[2])})", 
-				PInt(64) => $"reinterpret_cast<Vector128<float>>(reinterpret_cast<Vector128<double>>({GenerateExpression(list[1])}) / reinterpret_cast<Vector128<double>>({GenerateExpression(list[2])}))",
+				PInt(64) => $"(({GenerateExpression(list[1])}).As<float, double>() / ({GenerateExpression(list[2])}).As<float, double>()).As<double, float>()",
 				_ => throw new NotSupportedException()
 			}, 
 			list => list[3] switch {

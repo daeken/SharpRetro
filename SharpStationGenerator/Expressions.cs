@@ -43,22 +43,22 @@ public class Expressions : Builtin {
 		
 		Expression("copfun", _ => EUnit.RuntimeType,
 				list => $"Copfun({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
-				list => $"builder.Call(Copfun, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
+				list => $"builder.CallVoid(Copfun, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret();
 		
 		Expression("exception", _ => EUnit.RuntimeType, 
 				list => $"throw new CpuException(ExceptionType.{list[1]}, pc, insn)", 
-				list => $"builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.{list[1]}), builder.LiteralValue(pc), builder.LiteralValue(insn))")
+				list => $"builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.{list[1]}), builder.LiteralValue(pc), builder.LiteralValue(insn))")
 			.NoInterpret();
 		
 		Expression("copreg", _ => new EInt(false, 32).AsRuntime(), 
 				list => $"Copreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
-				list => $"builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
+				list => $"builder.Call<uint, uint, uint>(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret();
 
-		Expression("copcreg", _ => new EInt(false, 32).AsRuntime(), 
+		Expression("copcreg", _ => EUnit.RuntimeType, 
 				list => $"Copcreg({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
-				list => $"builder.Call(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
+				list => $"builder.Call<uint, uint, uint>(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret();
 
 		Expression("mul-delay", _ => EUnit.RuntimeType,
@@ -128,10 +128,10 @@ public class Expressions : Builtin {
 							c += $"state.{(sub[0] is PName("reg-hi") ? "Hi" : "Lo")} = (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("copreg"):
-							c += $"builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+							c += $"builder.CallVoid<uint, uint, uint>(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 						case PName("copcreg"):
-							c += $"builder.Call(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
+							c += $"builder.CallVoid<uint, uint, uint>(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[1])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(sub[2])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 					}
 

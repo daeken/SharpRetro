@@ -1,7 +1,7 @@
 // ReSharper disable CheckNamespace
 namespace SharpStationCore;
 using JitBase;
-using static LibSharpRetro.CpuHelpers.Math;
+using Math = LibSharpRetro.CpuHelpers.Math;
 
 public unsafe partial class Recompiler {
     public bool RecompileOne(IBuilder<uint> builder, IStructRef<CpuState> state, uint insn, uint pc) {
@@ -23,7 +23,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (~((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(lhs))) ^ ((IRuntimeValue<uint>) (builder.EnsureRuntime(rhs)))))))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(lhs))) ^ ((IRuntimeValue<uint>) (builder.EnsureRuntime(r))))))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(0x80000000U)))))))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime(0x0U)))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			var temp_192 = rd;
 			if(temp_192 != 0)
@@ -36,7 +36,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_2 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -46,7 +46,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (~((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(lhs))) ^ ((IRuntimeValue<uint>) (builder.EnsureRuntime(eimm)))))))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(lhs))) ^ ((IRuntimeValue<uint>) (builder.EnsureRuntime(r))))))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(0x80000000U)))))))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime(0x0U)))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			var temp_193 = rt;
 			if(temp_193 != 0)
@@ -59,7 +59,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_3 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -126,7 +126,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_9 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -147,7 +147,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC110000) == 0x04010000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_11 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
 			DoLds();
@@ -166,7 +166,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC110000) == 0x04110000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x1F)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_12 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -187,7 +187,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC1F0000) == 0x1C000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_13 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
 			DoLds();
@@ -206,7 +206,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC1F0000) == 0x18000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_14 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
 			DoLds();
@@ -225,7 +225,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC110000) == 0x04000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_15 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
 			DoLds();
@@ -244,7 +244,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC110000) == 0x04100000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x1F)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_16 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -266,7 +266,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_17 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -287,7 +287,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC00003F) == 0x0000000D) {
 			var code = (insn >> 6) & 0xFFFFFU;
 			DoLds();
-			builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.Break), builder.LiteralValue(pc), builder.LiteralValue(insn));
+			builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.Break), builder.LiteralValue(pc), builder.LiteralValue(insn));
 			return true;
 		}
 		insn_15:
@@ -301,7 +301,7 @@ public unsafe partial class Recompiler {
 			DoLds();
 			var temp_198 = rt;
 			if(temp_198 != 0)
-				state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(temp_198)] = (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd))));
+				state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(temp_198)] = (IRuntimeValue<uint>) builder.EnsureRuntime(builder.Call<uint, uint, uint>(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd)));
 			return true;
 		}
 		insn_16:
@@ -310,7 +310,7 @@ public unsafe partial class Recompiler {
 			var cop = (insn >> 26) & 0x3U;
 			var command = (insn >> 0) & 0x1FFFFFFU;
 			DoLds();
-			builder.Call(Copfun, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(command));
+			builder.CallVoid(Copfun, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(command));
 			return true;
 		}
 		insn_17:
@@ -323,7 +323,7 @@ public unsafe partial class Recompiler {
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_19 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rt)])).Store();
 			DoLds();
-			builder.Call(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd), (IRuntimeValue<uint>) builder.EnsureRuntime(temp_19));
+			builder.CallVoid<uint, uint, uint>(Copcreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd), (IRuntimeValue<uint>) builder.EnsureRuntime(temp_19));
 			return true;
 		}
 		insn_18:
@@ -426,7 +426,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(target))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			Branch(target);
 			return true;
@@ -445,7 +445,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(target))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			Branch(target);
 			return true;
@@ -456,7 +456,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_26 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -471,7 +471,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_27 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -486,7 +486,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_28 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -495,7 +495,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			state.LdWhich = (IRuntimeValue<uint>) builder.EnsureRuntime(rt);
 			state.LdValue = (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<short>) (builder.Pointer<short>(addr).Value));
@@ -507,7 +507,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_29 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -516,7 +516,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			state.LdWhich = (IRuntimeValue<uint>) builder.EnsureRuntime(rt);
 			state.LdValue = (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Pointer<ushort>(addr).Value));
@@ -541,7 +541,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_30 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -550,7 +550,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			state.LdWhich = (IRuntimeValue<uint>) builder.EnsureRuntime(rt);
 			state.LdValue = (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Pointer<uint>(addr).Value));
@@ -562,7 +562,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_31 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rt)])).Store();
@@ -581,7 +581,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_33 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rt)])).Store();
@@ -600,7 +600,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_35 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
 			DoLds();
@@ -608,9 +608,9 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADEL), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
-			builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2), (IRuntimeValue<uint>) builder.EnsureRuntime(rt), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Pointer<uint>(addr).Value)));
+			builder.CallVoid<uint, uint, uint>(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2), (IRuntimeValue<uint>) builder.EnsureRuntime(rt), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Pointer<uint>(addr).Value)));
 			return true;
 		}
 		insn_33:
@@ -623,7 +623,7 @@ public unsafe partial class Recompiler {
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			DoLds();
 			state.LdWhich = (IRuntimeValue<uint>) builder.EnsureRuntime(rt);
-			state.LdValue = (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd))));
+			state.LdValue = (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call<uint, uint, uint>(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd))));
 			return true;
 		}
 		insn_34:
@@ -666,7 +666,7 @@ public unsafe partial class Recompiler {
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_36 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rt)])).Store();
 			DoLds();
-			builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd), (IRuntimeValue<uint>) builder.EnsureRuntime(temp_36));
+			builder.CallVoid<uint, uint, uint>(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime(cop), (IRuntimeValue<uint>) builder.EnsureRuntime(rd), (IRuntimeValue<uint>) builder.EnsureRuntime(temp_36));
 			return true;
 		}
 		insn_37:
@@ -792,7 +792,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_48 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -807,7 +807,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_50 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -817,7 +817,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (16))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADES), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADES), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			builder.Pointer<ushort>(addr).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (temp_51));
 			return true;
@@ -880,7 +880,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (int) (SignExt<int>(imm, 16));
+			var eimm = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_57 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -896,7 +896,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_58 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -1011,7 +1011,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(lhs))) ^ ((IRuntimeValue<uint>) (builder.EnsureRuntime(rhs)))))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(lhs))) ^ ((IRuntimeValue<uint>) (builder.EnsureRuntime(r))))))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(0x80000000U)))))))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime(0x0U)))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.OV), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			var temp_216 = rd;
 			if(temp_216 != 0)
@@ -1042,7 +1042,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_71 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -1052,7 +1052,7 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADES), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADES), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
 			builder.Pointer<uint>(addr).Value = temp_72;
 			return true;
@@ -1063,7 +1063,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			var temp_73 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
 			DoLds();
@@ -1071,9 +1071,9 @@ public unsafe partial class Recompiler {
 			builder.When(
 				(IRuntimeValue<bool>) (((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x0)))) != ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(addr))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (((uint) (uint) ((uint) (((uint) (int) ((int) (32))) / ((uint) (byte) ((byte) 0x8))))) - ((uint) (byte) ((byte) 0x1)))))))))))), 
 				() => {
-					builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.ADES), builder.LiteralValue(pc), builder.LiteralValue(insn));
+					builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.ADES), builder.LiteralValue(pc), builder.LiteralValue(insn));
 				});
-			builder.Pointer<uint>(addr).Value = (IRuntimeValue<uint>) (builder.Call(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2), (IRuntimeValue<uint>) builder.EnsureRuntime(rt)));
+			builder.Pointer<uint>(addr).Value = (IRuntimeValue<uint>) (builder.Call<uint, uint, uint>(Copreg, (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x2), (IRuntimeValue<uint>) builder.EnsureRuntime(rt)));
 			return true;
 		}
 		insn_60:
@@ -1082,7 +1082,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_74 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -1114,7 +1114,7 @@ public unsafe partial class Recompiler {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rs)] = builder.LiteralValue(0U);
 			state.ReadAbsorb[(IRuntimeValue<int>) builder.EnsureRuntime(rt)] = builder.LiteralValue(0U);
 			var temp_76 = ((IRuntimeValue<uint>) (state.Registers[(IRuntimeValue<int>) builder.EnsureRuntime(rs)])).Store();
@@ -1145,7 +1145,7 @@ public unsafe partial class Recompiler {
 		if((insn & 0xFC00003F) == 0x0000000C) {
 			var code = (insn >> 6) & 0xFFFFFU;
 			DoLds();
-			builder.Call(ThrowCpuException, builder.LiteralValue(ExceptionType.Syscall), builder.LiteralValue(pc), builder.LiteralValue(insn));
+			builder.CallVoid(ThrowCpuException, builder.LiteralValue(ExceptionType.Syscall), builder.LiteralValue(pc), builder.LiteralValue(insn));
 			return true;
 		}
 		insn_63:

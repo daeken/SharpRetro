@@ -1,6 +1,6 @@
 // ReSharper disable CheckNamespace
 namespace SharpStationCore;
-using static LibSharpRetro.CpuHelpers.Math;
+using Math = LibSharpRetro.CpuHelpers.Math;
 
 public unsafe partial class Interpreter {
     public bool Interpret(uint insn, uint pc) {
@@ -33,7 +33,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_2 = (uint) ((rs) switch { 0 => 0U, var temp_84 => State->Registers[temp_84] });
@@ -54,7 +54,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			State->ReadAbsorb[rt] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_3 = (uint) ((rs) switch { 0 => 0U, var temp_86 => State->Registers[temp_86] });
@@ -121,7 +121,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_9 = (uint) ((rs) switch { 0 => 0U, var temp_96 => State->Registers[temp_96] });
@@ -139,7 +139,7 @@ public unsafe partial class Interpreter {
 		if((insn & 0xFC110000) == 0x04010000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[rs] = 0;
 			var temp_11 = (uint) ((rs) switch { 0 => 0U, var temp_98 => State->Registers[temp_98] });
 			DoLds();
@@ -155,7 +155,7 @@ public unsafe partial class Interpreter {
 		if((insn & 0xFC110000) == 0x04110000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[(byte) 0x1F] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_12 = (uint) ((rs) switch { 0 => 0U, var temp_99 => State->Registers[temp_99] });
@@ -173,7 +173,7 @@ public unsafe partial class Interpreter {
 		if((insn & 0xFC1F0000) == 0x1C000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[rs] = 0;
 			var temp_13 = (uint) ((rs) switch { 0 => 0U, var temp_100 => State->Registers[temp_100] });
 			DoLds();
@@ -189,7 +189,7 @@ public unsafe partial class Interpreter {
 		if((insn & 0xFC1F0000) == 0x18000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[rs] = 0;
 			var temp_14 = (uint) ((rs) switch { 0 => 0U, var temp_101 => State->Registers[temp_101] });
 			DoLds();
@@ -205,7 +205,7 @@ public unsafe partial class Interpreter {
 		if((insn & 0xFC110000) == 0x04000000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[rs] = 0;
 			var temp_15 = (uint) ((rs) switch { 0 => 0U, var temp_102 => State->Registers[temp_102] });
 			DoLds();
@@ -221,7 +221,7 @@ public unsafe partial class Interpreter {
 		if((insn & 0xFC110000) == 0x04100000) {
 			var rs = (insn >> 21) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[(byte) 0x1F] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_16 = (uint) ((rs) switch { 0 => 0U, var temp_103 => State->Registers[temp_103] });
@@ -240,7 +240,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
+			var target = (uint) (((uint) (uint) ((uint) ((pc + 4)))) + ((uint) (uint) ((uint) (((uint) (Math.SignExt<uint>(imm, 16))) << (int) ((byte) 0x2)))));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_17 = (uint) ((rs) switch { 0 => 0U, var temp_104 => State->Registers[temp_104] });
@@ -272,7 +272,7 @@ public unsafe partial class Interpreter {
 			DoLds();
 			var temp_106 = rt;
 			if(temp_106 != 0)
-				State->Registers[temp_106] = (uint) (Copcreg(cop, rd));
+				State->Registers[temp_106] = (uint) ((uint) (Copcreg(cop, rd)));
 			return true;
 		}
 		insn_16:
@@ -414,7 +414,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rt] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_26 = (uint) ((rs) switch { 0 => 0U, var temp_115 => State->Registers[temp_115] });
@@ -429,7 +429,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rt] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_27 = (uint) ((rs) switch { 0 => 0U, var temp_116 => State->Registers[temp_116] });
@@ -444,7 +444,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_28 = (uint) ((rs) switch { 0 => 0U, var temp_117 => State->Registers[temp_117] });
@@ -463,7 +463,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_29 = (uint) ((rs) switch { 0 => 0U, var temp_118 => State->Registers[temp_118] });
@@ -495,7 +495,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_30 = (uint) ((rs) switch { 0 => 0U, var temp_120 => State->Registers[temp_120] });
@@ -514,7 +514,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_31 = (uint) ((rt) switch { 0 => 0U, var temp_121 => State->Registers[temp_121] });
@@ -533,7 +533,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_33 = (uint) ((rt) switch { 0 => 0U, var temp_124 => State->Registers[temp_124] });
@@ -552,7 +552,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			var temp_35 = (uint) ((rs) switch { 0 => 0U, var temp_127 => State->Registers[temp_127] });
 			DoLds();
@@ -742,7 +742,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_48 = (uint) ((rs) switch { 0 => 0U, var temp_145 => State->Registers[temp_145] });
@@ -757,7 +757,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_50 = (uint) ((rs) switch { 0 => 0U, var temp_147 => State->Registers[temp_147] });
@@ -828,7 +828,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (int) (SignExt<int>(imm, 16));
+			var eimm = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rt] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_57 = (uint) ((rs) switch { 0 => 0U, var temp_157 => State->Registers[temp_157] });
@@ -844,7 +844,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var eimm = (uint) (SignExt<uint>(imm, 16));
+			var eimm = (uint) (Math.SignExt<uint>(imm, 16));
 			State->ReadAbsorb[rt] = 0;
 			State->ReadAbsorb[rs] = 0;
 			var temp_58 = (uint) ((rs) switch { 0 => 0U, var temp_159 => State->Registers[temp_159] });
@@ -988,7 +988,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_71 = (uint) ((rs) switch { 0 => 0U, var temp_180 => State->Registers[temp_180] });
@@ -1007,7 +1007,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			var temp_73 = (uint) ((rs) switch { 0 => 0U, var temp_182 => State->Registers[temp_182] });
 			DoLds();
@@ -1024,7 +1024,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_74 = (uint) ((rs) switch { 0 => 0U, var temp_183 => State->Registers[temp_183] });
@@ -1060,7 +1060,7 @@ public unsafe partial class Interpreter {
 			var rs = (insn >> 21) & 0x1FU;
 			var rt = (insn >> 16) & 0x1FU;
 			var imm = (insn >> 0) & 0xFFFFU;
-			var offset = (int) (SignExt<int>(imm, 16));
+			var offset = (int) (Math.SignExt<int>(imm, 16));
 			State->ReadAbsorb[rs] = 0;
 			State->ReadAbsorb[rt] = 0;
 			var temp_76 = (uint) ((rs) switch { 0 => 0U, var temp_185 => State->Registers[temp_185] });

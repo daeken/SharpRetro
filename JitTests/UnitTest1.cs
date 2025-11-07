@@ -244,31 +244,31 @@ public unsafe class Tests {
 	public void NoReturnCalls(IJit<uint> jit) {
 		var temp = false;
 		void ActionTest() => temp = true;
-		var callAction = jit.CreateFunction<Action>("action", builder => builder.Call(ActionTest));
+		var callAction = jit.CreateFunction<Action>("action", builder => builder.CallVoid(ActionTest));
 		callAction();
 		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest1(int a) => temp = a == 15;
-		var callAction1 = jit.CreateFunction<Action>("action1", builder => builder.Call(ActionTest1, builder.LiteralValue(15)));
+		var callAction1 = jit.CreateFunction<Action>("action1", builder => builder.CallVoid(ActionTest1, builder.LiteralValue(15)));
 		callAction1();
 		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest2(int a, int b) => temp = a == 15 && b == 27;
-		var callAction2 = jit.CreateFunction<Action>("action2", builder => builder.Call(ActionTest2, builder.LiteralValue(15), builder.LiteralValue(27)));
+		var callAction2 = jit.CreateFunction<Action>("action2", builder => builder.CallVoid(ActionTest2, builder.LiteralValue(15), builder.LiteralValue(27)));
 		callAction2();
 		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest3(int a, int b, int c) => temp = a == 15 && b == 27 && c == 123;
-		var callAction3 = jit.CreateFunction<Action>("action3", builder => builder.Call(ActionTest3, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123)));
+		var callAction3 = jit.CreateFunction<Action>("action3", builder => builder.CallVoid(ActionTest3, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123)));
 		callAction3();
 		ClassicAssert.True(temp);
 
 		temp = false;
 		void ActionTest4(int a, int b, int c, int d) => temp = a == 15 && b == 27 && c == 123 && d == -1;
-		var callAction4 = jit.CreateFunction<Action>("action4", builder => builder.Call(ActionTest4, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123), builder.LiteralValue(-1)));
+		var callAction4 = jit.CreateFunction<Action>("action4", builder => builder.CallVoid(ActionTest4, builder.LiteralValue(15), builder.LiteralValue(27), builder.LiteralValue(123), builder.LiteralValue(-1)));
 		callAction4();
 		ClassicAssert.True(temp);
 	}

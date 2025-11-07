@@ -116,29 +116,29 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		Ilg.LoadField(fld);
 	}
 	
-	public void Call(Action func) {
+	public void CallVoid(Action func) {
 		StoreValue(func);
 		Ilg.CallVirtual(typeof(Action).GetMethod("Invoke"));
 	}
-	public void Call<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct {
+	public void CallVoid<T1>(Action<T1> func, IRuntimeValue<T1> a1) where T1 : struct {
 		StoreValue(func);
 		Emit(a1);
 		Ilg.CallVirtual(typeof(Action<T1>).GetMethod("Invoke"));
 	}
-	public void Call<T1, T2>(Action<T1, T2> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct {
+	public void CallVoid<T1, T2>(Action<T1, T2> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2) where T1 : struct where T2 : struct {
 		StoreValue(func);
 		Emit(a1);
 		Emit(a2);
 		Ilg.CallVirtual(typeof(Action<T1, T2>).GetMethod("Invoke"));
 	}
-	public void Call<T1, T2, T3>(Action<T1, T2, T3> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct {
+	public void CallVoid<T1, T2, T3>(Action<T1, T2, T3> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct {
 		StoreValue(func);
 		Emit(a1);
 		Emit(a2);
 		Emit(a3);
 		Ilg.CallVirtual(typeof(Action<T1, T2, T3>).GetMethod("Invoke"));
 	}
-	public void Call<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct {
+	public void CallVoid<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct {
 		StoreValue(func);
 		Emit(a1);
 		Emit(a2);

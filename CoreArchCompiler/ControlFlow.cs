@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using DoubleSharp.Linq;
 
@@ -127,10 +128,10 @@ class ControlFlow : Builtin {
 
 			string type;
 			if(at == bt || at is not EInt(var asigned, var asized) || bt is not EInt(var bsigned, var bsized))
-				type = GenerateType(at);
+				type = GenerateType(at.AsRuntime(at.Runtime || bt.Runtime));
 			else
-				type = GenerateType(new EInt(asigned && bsigned, Math.Max(asized, bsized)));
-				
+				type = GenerateType(new EInt(asigned && bsigned, Math.Max(asized, bsized)).AsRuntime(at.Runtime || bt.Runtime));
+			
 			if(list[1].Type.Runtime) {
 				if(a.StartsWith("throw")) a = "null";
 				if(b.StartsWith("throw")) b = "null";
