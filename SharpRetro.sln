@@ -38,6 +38,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aarch64Cpu", "Aarch64Cpu\Aa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aarch64Common", "Aarch64Common\Aarch64Common.csproj", "{4FDA5033-2802-4210-A987-08BE8C86ABE6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoppermineGenerator", "CoppermineGenerator\CoppermineGenerator.csproj", "{63ADA7A4-C2D9-4BF9-A15A-B79D501E6927}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoppermineCpu", "CoppermineCpu\CoppermineCpu.csproj", "{616A63F0-87B9-4840-BA24-58DEF16D2E01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -120,5 +124,13 @@ Global
 		{4FDA5033-2802-4210-A987-08BE8C86ABE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FDA5033-2802-4210-A987-08BE8C86ABE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FDA5033-2802-4210-A987-08BE8C86ABE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63ADA7A4-C2D9-4BF9-A15A-B79D501E6927}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63ADA7A4-C2D9-4BF9-A15A-B79D501E6927}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63ADA7A4-C2D9-4BF9-A15A-B79D501E6927}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63ADA7A4-C2D9-4BF9-A15A-B79D501E6927}.Release|Any CPU.Build.0 = Release|Any CPU
+		{616A63F0-87B9-4840-BA24-58DEF16D2E01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{616A63F0-87B9-4840-BA24-58DEF16D2E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{616A63F0-87B9-4840-BA24-58DEF16D2E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{616A63F0-87B9-4840-BA24-58DEF16D2E01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
