@@ -10,17 +10,13 @@ public class Disassembler {
         if((insnBytes[0] & 0xC0) == 0x40) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-            if(!((rd != 0x6) & (rs != 0x6)))
+            if(!(rd != 0x6 & rs != 0x6))
                 goto insn_1;
             return "ld " +
                    rd switch {
-                       0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E",
-                       0x4 => "H", 0x5 => "L", 0x7 => "A",
-                       _ => "(HL)",
+                       0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
                    } + ", " + rs switch {
-                       0x0 => "B", 0x1 => "C", 0x2 => "D",
-                       0x3 => "E", 0x4 => "H", 0x5 => "L",
-                       0x7 => "A", _ => "(HL)",
+                       0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
                    };
         }
 
@@ -31,12 +27,9 @@ public class Disassembler {
             var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             if(!(rd != 0x6))
                 goto insn_2;
-            return "ld " +
-                   rd switch {
-                       0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E",
-                       0x4 => "H", 0x5 => "L", 0x7 => "A",
-                       _ => "(HL)",
-                   } + ", " + $"0x{imm:x02}";
+            return "ld " + rd switch {
+                    0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
+                } + ", " + $"0x{imm:x02}";
         }
 
         insn_2:
@@ -46,8 +39,7 @@ public class Disassembler {
             if(!(rd != 0x6))
                 goto insn_3;
             return "ld " + rd switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             } + ", (HL)";
         }
 
@@ -58,8 +50,7 @@ public class Disassembler {
             if(!(rs != 0x6))
                 goto insn_4;
             return "ld (HL), " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -72,12 +63,16 @@ public class Disassembler {
 
         /* LD-A-BC */
         if((insnBytes[0] & 0xFF) == 0xA) return "ld A, (BC)";
+
         /* LD-A-DE */
         if((insnBytes[0] & 0xFF) == 0x1A) return "ld A, (DE)";
+
         /* LD-BC-A */
         if((insnBytes[0] & 0xFF) == 0x2) return "ld (BC), A";
+
         /* LD-DE-A */
         if((insnBytes[0] & 0xFF) == 0x12) return "ld (DE), A";
+
         /* LD-A-imm16 */
         if((insnBytes[0] & 0xFF) == 0xFA) {
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
@@ -96,8 +91,10 @@ public class Disassembler {
 
         /* LDH-A-C */
         if((insnBytes[0] & 0xFF) == 0xF2) return "ldh A, (C)";
+
         /* LDH-C-A */
         if((insnBytes[0] & 0xFF) == 0xE2) return "ldh (C), A";
+
         /* LDH-A-imm8 */
         if((insnBytes[0] & 0xFF) == 0xF0) {
             var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
@@ -114,20 +111,23 @@ public class Disassembler {
 
         /* LD-A-HL- */
         if((insnBytes[0] & 0xFF) == 0x3A) return "ld A, (HL-)";
+
         /* LD-HL--A */
         if((insnBytes[0] & 0xFF) == 0x32) return "ld (HL-), A";
+
         /* LD-A-HL+ */
         if((insnBytes[0] & 0xFF) == 0x2A) return "ld A, (HL+)";
+
         /* LD-HL+-A */
         if((insnBytes[0] & 0xFF) == 0x22) return "ld (HL+), A";
+
         /* LD-rr-imm16 */
         if((insnBytes[0] & 0xCF) == 0x1) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
             var imm = (ushort) ((ushort) (msb << 0x8) | lsb);
-            return "ld " + r switch { 0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP" } +
-                   ", " + $"0x{imm:x04}";
+            return "ld " + r switch { 0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP" } + ", " + $"0x{imm:x04}";
         }
 
         /* LD-imm16-SP */
@@ -140,24 +140,17 @@ public class Disassembler {
 
         /* LD-SP-HL */
         if((insnBytes[0] & 0xFF) == 0xF9) return "ld SP, HL";
+
         /* PUSH-rr */
         if((insnBytes[0] & 0xCF) == 0xC5) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
-            return "push " + (r == 0x3
-                ? "AF"
-                : r switch {
-                    0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP",
-                });
+            return "push " + (r == 0x3 ? "AF" : r switch { 0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP" });
         }
 
         /* POP-rr */
         if((insnBytes[0] & 0xCF) == 0xC1) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
-            return "pop " + (r == 0x3
-                ? "AF"
-                : r switch {
-                    0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP",
-                });
+            return "pop " + (r == 0x3 ? "AF" : r switch { 0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP" });
         }
 
         /* JP-nn */
@@ -170,14 +163,14 @@ public class Disassembler {
 
         /* JP-HL */
         if((insnBytes[0] & 0xFF) == 0xE9) return "jp HL";
+
         /* JP-cc-imm16 */
         if((insnBytes[0] & 0xE7) == 0xC2) {
             var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
             var addr = (ushort) ((ushort) (msb << 0x8) | lsb);
-            return "jp " + cc switch { 0x0 => "NZ", 0x1 => "Z", 0x2 => "NC", _ => "C" } +
-                   ", " + $"0x{addr:x04}";
+            return "jp " + cc switch { 0x0 => "NZ", 0x1 => "Z", 0x2 => "NC", _ => "C" } + ", " + $"0x{addr:x04}";
         }
 
         /* JR-simm8 */
@@ -192,8 +185,7 @@ public class Disassembler {
             var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
             var e = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             var offset = (sbyte) e;
-            return "jr " + cc switch { 0x0 => "NZ", 0x1 => "Z", 0x2 => "NC", _ => "C" } +
-                   ", " +
+            return "jr " + cc switch { 0x0 => "NZ", 0x1 => "Z", 0x2 => "NC", _ => "C" } + ", " +
                    $"0x{(ushort) (pc + (ushort) offset):x04}";
         }
 
@@ -211,12 +203,12 @@ public class Disassembler {
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
             var addr = (ushort) ((ushort) (msb << 0x8) | lsb);
-            return "call " + cc switch { 0x0 => "NZ", 0x1 => "Z", 0x2 => "NC", _ => "C" } +
-                   ", " + $"0x{addr:x04}";
+            return "call " + cc switch { 0x0 => "NZ", 0x1 => "Z", 0x2 => "NC", _ => "C" } + ", " + $"0x{addr:x04}";
         }
 
         /* RET */
         if((insnBytes[0] & 0xFF) == 0xC9) return "ret";
+
         /* RET-cc */
         if((insnBytes[0] & 0xE7) == 0xC0) {
             var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
@@ -225,6 +217,7 @@ public class Disassembler {
 
         /* RETI */
         if((insnBytes[0] & 0xFF) == 0xD9) return "reti";
+
         /* RST */
         if((insnBytes[0] & 0xC7) == 0xC7) {
             var n = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
@@ -234,22 +227,27 @@ public class Disassembler {
 
         /* DI */
         if((insnBytes[0] & 0xFF) == 0xF3) return "di";
+
         /* EI */
         if((insnBytes[0] & 0xFF) == 0xFB) return "ei";
+
         /* CCF */
         if((insnBytes[0] & 0xFF) == 0x3F) return "ccf";
+
         /* SCF */
         if((insnBytes[0] & 0xFF) == 0x37) return "scf";
+
         /* CPL */
         if((insnBytes[0] & 0xFF) == 0x2F) return "cpl";
+
         /* NOP */
         if((insnBytes[0] & 0xFF) == 0x0) return "nop";
+
         /* INC */
         if((insnBytes[0] & 0xC7) == 0x4) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             return "inc " + rd switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -257,8 +255,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xC7) == 0x5) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             return "dec " + rd switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -277,8 +274,7 @@ public class Disassembler {
         /* ADD-HL */
         if((insnBytes[0] & 0xCF) == 0x9) {
             var rs = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
-            return "add HL, " +
-                   rs switch { 0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP" };
+            return "add HL, " + rs switch { 0x0 => "BC", 0x1 => "DE", 0x2 => "HL", _ => "SP" };
         }
 
         /* ADD-SP-r8 */
@@ -299,8 +295,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0x80) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "add A," + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -314,8 +309,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0x88) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "adc A," + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -329,8 +323,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0x90) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "sub" + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -344,8 +337,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0x98) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "sbc A," + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -359,8 +351,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0xA0) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "and" + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -374,8 +365,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0xA8) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "xor" + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -389,8 +379,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0xB0) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "or" + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -404,8 +393,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xF8) == 0xB8) {
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
             return "cp" + " " + rs switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -417,14 +405,15 @@ public class Disassembler {
 
         /* RLCA */
         if((insnBytes[0] & 0xFF) == 0x7) return "rlca";
+
         /* RLA */
         if((insnBytes[0] & 0xFF) == 0x17) return "rla";
+
         /* RLC */
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x0) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "rlc " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -432,30 +421,29 @@ public class Disassembler {
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x10) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "rl " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
         /* RRCA */
         if((insnBytes[0] & 0xFF) == 0xF) return "rrca";
+
         /* RRC */
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x8) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "rrc " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
         /* RRA */
         if((insnBytes[0] & 0xFF) == 0x1F) return "rra";
+
         /* RR */
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "rr " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -463,8 +451,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x20) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "sla " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -472,8 +459,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x28) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "sra " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -481,8 +467,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x30) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "swap " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -490,8 +475,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x38) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "srl " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -500,8 +484,7 @@ public class Disassembler {
             var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "bit " + bit + ", " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -510,8 +493,7 @@ public class Disassembler {
             var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "res " + bit + ", " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
@@ -520,15 +502,16 @@ public class Disassembler {
             var bit = (byte) ((byte) (insnBytes[1] >> 3) & 0x7);
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "set " + bit + ", " + reg switch {
-                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H",
-                0x5 => "L", 0x7 => "A", _ => "(HL)",
+                0x0 => "B", 0x1 => "C", 0x2 => "D", 0x3 => "E", 0x4 => "H", 0x5 => "L", 0x7 => "A", _ => "(HL)",
             };
         }
 
         /* DAA */
         if((insnBytes[0] & 0xFF) == 0x27) return "daa";
+
         /* HALT */
         if((insnBytes[0] & 0xFF) == 0x76) return "halt";
+
         /* STOP */
         if((insnBytes[0] & 0xFF) == 0x10) return "stop";
 
@@ -539,7 +522,7 @@ public class Disassembler {
         if((insnBytes[0] & 0xC0) == 0x40) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var rs = (byte) ((byte) (insnBytes[0] >> 0) & 0x7);
-            if(!((rd != 0x6) & (rs != 0x6)))
+            if(!(rd != 0x6 & rs != 0x6))
                 goto insn_1;
             return "LD-rd-rs";
         }
@@ -576,9 +559,13 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xA) return "LD-A-BC";
+
         if((insnBytes[0] & 0xFF) == 0x1A) return "LD-A-DE";
+
         if((insnBytes[0] & 0xFF) == 0x2) return "LD-BC-A";
+
         if((insnBytes[0] & 0xFF) == 0x12) return "LD-DE-A";
+
         if((insnBytes[0] & 0xFF) == 0xFA) {
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             var msb = (byte) ((byte) (insnBytes[2] >> 0) & 0xFF);
@@ -594,7 +581,9 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xF2) return "LDH-A-C";
+
         if((insnBytes[0] & 0xFF) == 0xE2) return "LDH-C-A";
+
         if((insnBytes[0] & 0xFF) == 0xF0) {
             var imm = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
             var addr = (ushort) (0xFF00 | imm);
@@ -608,9 +597,13 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0x3A) return "LD-A-HL-";
+
         if((insnBytes[0] & 0xFF) == 0x32) return "LD-HL--A";
+
         if((insnBytes[0] & 0xFF) == 0x2A) return "LD-A-HL+";
+
         if((insnBytes[0] & 0xFF) == 0x22) return "LD-HL+-A";
+
         if((insnBytes[0] & 0xCF) == 0x1) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
@@ -627,6 +620,7 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xF9) return "LD-SP-HL";
+
         if((insnBytes[0] & 0xCF) == 0xC5) {
             var r = (byte) ((byte) (insnBytes[0] >> 4) & 0x3);
             return "PUSH-rr";
@@ -645,6 +639,7 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xE9) return "JP-HL";
+
         if((insnBytes[0] & 0xE7) == 0xC2) {
             var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
             var lsb = (byte) ((byte) (insnBytes[1] >> 0) & 0xFF);
@@ -682,12 +677,14 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xC9) return "RET";
+
         if((insnBytes[0] & 0xE7) == 0xC0) {
             var cc = (byte) ((byte) (insnBytes[0] >> 3) & 0x3);
             return "RET-cc";
         }
 
         if((insnBytes[0] & 0xFF) == 0xD9) return "RETI";
+
         if((insnBytes[0] & 0xC7) == 0xC7) {
             var n = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             var addr = (byte) (n << 0x3);
@@ -695,11 +692,17 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xF3) return "DI";
+
         if((insnBytes[0] & 0xFF) == 0xFB) return "EI";
+
         if((insnBytes[0] & 0xFF) == 0x3F) return "CCF";
+
         if((insnBytes[0] & 0xFF) == 0x37) return "SCF";
+
         if((insnBytes[0] & 0xFF) == 0x2F) return "CPL";
+
         if((insnBytes[0] & 0xFF) == 0x0) return "NOP";
+
         if((insnBytes[0] & 0xC7) == 0x4) {
             var rd = (byte) ((byte) (insnBytes[0] >> 3) & 0x7);
             return "INC";
@@ -818,7 +821,9 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0x7) return "RLCA";
+
         if((insnBytes[0] & 0xFF) == 0x17) return "RLA";
+
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x0) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "RLC";
@@ -830,12 +835,14 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0xF) return "RRCA";
+
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x8) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "RRC";
         }
 
         if((insnBytes[0] & 0xFF) == 0x1F) return "RRA";
+
         if((insnBytes[0] & 0xFF) == 0xCB && (insnBytes[1] & 0xF8) == 0x18) {
             var reg = (byte) ((byte) (insnBytes[1] >> 0) & 0x7);
             return "RR";
@@ -880,7 +887,9 @@ public class Disassembler {
         }
 
         if((insnBytes[0] & 0xFF) == 0x27) return "DAA";
+
         if((insnBytes[0] & 0xFF) == 0x76) return "HALT";
+
         if((insnBytes[0] & 0xFF) == 0x10) return "STOP";
 
         return null;
