@@ -6,12 +6,16 @@ namespace CoreArchCompiler;
 
 class ScalarMath : Builtin {
 	static EType FirstType(PList list) => list[1].Type.AsRuntime(list.AnyRuntime);
-	static EType FirstNonBoolType(PList list) => 
-		(list[1].Type is EBool
-			? new EInt(false, 1)
-			: list[1].Type)
-		.AsRuntime(list.AnyRuntime);
-		
+	static EType LogicalBool(PList list) {
+		var allBool = list.All(x => x.Type is EBool) || (list.Any(x => x.Type is EBool) &&
+		                                                 list.All(x =>
+			                                                 x.Type is EBool or EInt(signed: false, width: 1)));
+		return (allBool
+				? new EBool()
+				: list[1].Type)
+			.AsRuntime(list.AnyRuntime);
+	}
+
 	static EType LogicalType(EType a, EType b) {
 		if(a is EInt || b is EInt) {
 			if(a is not EInt ai) throw new NotSupportedException("Logical expression contains lhs that is non-int");
@@ -63,23 +67,24 @@ class ScalarMath : Builtin {
 					}));
 
 		Expression(
-			new[] { "|", "&", "^" }, FirstNonBoolType,
+			new[] { "|", "&", "^" }, LogicalBool,
 			list => {
 				list = list.HomogeneousRuntime();
 				var signed = true;
 				var size = 0;
+				var rtype = LogicalBool(list);
 				foreach(var _elem in list.Skip(1)) {
 					var elem = _elem;
-					if(elem.Type is EBool)
-						elem = elem.Cast<sbyte>();
-					if(elem.Type is not EInt(var s, var ba))
+					if(rtype is not EBool && elem.Type is EBool)
+						elem = elem.Cast<byte>();
+					if(elem.Type is EInt(var s, var ba)) {
+						signed = signed && s;
+						size = Math.Max(size, ba);
+					} else if(rtype is not EBool)
 						throw new NotImplementedException($"Expression {list} should not see type {elem.Type} in {elem}");
-					signed = signed && s;
-					size = Math.Max(size, ba);
 				}
 
-				var etype = new EInt(signed, size).AsRuntime(list.AnyRuntime);
-				return list.Skip(1).Select(x => $"({GenerateExpression(x.Cast(etype))})")
+				return list.Skip(1).Select(x => $"({GenerateExpression(x.Cast(rtype))})")
 					.Aggregate((x1, x2) => $"({x1} {list[0]} {x2})");
 			}).Interpret(
 			(list, state) =>
@@ -135,12 +140,12 @@ class ScalarMath : Builtin {
 
 		Expression("reverse-bits", list => list[1].Type,
 				list => $"ReverseBits({GenerateExpression(list[1])})",
-				list => $"Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(ReverseBits, {GenerateExpression(list[1])})")
+				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(ReverseBits, {GenerateExpression(list[1])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("count-leading-zeros", list => list[1].Type,
 				list => $"CountLeadingZeros({GenerateExpression(list[1])})", 
-				list => $"Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(CountLeadingZeros, {GenerateExpression(list[1])})")
+				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(CountLeadingZeros, {GenerateExpression(list[1])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression(":", list => new EInt(false,

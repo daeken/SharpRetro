@@ -281,11 +281,23 @@ class ControlFlow : Builtin {
 			});
 
 		string MatchGen(PList list) {
+			var rtype = list.Count == 3 ? list[2].Type : list[3].Type;
+			var rs = GenerateType(rtype);
+
+			string Expr(PTree slist) {
+				var repr = GenerateExpression(slist);
+				if(rtype.Runtime && !slist.Type.Runtime && !repr.StartsWith("throw "))
+					repr = $"builder.LiteralValue({repr})";
+				if(slist.Type == rtype || repr.StartsWith("throw "))
+					return repr;
+				return $"({rs}) ({repr})";
+			}
+			
 			var opts = new List<string>();
 			for(var i = 2; i < list.Count; i += 2)
 				opts.Add(i + 1 == list.Count
-					? $"_ => {GenerateExpression(list[i])}"
-					: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {GenerateExpression(list[i + 1])}");
+					? $"_ => {Expr(list[i])}"
+					: $"({GenerateType(list[1].Type)}) ({GenerateExpression(list[i])}) => {Expr(list[i + 1])}");
 			var tn = TempName();
 			return $"{GenerateExpression(list[1])} switch {{ {string.Join(", ", opts)} }}";
 		}

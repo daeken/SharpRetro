@@ -97,7 +97,7 @@ public class Builtins : Builtin {
 							c += $"state.NZCV = builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("nzcv"):
-							c += $"{GenerateExpression(list[1], lhs: true)} = (IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[2])});";
+							c += $"{GenerateExpression(list[1], lhs: true)} = (IRuntimeValue<bool>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 					}
 
@@ -233,7 +233,7 @@ public class Builtins : Builtin {
 				list => $"state.VD[(int) ({GenerateExpression(list[1])})]")
 				.Interpret((list, state) => state.GetRegister($"V{state.Evaluate(list[1])}").As<double>()[0]);
 			
-			Expression("nzcv", list => new EInt(false, list.Count == 1 ? 32 : 1).AsRuntime(),
+			Expression("nzcv", _ => new EBool().AsRuntime(),
 				list => {
 					if(list.Count == 1) throw new NotSupportedException();
 					switch(list[1]) {
@@ -352,7 +352,7 @@ public class Builtins : Builtin {
 				list =>
 					$"state->Exclusive{(list.Type is EInt(_, var ewidth) ? ewidth : throw new NotSupportedException())} = *({GenerateType(list.Type)}*) ({GenerateExpression(list[1])})",
 				list =>
-					$"Exclusive{(list.Type is EInt(_, var width) ? width : throw new NotSupportedException())}R = ((IRuntimePointer<ulong, {GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
+					$"state.Exclusive{(list.Type is EInt(_, var width) ? width : throw new NotSupportedException())} = ((IRuntimePointer<ulong, {GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
 				.NoInterpret(); // TODO: Implement
 			
 			Expression("store", _ => EType.Unit.AsRuntime(),
@@ -375,7 +375,12 @@ public class Builtins : Builtin {
 			
 			Expression("store-exclusive", _ => new EInt(false, 1).AsRuntime(), 
 				list => $"CompareAndSwap(({GenerateType(list[2].Type)}*) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state->Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})", 
-				list => $"CompareAndSwap((IRuntimePointer<ulong, {GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())}R())")
+				list => $"CompareAndSwap<{GenerateType(list[2].Type.AsCompiletime())}>((IRuntimePointer<ulong, {GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state.Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})")
 				.NoInterpret(); // TODO: Implement
+			
+			Statement("breakpoint", _ => EUnit.RuntimeType,
+				(cb, list) => cb += $"Breakpoint({GenerateExpression(list[1])});",
+				(cb, list) => cb += $"builder.CallVoid<uint>(Breakpoint, builder.LiteralValue({GenerateExpression(list[1])}));"
+				).NoInterpret(); // TODO: Implement
 	}
 }

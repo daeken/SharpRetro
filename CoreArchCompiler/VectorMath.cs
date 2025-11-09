@@ -45,7 +45,7 @@ class VectorMath : Builtin {
 
 		Expression("vector-sum-unsigned", _ => new EInt(false, 64),
 				list => $"Math.VectorSumUnsigned({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"builder.Call<ulong, Vector128<float>, long, long>(Math.VectorSumUnsigned, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+				list => $"builder.Call<Vector128<float>, long, long, ulong>(Math.VectorSumUnsigned, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
 			.Interpret((list, state) => {
 				var esize = (int) state.Evaluate(list[2]);
 				var count = (int) state.Evaluate(list[3]);

@@ -369,6 +369,7 @@
             0b1100 "GT" 0b1101 "LE"
             "AL")))
     (block
+        (let temp (& (nzcv c) (! (nzcv z))))
         (let result (match (>> cond 1)
             0b000 (nzcv z)
             0b001 (nzcv c)
@@ -491,7 +492,7 @@
     "brk #$imm"
     (names (imm i))
     (block)
-    (branch 0xf1f1f1f1f2f2f2f2))
+    (breakpoint imm))
 
 (def BSL
     "0 Q 1 01110 01 1 mmmmm 00011 1 nnnnn ddddd"

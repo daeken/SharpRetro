@@ -86,8 +86,8 @@ public unsafe struct CpuState : IJitStruct {
     [FieldOffset(0x324)] public uint Exclusive32;
     [FieldOffset(0x328)] public ulong Exclusive64;
 
-    [FieldOffset(0x330)] public ulong NZCV_N;
-    [FieldOffset(0x338)] public ulong NZCV_Z;
-    [FieldOffset(0x340)] public ulong NZCV_C;
-    [FieldOffset(0x348)] public ulong NZCV_V;
+    [FieldOffset(0x330)] public bool NZCV_N;
+    [FieldOffset(0x338)] public bool NZCV_Z;
+    [FieldOffset(0x340)] public bool NZCV_C;
+    [FieldOffset(0x348)] public bool NZCV_V;
 }

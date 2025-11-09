@@ -64,6 +64,7 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public static IRuntimeValue<bool> operator >=(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.GTE(rhs);
 	public static IRuntimeValue<bool> operator >(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.GT(rhs);
 
+	public static explicit operator IRuntimeValue<bool>(IRuntimeValue<T> val) => val.Cast<bool>();
 	public static explicit operator IRuntimeValue<byte>(IRuntimeValue<T> val) => val.Cast<byte>();
 	public static explicit operator IRuntimeValue<sbyte>(IRuntimeValue<T> val) => val.Cast<sbyte>();
 	public static explicit operator IRuntimeValue<ushort>(IRuntimeValue<T> val) => val.Cast<ushort>();
