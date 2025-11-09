@@ -129,6 +129,9 @@ class ScalarMath : Builtin {
 					$"(({GenerateExpression(list[1])}) << ({bs} - (int) ({GenerateExpression(list[2])}))) | (({GenerateExpression(list[1])}) >> (int) ({GenerateExpression(list[2])}))";
 			}, list => {
 				if(list[1].Type is not EInt(false, var bs)) throw new NotSupportedException();
+				if(list[2].Type.Runtime)
+					return
+						$"(({GenerateExpression(list[1])}).LeftShift(({GenerateType(list[1].Type)}) (({GenerateType(list[2].Type)}) builder.EnsureRuntime({bs}) - builder.EnsureRuntime({GenerateExpression(list[2])}))))) | (({GenerateExpression(list[1])}).RightShift(({GenerateType(list[1].Type)}) builder.EnsureRuntime({GenerateExpression(list[2])}))";
 				return
 					$"(({GenerateExpression(list[1])}).LeftShift(({GenerateType(list[1].Type)}) builder.EnsureRuntime({bs} - ({GenerateExpression(list[2])}))))) | (({GenerateExpression(list[1])}).RightShift(({GenerateType(list[1].Type)}) builder.EnsureRuntime({GenerateExpression(list[2])}))";
 			}).Interpret((list, state) => {

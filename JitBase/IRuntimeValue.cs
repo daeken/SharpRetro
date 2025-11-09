@@ -12,8 +12,10 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<OT> Bitcast<OT>() where OT : struct;
 	public abstract IRuntimeValue<T> Store();
 	public abstract IRuntimeValue<T> Add(IRuntimeValue<T> rhs);
+	public abstract IRuntimeValue<T> Add<U>(IRuntimeValue<U> rhs) where U : struct;
 	public abstract IRuntimeValue<T> Sub(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<T> Mul(IRuntimeValue<T> rhs);
+	public abstract IRuntimeValue<T> Mul<U>(IRuntimeValue<U> rhs) where U : struct;
 	public abstract IRuntimeValue<T> Div(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<T> Mod(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<T> Negate();
@@ -45,8 +47,10 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> ZeroTop();
 	public abstract IRuntimeValue<Vector128<T>> CreateVector();
 	public static IRuntimeValue<T> operator +(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
+	public static IRuntimeValue<Vector128<T>> operator +(IRuntimeValue<Vector128<T>> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
 	public static IRuntimeValue<T> operator -(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Sub(rhs);
 	public static IRuntimeValue<T> operator *(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Mul(rhs);
+	public static IRuntimeValue<Vector128<T>> operator *(IRuntimeValue<Vector128<T>> lhs, IRuntimeValue<T> rhs) => lhs.Mul(rhs);
 	public static IRuntimeValue<T> operator /(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Div(rhs);
 	public static IRuntimeValue<T> operator %(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Mod(rhs);
 	public static IRuntimeValue<T> operator -(IRuntimeValue<T> v) => v.Negate();

@@ -56,8 +56,10 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 	}
 
 	public override IRuntimeValue<T> Add(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildAdd(Builder, Emit(), Emit(rhs), EmptyString));
+	public override IRuntimeValue<T> Add<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildSub(Builder, Emit(), Emit(rhs), EmptyString));
 	public override IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => C<T>(() => LLVM.BuildMul(Builder, Emit(), Emit(rhs), EmptyString));
+	public override IRuntimeValue<T> Mul<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => C<T>(() => IsSigned<T>()
 		? LLVM.BuildSDiv(Builder, Emit(), Emit(rhs), EmptyString)
 		: LLVM.BuildUDiv(Builder, Emit(), Emit(rhs), EmptyString));

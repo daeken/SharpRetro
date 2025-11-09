@@ -51,8 +51,10 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 		return C<T>(() => Ilg.LoadLocal(local));
 	}
 	public override IRuntimeValue<T> Add(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Add())));
+	public override IRuntimeValue<T> Add<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Subtract())));
 	public override IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.Multiply())));
+	public override IRuntimeValue<T> Mul<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();
 	public override IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => IsSigned<T>(() => Ilg.Divide(), () => Ilg.UnsignedDivide()))));
 	public override IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => C<T>(() => EmitThen(() => TT(rhs).EmitThen(() => IsSigned<T>(() => Ilg.Remainder(), () => Ilg.UnsignedRemainder()))));
 	public override IRuntimeValue<T> Negate() {

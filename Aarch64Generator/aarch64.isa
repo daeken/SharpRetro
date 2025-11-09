@@ -1514,7 +1514,7 @@
         0b0100 (= (vec-s rd) (f32 (vec-d rn)))
         (unimplemented)))
 
-(defm fcvtas-sub (v) (if (>= v 0) (round-half-up v) (round-half-down v)))
+(defm fcvtas-sub (v t) (if (>= v (t 0)) (round-half-up v) (round-half-down v)))
 
 (def FCVTAS-scalar-integer
     "s 0 0 11110 tt 1 00 100 000000 nnnnn ddddd"
@@ -1532,10 +1532,10 @@
             0b1_01 (block (= r1 "X") (= r2 "D"))
             (unimplemented)))
     (match st
-        0b0_00 (= (gpr32 rd) (bitcast (i32 (fcvtas-sub (vec-s rn))) u32))
-        0b1_00 (= (gpr64 rd) (bitcast (i64 (fcvtas-sub (vec-s rn))) u64))
-        0b0_01 (= (gpr32 rd) (bitcast (i32 (fcvtas-sub (vec-d rn))) u32))
-        0b1_01 (= (gpr64 rd) (bitcast (i64 (fcvtas-sub (vec-d rn))) u64))
+        0b0_00 (= (gpr32 rd) (bitcast (i32 (fcvtas-sub (vec-s rn) f32)) u32))
+        0b1_00 (= (gpr64 rd) (bitcast (i64 (fcvtas-sub (vec-s rn) f32)) u64))
+        0b0_01 (= (gpr32 rd) (bitcast (i32 (fcvtas-sub (vec-d rn) f64)) u32))
+        0b1_01 (= (gpr64 rd) (bitcast (i64 (fcvtas-sub (vec-d rn) f64)) u64))
         (unimplemented)))
 
 (def FCVTAU-scalar-integer
@@ -1554,10 +1554,10 @@
             0b1_01 (block (= r1 "X") (= r2 "D"))
             (unimplemented)))
     (match st
-        0b0_00 (= (gpr32 rd) (u32 (fcvtas-sub (vec-s rn))))
-        0b1_00 (= (gpr64 rd) (u64 (fcvtas-sub (vec-s rn))))
-        0b0_01 (= (gpr32 rd) (u32 (fcvtas-sub (vec-d rn))))
-        0b1_01 (= (gpr64 rd) (u64 (fcvtas-sub (vec-d rn))))
+        0b0_00 (= (gpr32 rd) (u32 (fcvtas-sub (vec-s rn) f32)))
+        0b1_00 (= (gpr64 rd) (u64 (fcvtas-sub (vec-s rn) f32)))
+        0b0_01 (= (gpr32 rd) (u32 (fcvtas-sub (vec-d rn) f64)))
+        0b1_01 (= (gpr64 rd) (u64 (fcvtas-sub (vec-d rn) f64)))
         (unimplemented)))
 
 (def FCVTL[2]
@@ -2202,7 +2202,7 @@
         0b01 (= (vec-d rd) (-! (* (vec-d rn) (vec-d rm))))
         (unimplemented)))
 
-(defm frinta (v) (if (< v 0) (round-half-down v) (round-half-up v)))
+(defm frinta (v t) (if (< v (t 0)) (round-half-down v) (round-half-up v)))
 
 (def FRINTA-scalar
     "0 0 0 11110 tt 1 001 100 10000 nnnnn ddddd"
@@ -2214,8 +2214,8 @@
         0b01 "D"
         (unimplemented)))
     (match type
-        0b00 (= (vec-s rd) (frinta (vec-s rn)))
-        0b01 (= (vec-d rd) (frinta (vec-d rn)))
+        0b00 (= (vec-s rd) (frinta (vec-s rn) f32))
+        0b01 (= (vec-d rd) (frinta (vec-d rn) f64))
         (unimplemented)))
 
 (def FRINTI-scalar
@@ -2284,8 +2284,8 @@
         0b01 "D"
         (unimplemented)))
     (match type
-        0b00 (= (vec-s rd) (if (< (vec-s rn) 0) (round-half-up (vec-s rn)) (round-half-down (vec-s rn))))
-        0b01 (= (vec-d rd) (if (< (vec-d rn) 0) (round-half-up (vec-d rn)) (round-half-down (vec-d rn))))
+        0b00 (= (vec-s rd) (if (< (vec-s rn) (f32 0)) (round-half-up (vec-s rn)) (round-half-down (vec-s rn))))
+        0b01 (= (vec-d rd) (if (< (vec-d rn) (f64 0)) (round-half-up (vec-d rn)) (round-half-down (vec-d rn))))
         (unimplemented)))
 
 (def FRSQRTE-vector
