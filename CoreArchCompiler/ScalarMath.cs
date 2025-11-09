@@ -139,13 +139,13 @@ class ScalarMath : Builtin {
 		});
 
 		Expression("reverse-bits", list => list[1].Type,
-				list => $"ReverseBits({GenerateExpression(list[1])})",
-				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(ReverseBits, {GenerateExpression(list[1])})")
+				list => $"Math.ReverseBits({GenerateExpression(list[1])})",
+				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(Math.ReverseBits, {GenerateExpression(list[1])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("count-leading-zeros", list => list[1].Type,
-				list => $"CountLeadingZeros({GenerateExpression(list[1])})", 
-				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(CountLeadingZeros, {GenerateExpression(list[1])})")
+				list => $"Math.CountLeadingZeros({GenerateExpression(list[1])})", 
+				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(Math.CountLeadingZeros, {GenerateExpression(list[1])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression(":", list => new EInt(false,

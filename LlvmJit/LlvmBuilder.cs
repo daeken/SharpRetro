@@ -193,6 +193,10 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 		Builder.BuildCall2(LlvmType<Action<T1, T2, T3>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3)]);
 	public void CallVoid<T1, T2, T3, T4>(Action<T1, T2, T3, T4> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct =>
 		Builder.BuildCall2(LlvmType<Action<T1, T2, T3, T4>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4)]);
+	public void CallVoid<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct =>
+		Builder.BuildCall2(LlvmType<Action<T1, T2, T3, T4, T5>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4), PrepArg(a5)]);
+	public void CallVoid<T1, T2, T3, T4, T5, T6>(Action<T1, T2, T3, T4, T5, T6> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5, IRuntimeValue<T6> a6) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where T6 : struct =>
+		Builder.BuildCall2(LlvmType<Action<T1, T2, T3, T4, T5, T6>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4), PrepArg(a5), PrepArg(a6)]);
 	public IRuntimeValue<RetT> Call<RetT>(Func<RetT> func) where RetT : struct =>
 		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall2(LlvmType<Func<RetT>>(), DelegateToFP(func), [])));
 	public IRuntimeValue<RetT> Call<T1, RetT>(Func<T1, RetT> func, IRuntimeValue<T1> a1) where T1 : struct where RetT : struct =>
@@ -202,6 +206,9 @@ public unsafe class LlvmBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 	public IRuntimeValue<RetT> Call<T1, T2, T3, RetT>(Func<T1, T2, T3, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3) where T1 : struct where T2 : struct where T3 : struct where RetT : struct =>
 		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall2(LlvmType<Func<T1, T2, T3, RetT>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3)])));
 	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, RetT>(Func<T1, T2, T3, T4, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where RetT : struct =>
-		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall2(LlvmType<Func<T1, T2, T3, T4, RetT>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4),
-		])));
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall2(LlvmType<Func<T1, T2, T3, T4, RetT>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4)])));
+	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, T5, RetT>(Func<T1, T2, T3, T4, T5, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where RetT : struct =>
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall2(LlvmType<Func<T1, T2, T3, T4, T5, RetT>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4), PrepArg(a5)])));
+	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, T5, T6, RetT>(Func<T1, T2, T3, T4, T5, T6, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5, IRuntimeValue<T6> a6) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where T6 : struct where RetT : struct =>
+		C<RetT>(() => PrepRet<RetT>(Builder.BuildCall2(LlvmType<Func<T1, T2, T3, T4, T5, T6, RetT>>(), DelegateToFP(func), [PrepArg(a1), PrepArg(a2), PrepArg(a3), PrepArg(a4), PrepArg(a5), PrepArg(a6)])));
 }

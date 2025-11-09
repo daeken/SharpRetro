@@ -146,6 +146,25 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		Emit(a4);
 		Ilg.CallVirtual(typeof(Action<T1, T2, T3, T4>).GetMethod("Invoke"));
 	}
+	public void CallVoid<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct {
+		StoreValue(func);
+		Emit(a1);
+		Emit(a2);
+		Emit(a3);
+		Emit(a4);
+		Emit(a5);
+		Ilg.CallVirtual(typeof(Action<T1, T2, T3, T4, T5>).GetMethod("Invoke"));
+	}
+	public void CallVoid<T1, T2, T3, T4, T5, T6>(Action<T1, T2, T3, T4, T5, T6> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5, IRuntimeValue<T6> a6) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where T6 : struct {
+		StoreValue(func);
+		Emit(a1);
+		Emit(a2);
+		Emit(a3);
+		Emit(a4);
+		Emit(a5);
+		Emit(a6);
+		Ilg.CallVirtual(typeof(Action<T1, T2, T3, T4, T5, T6>).GetMethod("Invoke"));
+	}
 	public IRuntimeValue<RetT> Call<RetT>(Func<RetT> func) where RetT : struct =>
 		C<RetT>(() => {
 			StoreValue(func);
@@ -180,5 +199,26 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 			Emit(a3);
 			Emit(a4);
 			Ilg.CallVirtual(typeof(Func<T1, T2, T3, T4, RetT>).GetMethod("Invoke"));
+		});
+	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, T5, RetT>(Func<T1, T2, T3, T4, T5, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where RetT : struct =>
+		C<RetT>(() => {
+			StoreValue(func);
+			Emit(a1);
+			Emit(a2);
+			Emit(a3);
+			Emit(a4);
+			Emit(a5);
+			Ilg.CallVirtual(typeof(Func<T1, T2, T3, T4, T5, RetT>).GetMethod("Invoke"));
+		});
+	public IRuntimeValue<RetT> Call<T1, T2, T3, T4, T5, T6, RetT>(Func<T1, T2, T3, T4, T5, T6, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3, IRuntimeValue<T4> a4, IRuntimeValue<T5> a5, IRuntimeValue<T6> a6) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where T6 : struct where RetT : struct =>
+		C<RetT>(() => {
+			StoreValue(func);
+			Emit(a1);
+			Emit(a2);
+			Emit(a3);
+			Emit(a4);
+			Emit(a5);
+			Emit(a6);
+			Ilg.CallVirtual(typeof(Func<T1, T2, T3, T4, T5, T6, RetT>).GetMethod("Invoke"));
 		});
 }

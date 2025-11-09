@@ -78,23 +78,35 @@ public class Builtins : Builtin {
 							c--;
 							return;
 						case PName("gpr64"):
-							c += $"state.X[(int) {GenerateExpression(sub[1])}] = builder.EnsureRuntime({GenerateExpression(list[2])});";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							return;
 						case PName("gpr-or-sp64"):
 							c += $"if({GenerateExpression(sub[1])} == 31)";
 							c++;
-							c += $"state.SP = builder.EnsureRuntime({GenerateExpression(list[2])});";
+							c += $"state.SP = (IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							c--;
 							c += "else";
 							c++;
-							c += $"state.X[(int) {GenerateExpression(sub[1])}] = builder.EnsureRuntime({GenerateExpression(list[2])});";
+							c += $"state.X[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[2])});";
 							c--;
 							return;
+						case PName("vec-b"):
+							c += $"state.VB[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<byte>) builder.EnsureRuntime({GenerateExpression(list[2])});";
+							return;
+						case PName("vec-h"):
+							c += $"state.VH[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<ushort>) builder.EnsureRuntime({GenerateExpression(list[2])});";
+							return;
+						case PName("vec-s"):
+							c += $"state.VS[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<float>) builder.EnsureRuntime({GenerateExpression(list[2])});";
+							return;
+						case PName("vec-d"):
+							c += $"state.VD[(int) {GenerateExpression(sub[1])}] = (IRuntimeValue<double>) builder.EnsureRuntime({GenerateExpression(list[2])});";
+							return;
 						case PName("sr"):
-							c += $"builder.Call<ulong, uint, uint, uint, uint, uint, ulong>(SR, (uint64_t) this, {GenerateExpression(sub[1])}, {GenerateExpression(sub[2])}, {GenerateExpression(sub[3])}, {GenerateExpression(sub[4])}, {GenerateExpression(sub[5])}, {GenerateExpression(list[2])});";
+							c += $"builder.CallVoid<uint, uint, uint, uint, uint, ulong>(SR, builder.EnsureRuntime({GenerateExpression(sub[1])}), builder.EnsureRuntime({GenerateExpression(sub[2])}), builder.EnsureRuntime({GenerateExpression(sub[3])}), builder.EnsureRuntime({GenerateExpression(sub[4])}), builder.EnsureRuntime({GenerateExpression(sub[5])}), builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 						case PName("nzcv") when sub.Count == 1:
-							c += $"state.NZCV = builder.EnsureRuntime({GenerateExpression(list[2])});";
+							c += $"SetNZCV(state, (IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[2])}));";
 							return;
 						case PName("nzcv"):
 							c += $"{GenerateExpression(list[1], lhs: true)} = (IRuntimeValue<bool>) builder.EnsureRuntime({GenerateExpression(list[2])});";
@@ -290,12 +302,12 @@ public class Builtins : Builtin {
 		
 			Expression("sr", _ => new EInt(false, 64).AsRuntime(), 
 				list => $"SR({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})", 
-				list => $"builder.Call<ulong, ulong, uint, uint, uint, uint, uint>(SR, (ulong) this, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])}, {GenerateExpression(list[5])})")
+				list => $"builder.Call<uint, uint, uint, uint, uint, ulong>(SR, builder.EnsureRuntime({GenerateExpression(list[1])}), builder.EnsureRuntime({GenerateExpression(list[2])}), builder.EnsureRuntime({GenerateExpression(list[3])}), builder.EnsureRuntime({GenerateExpression(list[4])}), builder.EnsureRuntime({GenerateExpression(list[5])}))")
 				.NoInterpret();
 			
 			Expression("float-to-fixed-point", list => TypeFromName(list[2]).AsRuntime(list[1].Type.Runtime || list[3].Type.Runtime), 
 				list => $"FloatToFixed{((EInt) list.Type).Width}({GenerateExpression(list[1])}, (int) ({GenerateExpression(list[3])}))", 
-				list => $"builder.Call<{(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}, {GenerateType(list[1].Type.AsCompiletime())}, int>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (IRuntimeValue<int>) ({GenerateExpression(list[3])}))")
+				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, int, {(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[3])}))")
 				.Interpret((list, state) => {
 					var width = ((EInt) list.Type).Width;
 					var swidth = ((EFloat) list[1].Type).Width;
@@ -345,7 +357,7 @@ public class Builtins : Builtin {
 #endif
 				},
 				list =>
-					$"((IRuntimePointer<ulong, {GenerateType(list.Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value")
+					$"builder.Pointer<{GenerateType(list.Type.AsCompiletime())}>((IRuntimeValue<ulong>) builder.EnsureRuntime({GenerateExpression(list[1])})).Value")
 				.Interpret((list, state) => state.GetMemory(state.Evaluate(list[1]), list.Type));
 
 			Expression("load-exclusive", list => TypeFromName(list[2]).AsRuntime(),

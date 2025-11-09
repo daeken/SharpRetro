@@ -50,4 +50,9 @@ public static class Common {
 
     public static ulong MakeWMask(uint n, uint imms, uint immr, long m, int immediate) => MakeMasks(n, imms, immr, (int) m, immediate != 0).Item1;
     public static ulong MakeTMask(uint n, uint imms, uint immr, long m, int immediate) => MakeMasks(n, imms, immr, (int) m, immediate != 0).Item2;
+    
+    public static uint FloatToFixed32(float fvalue, int fbits) => unchecked((uint) (int) MathF.Round(fvalue * (1 << fbits)));
+    public static ulong FloatToFixed64(float fvalue, int fbits) => unchecked((ulong) (long) MathF.Round(fvalue * (1 << fbits)));
+    public static uint FloatToFixed32(double fvalue, int fbits) => unchecked((uint) (int) Math.Round(fvalue * (1 << fbits)));
+    public static ulong FloatToFixed64(double fvalue, int fbits) => unchecked((ulong) (long) Math.Round(fvalue * (1 << fbits)));
 }

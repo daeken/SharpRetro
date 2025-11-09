@@ -144,7 +144,7 @@ class ControlFlow : Builtin {
 				
 			if(!a.StartsWith("throw")) a = $"({a})";
 			if(!b.StartsWith("throw")) b = $"({b})";
-			return $"({GenerateExpression(EnsureBool(list[1]))}) ? ({type}) {a} : ({type}) {b}";
+			return $"({GenerateExpression(EnsureBool(list[1]))}) ? ({type}) builder.EnsureRuntime({a}) : ({type}) builder.EnsureRuntime{b}";
 		});
 
 		Interpret("if", (list, state) => Extensions.AsBool(state.Evaluate(list[1])) ? state.Evaluate(list[2]) : state.Evaluate(list[3]));

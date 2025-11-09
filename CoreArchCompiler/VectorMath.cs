@@ -34,18 +34,18 @@ class VectorMath : Builtin {
 				list => $"({GenerateExpression(list[1])}).Element<{GenerateType(list.Type.AsCompiletime())}>({GenerateExpression(list[2].Cast<int>())})")
 			.Interpret((list, state) => state.Evaluate(list[1]).As(TypeFromName(list[3]))[(int) state.Evaluate(list[2])]);
 		Expression("vector-extract", list => EType.Vector.AsRuntime(list[1].Type.Runtime || list[2].Type.Runtime), 
-				list => $"VectorExtract({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})", 
-				list => $"builder.Call<Vector128<float>, Vector128<float>, Vector128<float>, uint, uint>(VectorExtract, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})")
+				list => $"Math.VectorExtract({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})", 
+				list => $"builder.Call<Vector128<float>, Vector128<float>, uint, uint, Vector128<float>>(Math.VectorExtract, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[3])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[4])}))")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("vector-count-bits", _ => EType.Vector, 
-				list => $"VectorCountBits({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
-				list => $"builder.Call<Vector128<float>, Vector128<float>, long>(VectorCountBits, {GenerateExpression(list[1])}, {GenerateExpression(list[2])})")
+				list => $"Math.VectorCountBits({GenerateExpression(list[1])}, {GenerateExpression(list[2])})", 
+				list => $"builder.Call<Vector128<float>, long, Vector128<float>>(Math.VectorCountBits, {GenerateExpression(list[1])}, (IRuntimeValue<long>) builder.EnsureRuntime({GenerateExpression(list[2])}))")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("vector-sum-unsigned", _ => new EInt(false, 64),
 				list => $"Math.VectorSumUnsigned({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"builder.Call<Vector128<float>, long, long, ulong>(Math.VectorSumUnsigned, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+				list => $"builder.Call<Vector128<float>, byte, byte, ulong>(Math.VectorSumUnsigned, builder.EnsureRuntime({GenerateExpression(list[1])}), (IRuntimeValue<byte>) builder.EnsureRuntime({GenerateExpression(list[2])}), (IRuntimeValue<byte>) builder.EnsureRuntime({GenerateExpression(list[3])}))")
 			.Interpret((list, state) => {
 				var esize = (int) state.Evaluate(list[2]);
 				var count = (int) state.Evaluate(list[3]);
@@ -84,8 +84,8 @@ class VectorMath : Builtin {
 			});
 
 		Expression("vec-frsqrte", list => EType.Vector.AsRuntime(list.AnyRuntime), 
-				list => $"VectorFrsqrte({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"builder.Call<Vector128<float>, Vector128<float>, int, int>(VectorFrsqrte, {GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
+				list => $"Math.VectorFrsqrte({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
+				list => $"builder.Call<Vector128<float>, int, int, Vector128<float>>(Math.VectorFrsqrte, {GenerateExpression(list[1])}, (IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[2])}), (IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[3])}))")
 			.Interpret((list, state) => {
 				var vector = state.Evaluate(list[1]);
 				switch((int) state.Evaluate(list[2])) {
