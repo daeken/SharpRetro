@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Aarch64Cpu;
 using JitBase;
 using StaticRecompilerBase;
@@ -28,7 +29,22 @@ public class CoreRecompiler : Recompiler {
         }).ToArray();
     }
 
-    public uint Fetch(ulong addr) => ExeLoader.Load<uint>(addr);
+    public uint Fetch(ulong addr) {
+        if(addr < ExeLoader.InitialLoadBase || addr > ExeLoader.InitialLoadBase + 0x1_0000_0000UL * (ulong) ExeLoader.ExeModules.Count)
+            throw new ArgumentOutOfRangeException(nameof(addr));
+        var modOff = (int) ((addr - ExeLoader.InitialLoadBase) >> 32);
+        var module = ExeLoader.ExeModules[modOff];
+        if(addr >= module.TextStart && addr < module.TextEnd) {
+            Debug.Assert((addr & 3) == 0); // Instructions must be 4-byte aligned
+            var taddr = addr - module.TextStart;
+            taddr >>= 2;
+            var shift = taddr & 0x3F;
+            taddr >>= 6;
+            Coverage[modOff][taddr] |= 1UL << (int) shift;
+        }
+        return module.Load<uint>(addr);
+    }
+
     public string Disassemble(ulong addr) => Disassembler.Disassemble(Fetch(addr), addr);
     public bool IsValidCodeAt(ulong addr) => Disassemble(addr) != null;
 
@@ -42,6 +58,19 @@ public class CoreRecompiler : Recompiler {
         Recompile(ExeLoader.EntryPoint);
         while(RecompileQueue.TryDequeue(out var addr))
             RecompileBlock(addr);
+        CheckCoverage();
+    }
+
+    void CheckCoverage() {
+        foreach(var module in Coverage) {
+            var totalBits = module.Length * 64;
+            var seenBits = 0;
+            foreach(var val in module) {
+                for(var i = 0; i < 64; i++)
+                    seenBits += (int) ((val >> i) & 1);
+            }
+            Console.WriteLine($"Seen  {seenBits}/{totalBits} instructions");
+        }
     }
 
     public void RecompileBlock(ulong addr) {

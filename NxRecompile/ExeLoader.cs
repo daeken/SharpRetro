@@ -124,7 +124,7 @@ public class ExeModule {
 }
 
 public class ExeLoader {
-    const ulong InitialLoadBase = 0x71_0000_0000;
+    public const ulong InitialLoadBase = 0x71_0000_0000;
     public readonly List<ExeModule> ExeModules = new();
     public readonly ulong EntryPoint;
     public ExeLoader(string path) {
