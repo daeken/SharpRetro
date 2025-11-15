@@ -73,10 +73,21 @@ public class CoreRecompiler : Recompiler {
         Recompile(addr);
     }
 
+    protected override void Branch(IRuntimeValue<ulong> addr) {
+        Branched = true;
+        Console.WriteLine("Branching to a runtime address!");
+    }
+
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
         Recompile(addr);
         KnownFunctions.Add(addr);
+    }
+
+    protected override void BranchLinked(IRuntimeValue<ulong> addr) {
+        Console.WriteLine("Branching with link to a runtime address!");
+        // TODO: Work out symbolic execution nonsense
+        // Surely this won't be that hard.
     }
 
     protected override void SetNZCV(IStructRef<CpuState> state, IRuntimeValue<ulong> nzcv) {
@@ -85,5 +96,14 @@ public class CoreRecompiler : Recompiler {
         state.NZCV_Z = ((nzcv >> Builder.LiteralValue(30UL)) & one) == one;
         state.NZCV_C = ((nzcv >> Builder.LiteralValue(29UL)) & one) == one;
         state.NZCV_V = ((nzcv >> Builder.LiteralValue(28UL)) & one) == one;
+    }
+
+    protected override IRuntimeValue<ulong> SR(uint op0, uint op1, uint crn, uint crm, uint op2) {
+        Console.WriteLine($"Soooo... trying to get an SR value. That's fun! {op0} {op1} {crn} {crm} {op2}");
+        return Builder.Zero<ulong>();
+    }
+
+    protected override void CallSvc(ulong svc) {
+        Console.WriteLine($"Calling Svc 0x{svc:X}!");
     }
 }

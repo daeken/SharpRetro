@@ -73,6 +73,8 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 		})),
 		_ => C<T>(() => EmitThen(() => Ilg.Not()))
 	};
+	public override IRuntimeValue<T> ReverseBits() => throw new NotImplementedException();
+	public override IRuntimeValue<T> CountLeadingZeros() => throw new NotImplementedException();
 	public override IRuntimeValue<bool> LT(IRuntimeValue<T> rhs) => C<bool>(() => EmitThen(() => TT(rhs).EmitThen(() => IsSigned<T>(() => Ilg.CompareLessThan(), () => Ilg.UnsignedCompareLessThan()))));
 	public override IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs) => GT(rhs).Not();
 	public override IRuntimeValue<bool> EQ(IRuntimeValue<T> rhs) => C<bool>(() => EmitThen(() => TT(rhs).EmitThen(() => Ilg.CompareEqual())));

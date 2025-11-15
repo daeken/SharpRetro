@@ -2,10 +2,19 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace JitBase; 
 
 public static class Helpers {
+	public static int SizeOf<T>() {
+		if(typeof(T).IsConstructedGenericType) {
+			if(typeof(T).GetGenericTypeDefinition() == typeof(Vector128<>))
+				return 16;
+			throw new NotSupportedException($"Getting size of type {typeof(T)}");
+		}
+		return Marshal.SizeOf<T>();
+	}
 	public static bool IsSigned<U>() => default(U) is sbyte or short or int or long;
 	public static void IsSigned<U>(Action if_, Action else_) {
 		if(default(U) is sbyte or short or int or long)

@@ -143,12 +143,12 @@ class ScalarMath : Builtin {
 
 		Expression("reverse-bits", list => list[1].Type,
 				list => $"Math.ReverseBits({GenerateExpression(list[1])})",
-				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(Math.ReverseBits, {GenerateExpression(list[1])})")
+				list => $"({GenerateExpression(list[1])}).ReverseBits()")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("count-leading-zeros", list => list[1].Type,
 				list => $"Math.CountLeadingZeros({GenerateExpression(list[1])})", 
-				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, {GenerateType(list[1].Type.AsCompiletime())}>(Math.CountLeadingZeros, {GenerateExpression(list[1])})")
+				list => $"({GenerateExpression(list[1])}).CountLeadingZeros()")
 			.NoInterpret(); // TODO: Implement
 
 		Expression(":", list => new EInt(false,

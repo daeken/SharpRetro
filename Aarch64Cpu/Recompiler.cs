@@ -23,11 +23,11 @@ public partial class Recompiler {
         throw new NotImplementedException();
     }
     
-    protected virtual void SR(uint op0, uint op1, uint crn, uint crm, uint op2, ulong value) {
+    protected virtual void SR(uint op0, uint op1, uint crn, uint crm, uint op2, IRuntimeValue<ulong> value) {
         throw new NotImplementedException();
     }
 
-    protected virtual ulong SR(uint op0, uint op1, uint crn, uint crm, uint op2) {
+    protected virtual IRuntimeValue<ulong> SR(uint op0, uint op1, uint crn, uint crm, uint op2) {
         throw new NotImplementedException();
     }
 

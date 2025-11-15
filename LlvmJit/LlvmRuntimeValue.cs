@@ -81,6 +81,8 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 				: LLVM.BuildLShr(Builder, Emit(), shift, EmptyString);
 		});
 	public override IRuntimeValue<T> Not() => throw new NotImplementedException();
+	public override IRuntimeValue<T> ReverseBits() => throw new NotImplementedException();
+	public override IRuntimeValue<T> CountLeadingZeros() => throw new NotImplementedException();
 	public override IRuntimeValue<bool> LT(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSLT : LLVMIntPredicate.LLVMIntULT, Emit(), Emit(rhs), EmptyString));
 	public override IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, IsSigned<T>() ? LLVMIntPredicate.LLVMIntSLE : LLVMIntPredicate.LLVMIntULE, Emit(), Emit(rhs), EmptyString));
 	public override IRuntimeValue<bool> EQ(IRuntimeValue<T> rhs) => C<bool>(() => LLVM.BuildICmp(Builder, LLVMIntPredicate.LLVMIntEQ, Emit(), Emit(rhs), EmptyString));

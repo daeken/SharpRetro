@@ -25,6 +25,8 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> LeftShift(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<T> RightShift(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<T> Not();
+	public abstract IRuntimeValue<T> ReverseBits();
+	public abstract IRuntimeValue<T> CountLeadingZeros();
 	public abstract IRuntimeValue<bool> LT(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<bool> LTE(IRuntimeValue<T> rhs);
 	public abstract IRuntimeValue<bool> EQ(IRuntimeValue<T> rhs);

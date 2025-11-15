@@ -17,6 +17,7 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
     static StaticIRValue W<T>(IRuntimeValue<T> irv) where T : struct =>
         irv is StaticRuntimeValue<T> srv ? srv.Value : throw new();
+    static StaticRuntimeValue<T> W<T>(StaticIRValue siv) where T : struct => new(siv);
     
     public IRuntimeValue<T> Argument<T>(int index) where T : struct => throw new NotImplementedException();
 
@@ -66,7 +67,8 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
             W(cond)
         ));
 
-    public IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct => throw new NotImplementedException();
+    public IRuntimeValue<T> Ternary<T>(IRuntimeValue<bool> cond, IRuntimeValue<T> a, IRuntimeValue<T> b) where T : struct =>
+        W<T>(new StaticIRValue.Ternary(W(cond), W(a), W(b)));
 
     public void CallVoid(Action func) {
         throw new NotImplementedException();
