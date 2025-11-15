@@ -65,11 +65,10 @@ public class CoreRecompiler : Recompiler {
         foreach(var module in Coverage) {
             var totalBits = module.Length * 64;
             var seenBits = 0;
-            foreach(var val in module) {
+            foreach(var val in module)
                 for(var i = 0; i < 64; i++)
                     seenBits += (int) ((val >> i) & 1);
-            }
-            Console.WriteLine($"Seen  {seenBits}/{totalBits} instructions");
+            Console.WriteLine($"Seen {seenBits}/{totalBits} instructions");
         }
     }
 
