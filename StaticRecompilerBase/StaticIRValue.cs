@@ -2,6 +2,7 @@
 namespace StaticRecompilerBase;
 
 public abstract record StaticIRValue(Type Type) {
+    public record Literal(object Value, Type Type) : StaticIRValue(Type);
     public record Cast(StaticIRValue Value, Type OT) : StaticIRValue(OT);
     public record Bitcast(StaticIRValue Value, Type OT) : StaticIRValue(OT);
     public record Store(StaticIRValue Value) : StaticIRValue(Value.Type);
@@ -37,6 +38,8 @@ public abstract record StaticIRValue(Type Type) {
     public record Ceil(StaticIRValue Value) : StaticIRValue(Value.Type);
     public record Floor(StaticIRValue Value) : StaticIRValue(Value.Type);
     public record IsNaN(StaticIRValue Value) : StaticIRValue(typeof(bool));
+    
+    public record Dereference(StaticIRValue Pointer, Type Type) : StaticIRValue(Type);
 
     public record GetElement(StaticIRValue Vector, StaticIRValue Index, Type ElementType) : StaticIRValue(ElementType);
     public record SetElement(StaticIRValue Vector, StaticIRValue Index, StaticIRValue Element) : StaticIRValue(Vector.Type);

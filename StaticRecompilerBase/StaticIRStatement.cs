@@ -11,4 +11,6 @@ public abstract record StaticIRStatement {
     public record Unless(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement;
     public record While(StaticIRValue Cond, StaticIRStatement Do) : StaticIRStatement;
     public record DoWhile(StaticIRStatement Do, StaticIRValue Cond) : StaticIRStatement;
+    
+    public record Dereference(StaticIRValue Pointer, StaticIRValue Value) : StaticIRStatement;
 }

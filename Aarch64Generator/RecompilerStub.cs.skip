@@ -7,7 +7,7 @@ using static Aarch64Common.Common;
 using Math = LibSharpRetro.CpuHelpers.Math;
 
 public partial class Recompiler {
-    public bool RecompileOne(IBuilder<ulong> builder, IStructRef<CpuState> state, uint insn, uint pc) {
+    public bool RecompileOne(IBuilder<ulong> builder, IStructRef<CpuState> state, uint insn, ulong pc) {
         unchecked {
 /*%CODE%*/
             return false;

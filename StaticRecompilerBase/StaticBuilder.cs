@@ -22,11 +22,12 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
     public IStructRef<T> StructRefArgument<T>(int index) where T : IJitStruct => throw new NotImplementedException();
 
-    public IRuntimeValue<T> Zero<T>() where T : struct => throw new NotImplementedException();
+    public IRuntimeValue<T> Zero<T>() where T : struct => LiteralValue(default(T));
+    public IRuntimeValue<T> LiteralValue<T>(T value) where T : struct =>
+        new StaticRuntimeValue<T>(new StaticIRValue.Literal(value, typeof(T)));
 
-    public IRuntimeValue<T> LiteralValue<T>(T value) where T : struct => throw new NotImplementedException();
-
-    public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct => throw new NotImplementedException();
+    public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct =>
+        new StaticRuntimePointer<AddrT, T>(this, pointer);
 
     public ILocalVar<T> DefineLocal<T>() where T : struct => throw new NotImplementedException();
 
@@ -116,4 +117,9 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
     public IRuntimeValue<RetT> Call<T1, T2, T3, T4, T5, T6, RetT>(Func<T1, T2, T3, T4, T5, T6, RetT> func, IRuntimeValue<T1> a1, IRuntimeValue<T2> a2, IRuntimeValue<T3> a3,
         IRuntimeValue<T4> a4, IRuntimeValue<T5> a5, IRuntimeValue<T6> a6) where T1 : struct where T2 : struct where T3 : struct where T4 : struct where T5 : struct where T6 : struct where RetT : struct =>
         throw new NotImplementedException();
+
+    public IRuntimeValue<T> Dereference<T>(IRuntimeValue<AddrT> addr) where T : struct =>
+        new StaticRuntimeValue<T>(new StaticIRValue.Dereference(W(addr), typeof(T)));
+    public void Dereference<T>(IRuntimeValue<AddrT> addr, IRuntimeValue<T> value) where T : struct =>
+        Add(new StaticIRStatement.Dereference(W(addr), W(value)));
 }

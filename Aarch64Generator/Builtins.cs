@@ -379,7 +379,7 @@ public class Builtins : Builtin {
 #endif
 				},
 				list =>
-					$"((IRuntimePointer<ulong, {GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])})).Value = {GenerateExpression(list[2])}")
+					$"builder.Pointer<{GenerateType(list[2].Type.AsCompiletime())}>({GenerateExpression(list[1])}).Value = {GenerateExpression(list[2])}")
 				.Interpret((list, state) => {
 					state.SetMemory(state.Evaluate(list[1]), state.Evaluate(list[2]));
 					return null;

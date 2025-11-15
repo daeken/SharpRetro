@@ -45,7 +45,7 @@ public unsafe struct CpuState : IJitStruct {
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
     [FieldOffset(0x0110)] public Vector128<float>[] V;
-    [FieldOffset(0x0110)] public Vector128<float> V0;
+    /*[FieldOffset(0x0110)] public Vector128<float> V0;
     [FieldOffset(0x0120)] public Vector128<float> V1;
     [FieldOffset(0x0130)] public Vector128<float> V2;
     [FieldOffset(0x0140)] public Vector128<float> V3;
@@ -76,7 +76,7 @@ public unsafe struct CpuState : IJitStruct {
     [FieldOffset(0x02d0)] public Vector128<float> V28;
     [FieldOffset(0x02e0)] public Vector128<float> V29;
     [FieldOffset(0x02f0)] public Vector128<float> V30;
-    [FieldOffset(0x0300)] public Vector128<float> V31;
+    [FieldOffset(0x0300)] public Vector128<float> V31;*/
 
     [FieldOffset(0x310)] public ulong TlsBase;
     [FieldOffset(0x318)] public ulong BranchTo;
