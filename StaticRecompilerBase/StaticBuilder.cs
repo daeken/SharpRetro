@@ -13,11 +13,11 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
         func();
         return new(ScopeStack.Pop());
     }
-    void Add(StaticIRStatement stmt) => ScopeStack.Peek().Add(stmt);
+    public void Add(StaticIRStatement stmt) => ScopeStack.Peek().Add(stmt);
 
-    static StaticIRValue W<T>(IRuntimeValue<T> irv) where T : struct =>
+    public static StaticIRValue W<T>(IRuntimeValue<T> irv) where T : struct =>
         irv is StaticRuntimeValue<T> srv ? srv.Value : throw new();
-    static StaticRuntimeValue<T> W<T>(StaticIRValue siv) where T : struct => new(siv);
+    public static StaticRuntimeValue<T> W<T>(StaticIRValue siv) where T : struct => new(siv);
     
     public IRuntimeValue<T> Argument<T>(int index) where T : struct => throw new NotImplementedException();
 

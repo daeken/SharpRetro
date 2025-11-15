@@ -150,18 +150,21 @@ public class CoreRecompiler : Recompiler {
 
     protected override void Branch(ulong addr) {
         Branched = true;
+        Builder.Add(new StaticIRStatement.Branch(new  StaticIRValue.Literal(addr, typeof(ulong))));
         Console.WriteLine($"Branching to {addr:X}");
         Recompile(addr);
     }
 
     protected override void Branch(IRuntimeValue<ulong> addr) {
         Branched = true;
+        Builder.Add(new StaticIRStatement.Branch(StaticBuilder<ulong>.W(addr)));
         Console.WriteLine("Branching to a runtime address!");
     }
 
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
         State.X31 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
+        Builder.Add(new StaticIRStatement.Branch(new  StaticIRValue.Literal(addr, typeof(ulong))));
         Recompile(addr);
         KnownFunctions.Add(addr);
     }
@@ -169,6 +172,7 @@ public class CoreRecompiler : Recompiler {
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
         Console.WriteLine("Branching with link to a runtime address!");
         State.X31 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
+        Builder.Add(new StaticIRStatement.Branch(StaticBuilder<ulong>.W(addr)));
         // TODO: Work out symbolic execution nonsense
         // Surely this won't be that hard.
     }
