@@ -10,6 +10,7 @@ public abstract record StaticIRValue(Type Type) {
     public record Bitcast(StaticIRValue Value, Type OT) : StaticIRValue(OT);
     public record SignExt(StaticIRValue Value, int Width, Type OT) : StaticIRValue(OT);
     public record Store(StaticIRValue Value) : StaticIRValue(Value.Type);
+    public record ZeroTop(StaticIRValue Value) : StaticIRValue(Value.Type);
 
     public record Add(StaticIRValue Left, StaticIRValue Right) : StaticIRValue(Left.Type);
     public record Sub(StaticIRValue Left, StaticIRValue Right) : StaticIRValue(Left.Type);

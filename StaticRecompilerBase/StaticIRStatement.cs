@@ -13,4 +13,6 @@ public abstract record StaticIRStatement {
     public record DoWhile(StaticIRStatement Do, StaticIRValue Cond) : StaticIRStatement;
     
     public record Dereference(StaticIRValue Pointer, StaticIRValue Value) : StaticIRStatement;
+    
+    public record Branch(StaticIRValue Address) : StaticIRStatement;
 }

@@ -19,6 +19,9 @@ public class CoreRecompiler : Recompiler {
     bool Branched = false;
     StaticStructRef<ulong, CpuState> State;
 
+    ulong LinearScanAddr = 0;
+    int LinearScanModule = 0;
+
     public CoreRecompiler(ExeLoader loader) {
         ExeLoader = loader;
         Coverage = loader.ExeModules.Select(mod => {
@@ -27,6 +30,20 @@ public class CoreRecompiler : Recompiler {
             size = size % 64 != 0 ? size / 64 + 1 : size / 64; // To bits
             return new ulong[size];
         }).ToArray();
+    }
+
+    bool HaveCovered(ulong addr) {
+        if(addr < ExeLoader.InitialLoadBase || addr > ExeLoader.InitialLoadBase + 0x1_0000_0000UL * (ulong) ExeLoader.ExeModules.Count)
+            throw new ArgumentOutOfRangeException(nameof(addr));
+        var modOff = (int) ((addr - ExeLoader.InitialLoadBase) >> 32);
+        var module = ExeLoader.ExeModules[modOff];
+        Debug.Assert(addr >= module.TextStart && addr < module.TextEnd);
+        Debug.Assert((addr & 3) == 0); // Instructions must be 4-byte aligned
+        var taddr = addr - module.TextStart;
+        taddr >>= 2;
+        var shift = taddr & 0x3F;
+        taddr >>= 6;
+        return (Coverage[modOff][taddr] & (1UL << (int) shift)) != 0;
     }
 
     public uint Fetch(ulong addr) {
@@ -45,7 +62,14 @@ public class CoreRecompiler : Recompiler {
         return module.Load<uint>(addr);
     }
 
-    public string Disassemble(ulong addr) => Disassembler.Disassemble(Fetch(addr), addr);
+    public string Disassemble(ulong addr, uint? insn = null) {
+        try {
+            return Disassembler.Disassemble(insn ?? Fetch(addr), addr);
+        } catch { // We want a blanket catch here; if disassembly fails for any reason, it's a bad insn
+            return null;
+        }
+    }
+
     public bool IsValidCodeAt(ulong addr) => Disassemble(addr) != null;
 
     void Recompile(ulong addr) {
@@ -56,9 +80,38 @@ public class CoreRecompiler : Recompiler {
 
     public void Recompile() {
         Recompile(ExeLoader.EntryPoint);
-        while(RecompileQueue.TryDequeue(out var addr))
-            RecompileBlock(addr);
-        CheckCoverage();
+        while(true) {
+            while(RecompileQueue.TryDequeue(out var addr))
+                RecompileBlock(addr);
+            CheckCoverage();
+            if(!LinearScan())
+                break;
+        }
+        Console.WriteLine($"Found {KnownFunctions.Count} functions, {KnownBlocks.Count} blocks");
+    }
+
+    bool LinearScan() {
+        if(LinearScanModule == ExeLoader.ExeModules.Count) return false;
+        
+        var module = ExeLoader.ExeModules[LinearScanModule];
+        if(LinearScanAddr == 0) LinearScanAddr = module.TextStart;
+
+        while(LinearScanAddr < module.TextEnd) {
+            if(HaveCovered(LinearScanAddr) || !IsValidCodeAt(LinearScanAddr)) {
+                LinearScanAddr += 4;
+                continue;
+            }
+            Recompile(LinearScanAddr);
+            LinearScanAddr += 4;
+            break;
+        }
+
+        if(LinearScanAddr >= module.TextEnd) {
+            LinearScanModule++;
+            LinearScanAddr = 0;
+        }
+
+        return true;
     }
 
     void CheckCoverage() {
@@ -80,9 +133,9 @@ public class CoreRecompiler : Recompiler {
         State = new StaticStructRef<ulong, CpuState>(Builder, new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(0UL, typeof(ulong))));
         while(true) {
             var insn = Fetch(PC);
-            var dasm = Disassembler.Disassemble(insn, PC);
+            var dasm = Disassemble(PC, insn);
             if(dasm == null) // TODO: What do we do when we reach an invalid instruction mid-block...?
-                break;
+                break; // We should probably assume this is a no-return kind of thing, if it's after a BLR...
             Console.WriteLine($"{PC:X}: {dasm}");
             Branched = false;
             if(!RecompileOne(Builder, State, insn, PC)) {
@@ -108,12 +161,14 @@ public class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
+        State.X31 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
         Recompile(addr);
         KnownFunctions.Add(addr);
     }
 
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
         Console.WriteLine("Branching with link to a runtime address!");
+        State.X31 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
         // TODO: Work out symbolic execution nonsense
         // Surely this won't be that hard.
     }
@@ -129,6 +184,10 @@ public class CoreRecompiler : Recompiler {
     protected override IRuntimeValue<ulong> SR(uint op0, uint op1, uint crn, uint crm, uint op2) {
         Console.WriteLine($"Soooo... trying to get an SR value. That's fun! {op0} {op1} {crn} {crm} {op2}");
         return Builder.Zero<ulong>();
+    }
+
+    protected override void SR(uint op0, uint op1, uint crn, uint crm, uint op2, IRuntimeValue<ulong> value) {
+        Console.WriteLine($"Soooo... trying to set an SR value. That's fun! {op0} {op1} {crn} {crm} {op2}");
     }
 
     protected override void CallSvc(ulong svc) {

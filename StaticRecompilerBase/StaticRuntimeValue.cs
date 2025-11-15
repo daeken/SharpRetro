@@ -66,7 +66,7 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     public override IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) =>
         W(new StaticIRValue.SetElement(this, W(index), W(value)));
 
-    public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
+    public override IRuntimeValue<T> ZeroTop() => W(new StaticIRValue.ZeroTop(this));
     
     public override IRuntimeValue<Vector128<T>> CreateVector() => W<Vector128<T>>(new StaticIRValue.CreateVector(this));
 }
