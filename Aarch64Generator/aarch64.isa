@@ -2364,6 +2364,13 @@
         0b11 (= (vec rd) (vec- (vec rn) (vec rm) 64))
         (unimplemented)))
 
+(def HINT
+    "11010101000000110010 mmmm ooo 11111"
+    "HINT $hint"
+    (names (crm m) (op2 o))
+    (let hint (: crm op2))
+    (block))
+
 (def INS-general
     "0 1 0 01110000 iiiii 0 0011 1 nnnnn ddddd"
     "ins V$rd.$ts[$index], $r$rn"

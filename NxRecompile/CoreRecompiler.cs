@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Aarch64Cpu;
+using CoreArchCompiler;
 using JitBase;
 using StaticRecompilerBase;
 
@@ -73,12 +74,14 @@ public class CoreRecompiler : Recompiler {
     public bool IsValidCodeAt(ulong addr) => Disassemble(addr) != null;
 
     void Recompile(ulong addr) {
+        Console.WriteLine($"Attempting to queue recompile {addr:X}");
         if(Seen.Contains(addr)) return;
         RecompileQueue.Enqueue(addr);
         Seen.Add(addr);
     }
 
     public void Recompile() {
+        KnownFunctions.Add(ExeLoader.EntryPoint);
         Recompile(ExeLoader.EntryPoint);
         while(true) {
             while(RecompileQueue.TryDequeue(out var addr))
@@ -88,6 +91,61 @@ public class CoreRecompiler : Recompiler {
                 break;
         }
         Console.WriteLine($"Found {KnownFunctions.Count} functions, {KnownBlocks.Count} blocks");
+    }
+
+    public void CleanupIR() {
+    }
+
+    public void Output(CodeBuilder cb) {
+        foreach(var funcAddr in KnownFunctions.Order()) {
+            cb += $"function 0x{funcAddr:X} {{";
+            cb++;
+            var body = KnownBlocks[funcAddr].Body;
+            Output(cb, body);
+            cb--;
+            cb += "}";
+        }
+    }
+
+    void Output(CodeBuilder cb, StaticIRStatement stmt) {
+        switch(stmt) {
+            case StaticIRStatement.Body(var stmts): {
+                foreach(var sub in stmts)
+                    Output(cb, sub);
+                break;
+            }
+            case StaticIRStatement.If(var cond, var then, var @else): {
+                cb += $"if({Output(cond)}) {{";
+                cb++;
+                Output(cb, then);
+                cb--;
+                cb += "} else {";
+                cb++;
+                Output(cb, @else);
+                cb--;
+                cb += "}";
+                break;
+            }
+            case StaticIRStatement.Branch(var target): {
+                cb += $"goto {Output(target)};";
+                break;
+            }
+            default:
+                cb += $"/* Unhandled stmt {stmt} */";
+                break;
+        }
+    }
+
+    string Output(StaticIRValue expr) {
+        switch(expr) {
+            case StaticIRValue.Literal(var value, var type): {
+                if(type == typeof(ulong))
+                    return $"0x{(ulong) value:X}";
+                return value.ToString();
+            }
+            default:
+                return $"/* Unhandled expr {expr} */";
+        }
     }
 
     bool LinearScan() {
@@ -126,7 +184,13 @@ public class CoreRecompiler : Recompiler {
     }
 
     public void RecompileBlock(ulong addr) {
-        if(!IsValidCodeAt(addr)) return;
+        if(!IsValidCodeAt(addr)) {
+            if(KnownFunctions.Contains(addr)) {
+                Console.WriteLine($"Uh oh! {addr:X} {Fetch(addr):X}");
+                throw new NotImplementedException();
+            }
+            return;
+        }
 
         Builder = KnownBlocks[addr] = new StaticBuilder<ulong>();
         PC = addr;
