@@ -142,6 +142,15 @@ public class CoreRecompiler : Recompiler {
                 cb += $"({Output(addr)})->{field}[{index}] = {Output(value)};";
                 break;
             }
+            case SvcStmt(var name, var inRegs, var outRegs): {
+                if(outRegs.Length == 0)
+                    cb += $"svc{name}({string.Join(", ", inRegs.Select(Output))});";
+                else if(outRegs.Length == 1)
+                    cb += $"{Output(outRegs[0])} = svc{name}({string.Join(", ", inRegs.Select(Output))});";
+                else
+                    cb += $"{Output(outRegs[0])} = svc{name}({string.Join(", ", inRegs.Select(Output))}{(inRegs.Length != 0 ? ", " : "")}{string.Join(", ", outRegs.Skip(1).Select(v => $"&({Output(v)})"))});";
+                break;
+            }
             default:
                 cb += $"/* Unhandled stmt {stmt} */";
                 break;
@@ -310,7 +319,7 @@ public class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
-        State.X31 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
+        State.X30 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
         Builder.Add(new StaticIRStatement.Branch(new  StaticIRValue.Literal(addr, typeof(ulong))));
         Recompile(addr);
         KnownFunctions.Add(addr);
@@ -318,7 +327,7 @@ public class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
         Console.WriteLine("Branching with link to a runtime address!");
-        State.X31 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
+        State.X30 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
         Builder.Add(new StaticIRStatement.Branch(StaticBuilder<ulong>.W(addr)));
         // TODO: Work out symbolic execution nonsense
         // Surely this won't be that hard.
@@ -343,5 +352,13 @@ public class CoreRecompiler : Recompiler {
 
     protected override void CallSvc(ulong svc) {
         Console.WriteLine($"Calling Svc 0x{svc:X}!");
+        Debug.Assert(Svcs.All.ContainsKey((int) svc));
+        var (name, inRegs, outRegs) = Svcs.All[(int) svc];
+        Builder.Add(new SvcStmt(
+            name, 
+            inRegs.Select(r => ((StaticRuntimeValue<ulong>) State.X[r]).Value).ToArray(), 
+            outRegs.Select(r => ((StaticRuntimeValue<ulong>) State.X[r]).Value).ToArray()));
     }
 }
+
+record SvcStmt(string Name, StaticIRValue[] InRegs, StaticIRValue[] OutRegs) : StaticIRStatement;
