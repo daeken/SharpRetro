@@ -97,10 +97,10 @@ public class CoreRecompiler : Recompiler {
     }
 
     public void Output(CodeBuilder cb) {
-        foreach(var funcAddr in KnownFunctions.Order()) {
-            cb += $"function 0x{funcAddr:X} {{";
+        foreach(var (blockAddr, block) in KnownBlocks.OrderBy(x => x.Key)) {
+            cb += $"{(KnownFunctions.Contains(blockAddr) ? "function" : "block")} 0x{blockAddr:X} {{";
             cb++;
-            var body = KnownBlocks[funcAddr].Body;
+            var body = block.Body;
             Output(cb, body);
             cb--;
             cb += "}";
@@ -173,6 +173,15 @@ public class CoreRecompiler : Recompiler {
             case StaticIRValue.Sub(var left, var right): {
                 return $"({Output(left)}) - ({Output(right)})";
             }
+            case StaticIRValue.Mul(var left, var right): {
+                return $"({Output(left)}) * ({Output(right)})";
+            }
+            case StaticIRValue.Div(var left, var right): {
+                return $"({Output(left)}) / ({Output(right)})";
+            }
+            case StaticIRValue.Mod(var left, var right): {
+                return $"({Output(left)}) % ({Output(right)})";
+            }
             case StaticIRValue.And(var left, var right): {
                 return $"({Output(left)}) & ({Output(right)})";
             }
@@ -187,6 +196,12 @@ public class CoreRecompiler : Recompiler {
             }
             case StaticIRValue.RightShift(var left, var right): {
                 return $"({Output(left)}) >> ({Output(right)})";
+            }
+            case StaticIRValue.Negate(var value): {
+                return $"!({Output(value)})";
+            }
+            case StaticIRValue.Not(var value): {
+                return $"~({Output(value)})";
             }
             case StaticIRValue.EQ(var left, var right): {
                 return $"({Output(left)}) == {Output(right)}";
