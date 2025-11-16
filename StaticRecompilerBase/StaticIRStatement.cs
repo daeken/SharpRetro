@@ -13,6 +13,8 @@ public abstract record StaticIRStatement {
     public record DoWhile(StaticIRStatement Do, StaticIRValue Cond) : StaticIRStatement;
     
     public record Dereference(StaticIRValue Pointer, StaticIRValue Value) : StaticIRStatement;
+    public record SetField(StaticIRValue Pointer, string Name, StaticIRValue Value) : StaticIRStatement;
+    public record SetFieldIndex(StaticIRValue Pointer, string Name, int Index, StaticIRValue Value) : StaticIRStatement;
     
     public record Branch(StaticIRValue Address) : StaticIRStatement;
 }

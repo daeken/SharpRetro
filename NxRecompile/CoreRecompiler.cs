@@ -130,6 +130,18 @@ public class CoreRecompiler : Recompiler {
                 cb += $"goto {Output(target)};";
                 break;
             }
+            case StaticIRStatement.Dereference(var addr, var value): {
+                cb += $"*({Output(value.Type)} *) ({Output(addr)}) = {Output(value)};";
+                break;
+            }
+            case StaticIRStatement.SetField(var addr, var field, var value): {
+                cb += $"({Output(addr)})->{field} = {Output(value)};";
+                break;
+            }
+            case StaticIRStatement.SetFieldIndex(var addr, var field, var index, var value): {
+                cb += $"({Output(addr)})->{field}[{index}] = {Output(value)};";
+                break;
+            }
             default:
                 cb += $"/* Unhandled stmt {stmt} */";
                 break;
@@ -143,10 +155,81 @@ public class CoreRecompiler : Recompiler {
                     return $"0x{(ulong) value:X}";
                 return value.ToString();
             }
+            case StaticIRValue.Named(var name, _): {
+                return name;
+            }
+            case StaticIRValue.Add(var left, var right): {
+                return $"({Output(left)}) + ({Output(right)})";
+            }
+            case StaticIRValue.Sub(var left, var right): {
+                return $"({Output(left)}) - ({Output(right)})";
+            }
+            case StaticIRValue.And(var left, var right): {
+                return $"({Output(left)}) & ({Output(right)})";
+            }
+            case StaticIRValue.Or(var left, var right): {
+                return $"({Output(left)}) | ({Output(right)})";
+            }
+            case StaticIRValue.Xor(var left, var right): {
+                return $"({Output(left)}) ^ ({Output(right)})";
+            }
+            case StaticIRValue.LeftShift(var left, var right): {
+                return $"({Output(left)}) << ({Output(right)})";
+            }
+            case StaticIRValue.RightShift(var left, var right): {
+                return $"({Output(left)}) >> ({Output(right)})";
+            }
+            case StaticIRValue.EQ(var left, var right): {
+                return $"({Output(left)}) == {Output(right)}";
+            }
+            case StaticIRValue.NE(var left, var right): {
+                return $"({Output(left)}) != {Output(right)}";
+            }
+            case StaticIRValue.LT(var left, var right): {
+                return $"({Output(left)}) < {Output(right)}";
+            }
+            case StaticIRValue.LTE(var left, var right): {
+                return $"({Output(left)}) <= {Output(right)}";
+            }
+            case StaticIRValue.GT(var left, var right): {
+                return $"({Output(left)}) > {Output(right)}";
+            }
+            case StaticIRValue.GTE(var left, var right): {
+                return $"({Output(left)}) >= {Output(right)}";
+            }
+            case StaticIRValue.Dereference(var addr, var type): {
+                return $"*({Output(type)} *) ({Output(addr)})";
+            }
+            case StaticIRValue.GetField(var addr, var field, _): {
+                return $"({Output(addr)})->{field}";
+            }
+            case StaticIRValue.GetFieldIndex(var addr, var field, var index, _): {
+                return $"({Output(addr)})->{field}[{index}]";
+            }
+            case StaticIRValue.Store(var value): {
+                return Output(value);
+            }
+            case StaticIRValue.Cast(var value, var type): {
+                return $"({Output(type)}) ({Output(value)})";
+            }
             default:
                 return $"/* Unhandled expr {expr} */";
         }
     }
+
+    string Output(Type type) =>
+        type switch {
+            var x when x == typeof(byte) => "uint8_t",
+            var x when x == typeof(ushort) => "uint16_t",
+            var x when x == typeof(uint) => "uint32_t",
+            var x when x == typeof(ulong) => "uint64_t",
+            var x when x == typeof(sbyte) => "int8_t",
+            var x when x == typeof(short) => "int16_t",
+            var x when x == typeof(int) => "int32_t",
+            var x when x == typeof(long) => "int64_t",
+            var x when x == typeof(bool) => "bool",
+            _ => type.ToString()
+        };
 
     bool LinearScan() {
         if(LinearScanModule == ExeLoader.ExeModules.Count) return false;
@@ -194,7 +277,7 @@ public class CoreRecompiler : Recompiler {
 
         Builder = KnownBlocks[addr] = new StaticBuilder<ulong>();
         PC = addr;
-        State = new StaticStructRef<ulong, CpuState>(Builder, new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(0UL, typeof(ulong))));
+        State = new StaticStructRef<ulong, CpuState>(Builder, new StaticRuntimeValue<ulong>(new StaticIRValue.Named("State", typeof(ulong))));
         while(true) {
             var insn = Fetch(PC);
             var dasm = Disassemble(PC, insn);

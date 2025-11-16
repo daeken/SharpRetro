@@ -14,34 +14,34 @@ public class CilStructRef<AddrT, DelegateT, T> : IStructRef<T> where AddrT : str
 		Pointer = ptr;
 	}
 	
-	public override IRuntimeValue<U> GetField<U>(ulong offset) => JBuilder.C<U>(() => {
+	public override IRuntimeValue<U> GetField<U>(string name, ulong offset) => JBuilder.C<U>(() => {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset));
 		Ilg.Convert<IntPtr>();
 		Ilg.LoadIndirect<U>();
 	});
-	public override void SetField<U>(ulong offset, IRuntimeValue<U> value) {
+	public override void SetField<U>(string name, ulong offset, IRuntimeValue<U> value) {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset));
 		Ilg.Convert<IntPtr>();
 		JBuilder.Emit(value);
 		Ilg.StoreIndirect<U>();
 	}
-	public override IRuntimeValue<U> GetFieldElement<U>(ulong offset, int index) => JBuilder.C<U>(() => {
+	public override IRuntimeValue<U> GetFieldElement<U>(string name, ulong offset, int index) => JBuilder.C<U>(() => {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset + (ulong) index * (ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();
 		Ilg.LoadIndirect<U>();
 	});
-	public override IRuntimeValue<U> GetFieldElement<U>(ulong offset, IRuntimeValue<int> index) => JBuilder.C<U>(() => {
+	public override IRuntimeValue<U> GetFieldElement<U>(string name, ulong offset, IRuntimeValue<int> index) => JBuilder.C<U>(() => {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset) + (IRuntimeValue<ulong>) index * JBuilder.LiteralValue((ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();
 		Ilg.LoadIndirect<U>();
 	});
-	public override void SetFieldElement<U>(ulong offset, int index, IRuntimeValue<U> value) {
+	public override void SetFieldElement<U>(string name, ulong offset, int index, IRuntimeValue<U> value) {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset + (ulong) index * (ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();
 		JBuilder.Emit(value);
 		Ilg.StoreIndirect<U>();
 	}
-	public override void SetFieldElement<U>(ulong offset, IRuntimeValue<int> index, IRuntimeValue<U> value) {
+	public override void SetFieldElement<U>(string name, ulong offset, IRuntimeValue<int> index, IRuntimeValue<U> value) {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset) + (IRuntimeValue<ulong>) index * JBuilder.LiteralValue((ulong) Marshal.SizeOf<U>()));
 		Ilg.Convert<IntPtr>();
 		JBuilder.Emit(value);

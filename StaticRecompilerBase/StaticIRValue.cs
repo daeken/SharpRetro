@@ -5,6 +5,7 @@ using System.Runtime.Intrinsics;
 namespace StaticRecompilerBase;
 
 public abstract record StaticIRValue(Type Type) {
+    public record Named(string Name, Type Type) : StaticIRValue(Type);
     public record Literal(object Value, Type Type) : StaticIRValue(Type);
     public record Cast(StaticIRValue Value, Type OT) : StaticIRValue(OT);
     public record Bitcast(StaticIRValue Value, Type OT) : StaticIRValue(OT);
@@ -48,6 +49,8 @@ public abstract record StaticIRValue(Type Type) {
     public record IsNaN(StaticIRValue Value) : StaticIRValue(typeof(bool));
     
     public record Dereference(StaticIRValue Pointer, Type Type) : StaticIRValue(Type);
+    public record GetField(StaticIRValue Pointer, string Name, Type Type) : StaticIRValue(Type);
+    public record GetFieldIndex(StaticIRValue Pointer, string Name, int Index, Type Type) : StaticIRValue(Type);
 
     public record CreateVector(StaticIRValue Value) : StaticIRValue(typeof(Vector128<>).MakeGenericType(Value.Type));
     public record GetElement(StaticIRValue Vector, StaticIRValue Index, Type ElementType) : StaticIRValue(ElementType);

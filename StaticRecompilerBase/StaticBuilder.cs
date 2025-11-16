@@ -124,4 +124,14 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
         new StaticRuntimeValue<T>(new StaticIRValue.Dereference(W(addr), typeof(T)));
     public void Dereference<T>(IRuntimeValue<AddrT> addr, IRuntimeValue<T> value) where T : struct =>
         Add(new StaticIRStatement.Dereference(W(addr), W(value)));
+
+    public StaticRuntimeValue<T> GetField<T>(IRuntimeValue<AddrT> addr, string name) where T : struct =>
+        W<T>(new StaticIRValue.GetField(W(addr), name, typeof(T)));
+    public StaticRuntimeValue<T> GetFieldIndex<T>(IRuntimeValue<AddrT> addr, string name, int index) where T : struct =>
+        W<T>(new StaticIRValue.GetFieldIndex(W(addr), name, index, typeof(T)));
+
+    public void SetField<T>(IRuntimeValue<AddrT> addr, string name, IRuntimeValue<T> value) where T : struct =>
+        Add(new StaticIRStatement.SetField(W(addr), name, W(value)));
+    public void SetFieldIndex<T>(IRuntimeValue<AddrT> addr, string name, int index, IRuntimeValue<T> value) where T : struct =>
+        Add(new StaticIRStatement.SetFieldIndex(W(addr), name, index, W(value)));
 }

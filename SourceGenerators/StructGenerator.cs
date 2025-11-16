@@ -49,14 +49,14 @@ public class StructGenerator : ISourceGenerator {
 		foreach(var (sn, fn, ft, offset) in fields) {
 			members += $"\t\textension(JitBase.IStructRef<{sn}> sr) {{\n";
 			members += $"\t\t\tpublic IRuntimeValue<{ft}> {fn} {{\n";
-			members += $"\t\t\t\tget => sr.GetField<{ft}>((ulong) ({offset}));\n";
-			members += $"\t\t\t\tset => sr.SetField((ulong) ({offset}), value);\n";
+			members += $"\t\t\t\tget => sr.GetField<{ft}>(\"{fn}\", (ulong) ({offset}));\n";
+			members += $"\t\t\t\tset => sr.SetField(\"{fn}\", (ulong) ({offset}), value);\n";
 			members += "\t\t\t}\n";
 			members += "\t\t}\n";
 		}
 		foreach(var (sn, fn, ft, offset) in arrFields) {
 			members += $"\t\textension(JitBase.IStructRef<{sn}> sr) {{\n";
-			members += $"\t\t\tpublic RuntimeIndexer<{sn}, {ft}> {fn} => new(sr, (ulong) ({offset}));\n";
+			members += $"\t\t\tpublic RuntimeIndexer<{sn}, {ft}> {fn} => new(\"{fn}\", sr, (ulong) ({offset}));\n";
 			members += "\t\t}\n";
 			//members += $"\t\tpublic static IRuntimeValue<{ft}> {fn}(this JitBase.IStructRef<{sn}> sr, IRuntimeValue<int> index) => sr.GetFieldElement<{ft}>((ulong) ({offset}), index);\n";
 			//members += $"\t\tpublic static void {fn}(this JitBase.IStructRef<{sn}> sr, IRuntimeValue<int> index, IRuntimeValue<{ft}> value) => sr.SetFieldElement((ulong) ({offset}), index, value);\n";
