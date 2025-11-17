@@ -1,0 +1,7 @@
+- Implement static IR walk/transform methods
+- ~~Switch to a map of address -> array of StaticIRStatement per instruction~~
+- Implement basic block splitting and coalescing
+- Implement SRs
+- Implement function basic block graphs
+- Implement graph flow reconstruction
+- Implement constant folding
