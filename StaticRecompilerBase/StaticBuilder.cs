@@ -3,7 +3,7 @@
 namespace StaticRecompilerBase;
 
 public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
-    readonly List<StaticIRStatement> BodyStmts = [];
+    public readonly List<StaticIRStatement> BodyStmts = [];
     readonly Stack<List<StaticIRStatement>> ScopeStack = new();
     public StaticBuilder() => ScopeStack.Push(BodyStmts);
     public StaticIRStatement.Body Body => new(BodyStmts);
