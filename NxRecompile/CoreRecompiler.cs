@@ -7,11 +7,12 @@ using StaticRecompilerBase;
 namespace NxRecompile;
 
 public class CoreRecompiler : Recompiler {
-    public readonly ExeLoader ExeLoader;
+    readonly ExeLoader ExeLoader;
 
     readonly List<StaticIRStatement>[][] AllInstructions;
     readonly HashSet<ulong> KnownBlocks = [];
     readonly HashSet<ulong> KnownFunctions = [];
+    readonly Dictionary<ulong, (ulong End, List<StaticIRStatement> Statements, List<ulong> LeadsTo)> Blocks = [];
     
     ulong PC;
     StaticBuilder<ulong> Builder;
@@ -36,8 +37,14 @@ public class CoreRecompiler : Recompiler {
     public bool IsValidCodeAt(ulong addr) => Disassemble(addr) != null;
 
     public void Recompile() {
-        KnownFunctions.Add(ExeLoader.EntryPoint);
+        KnownBlocks.Add(ExeLoader.EntryPoint);
+        KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
+        BuildBlockGraph();
+        Console.WriteLine($"Blocks: {Blocks.Count}");
+        foreach(var (addr, (end, _, leadsTo)) in Blocks) {
+            Console.WriteLine($"{addr:X}-{end:X} leads to [{string.Join(", ", leadsTo.Select(x => $"{x:X}"))}]");
+        }
     }
 
     public void LinearScan() {
@@ -57,15 +64,62 @@ public class CoreRecompiler : Recompiler {
         }
     }
 
+    bool DoesBranch(List<StaticIRStatement> stmts) {
+        var branched = false;
+        foreach(var stmt in stmts) {
+            stmt.Walk(x => branched |= x is StaticIRStatement.Branch);
+            if(branched) return true;
+        }
+        return false;
+    }
+    
+    void BuildBlockGraph() {
+        foreach(var (arr, module) in AllInstructions.Zip(ExeLoader.ExeModules)) {
+            var addr = module.TextStart;
+            var curBlock = addr;
+            var statements = new List<StaticIRStatement>();
+            var didBranch = false;
+            List<ulong> LeadingTo() {
+                var leadsTo = new HashSet<ulong>();
+                new StaticIRStatement.Body(statements).Walk(x => {
+                    if(x is StaticIRStatement.Branch { Address: StaticIRValue.Literal(var laddr, var type) } && type == typeof(ulong))
+                        leadsTo.Add((ulong) laddr);
+                });
+                return leadsTo.Order().ToList();
+            }
+            foreach(var insn in arr) {
+                if(didBranch || insn == null || (curBlock != addr && KnownBlocks.Contains(addr))) {
+                    didBranch = false;
+                    if(curBlock != addr && statements.Count != 0) {
+                        if(insn != null && !DoesBranch([statements.Last()]))
+                            statements.Add(new StaticIRStatement.Branch(new StaticIRValue.Literal(addr, typeof(ulong))));
+                        Blocks[curBlock] = (addr, statements, LeadingTo());
+                        statements = [];
+                    }
+                    curBlock = addr;
+                    if(insn == null) {
+                        addr += 4;
+                        continue;
+                    }
+                }
+                statements.AddRange(insn);
+                addr += 4;
+                if(DoesBranch(insn))
+                    didBranch = true;
+            }
+            if(statements.Count > 0)
+                Blocks[curBlock] = (addr, statements, LeadingTo());
+        }
+    }
+
     public void CleanupIR() {
     }
 
     public void Output(CodeBuilder cb) {
-        foreach(var blockAddr in KnownBlocks.Order()) {
+        foreach(var (blockAddr, (_, stmts, _)) in Blocks.OrderBy(x => x.Key)) {
             cb += $"{(KnownFunctions.Contains(blockAddr) ? "function" : "block")} 0x{blockAddr:X} {{";
             cb++;
-            //var body = block.Body;
-            //Output(cb, body);
+            Output(cb, new StaticIRStatement.Body(stmts));
             cb--;
             cb += "}";
         }
@@ -92,6 +146,10 @@ public class CoreRecompiler : Recompiler {
             }
             case StaticIRStatement.Branch(var target): {
                 cb += $"goto {Output(target)};";
+                break;
+            }
+            case LinkedBranch(var target): {
+                cb += $"{Output(target)}();";
                 break;
             }
             case StaticIRStatement.Dereference(var addr, var value): {
@@ -235,8 +293,7 @@ public class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
-        State.X30 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
-        Builder.Add(new StaticIRStatement.Branch(new  StaticIRValue.Literal(addr, typeof(ulong))));
+        Builder.Add(new LinkedBranch(new  StaticIRValue.Literal(addr, typeof(ulong))));
         if(IsValidCodeAt(addr)) {
             KnownBlocks.Add(addr);
             KnownFunctions.Add(addr);
@@ -245,8 +302,7 @@ public class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
         Console.WriteLine("Branching with link to a runtime address!");
-        State.X30 = new StaticRuntimeValue<ulong>(new StaticIRValue.Literal(PC + 4, typeof(ulong)));
-        Builder.Add(new StaticIRStatement.Branch(StaticBuilder<ulong>.W(addr)));
+        Builder.Add(new LinkedBranch(StaticBuilder<ulong>.W(addr)));
         // TODO: Work out symbolic execution nonsense
         // Surely this won't be that hard.
     }
@@ -279,4 +335,13 @@ public class CoreRecompiler : Recompiler {
     }
 }
 
-record SvcStmt(string Name, StaticIRValue[] InRegs, StaticIRValue[] OutRegs) : StaticIRStatement;
+record LinkedBranch(StaticIRValue Address) : StaticIRStatement {
+    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
+        stmtFunc(this);
+        Address.Walk(valueFunc);
+    }
+}
+
+record SvcStmt(string Name, StaticIRValue[] InRegs, StaticIRValue[] OutRegs) : StaticIRStatement {
+    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) => stmtFunc(this);
+}
