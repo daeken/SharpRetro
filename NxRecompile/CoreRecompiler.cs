@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using Aarch64Cpu;
 using CoreArchCompiler;
 using JitBase;
@@ -41,6 +43,100 @@ public class CoreRecompiler : Recompiler {
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
         WholeBlockGraph = BuildBlockGraph();
+        while(true) {
+            if(!FoldConstants() && !ResolveRoData())
+                break;
+        }
+    }
+
+    static object Cast(object value, Type castTo) {
+        if(Marshal.SizeOf(castTo) > Marshal.SizeOf(value.GetType()))
+            return Convert.ChangeType(value, castTo);
+        var temp = (ulong) Convert.ChangeType(value, typeof(ulong));
+        var mask = (1UL << (Marshal.SizeOf(castTo) * 8)) - 1;
+        return Convert.ChangeType(temp & mask, castTo);
+    }
+
+    static (Type Type, object Value)? GetConstant(StaticIRValue value) =>
+        value switch {
+            StaticIRValue.Literal(var lit, var type) => (type, lit),
+            StaticIRValue.Cast(var lval, var type) when GetConstant(lval) is var (_, oval) => (type, Cast(oval, type)),
+            _ => null
+        };
+
+    static T DoBinaryOp<T>(StaticIRValue bin, T left, T right) where T : INumber<T> =>
+        bin switch {
+            StaticIRValue.Add => left + right,
+            StaticIRValue.Sub => left + right,
+            StaticIRValue.And => left + right,
+            StaticIRValue.Or => left + right,
+            StaticIRValue.Xor => left + right,
+            _ => throw new NotImplementedException($"Attempted {bin} on {left} and {right}")
+        };
+
+    bool FoldConstants() {
+        var foldedAny = false;
+        foreach(var node in WholeBlockGraph.Values) {
+            var block = node.Block;
+            var body = block.Body;
+            var folded = false;
+            do {
+                folded = false;
+                var regs = new StaticIRValue[32];
+                for(var i = 0; i < body.Count; ++i) {
+                    var stmt = body[i];
+                    if(stmt is SvcStmt(_, _, var outRegs)) {
+                        foreach(var outReg in outRegs)
+                            if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
+                                regs[regIndex] = null; // Can't know the results of svc calls
+                        continue;
+                    }
+                    if(stmt is not StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _) ptr, "X", var reg,var val)) continue;
+
+                    StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
+                        if(GetConstant(left) is not var (leftType, leftValue) ||
+                           GetConstant(right) is not var (rightType, rightValue)) return null;
+
+                        if(leftType != rightType) return null;
+                        var nlit = leftType switch {
+                            {} x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue, (byte) rightValue),
+                            {} x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue, (ushort) rightValue),
+                            {} x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue, (uint) rightValue),
+                            {} x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue, (ulong) rightValue),
+                            _ => (object) null
+                        };
+                        if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
+                        return null;
+                    }
+                    var foldedVal = val.Transform(x => {
+                        return x switch {
+                            StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.And(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) => 
+                                regs[regIndex] switch {
+                                    StaticIRValue.Literal lit => lit,
+                                    _ => null
+                                },
+                            _ => null
+                        };
+                    });
+                    if(foldedVal != null && !ReferenceEquals(foldedVal, val)) {
+                        folded = true;
+                        foldedAny = true;
+                        body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
+                    }
+                    regs[reg] = val;
+                }
+            } while(folded);
+        }
+        return foldedAny;
+    }
+
+    bool ResolveRoData() {
+        return false;
     }
 
     public void LinearScan() {
