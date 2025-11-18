@@ -3,5 +3,5 @@
 - ~~Implement basic block splitting and coalescing~~
 - Implement SRs
 - ~~Implement function basic block graphs~~
-- Implement graph flow reconstruction
+- ~~Implement graph flow reconstruction~~
 - Implement constant folding

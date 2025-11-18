@@ -12,7 +12,7 @@ public class CoreRecompiler : Recompiler {
     readonly List<StaticIRStatement>[][] AllInstructions;
     readonly HashSet<ulong> KnownBlocks = [];
     readonly HashSet<ulong> KnownFunctions = [];
-    readonly Dictionary<ulong, (ulong End, List<StaticIRStatement> Statements, List<ulong> LeadsTo)> Blocks = [];
+    Dictionary<ulong, BlockGraph> WholeBlockGraph;
     
     ulong PC;
     StaticBuilder<ulong> Builder;
@@ -40,11 +40,7 @@ public class CoreRecompiler : Recompiler {
         KnownBlocks.Add(ExeLoader.EntryPoint);
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
-        BuildBlockGraph();
-        Console.WriteLine($"Blocks: {Blocks.Count}");
-        foreach(var (addr, (end, _, leadsTo)) in Blocks) {
-            Console.WriteLine($"{addr:X}-{end:X} leads to [{string.Join(", ", leadsTo.Select(x => $"{x:X}"))}]");
-        }
+        WholeBlockGraph = BuildBlockGraph();
     }
 
     public void LinearScan() {
@@ -72,8 +68,43 @@ public class CoreRecompiler : Recompiler {
         }
         return false;
     }
+
+    Dictionary<ulong, BlockGraph> BuildBlockGraph() {
+        var blocks = BuildBlockList();
+        var blockGraphs = new Dictionary<ulong, BlockGraph>();
+        foreach(var (addr, (_, stmts, leadsTo)) in blocks) {
+            var adjLeadsTo = leadsTo.Where(x => !KnownFunctions.Contains(x)).ToList();
+            var block = new Block(addr, stmts);
+            blockGraphs[addr] = adjLeadsTo.Count switch {
+                0 => new BlockGraph.End(block),
+                1 => new BlockGraph.Unconditional(block),
+                2 => new BlockGraph.Conditional(block),
+                _ => throw new NotSupportedException($"WTF? 0x{addr:X} leads to {leadsTo.Count} total, {adjLeadsTo.Count} adjusted leads to {blocks.Count}"),
+            };
+        }
+
+        foreach(var (addr, (_, _, leadsTo)) in blocks) {
+            var node = blockGraphs[addr];
+            var adjLeadsTo = leadsTo.Where(x => !KnownFunctions.Contains(x)).ToList();
+            switch(adjLeadsTo) {
+                case [var next]: {
+                    ((BlockGraph.Unconditional) node).Next = blockGraphs[next];
+                    break;
+                }
+                case [var taken, var not]: {
+                    var cnode = (BlockGraph.Conditional) node;
+                    cnode.Taken = blockGraphs[taken];
+                    cnode.Not = blockGraphs[not];
+                    break;
+                }
+            }
+        }
+
+        return BlockGraph.Reduce(blockGraphs, KnownFunctions);
+    }
     
-    void BuildBlockGraph() {
+    Dictionary<ulong, (ulong End, List<StaticIRStatement> Statements, List<ulong> LeadsTo)> BuildBlockList() {
+        var blocks = new Dictionary<ulong, (ulong End, List<StaticIRStatement> Statements, List<ulong> LeadsTo)>();
         foreach(var (arr, module) in AllInstructions.Zip(ExeLoader.ExeModules)) {
             var addr = module.TextStart;
             var curBlock = addr;
@@ -90,10 +121,10 @@ public class CoreRecompiler : Recompiler {
             foreach(var insn in arr) {
                 if(didBranch || insn == null || (curBlock != addr && KnownBlocks.Contains(addr))) {
                     didBranch = false;
-                    if(curBlock != addr && statements.Count != 0) {
-                        if(insn != null && !DoesBranch([statements.Last()]))
+                    if(curBlock != addr) {
+                        if(insn != null && (statements.Count == 0 || !DoesBranch([statements.Last()])))
                             statements.Add(new StaticIRStatement.Branch(new StaticIRValue.Literal(addr, typeof(ulong))));
-                        Blocks[curBlock] = (addr, statements, LeadingTo());
+                        blocks[curBlock] = (addr, statements, LeadingTo());
                         statements = [];
                     }
                     curBlock = addr;
@@ -107,19 +138,20 @@ public class CoreRecompiler : Recompiler {
                 if(DoesBranch(insn))
                     didBranch = true;
             }
-            if(statements.Count > 0)
-                Blocks[curBlock] = (addr, statements, LeadingTo());
+            if(statements.Count > 0) blocks[curBlock] = (addr, statements, LeadingTo());
         }
+        return blocks;
     }
 
     public void CleanupIR() {
     }
 
     public void Output(CodeBuilder cb) {
-        foreach(var (blockAddr, (_, stmts, _)) in Blocks.OrderBy(x => x.Key)) {
+        foreach(var (blockAddr, node) in WholeBlockGraph.OrderBy(x => x.Key)) {
             cb += $"{(KnownFunctions.Contains(blockAddr) ? "function" : "block")} 0x{blockAddr:X} {{";
             cb++;
-            Output(cb, new StaticIRStatement.Body(stmts));
+            cb += $"/**** {node} ****/";
+            Output(cb, new StaticIRStatement.Body(node.Block.Body));
             cb--;
             cb += "}";
         }
