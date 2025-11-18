@@ -137,7 +137,9 @@ public abstract class BlockGraph(Block Block) {
             (var foundIf, blocks) = Transform(blocks, node => {
                 if(node is not Conditional cond) return null;
                 var sharedNext = DominatingNext(cond.Taken, cond.Not);
-                return sharedNext != null ? new If(cond.Block, cond.Taken, cond.Not, sharedNext) : null;
+                return sharedNext != null && sharedNext != cond.Taken && sharedNext != cond.Not
+                    ? new If(cond.Block, cond.Taken, cond.Not, sharedNext)
+                    : null;
             });
             if(!foundWhen && !foundWhile && !foundInverseWhile && !foundIf)
                 return blocks;

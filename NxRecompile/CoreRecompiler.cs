@@ -64,13 +64,27 @@ public class CoreRecompiler : Recompiler {
             _ => null
         };
 
-    static T DoBinaryOp<T>(StaticIRValue bin, T left, T right) where T : INumber<T> =>
+    static T DoBinaryOp<T>(StaticIRValue bin, T left, T right) where T : IBinaryNumber<T> =>
         bin switch {
             StaticIRValue.Add => left + right,
             StaticIRValue.Sub => left + right,
             StaticIRValue.And => left + right,
             StaticIRValue.Or => left + right,
             StaticIRValue.Xor => left + right,
+            StaticIRValue.LeftShift => left switch {
+                byte v => (T) (object) (byte) (v << (int) Convert.ChangeType(right, typeof(int))),
+                ushort v => (T) (object) (ushort) (v << (int) Convert.ChangeType(right, typeof(int))),
+                uint v => (T) (object) (v << (int) Convert.ChangeType(right, typeof(int))),
+                ulong v => (T) (object) (v << (int) Convert.ChangeType(right, typeof(int))),
+                _ => throw new NotImplementedException($"Attempted left shift on {bin} -- {left} and {right}")
+            },
+            StaticIRValue.RightShift => left switch {
+                byte v => (T) (object) (byte) (v >> (int) Convert.ChangeType(right, typeof(int))),
+                ushort v => (T) (object) (ushort) (v >> (int) Convert.ChangeType(right, typeof(int))),
+                uint v => (T) (object) (v >> (int) Convert.ChangeType(right, typeof(int))),
+                ulong v => (T) (object) (v >> (int) Convert.ChangeType(right, typeof(int))),
+                _ => throw new NotImplementedException($"Attempted right shift on {bin} -- {left} and {right}")
+            },
             _ => throw new NotImplementedException($"Attempted {bin} on {left} and {right}")
         };
 
@@ -115,6 +129,8 @@ public class CoreRecompiler : Recompiler {
                             StaticIRValue.And(var left, var right) => FoldBinary(x, left, right), 
                             StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right), 
                             StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right), 
+                            StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right), 
                             StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) => 
                                 regs[regIndex] switch {
                                     StaticIRValue.Literal lit => lit,
