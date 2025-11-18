@@ -36,6 +36,11 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Next = Next;
         public override string ToString() => $"While(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
     }
+    public class InverseWhile(Block Block, BlockGraph Loop, BlockGraph Next) : BlockGraph(Block) {
+        public BlockGraph Loop = Loop;
+        public BlockGraph Next = Next;
+        public override string ToString() => $"InverseWhile(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
+    }
     public class Node(Block Block) : BlockGraph(Block);
 
     static (bool Changed, Dictionary<ulong, BlockGraph> Blocks) Transform(Dictionary<ulong, BlockGraph> blocks, Func<BlockGraph, BlockGraph> func) {
@@ -74,6 +79,11 @@ public abstract class BlockGraph(Block Block) {
                             if(ReferenceEquals(block, node.Next)) node.Next = nblock;
                             break;
                         }
+                        case InverseWhile node: {
+                            if(ReferenceEquals(block, node.Loop)) node.Loop = nblock;
+                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
+                            break;
+                        }
                     }
                 }
                 blocks[addr] = nblock;
@@ -85,18 +95,7 @@ public abstract class BlockGraph(Block Block) {
         return (didChange, blocks);
     }
 
-    static BlockGraph SingleNext(BlockGraph node) {
-        BlockGraph Sub(BlockGraph next) => next is Unconditional uncond ? uncond.Next : next;
-        return node switch {
-            Unconditional rnode => rnode.Next,
-            When rnode => Sub(rnode.Next),
-            If rnode => Sub(rnode.Next),
-            While rnode => Sub(rnode.Next),
-            _ => null,
-        };
-    }
-
-    static BlockGraph DominatingNext(BlockGraph left, BlockGraph right, BlockGraph includeOnLeft = null) {
+    static BlockGraph DominatingNext(BlockGraph left, BlockGraph right, BlockGraph includeOnRight = null) {
         List<BlockGraph> AllNext(BlockGraph node) {
             var all = new List<BlockGraph> { node };
             while(true) {
@@ -106,6 +105,7 @@ public abstract class BlockGraph(Block Block) {
                     When rnode => rnode.Next,
                     If rnode => rnode.Next,
                     While rnode => rnode.Next,
+                    InverseWhile rnode => rnode.Next,
                     _ => null,
                 };
                 if(node == null || all.Contains(node)) break;
@@ -115,8 +115,8 @@ public abstract class BlockGraph(Block Block) {
         }
 
         var leftNexts = AllNext(left);
-        if(includeOnLeft != null) leftNexts.Add(includeOnLeft);
         var rightNexts = AllNext(right);
+        if(includeOnRight != null) rightNexts.Add(includeOnRight);
         return leftNexts.FirstOrDefault(leftNext => rightNexts.Any(rightNext => leftNext == rightNext));
     }
 
@@ -128,14 +128,18 @@ public abstract class BlockGraph(Block Block) {
                     : null);
             (var foundWhile, blocks) = Transform(blocks, node => {
                 if(node is not Conditional cond) return null;
-                return SingleNext(cond.Taken) == node || DominatingNext(cond.Taken, cond.Not, node) == node ? new While(cond.Block, cond.Taken, cond.Not) : null;
+                return DominatingNext(cond.Taken, cond.Not, node) == node ? new While(cond.Block, cond.Taken, cond.Not) : null;
+            });
+            (var foundInverseWhile, blocks) = Transform(blocks, node => {
+                if(node is not Conditional cond) return null;
+                return DominatingNext(cond.Not, cond.Taken, node) == node ? new InverseWhile(cond.Block, cond.Not, cond.Taken) : null;
             });
             (var foundIf, blocks) = Transform(blocks, node => {
                 if(node is not Conditional cond) return null;
                 var sharedNext = DominatingNext(cond.Taken, cond.Not);
                 return sharedNext != null ? new If(cond.Block, cond.Taken, cond.Not, sharedNext) : null;
             });
-            if(!foundWhen && !foundWhile && !foundIf)
+            if(!foundWhen && !foundWhile && !foundInverseWhile && !foundIf)
                 return blocks;
         }
     }
