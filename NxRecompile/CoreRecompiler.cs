@@ -62,7 +62,7 @@ public class CoreRecompiler : Recompiler {
         };
     static object ToSigned(object obj) =>
         IsSigned(obj.GetType()) ? obj : obj switch {
-            byte v => unchecked((sbyte) v),
+            byte v => (object) unchecked((sbyte) v),
             ushort v => unchecked((short) v),
             uint v => unchecked((int) v),
             ulong v => unchecked((long) v),
@@ -71,7 +71,7 @@ public class CoreRecompiler : Recompiler {
         };
     static object ToUnsigned(object obj) =>
         !IsSigned(obj.GetType()) ? obj : obj switch {
-            sbyte v => unchecked((byte) v),
+            sbyte v => (object) unchecked((byte) v),
             short v => unchecked((ushort) v),
             int v => unchecked((uint) v),
             long v => unchecked((ulong) v),
@@ -83,6 +83,7 @@ public class CoreRecompiler : Recompiler {
             value = IsSigned(castTo)
                 ? ToSigned(value)
                 : ToUnsigned(value);
+        if(value.GetType() == castTo) return value;
         if(Marshal.SizeOf(castTo) > Marshal.SizeOf(value.GetType()))
             return Convert.ChangeType(value, castTo);
         var temp = (ulong) Convert.ChangeType(value, typeof(ulong));
