@@ -140,6 +140,11 @@ public class CoreRecompiler : Recompiler {
                                     regs[regIndex] = null; // Can't know the results of svc calls
                             continue;
                         }
+                        if(stmt is LinkedBranch) {
+                            for(var j = 0; j < 32; ++j)
+                                regs[j] = null;
+                            continue;
+                        }
 
                         if(stmt is not StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _) ptr, "X", var reg
                            , var val)) continue;
@@ -209,9 +214,19 @@ public class CoreRecompiler : Recompiler {
                             return null;
                         }
                         var ptrValue = (ulong) _ptrValue;
-                        if(IsRoDataAddr(ptrValue)) {
-                            Console.WriteLine($"Ptr to rodata! 0x{ptrValue:X}");
-                        }
+                        if(!IsRoDataAddr(ptrValue)) return null;
+                        var nval = type switch {
+                            _ when type == typeof(byte) => (object) ExeLoader.Load<byte>(ptrValue),
+                            _ when type == typeof(ushort) => ExeLoader.Load<ushort>(ptrValue),
+                            _ when type == typeof(uint) => ExeLoader.Load<uint>(ptrValue),
+                            _ when type == typeof(ulong) => ExeLoader.Load<ulong>(ptrValue),
+                            _ when type == typeof(sbyte) => ExeLoader.Load<sbyte>(ptrValue),
+                            _ when type == typeof(short) => ExeLoader.Load<short>(ptrValue),
+                            _ when type == typeof(int) => ExeLoader.Load<int>(ptrValue),
+                            _ when type == typeof(long) => ExeLoader.Load<long>(ptrValue),
+                            _ => null
+                        };
+                        if(nval != null) return new StaticIRValue.Literal(nval, type);
                     }
                     return null;
                 });
