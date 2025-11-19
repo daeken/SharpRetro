@@ -642,7 +642,7 @@ public partial class Recompiler {
 		/* BRK */
 		if((insn & 0xFFE0001F) == 0xD4200000) {
 			var imm = (insn >> 5) & 0xFFFFU;
-			builder.CallVoid<uint>(Breakpoint, builder.LiteralValue(imm));
+			Breakpoint(imm);
 			return true;
 		}
 		insn_28:
@@ -1431,7 +1431,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", _ => throw new NotImplementedException() });
-			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (builder.Call<Vector128<float>, long, Vector128<float>>(Math.VectorCountBits, (IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]), (IRuntimeValue<long>) builder.EnsureRuntime((byte) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (byte) 0x8, _ => (byte) ((byte) 0x10) }))));
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorCountBits((IRuntimeValue<long>) builder.EnsureRuntime((byte) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (byte) 0x8, _ => (byte) ((byte) 0x10) }))));
 			return true;
 		}
 		insn_49:
@@ -1763,7 +1763,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			var ts = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
-			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (builder.Call<Vector128<float>, Vector128<float>, uint, uint, Vector128<float>>(Math.VectorExtract, (IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]), (IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]), (IRuntimeValue<uint>) builder.EnsureRuntime(Q), (IRuntimeValue<uint>) builder.EnsureRuntime(index)));
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorExtract((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]), (IRuntimeValue<uint>) builder.EnsureRuntime(Q), (IRuntimeValue<uint>) builder.EnsureRuntime(index)));
 			return true;
 		}
 		insn_63:
@@ -2878,19 +2878,19 @@ public partial class Recompiler {
 			var r2 = (string) (type switch { (byte) ((byte) 0x3) => "H", (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => throw new NotImplementedException() });
 			switch((byte) ((byte) (((byte) (((byte) (type)) << 0)) | ((byte) (((byte) (size)) << 2))))) {
 				case (byte) ((byte) 0x0): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call<float, int, uint>(FloatToFixed32, (IRuntimeValue<float>) (state.VS[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (FloatToFixed32((IRuntimeValue<float>) (state.VS[(int) (rn)]), fbits)));
 					break;
 				}
 				case (byte) ((byte) 0x4): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (builder.Call<float, int, ulong>(FloatToFixed64, (IRuntimeValue<float>) (state.VS[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (FloatToFixed64((IRuntimeValue<float>) (state.VS[(int) (rn)]), fbits)));
 					break;
 				}
 				case (byte) ((byte) 0x1): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call<double, int, uint>(FloatToFixed32, (IRuntimeValue<double>) (state.VD[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (FloatToFixed32((IRuntimeValue<double>) (state.VD[(int) (rn)]), fbits)));
 					break;
 				}
 				case (byte) ((byte) 0x5): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (builder.Call<double, int, ulong>(FloatToFixed64, (IRuntimeValue<double>) (state.VD[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (FloatToFixed64((IRuntimeValue<double>) (state.VD[(int) (rn)]), fbits)));
 					break;
 				}
 				default: {
@@ -2985,19 +2985,19 @@ public partial class Recompiler {
 			var r2 = (string) (type switch { (byte) ((byte) 0x3) => "H", (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => throw new NotImplementedException() });
 			switch((byte) ((byte) (((byte) (((byte) (type)) << 0)) | ((byte) (((byte) (size)) << 2))))) {
 				case (byte) ((byte) 0x0): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call<float, int, uint>(FloatToFixed32, (IRuntimeValue<float>) (state.VS[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (FloatToFixed32((IRuntimeValue<float>) (state.VS[(int) (rn)]), fbits)));
 					break;
 				}
 				case (byte) ((byte) 0x4): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (builder.Call<float, int, ulong>(FloatToFixed64, (IRuntimeValue<float>) (state.VS[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (FloatToFixed64((IRuntimeValue<float>) (state.VS[(int) (rn)]), fbits)));
 					break;
 				}
 				case (byte) ((byte) 0x1): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Call<double, int, uint>(FloatToFixed32, (IRuntimeValue<double>) (state.VD[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (FloatToFixed32((IRuntimeValue<double>) (state.VD[(int) (rn)]), fbits)));
 					break;
 				}
 				case (byte) ((byte) 0x5): {
-					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (builder.Call<double, int, ulong>(FloatToFixed64, (IRuntimeValue<double>) (state.VD[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime(fbits))));
+					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (FloatToFixed64((IRuntimeValue<double>) (state.VD[(int) (rn)]), fbits)));
 					break;
 				}
 				default: {
@@ -3896,7 +3896,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "2S", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x3) => "2D", _ => throw new NotImplementedException() });
-			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.Call<Vector128<float>, int, int, Vector128<float>>(Math.VectorFrsqrte, (IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x20), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x2))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.Call<Vector128<float>, int, int, Vector128<float>>(Math.VectorFrsqrte, (IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x20), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x4))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.Call<Vector128<float>, int, int, Vector128<float>>(Math.VectorFrsqrte, (IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x40), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x2))), _ => throw new NotImplementedException() });
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x20), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x2))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x20), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x4))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x40), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x2))), _ => throw new NotImplementedException() });
 			return true;
 		}
 		insn_123:
@@ -13828,15 +13828,15 @@ public partial class Recompiler {
 			var count = (byte) (((byte) (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x80) : (byte) ((byte) 0x40)))) / ((byte) (byte) (esize)));
 			switch(size) {
 				case (byte) ((byte) 0x0): {
-					state.VH[(int) rd] = (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<ulong>) (builder.Call<Vector128<float>, byte, byte, ulong>(Math.VectorSumUnsigned, builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])), (IRuntimeValue<byte>) builder.EnsureRuntime(esize), (IRuntimeValue<byte>) builder.EnsureRuntime(count))))));
+					state.VH[(int) rd] = (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorSumUnsigned((IRuntimeValue<byte>) builder.EnsureRuntime(esize), (IRuntimeValue<byte>) builder.EnsureRuntime(count))))));
 					break;
 				}
 				case (byte) ((byte) 0x1): {
-					state.VS[(int) rd] = (IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ulong>) (builder.Call<Vector128<float>, byte, byte, ulong>(Math.VectorSumUnsigned, builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])), (IRuntimeValue<byte>) builder.EnsureRuntime(esize), (IRuntimeValue<byte>) builder.EnsureRuntime(count)))))).Bitcast<float>()));
+					state.VS[(int) rd] = (IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorSumUnsigned((IRuntimeValue<byte>) builder.EnsureRuntime(esize), (IRuntimeValue<byte>) builder.EnsureRuntime(count)))))).Bitcast<float>()));
 					break;
 				}
 				case (byte) ((byte) 0x2): {
-					state.VD[(int) rd] = (IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<ulong>) (builder.Call<Vector128<float>, byte, byte, ulong>(Math.VectorSumUnsigned, builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])), (IRuntimeValue<byte>) builder.EnsureRuntime(esize), (IRuntimeValue<byte>) builder.EnsureRuntime(count)))).Bitcast<double>()));
+					state.VD[(int) rd] = (IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorSumUnsigned((IRuntimeValue<byte>) builder.EnsureRuntime(esize), (IRuntimeValue<byte>) builder.EnsureRuntime(count)))).Bitcast<double>()));
 					break;
 				}
 				default: {

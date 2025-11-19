@@ -42,4 +42,9 @@ public partial class Recompiler {
     protected virtual void SetNZCV(IStructRef<CpuState> state, IRuntimeValue<ulong> nzcv) {
         throw new NotImplementedException();
     }
+    
+    protected virtual IRuntimeValue<uint> FloatToFixed32(IRuntimeValue<float> fvalue, int fbits) => throw new NotImplementedException();
+    protected virtual IRuntimeValue<ulong> FloatToFixed64(IRuntimeValue<float> fvalue, int fbits) => throw new NotImplementedException();
+    protected virtual IRuntimeValue<uint> FloatToFixed32(IRuntimeValue<double> fvalue, int fbits) => throw new NotImplementedException();
+    protected virtual IRuntimeValue<ulong> FloatToFixed64(IRuntimeValue<double> fvalue, int fbits) => throw new NotImplementedException();
 }

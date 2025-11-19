@@ -6,3 +6,5 @@
 - ~~Implement graph flow reconstruction~~
 - ~~Implement basic constant folding~~
 - Implement constant rodata reads
+  - ~~Discovering rodata pointer dereferences~~
+- Deprecate `IBuilder.Call*` (this isn't NX-specific, just general cleanup for our structures, because we shouldn't rely on this mechanism)

@@ -307,7 +307,7 @@ public class Builtins : Builtin {
 			
 			Expression("float-to-fixed-point", list => TypeFromName(list[2]).AsRuntime(list[1].Type.Runtime || list[3].Type.Runtime), 
 				list => $"FloatToFixed{((EInt) list.Type).Width}({GenerateExpression(list[1])}, (int) ({GenerateExpression(list[3])}))", 
-				list => $"builder.Call<{GenerateType(list[1].Type.AsCompiletime())}, int, {(((EInt) list.Type).Width == 64 ? "ulong" : "uint")}>(FloatToFixed{((EInt) list.Type).Width}, {GenerateExpression(list[1])}, (IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[3])}))")
+				list => $"FloatToFixed{((EInt) list.Type).Width}({GenerateExpression(list[1])}, {GenerateExpression(list[3])})")
 				.Interpret((list, state) => {
 					var width = ((EInt) list.Type).Width;
 					var swidth = ((EFloat) list[1].Type).Width;
@@ -392,7 +392,7 @@ public class Builtins : Builtin {
 			
 			Statement("breakpoint", _ => EUnit.RuntimeType,
 				(cb, list) => cb += $"Breakpoint({GenerateExpression(list[1])});",
-				(cb, list) => cb += $"builder.CallVoid<uint>(Breakpoint, builder.LiteralValue({GenerateExpression(list[1])}));"
+				(cb, list) => cb += $"Breakpoint({GenerateExpression(list[1])});"
 				).NoInterpret(); // TODO: Implement
 	}
 }

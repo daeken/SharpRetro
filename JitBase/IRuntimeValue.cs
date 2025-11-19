@@ -48,6 +48,10 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> Element<ElementT>(IRuntimeValue<int> index, IRuntimeValue<ElementT> value) where ElementT : struct;
 	public abstract IRuntimeValue<T> ZeroTop();
 	public abstract IRuntimeValue<Vector128<T>> CreateVector();
+	public abstract IRuntimeValue<ulong> VectorSumUnsigned(IRuntimeValue<byte> esize, IRuntimeValue<byte> count);
+	public abstract IRuntimeValue<Vector128<float>> VectorCountBits(IRuntimeValue<long> elems);
+	public abstract IRuntimeValue<Vector128<float>> VectorExtract(IRuntimeValue<Vector128<float>> _b, IRuntimeValue<uint> Q, IRuntimeValue<uint> _index);
+	public abstract IRuntimeValue<Vector128<float>> VectorFrsqrte(IRuntimeValue<int> bits, IRuntimeValue<int> elements);
 	public static IRuntimeValue<T> operator +(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
 	public static IRuntimeValue<Vector128<T>> operator +(IRuntimeValue<Vector128<T>> lhs, IRuntimeValue<T> rhs) => lhs.Add(rhs);
 	public static IRuntimeValue<T> operator -(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.Sub(rhs);

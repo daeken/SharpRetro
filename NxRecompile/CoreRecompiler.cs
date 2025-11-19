@@ -38,6 +38,8 @@ public class CoreRecompiler : Recompiler {
 
     public bool IsValidCodeAt(ulong addr) => Disassemble(addr) != null;
 
+    public bool IsRoDataAddr(ulong addr) => ExeLoader.ExeModules.Any(module => module.RoStart <= addr && addr < module.RoEnd);
+
     public void Recompile() {
         KnownBlocks.Add(ExeLoader.EntryPoint);
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
@@ -49,7 +51,38 @@ public class CoreRecompiler : Recompiler {
         }
     }
 
+    static bool IsSigned(Type type) =>
+        type switch {
+            _ when type == typeof(sbyte) => true,
+            _ when type == typeof(short) => true,
+            _ when type == typeof(int) => true,
+            _ when type == typeof(long) => true,
+            _ when type == typeof(Int128) => true,
+            _ => false
+        };
+    static object ToSigned(object obj) =>
+        IsSigned(obj.GetType()) ? obj : obj switch {
+            byte v => unchecked((sbyte) v),
+            ushort v => unchecked((short) v),
+            uint v => unchecked((int) v),
+            ulong v => unchecked((long) v),
+            UInt128 v => unchecked((Int128) v),
+            _ => throw new NotImplementedException($"Can't make signed value for {obj.GetType()}")
+        };
+    static object ToUnsigned(object obj) =>
+        !IsSigned(obj.GetType()) ? obj : obj switch {
+            sbyte v => unchecked((byte) v),
+            short v => unchecked((ushort) v),
+            int v => unchecked((uint) v),
+            long v => unchecked((ulong) v),
+            Int128 v => unchecked((UInt128) v),
+            _ => throw new NotImplementedException($"Can't make unsigned value for {obj.GetType()}")
+        };
     static object Cast(object value, Type castTo) {
+        if(IsSigned(value.GetType()) != IsSigned(castTo))
+            value = IsSigned(castTo)
+                ? ToSigned(value)
+                : ToUnsigned(value);
         if(Marshal.SizeOf(castTo) > Marshal.SizeOf(value.GetType()))
             return Convert.ChangeType(value, castTo);
         var temp = (ulong) Convert.ChangeType(value, typeof(ulong));
@@ -93,66 +126,101 @@ public class CoreRecompiler : Recompiler {
         foreach(var node in WholeBlockGraph.Values) {
             var block = node.Block;
             var body = block.Body;
-            var folded = false;
-            do {
-                folded = false;
-                var regs = new StaticIRValue[32];
-                for(var i = 0; i < body.Count; ++i) {
-                    var stmt = body[i];
-                    if(stmt is SvcStmt(_, _, var outRegs)) {
-                        foreach(var outReg in outRegs)
-                            if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
-                                regs[regIndex] = null; // Can't know the results of svc calls
-                        continue;
-                    }
-                    if(stmt is not StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _) ptr, "X", var reg,var val)) continue;
+            try {
+                var folded = false;
+                do {
+                    folded = false;
+                    var regs = new StaticIRValue[32];
+                    for(var i = 0; i < body.Count; ++i) {
+                        var stmt = body[i];
+                        if(stmt is SvcStmt(_, _, var outRegs)) {
+                            foreach(var outReg in outRegs)
+                                if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
+                                    regs[regIndex] = null; // Can't know the results of svc calls
+                            continue;
+                        }
 
-                    StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
-                        if(GetConstant(left) is not var (leftType, leftValue) ||
-                           GetConstant(right) is not var (rightType, rightValue)) return null;
+                        if(stmt is not StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _) ptr, "X", var reg
+                           , var val)) continue;
 
-                        if(leftType != rightType) return null;
-                        var nlit = leftType switch {
-                            {} x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue, (byte) rightValue),
-                            {} x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue, (ushort) rightValue),
-                            {} x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue, (uint) rightValue),
-                            {} x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue, (ulong) rightValue),
-                            _ => (object) null
-                        };
-                        if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
-                        return null;
+                        StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
+                            if(GetConstant(left) is not var (leftType, leftValue) ||
+                               GetConstant(right) is not var (rightType, rightValue)) return null;
+
+                            if(leftType != rightType) return null;
+                            var nlit = leftType switch {
+                                { } x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue, (byte) rightValue),
+                                { } x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue,
+                                    (ushort) rightValue),
+                                { } x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue, (uint) rightValue),
+                                { } x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue, (ulong) rightValue),
+                                _ => (object) null
+                            };
+                            if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
+                            return null;
+                        }
+
+                        var foldedVal = val.Transform(x => {
+                            return x switch {
+                                StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.And(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right),
+                                StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) =>
+                                    regs[regIndex] switch {
+                                        StaticIRValue.Literal lit => lit,
+                                        _ => null
+                                    },
+                                _ => null
+                            };
+                        });
+                        if(foldedVal != null && !ReferenceEquals(foldedVal, val)) {
+                            folded = true;
+                            foldedAny = true;
+                            body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
+                        }
+
+                        regs[reg] = val;
                     }
-                    var foldedVal = val.Transform(x => {
-                        return x switch {
-                            StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.And(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right), 
-                            StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) => 
-                                regs[regIndex] switch {
-                                    StaticIRValue.Literal lit => lit,
-                                    _ => null
-                                },
-                            _ => null
-                        };
-                    });
-                    if(foldedVal != null && !ReferenceEquals(foldedVal, val)) {
-                        folded = true;
-                        foldedAny = true;
-                        body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
-                    }
-                    regs[reg] = val;
-                }
-            } while(folded);
+                } while(folded);
+            } catch(Exception e) {
+                Console.WriteLine($"Constant folding failed for block 0x{block.Start:X}");
+                Console.WriteLine(e);
+            }
         }
         return foldedAny;
     }
 
     bool ResolveRoData() {
-        return false;
+        var foundData = false;
+        foreach(var node in WholeBlockGraph.Values) {
+            var block = node.Block;
+            var body = block.Body;
+            for(var i = 0; i < body.Count; ++i) {
+                var stmt = body[i];
+                var nstmt = stmt.TransformValues(x => {
+                    if(x is StaticIRValue.Dereference(var pointer, var type) && GetConstant(pointer) is var (ptrType, _ptrValue)) {
+                        if(ptrType != typeof(ulong)) {
+                            Console.WriteLine($"Weird -- pointer has non-ulong type...? {x}");
+                            return null;
+                        }
+                        var ptrValue = (ulong) _ptrValue;
+                        if(IsRoDataAddr(ptrValue)) {
+                            Console.WriteLine($"Ptr to rodata! 0x{ptrValue:X}");
+                        }
+                    }
+                    return null;
+                });
+                if(nstmt != null && stmt != nstmt) {
+                    foundData = true;
+                    body[i] = nstmt;
+                }
+            }
+        }
+        return foundData;
     }
 
     public void LinearScan() {
@@ -477,6 +545,8 @@ public class CoreRecompiler : Recompiler {
             inRegs.Select(r => ((StaticRuntimeValue<ulong>) State.X[r]).Value).ToArray(), 
             outRegs.Select(r => ((StaticRuntimeValue<ulong>) State.X[r]).Value).ToArray()));
     }
+
+    protected override void Breakpoint(uint imm) => Builder.Add(new BreakpointStmt(imm));
 }
 
 record LinkedBranch(StaticIRValue Address) : StaticIRStatement {
@@ -484,8 +554,26 @@ record LinkedBranch(StaticIRValue Address) : StaticIRStatement {
         stmtFunc(this);
         Address.Walk(valueFunc);
     }
+
+    public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
+        var address = Address.Transform(valueFunc);
+        var nthis = address != null && !ReferenceEquals(address, Address)
+            ? new LinkedBranch(address)
+            : this;
+        return stmtFunc(nthis) ?? nthis;
+    }
 }
 
 record SvcStmt(string Name, StaticIRValue[] InRegs, StaticIRValue[] OutRegs) : StaticIRStatement {
     public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) => stmtFunc(this);
+
+    public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc,
+        Func<StaticIRValue, StaticIRValue> valueFunc) => stmtFunc(this);
+}
+
+record BreakpointStmt(uint Imm) : StaticIRStatement {
+    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) => stmtFunc(this);
+
+    public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc,
+        Func<StaticIRValue, StaticIRValue> valueFunc) => stmtFunc(this);
 }
