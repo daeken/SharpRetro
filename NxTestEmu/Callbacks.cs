@@ -5,10 +5,12 @@ namespace NxTestEmu;
 
 delegate void StubDelegate();
 delegate void DebugDelegate(ulong pc, string dasm);
+unsafe delegate void LoadModuleDelegate(ulong loadBase, byte* data, int size);
 
 [StructLayout(LayoutKind.Sequential)]
 public struct Callbacks() {
     public IntPtr debug = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("debug"));
+    public IntPtr loadModule = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("loadModule"));
     public IntPtr readSr = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("readSr"));
     public IntPtr writeSr = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("writeSr"));
     public IntPtr svcSetHeapSize = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetHeapSize"));

@@ -4,6 +4,7 @@
 
 typedef struct CallbackTable {
 	void (*debug)(uint64_t pc, const char* dasm);
+	void (*loadModule)(uint64_t loadBase, uint8_t *data, uint32_t size);
 	uint64_t (*readSr)(uint32_t op0, uint32_t op1, uint32_t crn, uint32_t crm, uint32_t op2);
 	void (*writeSr)(uint32_t op0, uint32_t op1, uint32_t crn, uint32_t crm, uint32_t op2, uint64_t value);
 	uint64_t (*svcSetHeapSize)(uint64_t in_1, uint64_t *out_1);

@@ -48,6 +48,28 @@ public partial class CoreRecompiler {
         cb += "(void *[]) { (void*) 0 }";
         cb--;
         cb += "};";
+
+        foreach(var module in ExeLoader.ExeModules) {
+            cb += $"uint8_t module_{module.LoadBase:X}[] = {{";
+            cb++;
+            var size = module.Binary.Length;
+            if(module.BssEnd > module.LoadBase + (ulong) size)
+                size = (int) (module.BssEnd - module.LoadBase);
+            while(size % 16384 != 0) size++;
+            var data = new byte[size];
+            module.Binary.CopyTo(data);
+            cb += string.Join(", ", data.Select(x => $"0x{x:X02}"));
+            cb--;
+            cb += "};";
+            cb += $"uint32_t module_{module.LoadBase:X}_size = 0x{size:X};";
+        }
+
+        cb += "void loadModules() {";
+        cb++;
+        foreach(var module in ExeLoader.ExeModules)
+            cb += $"Callbacks->loadModule(0x{module.LoadBase:X}ULL, module_{module.LoadBase:X}, module_{module.LoadBase:X}_size);";
+        cb--;
+        cb += "}";
     }
 
     void Output(CodeBuilder cb, StaticIRStatement stmt) {

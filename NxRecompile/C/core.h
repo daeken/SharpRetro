@@ -16,10 +16,12 @@ CallbackTable_t *Callbacks;
 typedef uint64_t (*blockFunc)();
 void ***jumpTable;
 int moduleCount;
+void loadModules();
 
 void setup(CpuState_t *state, CallbackTable_t *callbacks) {
 	State = state;
 	Callbacks = callbacks;
+	loadModules();
 }
 
 void runFrom(uint64_t addr, uint64_t until) {
