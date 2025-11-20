@@ -13,12 +13,26 @@ typedef __int128_t int128_t;
 CpuState_t *State;
 CallbackTable_t *Callbacks;
 
-static void setup(CpuState_t *state, CallbackTable_t *callbacks) {
+typedef uint64_t (*blockFunc)();
+void ***jumpTable;
+int moduleCount;
+
+void setup(CpuState_t *state, CallbackTable_t *callbacks) {
 	State = state;
 	Callbacks = callbacks;
 }
 
-static void CALL(uint64_t addr) {
+void runFrom(uint64_t addr, uint64_t until) {
+	Callbacks->debug(addr, "Attempting run from here");
+	while(addr != until) {
+		if(addr < 0x7100000000)
+			break;
+		uint64_t modIndex = (addr - 0x7100000000) >> 32;
+		if(modIndex >= moduleCount)
+			break;
+		addr = ((blockFunc) jumpTable[modIndex][(addr & 0xFFFFFFFF) >> 2])();
+	}
+	Callbacks->debug(addr, "Finished running");
 }
 
 static inline int32_t signext_uint8_t_int32_t(uint8_t v, int width) {

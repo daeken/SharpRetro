@@ -29,6 +29,25 @@ public partial class CoreRecompiler {
             cb--;
             cb += "}";
         }
+
+        cb += $"int moduleCount = {ExeLoader.ExeModules.Count};";
+        cb += "void ***jumpTable = (void **[]) {";
+        cb++;
+        foreach(var module in ExeLoader.ExeModules) {
+            cb += "(void *[]) {";
+            cb++;
+            for(var addr = module.TextStart; addr < module.TextEnd; addr += 4)
+                if(WholeBlockGraph.ContainsKey(addr))
+                    cb += $"f_{addr:X},";
+                else
+                    cb += "(void*) 0,";
+            cb += "(void*) 0";
+            cb--;
+            cb += "},";
+        }
+        cb += "(void *[]) { (void*) 0 }";
+        cb--;
+        cb += "};";
     }
 
     void Output(CodeBuilder cb, StaticIRStatement stmt) {
@@ -55,10 +74,11 @@ public partial class CoreRecompiler {
                 break;
             }
             case LinkedBranch(var target): {
-                if(target is StaticIRValue.Literal(var value, _))
+                /*if(target is StaticIRValue.Literal(var value, _))
                     cb += $"f_{(ulong) value:X}();";
                 else
-                    cb += $"CALL({Output(target)});";
+                    cb += $"CALL({Output(target)});";*/
+                cb += $"runFrom({Output(target)}, State->X[30]);";
                 break;
             }
             case StaticIRStatement.Dereference(var addr, var value): {
@@ -84,6 +104,10 @@ public partial class CoreRecompiler {
             }
             case WriteSrStmt(var op0, var op1, var crn, var crm, var op2, var value): {
                 cb += $"Callbacks->writeSr({op0}, {op1}, {crn}, {crm}, {op2}, {Output(value)});";
+                break;
+            }
+            case DebugStmt(var pc, var dasm): {
+                cb += $"Callbacks->debug(0x{pc:X}ULL, \"{dasm}\");";
                 break;
             }
             default:

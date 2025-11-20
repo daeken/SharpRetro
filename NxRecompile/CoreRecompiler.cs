@@ -250,6 +250,7 @@ public partial class CoreRecompiler : Recompiler {
                 var dasm = Disassemble(PC, insn);
                 if(dasm == null) continue;
                 Console.WriteLine($"{PC:X}: {dasm}");
+                Builder.Add(new DebugStmt(PC, dasm));
                 if(RecompileOne(Builder, State, insn, PC))
                     arr[i] = Builder.BodyStmts;
             }
@@ -359,6 +360,7 @@ public partial class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
+        State.X[30] = Builder.LiteralValue<ulong>(PC + 4); // need this temporarily...
         Builder.Add(new LinkedBranch(new  StaticIRValue.Literal(addr, typeof(ulong))));
         if(IsValidCodeAt(addr)) {
             KnownBlocks.Add(addr);
@@ -368,6 +370,7 @@ public partial class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
         Console.WriteLine("Branching with link to a runtime address!");
+        State.X[30] = Builder.LiteralValue<ulong>(PC + 4); // need this temporarily...
         Builder.Add(new LinkedBranch(StaticBuilder<ulong>.W(addr)));
         // TODO: Work out symbolic execution nonsense
         // Surely this won't be that hard.
@@ -446,4 +449,10 @@ record WriteSrStmt(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2, StaticIRVal
             : this;
         return stmtFunc(nthis) ?? nthis;
     }
+}
+
+record DebugStmt(ulong PC, string Dasm) : StaticIRStatement {
+    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) => stmtFunc(this);
+    public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) =>
+        stmtFunc(this);
 }
