@@ -8,7 +8,7 @@ using StaticRecompilerBase;
 
 namespace NxRecompile;
 
-public class CoreRecompiler : Recompiler {
+public partial class CoreRecompiler : Recompiler {
     readonly ExeLoader ExeLoader;
 
     readonly List<StaticIRStatement>[][] AllInstructions;
@@ -318,7 +318,7 @@ public class CoreRecompiler : Recompiler {
                 if(didBranch || insn == null || (curBlock != addr && KnownBlocks.Contains(addr))) {
                     didBranch = false;
                     if(curBlock != addr) {
-                        if(insn != null && (statements.Count == 0 || !DoesBranch([statements.Last()])))
+                        if(addr != module.TextEnd && (statements.Count == 0 || !DoesBranch([statements.Last()])))
                             statements.Add(new StaticIRStatement.Branch(new StaticIRValue.Literal(addr, typeof(ulong))));
                         blocks[curBlock] = (addr, statements, LeadingTo());
                         statements = [];
@@ -334,178 +334,16 @@ public class CoreRecompiler : Recompiler {
                 if(DoesBranch(insn))
                     didBranch = true;
             }
-            if(statements.Count > 0) blocks[curBlock] = (addr, statements, LeadingTo());
+            // Infinite loop at the end
+            if(statements.Count == 0 || !DoesBranch([statements.Last()]))
+                statements.Add(new StaticIRStatement.Branch(new StaticIRValue.Literal(curBlock, typeof(ulong))));
+            blocks[curBlock] = (addr, statements, LeadingTo());
         }
         return blocks;
     }
 
     public void CleanupIR() {
     }
-
-    public void Output(CodeBuilder cb) {
-        foreach(var (blockAddr, node) in WholeBlockGraph.OrderBy(x => x.Key)) {
-            cb += $"{(KnownFunctions.Contains(blockAddr) ? "function" : "block")} 0x{blockAddr:X} {{";
-            cb++;
-            cb += $"/**** {node} ****/";
-            Output(cb, new StaticIRStatement.Body(node.Block.Body));
-            cb--;
-            cb += "}";
-        }
-    }
-
-    void Output(CodeBuilder cb, StaticIRStatement stmt) {
-        switch(stmt) {
-            case StaticIRStatement.Body(var stmts): {
-                foreach(var sub in stmts)
-                    Output(cb, sub);
-                break;
-            }
-            case StaticIRStatement.If(var cond, var then, var @else): {
-                cb += $"if({Output(cond)}) {{";
-                cb++;
-                Output(cb, then);
-                cb--;
-                cb += "} else {";
-                cb++;
-                Output(cb, @else);
-                cb--;
-                cb += "}";
-                break;
-            }
-            case StaticIRStatement.Branch(var target): {
-                cb += $"goto {Output(target)};";
-                break;
-            }
-            case LinkedBranch(var target): {
-                cb += $"{Output(target)}();";
-                break;
-            }
-            case StaticIRStatement.Dereference(var addr, var value): {
-                cb += $"*({Output(value.Type)} *) ({Output(addr)}) = {Output(value)};";
-                break;
-            }
-            case StaticIRStatement.SetField(var addr, var field, var value): {
-                cb += $"({Output(addr)})->{field} = {Output(value)};";
-                break;
-            }
-            case StaticIRStatement.SetFieldIndex(var addr, var field, var index, var value): {
-                cb += $"({Output(addr)})->{field}[{index}] = {Output(value)};";
-                break;
-            }
-            case SvcStmt(var name, var inRegs, var outRegs): {
-                if(outRegs.Length == 0)
-                    cb += $"svc{name}({string.Join(", ", inRegs.Select(Output))});";
-                else if(outRegs.Length == 1)
-                    cb += $"{Output(outRegs[0])} = svc{name}({string.Join(", ", inRegs.Select(Output))});";
-                else
-                    cb += $"{Output(outRegs[0])} = svc{name}({string.Join(", ", inRegs.Select(Output))}{(inRegs.Length != 0 ? ", " : "")}{string.Join(", ", outRegs.Skip(1).Select(v => $"&({Output(v)})"))});";
-                break;
-            }
-            default:
-                cb += $"/* Unhandled stmt {stmt} */";
-                break;
-        }
-    }
-
-    string Output(StaticIRValue expr) {
-        switch(expr) {
-            case StaticIRValue.Literal(var value, var type): {
-                if(type == typeof(ulong))
-                    return $"0x{(ulong) value:X}";
-                return value.ToString();
-            }
-            case StaticIRValue.Named(var name, _): {
-                return name;
-            }
-            case StaticIRValue.Add(var left, var right): {
-                return $"({Output(left)}) + ({Output(right)})";
-            }
-            case StaticIRValue.Sub(var left, var right): {
-                return $"({Output(left)}) - ({Output(right)})";
-            }
-            case StaticIRValue.Mul(var left, var right): {
-                return $"({Output(left)}) * ({Output(right)})";
-            }
-            case StaticIRValue.Div(var left, var right): {
-                return $"({Output(left)}) / ({Output(right)})";
-            }
-            case StaticIRValue.Mod(var left, var right): {
-                return $"({Output(left)}) % ({Output(right)})";
-            }
-            case StaticIRValue.And(var left, var right): {
-                return $"({Output(left)}) & ({Output(right)})";
-            }
-            case StaticIRValue.Or(var left, var right): {
-                return $"({Output(left)}) | ({Output(right)})";
-            }
-            case StaticIRValue.Xor(var left, var right): {
-                return $"({Output(left)}) ^ ({Output(right)})";
-            }
-            case StaticIRValue.LeftShift(var left, var right): {
-                return $"({Output(left)}) << ({Output(right)})";
-            }
-            case StaticIRValue.RightShift(var left, var right): {
-                return $"({Output(left)}) >> ({Output(right)})";
-            }
-            case StaticIRValue.Negate(var value): {
-                return $"!({Output(value)})";
-            }
-            case StaticIRValue.Not(var value): {
-                return $"~({Output(value)})";
-            }
-            case StaticIRValue.EQ(var left, var right): {
-                return $"({Output(left)}) == {Output(right)}";
-            }
-            case StaticIRValue.NE(var left, var right): {
-                return $"({Output(left)}) != {Output(right)}";
-            }
-            case StaticIRValue.LT(var left, var right): {
-                return $"({Output(left)}) < {Output(right)}";
-            }
-            case StaticIRValue.LTE(var left, var right): {
-                return $"({Output(left)}) <= {Output(right)}";
-            }
-            case StaticIRValue.GT(var left, var right): {
-                return $"({Output(left)}) > {Output(right)}";
-            }
-            case StaticIRValue.GTE(var left, var right): {
-                return $"({Output(left)}) >= {Output(right)}";
-            }
-            case StaticIRValue.Dereference(var addr, var type): {
-                return $"*({Output(type)} *) ({Output(addr)})";
-            }
-            case StaticIRValue.GetField(var addr, var field, _): {
-                return $"({Output(addr)})->{field}";
-            }
-            case StaticIRValue.GetFieldIndex(var addr, var field, var index, _): {
-                return $"({Output(addr)})->{field}[{index}]";
-            }
-            case StaticIRValue.Store(var value): {
-                return Output(value);
-            }
-            case StaticIRValue.Cast(var value, var type): {
-                return $"({Output(type)}) ({Output(value)})";
-            }
-            default:
-                return $"/* Unhandled expr {expr} */";
-        }
-    }
-
-    string Output(Type type) =>
-        type switch {
-            var x when x == typeof(byte) => "uint8_t",
-            var x when x == typeof(ushort) => "uint16_t",
-            var x when x == typeof(uint) => "uint32_t",
-            var x when x == typeof(ulong) => "uint64_t",
-            var x when x == typeof(UInt128) => "uint128_t",
-            var x when x == typeof(sbyte) => "int8_t",
-            var x when x == typeof(short) => "int16_t",
-            var x when x == typeof(int) => "int32_t",
-            var x when x == typeof(long) => "int64_t",
-            var x when x == typeof(Int128) => "int128_t",
-            var x when x == typeof(bool) => "bool",
-            _ => type.ToString()
-        };
 
     protected override void Branch(ulong addr) {
         Builder.Add(new StaticIRStatement.Branch(new  StaticIRValue.Literal(addr, typeof(ulong))));
