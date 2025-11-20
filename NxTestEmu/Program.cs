@@ -9,12 +9,32 @@ unsafe {
     var _state = new CpuState();
     var state = &_state;
     state->SP = (ulong) Marshal.AllocHGlobal(0x100000) + 0x100000 - 8;
+    state->TlsBase = (ulong) Marshal.AllocHGlobal(0x200);
+    *(ulong*) (state->TlsBase + 0x1D0) = 0xDEA0_00000000;
+    *(ulong*) (state->TlsBase + 0x1E0) = 0xDEA1_00000000;
+    *(ulong*) (state->TlsBase + 0x1E8) = 0xDEA2_00000000;
+    *(ulong*) (state->TlsBase + 0x1F0) = 0xDEA3_00000000;
+    *(ulong*) (state->TlsBase + 0x1F8) = 0xDEA4_00000000;
     var callbacks = new Callbacks();
     callbacks.debug = Marshal.GetFunctionPointerForDelegate<DebugDelegate>((pc, dasm) => {
         Console.WriteLine($"{pc:X}: {dasm}");
-        /*Console.WriteLine($"X0: {state->X0:X}");
-        Console.WriteLine($"X1: {state->X1:X}");
-        Console.WriteLine($"N: {state->NZCV_N}");
+        /*Console.WriteLine($" X0: {state->X0:X016}  X1: {state->X1:X016}");
+        Console.WriteLine($" X2: {state->X2:X016}  X3: {state->X3:X016}");
+        Console.WriteLine($" X4: {state->X4:X016}  X5: {state->X5:X016}");
+        Console.WriteLine($" X6: {state->X6:X016}  X7: {state->X7:X016}");
+        Console.WriteLine($" X8: {state->X8:X016}  X9: {state->X9:X016}");
+        Console.WriteLine($"X10: {state->X10:X016} X11: {state->X11:X016}");
+        Console.WriteLine($"X12: {state->X12:X016} X13: {state->X13:X016}");
+        Console.WriteLine($"X14: {state->X14:X016} X15: {state->X15:X016}");
+        Console.WriteLine($"X16: {state->X16:X016} X17: {state->X17:X016}");
+        Console.WriteLine($"X18: {state->X18:X016} X19: {state->X19:X016}");
+        Console.WriteLine($"X20: {state->X20:X016} X21: {state->X21:X016}");
+        Console.WriteLine($"X20: {state->X20:X016} X23: {state->X23:X016}");
+        Console.WriteLine($"X20: {state->X20:X016} X25: {state->X25:X016}");
+        Console.WriteLine($"X20: {state->X20:X016} X27: {state->X27:X016}");
+        Console.WriteLine($"X20: {state->X20:X016} X29: {state->X29:X016}");
+        Console.WriteLine($"X30: {state->X30:X016}  SP: {state->SP:X016}");*/
+        /*Console.WriteLine($"N: {state->NZCV_N}");
         Console.WriteLine($"Z: {state->NZCV_Z}");
         Console.WriteLine($"C: {state->NZCV_C}");
         Console.WriteLine($"V: {state->NZCV_V}");*/
@@ -27,10 +47,47 @@ unsafe {
             var ptr = LibWrapper.mmap(loadAddr, (ulong) size, 3, 0x1000 | 0x0010 | 0x0002, -1, 0);
             Debug.Assert(ptr == loadAddr);
             Buffer.MemoryCopy((void*) data, (void*) ptr, size, size);
+            for(var temp = loadAddr + 0x38460; temp < loadAddr + 0x38700; temp += 8)
+                *(ulong*) temp += loadAddr;
+            Console.WriteLine($"Wtf??? 0x{*(ulong*) 0x710003C6F8:X}");
         });
     }
 
-    state->X0 = (ulong) Marshal.AllocHGlobal(3 * 8); // Empty config env
+    callbacks.readSr = Marshal.GetFunctionPointerForDelegate<ReadSrDelegate>((op0, op1, crn, crm, op2) => {
+        Console.WriteLine("Getting SR!");
+        var reg = ((0b10 | op0) << 14) | (op1 << 11) | (crn << 7) | (crm << 3) | op2;
+        return reg switch {
+            0b11_011_0000_0000_001 => // CtrEl0
+                0x8444c004,
+            0b11_011_0100_0100_000 => // FPCR
+                0,
+            0b11_011_0100_0100_001 => // FPSR
+                0,
+            0b11_011_1101_0000_011 => // TPIDR
+                state->TlsBase,
+            0b11_011_1110_0000_001 => // CntpctEl0
+                0,
+            _ => throw new NotSupportedException($"Unknown SR: S{op0 | 2}_{op1}_{crn}_{crm}_{op2}")
+        };
+    });
+
+    callbacks.svcGetInfo = Marshal.GetFunctionPointerForDelegate<GetInfoDelegate>((infoType, handle, infoSubtype, ref info) => {
+        Console.WriteLine($"Attempting to getinfo {infoType:X} {infoSubtype:X} handle {handle:X}");
+        return 0;
+    });
+
+    callbacks.svcSetHeapSize = Marshal.GetFunctionPointerForDelegate<SetHeapSizeDelegate>((size, ref addr) => {
+        Console.WriteLine($"Setting heap size: 0x{size:X}");
+        addr = (ulong) Marshal.AllocHGlobal((int) size);
+        return 0;
+    });
+
+    // Env config
+    state->X0 = (ulong) Marshal.AllocHGlobal(6 * 8);
+    ((ulong*) state->X0)![0] = 0x00000001; // main thread handle key
+    ((ulong*) state->X0)![1] = 0xdeadbeef;
+    ((ulong*) state->X0)![2] = 0;
+    ((ulong*) state->X0)![3] = 0; // end of list
     state->X1 = ulong.MaxValue;
     LibWrapper.setup(state, ref callbacks);
     LibWrapper.runFrom(0x71_00000000, 0);

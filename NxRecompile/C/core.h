@@ -38,19 +38,19 @@ void runFrom(uint64_t addr, uint64_t until) {
 }
 
 static inline int32_t signext_uint8_t_int32_t(uint8_t v, int width) {
-	return 0;
+	return (int32_t) ((int32_t) (((int32_t) v) << (32 - width)) >> (32 - width));
 }
 static inline int64_t signext_uint8_t_int64_t(uint8_t v, int width) {
-	return 0;
+	return (int64_t) ((int64_t) (((int64_t) v) << (64 - width)) >> (64 - width));
 }
-static inline int64_t signext_uint16_t_int32_t(uint16_t v, int width) {
-	return 0;
+static inline int32_t signext_uint16_t_int32_t(uint16_t v, int width) {
+	return (int32_t) ((int32_t) (((int32_t) v) << (32 - width)) >> (32 - width));
 }
 static inline int64_t signext_uint16_t_int64_t(uint16_t v, int width) {
-	return 0;
+	return (int64_t) ((int64_t) (((int64_t) v) << (64 - width)) >> (64 - width));
 }
 static inline int64_t signext_uint32_t_int64_t(uint32_t v, int width) {
-	return 0;
+	return (int64_t) ((int64_t) (((int64_t) v) << (64 - width)) >> (64 - width));
 }
 
 static inline v4f setElement_v16u(v4f vector, int index, uint8_t value) {
