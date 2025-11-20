@@ -2,7 +2,9 @@
 
 #include <stdint.h>
 
-typedef struct SvcTable {
+typedef struct CallbackTable {
+	uint64_t (*readSr)(uint32_t op0, uint32_t op1, uint32_t crn, uint32_t crm, uint32_t op2);
+	void (*writeSr)(uint32_t op0, uint32_t op1, uint32_t crn, uint32_t crm, uint32_t op2, uint64_t value);
 	uint64_t (*svcSetHeapSize)(uint64_t in_1, uint64_t *out_1);
 	uint64_t (*svcSetMemoryPermission)(uint64_t in_0, uint64_t in_1, uint64_t in_2);
 	uint64_t (*svcSetMemoryAttribute)(uint64_t in_0, uint64_t in_1, uint64_t in_2, uint64_t in_3);
@@ -128,4 +130,4 @@ typedef struct SvcTable {
 	void (*svcSetMemoryAttribute2)();
 	void (*svcMapInsecurePhysicalMemory)();
 	void (*svcUnmapInsecurePhysicalMemory)();
-} SvcTable_t;
+} CallbackTable_t;

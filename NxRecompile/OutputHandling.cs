@@ -75,11 +75,15 @@ public partial class CoreRecompiler {
             }
             case SvcStmt(var name, var inRegs, var outRegs): {
                 if(outRegs.Length == 0)
-                    cb += $"SvcTable->svc{name}({string.Join(", ", inRegs.Select(Output))});";
+                    cb += $"Callbacks->svc{name}({string.Join(", ", inRegs.Select(Output))});";
                 else if(outRegs.Length == 1)
-                    cb += $"{Output(outRegs[0])} = SvcTable->svc{name}({string.Join(", ", inRegs.Select(Output))});";
+                    cb += $"{Output(outRegs[0])} = Callbacks->svc{name}({string.Join(", ", inRegs.Select(Output))});";
                 else
-                    cb += $"{Output(outRegs[0])} = SvcTable->svc{name}({string.Join(", ", inRegs.Select(Output))}{(inRegs.Length != 0 ? ", " : "")}{string.Join(", ", outRegs.Skip(1).Select(v => $"&({Output(v)})"))});";
+                    cb += $"{Output(outRegs[0])} = Callbacks->svc{name}({string.Join(", ", inRegs.Select(Output))}{(inRegs.Length != 0 ? ", " : "")}{string.Join(", ", outRegs.Skip(1).Select(v => $"&({Output(v)})"))});";
+                break;
+            }
+            case WriteSrStmt(var op0, var op1, var crn, var crm, var op2, var value): {
+                cb += $"Callbacks->writeSr({op0}, {op1}, {crn}, {crm}, {op2}, {Output(value)});";
                 break;
             }
             default:
@@ -225,6 +229,9 @@ public partial class CoreRecompiler {
                 if(value.Type == typeof(double))
                     return $"fabs({Output(value)})";
                 throw new NotImplementedException($"Unsupported type for abs: {value}");
+            }
+            case ReadSr(var op0, var op1, var crn, var crm, var op2): {
+                return $"Callbacks->readSr({op0}, {op1}, {crn}, {crm}, {op2})";
             }
             default:
                 throw new NotImplementedException($"Unhandled expression {expr}");

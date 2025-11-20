@@ -381,14 +381,11 @@ public partial class CoreRecompiler : Recompiler {
         state.NZCV_V = ((nzcv >> Builder.LiteralValue(28UL)) & one) == one;
     }
 
-    protected override IRuntimeValue<ulong> SR(uint op0, uint op1, uint crn, uint crm, uint op2) {
-        Console.WriteLine($"Soooo... trying to get an SR value. That's fun! {op0} {op1} {crn} {crm} {op2}");
-        return Builder.Zero<ulong>();
-    }
+    protected override IRuntimeValue<ulong> SR(uint op0, uint op1, uint crn, uint crm, uint op2) =>
+        new StaticRuntimeValue<ulong>(new ReadSr(op0, op1, crn, crm, op2));
 
-    protected override void SR(uint op0, uint op1, uint crn, uint crm, uint op2, IRuntimeValue<ulong> value) {
-        Console.WriteLine($"Soooo... trying to set an SR value. That's fun! {op0} {op1} {crn} {crm} {op2}");
-    }
+    protected override void SR(uint op0, uint op1, uint crn, uint crm, uint op2, IRuntimeValue<ulong> value) =>
+        Builder.Add(new WriteSrStmt(op0, op1, crn, crm, op2, StaticBuilder<ulong>.W(value)));
 
     protected override void CallSvc(ulong svc) {
         Console.WriteLine($"Calling Svc 0x{svc:X}!");
@@ -430,4 +427,23 @@ record BreakpointStmt(uint Imm) : StaticIRStatement {
 
     public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc,
         Func<StaticIRValue, StaticIRValue> valueFunc) => stmtFunc(this);
+}
+
+record ReadSr(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2) : StaticIRValue(typeof(ulong)) {
+    public override void Walk(Action<StaticIRValue> func) => func(this);
+    public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this);
+}
+
+record WriteSrStmt(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2, StaticIRValue Value) : StaticIRStatement {
+    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
+        stmtFunc(this);
+        Value.Walk(valueFunc);
+    }
+    public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
+        var value = Value.Transform(valueFunc);
+        var nthis = value != null && !ReferenceEquals(value, Value)
+            ? this with { Value = value }
+            : this;
+        return stmtFunc(nthis) ?? nthis;
+    }
 }

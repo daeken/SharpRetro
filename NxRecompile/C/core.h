@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "cpuState.h"
-#include "svcTable.h"
+#include "callbackTable.h"
 
 typedef uint64_t bool; // OH GOD
 typedef __uint128_t uint128_t;
@@ -11,11 +11,11 @@ typedef __int128_t int128_t;
 
 #ifdef BUILD_LIB
 CpuState_t *State;
-SvcTable_t *SvcTable;
+CallbackTable_t *Callbacks;
 
-static void setup(CpuState_t *state, SvcTable_t *svcTable) {
+static void setup(CpuState_t *state, CallbackTable_t *callbacks) {
 	State = state;
-	SvcTable = svcTable;
+	Callbacks = callbacks;
 }
 
 static void CALL(uint64_t addr) {
