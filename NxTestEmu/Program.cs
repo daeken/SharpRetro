@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Aarch64Cpu;
 using NxTestEmu;
 
@@ -17,27 +18,27 @@ unsafe {
     *(ulong*) (state->TlsBase + 0x1F8) = 0xDEA4_00000000;
     var callbacks = new Callbacks();
     callbacks.debug = Marshal.GetFunctionPointerForDelegate<DebugDelegate>((pc, dasm) => {
+        Console.WriteLine($"\t X0: {state->X0:X016}  X1: {state->X1:X016}");
+        Console.WriteLine($"\t X2: {state->X2:X016}  X3: {state->X3:X016}");
+        Console.WriteLine($"\t X4: {state->X4:X016}  X5: {state->X5:X016}");
+        Console.WriteLine($"\t X6: {state->X6:X016}  X7: {state->X7:X016}");
+        Console.WriteLine($"\t X8: {state->X8:X016}  X9: {state->X9:X016}");
+        Console.WriteLine($"\tX10: {state->X10:X016} X11: {state->X11:X016}");
+        Console.WriteLine($"\tX12: {state->X12:X016} X13: {state->X13:X016}");
+        Console.WriteLine($"\tX14: {state->X14:X016} X15: {state->X15:X016}");
+        Console.WriteLine($"\tX16: {state->X16:X016} X17: {state->X17:X016}");
+        Console.WriteLine($"\tX18: {state->X18:X016} X19: {state->X19:X016}");
+        Console.WriteLine($"\tX20: {state->X20:X016} X21: {state->X21:X016}");
+        Console.WriteLine($"\tX20: {state->X20:X016} X23: {state->X23:X016}");
+        Console.WriteLine($"\tX20: {state->X20:X016} X25: {state->X25:X016}");
+        Console.WriteLine($"\tX20: {state->X20:X016} X27: {state->X27:X016}");
+        Console.WriteLine($"\tX20: {state->X20:X016} X29: {state->X29:X016}");
+        Console.WriteLine($"\tX30: {state->X30:X016}  SP: {state->SP:X016}");
+        Console.WriteLine($"\tN: {state->NZCV_N}");
+        Console.WriteLine($"\tZ: {state->NZCV_Z}");
+        Console.WriteLine($"\tC: {state->NZCV_C}");
+        Console.WriteLine($"\tV: {state->NZCV_V}");
         Console.WriteLine($"{pc:X}: {dasm}");
-        /*Console.WriteLine($" X0: {state->X0:X016}  X1: {state->X1:X016}");
-        Console.WriteLine($" X2: {state->X2:X016}  X3: {state->X3:X016}");
-        Console.WriteLine($" X4: {state->X4:X016}  X5: {state->X5:X016}");
-        Console.WriteLine($" X6: {state->X6:X016}  X7: {state->X7:X016}");
-        Console.WriteLine($" X8: {state->X8:X016}  X9: {state->X9:X016}");
-        Console.WriteLine($"X10: {state->X10:X016} X11: {state->X11:X016}");
-        Console.WriteLine($"X12: {state->X12:X016} X13: {state->X13:X016}");
-        Console.WriteLine($"X14: {state->X14:X016} X15: {state->X15:X016}");
-        Console.WriteLine($"X16: {state->X16:X016} X17: {state->X17:X016}");
-        Console.WriteLine($"X18: {state->X18:X016} X19: {state->X19:X016}");
-        Console.WriteLine($"X20: {state->X20:X016} X21: {state->X21:X016}");
-        Console.WriteLine($"X20: {state->X20:X016} X23: {state->X23:X016}");
-        Console.WriteLine($"X20: {state->X20:X016} X25: {state->X25:X016}");
-        Console.WriteLine($"X20: {state->X20:X016} X27: {state->X27:X016}");
-        Console.WriteLine($"X20: {state->X20:X016} X29: {state->X29:X016}");
-        Console.WriteLine($"X30: {state->X30:X016}  SP: {state->SP:X016}");*/
-        /*Console.WriteLine($"N: {state->NZCV_N}");
-        Console.WriteLine($"Z: {state->NZCV_Z}");
-        Console.WriteLine($"C: {state->NZCV_C}");
-        Console.WriteLine($"V: {state->NZCV_V}");*/
     });
     unsafe {
         callbacks.loadModule = Marshal.GetFunctionPointerForDelegate<LoadModuleDelegate>((loadAddr, data, size) => {
@@ -46,10 +47,7 @@ unsafe {
             // MAP_ANON | MAP_FIXED | MAP_PRIVATE
             var ptr = LibWrapper.mmap(loadAddr, (ulong) size, 3, 0x1000 | 0x0010 | 0x0002, -1, 0);
             Debug.Assert(ptr == loadAddr);
-            Buffer.MemoryCopy((void*) data, (void*) ptr, size, size);
-            for(var temp = loadAddr + 0x38460; temp < loadAddr + 0x38700; temp += 8)
-                *(ulong*) temp += loadAddr;
-            Console.WriteLine($"Wtf??? 0x{*(ulong*) 0x710003C6F8:X}");
+            Buffer.MemoryCopy(data, (void*) ptr, size, size);
         });
     }
 
@@ -67,6 +65,8 @@ unsafe {
                 state->TlsBase,
             0b11_011_1110_0000_001 => // CntpctEl0
                 0,
+            0b11_011_0000_0000_111 => // DCZID_EL0
+                0,
             _ => throw new NotSupportedException($"Unknown SR: S{op0 | 2}_{op1}_{crn}_{crm}_{op2}")
         };
     });
@@ -80,6 +80,31 @@ unsafe {
         Console.WriteLine($"Setting heap size: 0x{size:X}");
         addr = (ulong) Marshal.AllocHGlobal((int) size);
         return 0;
+    });
+
+    callbacks.svcSetMemoryPermission = Marshal.GetFunctionPointerForDelegate<SetMemoryPermissionDelegate>((addr, size, perms) => {
+        Console.WriteLine($"Setting memory permissions for 0x{addr:X} -- size 0x{size:X}, perms 0x{perms:X}");
+        return 0;
+    });
+
+    callbacks.svcSetMemoryAttribute = Marshal.GetFunctionPointerForDelegate<SetMemoryAttributeDelegate>((addr, size, mask, value) => {
+        Console.WriteLine($"Setting memory permissions for 0x{addr:X} -- size 0x{size:X}, mask 0x{mask:X} value 0x{value:X}");
+        return 0;
+    });
+
+    callbacks.svcQueryMemory = Marshal.GetFunctionPointerForDelegate<QueryMemoryDelegate>((ptr, addr, ref pinfo) => {
+        Console.WriteLine($"Attempting to query memory for 0x{addr:X}");
+        return 0;
+    });
+
+    callbacks.svcArbitrateUnlock = Marshal.GetFunctionPointerForDelegate<ArbitrateUnlockDelegate>(addr => {
+        Console.WriteLine($"Attempting to arbitrate unlock for 0x{addr:X}");
+        return 0;
+    });
+
+    callbacks.svcConnectToNamedPort = Marshal.GetFunctionPointerForDelegate<ConnectToNamedPortDelegate>((namePtr, ref handle) => {
+        Console.WriteLine($"Attempting to connect to named port! '{Encoding.ASCII.GetString(new Span<byte>((void*) namePtr, 64)).Split('\0')[0]}'");
+        throw new NotImplementedException();
     });
 
     // Env config

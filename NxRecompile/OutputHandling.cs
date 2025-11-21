@@ -150,14 +150,14 @@ public partial class CoreRecompiler {
         switch(expr) {
             case StaticIRValue.Literal(var value, var type): {
                 return value switch {
-                    sbyte v => v.ToString(),
-                    short v => v.ToString(),
-                    int v => v.ToString(),
-                    long v => v + "L",
+                    sbyte v => $"(int8_t) {v}",
+                    short v => $"(int16_t) {v}",
+                    int v => $"(int32_t) {v}",
+                    long v => $"(int64_t) {v}LL",
                     byte v => $"(uint8_t) 0x{v:X}U",
                     ushort v => $"(uint16_t) 0x{v:X}U",
-                    uint v => $"0x{v:X}UL",
-                    ulong v => $"0x{v:X}ULL",
+                    uint v => $"(uint32_t) 0x{v:X}U",
+                    ulong v => $"(uint64_t) 0x{v:X}ULL",
                     float v => $"{v:0.0###############}f",
                     double v => $"{v:0.0###############}",
                     System.Runtime.Intrinsics.Vector128<byte> v => $"(v16u) {{ {string.Join(", ", Enumerable.Range(0, 16).Select(i => v[i]))} }}",
@@ -255,7 +255,7 @@ public partial class CoreRecompiler {
                 return $"__builtin_bitreverse{Marshal.SizeOf(value.Type) * 8}({Output(value)})";
             }
             case StaticIRValue.CountLeadingZeros(var value): {
-                return $"__builtin_clz({Output(value)})";
+                return $"__builtin_clzg({Output(value)})";
             }
             case StaticIRValue.SetElement(var vector, var index, var element): {
                 return $"setElement_{Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(element.Type))}({Output(vector)}, {Output(index)}, {Output(element)})";

@@ -46,6 +46,13 @@ enum DynamicKey {
     FINI_ARRAYSZ,
     RUNPATH,
     FLAGS,
+    ENCODING,
+    PREINIT_ARRAY,
+    PREINIT_ARRAYSZ,
+    SYMTAB_SHNDX,
+    RELRSZ,
+    RELR,
+    RELRENT,
 }
 
 public class ExeModule {

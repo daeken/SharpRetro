@@ -46,6 +46,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NxRecompile", "NxRecompile\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NxTestEmu", "NxTestEmu\NxTestEmu.csproj", "{BF1A2749-177C-40F6-BD92-2560D6466B9C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbraCore", "UmbraCore\UmbraCore.csproj", "{23562AA1-CEE8-484A-A6A2-0368536CF81E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -144,5 +146,9 @@ Global
 		{BF1A2749-177C-40F6-BD92-2560D6466B9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF1A2749-177C-40F6-BD92-2560D6466B9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF1A2749-177C-40F6-BD92-2560D6466B9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23562AA1-CEE8-484A-A6A2-0368536CF81E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23562AA1-CEE8-484A-A6A2-0368536CF81E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23562AA1-CEE8-484A-A6A2-0368536CF81E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23562AA1-CEE8-484A-A6A2-0368536CF81E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

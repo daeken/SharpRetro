@@ -25,7 +25,7 @@ void setup(CpuState_t *state, CallbackTable_t *callbacks) {
 }
 
 void runFrom(uint64_t addr, uint64_t until) {
-	Callbacks->debug(addr, "Attempting run from here");
+	//Callbacks->debug(addr, "Attempting run from here");
 	while(addr != until) {
 		if(addr < 0x7100000000)
 			break;
@@ -34,7 +34,7 @@ void runFrom(uint64_t addr, uint64_t until) {
 			break;
 		addr = ((blockFunc) jumpTable[modIndex][(addr & 0xFFFFFFFF) >> 2])();
 	}
-	Callbacks->debug(addr, "Finished running");
+	//Callbacks->debug(addr, "Finished running");
 }
 
 static inline int32_t signext_uint8_t_int32_t(uint8_t v, int width) {
