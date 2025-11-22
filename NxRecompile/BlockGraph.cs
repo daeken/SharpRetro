@@ -25,6 +25,11 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Next = Next;
         public override string ToString() => $"When(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
     }
+    public class Unless(Block Block, BlockGraph Then, BlockGraph Next) : BlockGraph(Block) {
+        public BlockGraph Then = Then;
+        public BlockGraph Next = Next;
+        public override string ToString() => $"Unless(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
+    }
     public class If(Block Block, BlockGraph Then, BlockGraph Else, BlockGraph Next) : BlockGraph(Block) {
         public BlockGraph Then = Then;
         public BlockGraph Else = Else;
@@ -41,7 +46,6 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Next = Next;
         public override string ToString() => $"InverseWhile(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
     }
-    public class Node(Block Block) : BlockGraph(Block);
 
     static (bool Changed, Dictionary<ulong, BlockGraph> Blocks) Transform(Dictionary<ulong, BlockGraph> blocks, Func<BlockGraph, BlockGraph> func) {
         var changed = false;
@@ -64,6 +68,11 @@ public abstract class BlockGraph(Block Block) {
                             break;
                         }
                         case When node: {
+                            if(ReferenceEquals(block, node.Then)) node.Then = nblock;
+                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
+                            break;
+                        }
+                        case Unless node: {
                             if(ReferenceEquals(block, node.Then)) node.Then = nblock;
                             if(ReferenceEquals(block, node.Next)) node.Next = nblock;
                             break;
@@ -103,6 +112,7 @@ public abstract class BlockGraph(Block Block) {
                     Unconditional rnode => rnode.Next,
                     Conditional rnode when !ReferenceEquals(node, rnode) => DominatingNext(rnode.Taken, rnode.Not),
                     When rnode => rnode.Next,
+                    Unless rnode => rnode.Next,
                     If rnode => rnode.Next,
                     While rnode => rnode.Next,
                     InverseWhile rnode => rnode.Next,
@@ -126,6 +136,10 @@ public abstract class BlockGraph(Block Block) {
                 node is Conditional cond && DominatingNext(cond.Taken, cond.Not) == cond.Not
                     ? new When(cond.Block, cond.Taken, cond.Not)
                     : null);
+            (var foundUnless, blocks) = Transform(blocks, node => 
+                node is Conditional cond && DominatingNext(cond.Taken, cond.Not) == cond.Taken
+                    ? new Unless(cond.Block, cond.Not, cond.Taken)
+                    : null);
             (var foundWhile, blocks) = Transform(blocks, node => {
                 if(node is not Conditional cond) return null;
                 return DominatingNext(cond.Taken, cond.Not, node) == node ? new While(cond.Block, cond.Taken, cond.Not) : null;
@@ -141,7 +155,7 @@ public abstract class BlockGraph(Block Block) {
                     ? new If(cond.Block, cond.Taken, cond.Not, sharedNext)
                     : null;
             });
-            if(!foundWhen && !foundWhile && !foundInverseWhile && !foundIf)
+            if(!foundWhen && !foundUnless && !foundWhile && !foundInverseWhile && !foundIf)
                 return blocks;
         }
     }

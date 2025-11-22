@@ -45,6 +45,7 @@ public partial class CoreRecompiler : Recompiler {
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
         WholeBlockGraph = BuildBlockGraph();
+        RewriteFunctions();
         while(true) {
             if(!FoldConstants() && !ResolveRoData())
                 break;
@@ -308,12 +309,12 @@ public partial class CoreRecompiler : Recompiler {
             var statements = new List<StaticIRStatement>();
             var didBranch = false;
             List<ulong> LeadingTo() {
-                var leadsTo = new HashSet<ulong>();
+                var leadsTo = new List<ulong>();
                 new StaticIRStatement.Body(statements).Walk(x => {
                     if(x is StaticIRStatement.Branch { Address: StaticIRValue.Literal(var laddr, var type) } && type == typeof(ulong))
                         leadsTo.Add((ulong) laddr);
                 });
-                return leadsTo.Order().ToList();
+                return leadsTo;
             }
             foreach(var insn in arr) {
                 if(didBranch || insn == null || (curBlock != addr && KnownBlocks.Contains(addr))) {

@@ -91,6 +91,22 @@ public partial class CoreRecompiler {
                 cb += "}";
                 break;
             }
+            case StaticIRStatement.When(var cond, var then): {
+                cb += $"if({Output(cond)}) {{";
+                cb++;
+                Output(cb, then);
+                cb--;
+                cb += "}";
+                break;
+            }
+            case StaticIRStatement.Unless(var cond, var then): {
+                cb += $"if(!({Output(cond)})) {{";
+                cb++;
+                Output(cb, then);
+                cb--;
+                cb += "}";
+                break;
+            }
             case StaticIRStatement.Branch(var target): {
                 cb += $"return {Output(target)};";
                 break;
