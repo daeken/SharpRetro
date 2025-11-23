@@ -10,7 +10,9 @@
 - Deprecate `IBuilder.Call*` (this isn't NX-specific, just general cleanup for our structures, because we shouldn't rely on this mechanism)
 - Rewrite mature functions
   - ~~For when/unless/unconditional~~
-  - For while/inversewhile
+  - ~~For while/inversewhile~~
 - Implement stores
 - Define new bundled binary format
   - Remove the embedded binary
+- ~~Implement dot graph output~~
+- Fix constant folding for rewritten functions

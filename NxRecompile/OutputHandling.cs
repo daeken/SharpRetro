@@ -107,6 +107,22 @@ public partial class CoreRecompiler {
                 cb += "}";
                 break;
             }
+            case StaticIRStatement.While(var cond, var loop): {
+                cb += $"while({Output(cond)}) {{";
+                cb++;
+                Output(cb, loop);
+                cb--;
+                cb += "}";
+                break;
+            }
+            case StaticIRStatement.DoWhile(var loop, var cond): {
+                cb += "do {";
+                cb++;
+                Output(cb, loop);
+                cb--;
+                cb += $"}} while({Output(cond)});";
+                break;
+            }
             case StaticIRStatement.Branch(var target): {
                 cb += $"return {Output(target)};";
                 break;

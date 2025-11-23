@@ -45,11 +45,83 @@ public partial class CoreRecompiler : Recompiler {
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
         WholeBlockGraph = BuildBlockGraph();
+        DumpDotGraph(0x7100002ED0);
         RewriteFunctions();
         while(true) {
             if(!FoldConstants() && !ResolveRoData())
                 break;
         }
+    }
+
+    void DumpDotGraph(ulong addr) {
+        var seen =  new HashSet<ulong>();
+        void Dump(BlockGraph node) {
+            if(!seen.Add(node.Block.Start)) return;
+            Console.WriteLine($"\"0x{node.Block.Start:X}\" [label=\"0x{node.Block.Start:X} - {node.GetType().Name}\"];");
+            switch(node) {
+                case BlockGraph.Unconditional n: {
+                    Dump(n.Next);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Next.Block.Start:X}\";");
+                    break;
+                }
+                case BlockGraph.Conditional n: {
+                    Dump(n.Taken);
+                    Dump(n.Not);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Taken.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Not.Block.Start:X}\" [color=red];");
+                    break;
+                }
+                case BlockGraph.When n: {
+                    Dump(n.Then);
+                    Dump(n.Next);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Then.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Next.Block.Start:X}\" [color=red];");
+                    break;
+                }
+                case BlockGraph.Unless n: {
+                    Dump(n.Then);
+                    Dump(n.Next);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Then.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Next.Block.Start:X}\" [color=red];");
+                    break;
+                }
+                case BlockGraph.If n: {
+                    Dump(n.Then);
+                    Dump(n.Else);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Then.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Else.Block.Start:X}\" [color=red];");
+                    break;
+                }
+                case BlockGraph.TerminalIf n: {
+                    Dump(n.Then);
+                    Dump(n.Else);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Then.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Else.Block.Start:X}\" [color=red];");
+                    break;
+                }
+                case BlockGraph.DoWhile n: {
+                    Dump(n.Loop);
+                    Dump(n.Next);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Loop.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Next.Block.Start:X}\" [color=blue];");
+                    break;
+                }
+                case BlockGraph.InverseDoWhile n: {
+                    Dump(n.Loop);
+                    Dump(n.Next);
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Loop.Block.Start:X}\" [color=green];");
+                    Console.WriteLine($"\"0x{node.Block.Start:X}\" -> \"0x{n.Next.Block.Start:X}\" [color=blue];");
+                    break;
+                }
+                case BlockGraph.End:
+                    break;
+                default:
+                    throw new NotImplementedException($"Can't output dot for {node}");
+            }
+        }
+        Console.WriteLine("digraph G {");
+        Dump(WholeBlockGraph[addr]);
+        Console.WriteLine("}");
     }
 
     static bool IsSigned(Type type) =>
