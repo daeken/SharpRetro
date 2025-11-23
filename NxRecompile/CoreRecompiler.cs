@@ -45,12 +45,13 @@ public partial class CoreRecompiler : Recompiler {
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
         WholeBlockGraph = BuildBlockGraph();
-        DumpDotGraph(0x7100002ED0);
+        DumpDotGraph(0x7100005680);
         RewriteFunctions();
         while(true) {
             if(!FoldConstants() && !ResolveRoData())
                 break;
         }
+        Unregister();
     }
 
     void DumpDotGraph(ulong addr) {
@@ -323,7 +324,7 @@ public partial class CoreRecompiler : Recompiler {
                 var dasm = Disassemble(PC, insn);
                 if(dasm == null) continue;
                 Console.WriteLine($"{PC:X}: {dasm}");
-                Builder.Add(new DebugStmt(PC, dasm));
+                //Builder.Add(new DebugStmt(PC, dasm));
                 if(RecompileOne(Builder, State, insn, PC))
                     arr[i] = Builder.BodyStmts;
             }

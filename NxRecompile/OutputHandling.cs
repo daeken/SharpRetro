@@ -135,6 +135,10 @@ public partial class CoreRecompiler {
                 cb += $"runFrom({Output(target)}, State->X[30]);";
                 break;
             }
+            case StaticIRStatement.Assign(var name, var value): {
+                cb += $"{name} = {Output(value)};";
+                break;
+            }
             case StaticIRStatement.Dereference(var addr, var value): {
                 cb += $"*({Output(value.Type)} *) ({Output(addr)}) = {Output(value)};";
                 break;

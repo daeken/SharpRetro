@@ -8,14 +8,14 @@ public abstract class BlockGraph(Block Block) {
     public Block Block = Block;
 
     public void Walk(Action<BlockGraph> func) => Walk(func, []);
-    public abstract void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen);
+    public abstract void Walk(Action<BlockGraph> func, HashSet<ulong> seen);
     
     // Immature
     public class Unconditional(Block Block, BlockGraph Next = null) : BlockGraph(Block) {
         public BlockGraph Next = Next;
         public override string ToString() => $"Unconditional(0x{(Next != null ? Next.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Next.Walk(func, seen);
         }
@@ -24,8 +24,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Taken = Taken;
         public BlockGraph Not = Not;
         public override string ToString() => $"Conditional(0x{(Taken != null ? Taken.Block.Start : 0):X}, 0x{(Not != null ? Not.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Taken.Walk(func, seen);
             Not.Walk(func, seen);
@@ -33,8 +33,8 @@ public abstract class BlockGraph(Block Block) {
     }
 
     public class End(Block Block) : BlockGraph(Block) {
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
         }
     }
@@ -44,8 +44,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Then = Then;
         public BlockGraph Next = Next;
         public override string ToString() => $"When(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Next.Walk(func, seen);
@@ -55,8 +55,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Then = Then;
         public BlockGraph Next = Next;
         public override string ToString() => $"Unless(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Next.Walk(func, seen);
@@ -67,8 +67,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Else = Else;
         public BlockGraph Next = Next;
         public override string ToString() => $"If(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Else != null ? Else.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Else.Walk(func, seen);
@@ -79,8 +79,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Then = Then;
         public BlockGraph Else = Else;
         public override string ToString() => $"TerminalIf(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Else != null ? Else.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Else.Walk(func, seen);
@@ -90,8 +90,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Loop = Loop;
         public BlockGraph Next = Next;
         public override string ToString() => $"DoWhile(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Loop.Walk(func, seen);
             Next.Walk(func, seen);
@@ -101,8 +101,8 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Loop = Loop;
         public BlockGraph Next = Next;
         public override string ToString() => $"InverseDoWhile(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
-        public override void Walk(Action<BlockGraph> func, HashSet<BlockGraph> seen) {
-            if(!seen.Add(this)) return;
+        public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
+            if(!seen.Add(Block.Start)) return;
             func(this);
             Loop.Walk(func, seen);
             Next.Walk(func, seen);
@@ -318,8 +318,6 @@ public abstract class BlockGraph(Block Block) {
 
         (_, blocks) = Transform(blocks, node => {
             if(node is not Conditional cond) return null;
-            if(node.Block.Start == 0x71_00002f70)
-                Console.WriteLine($"Foo? {cond.Taken.IsMature()} && {cond.Not.IsMature()} && {IsPeninsula(cond.Taken)} && {IsPeninsula(cond.Not)}");
             if(DominatingNext(cond.Taken, cond.Not) == cond.Not || (cond.Taken.IsMature() && cond.Not.IsMature() && IsPeninsula(cond.Taken)))
                 return new When(cond.Block, cond.Taken, cond.Not);
             if(DominatingNext(cond.Taken, cond.Not) == cond.Taken || (cond.Taken.IsMature() && cond.Not.IsMature() && IsPeninsula(cond.Not)))

@@ -23,9 +23,9 @@ public abstract record StaticIRStatement {
                 if(tstmt == null || ReferenceEquals(stmt, tstmt)) return stmt;
                 changed = true;
                 return tstmt;
-            });
-            var nthis = changed ? new Body(stmts.ToArray()) : this;
-            return stmtFunc(nthis) ?? this;
+            }).ToList();
+            var nthis = changed ? new Body(stmts) : this;
+            return stmtFunc(nthis) ?? nthis;
         }
     }
 
@@ -231,6 +231,21 @@ public abstract record StaticIRStatement {
                         Index, 
                         value != null && !ReferenceEquals(value, Value) ? value : Value
                     )
+                : this;
+            return stmtFunc(nthis) ?? nthis;
+        }
+    }
+
+    public record Assign(string Name, StaticIRValue Value) : StaticIRStatement {
+        public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
+            stmtFunc(this);
+            Value.Walk(valueFunc);
+        }
+
+        public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
+            var value = Value.Transform(valueFunc);
+            var nthis = value != null && !ReferenceEquals(value, Value)
+                ? new Assign(Name, value)
                 : this;
             return stmtFunc(nthis) ?? nthis;
         }

@@ -18,8 +18,10 @@ public partial class CoreRecompiler {
     }
 
     BlockGraph Rewrite(BlockGraph node, HashSet<BlockGraph> nexts) {
-        if(!WholeBlockGraph.Remove(node.Block.Start))
+        if(!WholeBlockGraph.Remove(node.Block.Start)) {
+            //Console.WriteLine($"Potentially duplicated block? 0x{node.Block.Start:X}");
             return node; // We already have seen it in the rewrite pass; must be a bad loop
+        }
         switch(node) {
             case BlockGraph.End: return node;
             case BlockGraph.Unconditional dnode: {
