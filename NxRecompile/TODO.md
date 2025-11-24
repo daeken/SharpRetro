@@ -16,4 +16,4 @@
   - Remove the embedded binary
 - ~~Implement dot graph output~~
 - Fix constant folding for rewritten functions
-- Implement load/store state <-> variables
+- ~~Implement load/store state <-> variables~~
