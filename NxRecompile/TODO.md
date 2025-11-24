@@ -15,8 +15,9 @@
 - Define new bundled binary format
   - Remove the embedded binary
 - ~~Implement dot graph output~~
-- Fix constant folding for rewritten functions
+- ~~Fix constant folding for rewritten functions~~ (Decided against this)
 - ~~Implement load/store state <-> variables~~
 - ~~Implement basic SSA~~
 - Use SSA data to handle load/store of state
 - Don't place Phis for cases where a return is guaranteed
+- Add second constant folding stage using Phi data
