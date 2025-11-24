@@ -11,7 +11,7 @@ namespace NxRecompile;
 public partial class CoreRecompiler : Recompiler {
     readonly ExeLoader ExeLoader;
 
-    readonly List<StaticIRStatement>[][] AllInstructions;
+    List<StaticIRStatement>[][] AllInstructions;
     readonly HashSet<ulong> KnownBlocks = [];
     readonly HashSet<ulong> KnownFunctions = [];
     Dictionary<ulong, BlockGraph> WholeBlockGraph;
@@ -44,6 +44,7 @@ public partial class CoreRecompiler : Recompiler {
         KnownBlocks.Add(ExeLoader.EntryPoint);
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
+        DitchX31();
         WholeBlockGraph = BuildBlockGraph();
         DumpDotGraph(0x7100005680);
         RewriteFunctions();
@@ -53,6 +54,16 @@ public partial class CoreRecompiler : Recompiler {
         }
         Unregister();
     }
+
+    void DitchX31() =>
+        AllInstructions = 
+            AllInstructions.Select(module =>
+                module.Select(insn =>
+                    insn?.Select(stmt => 
+                        stmt is StaticIRStatement.SetFieldIndex(
+                            StaticIRValue.Named("State", _), "X", 31, var value)
+                            ? new StaticIRStatement.Sink(value)
+                            : stmt).ToList()).ToArray()).ToArray();
 
     void DumpDotGraph(ulong addr) {
         var seen =  new HashSet<ulong>();

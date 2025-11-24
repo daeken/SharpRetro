@@ -1,4 +1,5 @@
 using System.Runtime.Intrinsics;
+using Aarch64Cpu;
 using StaticRecompilerBase;
 
 namespace NxRecompile;
@@ -12,6 +13,7 @@ public partial class CoreRecompiler {
     }
 
     void Unregister(BlockGraph node) {
+        if(node is not BlockGraph.End) return;
         var regsModified = new HashSet<int>();
         var regsUsed = new HashSet<int>();
         var vecsModified = new HashSet<int>();
@@ -89,6 +91,41 @@ public partial class CoreRecompiler {
         var zName = new StaticIRValue.Named("Z", typeof(bool));
         var cName = new StaticIRValue.Named("C", typeof(bool));
         var vName = new StaticIRValue.Named("V", typeof(bool));
+        var state = new StaticIRValue.Named("State", typeof(CpuState));
+        var storeValues = new List<StaticIRStatement>();
+        var loadValues = new List<StaticIRStatement>();
+        foreach(var (i, named) in regNames) {
+            if(regsModified.Contains(i))
+                storeValues.Add(new StaticIRStatement.SetFieldIndex(state, "X", i, named));
+            if(regsUsed.Contains(i))
+                loadValues.Add(new StaticIRStatement.Assign($"X{i}", new StaticIRValue.GetFieldIndex(state, "X", i, typeof(ulong))));
+        }
+        foreach(var (i, named) in vecNames) {
+            if(vecsModified.Contains(i))
+                storeValues.Add(new StaticIRStatement.SetFieldIndex(state, "V", i, named));
+            if(vecsUsed.Contains(i))
+                loadValues.Add(new StaticIRStatement.Assign($"V{i}", new StaticIRValue.GetFieldIndex(state, "V", i, typeof(Vector128<float>))));
+        }
+        if(spModified)
+            storeValues.Add(new StaticIRStatement.SetField(state, "SP", spName));
+        if(spUsed)
+            loadValues.Add(new StaticIRStatement.Assign("SP", new StaticIRValue.GetField(state, "SP", typeof(ulong))));
+        if(nModified)
+            storeValues.Add(new StaticIRStatement.SetField(state, "NZCV_N", nName));
+        if(nUsed)
+            loadValues.Add(new StaticIRStatement.Assign("N", new StaticIRValue.GetField(state, "NZCV_N", typeof(bool))));
+        if(zModified)
+            storeValues.Add(new StaticIRStatement.SetField(state, "NZCV_Z", zName));
+        if(zUsed)
+            loadValues.Add(new StaticIRStatement.Assign("Z", new StaticIRValue.GetField(state, "NZCV_Z", typeof(bool))));
+        if(cModified)
+            storeValues.Add(new StaticIRStatement.SetField(state, "NZCV_C", cName));
+        if(cUsed)
+            loadValues.Add(new StaticIRStatement.Assign("C", new StaticIRValue.GetField(state, "NZCV_C", typeof(bool))));
+        if(vModified)
+            storeValues.Add(new StaticIRStatement.SetField(state, "NZCV_V", vName));
+        if(vUsed)
+            loadValues.Add(new StaticIRStatement.Assign("V", new StaticIRValue.GetField(state, "NZCV_V", typeof(bool))));
         node.Walk(sub => {
             var body = new StaticIRStatement.Body(sub.Block.Body);
             body = (StaticIRStatement.Body) body.Transform(stmt => {
@@ -124,7 +161,15 @@ public partial class CoreRecompiler {
                     return vName;
                 return null;
             });
+            body = (StaticIRStatement.Body) body.Transform(stmt => {
+                if(stmt is LinkedBranch)
+                    return new StaticIRStatement.Body(storeValues.Concat([stmt]).Concat(loadValues).ToList());
+                if(stmt is StaticIRStatement.Branch)
+                    return new StaticIRStatement.Body(storeValues.Concat([stmt]).ToList());
+                return null;
+            });
             sub.Block = sub.Block with { Body = body.Stmts.ToList() };
         });
+        node.Block = node.Block with { Body = loadValues.Concat(node.Block.Body).ToList() };
     }
 }

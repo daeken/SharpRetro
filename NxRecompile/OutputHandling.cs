@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CoreArchCompiler;
 using StaticRecompilerBase;
@@ -25,6 +26,18 @@ public partial class CoreRecompiler {
             cb += $"uint64_t f_{blockAddr:X}() {{ /* 0x{blockAddr:X} */";
             cb++;
             cb += $"/**** {(KnownFunctions.Contains(blockAddr) ? "function" : "block")} {node} ****/";
+            var assignments = new Dictionary<string, Type>();
+            node.Walk(sub => {
+                new StaticIRStatement.Body(sub.Block.Body).Walk(stmt => {
+                    if(stmt is not StaticIRStatement.Assign(var name, var value)) return;
+                    if(assignments.TryGetValue(name, out var type)) {
+                        Debug.Assert(type == value.Type);
+                        return;
+                    }
+                    assignments[name] = value.Type;
+                    cb += $"{Output(value.Type)} {name};";
+                });
+            });
             Output(cb, new StaticIRStatement.Body(node.Block.Body));
             cb--;
             cb += "}";
@@ -149,6 +162,10 @@ public partial class CoreRecompiler {
             }
             case StaticIRStatement.SetFieldIndex(var addr, var field, var index, var value): {
                 cb += $"({Output(addr)})->{field}[{index}] = {Output(value)};";
+                break;
+            }
+            case StaticIRStatement.Sink(var value): {
+                cb += $"{Output(value)};";
                 break;
             }
             case SvcStmt(var name, var inRegs, var outRegs): {

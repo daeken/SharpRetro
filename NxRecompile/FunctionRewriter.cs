@@ -8,12 +8,7 @@ public partial class CoreRecompiler {
         foreach(var addr in KnownFunctions.Order()) {
             var firstBlock = WholeBlockGraph[addr];
             if(!firstBlock.IsMature() || firstBlock is BlockGraph.End) continue;
-            var temp = Rewrite(firstBlock, []);
-            // TODO: Remove this bullshit
-            temp.Block = temp.Block with { Body = (new List<StaticIRStatement> {
-                new DebugStmt(temp.Block.Start, "REWROTE THIS FUNCTION")
-            }).Concat(temp.Block.Body).ToList() };
-            WholeBlockGraph[addr] = temp;
+            WholeBlockGraph[addr] = Rewrite(firstBlock, []);
         }
     }
 

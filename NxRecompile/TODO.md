@@ -8,7 +8,7 @@
 - ~~Implement constant rodata reads~~
   - ~~Discovering rodata pointer dereferences~~
 - Deprecate `IBuilder.Call*` (this isn't NX-specific, just general cleanup for our structures, because we shouldn't rely on this mechanism)
-- Rewrite mature functions
+- ~~Rewrite mature functions~~
   - ~~For when/unless/unconditional~~
   - ~~For while/inversewhile~~
 - Implement stores
@@ -16,3 +16,4 @@
   - Remove the embedded binary
 - ~~Implement dot graph output~~
 - Fix constant folding for rewritten functions
+- Implement load/store state <-> variables
