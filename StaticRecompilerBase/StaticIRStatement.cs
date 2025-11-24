@@ -41,8 +41,8 @@ public abstract record StaticIRStatement {
 
     public record Sink(StaticIRValue Value) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Value.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -56,8 +56,8 @@ public abstract record StaticIRStatement {
 
     public record Return(StaticIRValue Value) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Value.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -71,10 +71,10 @@ public abstract record StaticIRStatement {
 
     public record If(StaticIRValue Cond, StaticIRStatement Then, StaticIRStatement Else) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Cond.Walk(valueFunc);
             Then.Walk(stmtFunc, valueFunc);
             Else.Walk(stmtFunc, valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -96,9 +96,9 @@ public abstract record StaticIRStatement {
     }
     public record When(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Cond.Walk(valueFunc);
             Then.Walk(stmtFunc, valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -117,9 +117,9 @@ public abstract record StaticIRStatement {
     }
     public record Unless(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Cond.Walk(valueFunc);
             Then.Walk(stmtFunc, valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -138,9 +138,9 @@ public abstract record StaticIRStatement {
     }
     public record While(StaticIRValue Cond, StaticIRStatement Do) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Cond.Walk(valueFunc);
             Do.Walk(stmtFunc, valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -159,9 +159,9 @@ public abstract record StaticIRStatement {
     }
     public record DoWhile(StaticIRStatement Do, StaticIRValue Cond) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Do.Walk(stmtFunc, valueFunc);
             Cond.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -181,9 +181,9 @@ public abstract record StaticIRStatement {
     
     public record Dereference(StaticIRValue Pointer, StaticIRValue Value) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Pointer.Walk(valueFunc);
             Value.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -202,9 +202,9 @@ public abstract record StaticIRStatement {
     }
     public record SetField(StaticIRValue Pointer, string Name, StaticIRValue Value) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Pointer.Walk(valueFunc);
             Value.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -224,9 +224,9 @@ public abstract record StaticIRStatement {
     }
     public record SetFieldIndex(StaticIRValue Pointer, string Name, int Index, StaticIRValue Value) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Pointer.Walk(valueFunc);
             Value.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -249,8 +249,8 @@ public abstract record StaticIRStatement {
     public record Assign(string Name, StaticIRValue Value) : StaticIRStatement {
         public int SsaId = -1;
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Value.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -264,8 +264,8 @@ public abstract record StaticIRStatement {
     
     public record Branch(StaticIRValue Address) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-            stmtFunc(this);
             Address.Walk(valueFunc);
+            stmtFunc(this);
         }
 
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {

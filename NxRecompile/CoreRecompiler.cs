@@ -53,7 +53,7 @@ public partial class CoreRecompiler : Recompiler {
                 break;
         }
         Unregister();
-        CullPhi();
+        //CullPhi();
     }
 
     void CullPhi() {
@@ -499,8 +499,8 @@ public partial class CoreRecompiler : Recompiler {
 
 record LinkedBranch(StaticIRValue Address) : StaticIRStatement {
     public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-        stmtFunc(this);
         Address.Walk(valueFunc);
+        stmtFunc(this);
     }
 
     public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
@@ -533,8 +533,8 @@ record ReadSr(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2) : StaticIRValue(
 
 record WriteSrStmt(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2, StaticIRValue Value) : StaticIRStatement {
     public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
-        stmtFunc(this);
         Value.Walk(valueFunc);
+        stmtFunc(this);
     }
     public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
         var value = Value.Transform(valueFunc);
