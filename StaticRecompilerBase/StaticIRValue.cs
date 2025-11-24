@@ -9,6 +9,7 @@ public abstract record StaticIRValue(Type Type) {
     public abstract StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func);
 
     public record Named(string Name, Type Type) : StaticIRValue(Type) {
+        public int SsaId = -1;
         public override void Walk(Action<StaticIRValue> func) => func(this);
         public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this) ?? this;
     }
@@ -788,6 +789,26 @@ public abstract record StaticIRValue(Type Type) {
                         False = _false != null && !ReferenceEquals(_false, False) ? _false : False
                     }
                     : this;
+            return func(nthis) ?? nthis;
+        }
+    }
+
+    public record Phi(IReadOnlyList<StaticIRValue> Values) : StaticIRValue(Values[0].Type) {
+        public override void Walk(Action<StaticIRValue> func) {
+            func(this);
+            foreach(var value in Values)
+                value.Walk(func);
+        }
+
+        public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
+            var changed = false;
+            var values = Values.Select(v => {
+                var value = func(v);
+                if(value == null || ReferenceEquals(value, v)) return v;
+                changed = true;
+                return value;
+            }).ToList();
+            var nthis = changed ? new Phi(values) : this;
             return func(nthis) ?? nthis;
         }
     }

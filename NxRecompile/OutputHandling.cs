@@ -148,8 +148,11 @@ public partial class CoreRecompiler {
                 cb += $"runFrom({Output(target)}, State->X[30]);";
                 break;
             }
-            case StaticIRStatement.Assign(var name, var value): {
-                cb += $"{name} = {Output(value)};";
+            case StaticIRStatement.Assign(var name, var value) { SsaId: var ssaId }: {
+                if(ssaId == -1)
+                    cb += $"{name} = {Output(value)};";
+                else
+                    cb += $"{name}/*{ssaId}*/ = {Output(value)};";
                 break;
             }
             case StaticIRStatement.Dereference(var addr, var value): {
@@ -218,8 +221,8 @@ public partial class CoreRecompiler {
                     _ => throw new NotImplementedException($"Literal value type {type}")
                 };
             }
-            case StaticIRValue.Named(var name, _): {
-                return name;
+            case StaticIRValue.Named(var name, _) { SsaId: var ssaId }: {
+                return ssaId == -1 ? name : $"{name}/*{ssaId}*/";
             }
             case StaticIRValue.Add(var left, var right): {
                 return $"({Output(left)}) + ({Output(right)})";
@@ -331,6 +334,9 @@ public partial class CoreRecompiler {
             }
             case ReadSr(var op0, var op1, var crn, var crm, var op2): {
                 return $"Callbacks->readSr({op0}, {op1}, {crn}, {crm}, {op2})";
+            }
+            case StaticIRValue.Phi(var values): {
+                return $"Phi({string.Join(", ", values.Select(Output))})";
             }
             default:
                 throw new NotImplementedException($"Unhandled expression {expr}");

@@ -8,7 +8,17 @@ public abstract record StaticIRStatement {
     public StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc) => Transform(stmtFunc, _ => null);
     public StaticIRStatement TransformValues(Func<StaticIRValue, StaticIRValue> valueFunc) => Transform(_ => null, valueFunc);
     public abstract StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc);
-    
+
+    public StaticIRStatement BiTransform(
+        Func<StaticIRStatement, StaticIRStatement> stmtEntryFunc,
+        Func<StaticIRStatement, StaticIRStatement> stmtExitFunc
+    ) => BiTransform(stmtEntryFunc, stmtExitFunc, _ => null);
+    public StaticIRStatement BiTransform(
+        Func<StaticIRStatement, StaticIRStatement> stmtEntryFunc,
+        Func<StaticIRStatement, StaticIRStatement> stmtExitFunc,
+        Func<StaticIRValue, StaticIRValue> valueFunc
+    ) => (stmtEntryFunc(this) ?? this).Transform(stmtExitFunc, valueFunc);
+
     public record Body(IReadOnlyList<StaticIRStatement> Stmts) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             stmtFunc(this);
@@ -237,6 +247,7 @@ public abstract record StaticIRStatement {
     }
 
     public record Assign(string Name, StaticIRValue Value) : StaticIRStatement {
+        public int SsaId = -1;
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             stmtFunc(this);
             Value.Walk(valueFunc);

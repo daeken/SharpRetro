@@ -59,11 +59,12 @@ public partial class CoreRecompiler : Recompiler {
         AllInstructions = 
             AllInstructions.Select(module =>
                 module.Select(insn =>
-                    insn?.Select(stmt => 
-                        stmt is StaticIRStatement.SetFieldIndex(
-                            StaticIRValue.Named("State", _), "X", 31, var value)
-                            ? new StaticIRStatement.Sink(value)
-                            : stmt).ToList()).ToArray()).ToArray();
+                    insn == null ? null
+                    : ((StaticIRStatement.Body) new StaticIRStatement.Body(insn)
+                        .Transform(stmt => 
+                            stmt is StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _), "X", 31, var value)
+                                ? new StaticIRStatement.Sink(value)
+                                : stmt)).Stmts.ToList()).ToArray()).ToArray();
 
     void DumpDotGraph(ulong addr) {
         var seen =  new HashSet<ulong>();
@@ -519,7 +520,7 @@ record BreakpointStmt(uint Imm) : StaticIRStatement {
 
 record ReadSr(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2) : StaticIRValue(typeof(ulong)) {
     public override void Walk(Action<StaticIRValue> func) => func(this);
-    public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this);
+    public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this) ?? this;
 }
 
 record WriteSrStmt(uint Op0, uint Op1, uint Crn, uint Crm, uint Op2, StaticIRValue Value) : StaticIRStatement {

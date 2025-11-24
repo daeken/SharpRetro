@@ -1445,22 +1445,12 @@ public partial class Recompiler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var condstr = (string) (cond switch { (byte) ((byte) 0x0) => "EQ", (byte) ((byte) 0x1) => "NE", (byte) ((byte) 0x2) => "CS", (byte) ((byte) 0x3) => "CC", (byte) ((byte) 0x4) => "MI", (byte) ((byte) 0x5) => "PL", (byte) ((byte) 0x6) => "VS", (byte) ((byte) 0x7) => "VC", (byte) ((byte) 0x8) => "HI", (byte) ((byte) 0x9) => "LS", (byte) ((byte) 0xA) => "GE", (byte) ((byte) 0xB) => "LT", (byte) ((byte) 0xC) => "GT", (byte) ((byte) 0xD) => "LE", _ => "AL" });
 			var result = ((IRuntimeValue<bool>) ((byte) ((cond) >> (int) ((byte) 0x1)) switch { (byte) ((byte) 0x0) => (IRuntimeValue<bool>) (state.NZCV_Z), (byte) ((byte) 0x1) => (IRuntimeValue<bool>) (state.NZCV_C), (byte) ((byte) 0x2) => (IRuntimeValue<bool>) (state.NZCV_N), (byte) ((byte) 0x3) => (IRuntimeValue<bool>) (state.NZCV_V), (byte) ((byte) 0x4) => (IRuntimeValue<bool>) ((((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (state.NZCV_C)))) & ((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (!((IRuntimeValue<bool>) (state.NZCV_Z)))))))), (byte) ((byte) 0x5) => (IRuntimeValue<bool>) (((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (state.NZCV_N)))) == ((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (state.NZCV_V))))), (byte) ((byte) 0x6) => (IRuntimeValue<bool>) ((((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (state.NZCV_N)))) == ((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (state.NZCV_V)))))))) & ((IRuntimeValue<bool>) (builder.EnsureRuntime((IRuntimeValue<bool>) (!((IRuntimeValue<bool>) (state.NZCV_Z)))))))), _ => (IRuntimeValue<bool>) (builder.LiteralValue((byte) 0x1)) })).Store();
-			builder.If(
-				(IRuntimeValue<bool>) (((bool) (((byte) ((((byte) (((cond) & ((byte) ((byte) ((byte) 0x1)))))) & ((byte) ((byte) (((bool) (((byte) (cond)) != ((byte) 0xF))) ? 1U : 0U)))))) != ((byte) 0x0))) ? (IRuntimeValue<bool>) builder.EnsureRuntime(((IRuntimeValue<bool>) (!(result)))) : (IRuntimeValue<bool>) builder.EnsureRuntime(result)), 
-				() => {
-					if((bool) (((byte) (size)) == ((byte) 0x0))) {
-						state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn])));
-					} else {
-						state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]));
-					}
-				}, 
-				() => {
-					if((bool) (((byte) (size)) == ((byte) 0x0))) {
-						state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm])));
-					} else {
-						state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm]));
-					}
-				});
+			var cs = ((IRuntimeValue<bool>) (((bool) (((byte) ((((byte) (((cond) & ((byte) ((byte) ((byte) 0x1)))))) & ((byte) ((byte) (((bool) (((byte) (cond)) != ((byte) 0xF))) ? 1U : 0U)))))) != ((byte) 0x0))) ? (IRuntimeValue<bool>) builder.EnsureRuntime(((IRuntimeValue<bool>) (!(result)))) : (IRuntimeValue<bool>) builder.EnsureRuntime(result))).Store();
+			if((bool) (((byte) (size)) == ((byte) 0x0))) {
+				state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary(cs, (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm]))))));
+			} else {
+				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (builder.Ternary(cs, (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn])), (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))));
+			}
 			return true;
 		}
 		insn_50:
