@@ -1,6 +1,7 @@
 ﻿namespace StaticRecompilerBase;
 
 public abstract record StaticIRStatement {
+    public StaticIRStatement Parent;
     public void Walk(Action<StaticIRStatement> stmtFunc) => Walk(stmtFunc, _ => {});
     public void WalkValues(Action<StaticIRValue> valueFunc) => Walk(_ => {}, valueFunc);
     public abstract void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc);
@@ -19,7 +20,7 @@ public abstract record StaticIRStatement {
         Func<StaticIRValue, StaticIRValue> valueFunc
     ) => (stmtEntryFunc(this) ?? this).Transform(stmtExitFunc, valueFunc);
 
-    public record Body(IReadOnlyList<StaticIRStatement> Stmts) : StaticIRStatement {
+    public record Body(List<StaticIRStatement> Stmts) : StaticIRStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             stmtFunc(this);
             foreach(var stmt in Stmts)
