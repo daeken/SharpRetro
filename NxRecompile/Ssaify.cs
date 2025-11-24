@@ -117,4 +117,10 @@ public class Ssaify {
     SvcStmt Transform(SvcStmt stmt) {
         return stmt;
     }
+
+    public static StaticIRStatement CullPhi(StaticIRStatement stmt) =>
+        stmt.Transform(sub =>
+            sub is StaticIRStatement.Assign(_, StaticIRValue.Phi)
+                ? new StaticIRStatement.Body([])
+                : sub);
 }

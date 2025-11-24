@@ -17,3 +17,6 @@
 - ~~Implement dot graph output~~
 - Fix constant folding for rewritten functions
 - ~~Implement load/store state <-> variables~~
+- ~~Implement basic SSA~~
+- Use SSA data to handle load/store of state
+- Don't place Phis for cases where a return is guaranteed

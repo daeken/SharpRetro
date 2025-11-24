@@ -53,6 +53,14 @@ public partial class CoreRecompiler : Recompiler {
                 break;
         }
         Unregister();
+        CullPhi();
+    }
+
+    void CullPhi() {
+        foreach(var node in WholeBlockGraph.Values)
+            node.Block = node.Block with { Body = 
+                ((StaticIRStatement.Body) Ssaify.CullPhi(new StaticIRStatement.Body(node.Block.Body))).Stmts.ToList()
+            };
     }
 
     void DitchX31() =>
