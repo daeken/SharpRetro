@@ -895,13 +895,10 @@
             0b101 (== (nzcv n) (nzcv v))
             0b110 (& (== (nzcv n) (nzcv v)) (! (nzcv z)))
             1)
-        (if (if (& (& cond 1) (!= cond 0b1111)) (! result) result)
+        (let cs (if (& (& cond 1) (!= cond 0b1111)) (! result) result)
             (if (== size 0)
-                (= (gpr32 rd) (gpr32 rn))
-                (= (gpr64 rd) (gpr64 rn)))
-            (if (== size 0)
-                (= (gpr32 rd) (gpr32 rm))
-                (= (gpr64 rd) (gpr64 rm))))))
+                (= (gpr32 rd) (if cs (gpr32 rn) (gpr32 rm)))
+                (= (gpr64 rd) (if cs (gpr64 rn) (gpr64 rm)))))))
 
 (def CSINC
     "s 0 0 11010100 mmmmm cccc 0 1 nnnnn ddddd"
