@@ -93,34 +93,28 @@ public partial class CoreRecompiler {
             Console.WriteLine("Assigned:");
             foreach(var (name, set) in assigned)
                 Console.WriteLine($"\t{name}: {string.Join(", ", set.Order())}");
+            Console.WriteLine("To store:");
+            foreach(var (name, set) in toStore)
+                Console.WriteLine($"\t{name}: {string.Join(", ", set.Order())}");
         }
+        bool IsUsed(string name, int id) => used.ContainsKey(name) && used[name].Contains(id);
+        bool IsAssigned(string name, int id) => assigned.ContainsKey(name) && assigned[name].Contains(id);
+        bool IsToStore(string name, int id) => toStore.ContainsKey(name) && toStore[name].Contains(id);
+        bool IsFromLoad(string name, int id) => fromLoad.ContainsKey(name) && fromLoad[name].Contains(id);
         body = body.Transform(stmt => {
             switch(stmt) {
-                case StaticIRStatement.Assign(var name, var avalue) { SsaId: var id }: {
-                    if(
-                        /*(
-                            avalue is StaticIRValue.GetField(StaticIRValue.Named("State", _), _, _) or
-                                StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), _, _, _)
-                            && toStore.TryGetValue(name, out var value) && value.Contains(id)
-                        ) ||*/ 
-                        !used.TryGetValue(name, out var set) || !set.Contains(id)
-                    )
+                case StaticIRStatement.Assign(var name, _) { SsaId: var id }: {
+                    if(IsToStore(name, id) && IsFromLoad(name, id) && !IsUsed(name, id))
                         return new StaticIRStatement.Body([]);
                     break;
                 }
                 case StaticIRStatement.SetField(StaticIRValue.Named("State", _), _, StaticIRValue.Named(var name, _) { SsaId: var id }): {
-                    if(
-                        (fromLoad.TryGetValue(name, out var value) && value.Contains(id)) ||
-                        !assigned.TryGetValue(name, out var set) || !set.Contains(id)
-                    )
+                    if(IsFromLoad(name, id) || !IsAssigned(name, id))
                         return new StaticIRStatement.Body([]);
                     break;
                 }
                 case StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _), _, _, StaticIRValue.Named(var name, _) { SsaId: var id }): {
-                    if(
-                        (fromLoad.TryGetValue(name, out var value) && value.Contains(id)) ||
-                        !assigned.TryGetValue(name, out var set) || !set.Contains(id)
-                    )
+                    if(IsFromLoad(name, id) || !IsAssigned(name, id))
                         return new StaticIRStatement.Body([]);
                     break;
                 }
