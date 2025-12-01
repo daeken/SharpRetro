@@ -507,7 +507,11 @@ record LinkedBranch(StaticIRValue Address) : StaticIRStatement {
 }
 
 record SvcStmt(string Name, StaticIRValue[] InRegs, StaticIRValue[] OutRegs) : StaticIRStatement {
-    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) => stmtFunc(this);
+    public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
+        stmtFunc(this);
+        foreach(var reg in InRegs.Concat(OutRegs))
+            reg.Walk(valueFunc);
+    }
 
     public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc,
         Func<StaticIRValue, StaticIRValue> valueFunc) => stmtFunc(this);

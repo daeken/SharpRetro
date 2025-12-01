@@ -224,6 +224,9 @@ public partial class CoreRecompiler {
             case StaticIRValue.Named(var name, _) { SsaId: var ssaId }: {
                 return ssaId == -1 ? name : $"{name}/*{ssaId}*/";
             }
+            case StaticIRValue.NamedOut(var name, _) { SsaId: var ssaId }: {
+                return ssaId == -1 ? name : $"{name}/*{ssaId}*/";
+            }
             case StaticIRValue.Add(var left, var right): {
                 return $"({Output(left)}) + ({Output(right)})";
             }

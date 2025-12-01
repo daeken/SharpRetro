@@ -28,7 +28,11 @@ public class Ssaify {
     }
 
     StaticIRValue Transform(StaticIRValue value) =>
-        value is StaticIRValue.Named(var name, var type) named ? named with { SsaId = GetCurrentId(name, type) } : value;
+        value switch {
+            StaticIRValue.Named(var name, var type) named => named with { SsaId = GetCurrentId(name, type) },
+            StaticIRValue.NamedOut(var name, var type) named => named with { SsaId = GetNextId(name, type) },
+            _ => value
+        };
 
     public StaticIRStatement Transform(StaticIRStatement istmt) =>
         istmt switch {
@@ -115,7 +119,10 @@ public class Ssaify {
         return WithPhi(new StaticIRStatement.DoWhile(loop, cond), thenScope, PeekScope());
     }
     SvcStmt Transform(SvcStmt stmt) {
-        return stmt;
+        return stmt with {
+            InRegs = stmt.InRegs.Select(Transform).ToArray(),
+            OutRegs = stmt.OutRegs.Select(Transform).ToArray(),
+        };
     }
 
     public static StaticIRStatement CullPhi(StaticIRStatement stmt) =>

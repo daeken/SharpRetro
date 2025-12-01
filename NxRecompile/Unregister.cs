@@ -18,6 +18,7 @@ public partial class CoreRecompiler {
         
         var body = node.Block.Body;
         var regNames = Enumerable.Range(0, 32).Select(x => (x, new StaticIRValue.Named($"X{x}", typeof(ulong)))).ToDictionary();
+        var outRegNames = Enumerable.Range(0, 32).Select(x => (x, new StaticIRValue.NamedOut($"X{x}", typeof(ulong)))).ToDictionary();
         var vecNames = Enumerable.Range(0, 32).Select(x => (x, new StaticIRValue.Named($"V{x}", typeof(Vector128<float>)))).ToDictionary();
         var spName = new StaticIRValue.Named("SP", typeof(ulong));
         var nName = new StaticIRValue.Named("N", typeof(bool));
@@ -34,11 +35,11 @@ public partial class CoreRecompiler {
                } sf)
                 return new StaticIRStatement.Assign(sf.Name.Split('_')[^1], rValue);
             if(stmt is SvcStmt(var name, var inRegs, var outRegs)) {
-                if(inRegs.Any(x => x is StaticIRValue.Named) || outRegs.Any(x => x is StaticIRValue.Named)) return null;
+                if(inRegs.Any(x => x is StaticIRValue.Named) || outRegs.Any(x => x is StaticIRValue.NamedOut)) return null;
                 return new SvcStmt(
                     name,
                     inRegs.Select(StaticIRValue (x) => regNames[((StaticIRValue.GetFieldIndex) x).Index]).ToArray(),
-                    outRegs.Select(StaticIRValue (x) => regNames[((StaticIRValue.GetFieldIndex) x).Index]).ToArray()
+                    outRegs.Select(StaticIRValue (x) => outRegNames[((StaticIRValue.GetFieldIndex) x).Index]).ToArray()
                 );
             }
             return null;

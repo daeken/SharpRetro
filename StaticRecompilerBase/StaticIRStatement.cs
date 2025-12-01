@@ -1,5 +1,7 @@
 ﻿namespace StaticRecompilerBase;
 
+public interface IStaticControlFlowStatement;
+
 public abstract record StaticIRStatement {
     public StaticIRStatement Parent;
     public void Walk(Action<StaticIRStatement> stmtFunc) => Walk(stmtFunc, _ => {});
@@ -20,7 +22,7 @@ public abstract record StaticIRStatement {
         Func<StaticIRValue, StaticIRValue> valueFunc
     ) => (stmtEntryFunc(this) ?? this).Transform(stmtExitFunc, valueFunc);
 
-    public record Body(List<StaticIRStatement> Stmts) : StaticIRStatement {
+    public record Body(List<StaticIRStatement> Stmts) : StaticIRStatement, IStaticControlFlowStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             stmtFunc(this);
             foreach(var stmt in Stmts)
@@ -70,7 +72,7 @@ public abstract record StaticIRStatement {
         }
     }
 
-    public record If(StaticIRValue Cond, StaticIRStatement Then, StaticIRStatement Else) : StaticIRStatement {
+    public record If(StaticIRValue Cond, StaticIRStatement Then, StaticIRStatement Else) : StaticIRStatement, IStaticControlFlowStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             Cond.Walk(valueFunc);
             Then.Walk(stmtFunc, valueFunc);
@@ -95,7 +97,7 @@ public abstract record StaticIRStatement {
             return stmtFunc(nthis) ?? nthis;
         }
     }
-    public record When(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement {
+    public record When(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement, IStaticControlFlowStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             Cond.Walk(valueFunc);
             Then.Walk(stmtFunc, valueFunc);
@@ -116,7 +118,7 @@ public abstract record StaticIRStatement {
             return stmtFunc(nthis) ?? nthis;
         }
     }
-    public record Unless(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement {
+    public record Unless(StaticIRValue Cond, StaticIRStatement Then) : StaticIRStatement, IStaticControlFlowStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             Cond.Walk(valueFunc);
             Then.Walk(stmtFunc, valueFunc);
@@ -137,7 +139,7 @@ public abstract record StaticIRStatement {
             return stmtFunc(nthis) ?? nthis;
         }
     }
-    public record While(StaticIRValue Cond, StaticIRStatement Do) : StaticIRStatement {
+    public record While(StaticIRValue Cond, StaticIRStatement Do) : StaticIRStatement, IStaticControlFlowStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             Cond.Walk(valueFunc);
             Do.Walk(stmtFunc, valueFunc);
@@ -158,7 +160,7 @@ public abstract record StaticIRStatement {
             return stmtFunc(nthis) ?? nthis;
         }
     }
-    public record DoWhile(StaticIRStatement Do, StaticIRValue Cond) : StaticIRStatement {
+    public record DoWhile(StaticIRStatement Do, StaticIRValue Cond) : StaticIRStatement, IStaticControlFlowStatement {
         public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) {
             Do.Walk(stmtFunc, valueFunc);
             Cond.Walk(valueFunc);

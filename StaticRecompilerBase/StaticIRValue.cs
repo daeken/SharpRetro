@@ -14,6 +14,12 @@ public abstract record StaticIRValue(Type Type) {
         public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this) ?? this;
     }
 
+    public record NamedOut(string Name, Type Type) : StaticIRValue(Type) {
+        public int SsaId = -1;
+        public override void Walk(Action<StaticIRValue> func) => func(this);
+        public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this) ?? this;
+    }
+    
     public record Literal(object Value, Type Type) : StaticIRValue(Type) {
         public override void Walk(Action<StaticIRValue> func) => func(this);
         public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) => func(this) ?? this;
