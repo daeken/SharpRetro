@@ -3,6 +3,7 @@ using StaticRecompilerBase;
 namespace NxRecompile;
 
 public class Ssaify {
+    public bool Debug = false;
     readonly Dictionary<string, Type> NameTypes = [];
     readonly Dictionary<string, int> NextIds = [];
     readonly Stack<Dictionary<string, int>> ScopeStack = new([new()]);
@@ -79,6 +80,15 @@ public class Ssaify {
         }
         return new StaticIRStatement.Body(body);
     }
+
+    static bool AlwaysReturns(StaticIRStatement stmt) =>
+        stmt switch {
+            StaticIRStatement.Body node => node.Stmts.Count != 0 && AlwaysReturns(node.Stmts[^1]),
+            StaticIRStatement.If node => AlwaysReturns(node.Then) && AlwaysReturns(node.Else),
+            StaticIRStatement.Return => true,
+            StaticIRStatement.Branch => true,
+            _ => false,
+        };
     
     StaticIRStatement Transform(StaticIRStatement.If stmt) {
         var cond = stmt.Cond.Transform(Transform);
@@ -88,21 +98,33 @@ public class Ssaify {
         PushScope();
         var _else =  Transform(stmt.Else);
         var elseScope = PopScope();
-        return WithPhi(new StaticIRStatement.If(cond, then, _else), thenScope, elseScope);
+        var thenReturns = AlwaysReturns(then);
+        var elseReturns = AlwaysReturns(_else);
+        if(Debug)
+            Console.WriteLine($"Foo? {thenReturns} {elseReturns}\nThen: {then.ToString().Indent()}\nElse: {_else.ToString().Indent()}");
+        var nif = new StaticIRStatement.If(cond, then, _else);
+        if(thenReturns && elseReturns) return nif;
+        if(thenReturns) return WithPhi(nif, PeekScope(), elseScope);
+        if(elseReturns) return WithPhi(nif, thenScope, PeekScope());
+        return WithPhi(nif, thenScope, elseScope);
     }
     StaticIRStatement Transform(StaticIRStatement.When stmt) {
         var cond = stmt.Cond.Transform(Transform);
         PushScope();
         var then = Transform(stmt.Then);
         var thenScope = PopScope();
-        return WithPhi(new StaticIRStatement.When(cond, then), thenScope, PeekScope());
+        var when = new StaticIRStatement.When(cond, then);
+        if(AlwaysReturns(then)) return when;
+        return WithPhi(when, thenScope, PeekScope());
     }
     StaticIRStatement Transform(StaticIRStatement.Unless stmt) {
         var cond = stmt.Cond.Transform(Transform);
         PushScope();
         var then = Transform(stmt.Then);
         var thenScope = PopScope();
-        return WithPhi(new StaticIRStatement.Unless(cond, then), thenScope, PeekScope());
+        var unless = new StaticIRStatement.Unless(cond, then);
+        if(AlwaysReturns(then)) return unless;
+        return WithPhi(unless, thenScope, PeekScope());
     }
     StaticIRStatement Transform(StaticIRStatement.While stmt) {
         var cond = stmt.Cond.Transform(Transform);

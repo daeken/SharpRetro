@@ -40,6 +40,8 @@ public abstract record StaticIRStatement {
             var nthis = changed ? new Body(stmts) : this;
             return stmtFunc(nthis) ?? nthis;
         }
+
+        public override string ToString() => $"Body([\n{string.Join(", \n", Stmts.Select(x => x.ToString().Indent()))}\n])";
     }
 
     public record Sink(StaticIRValue Value) : StaticIRStatement {
@@ -263,6 +265,8 @@ public abstract record StaticIRStatement {
                 : this;
             return stmtFunc(nthis) ?? nthis;
         }
+
+        public override string ToString() => $"Assign({Name}{(SsaId == -1 ? "" : $"/{SsaId}")}, {Value})";
     }
     
     public record Branch(StaticIRValue Address) : StaticIRStatement {

@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/Users/daeken/projects/SharpRetro/NxRecompile",
+    "command": "/usr/bin/clang -dynamiclib -o libtest.dylib test.c -DBUILD_LIB -Wno-shift-count-overflow -Wno-unused-value",
+    "file": "/Users/daeken/projects/SharpRetro/NxRecompile/test.c"
+  }
+]

@@ -1,0 +1,10 @@
+Checks: >
+  -*,
+  bugprone-redundant-cast,
+  readability-redundant-casting,
+  misc-redundant-expression,
+  readability-redundant-parentheses
+
+CheckOptions:
+  - key: readability-redundant-casting.IgnoreTypeAliases
+    value: true
