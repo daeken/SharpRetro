@@ -44,6 +44,7 @@ public partial class CoreRecompiler : Recompiler {
         KnownBlocks.Add(ExeLoader.EntryPoint);
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         LinearScan();
+        RewriteStores();
         DitchX31();
         WholeBlockGraph = BuildBlockGraph();
         DumpDotGraph(0x7100005680);
@@ -54,7 +55,6 @@ public partial class CoreRecompiler : Recompiler {
         }
         Unregister();
         SsaOpt();
-        //CullPhi();
     }
 
     void DitchX31() =>

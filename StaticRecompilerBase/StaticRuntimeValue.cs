@@ -17,7 +17,12 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     
     public override IRuntimeValue<OT> Cast<OT>() => W<OT>(new StaticIRValue.Cast(this, typeof(OT)));
     public override IRuntimeValue<OT> Bitcast<OT>() => W<OT>(new StaticIRValue.Bitcast(this, typeof(OT)));
-    public override IRuntimeValue<T> Store() => W(new StaticIRValue.Store(this));
+    public override IRuntimeValue<T> Store() =>
+        Value is StaticIRValue.Store or 
+        StaticIRValue.Named or 
+        StaticIRValue.GetField(StaticIRValue.Named("State", _), _, _) or
+        StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), _, _, _)
+            ? this : W(new StaticIRValue.Store(this));
 
     public override IRuntimeValue<T> Add(IRuntimeValue<T> rhs) => W(new StaticIRValue.Add(this, W(rhs)));
     public override IRuntimeValue<T> Add<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();

@@ -27,16 +27,14 @@ public partial class CoreRecompiler {
             cb++;
             cb += $"/**** {(KnownFunctions.Contains(blockAddr) ? "function" : "block")} {node} ****/";
             var assignments = new Dictionary<string, Type>();
-            node.Walk(sub => {
-                new StaticIRStatement.Body(sub.Block.Body).Walk(stmt => {
-                    if(stmt is not StaticIRStatement.Assign(var name, var value)) return;
-                    if(assignments.TryGetValue(name, out var type)) {
-                        Debug.Assert(type == value.Type);
-                        return;
-                    }
-                    assignments[name] = value.Type;
-                    cb += $"{Output(value.Type)} {name};";
-                });
+            new StaticIRStatement.Body(node.Block.Body).Walk(stmt => {
+                if(stmt is not StaticIRStatement.Assign(var name, var value)) return;
+                if(assignments.TryGetValue(name, out var type)) {
+                    Debug.Assert(type == value.Type);
+                    return;
+                }
+                assignments[name] = value.Type;
+                cb += $"{Output(value.Type)} {name};";
             });
             Output(cb, new StaticIRStatement.Body(node.Block.Body));
             cb--;
