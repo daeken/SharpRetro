@@ -100,8 +100,6 @@ public class Ssaify {
         var elseScope = PopScope();
         var thenReturns = AlwaysReturns(then);
         var elseReturns = AlwaysReturns(_else);
-        if(Debug)
-            Console.WriteLine($"Foo? {thenReturns} {elseReturns}\nThen: {then.ToString().Indent()}\nElse: {_else.ToString().Indent()}");
         var nif = new StaticIRStatement.If(cond, then, _else);
         if(thenReturns && elseReturns) return nif;
         if(thenReturns) return WithPhi(nif, PeekScope(), elseScope);

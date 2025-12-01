@@ -8,7 +8,7 @@ public partial class CoreRecompiler {
             // We only want to operate on single blocks && functions
             if(node is not BlockGraph.End || !KnownFunctions.Contains(addr)) continue;
 
-            var body = new Ssaify { Debug = addr == 0x7100005040 }.Transform(new StaticIRStatement.Body(node.Block.Body)).Stmts;
+            var body = new Ssaify { Debug = addr == 0x7100005000 }.Transform(new StaticIRStatement.Body(node.Block.Body)).Stmts;
             body = DeadCodeElimination(body, node.Block.Start);
             body = ((StaticIRStatement.Body) Ssaify.CullPhi(new StaticIRStatement.Body(body))).Stmts;
             node.Block = node.Block with { Body = body };
@@ -88,7 +88,7 @@ public partial class CoreRecompiler {
                         break;
                 }
             });
-            if(addr == 0x7100005040) {
+            if(addr == 0x7100005000) {
                 Console.WriteLine("Used:");
                 foreach(var (name, set) in used)
                     Console.WriteLine($"\t{name}: {string.Join(", ", set.Order())}");
@@ -104,14 +104,17 @@ public partial class CoreRecompiler {
             bool IsAssigned(string name, int id) => assigned.ContainsKey(name) && assigned[name].Contains(id);
             bool IsToStore(string name, int id) => toStore.ContainsKey(name) && toStore[name].Contains(id);
             bool IsFromLoad(string name, int id) => fromLoad.ContainsKey(name) && fromLoad[name].Contains(id);
-            if(addr == 0x7100005040)
+            if(addr == 0x7100005000)
                 Console.WriteLine(
-                    $"V26/2: used {IsUsed("V26", 2)} assigned {IsAssigned("V26", 2)} toStore {IsToStore("V26", 2)} fromLoad {IsFromLoad("V26", 2)}");
+                    $"X29/2: used {IsUsed("X29", 2)} assigned {IsAssigned("X29", 2)} toStore {IsToStore("X29", 2)} fromLoad {IsFromLoad("X29", 2)}");
             var obody = body;
             body = body.Transform(stmt => {
                 switch(stmt) {
-                    case StaticIRStatement.Assign(var name, _) { SsaId: var id }: {
-                        if(IsToStore(name, id) && IsFromLoad(name, id) && !IsUsed(name, id))
+                    case StaticIRStatement.Assign(var name, _) { SsaId: var id } when !IsUsed(name, id): {
+                        if(
+                            (IsToStore(name, id) && IsFromLoad(name, id)) ||
+                            !IsToStore(name, id)
+                        )
                             return new StaticIRStatement.Body([]);
                         break;
                     }
@@ -129,7 +132,6 @@ public partial class CoreRecompiler {
                         break;
                     }
                 }
-
                 return null;
             });
             if(ReferenceEquals(body, obody))
