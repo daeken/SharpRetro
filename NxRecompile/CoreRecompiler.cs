@@ -57,6 +57,24 @@ public partial class CoreRecompiler : Recompiler {
         SsaOpt();
     }
 
+    StaticIRStatement ReduceSink(StaticIRValue inv) {
+        var needed = new List<StaticIRValue>();
+        inv.Walk(value => {
+            switch(value) {
+                case StaticIRValue.GetField(StaticIRValue.Named("State", _), _, _):
+                case StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), _, _, _):
+                    break;
+                case StaticIRValue.GetField:
+                case StaticIRValue.GetFieldIndex:
+                case StaticIRValue.Dereference:
+                    needed.Add(value);
+                    break;
+            }
+        });
+        return new StaticIRStatement.Body(
+            needed.Select(StaticIRStatement (x) => new StaticIRStatement.Sink(x)).ToList());
+    }
+
     void DitchX31() =>
         AllInstructions = 
             AllInstructions.Select(module =>
@@ -65,7 +83,7 @@ public partial class CoreRecompiler : Recompiler {
                     : ((StaticIRStatement.Body) new StaticIRStatement.Body(insn)
                         .Transform(stmt => 
                             stmt is StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _), "X", 31, var value)
-                                ? new StaticIRStatement.Sink(value)
+                                ? ReduceSink(value)
                                 : stmt)).Stmts.ToList()).ToArray()).ToArray();
 
     void DumpDotGraph(ulong addr) {
