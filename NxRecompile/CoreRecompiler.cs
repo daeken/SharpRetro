@@ -199,7 +199,7 @@ public partial class CoreRecompiler : Recompiler {
             }
             return Convert.ChangeType(value, castTo);
         }
-        var temp = (ulong) Convert.ChangeType(value, typeof(ulong));
+        var temp = value is UInt128 uv ? (ulong) uv : (ulong) Convert.ChangeType(value, typeof(ulong));
         var mask = (1UL << (Marshal.SizeOf(castTo) * 8)) - 1;
         return Convert.ChangeType(temp & mask, castTo);
     }
@@ -218,6 +218,10 @@ public partial class CoreRecompiler : Recompiler {
             StaticIRValue.And => left & right,
             StaticIRValue.Or => left | right,
             StaticIRValue.Xor => left ^ right,
+            StaticIRValue.LeftShift when typeof(T) == typeof(UInt128) =>
+                (T) (object) ((UInt128) (object) left << (int) (UInt128) (object) right),
+            StaticIRValue.RightShift when typeof(T) == typeof(UInt128) =>
+                (T) (object) ((UInt128) (object) left >> (int) (UInt128) (object) right),
             StaticIRValue.LeftShift when Convert.ToInt32(right) >= 0 => left switch {
                 byte v => (T) (object) (byte) (v << Convert.ToInt32(right)),
                 ushort v => (T) (object) (ushort) (v << Convert.ToInt32(right)),
@@ -297,6 +301,8 @@ public partial class CoreRecompiler : Recompiler {
                                         (uint) rightValue),
                                     { } x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue,
                                         (ulong) rightValue),
+                                    { } x when x == typeof(UInt128) => DoBinaryOp(bin, (UInt128) leftValue,
+                                        (UInt128) rightValue),
                                     _ => (object) null,
                                 };
                                 if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
@@ -317,6 +323,8 @@ public partial class CoreRecompiler : Recompiler {
                                         (uint) rightValue),
                                     { } x when x == typeof(ulong) => DoCompare(op, (ulong) leftValue,
                                         (ulong) rightValue),
+                                    { } x when x == typeof(UInt128) => DoCompare(op, (UInt128) leftValue,
+                                        (UInt128) rightValue),
                                     _ => (object) null,
                                 };
                                 if(nlit != null) return new StaticIRValue.Literal(nlit, typeof(bool));
