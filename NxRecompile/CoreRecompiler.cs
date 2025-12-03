@@ -50,10 +50,7 @@ public partial class CoreRecompiler : Recompiler {
         WholeBlockGraph = BuildBlockGraph();
         DumpDotGraph(0x7100005680);
         RewriteFunctions();
-        while(true) {
-            if(!FoldConstants() && !ResolveRoData())
-                break;
-        }
+        while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
         Unregister();
         SsaOpt();
         //FindSignatures();
@@ -192,8 +189,15 @@ public partial class CoreRecompiler : Recompiler {
                 ? ToSigned(value)
                 : ToUnsigned(value);
         if(value.GetType() == castTo) return value;
-        if(Marshal.SizeOf(castTo) > Marshal.SizeOf(value.GetType()))
+        if(Marshal.SizeOf(castTo) > Marshal.SizeOf(value.GetType())) {
+            if(castTo == typeof(UInt128))
+                return new UInt128(0, Convert.ToUInt64(value));
+            if(castTo == typeof(Int128)) {
+                var big = unchecked((ulong) Convert.ToInt64(value));
+                return new Int128((big >> 63) == 0 ? 0 : ulong.MaxValue, big);
+            }
             return Convert.ChangeType(value, castTo);
+        }
         var temp = (ulong) Convert.ChangeType(value, typeof(ulong));
         var mask = (1UL << (Marshal.SizeOf(castTo) * 8)) - 1;
         return Convert.ChangeType(temp & mask, castTo);
@@ -306,6 +310,53 @@ public partial class CoreRecompiler : Recompiler {
             }
         }
         return foldedAny;
+    }
+
+    static bool IsZero(StaticIRValue value) =>
+        GetConstant(value) is var (type, cvalue) && Equals(cvalue, Activator.CreateInstance(type));
+
+    StaticIRValue RemoveRedundancy(StaticIRValue value) => value switch {
+        StaticIRValue.Add(var left, var right) when IsZero(right) => left,
+        StaticIRValue.Add(var left, var right) when IsZero(left) => right,
+        StaticIRValue.Sub(var left, var right) when IsZero(right) => left,
+        StaticIRValue.And(var left, _) when IsZero(left) => left,
+        StaticIRValue.And(_, var right) when IsZero(right) => right,
+        StaticIRValue.Or(var left, var right) when IsZero(right) => left,
+        StaticIRValue.Or(var left, var right) when IsZero(left) => right,
+        StaticIRValue.Xor(var left, var right) when IsZero(right) => left,
+        StaticIRValue.Xor(var left, var right) when IsZero(left) => right,
+        StaticIRValue.LeftShift(var left, var right) when IsZero(right) => left,
+        StaticIRValue.RightShift(var left, var right) when IsZero(right) => left,
+        _ => null
+    };
+
+    bool RemoveRedundancies() {
+        var didAny = false;
+        foreach(var node in WholeBlockGraph.Values) {
+            var block = node.Block;
+            var body = block.Body;
+            var did = false;
+            var didSome = false;
+            do {
+                did = false;
+                body = body.TransformValues(value => {
+                    try {
+                        var rep = RemoveRedundancy(value);
+                        if(rep != null && !ReferenceEquals(value, rep))
+                            did = didSome = didAny = true;
+                        return rep;
+                    } catch(Exception e) {
+                        Console.WriteLine($"Removing redundancies failed for block 0x{block.Start:X}");
+                        Console.WriteLine(value);
+                        Console.WriteLine(e);
+                        return null;
+                    }
+                });
+            } while(did);
+            if(didSome)
+                node.Block = node.Block with { Body = body };
+        }
+        return didAny;
     }
 
     bool ResolveRoData() {
