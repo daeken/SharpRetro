@@ -203,6 +203,7 @@ public partial class CoreRecompiler {
         switch(expr) {
             case StaticIRValue.Literal(var value, var type): {
                 return value switch {
+                    bool v => v ? "true" : "false",
                     sbyte v => $"(int8_t) {v}",
                     short v => $"(int16_t) {v}",
                     int v => $"(int32_t) {v}",
@@ -215,6 +216,7 @@ public partial class CoreRecompiler {
                     double v => $"{v:0.0###############}",
                     System.Runtime.Intrinsics.Vector128<byte> v => $"(v16u) {{ {string.Join(", ", Enumerable.Range(0, 16).Select(i => v[i]))} }}",
                     UInt128 v => $"0x{v:X}ULL", // TODO: Make 128-bit literals. Fakin' it for now
+                    Int128 v => $"{v}LL", // TODO: Make 128-bit literals
                     _ => throw new NotImplementedException($"Literal value type {type}")
                 };
             }

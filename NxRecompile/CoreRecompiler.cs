@@ -211,28 +211,28 @@ public partial class CoreRecompiler : Recompiler {
         };
 
     static T DoBinaryOp<T>(StaticIRValue bin, T left, T right) where T : IBinaryNumber<T> =>
-        bin switch {
+        unchecked(bin switch {
             StaticIRValue.Add => left + right,
-            StaticIRValue.Sub => left + right,
-            StaticIRValue.And => left + right,
-            StaticIRValue.Or => left + right,
-            StaticIRValue.Xor => left + right,
-            StaticIRValue.LeftShift => left switch {
-                byte v => (T) (object) (byte) (v << (int) Convert.ChangeType(right, typeof(int))),
-                ushort v => (T) (object) (ushort) (v << (int) Convert.ChangeType(right, typeof(int))),
-                uint v => (T) (object) (v << (int) Convert.ChangeType(right, typeof(int))),
-                ulong v => (T) (object) (v << (int) Convert.ChangeType(right, typeof(int))),
+            StaticIRValue.Sub => left - right,
+            StaticIRValue.And => left & right,
+            StaticIRValue.Or => left | right,
+            StaticIRValue.Xor => left ^ right,
+            StaticIRValue.LeftShift when Convert.ToInt32(right) >= 0 => left switch {
+                byte v => (T) (object) (byte) (v << Convert.ToInt32(right)),
+                ushort v => (T) (object) (ushort) (v << Convert.ToInt32(right)),
+                uint v => (T) (object) (v << Convert.ToInt32(right)),
+                ulong v => (T) (object) (v << Convert.ToInt32(right)),
                 _ => throw new NotImplementedException($"Attempted left shift on {bin} -- {left} and {right}")
             },
-            StaticIRValue.RightShift => left switch {
-                byte v => (T) (object) (byte) (v >> (int) Convert.ChangeType(right, typeof(int))),
-                ushort v => (T) (object) (ushort) (v >> (int) Convert.ChangeType(right, typeof(int))),
-                uint v => (T) (object) (v >> (int) Convert.ChangeType(right, typeof(int))),
-                ulong v => (T) (object) (v >> (int) Convert.ChangeType(right, typeof(int))),
+            StaticIRValue.RightShift when Convert.ToInt32(right) >= 0 => left switch {
+                byte v => (T) (object) (byte) (v >> Convert.ToInt32(right)),
+                ushort v => (T) (object) (ushort) (v >> Convert.ToInt32(right)),
+                uint v => (T) (object) (v >> Convert.ToInt32(right)),
+                ulong v => (T) (object) (v >> Convert.ToInt32(right)),
                 _ => throw new NotImplementedException($"Attempted right shift on {bin} -- {left} and {right}")
             },
             _ => throw new NotImplementedException($"Attempted {bin} on {left} and {right}")
-        };
+        });
 
     bool FoldConstants() {
         var foldedAny = false;
@@ -327,7 +327,9 @@ public partial class CoreRecompiler : Recompiler {
         StaticIRValue.Xor(var left, var right) when IsZero(left) => right,
         StaticIRValue.LeftShift(var left, var right) when IsZero(right) => left,
         StaticIRValue.RightShift(var left, var right) when IsZero(right) => left,
-        _ => null
+        StaticIRValue.Cast(var val, var type) when !type.IsConstructedGenericType && GetConstant(val) is var (_, cval) =>
+            new StaticIRValue.Literal(Cast(cval, type), type),
+        _ => null,
     };
 
     bool RemoveRedundancies() {

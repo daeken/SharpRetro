@@ -6,6 +6,8 @@
 #include "callbackTable.h"
 
 typedef uint64_t bool; // OH GOD
+#define true ((bool) 1ULL)
+#define false ((bool) 0ULL)
 typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
 
