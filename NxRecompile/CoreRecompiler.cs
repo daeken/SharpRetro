@@ -14,6 +14,7 @@ public partial class CoreRecompiler : Recompiler {
     List<StaticIRStatement>[][] AllInstructions;
     readonly HashSet<ulong> KnownBlocks = [];
     readonly HashSet<ulong> KnownFunctions = [];
+    readonly Dictionary<ulong, (List<StaticIRValue.Named> In, List<StaticIRValue.Named> Out)> FunctionSignatures = [];
     Dictionary<ulong, BlockGraph> WholeBlockGraph;
     
     ulong PC;
@@ -55,6 +56,7 @@ public partial class CoreRecompiler : Recompiler {
         }
         Unregister();
         SsaOpt();
+        //FindSignatures();
     }
 
     StaticIRStatement ReduceSink(StaticIRValue inv) {
@@ -466,8 +468,8 @@ public partial class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(ulong addr) {
         Console.WriteLine($"Branching with link to {addr:X}");
-        State.X[30] = Builder.LiteralValue<ulong>(PC + 4); // need this temporarily...
-        Builder.Add(new LinkedBranch(new  StaticIRValue.Literal(addr, typeof(ulong))));
+        State.X[30] = Builder.LiteralValue(PC + 4); // need this temporarily...
+        Builder.Add(new LinkedBranch(new StaticIRValue.Literal(addr, typeof(ulong))));
         if(IsValidCodeAt(addr)) {
             KnownBlocks.Add(addr);
             KnownFunctions.Add(addr);
@@ -476,7 +478,7 @@ public partial class CoreRecompiler : Recompiler {
 
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
         Console.WriteLine("Branching with link to a runtime address!");
-        State.X[30] = Builder.LiteralValue<ulong>(PC + 4); // need this temporarily...
+        State.X[30] = Builder.LiteralValue(PC + 4); // need this temporarily...
         Builder.Add(new LinkedBranch(StaticBuilder<ulong>.W(addr)));
         // TODO: Work out symbolic execution nonsense
         // Surely this won't be that hard.

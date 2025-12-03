@@ -8,7 +8,7 @@ public partial class CoreRecompiler {
             // We only want to operate on single blocks && functions
             if(node is not BlockGraph.End || !KnownFunctions.Contains(addr)) continue;
 
-            var body = new Ssaify { Debug = addr == 0x7100005000 }.Transform(new StaticIRStatement.Body(node.Block.Body)).Stmts;
+            var body = new Ssaify().Transform(new StaticIRStatement.Body(node.Block.Body)).Stmts;
             body = DeadCodeElimination(body, node.Block.Start);
             body = ((StaticIRStatement.Body) Ssaify.CullPhi(new StaticIRStatement.Body(body))).Stmts;
             node.Block = node.Block with { Body = body };

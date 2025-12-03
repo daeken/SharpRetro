@@ -139,11 +139,10 @@ public partial class CoreRecompiler {
                 break;
             }
             case LinkedBranch(var target): {
-                /*if(target is StaticIRValue.Literal(var value, _))
+                if(target is StaticIRValue.Literal(var value, _) && IsSaneFunction((ulong) value))
                     cb += $"f_{(ulong) value:X}();";
                 else
-                    cb += $"CALL({Output(target)});";*/
-                cb += $"runFrom({Output(target)}, State->X[30]);";
+                    cb += $"runFrom({Output(target)}, State->X[30]);";
                 break;
             }
             case StaticIRStatement.Assign(var name, var value) { SsaId: var ssaId }: {

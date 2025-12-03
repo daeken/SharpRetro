@@ -20,4 +20,7 @@
 - ~~Implement basic SSA~~
 - ~~Use SSA data to handle load/store of state~~
 - ~~Don't place Phis for cases where a return is guaranteed~~
-- Add second constant folding stage using Phi data
+- Add second constant folding stage using SSA data
+- Add function signature determination
+  - Add wrapper functions for jumptable invocations
+  - Use function signature for static runFrom instances

@@ -150,4 +150,15 @@ public class Ssaify {
             sub is StaticIRStatement.Assign(_, StaticIRValue.Phi)
                 ? new StaticIRStatement.Body([])
                 : sub);
+
+    public static StaticIRStatement.Body StripSsa(StaticIRStatement.Body body) =>
+        (StaticIRStatement.Body) body.Transform(stmt =>
+            stmt switch {
+                StaticIRStatement.Assign ass when ass.SsaId != -1 => new StaticIRStatement.Assign(ass.Name, ass.Value),
+                _ => stmt,
+            }, value => value switch {
+                StaticIRValue.Named named when named.SsaId != -1 => new StaticIRValue.Named(named.Name, named.Type),
+                StaticIRValue.NamedOut named when named.SsaId != -1 => new StaticIRValue.NamedOut(named.Name, named.Type),
+                _ => value,
+            });
 }
