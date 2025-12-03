@@ -263,7 +263,7 @@ public partial class CoreRecompiler {
                 return $"{(value.Type == typeof(bool) ? "!" : "~")}({Output(value)})";
             }
             case StaticIRValue.EQ(var left, var right): {
-                return $"({Output(left)}) == {Output(right)}";
+                return $"({Output(left)}) == ({Output(right)})";
             }
             case StaticIRValue.NE(var left, var right): {
                 return $"({Output(left)}) != {Output(right)}";

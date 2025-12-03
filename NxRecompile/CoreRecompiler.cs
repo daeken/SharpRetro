@@ -49,6 +49,7 @@ public partial class CoreRecompiler : Recompiler {
         DitchX31();
         WholeBlockGraph = BuildBlockGraph();
         DumpDotGraph(0x7100005680);
+        while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
         RewriteFunctions();
         while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
         Unregister();
@@ -231,8 +232,19 @@ public partial class CoreRecompiler : Recompiler {
                 ulong v => (T) (object) (v >> Convert.ToInt32(right)),
                 _ => throw new NotImplementedException($"Attempted right shift on {bin} -- {left} and {right}")
             },
-            _ => throw new NotImplementedException($"Attempted {bin} on {left} and {right}")
+            _ => throw new NotImplementedException($"Attempted {bin} on {left} and {right}"),
         });
+
+    static bool DoCompare<T>(StaticIRValue op, T left, T right) where T : IBinaryNumber<T> =>
+        op switch {
+            StaticIRValue.EQ => left == right,
+            StaticIRValue.NE => left != right,
+            StaticIRValue.LT => left < right,
+            StaticIRValue.LTE => left <= right,
+            StaticIRValue.GT => left > right,
+            StaticIRValue.GTE => left >= right,
+            _ => throw new NotImplementedException($"Attempted {op} on {left} and {right}"),
+        };
 
     bool FoldConstants() {
         var foldedAny = false;
@@ -244,64 +256,139 @@ public partial class CoreRecompiler : Recompiler {
                 do {
                     folded = false;
                     var regs = new StaticIRValue[32];
-                    for(var i = 0; i < body.Count; ++i) {
-                        var stmt = body[i];
-                        if(stmt is SvcStmt(_, _, var outRegs)) {
-                            foreach(var outReg in outRegs)
-                                if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
-                                    regs[regIndex] = null; // Can't know the results of svc calls
-                            continue;
+                    StaticIRValue N = null;
+                    StaticIRValue Z = null;
+                    StaticIRValue C = null;
+                    StaticIRValue V = null;
+                    var vars = new Dictionary<string, StaticIRValue>();
+                    FoldList(body);
+
+                    void FoldList(List<StaticIRStatement> body) {
+                        for(var i = 0; i < body.Count; ++i) {
+                            var stmt = body[i];
+                            if(stmt is SvcStmt(_, _, var outRegs)) {
+                                foreach(var outReg in outRegs)
+                                    if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
+                                        regs[regIndex] = null; // Can't know the results of svc calls
+                                continue;
+                            }
+                            if(stmt is LinkedBranch) {
+                                for(var j = 0; j < 32; ++j)
+                                    regs[j] = null;
+                                N = Z = C = V = null;
+                                continue;
+                            }
+                            if(stmt is StaticIRStatement.Body(var stmts)) {
+                                FoldList(stmts);
+                                continue;
+                            }
+
+                            StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
+                                if(GetConstant(left) is not var (leftType, leftValue) ||
+                                   GetConstant(right) is not var (rightType, rightValue)) return null;
+
+                                if(leftType != rightType) return null;
+                                var nlit = leftType switch {
+                                    { } x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue,
+                                        (byte) rightValue),
+                                    { } x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue,
+                                        (ushort) rightValue),
+                                    { } x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue,
+                                        (uint) rightValue),
+                                    { } x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue,
+                                        (ulong) rightValue),
+                                    _ => (object) null,
+                                };
+                                if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
+                                return null;
+                            }
+
+                            StaticIRValue FoldComp(StaticIRValue op, StaticIRValue left, StaticIRValue right) {
+                                if(GetConstant(left) is not var (leftType, leftValue) ||
+                                   GetConstant(right) is not var (rightType, rightValue)) return null;
+
+                                if(leftType != rightType) return null;
+                                var nlit = leftType switch {
+                                    { } x when x == typeof(byte) => DoCompare(op, (byte) leftValue,
+                                        (byte) rightValue),
+                                    { } x when x == typeof(ushort) => DoCompare(op, (ushort) leftValue,
+                                        (ushort) rightValue),
+                                    { } x when x == typeof(uint) => DoCompare(op, (uint) leftValue,
+                                        (uint) rightValue),
+                                    { } x when x == typeof(ulong) => DoCompare(op, (ulong) leftValue,
+                                        (ulong) rightValue),
+                                    _ => (object) null,
+                                };
+                                if(nlit != null) return new StaticIRValue.Literal(nlit, typeof(bool));
+                                return null;
+                            }
+
+                            StaticIRValue Fold(StaticIRValue val) {
+                                var foldedVal = val.Transform(x => {
+                                    return x switch {
+                                        StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.And(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right),
+                                        StaticIRValue.EQ(var left, var right) => FoldComp(x, left, right),
+                                        StaticIRValue.NE(var left, var right) => FoldComp(x, left, right),
+                                        StaticIRValue.LT(var left, var right) => FoldComp(x, left, right),
+                                        StaticIRValue.LTE(var left, var right) => FoldComp(x, left, right),
+                                        StaticIRValue.GT(var left, var right) => FoldComp(x, left, right),
+                                        StaticIRValue.GTE(var left, var right) => FoldComp(x, left, right),
+                                        StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) =>
+                                            regs[regIndex] switch {
+                                                StaticIRValue.Literal lit => lit,
+                                                _ => null,
+                                            },
+                                        StaticIRValue.Named(var name, _) when vars.TryGetValue(name, out var val) =>
+                                            val switch {
+                                                StaticIRValue.Literal lit => lit,
+                                                _ => null,
+                                            },
+                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_N", _) => N,
+                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_Z", _) => Z,
+                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_C", _) => C,
+                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_V", _) => V,
+                                        _ => null,
+                                    };
+                                });
+                                if(foldedVal == null || ReferenceEquals(foldedVal, val)) return null;
+                                folded = true;
+                                foldedAny = true;
+                                return foldedVal;
+                            }
+
+                            if(stmt is StaticIRStatement.Assign(var name, var value)) {
+                                var foldedVal = Fold(value);
+                                if(foldedVal != null)
+                                    body[i] = new StaticIRStatement.Assign(name, foldedVal);
+                                vars[name] = foldedVal ?? value;
+                            } else if(stmt is StaticIRStatement.SetFieldIndex(
+                                      StaticIRValue.Named("State", _) ptr, "X", var reg, var val)) {
+                                var foldedVal = Fold(val);
+                                if(foldedVal != null)
+                                    body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
+                                regs[reg] = foldedVal ?? val;
+                            } else if(stmt is StaticIRStatement.SetField(
+                                StaticIRValue.Named("State", _) fptr, var fname, var fval) &&
+                                fname is "NZCV_N" or "NZCV_Z" or "NZCV_C" or "NZCV_V"
+                            ) {
+                                var foldedVal = Fold(fval);
+                                if(foldedVal != null)
+                                    body[i] = new StaticIRStatement.SetField(fptr, fname, foldedVal);
+                                foldedVal ??= fval;
+                                switch(fname) {
+                                    case "NZCV_N": N = foldedVal; break;
+                                    case "NZCV_Z": Z = foldedVal; break;
+                                    case "NZCV_C": C = foldedVal; break;
+                                    case "NZCV_V": V = foldedVal; break;
+                                }
+                            }
                         }
-                        if(stmt is LinkedBranch) {
-                            for(var j = 0; j < 32; ++j)
-                                regs[j] = null;
-                            continue;
-                        }
-
-                        if(stmt is not StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _) ptr, "X", var reg
-                           , var val)) continue;
-
-                        StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
-                            if(GetConstant(left) is not var (leftType, leftValue) ||
-                               GetConstant(right) is not var (rightType, rightValue)) return null;
-
-                            if(leftType != rightType) return null;
-                            var nlit = leftType switch {
-                                { } x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue, (byte) rightValue),
-                                { } x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue,
-                                    (ushort) rightValue),
-                                { } x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue, (uint) rightValue),
-                                { } x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue, (ulong) rightValue),
-                                _ => (object) null
-                            };
-                            if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
-                            return null;
-                        }
-
-                        var foldedVal = val.Transform(x => {
-                            return x switch {
-                                StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.And(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right),
-                                StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) =>
-                                    regs[regIndex] switch {
-                                        StaticIRValue.Literal lit => lit,
-                                        _ => null
-                                    },
-                                _ => null
-                            };
-                        });
-                        if(foldedVal != null && !ReferenceEquals(foldedVal, val)) {
-                            folded = true;
-                            foldedAny = true;
-                            body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
-                        }
-
-                        regs[reg] = val;
                     }
                 } while(folded);
             } catch(Exception e) {
@@ -547,7 +634,14 @@ public partial class CoreRecompiler : Recompiler {
     }
 
     protected override IRuntimeValue<ulong> SR(uint op0, uint op1, uint crn, uint crm, uint op2) =>
-        new StaticRuntimeValue<ulong>(new ReadSr(op0, op1, crn, crm, op2));
+        (((0b10 | op0) << 14) | (op1 << 11) | (crn << 7) | (crm << 3) | op2) switch {
+            0b11_011_0000_0000_111 => Builder.LiteralValue(0UL), // DCZID_EL0
+            0b11_011_1101_0000_011 => 
+                Builder.GetField<ulong>(
+                    new StaticRuntimeValue<ulong>(new StaticIRValue.Named("State", typeof(ulong))), 
+                    "TlsBase"),
+            _ => new StaticRuntimeValue<ulong>(new ReadSr(op0, op1, crn, crm, op2))
+        };
 
     protected override void SR(uint op0, uint op1, uint crn, uint crm, uint op2, IRuntimeValue<ulong> value) =>
         Builder.Add(new WriteSrStmt(op0, op1, crn, crm, op2, StaticBuilder<ulong>.W(value)));
