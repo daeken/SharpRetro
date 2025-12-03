@@ -12,6 +12,16 @@ public partial class CoreRecompiler {
         }
     }
 
+    StaticIRStatement ReorderCondition(StaticIRStatement stmt) => stmt switch {
+        StaticIRStatement.When(StaticIRValue.Not(var cond), var then) =>
+            ReorderCondition(new StaticIRStatement.Unless(cond, then)),
+        StaticIRStatement.Unless(StaticIRValue.Not(var cond), var then) =>
+            ReorderCondition(new StaticIRStatement.When(cond, then)),
+        StaticIRStatement.If(StaticIRValue.Not(var cond), var left, var right) =>
+            ReorderCondition(new StaticIRStatement.If(cond, right, left)),
+        _ => stmt,
+    };
+
     BlockGraph Rewrite(BlockGraph node, HashSet<BlockGraph> nexts) {
         if(!WholeBlockGraph.Remove(node.Block.Start)) {
             //Console.WriteLine($"Potentially duplicated block? 0x{node.Block.Start:X}");
@@ -30,9 +40,9 @@ public partial class CoreRecompiler {
                 var body = dnode.Block.Body.ToList();
                 var ifStmt = (StaticIRStatement.If) body.Last();
                 body.RemoveAt(body.Count - 1);
-                var newStmt = new StaticIRStatement.When(
+                var newStmt = ReorderCondition(new StaticIRStatement.When(
                     ifStmt.Cond, 
-                    new StaticIRStatement.Body(Rewrite(dnode.Then, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body));
+                    new StaticIRStatement.Body(Rewrite(dnode.Then, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body)));
                 body.Add(newStmt);
                 if(!nexts.Contains(dnode.Next))
                     body.AddRange(Rewrite(dnode.Next, nexts).Block.Body);
@@ -42,9 +52,9 @@ public partial class CoreRecompiler {
                 var body = dnode.Block.Body.ToList();
                 var ifStmt = (StaticIRStatement.If) body.Last();
                 body.RemoveAt(body.Count - 1);
-                var newStmt = new StaticIRStatement.Unless(
+                var newStmt = ReorderCondition(new StaticIRStatement.Unless(
                     ifStmt.Cond, 
-                    new StaticIRStatement.Body(Rewrite(dnode.Then, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body));
+                    new StaticIRStatement.Body(Rewrite(dnode.Then, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body)));
                 body.Add(newStmt);
                 if(!nexts.Contains(dnode.Next))
                     body.AddRange(Rewrite(dnode.Next, nexts).Block.Body);
@@ -54,10 +64,10 @@ public partial class CoreRecompiler {
                 var body = dnode.Block.Body.ToList();
                 var ifStmt = (StaticIRStatement.If) body.Last();
                 body.RemoveAt(body.Count - 1);
-                var newStmt = new StaticIRStatement.If(
+                var newStmt = ReorderCondition(new StaticIRStatement.If(
                     ifStmt.Cond, 
                     new StaticIRStatement.Body(Rewrite(dnode.Then, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body),
-                    new StaticIRStatement.Body(Rewrite(dnode.Else, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body));
+                    new StaticIRStatement.Body(Rewrite(dnode.Else, nexts.Concat([dnode.Next]).ToHashSet()).Block.Body)));
                 body.Add(newStmt);
                 if(!nexts.Contains(dnode.Next))
                     body.AddRange(Rewrite(dnode.Next, nexts).Block.Body);
@@ -67,10 +77,10 @@ public partial class CoreRecompiler {
                 var body = dnode.Block.Body.ToList();
                 var ifStmt = (StaticIRStatement.If) body.Last();
                 body.RemoveAt(body.Count - 1);
-                var newStmt = new StaticIRStatement.If(
+                var newStmt = ReorderCondition(new StaticIRStatement.If(
                     ifStmt.Cond, 
                     new StaticIRStatement.Body(Rewrite(dnode.Then, nexts).Block.Body),
-                    new StaticIRStatement.Body(Rewrite(dnode.Else, nexts).Block.Body));
+                    new StaticIRStatement.Body(Rewrite(dnode.Else, nexts).Block.Body)));
                 body.Add(newStmt);
                 return new BlockGraph.End(node.Block with { Body = body });
             }

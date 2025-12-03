@@ -329,6 +329,7 @@ public partial class CoreRecompiler : Recompiler {
         StaticIRValue.RightShift(var left, var right) when IsZero(right) => left,
         StaticIRValue.Cast(var val, var type) when !type.IsConstructedGenericType && GetConstant(val) is var (_, cval) =>
             new StaticIRValue.Literal(Cast(cval, type), type),
+        StaticIRValue.Not(StaticIRValue.Not(var val)) => val,
         _ => null,
     };
 

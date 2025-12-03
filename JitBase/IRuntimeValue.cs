@@ -66,7 +66,7 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public static IRuntimeValue<T> operator <<(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LeftShift(rhs);
 	public static IRuntimeValue<T> operator >>(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.RightShift(rhs);
 	public static IRuntimeValue<T> operator ~(IRuntimeValue<T> v) => v.Not();
-	public static IRuntimeValue<T> operator !(IRuntimeValue<T> v) => v.Negate();
+	public static IRuntimeValue<T> operator !(IRuntimeValue<T> v) => v.Not();
 	public static IRuntimeValue<bool> operator <(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LT(rhs);
 	public static IRuntimeValue<bool> operator <=(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs.LTE(rhs);
 	public static IRuntimeValue<bool> operator ==(IRuntimeValue<T> lhs, IRuntimeValue<T> rhs) => lhs?.EQ(rhs);

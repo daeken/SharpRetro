@@ -257,10 +257,10 @@ public partial class CoreRecompiler {
                 return $"({Output(left)}) >> ({Output(right)})";
             }
             case StaticIRValue.Negate(var value): {
-                return $"!({Output(value)})";
+                return $"-({Output(value)})";
             }
             case StaticIRValue.Not(var value): {
-                return $"~({Output(value)})";
+                return $"{(value.Type == typeof(bool) ? "!" : "~")}({Output(value)})";
             }
             case StaticIRValue.EQ(var left, var right): {
                 return $"({Output(left)}) == {Output(right)}";
