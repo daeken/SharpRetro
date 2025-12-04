@@ -261,7 +261,7 @@ public abstract record StaticIRStatement {
         public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) {
             var value = Value.Transform(valueFunc);
             var nthis = value != null && !ReferenceEquals(value, Value)
-                ? new Assign(Name, value)
+                ? new Assign(Name, value) { SsaId = SsaId }
                 : this;
             return stmtFunc(nthis) ?? nthis;
         }
