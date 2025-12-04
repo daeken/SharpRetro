@@ -417,12 +417,22 @@ public partial class CoreRecompiler : Recompiler {
     static int? GetInt(StaticIRValue value) =>
         GetConstant(value) is var (_, cvalue) ? (int) Cast(cvalue, typeof(int)) : null;
 
+    static bool IsAllOnes(StaticIRValue value) {
+        if(GetConstant(value) is not var (type, cvalue)) return false;
+        var bits = Marshal.SizeOf(type) * 8;
+        if(bits > 64) return false;
+        var mask = bits == 64 ? 0xFFFF_FFFF_FFFF_FFFFUL : (1UL << bits) - 1;
+        return mask == (ulong) Cast(cvalue, typeof(ulong));
+    }
+
     StaticIRValue RemoveRedundancy(StaticIRValue value) => value switch {
         StaticIRValue.Add(var left, var right) when IsZero(right) => left,
         StaticIRValue.Add(var left, var right) when IsZero(left) => right,
         StaticIRValue.Sub(var left, var right) when IsZero(right) => left,
         StaticIRValue.And(var left, _) when IsZero(left) => left,
         StaticIRValue.And(_, var right) when IsZero(right) => right,
+        StaticIRValue.And(var left, var right) when IsAllOnes(right) => left,
+        StaticIRValue.And(var left, var right) when IsAllOnes(left) => right,
         StaticIRValue.Or(var left, var right) when IsZero(right) => left,
         StaticIRValue.Or(var left, var right) when IsZero(left) => right,
         StaticIRValue.Xor(var left, var right) when IsZero(right) => left,
