@@ -30,7 +30,7 @@ public partial class CoreRecompiler {
         stmts = stmts.Transform(stmt => {
             if(stmt is IStaticControlFlowStatement) return null;
             var containsStore = false;
-            stmt.WalkValues(value => { if(value is StaticIRValue.Store store && stores.ContainsKey(store)) containsStore = true; });
+            stmt.WalkValues(value => { if(value is StaticIRValue.Store) containsStore = true; });
             if(!containsStore) return null;
             var assignments = new List<StaticIRStatement>();
             stmt = stmt.TransformValues(value => {

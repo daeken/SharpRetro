@@ -72,6 +72,7 @@ public partial class CoreRecompiler {
     }
 
     void Output(CodeBuilder cb, StaticIRStatement stmt) {
+        // if(stmt is not IStaticControlFlowStatement) cb += $"/* {stmt} */";
         switch(stmt) {
             case StaticIRStatement.Body(var stmts): {
                 foreach(var sub in stmts)

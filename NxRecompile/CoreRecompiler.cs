@@ -254,6 +254,49 @@ public partial class CoreRecompiler : Recompiler {
             _ => throw new NotImplementedException($"Attempted {op} on {left} and {right}"),
         };
 
+    static StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
+        if(GetConstant(left) is not var (leftType, leftValue) ||
+           GetConstant(right) is not var (rightType, rightValue)) return null;
+
+        if(leftType != rightType) return null;
+        var nlit = leftType switch {
+            { } x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue,
+                (byte) rightValue),
+            { } x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue,
+                (ushort) rightValue),
+            { } x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue,
+                (uint) rightValue),
+            { } x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue,
+                (ulong) rightValue),
+            { } x when x == typeof(UInt128) => DoBinaryOp(bin, (UInt128) leftValue,
+                (UInt128) rightValue),
+            _ => (object) null,
+        };
+        if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
+        return null;
+    }
+
+    static StaticIRValue FoldComp(StaticIRValue op, StaticIRValue left, StaticIRValue right) {
+        if(GetConstant(left) is not var (leftType, leftValue) ||
+           GetConstant(right) is not var (rightType, rightValue)) return null;
+
+        if(leftType != rightType) return null;
+        var nlit = leftType switch {
+            { } x when x == typeof(byte) => DoCompare(op, (byte) leftValue,
+                (byte) rightValue),
+            { } x when x == typeof(ushort) => DoCompare(op, (ushort) leftValue,
+                (ushort) rightValue),
+            { } x when x == typeof(uint) => DoCompare(op, (uint) leftValue,
+                (uint) rightValue),
+            { } x when x == typeof(ulong) => DoCompare(op, (ulong) leftValue,
+                (ulong) rightValue),
+            { } x when x == typeof(UInt128) => DoCompare(op, (UInt128) leftValue,
+                (UInt128) rightValue),
+            _ => (object) null,
+        };
+        if(nlit != null) return new StaticIRValue.Literal(nlit, typeof(bool));
+        return null;
+    }
     bool FoldConstants() {
         var foldedAny = false;
         foreach(var node in WholeBlockGraph.Values) {
@@ -289,50 +332,6 @@ public partial class CoreRecompiler : Recompiler {
                             if(stmt is StaticIRStatement.Body(var stmts)) {
                                 FoldList(stmts);
                                 continue;
-                            }
-
-                            StaticIRValue FoldBinary(StaticIRValue bin, StaticIRValue left, StaticIRValue right) {
-                                if(GetConstant(left) is not var (leftType, leftValue) ||
-                                   GetConstant(right) is not var (rightType, rightValue)) return null;
-
-                                if(leftType != rightType) return null;
-                                var nlit = leftType switch {
-                                    { } x when x == typeof(byte) => DoBinaryOp(bin, (byte) leftValue,
-                                        (byte) rightValue),
-                                    { } x when x == typeof(ushort) => DoBinaryOp(bin, (ushort) leftValue,
-                                        (ushort) rightValue),
-                                    { } x when x == typeof(uint) => DoBinaryOp(bin, (uint) leftValue,
-                                        (uint) rightValue),
-                                    { } x when x == typeof(ulong) => DoBinaryOp(bin, (ulong) leftValue,
-                                        (ulong) rightValue),
-                                    { } x when x == typeof(UInt128) => DoBinaryOp(bin, (UInt128) leftValue,
-                                        (UInt128) rightValue),
-                                    _ => (object) null,
-                                };
-                                if(nlit != null) return new StaticIRValue.Literal(nlit, leftType);
-                                return null;
-                            }
-
-                            StaticIRValue FoldComp(StaticIRValue op, StaticIRValue left, StaticIRValue right) {
-                                if(GetConstant(left) is not var (leftType, leftValue) ||
-                                   GetConstant(right) is not var (rightType, rightValue)) return null;
-
-                                if(leftType != rightType) return null;
-                                var nlit = leftType switch {
-                                    { } x when x == typeof(byte) => DoCompare(op, (byte) leftValue,
-                                        (byte) rightValue),
-                                    { } x when x == typeof(ushort) => DoCompare(op, (ushort) leftValue,
-                                        (ushort) rightValue),
-                                    { } x when x == typeof(uint) => DoCompare(op, (uint) leftValue,
-                                        (uint) rightValue),
-                                    { } x when x == typeof(ulong) => DoCompare(op, (ulong) leftValue,
-                                        (ulong) rightValue),
-                                    { } x when x == typeof(UInt128) => DoCompare(op, (UInt128) leftValue,
-                                        (UInt128) rightValue),
-                                    _ => (object) null,
-                                };
-                                if(nlit != null) return new StaticIRValue.Literal(nlit, typeof(bool));
-                                return null;
                             }
 
                             StaticIRValue Fold(StaticIRValue val) {
@@ -424,6 +423,11 @@ public partial class CoreRecompiler : Recompiler {
         var mask = bits == 64 ? 0xFFFF_FFFF_FFFF_FFFFUL : (1UL << bits) - 1;
         return mask == (ulong) Cast(cvalue, typeof(ulong));
     }
+    
+    static bool IsConstant(StaticIRValue value) => GetConstant(value) is not null;
+
+    static StaticIRValue CombineMasks(StaticIRValue a, StaticIRValue b) =>
+        FoldBinary(new StaticIRValue.And(a, b), a, b);
 
     StaticIRValue RemoveRedundancy(StaticIRValue value) => value switch {
         StaticIRValue.Add(var left, var right) when IsZero(right) => left,
@@ -433,6 +437,24 @@ public partial class CoreRecompiler : Recompiler {
         StaticIRValue.And(_, var right) when IsZero(right) => right,
         StaticIRValue.And(var left, var right) when IsAllOnes(right) => left,
         StaticIRValue.And(var left, var right) when IsAllOnes(left) => right,
+        StaticIRValue.And(StaticIRValue.And(var left, var middle), var right)
+            when IsConstant(middle) && IsConstant(right)
+            => new StaticIRValue.And(left, CombineMasks(middle, right)),
+        StaticIRValue.And(StaticIRValue.And(var left, var middle), var right)
+            when IsConstant(left) && IsConstant(right)
+            => new StaticIRValue.And(middle, CombineMasks(left, right)),
+        StaticIRValue.And(StaticIRValue.And(var left, var middle), var right)
+                when IsConstant(left) && IsConstant(middle)
+            => new StaticIRValue.And(right, CombineMasks(left, middle)),
+        StaticIRValue.And(var left, StaticIRValue.And(var middle, var right))
+                when IsConstant(middle) && IsConstant(right)
+            => new StaticIRValue.And(left, CombineMasks(middle, right)),
+        StaticIRValue.And(var left, StaticIRValue.And(var middle, var right))
+                when IsConstant(left) && IsConstant(right)
+            => new StaticIRValue.And(middle, CombineMasks(left, right)),
+        StaticIRValue.And(var left, StaticIRValue.And(var middle, var right))
+                when IsConstant(left) && IsConstant(middle)
+            => new StaticIRValue.And(right, CombineMasks(left, middle)),
         StaticIRValue.Or(var left, var right) when IsZero(right) => left,
         StaticIRValue.Or(var left, var right) when IsZero(left) => right,
         StaticIRValue.Xor(var left, var right) when IsZero(right) => left,
