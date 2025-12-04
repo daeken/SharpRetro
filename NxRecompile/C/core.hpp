@@ -1,13 +1,14 @@
 #pragma once
 
-#include <stdint.h>
-#include <math.h>
-#include "cpuState.h"
-#include "callbackTable.h"
+#include <bit>
+#include <cstdint>
+#include <cmath>
+#include "cpuState.hpp"
+#include "callbackTable.hpp"
 
-typedef uint64_t bool; // OH GOD
-#define true ((bool) 1ULL)
-#define false ((bool) 0ULL)
+typedef uint64_t bool_t; // OH GOD
+#define TRUE ((bool_t) 1ULL)
+#define FALSE ((bool_t) 0ULL)
 typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
 
@@ -16,9 +17,14 @@ CpuState_t *State;
 CallbackTable_t *Callbacks;
 
 typedef uint64_t (*blockFunc)();
-void ***jumpTable;
-int moduleCount;
+extern void ***jumpTable;
+extern int moduleCount;
 void loadModules();
+
+extern "C" {
+	void setup(CpuState_t *state, CallbackTable_t *callbacks);
+	void runFrom(uint64_t addr, uint64_t until);
+}
 
 void setup(CpuState_t *state, CallbackTable_t *callbacks) {
 	State = state;

@@ -8,18 +8,7 @@ namespace NxRecompile;
 
 public partial class CoreRecompiler {
     public void Output(CodeBuilder cb) {
-        /*cb += "#include <stdint.h>";
-        cb += "typedef struct SvcTable {{";
-        cb++;
-        foreach(var (name, inRegs, outRegs) in Svcs.All.Values) {
-            if(outRegs.Length == 0)
-                cb += $"void (*svc{name})({string.Join(", ", inRegs.Select(x => $"uint64_t in_{x}"))});";
-            else
-                cb += $"uint64_t (*svc{name})({string.Join(", ", inRegs.Select(x => $"uint64_t in_{x}").Concat(outRegs.Skip(1).Select(x => $"uint64_t *out_{x}")))});";
-        }
-        cb--;
-        cb += "} SvcTable_t;";*/
-        cb += "#include \"C/core.h\"";
+        cb += "#include \"C/core.hpp\"";
         foreach(var blockAddr in WholeBlockGraph.Keys.Order())
             cb += $"uint64_t f_{blockAddr:X}();";
         foreach(var (blockAddr, node) in WholeBlockGraph.OrderBy(x => x.Key)) {
@@ -49,14 +38,14 @@ public partial class CoreRecompiler {
             cb++;
             for(var addr = module.TextStart; addr < module.TextEnd; addr += 4)
                 if(WholeBlockGraph.ContainsKey(addr))
-                    cb += $"f_{addr:X},";
+                    cb += $"reinterpret_cast<void*>(f_{addr:X}),";
                 else
-                    cb += "(void*) 0,";
-            cb += "(void*) 0";
+                    cb += "nullptr,";
+            cb += "nullptr";
             cb--;
             cb += "},";
         }
-        cb += "(void *[]) { (void*) 0 }";
+        cb += "(void *[]) { nullptr }";
         cb--;
         cb += "};";
 
@@ -203,7 +192,7 @@ public partial class CoreRecompiler {
         switch(expr) {
             case StaticIRValue.Literal(var value, var type): {
                 return value switch {
-                    bool v => v ? "true" : "false",
+                    bool v => v ? "TRUE" : "FALSE",
                     sbyte v => $"(int8_t) {v}",
                     short v => $"(int16_t) {v}",
                     int v => $"(int32_t) {v}",
@@ -294,17 +283,19 @@ public partial class CoreRecompiler {
             }
             case StaticIRValue.Cast(var value, var type): {
                 if(type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(System.Runtime.Intrinsics.Vector128<>))
-                    return $"__builtin_bit_cast({Output(type)}, {Output(value)})";
-                return $"({Output(type)}) ({Output(value)})";
+                    return $"std::bit_cast<{Output(type)}>({Output(value)})";
+                return $"static_cast<{Output(type)}>({Output(value)})";
             }
             case StaticIRValue.Bitcast(var value, var type): {
-                return $"__builtin_bit_cast({Output(type)}, {Output(value)})";
+                return $"std::bit_cast<{Output(type)}>({Output(value)})";
             }
             case StaticIRValue.Ternary(var cond, var taken, var not): {
                 return $"({Output(cond)}) ? ({Output(taken)}) : ({Output(not)})";
             }
             case StaticIRValue.CreateVector(var value): {
-                return $"(v4f) {{ {Output(value)} }}";
+                if(value.Type == typeof(float))
+                    return $"(v4f) {{ {Output(value)} }}";
+                return $"std::bit_cast<v4f>(({Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(value.Type))}) {{ {Output(value)} }})";
             }
             case StaticIRValue.SignExt(var value, var width, var type): {
                 return $"signext_{Output(value.Type)}_{Output(type)}({Output(value)}, {width})";
@@ -319,7 +310,7 @@ public partial class CoreRecompiler {
                 return $"setElement_{Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(element.Type))}({Output(vector)}, {Output(index)}, {Output(element)})";
             }
             case StaticIRValue.GetElement(var vector, var index, var etype): {
-                return $"__builtin_bit_cast({Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(etype))}, {Output(vector)})[{Output(index)}]";
+                return $"reinterpret_cast<{Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(etype))}>({Output(vector)})[{Output(index)}]";
             }
             case StaticIRValue.IsNaN(var value): {
                 return $"isnan({Output(value)})";
@@ -357,7 +348,7 @@ public partial class CoreRecompiler {
             var x when x == typeof(int) => "int32_t",
             var x when x == typeof(long) => "int64_t",
             var x when x == typeof(Int128) => "int128_t",
-            var x when x == typeof(bool) => "bool",
+            var x when x == typeof(bool) => "bool_t",
             var x when x == typeof(float) => "float",
             var x when x == typeof(double) => "double",
             var x when x == typeof(System.Runtime.Intrinsics.Vector128<sbyte>) => "v16i",

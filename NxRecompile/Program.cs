@@ -8,7 +8,7 @@ recompiler.Recompile();
 recompiler.CleanupIR();
 var cb = new CodeBuilder();
 recompiler.Output(cb);
-File.WriteAllText("test.c", cb.Code);
+File.WriteAllText("test.cpp", cb.Code);
 
 /*try {
     Sh.Run("clang-format", "-i", "-style=file", "test.c");
