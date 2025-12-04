@@ -199,7 +199,11 @@ public partial class CoreRecompiler : Recompiler {
             }
             return Convert.ChangeType(value, castTo);
         }
-        var temp = value is UInt128 uv ? (ulong) uv : (ulong) Convert.ChangeType(value, typeof(ulong));
+        var temp = value switch {
+            UInt128 uv => (ulong) uv,
+            Int128 iv => unchecked((ulong) (long) iv),
+            _ => (ulong) Convert.ChangeType(value, typeof(ulong))
+        };
         var mask = (1UL << (Marshal.SizeOf(castTo) * 8)) - 1;
         return Convert.ChangeType(temp & mask, castTo);
     }
@@ -410,6 +414,9 @@ public partial class CoreRecompiler : Recompiler {
     static bool IsZero(StaticIRValue value) =>
         GetConstant(value) is var (type, cvalue) && Equals(cvalue, Activator.CreateInstance(type));
 
+    static int? GetInt(StaticIRValue value) =>
+        GetConstant(value) is var (_, cvalue) ? (int) Cast(cvalue, typeof(int)) : null;
+
     StaticIRValue RemoveRedundancy(StaticIRValue value) => value switch {
         StaticIRValue.Add(var left, var right) when IsZero(right) => left,
         StaticIRValue.Add(var left, var right) when IsZero(left) => right,
@@ -421,6 +428,12 @@ public partial class CoreRecompiler : Recompiler {
         StaticIRValue.Xor(var left, var right) when IsZero(right) => left,
         StaticIRValue.Xor(var left, var right) when IsZero(left) => right,
         StaticIRValue.LeftShift(var left, var right) when IsZero(right) => left,
+        StaticIRValue.LeftShift(var left, var right)
+                when GetInt(right) is {} lshift && lshift >= Marshal.SizeOf(left.Type) * 8 =>
+            new StaticIRValue.Literal(Activator.CreateInstance(left.Type), left.Type),
+        StaticIRValue.RightShift(var left, var right)
+                when GetInt(right) is {} lshift && lshift >= Marshal.SizeOf(left.Type) * 8 =>
+            new StaticIRValue.Literal(Activator.CreateInstance(left.Type), left.Type),
         StaticIRValue.RightShift(var left, var right) when IsZero(right) => left,
         StaticIRValue.Cast(var val, var type) when !type.IsConstructedGenericType && GetConstant(val) is var (_, cval) =>
             new StaticIRValue.Literal(Cast(cval, type), type),
