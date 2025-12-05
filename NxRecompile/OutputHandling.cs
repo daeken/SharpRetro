@@ -38,6 +38,8 @@ public partial class CoreRecompiler {
             for(var addr = module.TextStart; addr < module.TextEnd; addr += 4)
                 if(WholeBlockGraph.ContainsKey(addr))
                     cb += $"reinterpret_cast<void*>(f_{addr:X}),";
+                else if(ProbablePadding.TryGetValue(addr, out var target))
+                    cb += $"reinterpret_cast<void*>(f_{ResolvePadding(target):X}),";
                 else
                     cb += "nullptr,";
             cb += "nullptr";
@@ -69,6 +71,12 @@ public partial class CoreRecompiler {
             cb += $"Callbacks->loadModule(0x{module.LoadBase:X}ULL, module_{module.LoadBase:X}, module_{module.LoadBase:X}_size);";
         cb--;
         cb += "}";
+    }
+
+    ulong ResolvePadding(ulong addr) {
+        while(ProbablePadding.TryGetValue(addr, out var taddr))
+            addr = taddr;
+        return addr;
     }
 
     void Output(CodeBuilder cb, StaticIRStatement stmt) {

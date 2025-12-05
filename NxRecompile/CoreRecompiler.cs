@@ -14,6 +14,7 @@ public partial class CoreRecompiler : Recompiler {
     List<StaticIRStatement>[][] AllInstructions;
     readonly HashSet<ulong> KnownBlocks = [];
     readonly HashSet<ulong> KnownFunctions = [];
+    readonly Dictionary<ulong, ulong> ProbablePadding = [];
     readonly Dictionary<ulong, (List<StaticIRValue.Named> In, List<StaticIRValue.Named> Out)> FunctionSignatures = [];
     Dictionary<ulong, BlockGraph> WholeBlockGraph;
     
@@ -48,6 +49,9 @@ public partial class CoreRecompiler : Recompiler {
         RewriteStores();
         DitchX31();
         WholeBlockGraph = BuildBlockGraph();
+        FindPadding();
+        DumpDotGraph(0x7100005680);
+        WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions);
         DumpDotGraph(0x7100005680);
         while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
         RewriteFunctions();
@@ -55,6 +59,25 @@ public partial class CoreRecompiler : Recompiler {
         Unregister();
         SsaOpt();
         //FindSignatures();
+
+        foreach(var (addr, taddr) in ProbablePadding.ToDictionary())
+            if(!WholeBlockGraph.ContainsKey(taddr))
+                ProbablePadding.Remove(addr);
+        foreach(var (addr, taddr) in ProbablePadding)
+            if(WholeBlockGraph.ContainsKey(taddr) || ProbablePadding.ContainsKey(taddr))
+                WholeBlockGraph.Remove(addr);
+    }
+
+    void FindPadding() {
+        foreach(var (addr, node) in WholeBlockGraph) {
+            if(node.Block.Body.Count != 1 || 
+               node.Block.Body[0] is not StaticIRStatement.Branch(var target) ||
+               !IsConstant(target)
+            ) continue;
+            var taddr = (ulong) GetConstant(target)!.Value.Value;
+            if(addr != taddr && WholeBlockGraph.ContainsKey(taddr))
+                ProbablePadding[addr] = taddr;
+        }
     }
 
     StaticIRStatement ReduceSink(StaticIRValue inv) {
@@ -87,7 +110,7 @@ public partial class CoreRecompiler : Recompiler {
                                 : stmt)).Stmts.ToList()).ToArray()).ToArray();
 
     void DumpDotGraph(ulong addr) {
-        var seen =  new HashSet<ulong>();
+        var seen = new HashSet<ulong>();
         void Dump(BlockGraph node) {
             if(!seen.Add(node.Block.Start)) return;
             Console.WriteLine($"\"0x{node.Block.Start:X}\" [label=\"0x{node.Block.Start:X} - {node.GetType().Name}\"];");
@@ -329,8 +352,7 @@ public partial class CoreRecompiler : Recompiler {
                 }
             }
         }
-
-        return BlockGraph.Reduce(blockGraphs, KnownFunctions);
+        return blockGraphs;
     }
     
     Dictionary<ulong, (ulong End, List<StaticIRStatement> Statements, List<ulong> LeadsTo)> BuildBlockList() {
