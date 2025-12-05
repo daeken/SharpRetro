@@ -817,5 +817,7 @@ public abstract record StaticIRValue(Type Type) {
             var nthis = changed ? new Phi(values) : this;
             return func(nthis) ?? nthis;
         }
+
+        public override string ToString() => $"Phi({string.Join(", ", Values)})";
     }
 }

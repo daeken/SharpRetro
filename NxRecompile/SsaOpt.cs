@@ -11,36 +11,10 @@ public partial class CoreRecompiler {
             var temp = new StaticIRStatement.Body(node.Block.Body);
             temp = Ssaify.StripSsa(temp);
             var body = new Ssaify().Transform(temp).Stmts;
-            body = PropagateConstants(body);
             body = DeadCodeElimination(body, node.Block.Start);
             body = ((StaticIRStatement.Body) Ssaify.CullPhi(new StaticIRStatement.Body(body))).Stmts;
             node.Block = node.Block with { Body = body };
         }
-    }
-
-    List<StaticIRStatement> PropagateConstants(List<StaticIRStatement> body) {
-        var values = new Dictionary<(string Name, int Id), StaticIRValue>();
-        body.Walk(stmt => {
-            if(stmt is not StaticIRStatement.Assign(var name, var value) { SsaId: var id } || 
-               id == -1 || value is not StaticIRValue.Literal) return;
-            values[(name, id)] = value;
-        });
-
-        StaticIRValue Transform(StaticIRValue value) =>
-            value is StaticIRValue.Named(var name, _) { SsaId: var id } ? values.GetValueOrDefault((name, id)) : null;
-        return body.Transform(stmt => stmt switch {
-            StaticIRStatement.SetField => null,
-            StaticIRStatement.SetFieldIndex => null,
-            StaticIRStatement.Assign or StaticIRStatement.Return or StaticIRStatement.Dereference or
-            SvcStmt or LinkedBranch or WriteSrStmt =>
-                stmt.TransformValues(Transform),
-            StaticIRStatement.While sub => sub with { Cond = sub.Cond.Transform(Transform) ?? sub.Cond },
-            StaticIRStatement.DoWhile sub => sub with { Cond = sub.Cond.Transform(Transform) ?? sub.Cond },
-            StaticIRStatement.If sub => sub with { Cond = sub.Cond.Transform(Transform) ?? sub.Cond },
-            StaticIRStatement.When sub => sub with { Cond = sub.Cond.Transform(Transform) ?? sub.Cond },
-            StaticIRStatement.Unless sub => sub with { Cond = sub.Cond.Transform(Transform) ?? sub.Cond },
-            _ => null,
-        });
     }
 
     static bool IsEmpty(StaticIRStatement stmt) {
@@ -122,7 +96,7 @@ public partial class CoreRecompiler {
                         break;
                 }
             });
-            if(false && addr == 0x7100000690) {
+            if(false && addr == 0x710001E920) {
                 Console.WriteLine("Used:");
                 foreach(var (name, set) in used)
                     Console.WriteLine($"\t{name}: {string.Join(", ", set.Order())}");
@@ -138,9 +112,9 @@ public partial class CoreRecompiler {
             bool IsAssigned(string name, int id) => assigned.ContainsKey(name) && assigned[name].Contains(id);
             bool IsToStore(string name, int id) => toStore.ContainsKey(name) && toStore[name].Contains(id);
             bool IsFromLoad(string name, int id) => fromLoad.ContainsKey(name) && fromLoad[name].Contains(id);
-            if(false && addr == 0x7100000690)
+            if(false && addr == 0x710001E920)
                 Console.WriteLine(
-                    $"temp_103/0: used {IsUsed("temp_103", 0)} assigned {IsAssigned("temp_103", 0)} toStore {IsToStore("temp_103", 0)} fromLoad {IsFromLoad("temp_103", 0)}");
+                    $"X6/3: used {IsUsed("X6", 3)} assigned {IsAssigned("X6", 3)} toStore {IsToStore("X6", 3)} fromLoad {IsFromLoad("X6", 3)}");
             var obody = body;
             body = body.Transform(stmt => {
                 switch(stmt) {
