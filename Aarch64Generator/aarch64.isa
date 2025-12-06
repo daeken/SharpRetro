@@ -1278,24 +1278,12 @@
         0b01 "4S"
         0b11 "2D"
         (unimplemented)))
-    (match (: size Q)
-        0b00 (mlet (a (vector-element (vec rn) 0 f32) b (vector-element (vec rn) 1 f32))
-            (= (vec rd) (vector-all (f32 0)))
-            (vector-insert rd 0 (abs a))
-            (vector-insert rd 1 (abs b)))
-        0b01 (mlet (
-                a (vector-element (vec rn) 0 f32) b (vector-element (vec rn) 1 f32)
-                c (vector-element (vec rn) 2 f32) d (vector-element (vec rn) 3 f32))
-            (= (vec rd) (vector-all (f32 0)))
-            (vector-insert rd 0 (abs a))
-            (vector-insert rd 1 (abs b))
-            (vector-insert rd 2 (abs c))
-            (vector-insert rd 3 (abs d)))
-        0b11 (mlet (a (vector-element (vec rn) 0 f64) b (vector-element (vec rn) 1 f64))
-            (= (vec rd) (vector-all (f64 0)))
-            (vector-insert rd 0 (abs a))
-            (vector-insert rd 1 (abs b)))
-        (unimplemented)))
+    (let n (vec rn)
+        (= (vec rd) (match (: size Q)
+            0b00 (vector (mfor (i 2) (abs (vector-element n i f32))) (mfor (i 2) (f32 0)))
+            0b01 (vector (mfor (i 4) (abs (vector-element n i f32))))
+            0b11 (vector (mfor (i 2) (abs (vector-element n i f64))))
+            (unimplemented)))))
 
 (def FADD-scalar
     "0 0 0 11110 tt 1 mmmmm 001 0 10 nnnnn ddddd"

@@ -1713,40 +1713,8 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "2S", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x3) => "2D", _ => throw new NotImplementedException() });
-			switch((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1))))) {
-				case (byte) ((byte) 0x0): {
-					var a = ((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<float>((int) ((int) ((byte) 0x0))))).Store();
-					var b = ((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<float>((int) ((int) ((byte) 0x1))))).Store();
-					state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((float) ((float) ((byte) 0x0)))).CreateVector());
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<float>) ((a).Abs()));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<float>) ((b).Abs()));
-					break;
-				}
-				case (byte) ((byte) 0x1): {
-					var a = ((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<float>((int) ((int) ((byte) 0x0))))).Store();
-					var b = ((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<float>((int) ((int) ((byte) 0x1))))).Store();
-					var c = ((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<float>((int) ((int) ((byte) 0x2))))).Store();
-					var d = ((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<float>((int) ((int) ((byte) 0x3))))).Store();
-					state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((float) ((float) ((byte) 0x0)))).CreateVector());
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<float>) ((a).Abs()));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<float>) ((b).Abs()));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x2)), (IRuntimeValue<float>) ((c).Abs()));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x3)), (IRuntimeValue<float>) ((d).Abs()));
-					break;
-				}
-				case (byte) ((byte) 0x3): {
-					var a = ((IRuntimeValue<double>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<double>((int) ((int) ((byte) 0x0))))).Store();
-					var b = ((IRuntimeValue<double>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<double>((int) ((int) ((byte) 0x1))))).Store();
-					state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime((double) ((double) ((byte) 0x0)))).CreateVector());
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<double>) ((a).Abs()));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<double>) ((b).Abs()));
-					break;
-				}
-				default: {
-					throw new NotImplementedException();
-					break;
-				}
-			}
+			var n = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Store();
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<float>) ((n).Element<float>((int) ((int) ((byte) 0x0))))).Abs())), builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<float>) ((n).Element<float>((int) ((int) ((byte) 0x1))))).Abs())), builder.EnsureRuntime((float) ((float) ((byte) 0x0))), builder.EnsureRuntime((float) ((float) ((byte) 0x0))))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<float>) ((n).Element<float>((int) ((int) ((byte) 0x0))))).Abs())), builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<float>) ((n).Element<float>((int) ((int) ((byte) 0x1))))).Abs())), builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<float>) ((n).Element<float>((int) ((int) ((byte) 0x2))))).Abs())), builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<float>) ((n).Element<float>((int) ((int) ((byte) 0x3))))).Abs())))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<double>) ((n).Element<double>((int) ((int) ((byte) 0x0))))).Abs())), builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<double>) ((n).Element<double>((int) ((int) ((byte) 0x1))))).Abs())))), _ => throw new NotImplementedException() });
 			return true;
 		}
 		insn_72:
