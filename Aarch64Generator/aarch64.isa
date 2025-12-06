@@ -5791,7 +5791,7 @@
         (unimplemented)))
 
 (defm uaddw-sub (count wide thin)
-    (for (i count) (vector-insert rd i (+ (vector-element a i wide) (wide (vector-element b (if Q (literal (+ i count)) i) thin))))))
+    (vector (mfor (i count) (+ (vector-element a i wide) (wide (vector-element b (if Q (literal (+ i count)) i) thin))))))
 
 (def UADDW[2]
     "0 Q 1 01110 ss 1 mmmmm 00 0 1 00 nnnnn ddddd"
@@ -5807,11 +5807,11 @@
             0b10_1 (block (= Ta "2D") (= Tb "4S"))
             (unimplemented)))
     (mlet (a (vec rn) b (vec rm))
-        (match size
+        (= (vec rd) (match size
             0b00 (uaddw-sub 8 u16 u8)
             0b01 (uaddw-sub 4 u32 u16)
             0b10 (uaddw-sub 2 u64 u32)
-            (unimplemented))))
+            (unimplemented)))))
 
 (def UBFM
     "f 10 100110 o pppppp ssssss nnnnn ddddd"
