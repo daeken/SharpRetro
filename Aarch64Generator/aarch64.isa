@@ -5879,20 +5879,21 @@
         0b11 "2D"
         (unimplemented)))
     (let n (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b00 (block
-                    (vector-insert rd 0 (f32 (vector-element n 0 u32)))
-                    (vector-insert rd 1 (f32 (vector-element n 1 u32))))
-            0b01 (block
-                    (vector-insert rd 0 (f32 (vector-element n 0 u32)))
-                    (vector-insert rd 1 (f32 (vector-element n 1 u32)))
-                    (vector-insert rd 2 (f32 (vector-element n 2 u32)))
-                    (vector-insert rd 3 (f32 (vector-element n 3 u32))))
-            0b11 (block
-                    (vector-insert rd 0 (f64 (vector-element n 0 u64)))
-                    (vector-insert rd 1 (f64 (vector-element n 1 u64))))
-            (unimplemented))))
+        (= (vec rd)
+            (match (: size Q)
+                0b00 (vector
+                        (f32 (vector-element n 0 u32))
+                        (f32 (vector-element n 1 u32))
+                        (f32 0) (f32 0))
+                0b01 (vector
+                        (f32 (vector-element n 0 u32))
+                        (f32 (vector-element n 1 u32))
+                        (f32 (vector-element n 2 u32))
+                        (f32 (vector-element n 3 u32)))
+                0b11 (vector
+                        (f64 (vector-element n 0 u64))
+                        (f64 (vector-element n 1 u64)))
+                (unimplemented)))))
 
 (def UDIV
     "f 0 0 11010110 mmmmm 00001 0 nnnnn ddddd"

@@ -11973,30 +11973,7 @@ public partial class Recompiler {
 			var rd = (insn >> 0) & 0x1FU;
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "2S", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x3) => "2D", _ => throw new NotImplementedException() });
 			var n = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Store();
-			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
-			switch((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1))))) {
-				case (byte) ((byte) 0x0): {
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0)))))));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))));
-					break;
-				}
-				case (byte) ((byte) 0x1): {
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0)))))));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x2)), (IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2)))))));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x3)), (IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3)))))));
-					break;
-				}
-				case (byte) ((byte) 0x3): {
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<double>) ((IRuntimeValue<double>) ((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x0)))))));
-					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<double>) ((IRuntimeValue<double>) ((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x1)))))));
-					break;
-				}
-				default: {
-					throw new NotImplementedException();
-					break;
-				}
-			}
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))), builder.EnsureRuntime((float) ((float) ((byte) 0x0))), builder.EnsureRuntime((float) ((float) ((byte) 0x0))))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3))))))))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<double>) ((IRuntimeValue<double>) ((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x0))))))), builder.EnsureRuntime((IRuntimeValue<double>) ((IRuntimeValue<double>) ((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x1))))))))), _ => throw new NotImplementedException() });
 			return true;
 		}
 		insn_333:
