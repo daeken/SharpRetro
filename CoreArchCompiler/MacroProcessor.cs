@@ -38,6 +38,7 @@ public static class MacroProcessor {
 			if(elem is PName(var pname)) return new PName(pname);
 			if(elem is not PList list) return elem;
 			if(list.Count == 0 || list[0] is not PName(var name)) return new PList(list.Select(Sub));
+			if(name == "defm") return elem;
 			if(name == "mfor") {
 				var nlist = new PList(list.Select(Sub));
 				var dlist = (PList) nlist[1];

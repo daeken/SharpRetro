@@ -1739,7 +1739,7 @@
                     (i16 (vector-element sv 2 f32))
                     (i16 (vector-element sv 3 f32))
                     (i16 0) (i16 0) (i16 0) (i16 0))
-                1 (vector
+                  (vector
                     (f32 (vector-element sv 0 f64))
                     (f32 (vector-element sv 1 f64))
                     (f32 0) (f32 0))))))
@@ -2540,19 +2540,15 @@
 
 (defm do-ld1 (r off)
     (let $off off
-        (match size
-                0b00 (= (vec r) (if Q
-                            (vector (mfor (i 16) (ld1-sub i 1 u8 $off)))
-                            (vector (mfor (i 8)  (ld1-sub i 1 u8 $off)) (mfor (i 8) (u8 0)))))
-                0b01 (= (vec r) (if Q
-                            (vector (mfor (i 8)  (ld1-sub i 2 u16 $off)))
-                            (vector (mfor (i 4)  (ld1-sub i 2 u16 $off)) (mfor (i 4) (u16 0)))))
-                0b10 (= (vec r) (if Q
-                            (vector (mfor (i 4)  (ld1-sub i 4 f32 $off)))
-                            (vector (mfor (i 2)  (ld1-sub i 4 f32 $off)) (mfor (i 2) (f32 0)))))
-                     (= (vec r) (if Q
-                            (vector (mfor (i 2)  (ld1-sub i 8 f64 $off)))
-                            (vector              (ld1-sub 0 8 f64 $off) (f64 0)))))))
+        (= (vec r) (match (: size Q)
+                0b00_1 (vector (mfor (i 16) (ld1-sub i 1 u8 $off)))
+                0b00_0 (vector (mfor (i 8)  (ld1-sub i 1 u8 $off)) (mfor (i 8) (u8 0)))
+                0b01_1 (vector (mfor (i 8)  (ld1-sub i 2 u16 $off)))
+                0b01_0 (vector (mfor (i 4)  (ld1-sub i 2 u16 $off)) (mfor (i 4) (u16 0)))
+                0b10_1 (vector (mfor (i 4)  (ld1-sub i 4 f32 $off)))
+                0b10_0 (vector (mfor (i 2)  (ld1-sub i 4 f32 $off)) (mfor (i 2) (f32 0)))
+                0b11_1 (vector (mfor (i 2)  (ld1-sub i 8 f64 $off)))
+                       (vector              (ld1-sub 0 8 f64 $off) (f64 0))))))
 
 (def LD1-multi-no-offset-one-register
     "0 Q 0011000 1 000000 0111 ss nnnnn ttttt"
@@ -2813,9 +2809,25 @@
             (= (vec rt) (if Q sv (vector-zero-top sv)))
             (= (gpr-or-sp64 rn) (+ address (gpr64 rm))))))
 
-(defm ld2-sub (size type) (block
-    (vector-insert rt i (load (+ address (literal (* i (* size 2)))) type))
-    (vector-insert rt2 i (load (+ address (literal (+ size (* i (* size 2))))) type))))
+(defm ld-sub (r hcount qcount type size num total)
+    (= (vec r) (if Q
+        (vector (mfor (i qcount) (load (+ address (literal (+ (* size num) (* i (* total size))))) type)))
+        (vector (mfor (i hcount) (load (+ address (literal (+ (* size num) (* i (* total size))))) type)) (mfor (i hcount) (type 0))))))
+
+(defm do-ld2 ()
+    (match size
+        0b00 (block
+            (ld-sub rt  8 16 u8 1 0 2)
+            (ld-sub rt2 8 16 u8 1 1 2))
+        0b01 (block
+            (ld-sub rt  4 8 u16 2 0 2)
+            (ld-sub rt2 4 8 u16 2 1 2))
+        0b10 (block
+            (ld-sub rt  2 4 u32 4 0 2)
+            (ld-sub rt2 2 4 u32 4 1 2))
+             (block
+            (ld-sub rt  1 2 u64 8 0 2)
+            (ld-sub rt2 1 2 u64 8 1 2))))
 
 (def LD2-multi-no-offset
     "0 Q 0011000 1 000000 1000 ss nnnnn ttttt"
@@ -2832,13 +2844,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld2-sub 1 u8))
-            0b01 (qfor i 4  8 (ld2-sub 2 u16))
-            0b10 (qfor i 2  4 (ld2-sub 4 f32))
-                 (for (i 2)   (ld2-sub 8 f64)))))
+        (do-ld2)))
 
 (def LD2-multi-postindex-immediate
     "0 Q 0011001 1 0 mmmmm 1000 ss nnnnn ttttt"
@@ -2856,13 +2862,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld2-sub 1 u8))
-            0b01 (qfor i 4  8 (ld2-sub 2 u16))
-            0b10 (qfor i 2  4 (ld2-sub 4 f32))
-                 (for (i 2)   (ld2-sub 8 f64)))
+        (do-ld2)
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD2-multi-postindex-register
@@ -2881,19 +2881,27 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld2-sub 1 u8))
-            0b01 (qfor i 4  8 (ld2-sub 2 u16))
-            0b10 (qfor i 2  4 (ld2-sub 4 f32))
-                 (for (i 2)   (ld2-sub 8 f64)))
+        (do-ld2)
         (= (gpr-or-sp64 rn) (+ address (gpr64 rm)))))
 
-(defm ld3-sub (size type) (block
-    (vector-insert rt i (load (+ address (literal (* i (* size 3)))) type))
-    (vector-insert rt2 i (load (+ address (literal (+ size (* i (* size 3))))) type))
-    (vector-insert rt3 i (load (+ address (literal (+ (* size 2) (* i (* size 3))))) type))))
+(defm do-ld3 ()
+    (match size
+        0b00 (block
+            (ld-sub rt  8 16 u8 1 0 3)
+            (ld-sub rt2 8 16 u8 1 1 3)
+            (ld-sub rt3 8 16 u8 1 2 3))
+        0b01 (block
+            (ld-sub rt  4 8 u16 2 0 3)
+            (ld-sub rt2 4 8 u16 2 1 3)
+            (ld-sub rt3 4 8 u16 2 2 3))
+        0b10 (block
+            (ld-sub rt  2 4 u32 4 0 3)
+            (ld-sub rt2 2 4 u32 4 1 3)
+            (ld-sub rt3 2 4 u32 4 2 3))
+             (block
+            (ld-sub rt  1 2 u64 8 0 3)
+            (ld-sub rt2 1 2 u64 8 1 3)
+            (ld-sub rt3 1 2 u64 8 2 3))))
 
 (def LD3-multi-no-offset
     "0 Q 0011000 1 000000 0100 ss nnnnn ttttt"
@@ -2910,14 +2918,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld3-sub 1 u8))
-            0b01 (qfor i 4  8 (ld3-sub 2 u16))
-            0b10 (qfor i 2  4 (ld3-sub 4 f32))
-                 (for (i 2)   (ld3-sub 8 f64)))))
+        (do-ld3)))
 
 (def LD3-multi-postindex-immediate
     "0 Q 0011001 1 0 mmmmm 0100 ss nnnnn ttttt"
@@ -2935,14 +2936,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld3-sub 1 u8))
-            0b01 (qfor i 4  8 (ld3-sub 2 u16))
-            0b10 (qfor i 2  4 (ld3-sub 4 f32))
-                 (for (i 2)   (ld3-sub 8 f64)))
+        (do-ld3)
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD3-multi-postindex-register
@@ -2961,21 +2955,31 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld3-sub 1 u8))
-            0b01 (qfor i 4  8 (ld3-sub 2 u16))
-            0b10 (qfor i 2  4 (ld3-sub 4 f32))
-                 (for (i 2)   (ld3-sub 8 f64)))
+        (do-ld3)
         (= (gpr-or-sp64 rn) (+ address (gpr64 rm)))))
 
-(defm ld4-sub (size type) (block
-    (vector-insert rt i (load (+ address (literal (* i (* size 4)))) type))
-    (vector-insert rt2 i (load (+ address (literal (+ size (* i (* size 4))))) type))
-    (vector-insert rt3 i (load (+ address (literal (+ (* size 2) (* i (* size 4))))) type))
-    (vector-insert rt4 i (load (+ address (literal (+ (* size 3) (* i (* size 4))))) type))))
+(defm do-ld4 ()
+    (match size
+        0b00 (block
+            (ld-sub rt  8 16 u8 1 0 4)
+            (ld-sub rt2 8 16 u8 1 1 4)
+            (ld-sub rt3 8 16 u8 1 2 4)
+            (ld-sub rt4 8 16 u8 1 3 4))
+        0b01 (block
+            (ld-sub rt  4 8 u16 2 0 4)
+            (ld-sub rt2 4 8 u16 2 1 4)
+            (ld-sub rt3 4 8 u16 2 2 4)
+            (ld-sub rt4 4 8 u16 2 3 4))
+        0b10 (block
+            (ld-sub rt  2 4 u32 4 0 4)
+            (ld-sub rt2 2 4 u32 4 1 4)
+            (ld-sub rt3 2 4 u32 4 2 4)
+            (ld-sub rt4 2 4 u32 4 3 4))
+             (block
+            (ld-sub rt  1 2 u64 8 0 4)
+            (ld-sub rt2 1 2 u64 8 1 4)
+            (ld-sub rt3 1 2 u64 8 2 4)
+            (ld-sub rt4 1 2 u64 8 3 4))))
 
 (def LD4-multi-no-offset
     "0 Q 0011000 1 000000 0000 ss nnnnn ttttt"
@@ -2992,15 +2996,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (= (vec rt4) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld4-sub 1 u8))
-            0b01 (qfor i 4  8 (ld4-sub 2 u16))
-            0b10 (qfor i 2  4 (ld4-sub 4 f32))
-                 (for (i 2)   (ld4-sub 8 f64)))))
+        (do-ld4)))
 
 (def LD4-multi-postindex-immediate
     "0 Q 0011001 1 0 mmmmm 0000 ss nnnnn ttttt"
@@ -3018,15 +3014,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (= (vec rt4) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld4-sub 1 u8))
-            0b01 (qfor i 4  8 (ld4-sub 2 u16))
-            0b10 (qfor i 2  4 (ld4-sub 4 f32))
-                 (for (i 2)   (ld4-sub 8 f64)))
+        (do-ld4)
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD4-multi-postindex-register
@@ -3045,15 +3033,7 @@
             0b11_1 "2D"
             (unimplemented))))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (= (vec rt4) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld4-sub 1 u8))
-            0b01 (qfor i 4  8 (ld4-sub 2 u16))
-            0b10 (qfor i 2  4 (ld4-sub 4 f32))
-                 (for (i 2)   (ld4-sub 8 f64)))
+        (do-ld4)
         (= (gpr-or-sp64 rn) (+ address (gpr64 rm)))))
 
 (def LDAR
