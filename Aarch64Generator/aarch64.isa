@@ -4323,20 +4323,20 @@
         0b11 "2D"
         (unimplemented)))
     (let n (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b00 (block
-                    (vector-insert rd 0 (f32 (vector-element n 0 i32)))
-                    (vector-insert rd 1 (f32 (vector-element n 1 i32))))
-            0b01 (block
-                    (vector-insert rd 0 (f32 (vector-element n 0 i32)))
-                    (vector-insert rd 1 (f32 (vector-element n 1 i32)))
-                    (vector-insert rd 2 (f32 (vector-element n 2 i32)))
-                    (vector-insert rd 3 (f32 (vector-element n 3 i32))))
-            0b11 (block
-                    (vector-insert rd 0 (f64 (vector-element n 0 i64)))
-                    (vector-insert rd 1 (f64 (vector-element n 1 i64))))
-            (unimplemented))))
+        (= (vec rd) (match (: size Q)
+            0b00 (vector
+                    (f32 (vector-element n 0 i32))
+                    (f32 (vector-element n 1 i32))
+                    (f32 0) (f32 0))
+            0b01 (vector
+                    (f32 (vector-element n 0 i32))
+                    (f32 (vector-element n 1 i32))
+                    (f32 (vector-element n 2 i32))
+                    (f32 (vector-element n 3 i32)))
+            0b11 (vector
+                    (f64 (vector-element n 0 i64))
+                    (f64 (vector-element n 1 i64)))
+            (unimplemented)))))
 
 (def SDIV
     "f 0 0 11010110 mmmmm 00001 1 nnnnn ddddd"
@@ -4361,7 +4361,7 @@
     (= (vec-d rd) (bitcast (<< (bitcast (vec-d rn) u64) shift) f64)))
 
 (defm shl-elem (i type)
-    (vector-insert rd i (<< (vector-element sv i type) shift)))
+    (<< (vector-element sv i type) shift))
 
 (def SHL-vector
     "0 Q 0 011110 hhhh bbb 01010 1 nnnnn ddddd"
@@ -4374,29 +4374,19 @@
         (if (== (& immh 0b1100) 0b0100) (block (= T (if Q "4S" "2S")) (= size 4) (= shift (- (u8 (: immh immb)) 32)))
                                         (block (= T (if Q "2D" (unimplemented))) (= size 8) (= shift (- (u8 (: immh immb)) 64)))))))
     (let sv (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match size
-            1 (block
-                (shl-elem 0 u8) (shl-elem 1 u8)
-                (shl-elem 2 u8) (shl-elem 3 u8)
-                (shl-elem 4 u8) (shl-elem 5 u8)
-                (shl-elem 6 u8) (shl-elem 7 u8)
-                (when Q
-                    (shl-elem 8  u8) (shl-elem 9  u8)
-                    (shl-elem 10 u8) (shl-elem 11 u8)
-                    (shl-elem 12 u8) (shl-elem 13 u8)
-                    (shl-elem 14 u8) (shl-elem 15 u8)))
-            2 (block
-                (shl-elem 0 u16) (shl-elem 1 u16)
-                (shl-elem 2 u16) (shl-elem 3 u16)
-                (when Q
-                    (shl-elem 4 u16) (shl-elem 5 u16)
-                    (shl-elem 6 u16) (shl-elem 7 u16)))
-            4 (block
-                (shl-elem 0 u32) (shl-elem 1 u32)
-                (when Q
-                    (shl-elem 2 u32) (shl-elem 3 u32)))
-              (block (shl-elem 0 u64) (shl-elem 1 u64)))))
+        (= (vec rd) (match size
+            1 (if Q
+                (vector (mfor (i 16) (shl-elem i u8)))
+                (vector (mfor (i 8) (shl-elem i u8)) (mfor (i 8) (u8 0))))
+            2 (if Q
+                (vector (mfor (i 8) (shl-elem i u16)))
+                (vector (mfor (i 4) (shl-elem i u16)) (mfor (i 4) (u16 0))))
+            4 (if Q
+                (vector (mfor (i 4) (shl-elem i u32)))
+                (vector (mfor (i 2) (shl-elem i u32)) (mfor (i 2) (u32 0))))
+              (if Q
+                (vector (mfor (i 2) (shl-elem i u64)))
+                (unimplemented))))))
 
 (def SMADDL
     "1 00 11011 0 01 mmmmm 0 aaaaa nnnnn ddddd"
