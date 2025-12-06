@@ -248,5 +248,10 @@ class VectorMath : Builtin {
 				list => $"Vector128.Xor({GenerateExpression(list[1])}, {GenerateExpression(list[2])})",
 				list => $"({GenerateExpression(list[1])}) ^ ({GenerateExpression(list[2])})")
 			.Interpret((list, state) => Vector128<byte>.Ensure(state.Evaluate(list[1])) ^ Vector128<byte>.Ensure(state.Evaluate(list[2])));
+		
+		Expression("vec~", list => list[1].Type, 
+				list => $"Vector128.Not({GenerateExpression(list[1])})",
+				list => $"~({GenerateExpression(list[1])})")
+			.NoInterpret(); // TODO
 	}
 }

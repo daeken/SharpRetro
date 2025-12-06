@@ -630,6 +630,34 @@ public partial class Recompiler {
 			return true;
 		}
 		insn_25:
+		/* BIF */
+		if((insn & 0xBFE0FC00) == 0x2EE01C00) {
+			var Q = (insn >> 30) & 0x1U;
+			var rm = (insn >> 16) & 0x1FU;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var T = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
+			var op1 = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])).Store();
+			var op3 = ((IRuntimeValue<Vector128<float>>) (~((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])))).Store();
+			var op4 = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Store();
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((op1) ^ ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) ((op1) ^ (op4))) & (op3))));
+			return true;
+		}
+		insn_26:
+		/* BIT */
+		if((insn & 0xBFE0FC00) == 0x2EA01C00) {
+			var Q = (insn >> 30) & 0x1U;
+			var rm = (insn >> 16) & 0x1FU;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var T = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
+			var op1 = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])).Store();
+			var op3 = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Store();
+			var op4 = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Store();
+			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((op1) ^ ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) ((op1) ^ (op4))) & (op3))));
+			return true;
+		}
+		insn_27:
 		/* BL */
 		if((insn & 0xFC000000) == 0x94000000) {
 			var imm = (insn >> 0) & 0x3FFFFFFU;
@@ -638,28 +666,28 @@ public partial class Recompiler {
 			BranchLinked(addr);
 			return true;
 		}
-		insn_26:
+		insn_28:
 		/* BLR */
 		if((insn & 0xFFFFFC1F) == 0xD63F0000) {
 			var rn = (insn >> 5) & 0x1FU;
 			BranchLinked((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]));
 			return true;
 		}
-		insn_27:
+		insn_29:
 		/* BR */
 		if((insn & 0xFFFFFC1F) == 0xD61F0000) {
 			var rn = (insn >> 5) & 0x1FU;
 			Branch((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]));
 			return true;
 		}
-		insn_28:
+		insn_30:
 		/* BRK */
 		if((insn & 0xFFE0001F) == 0xD4200000) {
 			var imm = (insn >> 5) & 0xFFFFU;
 			Breakpoint(imm);
 			return true;
 		}
-		insn_29:
+		insn_31:
 		/* BSL */
 		if((insn & 0xBFE0FC00) == 0x2E601C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -674,7 +702,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((v)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((v).ZeroTop())));
 			return true;
 		}
-		insn_30:
+		insn_32:
 		/* CASP */
 		if((insn & 0xBFE0FC00) == 0x08207C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -687,7 +715,7 @@ public partial class Recompiler {
 			throw new NotImplementedException();
 			return true;
 		}
-		insn_31:
+		insn_33:
 		/* CASPA */
 		if((insn & 0xBFE0FC00) == 0x08607C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -700,7 +728,7 @@ public partial class Recompiler {
 			throw new NotImplementedException();
 			return true;
 		}
-		insn_32:
+		insn_34:
 		/* CASPAL */
 		if((insn & 0xBFE0FC00) == 0x0860FC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -747,7 +775,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_33:
+		insn_35:
 		/* CASPL */
 		if((insn & 0xBFE0FC00) == 0x0820FC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -760,7 +788,7 @@ public partial class Recompiler {
 			throw new NotImplementedException();
 			return true;
 		}
-		insn_34:
+		insn_36:
 		/* CBNZ */
 		if((insn & 0x7F000000) == 0x35000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -789,7 +817,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_35:
+		insn_37:
 		/* CBZ */
 		if((insn & 0x7F000000) == 0x34000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -818,7 +846,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_36:
+		insn_38:
 		/* CCMN-immediate */
 		if((insn & 0x7FE00C10) == 0x3A400800) {
 			var size = (insn >> 31) & 0x1U;
@@ -869,7 +897,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_37:
+		insn_39:
 		/* CCMP-immediate */
 		if((insn & 0x7FE00C10) == 0x7A400800) {
 			var size = (insn >> 31) & 0x1U;
@@ -920,7 +948,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_38:
+		insn_40:
 		/* CCMP-register */
 		if((insn & 0x7FE00C10) == 0x7A400000) {
 			var size = (insn >> 31) & 0x1U;
@@ -971,13 +999,13 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_39:
+		insn_41:
 		/* CLREX */
 		if((insn & 0xFFFFF0FF) == 0xD503305F) {
 			var crm = (insn >> 8) & 0xFU;
 			return true;
 		}
-		insn_40:
+		insn_42:
 		/* CLZ */
 		if((insn & 0x7FFFFC00) == 0x5AC01000) {
 			var size = (insn >> 31) & 0x1U;
@@ -991,7 +1019,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_41:
+		insn_43:
 		/* CMEQ-register-scalar */
 		if((insn & 0xFF20FC00) == 0x7E208C00) {
 			var size = (insn >> 22) & 0x3U;
@@ -1011,7 +1039,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_42:
+		insn_44:
 		/* CMEQ-register-vector */
 		if((insn & 0xBF20FC00) == 0x2E208C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1104,7 +1132,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_43:
+		insn_45:
 		/* CMEQ-zero-scalar */
 		if((insn & 0xFF3FFC00) == 0x5E209800) {
 			var size = (insn >> 22) & 0x3U;
@@ -1123,7 +1151,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_44:
+		insn_46:
 		/* CMEQ-zero-vector */
 		if((insn & 0xBF3FFC00) == 0x0E209800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1214,7 +1242,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_45:
+		insn_47:
 		/* CMGT-register-scalar */
 		if((insn & 0xFF20FC00) == 0x5E203400) {
 			var size = (insn >> 22) & 0x3U;
@@ -1234,7 +1262,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_46:
+		insn_48:
 		/* CMGT-register-vector */
 		if((insn & 0xBF20FC00) == 0x0E203400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1327,7 +1355,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_47:
+		insn_49:
 		/* CMGT-zero-scalar */
 		if((insn & 0xFF3FFC00) == 0x5E208800) {
 			var size = (insn >> 22) & 0x3U;
@@ -1346,7 +1374,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_48:
+		insn_50:
 		/* CMGT-zero-vector */
 		if((insn & 0xBF3FFC00) == 0x0E208800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1437,7 +1465,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_49:
+		insn_51:
 		/* CNT */
 		if((insn & 0xBF3FFC00) == 0x0E205800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1448,7 +1476,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorCountBits((IRuntimeValue<long>) builder.EnsureRuntime((byte) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (byte) 0x8, _ => (byte) ((byte) 0x10) }))));
 			return true;
 		}
-		insn_50:
+		insn_52:
 		/* CSEL */
 		if((insn & 0x7FE00C00) == 0x1A800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -1467,7 +1495,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_51:
+		insn_53:
 		/* CSINC */
 		if((insn & 0x7FE00C00) == 0x1A800400) {
 			var size = (insn >> 31) & 0x1U;
@@ -1496,7 +1524,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_52:
+		insn_54:
 		/* CSINV */
 		if((insn & 0x7FE00C00) == 0x5A800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -1525,7 +1553,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_53:
+		insn_55:
 		/* CSNEG */
 		if((insn & 0x7FE00C00) == 0x5A800400) {
 			var size = (insn >> 31) & 0x1U;
@@ -1554,21 +1582,21 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_54:
+		insn_56:
 		/* DMB */
 		if((insn & 0xFFFFF0FF) == 0xD50330BF) {
 			var m = (insn >> 8) & 0xFU;
 			var option = (string) (m switch { (byte) ((byte) 0xF) => "SY", (byte) ((byte) 0xE) => "ST", (byte) ((byte) 0xD) => "LD", (byte) ((byte) 0xB) => "ISH", (byte) ((byte) 0xA) => "ISHST", (byte) ((byte) 0x9) => "ISHLD", (byte) ((byte) 0x7) => "NSH", (byte) ((byte) 0x6) => "NSHST", (byte) ((byte) 0x5) => "NSHLD", (byte) ((byte) 0x3) => "OSH", (byte) ((byte) 0x2) => "OSHST", _ => "OSHLD" });
 			return true;
 		}
-		insn_55:
+		insn_57:
 		/* DSB */
 		if((insn & 0xFFFFF0FF) == 0xD503309F) {
 			var crm = (insn >> 8) & 0xFU;
 			var option = (string) (crm switch { (byte) ((byte) 0xF) => "SY", (byte) ((byte) 0xE) => "ST", (byte) ((byte) 0xD) => "LD", (byte) ((byte) 0xB) => "ISH", (byte) ((byte) 0xA) => "ISHST", (byte) ((byte) 0x9) => "ISHLD", (byte) ((byte) 0x7) => "NSH", (byte) ((byte) 0x6) => "NSHST", (byte) ((byte) 0x5) => "NSHLD", (byte) ((byte) 0x3) => "OSH", (byte) ((byte) 0x2) => "OSHST", _ => "OSHLD" });
 			return true;
 		}
-		insn_56:
+		insn_58:
 		/* DUP-element-scalar */
 		if((insn & 0xFFE0FC00) == 0x5E000400) {
 			var imm = (insn >> 16) & 0x1FU;
@@ -1623,7 +1651,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_57:
+		insn_59:
 		/* DUP-element-vector */
 		if((insn & 0xBFE0FC00) == 0x0E000400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1668,7 +1696,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((tv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((tv).ZeroTop())));
 			return true;
 		}
-		insn_58:
+		insn_60:
 		/* DUP-general */
 		if((insn & 0xBFE0FC00) == 0x0E000C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1682,7 +1710,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((byte) (((imm) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x1))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) (src)))).CreateVector()))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) (src)))).CreateVector())).ZeroTop()))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((byte) (((imm) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x2))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (src)))).CreateVector()))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (src)))).CreateVector())).ZeroTop()))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((byte) (((imm) & ((byte) ((byte) ((byte) 0x7))))))) == ((byte) 0x4))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) (src)))).CreateVector()))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) (src)))).CreateVector())).ZeroTop()))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<ulong>) builder.EnsureRuntime(src)).CreateVector()) : throw new NotImplementedException())))))));
 			return true;
 		}
-		insn_59:
+		insn_61:
 		/* EON-shifted-register */
 		if((insn & 0x7F200000) == 0x4A200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -1692,7 +1720,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_60;
+				goto insn_62;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -1702,7 +1730,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_60:
+		insn_62:
 		/* EOR-immediate */
 		if((insn & 0x7F800000) == 0x52000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -1726,7 +1754,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_61:
+		insn_63:
 		/* EOR-shifted-register */
 		if((insn & 0x7F200000) == 0x4A000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -1736,7 +1764,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_62;
+				goto insn_64;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -1746,7 +1774,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_62:
+		insn_64:
 		/* EOR-vector */
 		if((insn & 0xBFE0FC00) == 0x2E201C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1758,7 +1786,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((v)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((v).ZeroTop())));
 			return true;
 		}
-		insn_63:
+		insn_65:
 		/* EXT */
 		if((insn & 0xBFE08400) == 0x2E000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1770,7 +1798,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorExtract((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]), (IRuntimeValue<uint>) builder.EnsureRuntime(Q), (IRuntimeValue<uint>) builder.EnsureRuntime(index)));
 			return true;
 		}
-		insn_64:
+		insn_66:
 		/* EXTR */
 		if((insn & 0x7FA00000) == 0x13800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -1780,9 +1808,9 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (lsb)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_65;
+				goto insn_67;
 			if(!((bool) ((size) == (o))))
-				goto insn_65;
+				goto insn_67;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((byte) (((byte) (byte) ((byte) 0x20)) - ((byte) (byte) (lsb))))))))) | ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm]))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(lsb)))))))));
@@ -1791,7 +1819,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_65:
+		insn_67:
 		/* FABD-scalar */
 		if((insn & 0xFFA0FC00) == 0x7EA0D400) {
 			var size = (insn >> 22) & 0x1U;
@@ -1811,7 +1839,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_66:
+		insn_68:
 		/* FABS-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E20C000) {
 			var type = (insn >> 22) & 0x3U;
@@ -1834,7 +1862,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_67:
+		insn_69:
 		/* FABS-vector */
 		if((insn & 0xBFBFFC00) == 0x0EA0F800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1878,7 +1906,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_68:
+		insn_70:
 		/* FADD-scalar */
 		if((insn & 0xFF20FC00) == 0x1E202800) {
 			var type = (insn >> 22) & 0x3U;
@@ -1906,7 +1934,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_69:
+		insn_71:
 		/* FADD-vector */
 		if((insn & 0xBFA0FC00) == 0x0E20D400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -1935,7 +1963,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_70:
+		insn_72:
 		/* FADDP-scalar */
 		if((insn & 0xFFBFFC00) == 0x7E30D800) {
 			var size = (insn >> 22) & 0x1U;
@@ -1949,7 +1977,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_71:
+		insn_73:
 		/* FADDP-vector */
 		if((insn & 0xBFA0FC00) == 0x2E20D400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -2002,7 +2030,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_72:
+		insn_74:
 		/* FCCMP */
 		if((insn & 0xFF200C10) == 0x1E200400) {
 			var type = (insn >> 22) & 0x3U;
@@ -2040,7 +2068,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_73:
+		insn_75:
 		/* FCMxx-register-vector */
 		if((insn & 0x9F20F400) == 0x0E20E400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -2097,7 +2125,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_74:
+		insn_76:
 		/* FCMxx-zero-vector */
 		if((insn & 0x9FBFEC00) == 0x0EA0C800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -2144,7 +2172,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_75:
+		insn_77:
 		/* FCMLT-zero-vector */
 		if((insn & 0xBFBFFC00) == 0x0EA0E800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -2188,7 +2216,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_76:
+		insn_78:
 		/* FCMP */
 		if((insn & 0xFF20FC17) == 0x1E202000) {
 			var type = (insn >> 22) & 0x3U;
@@ -2217,7 +2245,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_77:
+		insn_79:
 		/* FCSEL */
 		if((insn & 0xFF200C00) == 0x1E200C00) {
 			var type = (insn >> 22) & 0x3U;
@@ -2264,7 +2292,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_78:
+		insn_80:
 		/* FCVT */
 		if((insn & 0xFF3E7C00) == 0x1E224000) {
 			var type = (insn >> 22) & 0x3U;
@@ -2342,7 +2370,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_79:
+		insn_81:
 		/* FCVTAS-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E240000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2412,7 +2440,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_80:
+		insn_82:
 		/* FCVTAU-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E250000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2482,7 +2510,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_81:
+		insn_83:
 		/* FCVTL[2] */
 		if((insn & 0xBFBFFC00) == 0x0E217800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -2512,7 +2540,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_82:
+		insn_84:
 		/* FCVTMS-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E300000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2582,7 +2610,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_83:
+		insn_85:
 		/* FCVTMU-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E310000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2652,7 +2680,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_84:
+		insn_86:
 		/* FCVTN */
 		if((insn & 0xFFBFFC00) == 0x0E216800) {
 			var size = (insn >> 22) & 0x1U;
@@ -2690,7 +2718,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_85:
+		insn_87:
 		/* FCVTN2 */
 		if((insn & 0xFFBFFC00) == 0x4E216800) {
 			var size = (insn >> 22) & 0x1U;
@@ -2727,7 +2755,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_86:
+		insn_88:
 		/* FCVTPS-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E280000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2797,7 +2825,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_87:
+		insn_89:
 		/* FCVTPU-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E290000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2867,7 +2895,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_88:
+		insn_90:
 		/* FCVTZS-scalar-fixedpoint */
 		if((insn & 0x7F3F0000) == 0x1E180000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2877,7 +2905,7 @@ public partial class Recompiler {
 			var rd = (insn >> 0) & 0x1FU;
 			var fbits = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) (scale)));
 			if(!((bool) ((fbits) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_89;
+				goto insn_91;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (type switch { (byte) ((byte) 0x3) => "H", (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => throw new NotImplementedException() });
 			switch((byte) ((byte) (((byte) (((byte) (type)) << 0)) | ((byte) (((byte) (size)) << 2))))) {
@@ -2904,7 +2932,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_89:
+		insn_91:
 		/* FCVTZS-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E380000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2974,7 +3002,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_90:
+		insn_92:
 		/* FCVTZU-scalar-fixedpoint */
 		if((insn & 0x7F3F0000) == 0x1E190000) {
 			var size = (insn >> 31) & 0x1U;
@@ -2984,7 +3012,7 @@ public partial class Recompiler {
 			var rd = (insn >> 0) & 0x1FU;
 			var fbits = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) (scale)));
 			if(!((bool) ((fbits) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_91;
+				goto insn_93;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (type switch { (byte) ((byte) 0x3) => "H", (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => throw new NotImplementedException() });
 			switch((byte) ((byte) (((byte) (((byte) (type)) << 0)) | ((byte) (((byte) (size)) << 2))))) {
@@ -3011,7 +3039,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_91:
+		insn_93:
 		/* FCVTZU-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E390000) {
 			var size = (insn >> 31) & 0x1U;
@@ -3081,7 +3109,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_92:
+		insn_94:
 		/* FDIV-scalar */
 		if((insn & 0xFF20FC00) == 0x1E201800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3109,7 +3137,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_93:
+		insn_95:
 		/* FDIV-vector */
 		if((insn & 0xBFA0FC00) == 0x2E20FC00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3138,7 +3166,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_94:
+		insn_96:
 		/* FMADD */
 		if((insn & 0xFF208000) == 0x1F000000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3163,7 +3191,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_95:
+		insn_97:
 		/* FMAX-scalar */
 		if((insn & 0xFF20FC00) == 0x1E204800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3191,7 +3219,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_96:
+		insn_98:
 		/* FMAXNM-scalar */
 		if((insn & 0xFF20FC00) == 0x1E206800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3219,7 +3247,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_97:
+		insn_99:
 		/* FMIN-scalar */
 		if((insn & 0xFF20FC00) == 0x1E205800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3247,7 +3275,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_98:
+		insn_100:
 		/* FMINNM-scalar */
 		if((insn & 0xFF20FC00) == 0x1E207800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3275,7 +3303,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_99:
+		insn_101:
 		/* FMLA-by-element-vector-spdp */
 		if((insn & 0xBF80F400) == 0x0F801000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3292,7 +3320,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((v)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((v).ZeroTop())));
 			return true;
 		}
-		insn_100:
+		insn_102:
 		/* FMLA-vector */
 		if((insn & 0xBFA0FC00) == 0x0E20CC00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3304,7 +3332,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) + (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) + ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) + (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) + ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])))))))).ZeroTop())));
 			return true;
 		}
-		insn_101:
+		insn_103:
 		/* FMLS-by-element-vector-spdp */
 		if((insn & 0xBF80F400) == 0x0F805000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3320,7 +3348,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<double>((int) ((int) (index)))))).CreateVector()))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<float>((int) ((int) (index)))))).CreateVector()))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<double>((int) ((int) (index)))))).CreateVector()))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<float>((int) ((int) (index)))))).CreateVector())))))))).ZeroTop())));
 			return true;
 		}
-		insn_102:
+		insn_104:
 		/* FMLS-vector */
 		if((insn & 0xBFA0FC00) == 0x0EA0CC00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3332,7 +3360,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rd)])) - ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])))))))).ZeroTop())));
 			return true;
 		}
-		insn_103:
+		insn_105:
 		/* FMOV-general */
 		if((insn & 0x7F36FC00) == 0x1E260000) {
 			var sf = (insn >> 31) & 0x1U;
@@ -3451,7 +3479,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_104:
+		insn_106:
 		/* FMOV-register */
 		if((insn & 0xFF3FFC00) == 0x1E204000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3474,7 +3502,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_105:
+		insn_107:
 		/* FMOV-scalar-immediate */
 		if((insn & 0xFF201FE0) == 0x1E201000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3494,7 +3522,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_106:
+		insn_108:
 		/* FMOV-vector-immediate-single */
 		if((insn & 0xBFF8FC00) == 0x0F00F400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3517,7 +3545,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_107:
+		insn_109:
 		/* FMOV-vector-immediate-double */
 		if((insn & 0xFFF8FC00) == 0x6F00F400) {
 			var a = (insn >> 18) & 0x1U;
@@ -3533,7 +3561,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime(sv)).CreateVector());
 			return true;
 		}
-		insn_108:
+		insn_110:
 		/* FMSUB */
 		if((insn & 0xFF208000) == 0x1F008000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3558,7 +3586,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_109:
+		insn_111:
 		/* FMUL-by-element-scalar-spdp */
 		if((insn & 0xFF80F400) == 0x5F809000) {
 			var sz = (insn >> 22) & 0x1U;
@@ -3576,7 +3604,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_110:
+		insn_112:
 		/* FMUL-by-element-vector-spdp */
 		if((insn & 0xBF80F400) == 0x0F809000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3592,7 +3620,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<double>((int) ((int) (index)))))).CreateVector())))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<float>((int) ((int) (index)))))).CreateVector()))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((bool) ((sz) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<float>>) ((IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * (IRuntimeValue<Vector128<double>>) ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<double>((int) ((int) (index)))))).CreateVector())))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) * ((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])).Element<float>((int) ((int) (index)))))).CreateVector())))))).ZeroTop())));
 			return true;
 		}
-		insn_111:
+		insn_113:
 		/* FMUL-scalar */
 		if((insn & 0xFF20FC00) == 0x1E200800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3616,7 +3644,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_112:
+		insn_114:
 		/* FMUL-vector */
 		if((insn & 0xBFA0FC00) == 0x2E20DC00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3645,7 +3673,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_113:
+		insn_115:
 		/* FNEG-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E214000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3668,7 +3696,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_114:
+		insn_116:
 		/* FNEG-vector */
 		if((insn & 0xBFBFFC00) == 0x2EA0F800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3703,7 +3731,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_115:
+		insn_117:
 		/* FNMADD */
 		if((insn & 0xFF208000) == 0x1F200000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3728,7 +3756,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_116:
+		insn_118:
 		/* FNMSUB */
 		if((insn & 0xFF208000) == 0x1F208000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3753,7 +3781,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_117:
+		insn_119:
 		/* FNMUL-scalar */
 		if((insn & 0xFF20FC00) == 0x1E208800) {
 			var type = (insn >> 22) & 0x3U;
@@ -3777,7 +3805,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_118:
+		insn_120:
 		/* FRINTA-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E264000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3800,7 +3828,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_119:
+		insn_121:
 		/* FRINTI-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E27C000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3823,7 +3851,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_120:
+		insn_122:
 		/* FRINTM-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E254000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3846,7 +3874,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_121:
+		insn_123:
 		/* FRINTP-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E24C000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3869,7 +3897,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_122:
+		insn_124:
 		/* FRINTX-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E274000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3892,7 +3920,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_123:
+		insn_125:
 		/* FRINTZ-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E25C000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3915,7 +3943,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_124:
+		insn_126:
 		/* FRSQRTE-vector */
 		if((insn & 0xBFBFFC00) == 0x2EA1D800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3926,7 +3954,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x20), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x2))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x20), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x4))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x40), (IRuntimeValue<int>) builder.EnsureRuntime((byte) 0x2))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_125:
+		insn_127:
 		/* FRSQRTS-vector */
 		if((insn & 0xBFA0FC00) == 0x0EA0FC00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3955,7 +3983,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_126:
+		insn_128:
 		/* FSQRT-scalar */
 		if((insn & 0xFF3FFC00) == 0x1E21C000) {
 			var type = (insn >> 22) & 0x3U;
@@ -3978,7 +4006,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_127:
+		insn_129:
 		/* FSUB-scalar */
 		if((insn & 0xFF20FC00) == 0x1E203800) {
 			var type = (insn >> 22) & 0x3U;
@@ -4002,7 +4030,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_128:
+		insn_130:
 		/* FSUB-vector */
 		if((insn & 0xBFA0FC00) == 0x0EA0D400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4031,7 +4059,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_129:
+		insn_131:
 		/* HINT */
 		if((insn & 0xFFFFF01F) == 0xD503201F) {
 			var crm = (insn >> 8) & 0xFU;
@@ -4039,14 +4067,14 @@ public partial class Recompiler {
 			var hint = (byte) ((byte) (((byte) (((byte) (op2)) << 0)) | ((byte) (((byte) (crm)) << 3))));
 			return true;
 		}
-		insn_130:
+		insn_132:
 		/* INS-general */
 		if((insn & 0xFFE0FC00) == 0x4E001C00) {
 			var imm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) ((byte) (((imm) & ((byte) ((byte) ((byte) 0xF))))))) != ((byte) 0x0))))
-				goto insn_131;
+				goto insn_133;
 			var ts = "";
 			var index = (uint) ((uint) ((byte) 0x0));
 			var r = "W";
@@ -4083,7 +4111,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_131:
+		insn_133:
 		/* INS-vector */
 		if((insn & 0xFFE08400) == 0x6E000400) {
 			var imm5 = (insn >> 16) & 0x1FU;
@@ -4091,7 +4119,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) ((byte) (((imm5) & ((byte) ((byte) ((byte) 0xF))))))) != ((byte) 0x0))))
-				goto insn_132;
+				goto insn_134;
 			var ts = "";
 			var index1 = (uint) ((uint) ((byte) 0x0));
 			var index2 = (uint) ((uint) ((byte) 0x0));
@@ -4131,7 +4159,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_132:
+		insn_134:
 		/* LD1-multi-no-offset-one-register */
 		if((insn & 0xBFFFF000) == 0x0C407000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4214,7 +4242,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_133:
+		insn_135:
 		/* LD1-multi-no-offset-one-register-postindex-immediate */
 		if((insn & 0xBFFFF000) == 0x0CDF7000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4302,7 +4330,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_134:
+		insn_136:
 		/* LD1-multi-no-offset-two-registers */
 		if((insn & 0xBFFFF000) == 0x0C40A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4459,7 +4487,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_135:
+		insn_137:
 		/* LD1-multi-no-offset-two-registers-postindex-immediate */
 		if((insn & 0xBFFFF000) == 0x0CDFA000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4621,7 +4649,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_136:
+		insn_138:
 		/* LD1-multi-no-offset-three-registers */
 		if((insn & 0xBFFFF000) == 0x0C406000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4852,7 +4880,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_137:
+		insn_139:
 		/* LD1-multi-no-offset-three-registers-postindex-immediate */
 		if((insn & 0xBFFFF000) == 0x0CDF6000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5088,7 +5116,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_138:
+		insn_140:
 		/* LD1-multi-no-offset-four-registers */
 		if((insn & 0xBFFFF000) == 0x0C402000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5393,7 +5421,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_139:
+		insn_141:
 		/* LD1-multi-no-offset-four-registers-postindex-immediate */
 		if((insn & 0xBFFFF000) == 0x0C5F2000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5703,7 +5731,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_140:
+		insn_142:
 		/* LD1-single-no-offset */
 		if((insn & 0xBFFF2000) == 0x0D400000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5713,7 +5741,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
-				goto insn_141;
+				goto insn_143;
 			var t = (string) (((bool) (((byte) (opc)) == ((byte) 0x0))) ? (string) ("B") : (string) ((string) (((bool) ((((bool) (((byte) (opc)) == ((byte) 0x1))) & ((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))) ? (string) ("H") : (string) ((string) (((bool) (((byte) (opc)) == ((byte) 0x2))) ? ((string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ((string) (((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) & ((bool) (((byte) (S)) == ((byte) 0x0)))))) ? ("D") : throw new NotImplementedException())))) : throw new NotImplementedException())))));
 			var index = (uint) (opc switch { (byte) ((byte) 0x0) => (uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3)))))), (byte) ((byte) 0x1) => (uint) ((uint) (((uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3))))))) >> (int) ((byte) 0x1))), (byte) ((byte) 0x2) => (uint) ((uint) (((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) ? (uint) ((uint) ((uint) ((byte) ((byte) (((byte) (((byte) (S)) << 0)) | ((byte) (((byte) (Q)) << 1))))))) : (uint) (Q))), _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -5741,7 +5769,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_141:
+		insn_143:
 		/* LD1R-single-no-offset */
 		if((insn & 0xBFFFF000) == 0x0D40C000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5754,7 +5782,7 @@ public partial class Recompiler {
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((sv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((sv).ZeroTop())));
 			return true;
 		}
-		insn_142:
+		insn_144:
 		/* LD1R-single-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0DC0C000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5763,7 +5791,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_143;
+				goto insn_145;
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x6) => "1D", _ => "2D" });
 			var imm = (byte) (size switch { (byte) ((byte) 0x0) => (byte) 0x1, (byte) ((byte) 0x1) => (byte) ((byte) 0x2), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => (byte) ((byte) 0x8) });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -5775,7 +5803,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_143:
+		insn_145:
 		/* LD1R-single-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0DC0C000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5784,7 +5812,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_144;
+				goto insn_146;
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x6) => "1D", _ => "2D" });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var sv = ((IRuntimeValue<Vector128<float>>) (size switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))).CreateVector()), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))).CreateVector()), (byte) ((byte) 0x2) => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<float>) builder.EnsureRuntime((IRuntimeValue<float>) (builder.Pointer<float>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))).CreateVector()), _ => (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<double>) builder.EnsureRuntime((IRuntimeValue<double>) (builder.Pointer<double>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))).CreateVector()) })).Store();
@@ -5795,7 +5823,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_144:
+		insn_146:
 		/* LD2-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C408000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5920,7 +5948,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_145:
+		insn_147:
 		/* LD2-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0CC08000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -5931,7 +5959,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_146;
+				goto insn_148;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
@@ -6053,7 +6081,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_146:
+		insn_148:
 		/* LD2-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0CC08000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6063,7 +6091,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_147;
+				goto insn_149;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
@@ -6185,7 +6213,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_147:
+		insn_149:
 		/* LD3-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C404000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6356,7 +6384,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_148:
+		insn_150:
 		/* LD3-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0CC04000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6368,7 +6396,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_149;
+				goto insn_151;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
@@ -6535,7 +6563,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_149:
+		insn_151:
 		/* LD3-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0CC04000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6546,7 +6574,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_150;
+				goto insn_152;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
@@ -6713,7 +6741,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_150:
+		insn_152:
 		/* LD4-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C400000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6930,7 +6958,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_151:
+		insn_153:
 		/* LD4-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0CC00000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6943,7 +6971,7 @@ public partial class Recompiler {
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x40) : (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_152;
+				goto insn_154;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
@@ -7155,7 +7183,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_152:
+		insn_154:
 		/* LD4-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0CC00000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7167,7 +7195,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_153;
+				goto insn_155;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.V[(int) (rt)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<byte>) builder.EnsureRuntime((byte) ((byte) 0x0))).CreateVector());
@@ -7379,7 +7407,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_153:
+		insn_155:
 		/* LDAR */
 		if((insn & 0xBFFFFC00) == 0x88DFFC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -7395,7 +7423,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_154:
+		insn_156:
 		/* LDARB */
 		if((insn & 0xFFFFFC00) == 0x08DFFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -7404,7 +7432,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))));
 			return true;
 		}
-		insn_155:
+		insn_157:
 		/* LDARH */
 		if((insn & 0xFFFFFC00) == 0x48DFFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -7413,7 +7441,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))));
 			return true;
 		}
-		insn_156:
+		insn_158:
 		/* LDAXB */
 		if((insn & 0xBFFFFC00) == 0x885FFC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -7427,7 +7455,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_157:
+		insn_159:
 		/* LDAXRB */
 		if((insn & 0xFFFFFC00) == 0x085FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -7436,7 +7464,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (state.Exclusive8 = builder.Pointer<byte>(address).Value))));
 			return true;
 		}
-		insn_158:
+		insn_160:
 		/* LDAXRH */
 		if((insn & 0xFFFFFC00) == 0x485FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -7445,7 +7473,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (state.Exclusive16 = builder.Pointer<ushort>(address).Value))));
 			return true;
 		}
-		insn_159:
+		insn_161:
 		/* LDP-immediate-postindex */
 		if((insn & 0x7FC00000) == 0x28C00000) {
 			var size = (insn >> 31) & 0x1U;
@@ -7454,11 +7482,11 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
-				goto insn_160;
+				goto insn_162;
 			if(!((bool) ((rt1) != (rn))))
-				goto insn_160;
+				goto insn_162;
 			if(!((bool) ((rt2) != (rn))))
-				goto insn_160;
+				goto insn_162;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -7475,7 +7503,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_160:
+		insn_162:
 		/* LDP-immediate-signed-offset */
 		if((insn & 0x7FC00000) == 0x29400000) {
 			var size = (insn >> 31) & 0x1U;
@@ -7484,7 +7512,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
-				goto insn_161;
+				goto insn_163;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm)))))).Store();
@@ -7497,7 +7525,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_161:
+		insn_163:
 		/* LDP-simd-postindex */
 		if((insn & 0x3FC00000) == 0x2CC00000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -7506,7 +7534,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
-				goto insn_162;
+				goto insn_164;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -7533,7 +7561,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_162:
+		insn_164:
 		/* LDP-simd-preindex */
 		if((insn & 0x3FC00000) == 0x2DC00000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -7542,7 +7570,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
-				goto insn_163;
+				goto insn_165;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm)))))).Store();
@@ -7569,7 +7597,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_163:
+		insn_165:
 		/* LDP-simd-signed-offset */
 		if((insn & 0x3FC00000) == 0x2D400000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -7578,7 +7606,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
-				goto insn_164;
+				goto insn_166;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm)))))).Store();
@@ -7601,7 +7629,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_164:
+		insn_166:
 		/* LDPSW-immediate-signed-offset */
 		if((insn & 0xFFC00000) == 0x69400000) {
 			var imm = (insn >> 15) & 0x7FU;
@@ -7609,18 +7637,18 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
-				goto insn_165;
+				goto insn_167;
 			if(!((bool) ((rt1) != (rn))))
-				goto insn_165;
+				goto insn_167;
 			if(!((bool) ((rt2) != (rn))))
-				goto insn_165;
+				goto insn_167;
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) 0x2));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm)))))).Store();
 			state.X[(int) rt1] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value)).SignExt<long>(32)))));
 			state.X[(int) rt2] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x4))))))).Value)).SignExt<long>(32)))));
 			return true;
 		}
-		insn_165:
+		insn_167:
 		/* LDR-immediate-preindex */
 		if((insn & 0xBFE00C00) == 0xB8400C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -7628,7 +7656,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rd) != (rn))))
-				goto insn_166;
+				goto insn_168;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm)))))).Store();
@@ -7643,7 +7671,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_166:
+		insn_168:
 		/* LDR-immediate-postindex */
 		if((insn & 0xBFE00C00) == 0xB8400400) {
 			var size = (insn >> 30) & 0x1U;
@@ -7651,7 +7679,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rd) != (rn))))
-				goto insn_167;
+				goto insn_169;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -7665,7 +7693,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_167:
+		insn_169:
 		/* LDR-immediate-unsigned-offset */
 		if((insn & 0xBFC00000) == 0xB9400000) {
 			var size = (insn >> 30) & 0x1U;
@@ -7681,7 +7709,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_168:
+		insn_170:
 		/* LDR-literal */
 		if((insn & 0xBF000000) == 0x18000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -7697,7 +7725,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_169:
+		insn_171:
 		/* LDR-simd-immediate-postindex */
 		if((insn & 0x3F600C00) == 0x3C400400) {
 			var size = (insn >> 30) & 0x3U;
@@ -7740,7 +7768,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_170:
+		insn_172:
 		/* LDR-simd-immediate-preindex */
 		if((insn & 0x3F600C00) == 0x3C400C00) {
 			var size = (insn >> 30) & 0x3U;
@@ -7783,7 +7811,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_171:
+		insn_173:
 		/* LDR-simd-immediate-unsigned-offset */
 		if((insn & 0x3F400000) == 0x3D400000) {
 			var size = (insn >> 30) & 0x3U;
@@ -7819,7 +7847,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_172:
+		insn_174:
 		/* LDR-simd-literal */
 		if((insn & 0x3F000000) == 0x1C000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -7847,7 +7875,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_173:
+		insn_175:
 		/* LDR-simd-register */
 		if((insn & 0x3F600C00) == 0x3C600800) {
 			var size = (insn >> 30) & 0x3U;
@@ -7887,7 +7915,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_174:
+		insn_176:
 		/* LDR-register */
 		if((insn & 0xBFE00C00) == 0xB8600800) {
 			var size = (insn >> 30) & 0x1U;
@@ -7908,14 +7936,14 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_175:
+		insn_177:
 		/* LDRB-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x38400400) {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_176;
+				goto insn_178;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			state.X[(int) rt] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))).Value))));
 			if(rn == 31)
@@ -7924,14 +7952,14 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_176:
+		insn_178:
 		/* LDRB-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x38400C00) {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_177;
+				goto insn_179;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm)))))).Store();
 			state.X[(int) rt] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))));
@@ -7941,7 +7969,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_177:
+		insn_179:
 		/* LDRB-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x39400000) {
 			var imm = (insn >> 10) & 0xFFFU;
@@ -7950,7 +7978,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm))))))).Value))));
 			return true;
 		}
-		insn_178:
+		insn_180:
 		/* LDRB-register */
 		if((insn & 0xFFE00C00) == 0x38600800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -7964,14 +7992,14 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset))))))).Value));
 			return true;
 		}
-		insn_179:
+		insn_181:
 		/* LDRH-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x78400400) {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_180;
+				goto insn_182;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))));
@@ -7981,14 +8009,14 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_180:
+		insn_182:
 		/* LDRH-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x78400C00) {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_181;
+				goto insn_183;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm)))))).Store();
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value))));
@@ -7998,7 +8026,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_181:
+		insn_183:
 		/* LDRH-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x79400000) {
 			var rawimm = (insn >> 10) & 0xFFFU;
@@ -8008,7 +8036,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm))))))).Value))));
 			return true;
 		}
-		insn_182:
+		insn_184:
 		/* LDRH-register */
 		if((insn & 0xFFE00C00) == 0x78600800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -8022,7 +8050,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset))))))).Value));
 			return true;
 		}
-		insn_183:
+		insn_185:
 		/* LDRSB-immediate-postindex */
 		if((insn & 0xFFA00C00) == 0x38800400) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8030,7 +8058,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_184;
+				goto insn_186;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var r = (string) (((bool) (((byte) (opc)) == ((byte) 0x1))) ? (string) ("W") : (string) ("X"));
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -8045,7 +8073,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_184:
+		insn_186:
 		/* LDRSB-immediate-preindex */
 		if((insn & 0xFFA00C00) == 0x38800C00) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8053,7 +8081,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_185;
+				goto insn_187;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var r = (string) (((bool) (((byte) (opc)) == ((byte) 0x1))) ? (string) ("W") : (string) ("X"));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm)))))).Store();
@@ -8068,7 +8096,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_185:
+		insn_187:
 		/* LDRSB-immediate-unsigned-offset */
 		if((insn & 0xFF800000) == 0x39800000) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8083,7 +8111,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_186:
+		insn_188:
 		/* LDRSB-register */
 		if((insn & 0xFFA00C00) == 0x38A00800) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8102,7 +8130,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_187:
+		insn_189:
 		/* LDRSH-immediate-postindex */
 		if((insn & 0xFFA00C00) == 0x78800400) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8110,7 +8138,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_188;
+				goto insn_190;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var r = (string) (((bool) (((byte) (opc)) == ((byte) 0x1))) ? (string) ("W") : (string) ("X"));
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -8125,7 +8153,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_188:
+		insn_190:
 		/* LDRSH-immediate-preindex */
 		if((insn & 0xFFA00C00) == 0x78800C00) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8133,7 +8161,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_189;
+				goto insn_191;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var r = (string) (((bool) (((byte) (opc)) == ((byte) 0x1))) ? (string) ("W") : (string) ("X"));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm)))))).Store();
@@ -8148,7 +8176,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_189:
+		insn_191:
 		/* LDRSH-immediate-unsigned-offset */
 		if((insn & 0xFF800000) == 0x79800000) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8164,7 +8192,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_190:
+		insn_192:
 		/* LDRSH-register */
 		if((insn & 0xFFA00C00) == 0x78A00800) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8183,14 +8211,14 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_191:
+		insn_193:
 		/* LDRSW-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0xB8800400) {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_192;
+				goto insn_194;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value)).SignExt<long>(32)))));
@@ -8200,14 +8228,14 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_192:
+		insn_194:
 		/* LDRSW-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0xB8800C00) {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt) != (rn))))
-				goto insn_193;
+				goto insn_195;
 			var imm = (long) (Math.SignExt<long>(rawimm, 9));
 			var address = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm)))))).Store();
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value)).SignExt<long>(32)))));
@@ -8217,7 +8245,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_193:
+		insn_195:
 		/* LDRSW-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0xB9800000) {
 			var rawimm = (insn >> 10) & 0xFFFU;
@@ -8227,7 +8255,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm))))))).Value)).SignExt<long>(32)))));
 			return true;
 		}
-		insn_194:
+		insn_196:
 		/* LDRSW-literal */
 		if((insn & 0xFF000000) == 0x98000000) {
 			var imm = (insn >> 5) & 0x7FFFFU;
@@ -8236,7 +8264,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime(addr)).Value)).SignExt<long>(32)))));
 			return true;
 		}
-		insn_195:
+		insn_197:
 		/* LDRSW-register */
 		if((insn & 0xFFE00C00) == 0xB8A00800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -8251,7 +8279,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset))))))).Value)).SignExt<long>(32)))));
 			return true;
 		}
-		insn_196:
+		insn_198:
 		/* LDUR */
 		if((insn & 0xBFE00C00) == 0xB8400000) {
 			var size = (insn >> 30) & 0x1U;
@@ -8267,7 +8295,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_197:
+		insn_199:
 		/* LDURB */
 		if((insn & 0xFFE00C00) == 0x38400000) {
 			var rawimm = (insn >> 12) & 0x1FFU;
@@ -8277,7 +8305,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))))).Value))));
 			return true;
 		}
-		insn_198:
+		insn_200:
 		/* LDURH */
 		if((insn & 0xFFE00C00) == 0x78400000) {
 			var rawimm = (insn >> 12) & 0x1FFU;
@@ -8287,7 +8315,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))))).Value))));
 			return true;
 		}
-		insn_199:
+		insn_201:
 		/* LDURSB */
 		if((insn & 0xFFA00C00) == 0x38800000) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8303,7 +8331,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_200:
+		insn_202:
 		/* LDURSH */
 		if((insn & 0xFFA00C00) == 0x78800000) {
 			var opc = (insn >> 22) & 0x1U;
@@ -8319,7 +8347,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_201:
+		insn_203:
 		/* LDURSW */
 		if((insn & 0xFFE00C00) == 0xB8800000) {
 			var rawimm = (insn >> 12) & 0x1FFU;
@@ -8329,7 +8357,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<uint>) (builder.Pointer<uint>((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(imm))))))).Value)).SignExt<long>(32)))));
 			return true;
 		}
-		insn_202:
+		insn_204:
 		/* LDUR-simd */
 		if((insn & 0x3F600C00) == 0x3C400000) {
 			var size = (insn >> 30) & 0x3U;
@@ -8360,7 +8388,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_203:
+		insn_205:
 		/* LDXR */
 		if((insn & 0xBFFFFC00) == 0x885F7C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -8374,7 +8402,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_204:
+		insn_206:
 		/* LDXRB */
 		if((insn & 0xFFFFFC00) == 0x085F7C00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -8382,7 +8410,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (state.Exclusive8 = builder.Pointer<byte>((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Value))));
 			return true;
 		}
-		insn_205:
+		insn_207:
 		/* LDXRH */
 		if((insn & 0xFFFFFC00) == 0x485F7C00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -8390,7 +8418,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<ushort>) (state.Exclusive16 = builder.Pointer<ushort>((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Value))));
 			return true;
 		}
-		insn_206:
+		insn_208:
 		/* LDXP */
 		if((insn & 0xBFFF8000) == 0x887F0000) {
 			var size = (insn >> 30) & 0x1U;
@@ -8408,7 +8436,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_207:
+		insn_209:
 		/* LSL-register */
 		if((insn & 0x7FE0FC00) == 0x1AC02000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8423,7 +8451,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_208:
+		insn_210:
 		/* LSRV */
 		if((insn & 0x7FE0FC00) == 0x1AC02400) {
 			var size = (insn >> 31) & 0x1U;
@@ -8438,7 +8466,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_209:
+		insn_211:
 		/* MADD */
 		if((insn & 0x7FE08000) == 0x1B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8454,7 +8482,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_210:
+		insn_212:
 		/* MOVI-scalar-64bit */
 		if((insn & 0xFFF8FC00) == 0x2F00E400) {
 			var a = (insn >> 18) & 0x1U;
@@ -8478,7 +8506,7 @@ public partial class Recompiler {
 			state.VD[(int) rd] = (IRuntimeValue<double>) builder.EnsureRuntime((double) (Math.Bitcast<ulong, double>(imm)));
 			return true;
 		}
-		insn_211:
+		insn_213:
 		/* MOVI-vector-8bit */
 		if((insn & 0xBFF8FC00) == 0x0F00E400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8497,7 +8525,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((avec)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((avec).ZeroTop())));
 			return true;
 		}
-		insn_212:
+		insn_214:
 		/* MOVI-vector-16bit */
 		if((insn & 0xBFF8DC00) == 0x0F008400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8517,7 +8545,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((avec)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((avec).ZeroTop())));
 			return true;
 		}
-		insn_213:
+		insn_215:
 		/* MOVI-vector-32bit */
 		if((insn & 0xBFF89C00) == 0x0F000400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8538,7 +8566,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((avec)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((avec).ZeroTop())));
 			return true;
 		}
-		insn_214:
+		insn_216:
 		/* MOVI-Vx.2D */
 		if((insn & 0xFFF8FC00) == 0x6F00E400) {
 			var a = (insn >> 18) & 0x1U;
@@ -8554,7 +8582,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<ulong>) builder.EnsureRuntime(imm)).CreateVector());
 			return true;
 		}
-		insn_215:
+		insn_217:
 		/* MOVK */
 		if((insn & 0x7F800000) == 0x72800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8563,7 +8591,7 @@ public partial class Recompiler {
 			var rd = (insn >> 0) & 0x1FU;
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
 				if(!((bool) (((byte) (hw)) < ((byte) 0x2))))
-					goto insn_216;
+					goto insn_218;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shift = (uint) (((uint) ((uint) (hw))) << (int) ((byte) 0x4));
@@ -8574,7 +8602,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_216:
+		insn_218:
 		/* MOVN */
 		if((insn & 0x7F800000) == 0x12800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8583,7 +8611,7 @@ public partial class Recompiler {
 			var rd = (insn >> 0) & 0x1FU;
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
 				if(!((bool) (((byte) (hw)) < ((byte) 0x2))))
-					goto insn_217;
+					goto insn_219;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shift = (uint) (((uint) ((uint) (hw))) << (int) ((byte) 0x4));
@@ -8594,7 +8622,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_217:
+		insn_219:
 		/* MOVZ */
 		if((insn & 0x7F800000) == 0x52800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8610,7 +8638,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_218:
+		insn_220:
 		/* MRS */
 		if((insn & 0xFFF00000) == 0xD5300000) {
 			var op0 = (insn >> 19) & 0x1U;
@@ -8622,7 +8650,7 @@ public partial class Recompiler {
 			state.X[(int) rt] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (SR(op0, op1, cn, cm, op2)));
 			return true;
 		}
-		insn_219:
+		insn_221:
 		/* MSR-register */
 		if((insn & 0xFFF00000) == 0xD5100000) {
 			var op0 = (insn >> 19) & 0x1U;
@@ -8634,7 +8662,7 @@ public partial class Recompiler {
 			SR(op0, op1, cn, cm, op2, builder.EnsureRuntime((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_220:
+		insn_222:
 		/* MSUB */
 		if((insn & 0x7FE08000) == 0x1B008000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8650,7 +8678,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_221:
+		insn_223:
 		/* MUL-by-element */
 		if((insn & 0xBF00F400) == 0x0F008000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8669,7 +8697,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((v)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((v).ZeroTop())));
 			return true;
 		}
-		insn_222:
+		insn_224:
 		/* MUL-vector */
 		if((insn & 0xBF20FC00) == 0x0E209C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8682,7 +8710,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((v)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((v).ZeroTop())));
 			return true;
 		}
-		insn_223:
+		insn_225:
 		/* MVNI-vector-16bit */
 		if((insn & 0xBFF8DC00) == 0x2F008400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8703,7 +8731,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((avec)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((avec).ZeroTop())));
 			return true;
 		}
-		insn_224:
+		insn_226:
 		/* MVNI-vector-32bit-LSL */
 		if((insn & 0xBFF89C00) == 0x2F000400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8724,7 +8752,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((avec)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((avec).ZeroTop())));
 			return true;
 		}
-		insn_225:
+		insn_227:
 		/* MVNI-vector-32bit-MSL */
 		if((insn & 0xBFF8EC00) == 0x2F00C400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8745,7 +8773,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((avec)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) ((avec).ZeroTop())));
 			return true;
 		}
-		insn_226:
+		insn_228:
 		/* NEG-vector */
 		if((insn & 0xBF3FFC00) == 0x2E20B800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8828,12 +8856,12 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_227:
+		insn_229:
 		/* NOP */
 		if((insn & 0xFFFFFFFF) == 0xD503201F) {
 			return true;
 		}
-		insn_228:
+		insn_230:
 		/* ORN-shifted-register */
 		if((insn & 0x7F200000) == 0x2A200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8843,7 +8871,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_229;
+				goto insn_231;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -8853,7 +8881,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_229:
+		insn_231:
 		/* ORR-immediate */
 		if((insn & 0x7F800000) == 0x32000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8877,7 +8905,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_230:
+		insn_232:
 		/* ORR-shifted-register */
 		if((insn & 0x7F200000) == 0x2A000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -8887,7 +8915,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_231;
+				goto insn_233;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -8897,7 +8925,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_231:
+		insn_233:
 		/* ORR-simd-register */
 		if((insn & 0xBFE0FC00) == 0x0EA01C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8908,7 +8936,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) ((Q) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (((bool) ((rm) == (rn))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) | ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (((bool) ((rm) == (rn))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)]))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])) | ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)])))))).ZeroTop())));
 			return true;
 		}
-		insn_232:
+		insn_234:
 		/* PMULL[2] */
 		if((insn & 0xBF20FC00) == 0x0E20E000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9247,7 +9275,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_233:
+		insn_235:
 		/* PRFM-immediate */
 		if((insn & 0xFFC00000) == 0xF9800000) {
 			var imm = (insn >> 10) & 0xFFFU;
@@ -9256,14 +9284,14 @@ public partial class Recompiler {
 			var pimm = (ushort) (((ushort) (ushort) (imm)) * ((ushort) (byte) ((byte) 0x8)));
 			return true;
 		}
-		insn_234:
+		insn_236:
 		/* PRFM-literal */
 		if((insn & 0xFF000000) == 0xD8000000) {
 			var imm = (insn >> 5) & 0x7FFFFU;
 			var rt = (insn >> 0) & 0x1FU;
 			return true;
 		}
-		insn_235:
+		insn_237:
 		/* PRFM-register */
 		if((insn & 0xFFE00C00) == 0xF8A00800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -9273,7 +9301,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			return true;
 		}
-		insn_236:
+		insn_238:
 		/* PRFUM */
 		if((insn & 0xFFE00C00) == 0xF8800000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -9281,7 +9309,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			return true;
 		}
-		insn_237:
+		insn_239:
 		/* RBIT */
 		if((insn & 0x7FFFFC00) == 0x5AC00000) {
 			var size = (insn >> 31) & 0x1U;
@@ -9295,14 +9323,14 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_238:
+		insn_240:
 		/* RET */
 		if((insn & 0xFFFFFC1F) == 0xD65F0000) {
 			var rn = (insn >> 5) & 0x1FU;
 			Branch((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]));
 			return true;
 		}
-		insn_239:
+		insn_241:
 		/* REV */
 		if((insn & 0x7FFFF800) == 0x5AC00800) {
 			var size = (insn >> 31) & 0x1U;
@@ -9328,7 +9356,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_240:
+		insn_242:
 		/* REV16 */
 		if((insn & 0x7FFFFC00) == 0x5AC00400) {
 			var size = (insn >> 31) & 0x1U;
@@ -9344,7 +9372,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_241:
+		insn_243:
 		/* RORV */
 		if((insn & 0x7FE0FC00) == 0x1AC02C00) {
 			var size = (insn >> 31) & 0x1U;
@@ -9359,7 +9387,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_242:
+		insn_244:
 		/* SBCS */
 		if((insn & 0x7FE0FC00) == 0x7A000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -9400,7 +9428,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_243:
+		insn_245:
 		/* SBFM */
 		if((insn & 0x7F800000) == 0x13000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -9410,15 +9438,15 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imms)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_244;
+				goto insn_246;
 			if(!((bool) (((byte) (immr)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_244;
+				goto insn_246;
 			if((bool) ((size) != ((byte) 0x0))) {
 				if(!((bool) ((N) != ((byte) 0x0))))
-					goto insn_244;
+					goto insn_246;
 			} else {
 				if(!((bool) (((byte) (N)) == ((byte) 0x0))))
-					goto insn_244;
+					goto insn_246;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -9438,7 +9466,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_244:
+		insn_246:
 		/* SCVTF-scalar-integer */
 		if((insn & 0x7F3FFC00) == 0x1E220000) {
 			var size = (insn >> 31) & 0x1U;
@@ -9508,7 +9536,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_245:
+		insn_247:
 		/* SCVTF-scalar */
 		if((insn & 0xFFBFFC00) == 0x5E21D800) {
 			var size = (insn >> 22) & 0x1U;
@@ -9522,7 +9550,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_246:
+		insn_248:
 		/* SCVTF-vector */
 		if((insn & 0xBFBFFC00) == 0x0E21D800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9557,7 +9585,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_247:
+		insn_249:
 		/* SDIV */
 		if((insn & 0x7FE0FC00) == 0x1AC00C00) {
 			var size = (insn >> 31) & 0x1U;
@@ -9574,7 +9602,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_248:
+		insn_250:
 		/* SHL-vector */
 		if((insn & 0xBF80FC00) == 0x0F005400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9586,7 +9614,7 @@ public partial class Recompiler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_249;
+				goto insn_251;
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				T = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
 				size = (byte) 0x1;
@@ -9662,7 +9690,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_249:
+		insn_251:
 		/* SMADDL */
 		if((insn & 0xFFE08000) == 0x9B200000) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -9672,7 +9700,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<ulong>) ((ra) == 31 ? builder.Zero<ulong>() : state.X[(int) ra]))))))) + ((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))).SignExt<long>(32)))))) * ((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm]))).SignExt<long>(32)))))))))))))));
 			return true;
 		}
-		insn_250:
+		insn_252:
 		/* SMULH */
 		if((insn & 0xFFE0FC00) == 0x9B407C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -9681,7 +9709,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<Int128>) (((IRuntimeValue<Int128>) (((IRuntimeValue<Int128>) (IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) (builder.EnsureRuntime((IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) ((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]))))))))) * ((IRuntimeValue<Int128>) (IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) (builder.EnsureRuntime((IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) ((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm]))))))))))).RightShift((IRuntimeValue<Int128>) builder.EnsureRuntime((byte) 0x40))))))));
 			return true;
 		}
-		insn_251:
+		insn_253:
 		/* SSHLL */
 		if((insn & 0xBF80FC00) == 0x0F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9740,7 +9768,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_252:
+		insn_254:
 		/* ST1-multi-no-offset-one-register */
 		if((insn & 0xBFFFF000) == 0x0C007000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9819,7 +9847,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_253:
+		insn_255:
 		/* ST1-multi-postindex-immediate-one-register */
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9829,7 +9857,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_254;
+				goto insn_256;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -9906,7 +9934,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_254:
+		insn_256:
 		/* ST1-multi-postindex-register-one-register */
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9915,7 +9943,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_255;
+				goto insn_257;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -9992,7 +10020,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_255:
+		insn_257:
 		/* ST1-multi-no-offset-two-registers */
 		if((insn & 0xBFFFF000) == 0x0C00A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10141,7 +10169,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_256:
+		insn_258:
 		/* ST1-multi-postindex-immediate-two-registers */
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10152,7 +10180,7 @@ public partial class Recompiler {
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_257;
+				goto insn_259;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -10298,7 +10326,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8))))))));
 			return true;
 		}
-		insn_257:
+		insn_259:
 		/* ST1-multi-postindex-register-two-registers */
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10308,7 +10336,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_258;
+				goto insn_260;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var oaddress = (address).Store();
@@ -10455,7 +10483,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(oaddress)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_258:
+		insn_260:
 		/* ST1-multi-no-offset-three-registers */
 		if((insn & 0xBFFFF000) == 0x0C006000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10674,7 +10702,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_259:
+		insn_261:
 		/* ST1-multi-postindex-immediate-three-registers */
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10686,7 +10714,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_260;
+				goto insn_262;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -10901,7 +10929,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8))))))));
 			return true;
 		}
-		insn_260:
+		insn_262:
 		/* ST1-multi-postindex-register-three-registers */
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10912,7 +10940,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_261;
+				goto insn_263;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var oaddress = (address).Store();
@@ -11128,7 +11156,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(oaddress)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_261:
+		insn_263:
 		/* ST1-multi-no-offset-four-registers */
 		if((insn & 0xBFFFF000) == 0x0C002000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11417,7 +11445,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_262:
+		insn_264:
 		/* ST1-multi-postindex-immediate-four-registers */
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11430,7 +11458,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_263;
+				goto insn_265;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -11714,7 +11742,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8))))))));
 			return true;
 		}
-		insn_263:
+		insn_265:
 		/* ST1-multi-postindex-register-four-registers */
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11726,7 +11754,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_264;
+				goto insn_266;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var oaddress = (address).Store();
@@ -12011,7 +12039,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(oaddress)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_264:
+		insn_266:
 		/* ST1-single-no-offset */
 		if((insn & 0xBFFF2000) == 0x0D000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12021,7 +12049,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
-				goto insn_265;
+				goto insn_267;
 			var t = (string) (((bool) (((byte) (opc)) == ((byte) 0x0))) ? (string) ("B") : (string) ((string) (((bool) ((((bool) (((byte) (opc)) == ((byte) 0x1))) & ((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))) ? (string) ("H") : (string) ((string) (((bool) (((byte) (opc)) == ((byte) 0x2))) ? ((string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ((string) (((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) & ((bool) (((byte) (S)) == ((byte) 0x0)))))) ? ("D") : throw new NotImplementedException())))) : throw new NotImplementedException())))));
 			var index = (uint) (opc switch { (byte) ((byte) 0x0) => (uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3)))))), (byte) ((byte) 0x1) => (uint) ((uint) (((uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3))))))) >> (int) ((byte) 0x1))), (byte) ((byte) 0x2) => (uint) ((uint) (((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) ? (uint) ((uint) ((uint) ((byte) ((byte) (((byte) (((byte) (S)) << 0)) | ((byte) (((byte) (Q)) << 1))))))) : (uint) (Q))), _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -12050,7 +12078,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_265:
+		insn_267:
 		/* ST2-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C008000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12175,7 +12203,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_266:
+		insn_268:
 		/* ST2-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12186,7 +12214,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_267;
+				goto insn_269;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -12308,7 +12336,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_267:
+		insn_269:
 		/* ST2-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12318,7 +12346,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_268;
+				goto insn_270;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -12440,7 +12468,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_268:
+		insn_270:
 		/* ST3-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C004000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12611,7 +12639,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_269:
+		insn_271:
 		/* ST3-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12623,7 +12651,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_270;
+				goto insn_272;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -12790,7 +12818,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_270:
+		insn_272:
 		/* ST3-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12801,7 +12829,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_271;
+				goto insn_273;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -12968,7 +12996,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_271:
+		insn_273:
 		/* ST4-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -13185,7 +13213,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_272:
+		insn_274:
 		/* ST4-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -13198,7 +13226,7 @@ public partial class Recompiler {
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x40) : (byte) ((byte) 0x2B)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_273;
+				goto insn_275;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -13410,7 +13438,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_273:
+		insn_275:
 		/* ST4-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -13422,7 +13450,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_274;
+				goto insn_276;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -13634,7 +13662,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_274:
+		insn_276:
 		/* STLR */
 		if((insn & 0xBFFFFC00) == 0x889FFC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -13648,7 +13676,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_275:
+		insn_277:
 		/* STLRB */
 		if((insn & 0xFFFFFC00) == 0x089FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -13657,7 +13685,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>(address).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_276:
+		insn_278:
 		/* STLRH */
 		if((insn & 0xFFFFFC00) == 0x489FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -13666,7 +13694,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>(address).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_277:
+		insn_279:
 		/* STLXR */
 		if((insn & 0xBFE0FC00) == 0x8800FC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -13683,7 +13711,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0);
 			return true;
 		}
-		insn_278:
+		insn_280:
 		/* STLXRB */
 		if((insn & 0xFFE0FC00) == 0x0800FC00) {
 			var rs = (insn >> 16) & 0x1FU;
@@ -13694,7 +13722,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0);
 			return true;
 		}
-		insn_279:
+		insn_281:
 		/* STP-postindex */
 		if((insn & 0x7FC00000) == 0x28800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -13718,7 +13746,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_280:
+		insn_282:
 		/* STP-preindex */
 		if((insn & 0x7FC00000) == 0x29800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -13742,7 +13770,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_281:
+		insn_283:
 		/* STP-signed-offset */
 		if((insn & 0x7FC00000) == 0x29000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -13762,7 +13790,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_282:
+		insn_284:
 		/* STP-simd-postindex */
 		if((insn & 0x3FC00000) == 0x2C800000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -13800,7 +13828,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_283:
+		insn_285:
 		/* STP-simd-preindex */
 		if((insn & 0x3FC00000) == 0x2D800000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -13838,7 +13866,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_284:
+		insn_286:
 		/* STP-simd-signed-offset */
 		if((insn & 0x3FC00000) == 0x2D000000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -13872,7 +13900,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_285:
+		insn_287:
 		/* STR-immediate-postindex */
 		if((insn & 0xBFE00C00) == 0xB8000400) {
 			var size = (insn >> 30) & 0x1U;
@@ -13893,7 +13921,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_286:
+		insn_288:
 		/* STR-immediate-preindex */
 		if((insn & 0xBFE00C00) == 0xB8000C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -13914,7 +13942,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_287:
+		insn_289:
 		/* STR-immediate-unsigned-offset */
 		if((insn & 0xBFC00000) == 0xB9000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -13930,7 +13958,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_288:
+		insn_290:
 		/* STR-register */
 		if((insn & 0xBFE00C00) == 0xB8200800) {
 			var size = (insn >> 30) & 0x1U;
@@ -13951,7 +13979,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_289:
+		insn_291:
 		/* STR-simd-postindex */
 		if((insn & 0x3F600C00) == 0x3C000400) {
 			var size = (insn >> 30) & 0x3U;
@@ -13995,7 +14023,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_290:
+		insn_292:
 		/* STR-simd-preindex */
 		if((insn & 0x3F600C00) == 0x3C000C00) {
 			var size = (insn >> 30) & 0x3U;
@@ -14040,7 +14068,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_291:
+		insn_293:
 		/* STR-simd-unsigned-offset */
 		if((insn & 0x3F400000) == 0x3D000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -14080,7 +14108,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_292:
+		insn_294:
 		/* STR-simd-register */
 		if((insn & 0x3F600C00) == 0x3C200800) {
 			var size = (insn >> 30) & 0x3U;
@@ -14125,7 +14153,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_293:
+		insn_295:
 		/* STRB-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x38000400) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -14140,7 +14168,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_294:
+		insn_296:
 		/* STRB-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x38000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -14155,7 +14183,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_295:
+		insn_297:
 		/* STRB-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x39000000) {
 			var imm = (insn >> 10) & 0xFFFU;
@@ -14164,7 +14192,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm)))))).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_296:
+		insn_298:
 		/* STRB-register */
 		if((insn & 0xFFE00C00) == 0x38200800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -14178,7 +14206,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_297:
+		insn_299:
 		/* STRH-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x78000400) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -14193,7 +14221,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_298:
+		insn_300:
 		/* STRH-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x78000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -14208,7 +14236,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_299:
+		insn_301:
 		/* STRH-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x79000000) {
 			var rawimm = (insn >> 10) & 0xFFFU;
@@ -14218,7 +14246,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm)))))).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_300:
+		insn_302:
 		/* STRH-register */
 		if((insn & 0xFFE00C00) == 0x78200800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -14232,7 +14260,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_301:
+		insn_303:
 		/* STUR */
 		if((insn & 0xBFE00C00) == 0xB8000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -14248,7 +14276,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_302:
+		insn_304:
 		/* STUR-simd */
 		if((insn & 0x3F600C00) == 0x3C000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -14288,7 +14316,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_303:
+		insn_305:
 		/* STURB */
 		if((insn & 0xFFE00C00) == 0x38000000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -14298,7 +14326,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_304:
+		insn_306:
 		/* STURH */
 		if((insn & 0xFFE00C00) == 0x78000000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -14308,7 +14336,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_305:
+		insn_307:
 		/* STXRB */
 		if((insn & 0xFFE0FC00) == 0x08007C00) {
 			var rs = (insn >> 16) & 0x1FU;
@@ -14317,7 +14345,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<byte>((IRuntimePointer<ulong, byte>) ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])))), state.Exclusive8)));
 			return true;
 		}
-		insn_306:
+		insn_308:
 		/* STXR */
 		if((insn & 0xBFE0FC00) == 0x88007C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -14328,7 +14356,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (CompareAndSwap<uint>((IRuntimePointer<ulong, uint>) ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])), (IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])), state.Exclusive32)))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<ulong>((IRuntimePointer<ulong, ulong>) ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])), (IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt]), state.Exclusive64)))));
 			return true;
 		}
-		insn_307:
+		insn_309:
 		/* STXP */
 		if((insn & 0xBFE08000) == 0x88200000) {
 			var size = (insn >> 30) & 0x1U;
@@ -14341,7 +14369,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) ((((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<uint>((IRuntimePointer<ulong, uint>) (address), (IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])), state.Exclusive32))))) | ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<uint>((IRuntimePointer<ulong, uint>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x4)))))), (IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])), state.Exclusive32))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<ulong>((IRuntimePointer<ulong, ulong>) (address), (IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt]), state.Exclusive64))))) | ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<ulong>((IRuntimePointer<ulong, ulong>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x8)))))), (IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt]), state.Exclusive64))))))))));
 			return true;
 		}
-		insn_308:
+		insn_310:
 		/* SUB-immediate */
 		if((insn & 0x7F800000) == 0x51000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14364,7 +14392,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_309:
+		insn_311:
 		/* SUB-extended-register */
 		if((insn & 0x7FE00000) == 0x4B200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14374,7 +14402,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_310;
+				goto insn_312;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
@@ -14400,7 +14428,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_310:
+		insn_312:
 		/* SUB-shifted-register */
 		if((insn & 0x7F200000) == 0x4B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14410,9 +14438,9 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_311;
+				goto insn_313;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_311;
+				goto insn_313;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -14422,7 +14450,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_311:
+		insn_313:
 		/* SUBS-extended-register */
 		if((insn & 0x7FE00000) == 0x6B200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14432,7 +14460,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_312;
+				goto insn_314;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
@@ -14488,7 +14516,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_312:
+		insn_314:
 		/* SUBS-shifted-register */
 		if((insn & 0x7F200000) == 0x6B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14498,9 +14526,9 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_313;
+				goto insn_315;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_313;
+				goto insn_315;
 			var mode32 = (bool) (((byte) (size)) == ((byte) 0x0));
 			var r = (string) ((mode32) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
@@ -14537,7 +14565,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_313:
+		insn_315:
 		/* SUBS-immediate */
 		if((insn & 0x7F800000) == 0x71000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14581,14 +14609,14 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_314:
+		insn_316:
 		/* SVC */
 		if((insn & 0xFFE0001F) == 0xD4000001) {
 			var imm = (insn >> 5) & 0xFFFFU;
 			CallSvc(imm);
 			return true;
 		}
-		insn_315:
+		insn_317:
 		/* SYS */
 		if((insn & 0xFFF80000) == 0xD5080000) {
 			var op1 = (insn >> 16) & 0x7U;
@@ -14598,7 +14626,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			return true;
 		}
-		insn_316:
+		insn_318:
 		/* TBZ */
 		if((insn & 0x7F000000) == 0x36000000) {
 			var upper = (insn >> 31) & 0x1U;
@@ -14618,7 +14646,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_317:
+		insn_319:
 		/* TBNZ */
 		if((insn & 0x7F000000) == 0x37000000) {
 			var upper = (insn >> 31) & 0x1U;
@@ -14638,7 +14666,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_318:
+		insn_320:
 		/* UADDLV */
 		if((insn & 0xBF3FFC00) == 0x2E303800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -14669,7 +14697,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_319:
+		insn_321:
 		/* UADDW[2] */
 		if((insn & 0xBF20FC00) == 0x2E201000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -14749,7 +14777,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_320:
+		insn_322:
 		/* UBFM */
 		if((insn & 0x7F800000) == 0x53000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14759,15 +14787,15 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imms)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_321;
+				goto insn_323;
 			if(!((bool) (((byte) (immr)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_321;
+				goto insn_323;
 			if((bool) ((size) != ((byte) 0x0))) {
 				if(!((bool) ((N) != ((byte) 0x0))))
-					goto insn_321;
+					goto insn_323;
 			} else {
 				if(!((bool) (((byte) (N)) == ((byte) 0x0))))
-					goto insn_321;
+					goto insn_323;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -14785,7 +14813,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_321:
+		insn_323:
 		/* UCVTF-scalar-gpr-integer */
 		if((insn & 0x7F3FFC00) == 0x1E230000) {
 			var size = (insn >> 31) & 0x1U;
@@ -14855,7 +14883,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_322:
+		insn_324:
 		/* UCVTF-scalar-integer */
 		if((insn & 0xFFBFFC00) == 0x7E21D800) {
 			var size = (insn >> 22) & 0x1U;
@@ -14869,7 +14897,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_323:
+		insn_325:
 		/* UCVTF-vector */
 		if((insn & 0xBFBFFC00) == 0x2E21D800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -14904,7 +14932,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_324:
+		insn_326:
 		/* UDIV */
 		if((insn & 0x7FE0FC00) == 0x1AC00800) {
 			var size = (insn >> 31) & 0x1U;
@@ -14921,7 +14949,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_325:
+		insn_327:
 		/* UMADDL */
 		if((insn & 0xFFE08000) == 0x9BA00000) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -14931,7 +14959,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((ra) == 31 ? builder.Zero<ulong>() : state.X[(int) ra]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn])))))))) * ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm])))))))))))))));
 			return true;
 		}
-		insn_326:
+		insn_328:
 		/* UMOV */
 		if((insn & 0xBFE0FC00) == 0x0E003C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -14973,7 +15001,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_327:
+		insn_329:
 		/* UMULH */
 		if((insn & 0xFFE0FC00) == 0x9BC07C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -14982,7 +15010,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<UInt128>) (((IRuntimeValue<UInt128>) (((IRuntimeValue<UInt128>) (IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) (builder.EnsureRuntime((IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) ((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]))))))) * ((IRuntimeValue<UInt128>) (IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) (builder.EnsureRuntime((IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) ((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm]))))))))).RightShift((IRuntimeValue<UInt128>) builder.EnsureRuntime((byte) 0x40))))));
 			return true;
 		}
-		insn_328:
+		insn_330:
 		/* USHL-vector */
 		if((insn & 0xBF20FC00) == 0x2E204400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -15067,7 +15095,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_329:
+		insn_331:
 		/* USHLL-vector */
 		if((insn & 0xBF80FC00) == 0x2F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -15080,7 +15108,7 @@ public partial class Recompiler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_330;
+				goto insn_332;
 			var i2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				Ta = "8H";
@@ -15160,7 +15188,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_330:
+		insn_332:
 		/* XTN */
 		if((insn & 0xFF3FFC00) == 0x0E212800) {
 			var size = (insn >> 22) & 0x3U;
@@ -15201,7 +15229,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_331:
+		insn_333:
 		/* XTN2 */
 		if((insn & 0xFF3FFC00) == 0x4E212800) {
 			var size = (insn >> 22) & 0x3U;
@@ -15241,12 +15269,12 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_332:
+		insn_334:
 		/* YIELD */
 		if((insn & 0xFFFFFFFF) == 0xD503203F) {
 			return true;
 		}
-		insn_333:
+		insn_335:
 		/* ZIP */
 		if((insn & 0xBF20BC00) == 0x0E003800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -15313,7 +15341,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_334:
+		insn_336:
 
             return false;
         }

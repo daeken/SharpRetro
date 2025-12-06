@@ -536,6 +536,22 @@
             (= (gpr64 rd) val)
             (= (nzcv) (| (<< (u64 (>> val 63)) 31) (<< (u64 (== val 0)) 30))))))
 
+(def BIF
+    "0 Q 1 01110 11 1 mmmmm 00011 1 nnnnn ddddd"
+    "bif V$rd.$T, V$rn.$T, V$rm.$T"
+    (names (Q Q) (rm m) (rn n) (rd d))
+    (let T (if Q "16B" "8B"))
+    (mlet (op1 (vec rd) op3 (vec~ (vec rm)) op4 (vec rn))
+        (= (vec rd) (vec^ op1 (vec& (vec^ op1 op4) op3)))))
+
+(def BIT
+    "0 Q 1 01110 10 1 mmmmm 00011 1 nnnnn ddddd"
+    "bit V$rd.$T, V$rn.$T, V$rm.$T"
+    (names (Q Q) (rm m) (rn n) (rd d))
+    (let T (if Q "16B" "8B"))
+    (mlet (op1 (vec rd) op3 (vec rm) op4 (vec rn))
+        (= (vec rd) (vec^ op1 (vec& (vec^ op1 op4) op3)))))
+
 (def BL
     "1 00101 iiiiiiiiiiiiiiiiiiiiiiiiii"
     "bl #$addr"

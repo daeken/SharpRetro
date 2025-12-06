@@ -272,7 +272,11 @@ public partial class CoreRecompiler {
                 return $"-{POutput(value)}";
             }
             case StaticIRValue.Not(var value): {
-                return $"{(value.Type == typeof(bool) ? "!" : "~")}{POutput(value)}";
+                var sexpr = POutput(value);
+                if(value.Type == typeof(bool)) return $"!{sexpr}";
+                if(value.Type.IsConstructedGenericType && value.Type.GetGenericTypeDefinition() == typeof(System.Runtime.Intrinsics.Vector128<>))
+                    return $"__builtin_bit_cast(v4f, ~__builtin_bit_cast(v16u, {sexpr}))";
+                return $"~{sexpr}";
             }
             case StaticIRValue.EQ(var left, var right): {
                 return $"{POutput(left)} == {POutput(right)}";
