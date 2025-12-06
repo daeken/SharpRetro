@@ -6778,6 +6778,86 @@ public partial class Recompiler {
 			return true;
 		}
 		insn_258:
+		/* SHRN[2] */
+		if((insn & 0xBF80FC00) == 0x0F008400) {
+			var Q = (insn >> 30) & 0x1U;
+			var immh = (insn >> 19) & 0xFU;
+			var immb = (insn >> 16) & 0x7U;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
+			var ta = "";
+			var tb = "";
+			var shift = (ulong) ((ulong) ((byte) 0x0));
+			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
+				ta = "8H";
+				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
+				shift = (byte) (((byte) (byte) ((byte) 0x10)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+			} else {
+				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
+					ta = "4S";
+					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
+					shift = (byte) (((byte) (byte) ((byte) 0x20)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+				} else {
+					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
+						ta = "2D";
+						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
+						shift = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+					} else {
+						throw new NotImplementedException();
+					}
+				}
+			}
+			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
+				if((bool) ((Q) != ((byte) 0x0))) {
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x0))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x1))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x2)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x2))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x3)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x3))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x4)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x4))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x5)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x5))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x6)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x6))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x7)) + ((byte) (byte) ((byte) 0x8))))), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x7))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+				} else {
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x0))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x1))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x2)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x2))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x3)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x3))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x4)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x4))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x5)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x5))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x6)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x6))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+					state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x7)), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ushort>((int) ((int) ((byte) 0x7))))).RightShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift))))));
+				}
+			} else {
+				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
+					if((bool) ((Q) != ((byte) 0x0))) {
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x4))))), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x0))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x4))))), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x1))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x2)) + ((byte) (byte) ((byte) 0x4))))), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x2))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x3)) + ((byte) (byte) ((byte) 0x4))))), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x3))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+					} else {
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x0))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x1))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x2)), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x2))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+						state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x3)), (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<uint>((int) ((int) ((byte) 0x3))))).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift))))));
+					}
+				} else {
+					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
+						if((bool) ((Q) != ((byte) 0x0))) {
+							state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x2))))), (IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ulong>((int) ((int) ((byte) 0x0))))).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift))))));
+							state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x2))))), (IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ulong>((int) ((int) ((byte) 0x1))))).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift))))));
+						} else {
+							state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x0)), (IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ulong>((int) ((int) ((byte) 0x0))))).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift))))));
+							state.V[(int) (rd)] = state.V[(int) (rd)].Element((int) ((int) ((byte) 0x1)), (IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).Element<ulong>((int) ((int) ((byte) 0x1))))).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift))))));
+						}
+					} else {
+						throw new NotImplementedException();
+					}
+				}
+			}
+			return true;
+		}
+		insn_259:
 		/* SMADDL */
 		if((insn & 0xFFE08000) == 0x9B200000) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -6787,7 +6867,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) (((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<ulong>) ((ra) == 31 ? builder.Zero<ulong>() : state.X[(int) ra]))))))) + ((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))).SignExt<long>(32)))))) * ((IRuntimeValue<long>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm]))).SignExt<long>(32)))))))))))))));
 			return true;
 		}
-		insn_259:
+		insn_260:
 		/* SMULH */
 		if((insn & 0xFFE0FC00) == 0x9B407C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -6796,7 +6876,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<Int128>) (((IRuntimeValue<Int128>) (((IRuntimeValue<Int128>) (IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) (builder.EnsureRuntime((IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) ((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]))))))))) * ((IRuntimeValue<Int128>) (IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) (builder.EnsureRuntime((IRuntimeValue<Int128>) ((IRuntimeValue<Int128>) ((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm]))))))))))).RightShift((IRuntimeValue<Int128>) builder.EnsureRuntime((byte) 0x40))))))));
 			return true;
 		}
-		insn_260:
+		insn_261:
 		/* SSHLL */
 		if((insn & 0xBF80FC00) == 0x0F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6831,7 +6911,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((bool) (((byte) (immh)) == ((byte) 0x1))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x0))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x1))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x2)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x2))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x3)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x3))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x4)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x4))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x5)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x5))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x6)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x6))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<short>) (((IRuntimeValue<short>) ((IRuntimeValue<short>) ((IRuntimeValue<sbyte>) ((iv).Element<sbyte>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x7)) + ((byte) (byte) ((byte) 0x8)))) : (byte) ((byte) 0x7))))))))))).LeftShift((IRuntimeValue<short>) builder.EnsureRuntime(shift)))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(((IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<int>) (((IRuntimeValue<int>) ((IRuntimeValue<int>) ((IRuntimeValue<short>) ((iv).Element<short>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x4)))) : (byte) ((byte) 0x0))))))))))).LeftShift((IRuntimeValue<int>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<int>) (((IRuntimeValue<int>) ((IRuntimeValue<int>) ((IRuntimeValue<short>) ((iv).Element<short>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x4)))) : (byte) ((byte) 0x1))))))))))).LeftShift((IRuntimeValue<int>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<int>) (((IRuntimeValue<int>) ((IRuntimeValue<int>) ((IRuntimeValue<short>) ((iv).Element<short>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x2)) + ((byte) (byte) ((byte) 0x4)))) : (byte) ((byte) 0x2))))))))))).LeftShift((IRuntimeValue<int>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<int>) (((IRuntimeValue<int>) ((IRuntimeValue<int>) ((IRuntimeValue<short>) ((iv).Element<short>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x3)) + ((byte) (byte) ((byte) 0x4)))) : (byte) ((byte) 0x3))))))))))).LeftShift((IRuntimeValue<int>) builder.EnsureRuntime(shift)))))))) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) ? (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<int>) ((iv).Element<int>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x2)))) : (byte) ((byte) 0x0))))))))))).LeftShift((IRuntimeValue<long>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<long>) ((IRuntimeValue<long>) ((IRuntimeValue<int>) ((iv).Element<int>((int) ((int) ((uint) ((uint) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x2)))) : (byte) ((byte) 0x1))))))))))).LeftShift((IRuntimeValue<long>) builder.EnsureRuntime(shift)))))) : throw new NotImplementedException())))));
 			return true;
 		}
-		insn_261:
+		insn_262:
 		/* ST1-multi-no-offset-one-register */
 		if((insn & 0xBFFFF000) == 0x0C007000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6910,7 +6990,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_262:
+		insn_263:
 		/* ST1-multi-postindex-immediate-one-register */
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -6920,7 +7000,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_263;
+				goto insn_264;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -6997,7 +7077,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_263:
+		insn_264:
 		/* ST1-multi-postindex-register-one-register */
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7006,7 +7086,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_264;
+				goto insn_265;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -7083,7 +7163,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_264:
+		insn_265:
 		/* ST1-multi-no-offset-two-registers */
 		if((insn & 0xBFFFF000) == 0x0C00A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7232,7 +7312,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_265:
+		insn_266:
 		/* ST1-multi-postindex-immediate-two-registers */
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7243,7 +7323,7 @@ public partial class Recompiler {
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_266;
+				goto insn_267;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -7389,7 +7469,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8))))))));
 			return true;
 		}
-		insn_266:
+		insn_267:
 		/* ST1-multi-postindex-register-two-registers */
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7399,7 +7479,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_267;
+				goto insn_268;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var oaddress = (address).Store();
@@ -7546,7 +7626,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(oaddress)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_267:
+		insn_268:
 		/* ST1-multi-no-offset-three-registers */
 		if((insn & 0xBFFFF000) == 0x0C006000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7765,7 +7845,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_268:
+		insn_269:
 		/* ST1-multi-postindex-immediate-three-registers */
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -7777,7 +7857,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_269;
+				goto insn_270;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -7992,7 +8072,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8))))))));
 			return true;
 		}
-		insn_269:
+		insn_270:
 		/* ST1-multi-postindex-register-three-registers */
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8003,7 +8083,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_270;
+				goto insn_271;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var oaddress = (address).Store();
@@ -8219,7 +8299,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(oaddress)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_270:
+		insn_271:
 		/* ST1-multi-no-offset-four-registers */
 		if((insn & 0xBFFFF000) == 0x0C002000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8508,7 +8588,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_271:
+		insn_272:
 		/* ST1-multi-postindex-immediate-four-registers */
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8521,7 +8601,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_272;
+				goto insn_273;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var v = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -8805,7 +8885,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8))))))));
 			return true;
 		}
-		insn_272:
+		insn_273:
 		/* ST1-multi-postindex-register-four-registers */
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -8817,7 +8897,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_273;
+				goto insn_274;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var oaddress = (address).Store();
@@ -9102,7 +9182,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(oaddress)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_273:
+		insn_274:
 		/* ST1-single-no-offset */
 		if((insn & 0xBFFF2000) == 0x0D000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9112,7 +9192,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
-				goto insn_274;
+				goto insn_275;
 			var t = (string) (((bool) (((byte) (opc)) == ((byte) 0x0))) ? (string) ("B") : (string) ((string) (((bool) ((((bool) (((byte) (opc)) == ((byte) 0x1))) & ((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))) ? (string) ("H") : (string) ((string) (((bool) (((byte) (opc)) == ((byte) 0x2))) ? ((string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ((string) (((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) & ((bool) (((byte) (S)) == ((byte) 0x0)))))) ? ("D") : throw new NotImplementedException())))) : throw new NotImplementedException())))));
 			var index = (uint) (opc switch { (byte) ((byte) 0x0) => (uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3)))))), (byte) ((byte) 0x1) => (uint) ((uint) (((uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3))))))) >> (int) ((byte) 0x1))), (byte) ((byte) 0x2) => (uint) ((uint) (((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) ? (uint) ((uint) ((uint) ((byte) ((byte) (((byte) (((byte) (S)) << 0)) | ((byte) (((byte) (Q)) << 1))))))) : (uint) (Q))), _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -9141,7 +9221,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_274:
+		insn_275:
 		/* ST2-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C008000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9266,7 +9346,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_275:
+		insn_276:
 		/* ST2-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9277,7 +9357,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_276;
+				goto insn_277;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -9399,7 +9479,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_276:
+		insn_277:
 		/* ST2-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9409,7 +9489,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_277;
+				goto insn_278;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -9531,7 +9611,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_277:
+		insn_278:
 		/* ST3-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C004000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9702,7 +9782,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_278:
+		insn_279:
 		/* ST3-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9714,7 +9794,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_279;
+				goto insn_280;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -9881,7 +9961,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_279:
+		insn_280:
 		/* ST3-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -9892,7 +9972,7 @@ public partial class Recompiler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_280;
+				goto insn_281;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -10059,7 +10139,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_280:
+		insn_281:
 		/* ST4-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10276,7 +10356,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_281:
+		insn_282:
 		/* ST4-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10289,7 +10369,7 @@ public partial class Recompiler {
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x40) : (byte) ((byte) 0x2B)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_282;
+				goto insn_283;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -10501,7 +10581,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime(imm))))));
 			return true;
 		}
-		insn_282:
+		insn_283:
 		/* ST4-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -10513,7 +10593,7 @@ public partial class Recompiler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_283;
+				goto insn_284;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
 			var a = ((IRuntimeValue<Vector128<float>>) (state.V[(int) (rt)])).Store();
@@ -10725,7 +10805,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm])))))));
 			return true;
 		}
-		insn_283:
+		insn_284:
 		/* STLR */
 		if((insn & 0xBFFFFC00) == 0x889FFC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -10739,7 +10819,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_284:
+		insn_285:
 		/* STLRB */
 		if((insn & 0xFFFFFC00) == 0x089FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -10748,7 +10828,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>(address).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_285:
+		insn_286:
 		/* STLRH */
 		if((insn & 0xFFFFFC00) == 0x489FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
@@ -10757,7 +10837,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>(address).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_286:
+		insn_287:
 		/* STLXR */
 		if((insn & 0xBFE0FC00) == 0x8800FC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -10774,7 +10854,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0);
 			return true;
 		}
-		insn_287:
+		insn_288:
 		/* STLXRB */
 		if((insn & 0xFFE0FC00) == 0x0800FC00) {
 			var rs = (insn >> 16) & 0x1FU;
@@ -10785,7 +10865,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((byte) 0x0);
 			return true;
 		}
-		insn_288:
+		insn_289:
 		/* STP-postindex */
 		if((insn & 0x7FC00000) == 0x28800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -10809,7 +10889,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_289:
+		insn_290:
 		/* STP-preindex */
 		if((insn & 0x7FC00000) == 0x29800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -10833,7 +10913,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_290:
+		insn_291:
 		/* STP-signed-offset */
 		if((insn & 0x7FC00000) == 0x29000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -10853,7 +10933,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_291:
+		insn_292:
 		/* STP-simd-postindex */
 		if((insn & 0x3FC00000) == 0x2C800000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -10891,7 +10971,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_292:
+		insn_293:
 		/* STP-simd-preindex */
 		if((insn & 0x3FC00000) == 0x2D800000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -10929,7 +11009,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_293:
+		insn_294:
 		/* STP-simd-signed-offset */
 		if((insn & 0x3FC00000) == 0x2D000000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -10963,7 +11043,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_294:
+		insn_295:
 		/* STR-immediate-postindex */
 		if((insn & 0xBFE00C00) == 0xB8000400) {
 			var size = (insn >> 30) & 0x1U;
@@ -10984,7 +11064,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_295:
+		insn_296:
 		/* STR-immediate-preindex */
 		if((insn & 0xBFE00C00) == 0xB8000C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -11005,7 +11085,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_296:
+		insn_297:
 		/* STR-immediate-unsigned-offset */
 		if((insn & 0xBFC00000) == 0xB9000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -11021,7 +11101,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_297:
+		insn_298:
 		/* STR-register */
 		if((insn & 0xBFE00C00) == 0xB8200800) {
 			var size = (insn >> 30) & 0x1U;
@@ -11042,7 +11122,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_298:
+		insn_299:
 		/* STR-simd-postindex */
 		if((insn & 0x3F600C00) == 0x3C000400) {
 			var size = (insn >> 30) & 0x3U;
@@ -11086,7 +11166,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_299:
+		insn_300:
 		/* STR-simd-preindex */
 		if((insn & 0x3F600C00) == 0x3C000C00) {
 			var size = (insn >> 30) & 0x3U;
@@ -11131,7 +11211,7 @@ public partial class Recompiler {
 				state.X[(int) rn] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_300:
+		insn_301:
 		/* STR-simd-unsigned-offset */
 		if((insn & 0x3F400000) == 0x3D000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -11171,7 +11251,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_301:
+		insn_302:
 		/* STR-simd-register */
 		if((insn & 0x3F600C00) == 0x3C200800) {
 			var size = (insn >> 30) & 0x3U;
@@ -11216,7 +11296,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_302:
+		insn_303:
 		/* STRB-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x38000400) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -11231,7 +11311,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_303:
+		insn_304:
 		/* STRB-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x38000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -11246,7 +11326,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_304:
+		insn_305:
 		/* STRB-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x39000000) {
 			var imm = (insn >> 10) & 0xFFFU;
@@ -11255,7 +11335,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm)))))).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_305:
+		insn_306:
 		/* STRB-register */
 		if((insn & 0xFFE00C00) == 0x38200800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -11269,7 +11349,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_306:
+		insn_307:
 		/* STRH-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x78000400) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -11284,7 +11364,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(simm))))));
 			return true;
 		}
-		insn_307:
+		insn_308:
 		/* STRH-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x78000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -11299,7 +11379,7 @@ public partial class Recompiler {
 				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime(address);
 			return true;
 		}
-		insn_308:
+		insn_309:
 		/* STRH-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x79000000) {
 			var rawimm = (insn >> 10) & 0xFFFU;
@@ -11309,7 +11389,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime(imm)))))).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_309:
+		insn_310:
 		/* STRH-register */
 		if((insn & 0xFFE00C00) == 0x78200800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -11323,7 +11403,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt]))));
 			return true;
 		}
-		insn_310:
+		insn_311:
 		/* STUR */
 		if((insn & 0xBFE00C00) == 0xB8000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -11339,7 +11419,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_311:
+		insn_312:
 		/* STUR-simd */
 		if((insn & 0x3F600C00) == 0x3C000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -11379,7 +11459,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_312:
+		insn_313:
 		/* STURB */
 		if((insn & 0xFFE00C00) == 0x38000000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -11389,7 +11469,7 @@ public partial class Recompiler {
 			builder.Pointer<byte>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_313:
+		insn_314:
 		/* STURH */
 		if((insn & 0xFFE00C00) == 0x78000000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -11399,7 +11479,7 @@ public partial class Recompiler {
 			builder.Pointer<ushort>((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<long>) ((IRuntimeValue<long>) (builder.EnsureRuntime(offset)))))).Value = (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt])));
 			return true;
 		}
-		insn_314:
+		insn_315:
 		/* STXRB */
 		if((insn & 0xFFE0FC00) == 0x08007C00) {
 			var rs = (insn >> 16) & 0x1FU;
@@ -11408,7 +11488,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<byte>((IRuntimePointer<ulong, byte>) ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])), (IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])))), state.Exclusive8)));
 			return true;
 		}
-		insn_315:
+		insn_316:
 		/* STXR */
 		if((insn & 0xBFE0FC00) == 0x88007C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -11419,7 +11499,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (CompareAndSwap<uint>((IRuntimePointer<ulong, uint>) ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])), (IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])), state.Exclusive32)))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<ulong>((IRuntimePointer<ulong, ulong>) ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])), (IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt]), state.Exclusive64)))));
 			return true;
 		}
-		insn_316:
+		insn_317:
 		/* STXP */
 		if((insn & 0xBFE08000) == 0x88200000) {
 			var size = (insn >> 30) & 0x1U;
@@ -11432,7 +11512,7 @@ public partial class Recompiler {
 			state.X[(int) rs] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) ((((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<uint>((IRuntimePointer<ulong, uint>) (address), (IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])), state.Exclusive32))))) | ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<uint>((IRuntimePointer<ulong, uint>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x4)))))), (IRuntimeValue<uint>) ((rt) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rt])), state.Exclusive32))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<ulong>((IRuntimePointer<ulong, ulong>) (address), (IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt]), state.Exclusive64))))) | ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) (CompareAndSwap<ulong>((IRuntimePointer<ulong, ulong>) ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime(address)))) + ((IRuntimeValue<ulong>) (IRuntimeValue<byte>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x8)))))), (IRuntimeValue<ulong>) ((rt) == 31 ? builder.Zero<ulong>() : state.X[(int) rt]), state.Exclusive64))))))))));
 			return true;
 		}
-		insn_317:
+		insn_318:
 		/* SUB-immediate */
 		if((insn & 0x7F800000) == 0x51000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11455,7 +11535,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_318:
+		insn_319:
 		/* SUB-extended-register */
 		if((insn & 0x7FE00000) == 0x4B200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11465,7 +11545,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_319;
+				goto insn_320;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
@@ -11491,7 +11571,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_319:
+		insn_320:
 		/* SUB-shifted-register */
 		if((insn & 0x7F200000) == 0x4B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11501,9 +11581,9 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_320;
+				goto insn_321;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_320;
+				goto insn_321;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -11513,7 +11593,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_320:
+		insn_321:
 		/* SUBS-extended-register */
 		if((insn & 0x7FE00000) == 0x6B200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11523,7 +11603,7 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_321;
+				goto insn_322;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
@@ -11579,7 +11659,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_321:
+		insn_322:
 		/* SUBS-shifted-register */
 		if((insn & 0x7F200000) == 0x6B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11589,9 +11669,9 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_322;
+				goto insn_323;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_322;
+				goto insn_323;
 			var mode32 = (bool) (((byte) (size)) == ((byte) 0x0));
 			var r = (string) ((mode32) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
@@ -11628,7 +11708,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_322:
+		insn_323:
 		/* SUBS-immediate */
 		if((insn & 0x7F800000) == 0x71000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11672,14 +11752,14 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_323:
+		insn_324:
 		/* SVC */
 		if((insn & 0xFFE0001F) == 0xD4000001) {
 			var imm = (insn >> 5) & 0xFFFFU;
 			CallSvc(imm);
 			return true;
 		}
-		insn_324:
+		insn_325:
 		/* SYS */
 		if((insn & 0xFFF80000) == 0xD5080000) {
 			var op1 = (insn >> 16) & 0x7U;
@@ -11689,7 +11769,7 @@ public partial class Recompiler {
 			var rt = (insn >> 0) & 0x1FU;
 			return true;
 		}
-		insn_325:
+		insn_326:
 		/* TBZ */
 		if((insn & 0x7F000000) == 0x36000000) {
 			var upper = (insn >> 31) & 0x1U;
@@ -11709,7 +11789,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_326:
+		insn_327:
 		/* TBNZ */
 		if((insn & 0x7F000000) == 0x37000000) {
 			var upper = (insn >> 31) & 0x1U;
@@ -11729,7 +11809,7 @@ public partial class Recompiler {
 				});
 			return true;
 		}
-		insn_327:
+		insn_328:
 		/* UADDLV */
 		if((insn & 0xBF3FFC00) == 0x2E303800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11760,7 +11840,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_328:
+		insn_329:
 		/* UADDW[2] */
 		if((insn & 0xBF20FC00) == 0x2E201000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11812,7 +11892,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (size switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x0)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x8)) : (byte) ((byte) 0x0)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x1)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x9)) : (byte) ((byte) 0x1)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x2)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0xA)) : (byte) ((byte) 0x2)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x3)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0xB)) : (byte) ((byte) 0x3)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x4)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0xC)) : (byte) ((byte) 0x4)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x5)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0xD)) : (byte) ((byte) 0x5)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x6)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0xE)) : (byte) ((byte) 0x6)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((a).Element<ushort>((int) ((int) ((byte) 0x7)))))))) + ((IRuntimeValue<ushort>) (IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((b).Element<byte>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0xF)) : (byte) ((byte) 0x7)))))))))))))))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((a).Element<uint>((int) ((int) ((byte) 0x0)))))))) + ((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((b).Element<ushort>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x4)) : (byte) ((byte) 0x0)))))))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((a).Element<uint>((int) ((int) ((byte) 0x1)))))))) + ((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((b).Element<ushort>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x5)) : (byte) ((byte) 0x1)))))))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((a).Element<uint>((int) ((int) ((byte) 0x2)))))))) + ((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((b).Element<ushort>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x6)) : (byte) ((byte) 0x2)))))))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((a).Element<uint>((int) ((int) ((byte) 0x3)))))))) + ((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((b).Element<ushort>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x7)) : (byte) ((byte) 0x3)))))))))))))))), (byte) ((byte) 0x2) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((a).Element<ulong>((int) ((int) ((byte) 0x0)))))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((b).Element<uint>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x2)) : (byte) ((byte) 0x0)))))))))))))), builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((a).Element<ulong>((int) ((int) ((byte) 0x1)))))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((b).Element<uint>((int) ((int) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) ((byte) 0x3)) : (byte) ((byte) 0x1)))))))))))))))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_329:
+		insn_330:
 		/* UBFM */
 		if((insn & 0x7F800000) == 0x53000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11822,15 +11902,15 @@ public partial class Recompiler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imms)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_330;
+				goto insn_331;
 			if(!((bool) (((byte) (immr)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_330;
+				goto insn_331;
 			if((bool) ((size) != ((byte) 0x0))) {
 				if(!((bool) ((N) != ((byte) 0x0))))
-					goto insn_330;
+					goto insn_331;
 			} else {
 				if(!((bool) (((byte) (N)) == ((byte) 0x0))))
-					goto insn_330;
+					goto insn_331;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -11848,7 +11928,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_330:
+		insn_331:
 		/* UCVTF-scalar-gpr-integer */
 		if((insn & 0x7F3FFC00) == 0x1E230000) {
 			var size = (insn >> 31) & 0x1U;
@@ -11918,7 +11998,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_331:
+		insn_332:
 		/* UCVTF-scalar-integer */
 		if((insn & 0xFFBFFC00) == 0x7E21D800) {
 			var size = (insn >> 22) & 0x1U;
@@ -11932,7 +12012,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_332:
+		insn_333:
 		/* UCVTF-vector */
 		if((insn & 0xBFBFFC00) == 0x2E21D800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11944,7 +12024,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))), builder.EnsureRuntime((float) ((float) ((byte) 0x0))), builder.EnsureRuntime((float) ((float) ((byte) 0x0))))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))))), builder.EnsureRuntime((IRuntimeValue<float>) ((IRuntimeValue<float>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3))))))))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<double>) ((IRuntimeValue<double>) ((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x0))))))), builder.EnsureRuntime((IRuntimeValue<double>) ((IRuntimeValue<double>) ((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x1))))))))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_333:
+		insn_334:
 		/* UDIV */
 		if((insn & 0x7FE0FC00) == 0x1AC00800) {
 			var size = (insn >> 31) & 0x1U;
@@ -11961,7 +12041,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_334:
+		insn_335:
 		/* UMADDL */
 		if((insn & 0xFFE08000) == 0x9BA00000) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -11971,7 +12051,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((ra) == 31 ? builder.Zero<ulong>() : state.X[(int) ra]))))) + ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn])))))))) * ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((rm) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rm])))))))))))))));
 			return true;
 		}
-		insn_335:
+		insn_336:
 		/* UMAXP-UMINP */
 		if((insn & 0xBF20F400) == 0x2E20A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -11987,7 +12067,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7)))))))))), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x8))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x9)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x8))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x9))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x8))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x9)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x8))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x9)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xA))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xB)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xA))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xB))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xA))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xB)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xA))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xB)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xC))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xD)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xC))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xD))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xC))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xD)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xC))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xD)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xE))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xF)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xE))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xF))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xE))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xF)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xE))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xF)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x8))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x9)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x8))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x9))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x8))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x9)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x8))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x9)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xA))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xB)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xA))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xB))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xA))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xB)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xA))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xB)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xC))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xD)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xC))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xD))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xC))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xD)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xC))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xD)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<byte>) builder.EnsureRuntime(((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xE))))))) < ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xF)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xE))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xF))))))))) : (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xE))))))) > ((IRuntimeValue<byte>) (builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xF)))))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xE))))), (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xF)))))))))))), (byte) ((byte) 0x2) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x4))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x5))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x4))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x6))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x7))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x6))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x7)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x4))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x5))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x4))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x5)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x4))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<ushort>) builder.EnsureRuntime(((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x6))))))) < ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x7))))))))) : (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x6))))))) > ((IRuntimeValue<ushort>) (builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x7)))))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x6))))), (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x7)))))))))))), (byte) ((byte) 0x4) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<uint>) builder.EnsureRuntime(((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<uint>) builder.EnsureRuntime(((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((uint) ((uint) ((byte) 0x0))), builder.EnsureRuntime((uint) ((uint) ((byte) 0x0))))), (byte) ((byte) 0x5) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<uint>) builder.EnsureRuntime(((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<uint>) builder.EnsureRuntime(((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<uint>) builder.EnsureRuntime(((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))) < ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))))) : (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))) > ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((bool) ((min) != ((byte) 0x0))) ? (IRuntimeValue<uint>) builder.EnsureRuntime(((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))))) < ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3))))))))) : (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) (builder.Ternary((IRuntimeValue<bool>) (((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))))) > ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3)))))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))), (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3)))))))))))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_336:
+		insn_337:
 		/* UMOV */
 		if((insn & 0xBFE0FC00) == 0x0E003C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12029,7 +12109,7 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_337:
+		insn_338:
 		/* UMULH */
 		if((insn & 0xFFE0FC00) == 0x9BC07C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -12038,7 +12118,7 @@ public partial class Recompiler {
 			state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<UInt128>) (((IRuntimeValue<UInt128>) (((IRuntimeValue<UInt128>) (IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) (builder.EnsureRuntime((IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) ((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn]))))))) * ((IRuntimeValue<UInt128>) (IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) (builder.EnsureRuntime((IRuntimeValue<UInt128>) ((IRuntimeValue<UInt128>) ((IRuntimeValue<ulong>) ((rm) == 31 ? builder.Zero<ulong>() : state.X[(int) rm]))))))))).RightShift((IRuntimeValue<UInt128>) builder.EnsureRuntime((byte) 0x40))))));
 			return true;
 		}
-		insn_338:
+		insn_339:
 		/* USHL-vector */
 		if((insn & 0xBF20FC00) == 0x2E204400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12052,7 +12132,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7))))))))), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x0))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x1))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x2))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x3))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x4))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x5))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x6))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x7))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x8))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x8))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x9))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0x9))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xA))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xA))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xB))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xB))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xC))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xC))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xD))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xD))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xE))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xE))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0xF))))).LeftShift((IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((m).Element<byte>((int) ((int) ((byte) 0xF))))))))))), (byte) ((byte) 0x2) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x0)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x2)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x3)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x4))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x4)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x5))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x5)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x6))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x6)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x7))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ushort>) ((m).Element<ushort>((int) ((int) ((byte) 0x7)))))))))))), (byte) ((byte) 0x4) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((uint) ((uint) ((byte) 0x0))), builder.EnsureRuntime((uint) ((uint) ((byte) 0x0))))), (byte) ((byte) 0x5) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x0)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x2))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x2)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x3))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<uint>) ((m).Element<uint>((int) ((int) ((byte) 0x3)))))))))))), (byte) ((byte) 0x7) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x0))))).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ulong>) ((m).Element<ulong>((int) ((int) ((byte) 0x0)))))))))), builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) ((n).Element<ulong>((int) ((int) ((byte) 0x1))))).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<byte>) ((IRuntimeValue<byte>) ((IRuntimeValue<ulong>) ((m).Element<ulong>((int) ((int) ((byte) 0x1)))))))))))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_339:
+		insn_340:
 		/* USHLL-vector */
 		if((insn & 0xBF80FC00) == 0x2F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12065,7 +12145,7 @@ public partial class Recompiler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_340;
+				goto insn_341;
 			var i2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				Ta = "8H";
@@ -12093,7 +12173,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((ushort) ((ushort) (((ushort) (((ushort) (Q)) << 0)) | ((ushort) (((ushort) (size)) << 1)))) switch { (ushort) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x0))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x1))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x2))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x3))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x4))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x5))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x6))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) 0x7))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))))), (ushort) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x2)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x3)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x4)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x5)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x6)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<ushort>) ((IRuntimeValue<ushort>) ((IRuntimeValue<byte>) ((n).Element<byte>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x7)) + ((byte) (byte) ((byte) 0x8)))))))))).LeftShift((IRuntimeValue<ushort>) builder.EnsureRuntime(shift)))))), (ushort) ((byte) 0x2) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x0))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x1))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x2))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) 0x3))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))))), (ushort) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x4)))))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x4)))))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x2)) + ((byte) (byte) ((byte) 0x4)))))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<ushort>) ((n).Element<ushort>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x3)) + ((byte) (byte) ((byte) 0x4)))))))))).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(shift)))))), (ushort) ((byte) 0x4) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x0))))))).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) 0x1))))))).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift)))))), (ushort) ((byte) 0x5) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x0)) + ((byte) (byte) ((byte) 0x2)))))))))).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift)))), builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<uint>) ((n).Element<uint>((int) ((int) ((byte) (((byte) (byte) ((byte) 0x1)) + ((byte) (byte) ((byte) 0x2)))))))))).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime(shift)))))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_340:
+		insn_341:
 		/* XTN[2] */
 		if((insn & 0xBF3FFC00) == 0x0E212800) {
 			var top = (insn >> 30) & 0x1U;
@@ -12138,12 +12218,12 @@ public partial class Recompiler {
 			}
 			return true;
 		}
-		insn_341:
+		insn_342:
 		/* YIELD */
 		if((insn & 0xFFFFFFFF) == 0xD503203F) {
 			return true;
 		}
-		insn_342:
+		insn_343:
 		/* ZIP */
 		if((insn & 0xBF20BC00) == 0x0E003800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -12160,7 +12240,7 @@ public partial class Recompiler {
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x2) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x2) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x3) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x3) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x4) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x4) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x5) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x5) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x6) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x6) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x7) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x7) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)), builder.EnsureRuntime((byte) ((byte) 0x0)))), (byte) ((byte) 0x1) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x2) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x2) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x3) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x3) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x4) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x4) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x5) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x5) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x6) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x6) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x7) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x7) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x8) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x8) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x9) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x9) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0xA) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0xA) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0xB) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0xB) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0xC) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0xC) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0xD) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0xD) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0xE) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0xE) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<byte>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0xF) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<byte>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0xF) >> (int) ((byte) 0x1)))))))))))), (byte) ((byte) 0x2) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x2) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x2) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x3) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x3) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))), builder.EnsureRuntime((ushort) ((ushort) ((byte) 0x0))))), (byte) ((byte) 0x3) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x2) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x2) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x3) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x3) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x4) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x4) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x5) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x5) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x6) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x6) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ushort>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x7) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ushort>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x7) >> (int) ((byte) 0x1)))))))))))), (byte) ((byte) 0x4) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<uint>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<uint>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((uint) ((uint) ((byte) 0x0))), builder.EnsureRuntime((uint) ((uint) ((byte) 0x0))))), (byte) ((byte) 0x5) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<uint>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<uint>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x2) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<uint>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x2) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<uint>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x3) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<uint>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x3) >> (int) ((byte) 0x1)))))))))))), (byte) ((byte) 0x7) => (IRuntimeValue<Vector128<float>>) (builder.CreateVector(builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x0) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ulong>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x0) >> (int) ((byte) 0x1)))))))))), builder.EnsureRuntime((IRuntimeValue<ulong>) (((IRuntimeValue<Vector128<float>>) (((bool) (((byte) ((((byte) 0x1) & ((byte) 0x1)))) != ((byte) 0x0))) ? (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime((bv)) : (IRuntimeValue<Vector128<float>>) builder.EnsureRuntime(av))).Element<ulong>((int) ((int) ((uint) (((uint) (uint) (_base)) + ((uint) (byte) ((byte) (((byte) 0x1) >> (int) ((byte) 0x1)))))))))))), _ => throw new NotImplementedException() });
 			return true;
 		}
-		insn_343:
+		insn_344:
 
             return false;
         }

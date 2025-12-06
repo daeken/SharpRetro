@@ -3575,6 +3575,39 @@ public partial class Disassembler {
 			return (string) ("shl V" + (rd).ToString() + "." + T + ", V" + (rn).ToString() + "." + T + ", #" + (shift).ToString());
 		}
 		insn_258:
+		/* SHRN[2] */
+		if((insn & 0xBF80FC00) == 0x0F008400) {
+			var Q = (insn >> 30) & 0x1U;
+			var immh = (insn >> 19) & 0xFU;
+			var immb = (insn >> 16) & 0x7U;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
+			var ta = "";
+			var tb = "";
+			var shift = (ulong) ((ulong) ((byte) 0x0));
+			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
+				ta = "8H";
+				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
+				shift = (byte) (((byte) (byte) ((byte) 0x10)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+			} else {
+				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
+					ta = "4S";
+					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
+					shift = (byte) (((byte) (byte) ((byte) 0x20)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+				} else {
+					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
+						ta = "2D";
+						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
+						shift = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+					} else {
+						throw new NotImplementedException();
+					}
+				}
+			}
+			return (string) ("shrn" + variant + " V" + (rd).ToString() + "." + tb + ", V" + (rn).ToString() + "." + ta + ", #" + (shift).ToString());
+		}
+		insn_259:
 		/* SMADDL */
 		if((insn & 0xFFE08000) == 0x9B200000) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -3583,7 +3616,7 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return (string) ("smaddl X" + (rd).ToString() + ", W" + (rn).ToString() + ", W" + (rm).ToString() + ", X" + (ra).ToString());
 		}
-		insn_259:
+		insn_260:
 		/* SMULH */
 		if((insn & 0xFFE0FC00) == 0x9B407C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -3591,7 +3624,7 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return (string) ("smulh X" + (rd).ToString() + ", X" + (rn).ToString() + ", X" + (rm).ToString());
 		}
-		insn_260:
+		insn_261:
 		/* SSHLL */
 		if((insn & 0xBF80FC00) == 0x0F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3624,7 +3657,7 @@ public partial class Disassembler {
 			}
 			return (string) ("sshll" + variant + " V" + (rd).ToString() + "." + ta + ", V" + (rn).ToString() + "." + tb + ", #" + (shift).ToString());
 		}
-		insn_261:
+		insn_262:
 		/* ST1-multi-no-offset-one-register */
 		if((insn & 0xBFFFF000) == 0x0C007000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3634,7 +3667,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_262:
+		insn_263:
 		/* ST1-multi-postindex-immediate-one-register */
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3644,11 +3677,11 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_263;
+				goto insn_264;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_263:
+		insn_264:
 		/* ST1-multi-postindex-register-one-register */
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3657,11 +3690,11 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_264;
+				goto insn_265;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_264:
+		insn_265:
 		/* ST1-multi-no-offset-two-registers */
 		if((insn & 0xBFFFF000) == 0x0C00A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3672,7 +3705,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_265:
+		insn_266:
 		/* ST1-multi-postindex-immediate-two-registers */
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3683,11 +3716,11 @@ public partial class Disassembler {
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_266;
+				goto insn_267;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_266:
+		insn_267:
 		/* ST1-multi-postindex-register-two-registers */
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3697,11 +3730,11 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_267;
+				goto insn_268;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_267:
+		insn_268:
 		/* ST1-multi-no-offset-three-registers */
 		if((insn & 0xBFFFF000) == 0x0C006000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3713,7 +3746,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_268:
+		insn_269:
 		/* ST1-multi-postindex-immediate-three-registers */
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3725,11 +3758,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_269;
+				goto insn_270;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_269:
+		insn_270:
 		/* ST1-multi-postindex-register-three-registers */
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3740,11 +3773,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_270;
+				goto insn_271;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_270:
+		insn_271:
 		/* ST1-multi-no-offset-four-registers */
 		if((insn & 0xBFFFF000) == 0x0C002000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3757,7 +3790,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + ", V" + (rt4).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_271:
+		insn_272:
 		/* ST1-multi-postindex-immediate-four-registers */
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3770,11 +3803,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_272;
+				goto insn_273;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + ", V" + (rt4).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_272:
+		insn_273:
 		/* ST1-multi-postindex-register-four-registers */
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3786,11 +3819,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_273;
+				goto insn_274;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + ", V" + (rt4).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_273:
+		insn_274:
 		/* ST1-single-no-offset */
 		if((insn & 0xBFFF2000) == 0x0D000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3800,12 +3833,12 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
-				goto insn_274;
+				goto insn_275;
 			var t = (string) (((bool) (((byte) (opc)) == ((byte) 0x0))) ? (string) ("B") : (string) ((string) (((bool) ((((bool) (((byte) (opc)) == ((byte) 0x1))) & ((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))) ? (string) ("H") : (string) ((string) (((bool) (((byte) (opc)) == ((byte) 0x2))) ? ((string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ((string) (((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) & ((bool) (((byte) (S)) == ((byte) 0x0)))))) ? ("D") : throw new NotImplementedException())))) : throw new NotImplementedException())))));
 			var index = (uint) (opc switch { (byte) ((byte) 0x0) => (uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3)))))), (byte) ((byte) 0x1) => (uint) ((uint) (((uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3))))))) >> (int) ((byte) 0x1))), (byte) ((byte) 0x2) => (uint) ((uint) (((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) ? (uint) ((uint) ((uint) ((byte) ((byte) (((byte) (((byte) (S)) << 0)) | ((byte) (((byte) (Q)) << 1))))))) : (uint) (Q))), _ => throw new NotImplementedException() });
 			return (string) ("st1 { V" + (rt).ToString() + "." + t + " }[" + (index).ToString() + "], [X" + (rn).ToString() + "]");
 		}
-		insn_274:
+		insn_275:
 		/* ST2-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C008000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3816,7 +3849,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st2 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_275:
+		insn_276:
 		/* ST2-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3827,11 +3860,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_276;
+				goto insn_277;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st2 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_276:
+		insn_277:
 		/* ST2-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3841,11 +3874,11 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_277;
+				goto insn_278;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st2 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_277:
+		insn_278:
 		/* ST3-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C004000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3857,7 +3890,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st3 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_278:
+		insn_279:
 		/* ST3-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3869,11 +3902,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_279;
+				goto insn_280;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st3 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_279:
+		insn_280:
 		/* ST3-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3884,11 +3917,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_280;
+				goto insn_281;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st3 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_280:
+		insn_281:
 		/* ST4-multi-no-offset */
 		if((insn & 0xBFFFF000) == 0x0C000000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3901,7 +3934,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st4 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + ", V" + (rt4).ToString() + "." + T + " }, [X" + (rn).ToString() + "]");
 		}
-		insn_281:
+		insn_282:
 		/* ST4-multi-postindex-immediate */
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3914,11 +3947,11 @@ public partial class Disassembler {
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x40) : (byte) ((byte) 0x2B)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_282;
+				goto insn_283;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st4 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + ", V" + (rt4).ToString() + "." + T + " }, [X" + (rn).ToString() + "], #" + (imm).ToString());
 		}
-		insn_282:
+		insn_283:
 		/* ST4-multi-postindex-register */
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -3930,11 +3963,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_283;
+				goto insn_284;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("st4 { V" + (rt).ToString() + "." + T + ", V" + (rt2).ToString() + "." + T + ", V" + (rt3).ToString() + "." + T + ", V" + (rt4).ToString() + "." + T + " }, [X" + (rn).ToString() + "], X" + (rm).ToString());
 		}
-		insn_283:
+		insn_284:
 		/* STLR */
 		if((insn & 0xBFFFFC00) == 0x889FFC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -3943,21 +3976,21 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return (string) ("stlr " + r + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_284:
+		insn_285:
 		/* STLRB */
 		if((insn & 0xFFFFFC00) == 0x089FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return (string) ("stlrb W" + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_285:
+		insn_286:
 		/* STLRH */
 		if((insn & 0xFFFFFC00) == 0x489FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return (string) ("stlrh W" + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_286:
+		insn_287:
 		/* STLXR */
 		if((insn & 0xBFE0FC00) == 0x8800FC00) {
 			var size = (insn >> 30) & 0x1U;
@@ -3967,7 +4000,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return (string) ("stlxr W" + (rs).ToString() + ", " + r + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_287:
+		insn_288:
 		/* STLXRB */
 		if((insn & 0xFFE0FC00) == 0x0800FC00) {
 			var rs = (insn >> 16) & 0x1FU;
@@ -3975,7 +4008,7 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			return (string) ("stlxrr W" + (rs).ToString() + ", W" + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_288:
+		insn_289:
 		/* STP-postindex */
 		if((insn & 0x7FC00000) == 0x28800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -3987,7 +4020,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
 		}
-		insn_289:
+		insn_290:
 		/* STP-preindex */
 		if((insn & 0x7FC00000) == 0x29800000) {
 			var size = (insn >> 31) & 0x1U;
@@ -3999,7 +4032,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]!");
 		}
-		insn_290:
+		insn_291:
 		/* STP-signed-offset */
 		if((insn & 0x7FC00000) == 0x29000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4011,7 +4044,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]");
 		}
-		insn_291:
+		insn_292:
 		/* STP-simd-postindex */
 		if((insn & 0x3FC00000) == 0x2C800000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -4023,7 +4056,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
 			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
 		}
-		insn_292:
+		insn_293:
 		/* STP-simd-preindex */
 		if((insn & 0x3FC00000) == 0x2D800000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -4035,7 +4068,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
 			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]!");
 		}
-		insn_293:
+		insn_294:
 		/* STP-simd-signed-offset */
 		if((insn & 0x3FC00000) == 0x2D000000) {
 			var opc = (insn >> 30) & 0x3U;
@@ -4047,7 +4080,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
 			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]");
 		}
-		insn_294:
+		insn_295:
 		/* STR-immediate-postindex */
 		if((insn & 0xBFE00C00) == 0xB8000400) {
 			var size = (insn >> 30) & 0x1U;
@@ -4058,7 +4091,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("str " + r + (rs).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
 		}
-		insn_295:
+		insn_296:
 		/* STR-immediate-preindex */
 		if((insn & 0xBFE00C00) == 0xB8000C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -4069,7 +4102,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("str " + r + (rs).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]!");
 		}
-		insn_296:
+		insn_297:
 		/* STR-immediate-unsigned-offset */
 		if((insn & 0xBFC00000) == 0xB9000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -4080,7 +4113,7 @@ public partial class Disassembler {
 			var pimm = (ulong) (((ulong) ((ulong) (imm))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return (string) ("str " + r + (rs).ToString() + ", [X" + (rd).ToString() + ", #" + (pimm).ToString() + "]");
 		}
-		insn_297:
+		insn_298:
 		/* STR-register */
 		if((insn & 0xBFE00C00) == 0xB8200800) {
 			var size = (insn >> 30) & 0x1U;
@@ -4095,7 +4128,7 @@ public partial class Disassembler {
 			var extend = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", (byte) ((byte) 0x3) => "LSL", _ => throw new NotImplementedException() });
 			return (string) ("str " + r1 + (rt).ToString() + ", [X" + (rn).ToString() + ", " + r2 + (rm).ToString() + ", " + extend + " " + (amount).ToString() + "]");
 		}
-		insn_298:
+		insn_299:
 		/* STR-simd-postindex */
 		if((insn & 0x3F600C00) == 0x3C000400) {
 			var size = (insn >> 30) & 0x3U;
@@ -4108,7 +4141,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("str " + r + (rt).ToString() + ", [X" + (rn).ToString() + "], #" + (simm).ToString());
 		}
-		insn_299:
+		insn_300:
 		/* STR-simd-preindex */
 		if((insn & 0x3F600C00) == 0x3C000C00) {
 			var size = (insn >> 30) & 0x3U;
@@ -4122,7 +4155,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("str " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]!");
 		}
-		insn_300:
+		insn_301:
 		/* STR-simd-unsigned-offset */
 		if((insn & 0x3F400000) == 0x3D000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -4135,7 +4168,7 @@ public partial class Disassembler {
 			var scale = (byte) ((byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (opc)) << 2))));
 			return (string) ("str " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
 		}
-		insn_301:
+		insn_302:
 		/* STR-simd-register */
 		if((insn & 0x3F600C00) == 0x3C200800) {
 			var size = (insn >> 30) & 0x3U;
@@ -4152,7 +4185,7 @@ public partial class Disassembler {
 			var extend = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", (byte) ((byte) 0x3) => (string) (((bool) (((byte) (rop)) != ((byte) 0x0))) ? ("LSL") : throw new NotImplementedException()), _ => throw new NotImplementedException() });
 			return (string) ("str " + r1 + (rt).ToString() + ", [X" + (rn).ToString() + ", " + r2 + (rm).ToString() + ", " + extend + " " + (amount).ToString() + "]");
 		}
-		insn_302:
+		insn_303:
 		/* STRB-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x38000400) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -4161,7 +4194,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("strb W" + (rs).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
 		}
-		insn_303:
+		insn_304:
 		/* STRB-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x38000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -4170,7 +4203,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("strb W" + (rs).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]!");
 		}
-		insn_304:
+		insn_305:
 		/* STRB-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x39000000) {
 			var imm = (insn >> 10) & 0xFFFU;
@@ -4178,7 +4211,7 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			return (string) ("strb W" + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
 		}
-		insn_305:
+		insn_306:
 		/* STRB-register */
 		if((insn & 0xFFE00C00) == 0x38200800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -4190,7 +4223,7 @@ public partial class Disassembler {
 			var str = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", _ => throw new NotImplementedException() });
 			return (string) ("strb W" + (rt).ToString() + ", [X" + (rn).ToString() + ", " + r + (rm).ToString() + ", " + str + " " + (amount).ToString() + "]");
 		}
-		insn_306:
+		insn_307:
 		/* STRH-immediate-postindex */
 		if((insn & 0xFFE00C00) == 0x78000400) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -4199,7 +4232,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("strh W" + (rs).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
 		}
-		insn_307:
+		insn_308:
 		/* STRH-immediate-preindex */
 		if((insn & 0xFFE00C00) == 0x78000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -4208,7 +4241,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("strh W" + (rs).ToString() + ", [X" + (rd).ToString() + ", #" + (simm).ToString() + "]!");
 		}
-		insn_308:
+		insn_309:
 		/* STRH-immediate-unsigned-offset */
 		if((insn & 0xFFC00000) == 0x79000000) {
 			var rawimm = (insn >> 10) & 0xFFFU;
@@ -4217,7 +4250,7 @@ public partial class Disassembler {
 			var imm = (ushort) ((rawimm) << (int) ((byte) 0x1));
 			return (string) ("strh W" + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
 		}
-		insn_309:
+		insn_310:
 		/* STRH-register */
 		if((insn & 0xFFE00C00) == 0x78200800) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -4229,7 +4262,7 @@ public partial class Disassembler {
 			var str = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", _ => throw new NotImplementedException() });
 			return (string) ("strh W" + (rt).ToString() + ", [X" + (rn).ToString() + ", " + r + (rm).ToString() + ", " + str + " " + (amount).ToString() + "]");
 		}
-		insn_310:
+		insn_311:
 		/* STUR */
 		if((insn & 0xBFE00C00) == 0xB8000000) {
 			var size = (insn >> 30) & 0x1U;
@@ -4240,7 +4273,7 @@ public partial class Disassembler {
 			var offset = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("stur " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (offset).ToString() + "]");
 		}
-		insn_311:
+		insn_312:
 		/* STUR-simd */
 		if((insn & 0x3F600C00) == 0x3C000000) {
 			var size = (insn >> 30) & 0x3U;
@@ -4253,7 +4286,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("stur " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]");
 		}
-		insn_312:
+		insn_313:
 		/* STURB */
 		if((insn & 0xFFE00C00) == 0x38000000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -4262,7 +4295,7 @@ public partial class Disassembler {
 			var offset = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("sturb W" + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (offset).ToString() + "]");
 		}
-		insn_313:
+		insn_314:
 		/* STURH */
 		if((insn & 0xFFE00C00) == 0x78000000) {
 			var imm = (insn >> 12) & 0x1FFU;
@@ -4271,7 +4304,7 @@ public partial class Disassembler {
 			var offset = (long) (Math.SignExt<long>(imm, 9));
 			return (string) ("sturh W" + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (offset).ToString() + "]");
 		}
-		insn_314:
+		insn_315:
 		/* STXRB */
 		if((insn & 0xFFE0FC00) == 0x08007C00) {
 			var rs = (insn >> 16) & 0x1FU;
@@ -4279,7 +4312,7 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			return (string) ("stxrb W" + (rs).ToString() + ", W" + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_315:
+		insn_316:
 		/* STXR */
 		if((insn & 0xBFE0FC00) == 0x88007C00) {
 			var size = (insn >> 30) & 0x1U;
@@ -4289,7 +4322,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return (string) ("stxr W" + (rs).ToString() + ", " + r + (rt).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_316:
+		insn_317:
 		/* STXP */
 		if((insn & 0xBFE08000) == 0x88200000) {
 			var size = (insn >> 30) & 0x1U;
@@ -4300,7 +4333,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return (string) ("stxp W" + (rs).ToString() + ", " + r + (rt).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
 		}
-		insn_317:
+		insn_318:
 		/* SUB-immediate */
 		if((insn & 0x7F800000) == 0x51000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4312,7 +4345,7 @@ public partial class Disassembler {
 			var shift = (byte) (((bool) (((byte) (sh)) == ((byte) 0x0))) ? (byte) ((byte) 0x0) : (byte) ((byte) 0xC));
 			return (string) ("sub " + r + (rd).ToString() + ", " + r + (rn).ToString() + ", #" + (imm).ToString() + ", LSL #" + (shift).ToString());
 		}
-		insn_318:
+		insn_319:
 		/* SUB-extended-register */
 		if((insn & 0x7FE00000) == 0x4B200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4322,13 +4355,13 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_319;
+				goto insn_320;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
 			return (string) ("sub " + r1 + (rd).ToString() + ", " + r1 + (rn).ToString() + ", " + r2 + (rm).ToString() + ", " + extend + " #" + (imm).ToString());
 		}
-		insn_319:
+		insn_320:
 		/* SUB-shifted-register */
 		if((insn & 0x7F200000) == 0x4B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4338,14 +4371,14 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_320;
+				goto insn_321;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_320;
+				goto insn_321;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			return (string) ("sub " + r + (rd).ToString() + ", " + r + (rn).ToString() + ", " + r + (rm).ToString() + ", " + shiftstr + " #" + (imm).ToString());
 		}
-		insn_320:
+		insn_321:
 		/* SUBS-extended-register */
 		if((insn & 0x7FE00000) == 0x6B200000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4355,13 +4388,13 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_321;
+				goto insn_322;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
 			return (string) ("subs " + r1 + (rd).ToString() + ", " + r1 + (rn).ToString() + ", " + r2 + (rm).ToString() + ", " + extend + " #" + (imm).ToString());
 		}
-		insn_321:
+		insn_322:
 		/* SUBS-shifted-register */
 		if((insn & 0x7F200000) == 0x6B000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4371,15 +4404,15 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_322;
+				goto insn_323;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_322;
+				goto insn_323;
 			var mode32 = (bool) (((byte) (size)) == ((byte) 0x0));
 			var r = (string) ((mode32) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			return (string) ("subs " + r + (rd).ToString() + ", " + r + (rn).ToString() + ", " + r + (rm).ToString() + ", " + shiftstr + " #" + (imm).ToString());
 		}
-		insn_322:
+		insn_323:
 		/* SUBS-immediate */
 		if((insn & 0x7F800000) == 0x71000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4391,13 +4424,13 @@ public partial class Disassembler {
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL #0", (byte) ((byte) 0x1) => "LSL #12", _ => throw new NotImplementedException() });
 			return (string) ("subs " + r + (rd).ToString() + ", " + r + (rn).ToString() + ", #" + (imm).ToString() + ", " + shiftstr);
 		}
-		insn_323:
+		insn_324:
 		/* SVC */
 		if((insn & 0xFFE0001F) == 0xD4000001) {
 			var imm = (insn >> 5) & 0xFFFFU;
 			return (string) ("svc #" + (imm).ToString());
 		}
-		insn_324:
+		insn_325:
 		/* SYS */
 		if((insn & 0xFFF80000) == 0xD5080000) {
 			var op1 = (insn >> 16) & 0x7U;
@@ -4407,7 +4440,7 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			return (string) ("sys #" + (op1).ToString() + ", " + (cn).ToString() + ", " + (cm).ToString() + ", #" + (op2).ToString() + ", X" + (rt).ToString());
 		}
-		insn_325:
+		insn_326:
 		/* TBZ */
 		if((insn & 0x7F000000) == 0x36000000) {
 			var upper = (insn >> 31) & 0x1U;
@@ -4419,7 +4452,7 @@ public partial class Disassembler {
 			var addr = (ulong) (((ulong) (ulong) ((ulong) (pc))) + ((ulong) (long) ((long) (Math.SignExt<long>((ushort) (((ushort) ((ushort) (offset))) << (int) ((byte) 0x2)), 16)))));
 			return (string) ("tbz " + r + (rt).ToString() + ", #" + (imm).ToString() + ", " + (addr).ToString());
 		}
-		insn_326:
+		insn_327:
 		/* TBNZ */
 		if((insn & 0x7F000000) == 0x37000000) {
 			var upper = (insn >> 31) & 0x1U;
@@ -4431,7 +4464,7 @@ public partial class Disassembler {
 			var addr = (ulong) (((ulong) (ulong) ((ulong) (pc))) + ((ulong) (long) ((long) (Math.SignExt<long>((ushort) (((ushort) ((ushort) (offset))) << (int) ((byte) 0x2)), 16)))));
 			return (string) ("tbnz " + r + (rt).ToString() + ", #" + (imm).ToString() + ", " + (addr).ToString());
 		}
-		insn_327:
+		insn_328:
 		/* UADDLV */
 		if((insn & 0xBF3FFC00) == 0x2E303800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4444,7 +4477,7 @@ public partial class Disassembler {
 			var count = (byte) (((byte) (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x80) : (byte) ((byte) 0x40)))) / ((byte) (byte) (esize)));
 			return (string) ("uaddlv " + r + (rd).ToString() + ", V" + (rn).ToString() + "." + t);
 		}
-		insn_328:
+		insn_329:
 		/* UADDW[2] */
 		if((insn & 0xBF20FC00) == 0x2E201000) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4493,7 +4526,7 @@ public partial class Disassembler {
 			}
 			return (string) ("uaddw" + o2 + " V" + (rd).ToString() + "." + Ta + ", V" + (rn).ToString() + "." + Ta + ", V" + (rm).ToString() + "." + Tb);
 		}
-		insn_329:
+		insn_330:
 		/* UBFM */
 		if((insn & 0x7F800000) == 0x53000000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4503,20 +4536,20 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imms)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_330;
+				goto insn_331;
 			if(!((bool) (((byte) (immr)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_330;
+				goto insn_331;
 			if((bool) ((size) != ((byte) 0x0))) {
 				if(!((bool) ((N) != ((byte) 0x0))))
-					goto insn_330;
+					goto insn_331;
 			} else {
 				if(!((bool) (((byte) (N)) == ((byte) 0x0))))
-					goto insn_330;
+					goto insn_331;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return (string) ("ubfm " + r + (rd).ToString() + ", " + r + (rn).ToString() + ", #" + (immr).ToString() + ", #" + (imms).ToString());
 		}
-		insn_330:
+		insn_331:
 		/* UCVTF-scalar-gpr-integer */
 		if((insn & 0x7F3FFC00) == 0x1E230000) {
 			var size = (insn >> 31) & 0x1U;
@@ -4564,7 +4597,7 @@ public partial class Disassembler {
 			}
 			return (string) ("ucvtf " + r1 + (rd).ToString() + ", " + r2 + (rn).ToString());
 		}
-		insn_331:
+		insn_332:
 		/* UCVTF-scalar-integer */
 		if((insn & 0xFFBFFC00) == 0x7E21D800) {
 			var size = (insn >> 22) & 0x1U;
@@ -4573,7 +4606,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ("D"));
 			return (string) ("ucvtf " + r + (rd).ToString() + ", " + r + (rn).ToString());
 		}
-		insn_332:
+		insn_333:
 		/* UCVTF-vector */
 		if((insn & 0xBFBFFC00) == 0x2E21D800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4583,7 +4616,7 @@ public partial class Disassembler {
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "2S", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x3) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("ucvtf V" + (rd).ToString() + "." + t + ", V" + (rn).ToString() + "." + t);
 		}
-		insn_333:
+		insn_334:
 		/* UDIV */
 		if((insn & 0x7FE0FC00) == 0x1AC00800) {
 			var size = (insn >> 31) & 0x1U;
@@ -4593,7 +4626,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return (string) ("udiv " + r + (rd).ToString() + ", " + r + (rn).ToString() + ", " + r + (rm).ToString());
 		}
-		insn_334:
+		insn_335:
 		/* UMADDL */
 		if((insn & 0xFFE08000) == 0x9BA00000) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -4602,7 +4635,7 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return (string) ("umaddl X" + (rd).ToString() + ", W" + (rn).ToString() + ", W" + (rm).ToString() + ", X" + (ra).ToString());
 		}
-		insn_335:
+		insn_336:
 		/* UMAXP-UMINP */
 		if((insn & 0xBF20F400) == 0x2E20A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4615,7 +4648,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", _ => throw new NotImplementedException() });
 			return (string) (mnem + " V" + (rd).ToString() + "." + T + ", V" + (rn).ToString() + "." + T + ", V" + (rm).ToString() + "." + T);
 		}
-		insn_336:
+		insn_337:
 		/* UMOV */
 		if((insn & 0xBFE0FC00) == 0x0E003C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4651,7 +4684,7 @@ public partial class Disassembler {
 			}
 			return (string) ("umov " + r + (rd).ToString() + ", V" + (rn).ToString() + "." + T + "[" + (index).ToString() + "]");
 		}
-		insn_337:
+		insn_338:
 		/* UMULH */
 		if((insn & 0xFFE0FC00) == 0x9BC07C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -4659,7 +4692,7 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return (string) ("umulh X" + (rd).ToString() + ", X" + (rn).ToString() + ", X" + (rm).ToString());
 		}
-		insn_338:
+		insn_339:
 		/* USHL-vector */
 		if((insn & 0xBF20FC00) == 0x2E204400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4670,7 +4703,7 @@ public partial class Disassembler {
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("ushl V" + (rd).ToString() + "." + t + ", V" + (rn).ToString() + "." + t + ", V" + (rm).ToString() + "." + t);
 		}
-		insn_339:
+		insn_340:
 		/* USHLL-vector */
 		if((insn & 0xBF80FC00) == 0x2F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4683,7 +4716,7 @@ public partial class Disassembler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_340;
+				goto insn_341;
 			var i2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				Ta = "8H";
@@ -4709,7 +4742,7 @@ public partial class Disassembler {
 			}
 			return (string) ("ushll" + i2 + " V" + (rd).ToString() + "." + Ta + ", V" + (rn).ToString() + "." + Tb + ", #" + (shift).ToString());
 		}
-		insn_340:
+		insn_341:
 		/* XTN[2] */
 		if((insn & 0xBF3FFC00) == 0x0E212800) {
 			var top = (insn >> 30) & 0x1U;
@@ -4721,12 +4754,12 @@ public partial class Disassembler {
 			var ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x2) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("xtn" + variant + " V" + (rd).ToString() + "." + tb + ", V" + (rn).ToString() + "." + ta);
 		}
-		insn_341:
+		insn_342:
 		/* YIELD */
 		if((insn & 0xFFFFFFFF) == 0xD503203F) {
 			return "yield";
 		}
-		insn_342:
+		insn_343:
 		/* ZIP */
 		if((insn & 0xBF20BC00) == 0x0E003800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4739,7 +4772,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("zip" + (i).ToString() + " V" + (rd).ToString() + "." + T + ", V" + (rn).ToString() + "." + T + ", V" + (rm).ToString() + "." + T);
 		}
-		insn_343:
+		insn_344:
 
         return null;
     }
@@ -8057,6 +8090,38 @@ public partial class Disassembler {
 			return "SHL-vector";
 		}
 		insn_258:
+		if((insn & 0xBF80FC00) == 0x0F008400) {
+			var Q = (insn >> 30) & 0x1U;
+			var immh = (insn >> 19) & 0xFU;
+			var immb = (insn >> 16) & 0x7U;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
+			var ta = "";
+			var tb = "";
+			var shift = (ulong) ((ulong) ((byte) 0x0));
+			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
+				ta = "8H";
+				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
+				shift = (byte) (((byte) (byte) ((byte) 0x10)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+			} else {
+				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
+					ta = "4S";
+					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
+					shift = (byte) (((byte) (byte) ((byte) 0x20)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+				} else {
+					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
+						ta = "2D";
+						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
+						shift = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
+					} else {
+						throw new NotImplementedException();
+					}
+				}
+			}
+			return "SHRN[2]";
+		}
+		insn_259:
 		if((insn & 0xFFE08000) == 0x9B200000) {
 			var rm = (insn >> 16) & 0x1FU;
 			var ra = (insn >> 10) & 0x1FU;
@@ -8064,14 +8129,14 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return "SMADDL";
 		}
-		insn_259:
+		insn_260:
 		if((insn & 0xFFE0FC00) == 0x9B407C00) {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			return "SMULH";
 		}
-		insn_260:
+		insn_261:
 		if((insn & 0xBF80FC00) == 0x0F00A400) {
 			var Q = (insn >> 30) & 0x1U;
 			var immh = (insn >> 19) & 0xFU;
@@ -8103,7 +8168,7 @@ public partial class Disassembler {
 			}
 			return "SSHLL";
 		}
-		insn_261:
+		insn_262:
 		if((insn & 0xBFFFF000) == 0x0C007000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8112,7 +8177,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-no-offset-one-register";
 		}
-		insn_262:
+		insn_263:
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8121,11 +8186,11 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x10) : (byte) ((byte) 0x8)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_263;
+				goto insn_264;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-immediate-one-register";
 		}
-		insn_263:
+		insn_264:
 		if((insn & 0xBFE0F000) == 0x0C807000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8133,11 +8198,11 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_264;
+				goto insn_265;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-register-one-register";
 		}
-		insn_264:
+		insn_265:
 		if((insn & 0xBFFFF000) == 0x0C00A000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8147,7 +8212,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-no-offset-two-registers";
 		}
-		insn_265:
+		insn_266:
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8157,11 +8222,11 @@ public partial class Disassembler {
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_266;
+				goto insn_267;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-immediate-two-registers";
 		}
-		insn_266:
+		insn_267:
 		if((insn & 0xBFE0F000) == 0x0C80A000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8170,11 +8235,11 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_267;
+				goto insn_268;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-register-two-registers";
 		}
-		insn_267:
+		insn_268:
 		if((insn & 0xBFFFF000) == 0x0C006000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8185,7 +8250,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-no-offset-three-registers";
 		}
-		insn_268:
+		insn_269:
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8196,11 +8261,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_269;
+				goto insn_270;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-immediate-three-registers";
 		}
-		insn_269:
+		insn_270:
 		if((insn & 0xBFE0F000) == 0x0C806000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8210,11 +8275,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_270;
+				goto insn_271;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-register-three-registers";
 		}
-		insn_270:
+		insn_271:
 		if((insn & 0xBFFFF000) == 0x0C002000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8226,7 +8291,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-no-offset-four-registers";
 		}
-		insn_271:
+		insn_272:
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8238,11 +8303,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_272;
+				goto insn_273;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-immediate-four-registers";
 		}
-		insn_272:
+		insn_273:
 		if((insn & 0xBFE0F000) == 0x0C802000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8253,11 +8318,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_273;
+				goto insn_274;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST1-multi-postindex-register-four-registers";
 		}
-		insn_273:
+		insn_274:
 		if((insn & 0xBFFF2000) == 0x0D000000) {
 			var Q = (insn >> 30) & 0x1U;
 			var opc = (insn >> 14) & 0x3U;
@@ -8266,12 +8331,12 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
-				goto insn_274;
+				goto insn_275;
 			var t = (string) (((bool) (((byte) (opc)) == ((byte) 0x0))) ? (string) ("B") : (string) ((string) (((bool) ((((bool) (((byte) (opc)) == ((byte) 0x1))) & ((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))) ? (string) ("H") : (string) ((string) (((bool) (((byte) (opc)) == ((byte) 0x2))) ? ((string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ((string) (((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) & ((bool) (((byte) (S)) == ((byte) 0x0)))))) ? ("D") : throw new NotImplementedException())))) : throw new NotImplementedException())))));
 			var index = (uint) (opc switch { (byte) ((byte) 0x0) => (uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3)))))), (byte) ((byte) 0x1) => (uint) ((uint) (((uint) ((uint) ((byte) ((byte) (((byte) (byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (S)) << 2)))) | ((byte) (((byte) (Q)) << 3))))))) >> (int) ((byte) 0x1))), (byte) ((byte) 0x2) => (uint) ((uint) (((bool) (((byte) ((byte) (((size) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) ? (uint) ((uint) ((uint) ((byte) ((byte) (((byte) (((byte) (S)) << 0)) | ((byte) (((byte) (Q)) << 1))))))) : (uint) (Q))), _ => throw new NotImplementedException() });
 			return "ST1-single-no-offset";
 		}
-		insn_274:
+		insn_275:
 		if((insn & 0xBFFFF000) == 0x0C008000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8281,7 +8346,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST2-multi-no-offset";
 		}
-		insn_275:
+		insn_276:
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8291,11 +8356,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_276;
+				goto insn_277;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST2-multi-postindex-immediate";
 		}
-		insn_276:
+		insn_277:
 		if((insn & 0xBFE0F000) == 0x0C808000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8304,11 +8369,11 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_277;
+				goto insn_278;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST2-multi-postindex-register";
 		}
-		insn_277:
+		insn_278:
 		if((insn & 0xBFFFF000) == 0x0C004000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8319,7 +8384,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST3-multi-no-offset";
 		}
-		insn_278:
+		insn_279:
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8330,11 +8395,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_279;
+				goto insn_280;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST3-multi-postindex-immediate";
 		}
-		insn_279:
+		insn_280:
 		if((insn & 0xBFE0F000) == 0x0C804000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8344,11 +8409,11 @@ public partial class Disassembler {
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_280;
+				goto insn_281;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST3-multi-postindex-register";
 		}
-		insn_280:
+		insn_281:
 		if((insn & 0xBFFFF000) == 0x0C000000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
@@ -8360,7 +8425,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST4-multi-no-offset";
 		}
-		insn_281:
+		insn_282:
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8372,11 +8437,11 @@ public partial class Disassembler {
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x40) : (byte) ((byte) 0x2B)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
-				goto insn_282;
+				goto insn_283;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST4-multi-postindex-immediate";
 		}
-		insn_282:
+		insn_283:
 		if((insn & 0xBFE0F000) == 0x0C800000) {
 			var Q = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8387,11 +8452,11 @@ public partial class Disassembler {
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
-				goto insn_283;
+				goto insn_284;
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ST4-multi-postindex-register";
 		}
-		insn_283:
+		insn_284:
 		if((insn & 0xBFFFFC00) == 0x889FFC00) {
 			var size = (insn >> 30) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
@@ -8399,19 +8464,19 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return "STLR";
 		}
-		insn_284:
+		insn_285:
 		if((insn & 0xFFFFFC00) == 0x089FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return "STLRB";
 		}
-		insn_285:
+		insn_286:
 		if((insn & 0xFFFFFC00) == 0x489FFC00) {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return "STLRH";
 		}
-		insn_286:
+		insn_287:
 		if((insn & 0xBFE0FC00) == 0x8800FC00) {
 			var size = (insn >> 30) & 0x1U;
 			var rs = (insn >> 16) & 0x1FU;
@@ -8420,14 +8485,14 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return "STLXR";
 		}
-		insn_287:
+		insn_288:
 		if((insn & 0xFFE0FC00) == 0x0800FC00) {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return "STLXRB";
 		}
-		insn_288:
+		insn_289:
 		if((insn & 0x7FC00000) == 0x28800000) {
 			var size = (insn >> 31) & 0x1U;
 			var imm = (insn >> 15) & 0x7FU;
@@ -8438,7 +8503,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return "STP-postindex";
 		}
-		insn_289:
+		insn_290:
 		if((insn & 0x7FC00000) == 0x29800000) {
 			var size = (insn >> 31) & 0x1U;
 			var imm = (insn >> 15) & 0x7FU;
@@ -8449,7 +8514,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return "STP-preindex";
 		}
-		insn_290:
+		insn_291:
 		if((insn & 0x7FC00000) == 0x29000000) {
 			var size = (insn >> 31) & 0x1U;
 			var imm = (insn >> 15) & 0x7FU;
@@ -8460,7 +8525,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return "STP-signed-offset";
 		}
-		insn_291:
+		insn_292:
 		if((insn & 0x3FC00000) == 0x2C800000) {
 			var opc = (insn >> 30) & 0x3U;
 			var imm = (insn >> 15) & 0x7FU;
@@ -8471,7 +8536,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
 			return "STP-simd-postindex";
 		}
-		insn_292:
+		insn_293:
 		if((insn & 0x3FC00000) == 0x2D800000) {
 			var opc = (insn >> 30) & 0x3U;
 			var imm = (insn >> 15) & 0x7FU;
@@ -8482,7 +8547,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
 			return "STP-simd-preindex";
 		}
-		insn_293:
+		insn_294:
 		if((insn & 0x3FC00000) == 0x2D000000) {
 			var opc = (insn >> 30) & 0x3U;
 			var imm = (insn >> 15) & 0x7FU;
@@ -8493,7 +8558,7 @@ public partial class Disassembler {
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
 			return "STP-simd-signed-offset";
 		}
-		insn_294:
+		insn_295:
 		if((insn & 0xBFE00C00) == 0xB8000400) {
 			var size = (insn >> 30) & 0x1U;
 			var imm = (insn >> 12) & 0x1FFU;
@@ -8503,7 +8568,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STR-immediate-postindex";
 		}
-		insn_295:
+		insn_296:
 		if((insn & 0xBFE00C00) == 0xB8000C00) {
 			var size = (insn >> 30) & 0x1U;
 			var imm = (insn >> 12) & 0x1FFU;
@@ -8513,7 +8578,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STR-immediate-preindex";
 		}
-		insn_296:
+		insn_297:
 		if((insn & 0xBFC00000) == 0xB9000000) {
 			var size = (insn >> 30) & 0x1U;
 			var imm = (insn >> 10) & 0xFFFU;
@@ -8523,7 +8588,7 @@ public partial class Disassembler {
 			var pimm = (ulong) (((ulong) ((ulong) (imm))) << (int) ((byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x2) : (byte) ((byte) 0x3))));
 			return "STR-immediate-unsigned-offset";
 		}
-		insn_297:
+		insn_298:
 		if((insn & 0xBFE00C00) == 0xB8200800) {
 			var size = (insn >> 30) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8537,7 +8602,7 @@ public partial class Disassembler {
 			var extend = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", (byte) ((byte) 0x3) => "LSL", _ => throw new NotImplementedException() });
 			return "STR-register";
 		}
-		insn_298:
+		insn_299:
 		if((insn & 0x3F600C00) == 0x3C000400) {
 			var size = (insn >> 30) & 0x3U;
 			var opc = (insn >> 23) & 0x1U;
@@ -8549,7 +8614,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STR-simd-postindex";
 		}
-		insn_299:
+		insn_300:
 		if((insn & 0x3F600C00) == 0x3C000C00) {
 			var size = (insn >> 30) & 0x3U;
 			var opc = (insn >> 23) & 0x1U;
@@ -8562,7 +8627,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STR-simd-preindex";
 		}
-		insn_300:
+		insn_301:
 		if((insn & 0x3F400000) == 0x3D000000) {
 			var size = (insn >> 30) & 0x3U;
 			var opc = (insn >> 23) & 0x1U;
@@ -8574,7 +8639,7 @@ public partial class Disassembler {
 			var scale = (byte) ((byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (opc)) << 2))));
 			return "STR-simd-unsigned-offset";
 		}
-		insn_301:
+		insn_302:
 		if((insn & 0x3F600C00) == 0x3C200800) {
 			var size = (insn >> 30) & 0x3U;
 			var opc = (insn >> 23) & 0x1U;
@@ -8590,7 +8655,7 @@ public partial class Disassembler {
 			var extend = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", (byte) ((byte) 0x3) => (string) (((bool) (((byte) (rop)) != ((byte) 0x0))) ? ("LSL") : throw new NotImplementedException()), _ => throw new NotImplementedException() });
 			return "STR-simd-register";
 		}
-		insn_302:
+		insn_303:
 		if((insn & 0xFFE00C00) == 0x38000400) {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rd = (insn >> 5) & 0x1FU;
@@ -8598,7 +8663,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STRB-immediate-postindex";
 		}
-		insn_303:
+		insn_304:
 		if((insn & 0xFFE00C00) == 0x38000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rd = (insn >> 5) & 0x1FU;
@@ -8606,14 +8671,14 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STRB-immediate-preindex";
 		}
-		insn_304:
+		insn_305:
 		if((insn & 0xFFC00000) == 0x39000000) {
 			var imm = (insn >> 10) & 0xFFFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return "STRB-immediate-unsigned-offset";
 		}
-		insn_305:
+		insn_306:
 		if((insn & 0xFFE00C00) == 0x38200800) {
 			var rm = (insn >> 16) & 0x1FU;
 			var option = (insn >> 13) & 0x7U;
@@ -8624,7 +8689,7 @@ public partial class Disassembler {
 			var str = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", _ => throw new NotImplementedException() });
 			return "STRB-register";
 		}
-		insn_306:
+		insn_307:
 		if((insn & 0xFFE00C00) == 0x78000400) {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rd = (insn >> 5) & 0x1FU;
@@ -8632,7 +8697,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STRH-immediate-postindex";
 		}
-		insn_307:
+		insn_308:
 		if((insn & 0xFFE00C00) == 0x78000C00) {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rd = (insn >> 5) & 0x1FU;
@@ -8640,7 +8705,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STRH-immediate-preindex";
 		}
-		insn_308:
+		insn_309:
 		if((insn & 0xFFC00000) == 0x79000000) {
 			var rawimm = (insn >> 10) & 0xFFFU;
 			var rn = (insn >> 5) & 0x1FU;
@@ -8648,7 +8713,7 @@ public partial class Disassembler {
 			var imm = (ushort) ((rawimm) << (int) ((byte) 0x1));
 			return "STRH-immediate-unsigned-offset";
 		}
-		insn_309:
+		insn_310:
 		if((insn & 0xFFE00C00) == 0x78200800) {
 			var rm = (insn >> 16) & 0x1FU;
 			var option = (insn >> 13) & 0x7U;
@@ -8659,7 +8724,7 @@ public partial class Disassembler {
 			var str = (string) (option switch { (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x6) => "SXTW", (byte) ((byte) 0x7) => "SXTX", _ => throw new NotImplementedException() });
 			return "STRH-register";
 		}
-		insn_310:
+		insn_311:
 		if((insn & 0xBFE00C00) == 0xB8000000) {
 			var size = (insn >> 30) & 0x1U;
 			var imm = (insn >> 12) & 0x1FFU;
@@ -8669,7 +8734,7 @@ public partial class Disassembler {
 			var offset = (long) (Math.SignExt<long>(imm, 9));
 			return "STUR";
 		}
-		insn_311:
+		insn_312:
 		if((insn & 0x3F600C00) == 0x3C000000) {
 			var size = (insn >> 30) & 0x3U;
 			var opc = (insn >> 23) & 0x1U;
@@ -8681,7 +8746,7 @@ public partial class Disassembler {
 			var simm = (long) (Math.SignExt<long>(imm, 9));
 			return "STUR-simd";
 		}
-		insn_312:
+		insn_313:
 		if((insn & 0xFFE00C00) == 0x38000000) {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
@@ -8689,7 +8754,7 @@ public partial class Disassembler {
 			var offset = (long) (Math.SignExt<long>(imm, 9));
 			return "STURB";
 		}
-		insn_313:
+		insn_314:
 		if((insn & 0xFFE00C00) == 0x78000000) {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
@@ -8697,14 +8762,14 @@ public partial class Disassembler {
 			var offset = (long) (Math.SignExt<long>(imm, 9));
 			return "STURH";
 		}
-		insn_314:
+		insn_315:
 		if((insn & 0xFFE0FC00) == 0x08007C00) {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			return "STXRB";
 		}
-		insn_315:
+		insn_316:
 		if((insn & 0xBFE0FC00) == 0x88007C00) {
 			var size = (insn >> 30) & 0x1U;
 			var rs = (insn >> 16) & 0x1FU;
@@ -8713,7 +8778,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return "STXR";
 		}
-		insn_316:
+		insn_317:
 		if((insn & 0xBFE08000) == 0x88200000) {
 			var size = (insn >> 30) & 0x1U;
 			var rs = (insn >> 16) & 0x1FU;
@@ -8723,7 +8788,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return "STXP";
 		}
-		insn_317:
+		insn_318:
 		if((insn & 0x7F800000) == 0x51000000) {
 			var size = (insn >> 31) & 0x1U;
 			var sh = (insn >> 22) & 0x1U;
@@ -8734,7 +8799,7 @@ public partial class Disassembler {
 			var shift = (byte) (((bool) (((byte) (sh)) == ((byte) 0x0))) ? (byte) ((byte) 0x0) : (byte) ((byte) 0xC));
 			return "SUB-immediate";
 		}
-		insn_318:
+		insn_319:
 		if((insn & 0x7FE00000) == 0x4B200000) {
 			var size = (insn >> 31) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8743,13 +8808,13 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_319;
+				goto insn_320;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
 			return "SUB-extended-register";
 		}
-		insn_319:
+		insn_320:
 		if((insn & 0x7F200000) == 0x4B000000) {
 			var size = (insn >> 31) & 0x1U;
 			var shift = (insn >> 22) & 0x3U;
@@ -8758,14 +8823,14 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_320;
+				goto insn_321;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_320;
+				goto insn_321;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			return "SUB-shifted-register";
 		}
-		insn_320:
+		insn_321:
 		if((insn & 0x7FE00000) == 0x6B200000) {
 			var size = (insn >> 31) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8774,13 +8839,13 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) 0x4))))
-				goto insn_321;
+				goto insn_322;
 			var r1 = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var r2 = (string) (((bool) (((byte) ((byte) (((option) & ((byte) ((byte) ((byte) 0x3))))))) == ((byte) 0x3))) ? (string) ("X") : (string) ("W"));
 			var extend = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "LSL", (byte) ((byte) 0x3) => "UXTX", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })) : (string) ((string) (option switch { (byte) ((byte) 0x0) => "UXTB", (byte) ((byte) 0x1) => "UXTH", (byte) ((byte) 0x2) => "UXTW", (byte) ((byte) 0x3) => "LSL", (byte) ((byte) 0x4) => "SXTB", (byte) ((byte) 0x5) => "SXTH", (byte) ((byte) 0x6) => "SXTW", _ => "SXTX" })));
 			return "SUBS-extended-register";
 		}
-		insn_321:
+		insn_322:
 		if((insn & 0x7F200000) == 0x6B000000) {
 			var size = (insn >> 31) & 0x1U;
 			var shift = (insn >> 22) & 0x3U;
@@ -8789,15 +8854,15 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_322;
+				goto insn_323;
 			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
-				goto insn_322;
+				goto insn_323;
 			var mode32 = (bool) (((byte) (size)) == ((byte) 0x0));
 			var r = (string) ((mode32) ? (string) ("W") : (string) ("X"));
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL", (byte) ((byte) 0x1) => "LSR", (byte) ((byte) 0x2) => "ASR", _ => "ROR" });
 			return "SUBS-shifted-register";
 		}
-		insn_322:
+		insn_323:
 		if((insn & 0x7F800000) == 0x71000000) {
 			var size = (insn >> 31) & 0x1U;
 			var shift = (insn >> 22) & 0x1U;
@@ -8808,12 +8873,12 @@ public partial class Disassembler {
 			var shiftstr = (string) (shift switch { (byte) ((byte) 0x0) => "LSL #0", (byte) ((byte) 0x1) => "LSL #12", _ => throw new NotImplementedException() });
 			return "SUBS-immediate";
 		}
-		insn_323:
+		insn_324:
 		if((insn & 0xFFE0001F) == 0xD4000001) {
 			var imm = (insn >> 5) & 0xFFFFU;
 			return "SVC";
 		}
-		insn_324:
+		insn_325:
 		if((insn & 0xFFF80000) == 0xD5080000) {
 			var op1 = (insn >> 16) & 0x7U;
 			var cn = (insn >> 12) & 0xFU;
@@ -8822,7 +8887,7 @@ public partial class Disassembler {
 			var rt = (insn >> 0) & 0x1FU;
 			return "SYS";
 		}
-		insn_325:
+		insn_326:
 		if((insn & 0x7F000000) == 0x36000000) {
 			var upper = (insn >> 31) & 0x1U;
 			var bottom = (insn >> 19) & 0x1FU;
@@ -8833,7 +8898,7 @@ public partial class Disassembler {
 			var addr = (ulong) (((ulong) (ulong) ((ulong) (pc))) + ((ulong) (long) ((long) (Math.SignExt<long>((ushort) (((ushort) ((ushort) (offset))) << (int) ((byte) 0x2)), 16)))));
 			return "TBZ";
 		}
-		insn_326:
+		insn_327:
 		if((insn & 0x7F000000) == 0x37000000) {
 			var upper = (insn >> 31) & 0x1U;
 			var bottom = (insn >> 19) & 0x1FU;
@@ -8844,7 +8909,7 @@ public partial class Disassembler {
 			var addr = (ulong) (((ulong) (ulong) ((ulong) (pc))) + ((ulong) (long) ((long) (Math.SignExt<long>((ushort) (((ushort) ((ushort) (offset))) << (int) ((byte) 0x2)), 16)))));
 			return "TBNZ";
 		}
-		insn_327:
+		insn_328:
 		if((insn & 0xBF3FFC00) == 0x2E303800) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -8856,7 +8921,7 @@ public partial class Disassembler {
 			var count = (byte) (((byte) (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x80) : (byte) ((byte) 0x40)))) / ((byte) (byte) (esize)));
 			return "UADDLV";
 		}
-		insn_328:
+		insn_329:
 		if((insn & 0xBF20FC00) == 0x2E201000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -8904,7 +8969,7 @@ public partial class Disassembler {
 			}
 			return "UADDW[2]";
 		}
-		insn_329:
+		insn_330:
 		if((insn & 0x7F800000) == 0x53000000) {
 			var size = (insn >> 31) & 0x1U;
 			var N = (insn >> 22) & 0x1U;
@@ -8913,20 +8978,20 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			if(!((bool) (((byte) (imms)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_330;
+				goto insn_331;
 			if(!((bool) (((byte) (immr)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
-				goto insn_330;
+				goto insn_331;
 			if((bool) ((size) != ((byte) 0x0))) {
 				if(!((bool) ((N) != ((byte) 0x0))))
-					goto insn_330;
+					goto insn_331;
 			} else {
 				if(!((bool) (((byte) (N)) == ((byte) 0x0))))
-					goto insn_330;
+					goto insn_331;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return "UBFM";
 		}
-		insn_330:
+		insn_331:
 		if((insn & 0x7F3FFC00) == 0x1E230000) {
 			var size = (insn >> 31) & 0x1U;
 			var type = (insn >> 22) & 0x3U;
@@ -8973,7 +9038,7 @@ public partial class Disassembler {
 			}
 			return "UCVTF-scalar-gpr-integer";
 		}
-		insn_331:
+		insn_332:
 		if((insn & 0xFFBFFC00) == 0x7E21D800) {
 			var size = (insn >> 22) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
@@ -8981,7 +9046,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("S") : (string) ("D"));
 			return "UCVTF-scalar-integer";
 		}
-		insn_332:
+		insn_333:
 		if((insn & 0xBFBFFC00) == 0x2E21D800) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x1U;
@@ -8990,7 +9055,7 @@ public partial class Disassembler {
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "2S", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x3) => "2D", _ => throw new NotImplementedException() });
 			return "UCVTF-vector";
 		}
-		insn_333:
+		insn_334:
 		if((insn & 0x7FE0FC00) == 0x1AC00800) {
 			var size = (insn >> 31) & 0x1U;
 			var rm = (insn >> 16) & 0x1FU;
@@ -8999,7 +9064,7 @@ public partial class Disassembler {
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			return "UDIV";
 		}
-		insn_334:
+		insn_335:
 		if((insn & 0xFFE08000) == 0x9BA00000) {
 			var rm = (insn >> 16) & 0x1FU;
 			var ra = (insn >> 10) & 0x1FU;
@@ -9007,7 +9072,7 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return "UMADDL";
 		}
-		insn_335:
+		insn_336:
 		if((insn & 0xBF20F400) == 0x2E20A400) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -9019,7 +9084,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", _ => throw new NotImplementedException() });
 			return "UMAXP-UMINP";
 		}
-		insn_336:
+		insn_337:
 		if((insn & 0xBFE0FC00) == 0x0E003C00) {
 			var Q = (insn >> 30) & 0x1U;
 			var imm = (insn >> 16) & 0x1FU;
@@ -9054,14 +9119,14 @@ public partial class Disassembler {
 			}
 			return "UMOV";
 		}
-		insn_337:
+		insn_338:
 		if((insn & 0xFFE0FC00) == 0x9BC07C00) {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			return "UMULH";
 		}
-		insn_338:
+		insn_339:
 		if((insn & 0xBF20FC00) == 0x2E204400) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -9071,7 +9136,7 @@ public partial class Disassembler {
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "USHL-vector";
 		}
-		insn_339:
+		insn_340:
 		if((insn & 0xBF80FC00) == 0x2F00A400) {
 			var Q = (insn >> 30) & 0x1U;
 			var immh = (insn >> 19) & 0xFU;
@@ -9083,7 +9148,7 @@ public partial class Disassembler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_340;
+				goto insn_341;
 			var i2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				Ta = "8H";
@@ -9109,7 +9174,7 @@ public partial class Disassembler {
 			}
 			return "USHLL-vector";
 		}
-		insn_340:
+		insn_341:
 		if((insn & 0xBF3FFC00) == 0x0E212800) {
 			var top = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -9120,11 +9185,11 @@ public partial class Disassembler {
 			var ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x2) => "2D", _ => throw new NotImplementedException() });
 			return "XTN[2]";
 		}
-		insn_341:
+		insn_342:
 		if((insn & 0xFFFFFFFF) == 0xD503203F) {
 			return "YIELD";
 		}
-		insn_342:
+		insn_343:
 		if((insn & 0xBF20BC00) == 0x0E003800) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -9136,10 +9201,10 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ZIP";
 		}
-		insn_343:
+		insn_344:
 
         return null;
     }
 
-    public const int InstructionCount = 343 + 0;
+    public const int InstructionCount = 344 + 0;
 }

@@ -4376,6 +4376,36 @@
                 (vector (mfor (i 2) (shl-elem i u64)))
                 (unimplemented))))))
 
+(defm shrn-elem (di si wide thin)
+    (vector-insert rd di (thin (>> (vector-element (vec rn) si wide) shift))))
+(defm shrn-sub (count wide thin)
+    (if Q
+        (block (mfor (i count) (shrn-elem (+ i count) i wide thin)))
+        (block (mfor (i count) (shrn-elem i i wide thin)))))
+
+(def SHRN[2]
+    "0 Q 0 011110 hhhh bbb 1000 0 1 nnnnn ddddd"
+    "shrn$variant V$rd.$tb, V$rn.$ta, #$shift"
+    (names (Q Q) (immh h) (immb b) (rn n) (rd d))
+    (mlet (variant (if Q "2" "") ta "" tb "" shift (u64 0))
+        (if (== immh 0b0001) (block
+            (= ta "8H") (= tb (if Q "16B" "8B"))
+            (= shift (- 16 (: immh immb))))
+        (if (== (& immh 0b1110) 0b0010) (block
+            (= ta "4S") (= tb (if Q "8H" "4H"))
+            (= shift (- 32 (: immh immb))))
+        (if (== (& immh 0b1100) 0b0100) (block
+            (= ta "2D") (= tb (if Q "4S" "2S"))
+            (= shift (- 64 (: immh immb))))
+        (unimplemented)))))
+    (if (== immh 0b0001)
+        (shrn-sub 8 u16 u8)
+    (if (== (& immh 0b1110) 0b0010)
+        (shrn-sub 4 u32 u16)
+    (if (== (& immh 0b1100) 0b0100)
+        (shrn-sub 2 u64 u32)
+        (unimplemented)))))
+
 (def SMADDL
     "1 00 11011 0 01 mmmmm 0 aaaaa nnnnn ddddd"
     "smaddl X$rd, W$rn, W$rm, X$ra"
