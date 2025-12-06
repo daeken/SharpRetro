@@ -304,7 +304,10 @@ public partial class CoreRecompiler : Recompiler {
                 State = new StaticStructRef<ulong, CpuState>(Builder, new StaticRuntimeValue<ulong>(new StaticIRValue.Named("State", typeof(ulong))));
                 var insn = ExeLoader.Load<uint>(PC);
                 var dasm = Disassemble(PC, insn);
-                if(dasm == null) continue;
+                if(dasm == null) {
+                    Console.WriteLine($"{PC:X}: Invalid instruction {insn & 0xFF:X02} {(insn >> 8) & 0xFF:X02} {(insn >> 16) & 0xFF:X02} {(insn >> 24) & 0xFF:X02}");
+                    continue;
+                }
                 Console.WriteLine($"{PC:X}: {dasm}");
                 //Builder.Add(new DebugStmt(PC, dasm));
                 if(RecompileOne(Builder, State, insn, PC))
@@ -396,9 +399,6 @@ public partial class CoreRecompiler : Recompiler {
             blocks[curBlock] = (addr, statements, LeadingTo());
         }
         return blocks;
-    }
-
-    public void CleanupIR() {
     }
 
     protected override void Branch(ulong addr) {

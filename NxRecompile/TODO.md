@@ -24,3 +24,6 @@
 - Add function signature determination
   - Add wrapper functions for jumptable invocations
   - Use function signature for static runFrom instances
+- Divide WholeBlockGraph into minimal subgraphs (both for optimization of the graph logic, and for easier reasoning)
+- Implement NSO loading
+  - Implement RTLD replacement
