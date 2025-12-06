@@ -6123,43 +6123,20 @@
             0b11_1 "2D"
             (unimplemented))))
     (mlet (av (vec rn) bv (vec rm))
-        (= (vec rd) (vector-all (u8 0)))
         (let _base (* (u32 op) (/ (/ (if Q 128 64) (<< 8 size)) 2))
-            (match size
-                0b00 (block
-                    (vector-insert rd 0 (vector-element av (+ _base 0) u8))
-                    (vector-insert rd 2 (vector-element av (+ _base 1) u8))
-                    (vector-insert rd 4 (vector-element av (+ _base 2) u8))
-                    (vector-insert rd 6 (vector-element av (+ _base 3) u8))
-                    (vector-insert rd 1 (vector-element bv (+ _base 0) u8))
-                    (vector-insert rd 3 (vector-element bv (+ _base 1) u8))
-                    (vector-insert rd 5 (vector-element bv (+ _base 2) u8))
-                    (vector-insert rd 7 (vector-element bv (+ _base 3) u8))
-                    (when Q
-                        (vector-insert rd 8  (vector-element av (+ _base 4) u8))
-                        (vector-insert rd 10 (vector-element av (+ _base 5) u8))
-                        (vector-insert rd 12 (vector-element av (+ _base 6) u8))
-                        (vector-insert rd 14 (vector-element av (+ _base 7) u8))
-                        (vector-insert rd 9  (vector-element bv (+ _base 4) u8))
-                        (vector-insert rd 11 (vector-element bv (+ _base 5) u8))
-                        (vector-insert rd 13 (vector-element bv (+ _base 6) u8))
-                        (vector-insert rd 15 (vector-element bv (+ _base 7) u8))))
-                0b01 (block
-                    (vector-insert rd 0 (vector-element av (+ _base 0) u16))
-                    (vector-insert rd 2 (vector-element av (+ _base 1) u16))
-                    (vector-insert rd 1 (vector-element bv (+ _base 0) u16))
-                    (vector-insert rd 3 (vector-element bv (+ _base 1) u16))
-                    (when Q
-                        (vector-insert rd 4 (vector-element av (+ _base 2) u16))
-                        (vector-insert rd 6 (vector-element av (+ _base 3) u16))
-                        (vector-insert rd 5 (vector-element bv (+ _base 2) u16))
-                        (vector-insert rd 7 (vector-element bv (+ _base 3) u16))))
-                0b10 (block
-                    (vector-insert rd 0 (vector-element av (+ _base 0) u32))
-                    (vector-insert rd 1 (vector-element bv (+ _base 0) u32))
-                    (when Q
-                        (vector-insert rd 2 (vector-element av (+ _base 1) u32))
-                        (vector-insert rd 3 (vector-element bv (+ _base 1) u32))))
-                     (block
-                    (vector-insert rd 0 (vector-element av (+ _base 0) u64))
-                    (vector-insert rd 1 (vector-element bv (+ _base 0) u64)))))))
+            (= (vec rd)
+                (match (: size Q)
+                    0b00_0 (vector
+                        (mfor (i 8) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u8))
+                        (mfor (i 8) (u8 0)))
+                    0b00_1 (vector (mfor (i 16) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u8)))
+                    0b01_0 (vector
+                        (mfor (i 4) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u16))
+                        (mfor (i 4) (u16 0)))
+                    0b01_1 (vector (mfor (i 8) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u16)))
+                    0b10_0 (vector
+                        (mfor (i 2) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u32))
+                        (mfor (i 2) (u32 0)))
+                    0b10_1 (vector (mfor (i 4) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u32)))
+                    0b11_1 (vector (mfor (i 2) (vector-element (if (& i 1) bv av) (+ _base (>> i 1)) u64)))
+                           (unimplemented))))))
