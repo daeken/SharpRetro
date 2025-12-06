@@ -1567,7 +1567,21 @@
     (names (type t) (rm m) (rn n) (opc o))
     (block
         (let r (match type
-            0b11 "H"
+            0b00 "S"
+            0b01 "D"
+            (unimplemented)))
+        (let zero (if (== opc 1) "/0" "")))
+    (match type
+        0b00 (fcmp (vec-s rn) (if (== opc 1) (f32 0) (vec-s rm)))
+        0b01 (fcmp (vec-d rn) (if (== opc 1) (f64 0) (vec-d rm)))
+        (unimplemented)))
+
+(def FCMPE
+    "0 0 0 11110 tt 1 mmmmm 00 1000 nnnnn 1o 000"
+    "fcmpe $r$rn, $r$rm $zero"
+    (names (type t) (rm m) (rn n) (opc o))
+    (block
+        (let r (match type
             0b00 "S"
             0b01 "D"
             (unimplemented)))
