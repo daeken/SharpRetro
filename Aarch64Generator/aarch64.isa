@@ -5982,10 +5982,10 @@
     (mlet (T "" index 0
             r (if Q "X" "W")
             comb (: Q imm)
-            size (if (== (& 0b100001) 0b000001) 8
-                    (if (== (& 0b100011) 0b000010) 16
-                    (if (== (& 0b100111) 0b000100) 32
-                    (if (== (& 0b101111) 0b101000) 64
+            size (if (== (& comb 0b100001) 0b000001) 8
+                    (if (== (& comb 0b100011) 0b000010) 16
+                    (if (== (& comb 0b100111) 0b000100) 32
+                    (if (== (& comb 0b101111) 0b101000) 64
                     (unimplemented))))))
         (match size
             8  (block (= T "B") (= index (>> imm 1)))

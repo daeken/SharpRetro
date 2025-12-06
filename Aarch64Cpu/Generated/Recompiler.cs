@@ -14942,7 +14942,7 @@ public partial class Recompiler {
 			var index = (byte) 0x0;
 			var r = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("X") : (string) ("W"));
 			var comb = (byte) ((byte) (((byte) (((byte) (imm)) << 0)) | ((byte) (((byte) (Q)) << 5))));
-			var size = (byte) (((bool) (((byte) (((byte) 0x21))) == ((byte) 0x1))) ? (byte) ((byte) 0x8) : (byte) ((byte) (((bool) (((byte) (((byte) 0x23))) == ((byte) 0x2))) ? (byte) ((byte) 0x10) : (byte) ((byte) (((bool) (((byte) (((byte) 0x27))) == ((byte) 0x4))) ? (byte) ((byte) 0x20) : (byte) ((byte) (((bool) (((byte) (((byte) 0x2F))) == ((byte) 0x28))) ? ((byte) 0x40) : throw new NotImplementedException())))))));
+			var size = (byte) (((bool) (((byte) ((byte) (((comb) & ((byte) ((byte) ((byte) 0x21))))))) == ((byte) 0x1))) ? (byte) ((byte) 0x8) : (byte) ((byte) (((bool) (((byte) ((byte) (((comb) & ((byte) ((byte) ((byte) 0x23))))))) == ((byte) 0x2))) ? (byte) ((byte) 0x10) : (byte) ((byte) (((bool) (((byte) ((byte) (((comb) & ((byte) ((byte) ((byte) 0x27))))))) == ((byte) 0x4))) ? (byte) ((byte) 0x20) : (byte) ((byte) (((bool) (((byte) ((byte) (((comb) & ((byte) ((byte) ((byte) 0x2F))))))) == ((byte) 0x28))) ? ((byte) 0x40) : throw new NotImplementedException())))))));
 			switch(size) {
 				case (byte) ((byte) 0x8): {
 					T = "B";
