@@ -6076,11 +6076,12 @@
 (defm xtn-sub (count wide thin base)
     (for (i count) (vector-insert rd (+ base i) (thin (vector-element v i wide)))))
 
-(def XTN
-    "0 0 0 01110 ss 10000 10010 10 nnnnn ddddd"
-    "xtn V$rd.$tb, V$rn.$ta"
-    (names (size s) (rn n) (rd d))
+(def XTN[2]
+    "0 t 0 01110 ss 10000 10010 10 nnnnn ddddd"
+    "xtn$variant V$rd.$tb, V$rn.$ta"
+    (names (top t) (size s) (rn n) (rd d))
     (block
+        (let variant (if top "2" ""))
         (let tb (match size
             0b00 "8B"
             0b01 "4H"
@@ -6092,33 +6093,12 @@
             0b10 "2D"
             (unimplemented))))
     (let v (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
+        (when (! top)
+            (= (vec rd) (vector-all (u8 0))))
         (match size
-            0b00 (xtn-sub 8 u16 u8 0)
-            0b01 (xtn-sub 4 u32 u16 0)
-            0b10 (xtn-sub 2 u64 u32 0)
-            (unimplemented))))
-
-(def XTN2
-    "0 1 0 01110 ss 10000 10010 10 nnnnn ddddd"
-    "xtn2 V$rd.$tb, V$rn.$ta"
-    (names (size s) (rn n) (rd d))
-    (block
-        (let tb (match size
-            0b00 "16B"
-            0b01 "8H"
-            0b10 "4S"
-            (unimplemented)))
-        (let ta (match size
-            0b00 "8H"
-            0b01 "4S"
-            0b10 "2D"
-            (unimplemented))))
-    (let v (vec rn)
-        (match size
-            0b00 (xtn-sub 8 u16 u8 8)
-            0b01 (xtn-sub 4 u32 u16 4)
-            0b10 (xtn-sub 2 u64 u32 2)
+            0b00 (xtn-sub 8 u16 u8 (if top 8 0))
+            0b01 (xtn-sub 4 u32 u16 (if top 4 0))
+            0b10 (xtn-sub 2 u64 u32 (if top 2 0))
             (unimplemented))))
 
 (def YIELD
