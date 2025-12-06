@@ -656,7 +656,7 @@ public abstract record StaticIRValue(Type Type) {
             var nvalues = Values.Zip(Values.Select(value => value.Transform(func)))
                 .Select(x => x.Second == null || ReferenceEquals(x.First, x.Second) ? null : x.Second).ToArray();
             var nthis = nvalues.Any(x => x != null)
-                ? this with { Values = nvalues }
+                ? this with { Values = nvalues.Zip(Values).Select(x => x.First ?? x.Second).ToArray() }
                 : this;
             return func(nthis) ?? nthis;
         }

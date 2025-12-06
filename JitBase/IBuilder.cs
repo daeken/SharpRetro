@@ -26,6 +26,9 @@ public interface IBuilder<AddrT> where AddrT : struct {
 		IRuntimeValue<uint> _00, IRuntimeValue<uint> _01, IRuntimeValue<uint> _02, IRuntimeValue<uint> _03
 	);
 	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<ulong> _00, IRuntimeValue<ulong> _01
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
 		IRuntimeValue<float> _00, IRuntimeValue<float> _01, IRuntimeValue<float> _02, IRuntimeValue<float> _03
 	);
 	IRuntimeValue<Vector128<float>> CreateVector(

@@ -33,7 +33,25 @@ public static class MacroProcessor {
 		PTree Sub(PTree elem) {
 			if(elem is PName(var pname)) return new PName(pname);
 			if(elem is not PList list) return elem;
-			if(list.Count == 0 || list[0] is not PName(var name) || !macros.TryGetValue(name, out var mlist)) return new PList(list.Select(Sub));
+			if(list.Count == 0 || list[0] is not PName(var name)) return new PList(list.Select(Sub));
+			if(name == "mfor") {
+				var nlist = new PList(list.Select(Sub));
+				var dlist = (PList) nlist[1];
+				var (iname, start, end, step) = dlist switch {
+					[PName(var vname), PInt(var fend)] =>
+						(vname, 0, (int) fend, 1),
+					[PName(var vname), PInt(var fstart), PInt(var fend)] =>
+						(vname, (int) fstart, (int) fend, 1),
+					[PName(var vname), PInt(var fstart), PInt(var fend), PInt(var fstep)] =>
+						(vname, (int) fstart, (int) fend, (int) fstep),
+					_ => throw new NotSupportedException(dlist.ToString()),
+				};
+				var ret = new List<PTree> { new PName("inline-block") };
+				for(var i = start; i < end; i += step)
+					ret.Add(Sub(Repl(name, nlist[2], new() { [iname] = new PInt(i) })));
+				return new PList(ret);
+			}
+			if(!macros.TryGetValue(name, out var mlist)) return new PList(list.Select(Sub));
 			foreach(var (args, block) in mlist) {
 				if(args.Count != list.Count - 1) continue;
 				return Sub(Repl(name, block, args.Select((vn, i) => (vn, list[i + 1])).ToDictionary()));
@@ -41,7 +59,22 @@ public static class MacroProcessor {
 
 			throw new NotSupportedException($"No overload of macro {name.ToPrettyString()} takes {list.Count - 1} arguments");
 		}
-			
-		return (PList) Sub(top);
+
+		PList StripInlineBlocks(PList list) {
+			var nlist = new List<PTree>();
+			foreach(var elem in list) {
+				if(elem is not PList elist || elist.Count == 0) {
+					nlist.Add(elem);
+					continue;
+				}
+				if(elist[0] is PName("inline-block"))
+					nlist.AddRange(StripInlineBlocks(new(elist.Skip(1))));
+				else
+					nlist.Add(StripInlineBlocks(elist));
+			}
+			return new(nlist);
+		}
+
+		return StripInlineBlocks((PList) Sub(top));
 	}
 }
