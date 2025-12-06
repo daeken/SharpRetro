@@ -45,8 +45,30 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
         ]));
 
     public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<sbyte> _00, IRuntimeValue<sbyte> _01, IRuntimeValue<sbyte> _02, IRuntimeValue<sbyte> _03,
+        IRuntimeValue<sbyte> _04, IRuntimeValue<sbyte> _05, IRuntimeValue<sbyte> _06, IRuntimeValue<sbyte> _07,
+        IRuntimeValue<sbyte> _08, IRuntimeValue<sbyte> _09, IRuntimeValue<sbyte> _10, IRuntimeValue<sbyte> _11,
+        IRuntimeValue<sbyte> _12, IRuntimeValue<sbyte> _13, IRuntimeValue<sbyte> _14, IRuntimeValue<sbyte> _15
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03), 
+            W(_04), W(_05), W(_06), W(_07), 
+            W(_08), W(_09), W(_10), W(_11), 
+            W(_12), W(_13), W(_14), W(_15),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(
         IRuntimeValue<ushort> _00, IRuntimeValue<ushort> _01, IRuntimeValue<ushort> _02, IRuntimeValue<ushort> _03,
         IRuntimeValue<ushort> _04, IRuntimeValue<ushort> _05, IRuntimeValue<ushort> _06, IRuntimeValue<ushort> _07
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03), 
+            W(_04), W(_05), W(_06), W(_07),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<short> _00, IRuntimeValue<short> _01, IRuntimeValue<short> _02, IRuntimeValue<short> _03,
+        IRuntimeValue<short> _04, IRuntimeValue<short> _05, IRuntimeValue<short> _06, IRuntimeValue<short> _07
     ) =>
         new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
             W(_00), W(_01), W(_02), W(_03), 
@@ -60,7 +82,19 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
             W(_00), W(_01), W(_02), W(_03),
         ]));
 
+    public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<int> _00, IRuntimeValue<int> _01, IRuntimeValue<int> _02, IRuntimeValue<int> _03
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03),
+        ]));
+
     public IRuntimeValue<Vector128<float>> CreateVector(IRuntimeValue<ulong> _00, IRuntimeValue<ulong> _01) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(IRuntimeValue<long> _00, IRuntimeValue<long> _01) =>
         new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
             W(_00), W(_01),
         ]));

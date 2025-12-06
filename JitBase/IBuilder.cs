@@ -19,14 +19,30 @@ public interface IBuilder<AddrT> where AddrT : struct {
 		IRuntimeValue<byte> _12, IRuntimeValue<byte> _13, IRuntimeValue<byte> _14, IRuntimeValue<byte> _15
 	);
 	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<sbyte> _00, IRuntimeValue<sbyte> _01, IRuntimeValue<sbyte> _02, IRuntimeValue<sbyte> _03,
+		IRuntimeValue<sbyte> _04, IRuntimeValue<sbyte> _05, IRuntimeValue<sbyte> _06, IRuntimeValue<sbyte> _07,
+		IRuntimeValue<sbyte> _08, IRuntimeValue<sbyte> _09, IRuntimeValue<sbyte> _10, IRuntimeValue<sbyte> _11,
+		IRuntimeValue<sbyte> _12, IRuntimeValue<sbyte> _13, IRuntimeValue<sbyte> _14, IRuntimeValue<sbyte> _15
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
 		IRuntimeValue<ushort> _00, IRuntimeValue<ushort> _01, IRuntimeValue<ushort> _02, IRuntimeValue<ushort> _03,
 		IRuntimeValue<ushort> _04, IRuntimeValue<ushort> _05, IRuntimeValue<ushort> _06, IRuntimeValue<ushort> _07
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<short> _00, IRuntimeValue<short> _01, IRuntimeValue<short> _02, IRuntimeValue<short> _03,
+		IRuntimeValue<short> _04, IRuntimeValue<short> _05, IRuntimeValue<short> _06, IRuntimeValue<short> _07
 	);
 	IRuntimeValue<Vector128<float>> CreateVector(
 		IRuntimeValue<uint> _00, IRuntimeValue<uint> _01, IRuntimeValue<uint> _02, IRuntimeValue<uint> _03
 	);
 	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<int> _00, IRuntimeValue<int> _01, IRuntimeValue<int> _02, IRuntimeValue<int> _03
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
 		IRuntimeValue<ulong> _00, IRuntimeValue<ulong> _01
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<long> _00, IRuntimeValue<long> _01
 	);
 	IRuntimeValue<Vector128<float>> CreateVector(
 		IRuntimeValue<float> _00, IRuntimeValue<float> _01, IRuntimeValue<float> _02, IRuntimeValue<float> _03

@@ -1345,31 +1345,22 @@
         0b01 "4S"
         0b11 "2D"
         (unimplemented)))
-    (block
-        (match (: size Q)
-            0b00 (mlet (
-                    a (vector-element (vec rn) 0 f32) b (vector-element (vec rn) 1 f32)
-                    c (vector-element (vec rm) 0 f32) d (vector-element (vec rm) 1 f32))
-                (= (vec rd) (vector-all (f32 0)))
-                (vector-insert rd 0 (+ a b))
-                (vector-insert rd 1 (+ c d)))
-            0b01 (mlet (
-                    a (vector-element (vec rn) 0 f32) b (vector-element (vec rn) 1 f32)
-                    c (vector-element (vec rn) 2 f32) d (vector-element (vec rn) 3 f32)
-                    e (vector-element (vec rm) 0 f32) f (vector-element (vec rm) 1 f32)
-                    g (vector-element (vec rm) 2 f32) h (vector-element (vec rm) 3 f32))
-                (= (vec rd) (vector-all (f32 0)))
-                (vector-insert rd 0 (+ a b))
-                (vector-insert rd 1 (+ c d))
-                (vector-insert rd 2 (+ e f))
-                (vector-insert rd 3 (+ g h)))
-            0b11 (mlet (
-                    a (vector-element (vec rn) 0 f64) b (vector-element (vec rn) 1 f64)
-                    c (vector-element (vec rm) 0 f64) d (vector-element (vec rm) 1 f64))
-                (= (vec rd) (vector-all (f32 0)))
-                (vector-insert rd 0 (+ a b))
-                (vector-insert rd 1 (+ c d)))
-            (unimplemented))))
+    (mlet (n (vec rn) m (vec rm))
+        (= (vec rd)
+            (match (: size Q)
+                0b00 (vector
+                    (+ (vector-element n 0 f32) (vector-element n 1 f32))
+                    (+ (vector-element m 0 f32) (vector-element m 1 f32))
+                    (f32 0) (f32 0))
+                0b01 (vector
+                    (+ (vector-element n 0 f32) (vector-element n 1 f32))
+                    (+ (vector-element n 2 f32) (vector-element n 3 f32))
+                    (+ (vector-element m 0 f32) (vector-element m 1 f32))
+                    (+ (vector-element m 2 f32) (vector-element m 3 f32)))
+                0b11 (vector
+                    (+ (vector-element n 0 f64) (vector-element n 1 f64))
+                    (+ (vector-element m 0 f64) (vector-element m 1 f64)))
+                (unimplemented)))))
 
 (def FCCMP
     "0 0 0 11110 tt 1 mmmmm cccc 01 nnnnn 0 vvvv"
@@ -1433,25 +1424,26 @@
             0b11 "2D"
             (unimplemented))))
     (match (: size Q)
-        0b00 (let a1 (vector-element (vec rn) 0 f32) (let a2 (vector-element (vec rn) 1 f32)
-            (let b1 (vector-element (vec rm) 0 f32) (let b2 (vector-element (vec rm) 1 f32)
-                (= (vec rd) (vector-all (i32 0)))
-                (vector-insert rd 0 (fcm-reg a1 b1 i32 f32))
-                (vector-insert rd 1 (fcm-reg a2 b2 i32 f32))))))
-        0b01 (let a1 (vector-element (vec rn) 0 f32) (let a2 (vector-element (vec rn) 1 f32)
-            (let a3 (vector-element (vec rn) 2 f32) (let a4 (vector-element (vec rn) 3 f32)
-            (let b1 (vector-element (vec rm) 0 f32) (let b2 (vector-element (vec rm) 1 f32)
-            (let b3 (vector-element (vec rm) 2 f32) (let b4 (vector-element (vec rm) 3 f32)
-                (= (vec rd) (vector-all (i32 0)))
-                (vector-insert rd 0 (fcm-reg a1 b1 i32 f32))
-                (vector-insert rd 1 (fcm-reg a2 b2 i32 f32))
-                (vector-insert rd 2 (fcm-reg a3 b3 i32 f32))
-                (vector-insert rd 3 (fcm-reg a4 b4 i32 f32))))))))))
-        0b11 (let a1 (vector-element (vec rn) 0 f64) (let a2 (vector-element (vec rn) 1 f64)
-             (let b1 (vector-element (vec rm) 0 f64) (let b2 (vector-element (vec rm) 1 f64)
-                 (= (vec rd) (vector-all (i32 0)))
-                 (vector-insert rd 0 (fcm-reg a1 b1 i64 f64))
-                 (vector-insert rd 1 (fcm-reg a2 b2 i64 f64))))))
+        0b00 (mlet (a1 (vector-element (vec rn) 0 f32) a2 (vector-element (vec rn) 1 f32)
+                    b1 (vector-element (vec rm) 0 f32) b2 (vector-element (vec rm) 1 f32))
+                (= (vec rd) (vector
+                    (fcm-reg a1 b1 i32 f32)
+                    (fcm-reg a2 b2 i32 f32)
+                    (f32 0) (f32 0))))
+        0b01 (mlet (a1 (vector-element (vec rn) 0 f32) a2 (vector-element (vec rn) 1 f32)
+                    a3 (vector-element (vec rn) 2 f32) a4 (vector-element (vec rn) 3 f32)
+                    b1 (vector-element (vec rm) 0 f32) b2 (vector-element (vec rm) 1 f32)
+                    b3 (vector-element (vec rm) 2 f32) b4 (vector-element (vec rm) 3 f32))
+                (= (vec rd) (vector
+                    (fcm-reg a1 b1 i32 f32)
+                    (fcm-reg a2 b2 i32 f32)
+                    (fcm-reg a3 b3 i32 f32)
+                    (fcm-reg a4 b4 i32 f32))))
+        0b11 (mlet (a1 (vector-element (vec rn) 0 f64) a2 (vector-element (vec rn) 1 f64)
+                    b1 (vector-element (vec rm) 0 f64) b2 (vector-element (vec rm) 1 f64))
+                 (= (vec rd) (vector
+                     (fcm-reg a1 b1 i64 f64)
+                     (fcm-reg a2 b2 i64 f64))))
         (unimplemented)))
 
 (defm fcm-zero (a b itype ftype)
@@ -1477,21 +1469,22 @@
             0b11 "2D"
             (unimplemented))))
     (match (: size Q)
-        0b00 (let v1 (vector-element (vec rn) 0 f32) (let v2 (vector-element (vec rn) 1 f32)
-            (= (vec rd) (vector-all (i32 0)))
-            (vector-insert rd 0 (fcm-zero v1 (f32 0) i32 f32))
-            (vector-insert rd 1 (fcm-zero v2 (f32 0) i32 f32))))
-        0b01 (let v1 (vector-element (vec rn) 0 f32) (let v2 (vector-element (vec rn) 1 f32)
-            (let v3 (vector-element (vec rn) 2 f32) (let v4 (vector-element (vec rn) 3 f32)
-                (= (vec rd) (vector-all (i32 0)))
-                (vector-insert rd 0 (fcm-zero v1 (f32 0) i32 f32))
-                (vector-insert rd 1 (fcm-zero v2 (f32 0) i32 f32))
-                (vector-insert rd 2 (fcm-zero v3 (f32 0) i32 f32))
-                (vector-insert rd 3 (fcm-zero v4 (f32 0) i32 f32))))))
-        0b11 (let v1 (vector-element (vec rn) 0 f64) (let v2 (vector-element (vec rn) 1 f64)
-            (= (vec rd) (vector-all (i32 0)))
-            (vector-insert rd 0 (fcm-zero v1 (f64 0) i64 f64))
-            (vector-insert rd 1 (fcm-zero v2 (f64 0) i64 f64))))
+        0b00 (mlet (v1 (vector-element (vec rn) 0 f32) v2 (vector-element (vec rn) 1 f32))
+            (= (vec rd) (vector
+                (fcm-zero v1 (f32 0) i32 f32)
+                (fcm-zero v2 (f32 0) i32 f32)
+                (f32 0) (f32 0))))
+        0b01 (mlet (v1 (vector-element (vec rn) 0 f32) v2 (vector-element (vec rn) 1 f32)
+                    v3 (vector-element (vec rn) 2 f32) v4 (vector-element (vec rn) 3 f32))
+                (= (vec rd) (vector
+                    (fcm-zero v1 (f32 0) i32 f32)
+                    (fcm-zero v2 (f32 0) i32 f32)
+                    (fcm-zero v3 (f32 0) i32 f32)
+                    (fcm-zero v4 (f32 0) i32 f32))))
+        0b11 (mlet (v1 (vector-element (vec rn) 0 f64) v2 (vector-element (vec rn) 1 f64))
+            (= (vec rd) (vector
+                (fcm-zero v1 (f64 0) i64 f64)
+                (fcm-zero v2 (f64 0) i64 f64))))
         (unimplemented)))
 
 (defm fcmlt-zero (a b itype ftype)
@@ -1507,21 +1500,22 @@
         0b11 "2D"
         (unimplemented)))
     (match (: size Q)
-        0b00 (let v1 (vector-element (vec rn) 0 f32) (let v2 (vector-element (vec rn) 1 f32)
-            (= (vec rd) (vector-all (i32 0)))
-            (vector-insert rd 0 (fcmlt-zero v1 (f32 0) i32 f32))
-            (vector-insert rd 1 (fcmlt-zero v2 (f32 0) i32 f32))))
-        0b01 (let v1 (vector-element (vec rn) 0 f32) (let v2 (vector-element (vec rn) 1 f32)
-            (let v3 (vector-element (vec rn) 2 f32) (let v4 (vector-element (vec rn) 3 f32)
-                (= (vec rd) (vector-all (i32 0)))
-                (vector-insert rd 0 (fcmlt-zero v1 (f32 0) i32 f32))
-                (vector-insert rd 1 (fcmlt-zero v2 (f32 0) i32 f32))
-                (vector-insert rd 2 (fcmlt-zero v3 (f32 0) i32 f32))
-                (vector-insert rd 3 (fcmlt-zero v4 (f32 0) i32 f32))))))
-        0b11 (let v1 (vector-element (vec rn) 0 f64) (let v2 (vector-element (vec rn) 1 f64)
-            (= (vec rd) (vector-all (i32 0)))
-            (vector-insert rd 0 (fcmlt-zero v1 (f64 0) i64 f64))
-            (vector-insert rd 1 (fcmlt-zero v2 (f64 0) i64 f64))))
+        0b00 (mlet (v1 (vector-element (vec rn) 0 f32) v2 (vector-element (vec rn) 1 f32))
+            (= (vec rd) (vector
+                (fcmlt-zero v1 (f32 0) i32 f32)
+                (fcmlt-zero v2 (f32 0) i32 f32)
+                (f32 0) (f32 0))))
+        0b01 (mlet (v1 (vector-element (vec rn) 0 f32) v2 (vector-element (vec rn) 1 f32)
+                    v3 (vector-element (vec rn) 2 f32) v4 (vector-element (vec rn) 3 f32))
+                (= (vec rd) (vector
+                    (fcmlt-zero v1 (f32 0) i32 f32)
+                    (fcmlt-zero v2 (f32 0) i32 f32)
+                    (fcmlt-zero v3 (f32 0) i32 f32)
+                    (fcmlt-zero v4 (f32 0) i32 f32))))
+        0b11 (mlet (v1 (vector-element (vec rn) 0 f64) v2 (vector-element (vec rn) 1 f64))
+            (= (vec rd) (vector
+                (fcmlt-zero v1 (f64 0) i64 f64)
+                (fcmlt-zero v2 (f64 0) i64 f64))))
         (unimplemented)))
 
 (def FCMP
@@ -1674,15 +1668,15 @@
             0b10 "2S"
             "4S")))
     (let n (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b10 (block
-                    (vector-insert rd 0 (f64 (vector-element n 0 f32)))
-                    (vector-insert rd 1 (f64 (vector-element n 1 f32))))
-            0b11 (block
-                    (vector-insert rd 0 (f64 (vector-element n 2 f32)))
-                    (vector-insert rd 1 (f64 (vector-element n 3 f32))))
-            (unimplemented))))
+        (= (vec rd)
+            (match (: size Q)
+                0b10 (vector
+                        (f64 (vector-element n 0 f32))
+                        (f64 (vector-element n 1 f32)))
+                0b11 (vector
+                        (f64 (vector-element n 2 f32))
+                        (f64 (vector-element n 3 f32)))
+                (unimplemented)))))
 
 (def FCVTMS-scalar-integer
     "s 0 0 11110 tt 1 10 000 000000 nnnnn ddddd"
@@ -1737,16 +1731,18 @@
             0 (block (= Ta "4S") (= Tb "4H"))
             1 (block (= Ta "2D") (= Tb "2S"))))
     (let sv (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match size
-            0 (block
-                (vector-insert rd 0 (i16 (vector-element sv 0 f32)))
-                (vector-insert rd 1 (i16 (vector-element sv 1 f32)))
-                (vector-insert rd 2 (i16 (vector-element sv 2 f32)))
-                (vector-insert rd 3 (i16 (vector-element sv 3 f32))))
-            1 (block
-                (vector-insert rd 0 (f32 (vector-element sv 0 f64)))
-                (vector-insert rd 1 (f32 (vector-element sv 1 f64)))))))
+        (= (vec rd)
+            (match size
+                0 (vector
+                    (i16 (vector-element sv 0 f32))
+                    (i16 (vector-element sv 1 f32))
+                    (i16 (vector-element sv 2 f32))
+                    (i16 (vector-element sv 3 f32))
+                    (i16 0) (i16 0) (i16 0) (i16 0))
+                1 (vector
+                    (f32 (vector-element sv 0 f64))
+                    (f32 (vector-element sv 1 f64))
+                    (f32 0) (f32 0))))))
 
 (def FCVTN2
     "0 1 0 01110 0 s 10000 10110 10 nnnnn ddddd"
@@ -2268,20 +2264,21 @@
         0b1_1 "2D"
         (unimplemented)))
     (let sv (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b0_0 (block
-                (vector-insert rd 0 (-! (vector-element sv 0 f32)))
-                (vector-insert rd 1 (-! (vector-element sv 1 f32))))
-            0b0_1 (block
-                (vector-insert rd 0 (-! (vector-element sv 0 f32)))
-                (vector-insert rd 1 (-! (vector-element sv 1 f32)))
-                (vector-insert rd 2 (-! (vector-element sv 2 f32)))
-                (vector-insert rd 3 (-! (vector-element sv 3 f32))))
-            0b1_1 (block
-                (vector-insert rd 0 (-! (vector-element sv 0 f64)))
-                (vector-insert rd 1 (-! (vector-element sv 1 f64))))
-            (unimplemented))))
+        (= (vec rd)
+            (match (: size Q)
+                0b0_0 (vector
+                    (-! (vector-element sv 0 f32))
+                    (-! (vector-element sv 1 f32))
+                    (f32 0) (f32 0))
+                0b0_1 (vector
+                    (-! (vector-element sv 0 f32))
+                    (-! (vector-element sv 1 f32))
+                    (-! (vector-element sv 2 f32))
+                    (-! (vector-element sv 3 f32)))
+                0b1_1 (vector
+                    (-! (vector-element sv 0 f64))
+                    (-! (vector-element sv 1 f64)))
+                (unimplemented)))))
 
 (def FNMADD
     "0 0 0 11111 tt 1 mmmmm 0 aaaaa nnnnn ddddd"
@@ -4182,38 +4179,19 @@
         0b11_1 "2D"
         (unimplemented)))
     (let n (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b00_0 (block
-                    (vector-insert rd 0 (-! (vector-element n 0 i8))) (vector-insert rd 1 (-! (vector-element n 1 i8)))
-                    (vector-insert rd 2 (-! (vector-element n 2 i8))) (vector-insert rd 3 (-! (vector-element n 3 i8)))
-                    (vector-insert rd 4 (-! (vector-element n 4 i8))) (vector-insert rd 5 (-! (vector-element n 5 i8)))
-                    (vector-insert rd 6 (-! (vector-element n 6 i8))) (vector-insert rd 7 (-! (vector-element n 7 i8))))
-            0b00_1 (block
-                    (vector-insert rd  0 (-! (vector-element n  0 i8))) (vector-insert rd  1 (-! (vector-element n  1 i8)))
-                    (vector-insert rd  2 (-! (vector-element n  2 i8))) (vector-insert rd  3 (-! (vector-element n  3 i8)))
-                    (vector-insert rd  4 (-! (vector-element n  4 i8))) (vector-insert rd  5 (-! (vector-element n  5 i8)))
-                    (vector-insert rd  6 (-! (vector-element n  6 i8))) (vector-insert rd  7 (-! (vector-element n  7 i8)))
-                    (vector-insert rd  8 (-! (vector-element n  8 i8))) (vector-insert rd  9 (-! (vector-element n  9 i8)))
-                    (vector-insert rd 10 (-! (vector-element n 10 i8))) (vector-insert rd 11 (-! (vector-element n 11 i8)))
-                    (vector-insert rd 12 (-! (vector-element n 12 i8))) (vector-insert rd 13 (-! (vector-element n 13 i8)))
-                    (vector-insert rd 14 (-! (vector-element n 14 i8))) (vector-insert rd 15 (-! (vector-element n 15 i8))))
-            0b01_0 (block
-                    (vector-insert rd 0 (-! (vector-element n 0 i16))) (vector-insert rd 1 (-! (vector-element n 1 i16)))
-                    (vector-insert rd 2 (-! (vector-element n 2 i16))) (vector-insert rd 3 (-! (vector-element n 3 i16))))
-            0b01_1 (block
-                    (vector-insert rd 0 (-! (vector-element n 0 i16))) (vector-insert rd 1 (-! (vector-element n 1 i16)))
-                    (vector-insert rd 2 (-! (vector-element n 2 i16))) (vector-insert rd 3 (-! (vector-element n 3 i16)))
-                    (vector-insert rd 4 (-! (vector-element n 4 i16))) (vector-insert rd 5 (-! (vector-element n 5 i16)))
-                    (vector-insert rd 6 (-! (vector-element n 6 i16))) (vector-insert rd 7 (-! (vector-element n 7 i16))))
-            0b10_0 (block
-                    (vector-insert rd 0 (-! (vector-element n 0 i32))) (vector-insert rd 1 (-! (vector-element n 1 i32))))
-            0b10_1 (block
-                    (vector-insert rd 0 (-! (vector-element n 0 i32))) (vector-insert rd 1 (-! (vector-element n 1 i32)))
-                    (vector-insert rd 2 (-! (vector-element n 2 i32))) (vector-insert rd 3 (-! (vector-element n 3 i32))))
-            0b11_1 (block
-                    (vector-insert rd 0 (-! (vector-element n 0 i64))) (vector-insert rd 1 (-! (vector-element n 1 i64))))
-            (unimplemented))))
+        (match size
+            0b00 (= (vec rd) (if Q
+                    (vector (mfor (i 16) (-! (vector-element n i i8))))
+                    (vector (mfor (i 8) (-! (vector-element n i i8))) (mfor (i 8) (i8 0)))))
+            0b01 (= (vec rd) (if Q
+                    (vector (mfor (i 8) (-! (vector-element n i i16))))
+                    (vector (mfor (i 4) (-! (vector-element n i i16))) (mfor (i 4) (i16 0)))))
+            0b10 (= (vec rd) (if Q
+                    (vector (mfor (i 4) (-! (vector-element n i i32))))
+                    (vector (mfor (i 2) (-! (vector-element n i i32))) (mfor (i 2) (i32 0)))))
+                 (= (vec rd) (if Q
+                    (vector (mfor (i 2) (-! (vector-element n i i64))))
+                    (unimplemented))))))
 
 (def NOP
     "1101010100 0 00 011 0010 0000 000 11111"

@@ -13,7 +13,9 @@ public class CilStructRef<AddrT, DelegateT, T> : IStructRef<T> where AddrT : str
 		Ilg = ilg;
 		Pointer = ptr;
 	}
-	
+
+	public override IBuilder<U> GetBuilder<U>() => (IBuilder<U>) JBuilder;
+
 	public override IRuntimeValue<U> GetField<U>(string name, ulong offset) => JBuilder.C<U>(() => {
 		JBuilder.Emit(Pointer + JBuilder.LiteralValue(offset));
 		Ilg.Convert<IntPtr>();

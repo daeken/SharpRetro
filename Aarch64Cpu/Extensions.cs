@@ -7,8 +7,30 @@ internal class RuntimeVectorSubIndexer<T>(IStructRef<CpuState> state) where T : 
     public IRuntimeValue<T> this[int index] {
         get => state.V[index].Element<T>(0);
         set {
-            var nvec = state.V[index].Cast<Vector128<byte>>().ToZero().Cast<Vector128<float>>();
-            state.V[index] = nvec.Element(0, value);
+            var builder = state.GetBuilder<ulong>();
+            if(typeof(T) == typeof(byte)) {
+                var zero = builder.Zero<byte>();
+                state.V[index] = builder.CreateVector(
+                    (IRuntimeValue<byte>) value, zero, zero, zero, 
+                    zero, zero, zero, zero,
+                    zero, zero, zero, zero,
+                    zero, zero, zero, zero
+                );
+            } else if(typeof(T) == typeof(ushort)) {
+                var zero = builder.Zero<ushort>();
+                state.V[index] = builder.CreateVector(
+                    (IRuntimeValue<ushort>) value, zero, zero, zero, 
+                    zero, zero, zero, zero
+                );
+            } else if(typeof(T) == typeof(float)) {
+                var zero = builder.Zero<float>();
+                state.V[index] = builder.CreateVector(
+                    (IRuntimeValue<float>) value, zero, zero, zero
+                );
+            } else if(typeof(T) == typeof(double))
+                state.V[index] = builder.CreateVector((IRuntimeValue<double>) value, builder.Zero<double>());
+            else
+                throw new NotImplementedException($"Unhandled type {typeof(T)}");
         }
     }
 }

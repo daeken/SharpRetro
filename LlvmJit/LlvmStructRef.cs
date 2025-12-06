@@ -16,6 +16,8 @@ public unsafe class LlvmStructRef<AddrT, T> : IStructRef<T> where AddrT : struct
 		Pointer = ptr;
 	}
 
+	public override IBuilder<U> GetBuilder<U>() => (IBuilder<U>) JBuilder;
+
 	public override IRuntimeValue<U> GetField<U>(string name, ulong offset) => JBuilder.C<U>(() => {
 		var naddr = LLVM.BuildAdd(Builder, Pointer, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), offset), EmptyString);
 		var ptr = LLVM.BuildIntToPtr(Builder, naddr, LLVM.PointerType(LlvmType<U>(), 0), EmptyString);

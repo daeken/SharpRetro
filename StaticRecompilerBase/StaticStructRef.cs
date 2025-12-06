@@ -12,7 +12,9 @@ public class StaticStructRef<AddrT, T> : IStructRef<T> where AddrT : struct, INu
 		Builder = builder;
 		Pointer = ptr;
 	}
-	
+
+	public override IBuilder<U> GetBuilder<U>() => (IBuilder<U>) Builder;
+
 	public override IRuntimeValue<U> GetField<U>(string name, ulong offset) =>
 		name == null
 			? Builder.Pointer<U>(Pointer + Builder.LiteralValue(offset).Cast<AddrT>()).Value
