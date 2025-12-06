@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace CoreArchCompiler; 
 
@@ -21,6 +22,10 @@ class VectorMath : Builtin {
 	}
 			
 	public override void Define() {
+		Expression("vector", _ => EType.Vector.AsRuntime(),
+				list => throw new NotImplementedException(),
+				list => $"builder.CreateVector({string.Join(", ", list.Skip(1).Select(x => $"builder.EnsureRuntime({GenerateExpression(x)})"))})")
+			.NoInterpret(); // TODO: Implement
 		Expression("vector-all", list => EType.Vector.AsRuntime(),
 				list => $"reinterpret_cast<Vector128<float>>(({GenerateExpression(list[1])}) - (Vector128<{GenerateType(list[1].Type)}>) {{}})",
 				list => $"(({GenerateType(list[1].Type.AsRuntime())}) builder.EnsureRuntime({GenerateExpression(list[1])})).CreateVector()")

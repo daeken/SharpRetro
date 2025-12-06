@@ -631,6 +631,22 @@ public abstract record StaticIRValue(Type Type) {
             return func(nthis) ?? nthis;
         }
     }
+
+    public record CreateFullVector(StaticIRValue[] Values) : StaticIRValue(typeof(Vector128<float>)) {
+        public override void Walk(Action<StaticIRValue> func) {
+            func(this);
+            foreach(var value in Values)
+                value.Walk(func);
+        }
+        public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
+            var nvalues = Values.Zip(Values.Select(value => value.Transform(func)))
+                .Select(x => x.Second == null || ReferenceEquals(x.First, x.Second) ? null : x.Second).ToArray();
+            var nthis = nvalues.Any(x => x != null)
+                ? this with { Values = nvalues }
+                : this;
+            return func(nthis) ?? nthis;
+        }
+    }
     public record GetElement(StaticIRValue Vector, StaticIRValue Index, Type ElementType) : StaticIRValue(ElementType) {
         public override void Walk(Action<StaticIRValue> func) {
             func(this);

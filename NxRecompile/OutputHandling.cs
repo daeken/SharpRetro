@@ -205,6 +205,11 @@ public partial class CoreRecompiler {
     };
     static string POutput(StaticIRValue expr) =>
         NeedsParens(expr) ? $"({Output(expr)})" : Output(expr);
+
+    static string EnsureSize(Type type, string expr) =>
+        !type.IsConstructedGenericType && Marshal.SizeOf(type) < 4
+            ? $"({Output(type)}) ({expr})"
+            : expr;
     
     static string Output(StaticIRValue expr) {
         switch(expr) {
@@ -234,19 +239,19 @@ public partial class CoreRecompiler {
                 return ssaId == -1 ? name : $"{name}/*{ssaId}*/";
             }
             case StaticIRValue.Add(var left, var right): {
-                return $"{POutput(left)} + {POutput(right)}";
+                return EnsureSize(left.Type, $"{POutput(left)} + {POutput(right)}");
             }
             case StaticIRValue.Sub(var left, var right): {
-                return $"{POutput(left)} - {POutput(right)}";
+                return EnsureSize(left.Type, $"{POutput(left)} - {POutput(right)}");
             }
             case StaticIRValue.Mul(var left, var right): {
-                return $"{POutput(left)} * {POutput(right)}";
+                return EnsureSize(left.Type, $"{POutput(left)} * {POutput(right)}");
             }
             case StaticIRValue.Div(var left, var right): {
-                return $"{POutput(left)} / {POutput(right)}";
+                return EnsureSize(left.Type, $"{POutput(left)} / {POutput(right)}");
             }
             case StaticIRValue.Mod(var left, var right): {
-                return $"{POutput(left)} % {POutput(right)}";
+                return EnsureSize(left.Type, $"{POutput(left)} % {POutput(right)}");
             }
             case StaticIRValue.And(var left, var right): {
                 return BitwiseOp("&", left, right);
@@ -314,6 +319,11 @@ public partial class CoreRecompiler {
                 if(value.Type == typeof(float))
                     return $"(v4f) {{ {Output(value)} }}";
                 return $"std::bit_cast<v4f>(({Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(value.Type))}) {{ {Output(value)} }})";
+            }
+            case StaticIRValue.CreateFullVector(var values): {
+                var vals = string.Join(", ", values.Select(Output));
+                var vec = $"({Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(values[0].Type))}) {{ {vals} }}";
+                return values[0].Type == typeof(float) ? vec : $"std::bit_cast<v4f>({vec})";
             }
             case StaticIRValue.SignExt(var value, var width, var type): {
                 return $"signext_{Output(value.Type)}_{Output(type)}({Output(value)}, {width})";

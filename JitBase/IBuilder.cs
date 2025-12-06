@@ -1,3 +1,5 @@
+using System.Runtime.Intrinsics;
+
 namespace JitBase; 
 
 public interface IBuilder<AddrT> where AddrT : struct {
@@ -9,6 +11,23 @@ public interface IBuilder<AddrT> where AddrT : struct {
 	IRuntimeValue<T> EnsureRuntime<T>(T value) where T : struct => LiteralValue(value);
 	IRuntimeValue<T> EnsureRuntime<T>(IRuntimeValue<T> value) where T : struct => value;
 	IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct;
+
+	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<byte> _00, IRuntimeValue<byte> _01, IRuntimeValue<byte> _02, IRuntimeValue<byte> _03,
+		IRuntimeValue<byte> _04, IRuntimeValue<byte> _05, IRuntimeValue<byte> _06, IRuntimeValue<byte> _07,
+		IRuntimeValue<byte> _08, IRuntimeValue<byte> _09, IRuntimeValue<byte> _10, IRuntimeValue<byte> _11,
+		IRuntimeValue<byte> _12, IRuntimeValue<byte> _13, IRuntimeValue<byte> _14, IRuntimeValue<byte> _15
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<ushort> _00, IRuntimeValue<ushort> _01, IRuntimeValue<ushort> _02, IRuntimeValue<ushort> _03,
+		IRuntimeValue<ushort> _04, IRuntimeValue<ushort> _05, IRuntimeValue<ushort> _06, IRuntimeValue<ushort> _07
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<float> _00, IRuntimeValue<float> _01, IRuntimeValue<float> _02, IRuntimeValue<float> _03
+	);
+	IRuntimeValue<Vector128<float>> CreateVector(
+		IRuntimeValue<double> _00, IRuntimeValue<double> _01
+	);
 
 	ILocalVar<T> DefineLocal<T>() where T : struct;
 

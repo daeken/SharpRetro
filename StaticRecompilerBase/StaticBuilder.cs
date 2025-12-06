@@ -1,4 +1,5 @@
-﻿using JitBase;
+﻿using System.Runtime.Intrinsics;
+using JitBase;
 
 namespace StaticRecompilerBase;
 
@@ -29,6 +30,40 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
 
     public IRuntimePointer<AddrT, T> Pointer<T>(IRuntimeValue<AddrT> pointer) where T : struct =>
         new StaticRuntimePointer<AddrT, T>(this, pointer);
+
+    public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<byte> _00, IRuntimeValue<byte> _01, IRuntimeValue<byte> _02, IRuntimeValue<byte> _03,
+        IRuntimeValue<byte> _04, IRuntimeValue<byte> _05, IRuntimeValue<byte> _06, IRuntimeValue<byte> _07,
+        IRuntimeValue<byte> _08, IRuntimeValue<byte> _09, IRuntimeValue<byte> _10, IRuntimeValue<byte> _11,
+        IRuntimeValue<byte> _12, IRuntimeValue<byte> _13, IRuntimeValue<byte> _14, IRuntimeValue<byte> _15
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03), 
+            W(_04), W(_05), W(_06), W(_07), 
+            W(_08), W(_09), W(_10), W(_11), 
+            W(_12), W(_13), W(_14), W(_15),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<ushort> _00, IRuntimeValue<ushort> _01, IRuntimeValue<ushort> _02, IRuntimeValue<ushort> _03,
+        IRuntimeValue<ushort> _04, IRuntimeValue<ushort> _05, IRuntimeValue<ushort> _06, IRuntimeValue<ushort> _07
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03), 
+            W(_04), W(_05), W(_06), W(_07),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<float> _00, IRuntimeValue<float> _01, IRuntimeValue<float> _02, IRuntimeValue<float> _03
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(IRuntimeValue<double> _00, IRuntimeValue<double> _01) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01),
+        ]));
 
     public ILocalVar<T> DefineLocal<T>() where T : struct => throw new NotImplementedException();
 

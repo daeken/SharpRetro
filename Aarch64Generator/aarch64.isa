@@ -173,6 +173,78 @@
             (unimplemented))
         (= (vec rd) (if Q v (vector-zero-top v)))))
 
+(def ADDP-vector
+    "0 Q 0 01110 ss 1 mmmmm 10111 1 nnnnn ddddd"
+    "addp V$rd.$ts, V$rn.$ts, V$rm.$ts"
+    (names (Q Q) (size s) (rm m) (rn n) (rd d))
+    (let ts (match (: size Q)
+        0b00_0 "8B"
+        0b00_1 "16B"
+        0b01_0 "4H"
+        0b01_1 "8H"
+        0b10_0 "2S"
+        0b10_1 "4S"
+        0b11_1 "2D"
+        (unimplemented)))
+    (mlet (m (vec rm) n (vec rn))
+        (= (vec rd) (match (: size Q)
+            0b00_0 (vector
+                (+ (vector-element m 0 u8) (vector-element m 1 u8))
+                (+ (vector-element m 2 u8) (vector-element m 3 u8))
+                (+ (vector-element m 4 u8) (vector-element m 5 u8))
+                (+ (vector-element m 6 u8) (vector-element m 7 u8))
+                (+ (vector-element n 0 u8) (vector-element n 1 u8))
+                (+ (vector-element n 2 u8) (vector-element n 3 u8))
+                (+ (vector-element n 4 u8) (vector-element n 5 u8))
+                (+ (vector-element n 6 u8) (vector-element n 7 u8))
+                (u8 0) (u8 0) (u8 0) (u8 0)
+                (u8 0) (u8 0) (u8 0) (u8 0))
+            0b00_1 (vector
+                (+ (vector-element m  0 u8) (vector-element m  1 u8))
+                (+ (vector-element m  2 u8) (vector-element m  3 u8))
+                (+ (vector-element m  4 u8) (vector-element m  5 u8))
+                (+ (vector-element m  6 u8) (vector-element m  7 u8))
+                (+ (vector-element m  8 u8) (vector-element m  9 u8))
+                (+ (vector-element m 10 u8) (vector-element m 11 u8))
+                (+ (vector-element m 12 u8) (vector-element m 13 u8))
+                (+ (vector-element m 14 u8) (vector-element m 15 u8))
+                (+ (vector-element n  0 u8) (vector-element n  1 u8))
+                (+ (vector-element n  2 u8) (vector-element n  3 u8))
+                (+ (vector-element n  4 u8) (vector-element n  5 u8))
+                (+ (vector-element n  6 u8) (vector-element n  7 u8))
+                (+ (vector-element n  8 u8) (vector-element n  9 u8))
+                (+ (vector-element n 10 u8) (vector-element n 11 u8))
+                (+ (vector-element n 12 u8) (vector-element n 13 u8))
+                (+ (vector-element n 14 u8) (vector-element n 15 u8)))
+            0b01_0 (vector
+                (+ (vector-element m 0 u16) (vector-element m 1 u16))
+                (+ (vector-element m 2 u16) (vector-element m 3 u16))
+                (+ (vector-element n 0 u16) (vector-element n 1 u16))
+                (+ (vector-element n 2 u16) (vector-element n 3 u16))
+                (u16 0) (u16 0) (u16 0) (u16 0))
+            0b01_1 (vector
+                (+ (vector-element m 0 u16) (vector-element m 1 u16))
+                (+ (vector-element m 2 u16) (vector-element m 3 u16))
+                (+ (vector-element m 4 u16) (vector-element m 5 u16))
+                (+ (vector-element m 6 u16) (vector-element m 7 u16))
+                (+ (vector-element n 0 u16) (vector-element n 1 u16))
+                (+ (vector-element n 2 u16) (vector-element n 3 u16))
+                (+ (vector-element n 4 u16) (vector-element n 5 u16))
+                (+ (vector-element n 6 u16) (vector-element n 7 u16)))
+            0b10_0 (vector
+                (+ (vector-element m 0 f32) (vector-element m 1 f32))
+                (+ (vector-element n 0 f32) (vector-element n 1 f32))
+                (f32 0) (f32 0))
+            0b10_1 (vector
+                (+ (vector-element m 0 f32) (vector-element m 1 f32))
+                (+ (vector-element m 2 f32) (vector-element m 3 f32))
+                (+ (vector-element n 0 f32) (vector-element n 1 f32))
+                (+ (vector-element n 2 f32) (vector-element n 3 f32)))
+            0b11_1 (vector
+                (+ (vector-element m 0 f64) (vector-element m 1 f64))
+                (+ (vector-element n 0 f64) (vector-element n 1 f64)))
+            (unimplemented)))))
+
 (def ADDS-extended-register
     "s 0 1 01011 00 1 mmmmm ooo iii nnnnn ddddd"
     "adds $r1$rd, $r1$rn, $r2$rm, $extend #$imm"
@@ -1989,13 +2061,26 @@
         0b1_10_01_111 (vector-insert rd 1 (gpr64 rn))
         (unimplemented)))
 
+(def FMOV-register
+    "0 0 0 11110 tt 10000 00 10000 nnnnn ddddd"
+    "fmov $r$rd, $r$rn"
+    (names (type t) (rn n) (rd d))
+    (let r (match type
+        0b00 "S"
+        0b01 "D"
+        0b11 "H"
+        (unimplemented)))
+    (match type
+        0b00 (= (vec-s rd) (vec-s rn))
+        0b01 (= (vec-d rd) (vec-d rn))
+        0b11 (= (vec-h rd) (vec-d rn))))
+
 (def FMOV-scalar-immediate
     "0 0 0 11110 tt 1 iiiiiiii 100 00000 ddddd"
     "fmov $r$rd, #$sv"
     (names (type t) (imm i) (rd d))
     (block
         (let r (match type
-            0b11 "H"
             0b00 "S"
             0b01 "D"
             (unimplemented)))
