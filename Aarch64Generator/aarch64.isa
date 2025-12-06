@@ -6049,7 +6049,7 @@
                 0b11_1 (vector (mfor (i 2) (ushl-sub i u64)))
                        (unimplemented)))))
 
-(defm ushll-sub (si di stype dtype) (vector-insert rd di (<< (cast (vector-element n si stype) dtype) shift)))
+(defm ushll-sub (si stype dtype) (<< (cast (vector-element n si stype) dtype) shift))
 
 (def USHLL-vector
     "0 Q 1 011110 hhhh bbb 10100 1 nnnnn ddddd"
@@ -6063,21 +6063,15 @@
         (if (== (& immh 0b1100) 0b0100) (block (= Ta "2D") (= Tb (if Q "4S" "2S")) (= size 0b10) (= shift (- (u8 (: immh immb)) 32)))
                                         (unimplemented)))))
     (mlet (n (vec rn))
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b00_0 (block
-                    (ushll-sub 0 0 u8 u16) (ushll-sub 1 1 u8 u16) (ushll-sub 2 2 u8 u16) (ushll-sub 3 3 u8 u16)
-                    (ushll-sub 4 4 u8 u16) (ushll-sub 5 5 u8 u16) (ushll-sub 6 6 u8 u16) (ushll-sub 7 7 u8 u16))
-            0b00_1 (block
-                    (ushll-sub 8  0 u8 u16) (ushll-sub 9  1 u8 u16) (ushll-sub 10 2 u8 u16) (ushll-sub 11 3 u8 u16)
-                    (ushll-sub 12 4 u8 u16) (ushll-sub 13 5 u8 u16) (ushll-sub 14 6 u8 u16) (ushll-sub 15 7 u8 u16))
-            0b01_0 (block
-                    (ushll-sub 0 0 u16 u32) (ushll-sub 1 1 u16 u32) (ushll-sub 2 2 u16 u32) (ushll-sub 3 3 u16 u32))
-            0b01_1 (block
-                    (ushll-sub 4 0 u16 u32) (ushll-sub 5 1 u16 u32) (ushll-sub 6 2 u16 u32) (ushll-sub 7 3 u16 u32))
-            0b10_0 (block (ushll-sub 0 0 u32 u64) (ushll-sub 1 1 u32 u64))
-            0b10_1 (block (ushll-sub 2 0 u32 u64) (ushll-sub 3 1 u32 u64))
-                   (unimplemented))))
+        (= (vec rd)
+            (match (: size Q)
+                0b00_0 (vector (mfor (i 8) (ushll-sub i u8 u16)))
+                0b00_1 (vector (mfor (i 8) (ushll-sub (+ i 8) u8 u16)))
+                0b01_0 (vector (mfor (i 4) (ushll-sub i u16 u32)))
+                0b01_1 (vector (mfor (i 4) (ushll-sub (+ i 4) u16 u32)))
+                0b10_0 (vector (mfor (i 2) (ushll-sub i u32 u64)))
+                0b10_1 (vector (mfor (i 2) (ushll-sub (+ i 2) u32 u64)))
+                       (unimplemented)))))
 
 (defm xtn-sub (count wide thin base)
     (for (i count) (vector-insert rd (+ base i) (thin (vector-element v i wide)))))
