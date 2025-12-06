@@ -3265,6 +3265,26 @@
                 (= (gpr64 rt2) (load (+ address 8) u64))))
         (= (gpr-or-sp64 rn) (+ address simm))))
 
+(def LDP-immediate-preindex
+    "s0 101 0 011 1 iiiiiii ppppp nnnnn ttttt"
+    "ldp $r$rt1, $r$rt2, [X$rn, #$simm]!"
+    (names (size s) (imm i) (rt2 p) (rn n) (rt1 t))
+    (block
+        (requires (!= rt1 rt2))
+        (requires (!= rt1 rn))
+        (requires (!= rt2 rn))
+        (let r (if (== size 0) "W" "X"))
+        (let simm (<< (signext imm i64) (if (== size 0) 2 3))))
+    (let address (+ (gpr-or-sp64 rn) simm)
+        (= (gpr-or-sp64 rn) address)
+        (if (== size 0)
+            (block
+                (= (gpr32 rt1) (load address u32))
+                (= (gpr32 rt2) (load (+ address 4) u32)))
+            (block
+                (= (gpr64 rt1) (load address u64))
+                (= (gpr64 rt2) (load (+ address 8) u64))))))
+
 (def LDP-immediate-signed-offset
     "s0 101 0 010 1 iiiiiii ppppp nnnnn ttttt"
     "ldp $r$rt1, $r$rt2, [X$rn, #$simm]"
@@ -3281,6 +3301,27 @@
             (block
                 (= (gpr64 rt1) (load address u64))
                 (= (gpr64 rt2) (load (+ address 8) u64))))))
+
+(def LDP-simd-preindex
+    "oo 101 1 011 1 iiiiiii ppppp nnnnn ttttt"
+    "ldp $r$rt1, $r$rt2, [X$rn, #$simm]!"
+    (names (opc o) (imm i) (rt2 p) (rn n) (rt1 t))
+    (block
+        (requires (!= rt1 rt2))
+        (let r (match opc 0b00 "S" 0b01 "D" "Q"))
+        (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 4))))
+    (let address (+ (gpr-or-sp64 rn) simm)
+        (= (gpr-or-sp64 rn) address)
+        (match opc
+            0b00 (block
+                (= (vec-s rt1) (load address f32))
+                (= (vec-s rt2) (load (+ address 4) f32)))
+            0b01 (block
+                (= (vec-d rt1) (load address f64))
+                (= (vec-d rt2) (load (+ address 8) f64)))
+            (block
+                (= (vec rt1) (load address vec))
+                (= (vec rt2) (load (+ address 16) vec))))))
 
 (def LDP-simd-postindex
     "oo 101 1 001 1 iiiiiii ppppp nnnnn ttttt"
