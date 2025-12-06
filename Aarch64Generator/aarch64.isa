@@ -4403,7 +4403,7 @@
     (= (gpr64 rd) (u64 (i64 (>> (* (cast (i64 (gpr64 rn)) i128) (cast (i64 (gpr64 rm)) i128)) 64)))))
 
 (defm sshll-elem (i offset type etype)
-    (vector-insert rd i (<< (etype (vector-element iv (u32 (if Q (+ i offset) i)) type)) shift)))
+    (<< (etype (vector-element iv (u32 (if Q (+ i offset) i)) type)) shift))
 
 (def SSHLL
     "0 Q 0 011110 hhhh bbb 10100 1 nnnnn ddddd"
@@ -4421,25 +4421,25 @@
             (= shift (- (: immh immb) 32)))
         (unimplemented)))))
     (let iv (vec rn)
-        (= (vec rd) (vector-all (u8 0)))
-        (if (== immh 0b0001) (block
-            (sshll-elem 0 8 i8 i16)
-            (sshll-elem 1 8 i8 i16)
-            (sshll-elem 2 8 i8 i16)
-            (sshll-elem 3 8 i8 i16)
-            (sshll-elem 4 8 i8 i16)
-            (sshll-elem 5 8 i8 i16)
-            (sshll-elem 6 8 i8 i16)
-            (sshll-elem 7 8 i8 i16))
-        (if (== (& immh 0b1110) 0b0010) (block
-            (sshll-elem 0 4 i16 i32)
-            (sshll-elem 1 4 i16 i32)
-            (sshll-elem 2 4 i16 i32)
-            (sshll-elem 3 4 i16 i32))
-        (if (== (& immh 0b1100) 0b0100) (block
-            (sshll-elem 0 2 i32 i64)
-            (sshll-elem 1 2 i32 i64))
-        (unimplemented))))))
+        (= (vec rd)
+            (if (== immh 0b0001) (vector
+                (sshll-elem 0 8 i8 i16)
+                (sshll-elem 1 8 i8 i16)
+                (sshll-elem 2 8 i8 i16)
+                (sshll-elem 3 8 i8 i16)
+                (sshll-elem 4 8 i8 i16)
+                (sshll-elem 5 8 i8 i16)
+                (sshll-elem 6 8 i8 i16)
+                (sshll-elem 7 8 i8 i16))
+            (if (== (& immh 0b1110) 0b0010) (vector
+                (sshll-elem 0 4 i16 i32)
+                (sshll-elem 1 4 i16 i32)
+                (sshll-elem 2 4 i16 i32)
+                (sshll-elem 3 4 i16 i32))
+            (if (== (& immh 0b1100) 0b0100) (vector
+                (sshll-elem 0 2 i32 i64)
+                (sshll-elem 1 2 i32 i64))
+            (unimplemented)))))))
 
 (defm st1-sub (size type) (store (+ address (literal (* i size))) (vector-element v i type)))
 
