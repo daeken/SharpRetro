@@ -2535,8 +2535,24 @@
                 (vector-insert rd index1 (vector-element (vec rn) index2 f32))
                 (vector-insert rd index1 (vector-element (vec rn) index2 f64))))))
 
-(defm ld1-sub (register size type offset)
-    (vector-insert register i (load (+ address (+ (literal (* i size)) offset)) type)))
+(defm ld1-sub (i size type offset)
+    (load (+ address (+ (literal (* i size)) offset)) type))
+
+(defm do-ld1 (r off)
+    (let $off off
+        (match size
+                0b00 (= (vec r) (if Q
+                            (vector (mfor (i 16) (ld1-sub i 1 u8 $off)))
+                            (vector (mfor (i 8)  (ld1-sub i 1 u8 $off)) (mfor (i 8) (u8 0)))))
+                0b01 (= (vec r) (if Q
+                            (vector (mfor (i 8)  (ld1-sub i 2 u16 $off)))
+                            (vector (mfor (i 4)  (ld1-sub i 2 u16 $off)) (mfor (i 4) (u16 0)))))
+                0b10 (= (vec r) (if Q
+                            (vector (mfor (i 4)  (ld1-sub i 4 f32 $off)))
+                            (vector (mfor (i 2)  (ld1-sub i 4 f32 $off)) (mfor (i 2) (f32 0)))))
+                     (= (vec r) (if Q
+                            (vector (mfor (i 2)  (ld1-sub i 8 f64 $off)))
+                            (vector              (ld1-sub 0 8 f64 $off) (f64 0)))))))
 
 (def LD1-multi-no-offset-one-register
     "0 Q 0011000 1 000000 0111 ss nnnnn ttttt"
@@ -2552,12 +2568,7 @@
         0b11_0 "1D"
                "2D"))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))))
+        (do-ld1 rt 0)))
 
 (def LD1-multi-no-offset-one-register-postindex-immediate
     "0 Q 0011001 1 0 11111 0111 ss nnnnn ttttt"
@@ -2575,12 +2586,7 @@
                    "2D"))
        (let imm (if Q 16 8)))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
+        (do-ld1 rt 0)
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD1-multi-no-offset-two-registers
@@ -2598,19 +2604,8 @@
             0b11_0 "1D"
                    "2D")))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
-        (let offset (if Q 16 8)
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt2 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt2 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt2 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt2 8 f64 offset))))))
+        (do-ld1 rt 0)
+        (do-ld1 rt2 (if Q 16 8))))
 
 (def LD1-multi-no-offset-two-registers-postindex-immediate
     "0 Q 0011001 1 0 11111 1010 ss nnnnn ttttt"
@@ -2627,19 +2622,8 @@
             0b11_0 "1D"
                    "2D")))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
-        (let offset (if Q 16 8)
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt2 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt2 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt2 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt2 8 f64 offset))))
+        (do-ld1 rt 0)
+        (do-ld1 rt (if Q 16 8))
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD1-multi-no-offset-three-registers
@@ -2657,26 +2641,9 @@
             0b11_0 "1D"
                    "2D")))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
-        (let offset (if Q 16 8)
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt2 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt2 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt2 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt2 8 f64 offset)))
-            (= offset (if Q 32 16))
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt3 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt3 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt3 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt3 8 f64 offset))))))
+        (do-ld1 rt 0)
+        (do-ld1 rt2 (if Q 16 8))
+        (do-ld1 rt3 (if Q 32 16))))
 
 (def LD1-multi-no-offset-three-registers-postindex-immediate
     "0 Q 0011001 1 0 11111 0110 ss nnnnn ttttt"
@@ -2693,26 +2660,9 @@
             0b11_0 "1D"
                    "2D")))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
-        (let offset (if Q 16 8)
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt2 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt2 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt2 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt2 8 f64 offset)))
-            (= offset (if Q 32 16))
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt3 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt3 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt3 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt3 8 f64 offset))))
+        (do-ld1 rt 0)
+        (do-ld1 rt2 (if Q 16 8))
+        (do-ld1 rt3 (if Q 32 16))
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD1-multi-no-offset-four-registers
@@ -2730,33 +2680,10 @@
             0b11_0 "1D"
                    "2D")))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (= (vec rt4) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
-        (let offset (if Q 16 8)
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt2 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt2 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt2 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt2 8 f64 offset)))
-            (= offset (if Q 32 16))
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt3 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt3 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt3 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt3 8 f64 offset)))
-            (= offset (if Q 48 24))
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt4 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt4 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt4 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt4 8 f64 offset))))))
+        (do-ld1 rt 0)
+        (do-ld1 rt2 (if Q 16 8))
+        (do-ld1 rt3 (if Q 32 16))
+        (do-ld1 rt4 (if Q 48 24))))
 
 (def LD1-multi-no-offset-four-registers-postindex-immediate
     "0 Q 0011000 1 0 11111 0010 ss nnnnn ttttt"
@@ -2773,33 +2700,10 @@
             0b11_0 "1D"
                    "2D")))
     (let address (gpr-or-sp64 rn)
-        (= (vec rt) (vector-all (u8 0)))
-        (= (vec rt2) (vector-all (u8 0)))
-        (= (vec rt3) (vector-all (u8 0)))
-        (= (vec rt4) (vector-all (u8 0)))
-        (match size
-            0b00 (qfor i 8 16 (ld1-sub rt 1 u8  0))
-            0b01 (qfor i 4  8 (ld1-sub rt 2 u16 0))
-            0b10 (qfor i 2  4 (ld1-sub rt 4 f32 0))
-                 (qfor i 1  2 (ld1-sub rt 8 f64 0)))
-        (let offset (if Q 16 8)
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt2 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt2 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt2 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt2 8 f64 offset)))
-            (= offset (if Q 32 16))
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt3 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt3 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt3 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt3 8 f64 offset)))
-            (= offset (if Q 48 24))
-            (match size
-                0b00 (qfor i 8 16 (ld1-sub rt4 1 u8  offset))
-                0b01 (qfor i 4  8 (ld1-sub rt4 2 u16 offset))
-                0b10 (qfor i 2  4 (ld1-sub rt4 4 f32 offset))
-                     (qfor i 1  2 (ld1-sub rt4 8 f64 offset))))
+        (do-ld1 rt 0)
+        (do-ld1 rt2 (if Q 16 8))
+        (do-ld1 rt3 (if Q 32 16))
+        (do-ld1 rt4 (if Q 48 24))
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD1-single-no-offset

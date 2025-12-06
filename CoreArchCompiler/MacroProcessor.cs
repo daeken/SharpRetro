@@ -7,6 +7,7 @@ namespace CoreArchCompiler;
 
 public static class MacroProcessor {
 	public static PList Rewrite(PList top) {
+		var tempI = 0;
 		var macros = new Dictionary<string, List<(List<string>, PTree)>>();
 		foreach(var elem in top) {
 			if(elem is not PList list || list[0] is not PName("defm")) continue;
@@ -17,14 +18,17 @@ public static class MacroProcessor {
 			mlist.Add((varnames, list[3]));
 		}
 
-		PTree Repl(string macroName, PTree elem, Dictionary<string, PTree> replacements) {
+		PTree Repl(string macroName, PTree elem, Dictionary<string, PTree> replacements, Dictionary<string, int> uids) {
 			switch(elem) {
-				case PList list: return new PList(list.Select(x => Repl(macroName, x, replacements)));
+				case PList list: return new PList(list.Select(x => Repl(macroName, x, replacements, uids)));
 				case PName(var name):
 					if(replacements.TryGetValue(name, out var repl))
 						return repl;
-					if(name[0] == '$')
-						return new PName($"__macro_{macroName.Replace("-", "_")}_{name[1..]}");
+					if(name[0] == '$') {
+						var tname = name[1..];
+						var uid = uids.TryGetValue(tname, out var tuid) ? tuid : uids[tname] = tempI++;
+						return new PName($"__macro_{macroName.Replace("-", "_")}_{tname}_{uid}");
+					}
 					return elem;
 				default: return elem;
 			}
@@ -48,13 +52,13 @@ public static class MacroProcessor {
 				};
 				var ret = new List<PTree> { new PName("inline-block") };
 				for(var i = start; i < end; i += step)
-					ret.Add(Sub(Repl(name, nlist[2], new() { [iname] = new PInt(i) })));
+					ret.Add(Sub(Repl(name, nlist[2], new() { [iname] = new PInt(i) }, [])));
 				return new PList(ret);
 			}
 			if(!macros.TryGetValue(name, out var mlist)) return new PList(list.Select(Sub));
 			foreach(var (args, block) in mlist) {
 				if(args.Count != list.Count - 1) continue;
-				return Sub(Repl(name, block, args.Select((vn, i) => (vn, list[i + 1])).ToDictionary()));
+				return Sub(Repl(name, block, args.Select((vn, i) => (vn, list[i + 1])).ToDictionary(), []));
 			}
 
 			throw new NotSupportedException($"No overload of macro {name.ToPrettyString()} takes {list.Count - 1} arguments");
