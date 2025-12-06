@@ -949,6 +949,45 @@
                  (mlet (one (u64 0xFFFFFFFF_FFFFFFFF) zero (u64 0))
                     (qfor i 1 2 (cmgtz-sub i i64))))))
 
+(def CMHS-register-scalar
+    "01 1 11110 ss 1 mmmmm 0011 1 1 nnnnn ddddd"
+    "cmhs $V$rd, $V$rn, $V$rm"
+    (names (size s) (rm m) (rn n) (rd d))
+    (let V (match size
+        0b11 "D"
+        (unimplemented)))
+    (match size
+        0b11 (= (vec-d rd) (bitcast (if (>= (bitcast (vec-d rn) u64) (bitcast (vec-d rm) u64)) (u64 0xFFFFFFFF_FFFFFFFF) (u64 0)) f64))
+        (unimplemented)))
+
+(defm cmhs-sub (index type)
+    (vector-insert rd index (if (>= (vector-element a index type) (vector-element b index type)) one zero)))
+
+(def CMHS-register-vector
+    "0 Q 1 01110 ss 1 mmmmm 0011 1 1 nnnnn ddddd"
+    "cmhs V$rd.$T, V$rn.$T, V$rm.$T"
+    (names (Q Q) (size s) (rm m) (rn n) (rd d))
+    (let T (match (: size Q)
+        0b00_0 "8B"
+        0b00_1 "16B"
+        0b01_0 "4H"
+        0b01_1 "8H"
+        0b10_0 "2S"
+        0b10_1 "4S"
+        0b11_1 "2D"
+        (unimplemented)))
+    (mlet (a (vec rn) b (vec rm))
+        (= (vec rd) (vector-all (u8 0)))
+        (match size
+            0b00 (mlet (one (u8 0xFF) zero (u8 0))
+                    (qfor i 8 16 (cmhs-sub i u8)))
+            0b01 (mlet (one (u16 0xFFFF) zero (u16 0))
+                    (qfor i 4 8 (cmhs-sub i u16)))
+            0b10 (mlet (one (u32 0xFFFFFFFF) zero (u32 0))
+                    (qfor i 2 4 (cmhs-sub i u32)))
+                 (mlet (one (u64 0xFFFFFFFF_FFFFFFFF) zero (u64 0))
+                    (qfor i 1 2 (cmhs-sub i u64))))))
+
 (def CNT
     "0 q 0 01110 ss 10000 00101 10 nnnnn ddddd"
     "cnt V$rd.$t, V$rn.$t"
