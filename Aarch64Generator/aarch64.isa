@@ -4487,6 +4487,13 @@
                 (u64 0)
                 (u64 (/ (i64 (gpr64 rn)) (i64 operand2))))))))
 
+(def SHL-scalar
+    "01 0 111110 1iiiiii 01010 1 nnnnn ddddd"
+    "shl D$rd, D$rn, #$shift"
+    (names (imm i) (rd d) (rn n))
+    (let shift (- (: 0b1 imm) 64))
+    (= (vec-d rd) (bitcast (<< (bitcast (vec-d rn) u64) shift) f64)))
+
 (defm shl-elem (i type)
     (vector-insert rd i (<< (vector-element sv i type) shift)))
 
