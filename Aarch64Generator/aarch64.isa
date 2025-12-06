@@ -6044,6 +6044,79 @@
     (block)
     (= (gpr64 rd) (+ (gpr64 ra) (* (u64 (gpr32 rn)) (u64 (gpr32 rm))))))
 
+(defm umaxmin (isMin a b)
+    (if isMin
+        (if (< a b) a b)
+        (if (> a b) a b)))
+(def UMAXP-UMINP
+    "0 Q 1 01110 ss 1 mmmmm 1010 o 1 nnnnn ddddd"
+    "$mnem V$rd.$T, V$rn.$T, V$rm.$T"
+    (names (Q Q) (size s) (rm m) (min o) (rn n) (rd d))
+    (let mnem (if min "uminp" "umaxp")
+        (let T (match (: size Q)
+            0b00_0 "8B"
+            0b00_1 "16B"
+            0b01_0 "4H"
+            0b01_1 "8H"
+            0b10_0 "2S"
+            0b10_1 "4S"
+            (unimplemented))))
+    (mlet (m (vec rm) n (vec rn))
+        (= (vec rd) (match (: size Q)
+            0b00_0 (vector
+                (umaxmin min (vector-element m 0 u8) (vector-element m 1 u8))
+                (umaxmin min (vector-element m 2 u8) (vector-element m 3 u8))
+                (umaxmin min (vector-element m 4 u8) (vector-element m 5 u8))
+                (umaxmin min (vector-element m 6 u8) (vector-element m 7 u8))
+                (umaxmin min (vector-element n 0 u8) (vector-element n 1 u8))
+                (umaxmin min (vector-element n 2 u8) (vector-element n 3 u8))
+                (umaxmin min (vector-element n 4 u8) (vector-element n 5 u8))
+                (umaxmin min (vector-element n 6 u8) (vector-element n 7 u8))
+                (u8 0) (u8 0) (u8 0) (u8 0)
+                (u8 0) (u8 0) (u8 0) (u8 0))
+            0b00_1 (vector
+                (umaxmin min (vector-element m  0 u8) (vector-element m  1 u8))
+                (umaxmin min (vector-element m  2 u8) (vector-element m  3 u8))
+                (umaxmin min (vector-element m  4 u8) (vector-element m  5 u8))
+                (umaxmin min (vector-element m  6 u8) (vector-element m  7 u8))
+                (umaxmin min (vector-element m  8 u8) (vector-element m  9 u8))
+                (umaxmin min (vector-element m 10 u8) (vector-element m 11 u8))
+                (umaxmin min (vector-element m 12 u8) (vector-element m 13 u8))
+                (umaxmin min (vector-element m 14 u8) (vector-element m 15 u8))
+                (umaxmin min (vector-element n  0 u8) (vector-element n  1 u8))
+                (umaxmin min (vector-element n  2 u8) (vector-element n  3 u8))
+                (umaxmin min (vector-element n  4 u8) (vector-element n  5 u8))
+                (umaxmin min (vector-element n  6 u8) (vector-element n  7 u8))
+                (umaxmin min (vector-element n  8 u8) (vector-element n  9 u8))
+                (umaxmin min (vector-element n 10 u8) (vector-element n 11 u8))
+                (umaxmin min (vector-element n 12 u8) (vector-element n 13 u8))
+                (umaxmin min (vector-element n 14 u8) (vector-element n 15 u8)))
+            0b01_0 (vector
+                (umaxmin min (vector-element m 0 u16) (vector-element m 1 u16))
+                (umaxmin min (vector-element m 2 u16) (vector-element m 3 u16))
+                (umaxmin min (vector-element n 0 u16) (vector-element n 1 u16))
+                (umaxmin min (vector-element n 2 u16) (vector-element n 3 u16))
+                (u16 0) (u16 0) (u16 0) (u16 0))
+            0b01_1 (vector
+                (umaxmin min (vector-element m 0 u16) (vector-element m 1 u16))
+                (umaxmin min (vector-element m 2 u16) (vector-element m 3 u16))
+                (umaxmin min (vector-element m 4 u16) (vector-element m 5 u16))
+                (umaxmin min (vector-element m 6 u16) (vector-element m 7 u16))
+                (umaxmin min (vector-element n 0 u16) (vector-element n 1 u16))
+                (umaxmin min (vector-element n 2 u16) (vector-element n 3 u16))
+                (umaxmin min (vector-element n 4 u16) (vector-element n 5 u16))
+                (umaxmin min (vector-element n 6 u16) (vector-element n 7 u16)))
+            0b10_0 (vector
+                (umaxmin min (vector-element m 0 u32) (vector-element m 1 u32))
+                (umaxmin min (vector-element n 0 u32) (vector-element n 1 u32))
+                (u32 0) (u32 0))
+            0b10_1 (vector
+                (umaxmin min (vector-element m 0 u32) (vector-element m 1 u32))
+                (umaxmin min (vector-element m 2 u32) (vector-element m 3 u32))
+                (umaxmin min (vector-element n 0 u32) (vector-element n 1 u32))
+                (umaxmin min (vector-element n 2 u32) (vector-element n 3 u32)))
+            (unimplemented)))))
+
 (def UMOV
     "0 Q 0 01110000 iiiii 0 01 1 1 1 nnnnn ddddd"
     "umov $r$rd, V$rn.$T[$index]"

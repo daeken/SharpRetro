@@ -4553,6 +4553,19 @@ public partial class Disassembler {
 			return (string) ("umaddl X" + (rd).ToString() + ", W" + (rn).ToString() + ", W" + (rm).ToString() + ", X" + (ra).ToString());
 		}
 		insn_331:
+		/* UMAXP-UMINP */
+		if((insn & 0xBF20F400) == 0x2E20A400) {
+			var Q = (insn >> 30) & 0x1U;
+			var size = (insn >> 22) & 0x3U;
+			var rm = (insn >> 16) & 0x1FU;
+			var min = (insn >> 11) & 0x1U;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var mnem = (string) (((bool) ((min) != ((byte) 0x0))) ? (string) ("uminp") : (string) ("umaxp"));
+			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", _ => throw new NotImplementedException() });
+			return (string) (mnem + " V" + (rd).ToString() + "." + T + ", V" + (rn).ToString() + "." + T + ", V" + (rm).ToString() + "." + T);
+		}
+		insn_332:
 		/* UMOV */
 		if((insn & 0xBFE0FC00) == 0x0E003C00) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4588,7 +4601,7 @@ public partial class Disassembler {
 			}
 			return (string) ("umov " + r + (rd).ToString() + ", V" + (rn).ToString() + "." + T + "[" + (index).ToString() + "]");
 		}
-		insn_332:
+		insn_333:
 		/* UMULH */
 		if((insn & 0xFFE0FC00) == 0x9BC07C00) {
 			var rm = (insn >> 16) & 0x1FU;
@@ -4596,7 +4609,7 @@ public partial class Disassembler {
 			var rd = (insn >> 0) & 0x1FU;
 			return (string) ("umulh X" + (rd).ToString() + ", X" + (rn).ToString() + ", X" + (rm).ToString());
 		}
-		insn_333:
+		insn_334:
 		/* USHL-vector */
 		if((insn & 0xBF20FC00) == 0x2E204400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4607,7 +4620,7 @@ public partial class Disassembler {
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("ushl V" + (rd).ToString() + "." + t + ", V" + (rn).ToString() + "." + t + ", V" + (rm).ToString() + "." + t);
 		}
-		insn_334:
+		insn_335:
 		/* USHLL-vector */
 		if((insn & 0xBF80FC00) == 0x2F00A400) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4620,7 +4633,7 @@ public partial class Disassembler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_335;
+				goto insn_336;
 			var i2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				Ta = "8H";
@@ -4646,7 +4659,7 @@ public partial class Disassembler {
 			}
 			return (string) ("ushll" + i2 + " V" + (rd).ToString() + "." + Ta + ", V" + (rn).ToString() + "." + Tb + ", #" + (shift).ToString());
 		}
-		insn_335:
+		insn_336:
 		/* XTN */
 		if((insn & 0xFF3FFC00) == 0x0E212800) {
 			var size = (insn >> 22) & 0x3U;
@@ -4656,7 +4669,7 @@ public partial class Disassembler {
 			var ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x2) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("xtn V" + (rd).ToString() + "." + tb + ", V" + (rn).ToString() + "." + ta);
 		}
-		insn_336:
+		insn_337:
 		/* XTN2 */
 		if((insn & 0xFF3FFC00) == 0x4E212800) {
 			var size = (insn >> 22) & 0x3U;
@@ -4666,12 +4679,12 @@ public partial class Disassembler {
 			var ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x2) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("xtn2 V" + (rd).ToString() + "." + tb + ", V" + (rn).ToString() + "." + ta);
 		}
-		insn_337:
+		insn_338:
 		/* YIELD */
 		if((insn & 0xFFFFFFFF) == 0xD503203F) {
 			return "yield";
 		}
-		insn_338:
+		insn_339:
 		/* ZIP */
 		if((insn & 0xBF20BC00) == 0x0E003800) {
 			var Q = (insn >> 30) & 0x1U;
@@ -4684,7 +4697,7 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return (string) ("zip" + (i).ToString() + " V" + (rd).ToString() + "." + T + ", V" + (rn).ToString() + "." + T + ", V" + (rm).ToString() + "." + T);
 		}
-		insn_339:
+		insn_340:
 
         return null;
     }
@@ -8907,6 +8920,18 @@ public partial class Disassembler {
 			return "UMADDL";
 		}
 		insn_331:
+		if((insn & 0xBF20F400) == 0x2E20A400) {
+			var Q = (insn >> 30) & 0x1U;
+			var size = (insn >> 22) & 0x3U;
+			var rm = (insn >> 16) & 0x1FU;
+			var min = (insn >> 11) & 0x1U;
+			var rn = (insn >> 5) & 0x1FU;
+			var rd = (insn >> 0) & 0x1FU;
+			var mnem = (string) (((bool) ((min) != ((byte) 0x0))) ? (string) ("uminp") : (string) ("umaxp"));
+			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", _ => throw new NotImplementedException() });
+			return "UMAXP-UMINP";
+		}
+		insn_332:
 		if((insn & 0xBFE0FC00) == 0x0E003C00) {
 			var Q = (insn >> 30) & 0x1U;
 			var imm = (insn >> 16) & 0x1FU;
@@ -8941,14 +8966,14 @@ public partial class Disassembler {
 			}
 			return "UMOV";
 		}
-		insn_332:
+		insn_333:
 		if((insn & 0xFFE0FC00) == 0x9BC07C00) {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
 			return "UMULH";
 		}
-		insn_333:
+		insn_334:
 		if((insn & 0xBF20FC00) == 0x2E204400) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -8958,7 +8983,7 @@ public partial class Disassembler {
 			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "USHL-vector";
 		}
-		insn_334:
+		insn_335:
 		if((insn & 0xBF80FC00) == 0x2F00A400) {
 			var Q = (insn >> 30) & 0x1U;
 			var immh = (insn >> 19) & 0xFU;
@@ -8970,7 +8995,7 @@ public partial class Disassembler {
 			var size = (byte) 0x0;
 			var shift = (byte) 0x0;
 			if(!((bool) (((byte) (immh)) != ((byte) 0x0))))
-				goto insn_335;
+				goto insn_336;
 			var i2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
 			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
 				Ta = "8H";
@@ -8996,7 +9021,7 @@ public partial class Disassembler {
 			}
 			return "USHLL-vector";
 		}
-		insn_335:
+		insn_336:
 		if((insn & 0xFF3FFC00) == 0x0E212800) {
 			var size = (insn >> 22) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
@@ -9005,7 +9030,7 @@ public partial class Disassembler {
 			var ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x2) => "2D", _ => throw new NotImplementedException() });
 			return "XTN";
 		}
-		insn_336:
+		insn_337:
 		if((insn & 0xFF3FFC00) == 0x4E212800) {
 			var size = (insn >> 22) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
@@ -9014,11 +9039,11 @@ public partial class Disassembler {
 			var ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x1) => "4S", (byte) ((byte) 0x2) => "2D", _ => throw new NotImplementedException() });
 			return "XTN2";
 		}
-		insn_337:
+		insn_338:
 		if((insn & 0xFFFFFFFF) == 0xD503203F) {
 			return "YIELD";
 		}
-		insn_338:
+		insn_339:
 		if((insn & 0xBF20BC00) == 0x0E003800) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 22) & 0x3U;
@@ -9030,10 +9055,10 @@ public partial class Disassembler {
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			return "ZIP";
 		}
-		insn_339:
+		insn_340:
 
         return null;
     }
 
-    public const int InstructionCount = 339 + 0;
+    public const int InstructionCount = 340 + 0;
 }

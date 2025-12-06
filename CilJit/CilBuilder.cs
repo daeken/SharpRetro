@@ -51,6 +51,8 @@ public class CilBuilder<AddrT, DelegateT> : IBuilder<AddrT> where AddrT : struct
 		IRuntimeValue<ushort> _04, IRuntimeValue<ushort> _05, IRuntimeValue<ushort> _06, IRuntimeValue<ushort> _07) =>
 		throw new NotImplementedException();
 
+	public IRuntimeValue<Vector128<float>> CreateVector(IRuntimeValue<uint> _00, IRuntimeValue<uint> _01, IRuntimeValue<uint> _02, IRuntimeValue<uint> _03) => throw new NotImplementedException();
+
 	public IRuntimeValue<Vector128<float>> CreateVector(IRuntimeValue<float> _00, IRuntimeValue<float> _01, IRuntimeValue<float> _02, IRuntimeValue<float> _03) => throw new NotImplementedException();
 
 	public IRuntimeValue<Vector128<float>> CreateVector(IRuntimeValue<double> _00, IRuntimeValue<double> _01) => throw new NotImplementedException();

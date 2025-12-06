@@ -54,6 +54,13 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
         ]));
 
     public IRuntimeValue<Vector128<float>> CreateVector(
+        IRuntimeValue<uint> _00, IRuntimeValue<uint> _01, IRuntimeValue<uint> _02, IRuntimeValue<uint> _03
+    ) =>
+        new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
+            W(_00), W(_01), W(_02), W(_03),
+        ]));
+
+    public IRuntimeValue<Vector128<float>> CreateVector(
         IRuntimeValue<float> _00, IRuntimeValue<float> _01, IRuntimeValue<float> _02, IRuntimeValue<float> _03
     ) =>
         new StaticRuntimeValue<Vector128<float>>(new StaticIRValue.CreateFullVector([
