@@ -6022,7 +6022,7 @@
     (block)
     (= (gpr64 rd) (u64 (>> (* (cast (gpr64 rn) u128) (cast (gpr64 rm) u128)) 64))))
 
-(defm ushl-sub (i type) (vector-insert rd i (<< (vector-element n i type) (u8 (vector-element m i type)))))
+(defm ushl-sub (i type) (<< (vector-element n i type) (u8 (vector-element m i type))))
 
 (def USHL-vector
     "0 Q 1 01110 ss 1 mmmmm 010 0 0 1 nnnnn ddddd"
@@ -6038,25 +6038,16 @@
         0b11_1 "2D"
         (unimplemented)))
     (mlet (n (vec rn) m (vec rm))
-        (= (vec rd) (vector-all (u8 0)))
-        (match (: size Q)
-            0b00_0 (block
-                    (ushl-sub 0 u8) (ushl-sub 1 u8) (ushl-sub 2 u8) (ushl-sub 3 u8)
-                    (ushl-sub 4 u8) (ushl-sub 5 u8) (ushl-sub 6 u8) (ushl-sub 7 u8))
-            0b00_1 (block
-                    (ushl-sub  0 u8) (ushl-sub  1 u8) (ushl-sub  2 u8) (ushl-sub  3 u8)
-                    (ushl-sub  4 u8) (ushl-sub  5 u8) (ushl-sub  6 u8) (ushl-sub  7 u8)
-                    (ushl-sub  8 u8) (ushl-sub  9 u8) (ushl-sub 10 u8) (ushl-sub 11 u8)
-                    (ushl-sub 12 u8) (ushl-sub 13 u8) (ushl-sub 14 u8) (ushl-sub 15 u8))
-            0b01_0 (block
-                    (ushl-sub 0 u16) (ushl-sub 1 u16) (ushl-sub 2 u16) (ushl-sub 3 u16))
-            0b01_1 (block
-                    (ushl-sub 0 u16) (ushl-sub 1 u16) (ushl-sub 2 u16) (ushl-sub 3 u16)
-                    (ushl-sub 4 u16) (ushl-sub 5 u16) (ushl-sub 6 u16) (ushl-sub 7 u16))
-            0b10_0 (block (ushl-sub 0 u32) (ushl-sub 1 u32))
-            0b10_1 (block (ushl-sub 0 u32) (ushl-sub 1 u32) (ushl-sub 2 u32) (ushl-sub 3 u32))
-            0b11_1 (block (ushl-sub 0 u64) (ushl-sub 1 u64))
-                   (unimplemented))))
+        (= (vec rd)
+            (match (: size Q)
+                0b00_0 (vector (mfor (i 8) (ushl-sub i u8)) (mfor (i 8) (u8 0)))
+                0b00_1 (vector (mfor (i 16) (ushl-sub i u8)))
+                0b01_0 (vector (mfor (i 4) (ushl-sub i u16)) (mfor (i 4) (u16 0)))
+                0b01_1 (vector (mfor (i 8) (ushl-sub i u16)))
+                0b10_0 (vector (mfor (i 2) (ushl-sub i u32)) (mfor (i 2) (u32 0)))
+                0b10_1 (vector (mfor (i 4) (ushl-sub i u32)))
+                0b11_1 (vector (mfor (i 2) (ushl-sub i u64)))
+                       (unimplemented)))))
 
 (defm ushll-sub (si di stype dtype) (vector-insert rd di (<< (cast (vector-element n si stype) dtype) shift)))
 
