@@ -36,6 +36,7 @@ public abstract class IRuntimeValue<T> where T : struct {
 	public abstract IRuntimeValue<T> Abs();
 	public abstract IRuntimeValue<T> Sqrt();
 	public abstract IRuntimeValue<T> Round();
+	public abstract IRuntimeValue<T> RoundTowardZero();
 	public abstract IRuntimeValue<T> RoundHalfDown();
 	public abstract IRuntimeValue<T> RoundHalfUp();
 	public abstract IRuntimeValue<T> Ceil();

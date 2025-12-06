@@ -1848,6 +1848,15 @@
         0b1_01 (= (gpr64 rd) (u64 (i64 (ceil (vec-d rn)))))
         (unimplemented)))
 
+(def FCVTZS-scalar
+    "01 0 11110 1 s 100001101 1 10 nnnnn ddddd"
+    "fcvtzs $r$rd, $r$rn"
+    (names (size s) (rn n) (rd d))
+    (let r (if size "D" "S"))
+    (if size
+        (= (vec-d rd) (round-toward-zero (vec-d rn)))
+        (= (vec-s rd) (round-toward-zero (vec-s rn)))))
+
 (def FCVTZS-scalar-fixedpoint
     "f 0 0 11110 tt 0 11 000 ssssss nnnnn ddddd"
     "fcvtzs $r1$rd, $r2$rn, #$fbits"

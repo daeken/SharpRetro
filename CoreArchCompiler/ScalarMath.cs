@@ -222,7 +222,12 @@ class ScalarMath : Builtin {
 				list => $"round{(list[1].Type is EFloat(32) ? "f" : "")}({GenerateExpression(list[1])})", 
 				list => $"({GenerateExpression(list[1])}).Round()")
 			.Interpret((list, state) => ((object) state.Evaluate(list[1])).If<float>(x => MathF.Round(x)).IfNot<float>(x => Math.Round((double) x)));
-			
+
+		Expression("round-toward-zero", list => list[1].Type, 
+				list => $"roundTowardZero{(list[1].Type is EFloat(32) ? "f" : "")}({GenerateExpression(list[1])})", 
+				list => $"({GenerateExpression(list[1])}).RoundTowardZero()")
+			.Interpret((list, state) => ((object) state.Evaluate(list[1])).If<float>(x => MathF.Round(x, MidpointRounding.ToZero)).IfNot<float>(x => Math.Round((double) x, MidpointRounding.ToZero)));
+
 		Expression("round-half-down", list => list[1].Type, 
 				list => $"ceil{(list[1].Type is EFloat(32) ? "f" : "")}(({GenerateExpression(list[1])}) - 0.5{(list[1].Type is EFloat(32) ? "f" : "")})", 
 				list => $"({GenerateExpression(list[1])}).RoundHalfDown()")

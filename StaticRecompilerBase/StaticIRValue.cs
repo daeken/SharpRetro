@@ -503,6 +503,20 @@ public abstract record StaticIRValue(Type Type) {
             return func(nthis) ?? nthis;
         }
     }
+    public record RoundTowardZero(StaticIRValue Value) : StaticIRValue(Value.Type) {
+        public override void Walk(Action<StaticIRValue> func) {
+            func(this);
+            Value.Walk(func);
+        }
+
+        public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
+            var value = Value.Transform(func);
+            var nthis = value != null && !ReferenceEquals(value, Value)
+                ? this with { Value = value }
+                : this;
+            return func(nthis) ?? nthis;
+        }
+    }
     public record RoundHalfDown(StaticIRValue Value) : StaticIRValue(Value.Type) {
         public override void Walk(Action<StaticIRValue> func) {
             func(this);

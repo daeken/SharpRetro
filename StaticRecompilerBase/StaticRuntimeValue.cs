@@ -54,6 +54,7 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     public override IRuntimeValue<T> Abs() => W(new StaticIRValue.Abs(this));
     public override IRuntimeValue<T> Sqrt() => W(new StaticIRValue.Sqrt(this));
     public override IRuntimeValue<T> Round() => W(new StaticIRValue.Round(this));
+    public override IRuntimeValue<T> RoundTowardZero() => W(new StaticIRValue.RoundTowardZero(this));
     public override IRuntimeValue<T> RoundHalfDown() => W(new StaticIRValue.RoundHalfDown(this));
     public override IRuntimeValue<T> RoundHalfUp() => W(new StaticIRValue.RoundHalfUp(this));
     public override IRuntimeValue<T> Ceil() => W(new StaticIRValue.Ceil(this));

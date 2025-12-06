@@ -350,13 +350,12 @@ public partial class CoreRecompiler {
             case StaticIRValue.ZeroTop(var value): {
                 return $"zerotop_{Output(value.Type)}({Output(value)})";
             }
-            case StaticIRValue.Abs(var value): {
-                if(value.Type == typeof(float))
-                    return $"fabsf({Output(value)})";
-                if(value.Type == typeof(double))
-                    return $"fabs({Output(value)})";
-                throw new NotImplementedException($"Unsupported type for abs: {value}");
-            }
+            case StaticIRValue.Abs(var value):
+                return $"abs({Output(value)})";
+            case StaticIRValue.Round(var value):
+                return $"round({Output(value)})";
+            case StaticIRValue.RoundTowardZero(var value):
+                return $"trunc({Output(value)})";
             case ReadSr(var op0, var op1, var crn, var crm, var op2): {
                 return $"Callbacks->readSr({op0}, {op1}, {crn}, {crm}, {op2})";
             }

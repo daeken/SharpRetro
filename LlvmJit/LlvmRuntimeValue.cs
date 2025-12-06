@@ -92,6 +92,7 @@ public unsafe class LlvmRuntimeValue<AddrT, T> : IRuntimeValue<T> where AddrT : 
 	public override IRuntimeValue<T> Abs() => throw new NotImplementedException();
 	public override IRuntimeValue<T> Sqrt() => throw new NotImplementedException();
 	public override IRuntimeValue<T> Round() => throw new NotImplementedException();
+	public override IRuntimeValue<T> RoundTowardZero() => throw new NotImplementedException();
 	public override IRuntimeValue<T> RoundHalfDown() => throw new NotImplementedException();
 	public override IRuntimeValue<T> RoundHalfUp() => throw new NotImplementedException();
 	public override IRuntimeValue<T> Ceil() => throw new NotImplementedException();
