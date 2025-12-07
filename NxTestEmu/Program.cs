@@ -114,8 +114,8 @@ unsafe {
     ((ulong*) state->X0)![2] = 0;
     ((ulong*) state->X0)![3] = 0; // end of list
     state->X1 = ulong.MaxValue;
-    LibWrapper.setup(state, ref callbacks);
-    LibWrapper.runFrom(0x71_00000000, 0);
+    LibWrapper.setup(ref callbacks);
+    LibWrapper.runFrom(state, 0x71_00000000, 0);
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -124,11 +124,11 @@ struct ConfigEntry {
     public ulong Value0, Value1;
 }
 
-static unsafe class LibWrapper {
-    [DllImport("../NxRecompile/libtest.dylib")]
-    public static extern void setup(CpuState* state, ref Callbacks callbacks);
-    [DllImport("../NxRecompile/libtest.dylib")]
-    public static extern void runFrom(ulong addr, ulong until);
+static unsafe partial class LibWrapper {
+    [LibraryImport("../NxRecompile/libtest.dylib")]
+    public static partial void setup(ref Callbacks callbacks);
+    [LibraryImport("../NxRecompile/libtest.dylib")]
+    public static partial void runFrom(CpuState* state, ulong addr, ulong until);
 
     [DllImport("libSystem.dylib")]
     public static extern ulong mmap(ulong addr, ulong len, int prot, int flags, int fd, ulong offset);

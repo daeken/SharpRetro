@@ -9,9 +9,9 @@ public partial class CoreRecompiler {
     public void Output(CodeBuilder cb) {
         cb += "#include \"C/core.hpp\"";
         foreach(var blockAddr in WholeBlockGraph.Keys.Order())
-            cb += $"uint64_t f_{blockAddr:X}();";
+            cb += $"uint64_t f_{blockAddr:X}(CpuState_t *);";
         foreach(var (blockAddr, node) in WholeBlockGraph.OrderBy(x => x.Key)) {
-            cb += $"uint64_t f_{blockAddr:X}() {{ /* 0x{blockAddr:X} */";
+            cb += $"uint64_t f_{blockAddr:X}(CpuState_t *State) {{ /* 0x{blockAddr:X} */";
             cb++;
             cb += $"/**** {(KnownFunctions.Contains(blockAddr) ? "function" : "block")} {node} ****/";
             var assignments = new Dictionary<string, Type>();
@@ -137,9 +137,9 @@ public partial class CoreRecompiler {
             }
             case LinkedBranch(var target): {
                 if(target is StaticIRValue.Literal(var value, _) && IsSaneFunction((ulong) value))
-                    cb += $"f_{(ulong) value:X}();";
+                    cb += $"f_{(ulong) value:X}(State);";
                 else
-                    cb += $"runFrom({Output(target)}, State->X[30]);";
+                    cb += $"runFrom(State, {Output(target)}, State->X[30]);";
                 break;
             }
             case StaticIRStatement.Assign(var name, var value) { SsaId: var ssaId }: {

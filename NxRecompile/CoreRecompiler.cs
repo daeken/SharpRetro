@@ -50,9 +50,9 @@ public partial class CoreRecompiler : Recompiler {
         DitchX31();
         WholeBlockGraph = BuildBlockGraph();
         FindPadding();
-        DumpDotGraph(0x7100005680);
+        //DumpDotGraph(0x7100005680);
         WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions);
-        DumpDotGraph(0x7100005680);
+        //DumpDotGraph(0x7100005680);
         while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
         RewriteFunctions();
         while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}

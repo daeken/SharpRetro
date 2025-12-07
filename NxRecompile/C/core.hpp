@@ -13,26 +13,24 @@ typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
 
 #ifdef BUILD_LIB
-CpuState_t *State;
 CallbackTable_t *Callbacks;
 
-typedef uint64_t (*blockFunc)();
+typedef uint64_t (*blockFunc)(CpuState_t *);
 extern void ***jumpTable;
 extern int moduleCount;
 void loadModules();
 
 extern "C" {
-	void setup(CpuState_t *state, CallbackTable_t *callbacks);
-	void runFrom(uint64_t addr, uint64_t until);
+	void setup(CallbackTable_t *callbacks);
+	void runFrom(CpuState_t *state, uint64_t addr, uint64_t until);
 }
 
-void setup(CpuState_t *state, CallbackTable_t *callbacks) {
-	State = state;
+void setup(CallbackTable_t *callbacks) {
 	Callbacks = callbacks;
 	loadModules();
 }
 
-void runFrom(uint64_t addr, uint64_t until) {
+void runFrom(CpuState_t *state, uint64_t addr, uint64_t until) {
 	//Callbacks->debug(addr, "Attempting run from here");
 	while(addr != until) {
 		if(addr < 0x7100000000)
@@ -40,7 +38,7 @@ void runFrom(uint64_t addr, uint64_t until) {
 		uint64_t modIndex = (addr - 0x7100000000) >> 32;
 		if(modIndex >= moduleCount)
 			break;
-		addr = ((blockFunc) jumpTable[modIndex][(addr & 0xFFFFFFFF) >> 2])();
+		addr = ((blockFunc) jumpTable[modIndex][(addr & 0xFFFFFFFF) >> 2])(state);
 	}
 	//Callbacks->debug(addr, "Finished running");
 }
