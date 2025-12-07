@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using K4os.Compression.LZ4;
 
 namespace NxRecompile;
 
@@ -121,6 +123,43 @@ public class ExeModule {
         var _data = data.Slice((int) dloc, ReadFrom<int>(data, 0x34));
         return new(loadBase, tloc, text, rloc, ro, dloc, _data);
     }
+
+    [Flags]
+    enum NsoFlags {
+        TextCompress = 1 << 0,
+        RoCompress = 1 << 1,
+        DataCompress = 1 << 2,
+        TextHash = 1 << 3,
+        RoHash = 1 << 4,
+        DataHash = 1 << 5,
+        ExecuteOnlyMemory =  1 << 6,
+    }
+
+    public static ExeModule LoadNso(Memory<byte> data, ulong loadBase) {
+        if(ReadFrom<uint>(data, 0) != 0x304f534e) // NSO0
+            throw new NotSupportedException();
+        var flags = (NsoFlags) ReadFrom<uint>(data, 0xC);
+        Memory<byte> ReadSegment(int offset, int coffset, NsoFlags compressionFlag, out uint segOffset) {
+            var fileOffset = ReadFrom<int>(data, offset);
+            var memoryOffset = ReadFrom<uint>(data, offset + 4);
+            var size = ReadFrom<int>(data, offset + 8);
+            segOffset = memoryOffset;
+            if(!flags.HasFlag(compressionFlag))
+                return data.Slice(fileOffset, size);
+            var csize = ReadFrom<int>(data, coffset);
+            var seg = data.Slice(fileOffset, csize);
+            var odata = new byte[size];
+            LZ4Codec.Decode(seg.ToArray(), 0, csize, odata, 0, size);
+            return odata;
+        }
+        var textData = ReadSegment(0x10, 0x60, NsoFlags.TextCompress, out var textOffset);
+        var roData = ReadSegment(0x20, 0x64, NsoFlags.RoCompress, out var roOffset);
+        var dataData = ReadSegment(0x30, 0x68, NsoFlags.DataCompress, out var dataOffset);
+        return new ExeModule(loadBase, textOffset, textData.Span, roOffset, roData.Span, dataOffset, dataData.Span);
+    }
+
+    static T ReadFrom<T>(Memory<byte> data, int offset) where T : struct =>
+        ReadFrom<T>(data.Span, offset);
     
     static T ReadFrom<T>(Span<byte> data, int offset) where T : struct {
         var size = Marshal.SizeOf<T>();
@@ -134,10 +173,24 @@ public class ExeLoader {
     public const ulong InitialLoadBase = 0x71_0000_0000;
     public readonly List<ExeModule> ExeModules = new();
     public readonly ulong EntryPoint;
+    static readonly string[] LoadOrder = [
+        //"rtld", 
+        "main", "subsdk0", "subsdk1", "subsdk2", "subsdk3",
+        "subsdk4", "subsdk5", "subsdk6", "subsdk7", "subsdk8", "subsdk9",
+        "sdk",
+    ];
     public ExeLoader(string path) {
         if(!Path.Exists(path)) throw new FileNotFoundException(path);
         if(File.GetAttributes(path).HasFlag(FileAttributes.Directory)) {
-            throw new NotImplementedException(); // TODO: Implement loading NSOs in a directory
+            var files = Directory.EnumerateFiles(path)
+                .Select(Path.GetFileName)
+                .Where(x => LoadOrder.Contains(x))
+                .OrderBy(x => LoadOrder.IndexOf(x))
+                .ToList();
+            //EntryPoint = InitialLoadBase;
+            ExeModules.AddRange(files.Select((x, i) =>
+                ExeModule.LoadNso(File.ReadAllBytes(Path.Join(path, x)), InitialLoadBase + 0x1_0000_0000UL * (ulong) i)));
+            return;
         }
 
         var contents = (Span<byte>) File.ReadAllBytes(path);

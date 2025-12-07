@@ -3403,6 +3403,7 @@
         (let address (+ (gpr-or-sp64 rn) offset)
             (match (: size opc)
                 0b00_0 (= (vec-b rt) (load address u8))
+                0b01_0 (= (vec-h rt) (load address u16))
                 0b10_0 (= (vec-s rt) (load address f32))
                 0b11_0 (= (vec-d rt) (load address f64))
                 0b00_1 (= (vec rt) (load address vec))

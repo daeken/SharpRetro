@@ -463,6 +463,25 @@ public partial class CoreRecompiler : Recompiler {
     }
 
     protected override void Breakpoint(uint imm) => Builder.Add(new BreakpointStmt(imm));
+
+    protected override IRuntimeValue<uint> FloatToFixed32(IRuntimeValue<float> fvalue, int fbits) =>
+        new StaticRuntimeValue<uint>(new FloatToFixed(StaticBuilder<ulong>.W(fvalue), fbits, typeof(uint)));
+    protected override IRuntimeValue<uint> FloatToFixed32(IRuntimeValue<double> fvalue, int fbits) =>
+        new StaticRuntimeValue<uint>(new FloatToFixed(StaticBuilder<ulong>.W(fvalue), fbits, typeof(uint)));
+    protected override IRuntimeValue<ulong> FloatToFixed64(IRuntimeValue<float> fvalue, int fbits) =>
+        new StaticRuntimeValue<ulong>(new FloatToFixed(StaticBuilder<ulong>.W(fvalue), fbits, typeof(ulong)));
+    protected override IRuntimeValue<ulong> FloatToFixed64(IRuntimeValue<double> fvalue, int fbits) =>
+        new StaticRuntimeValue<ulong>(new FloatToFixed(StaticBuilder<ulong>.W(fvalue), fbits, typeof(ulong)));
+
+    protected override IRuntimeValue<byte> CompareAndSwap<T>(
+        IRuntimePointer<ulong, T> pointer, IRuntimeValue<T> value,
+        IRuntimeValue<T> comparand
+    ) =>
+        new StaticRuntimeValue<byte>(new CompareAndSwap(
+            StaticBuilder<ulong>.W(((StaticRuntimePointer<ulong, T>) pointer).Value),
+            StaticBuilder<ulong>.W(value),
+            StaticBuilder<ulong>.W(comparand)
+        ));
 }
 
 record LinkedBranch(StaticIRValue Address) : StaticIRStatement {
@@ -521,4 +540,46 @@ record DebugStmt(ulong PC, string Dasm) : StaticIRStatement {
     public override void Walk(Action<StaticIRStatement> stmtFunc, Action<StaticIRValue> valueFunc) => stmtFunc(this);
     public override StaticIRStatement Transform(Func<StaticIRStatement, StaticIRStatement> stmtFunc, Func<StaticIRValue, StaticIRValue> valueFunc) =>
         stmtFunc(this);
+}
+
+record FloatToFixed(StaticIRValue Value, int Fbits, Type OutType) : StaticIRValue(OutType) {
+    public override void Walk(Action<StaticIRValue> func) {
+        func(this);
+        Value.Walk(func);
+    }
+
+    public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
+        var value = Value.Transform(func);
+        var nthis = value != null && !ReferenceEquals(value, Value)
+            ? this with { Value = value }
+            : this;
+        return func(nthis) ?? nthis;
+    }
+}
+
+record CompareAndSwap(StaticIRValue Pointer, StaticIRValue Value, StaticIRValue Comparand) : StaticIRValue(typeof(byte)) {
+    public override void Walk(Action<StaticIRValue> func) {
+        func(this);
+        Pointer.Walk(func);
+        Value.Walk(func);
+        Comparand.Walk(func);
+    }
+
+    public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
+        var pointer = Pointer.Transform(func);
+        var value = Value.Transform(func);
+        var comparand = Comparand.Transform(func);
+        var nthis = 
+            (pointer != null && !ReferenceEquals(pointer, Pointer)) || 
+            (value != null && !ReferenceEquals(value, Value)) || 
+            (comparand != null && !ReferenceEquals(comparand, Comparand))
+                ? this with {
+                    Pointer = pointer != null && !ReferenceEquals(pointer, Pointer) ? pointer : Pointer, 
+                    Value = value != null && !ReferenceEquals(value, Value) ? value : Value,
+                    Comparand = comparand != null && !ReferenceEquals(comparand, Comparand) ? comparand : Comparand
+                }
+                : this;
+        return func(nthis) ?? nthis;
+
+    }
 }

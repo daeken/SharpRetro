@@ -387,7 +387,7 @@ public class Builtins : Builtin {
 			
 			Expression("store-exclusive", _ => new EInt(false, 1).AsRuntime(), 
 				list => $"CompareAndSwap(({GenerateType(list[2].Type)}*) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state->Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})", 
-				list => $"CompareAndSwap<{GenerateType(list[2].Type.AsCompiletime())}>((IRuntimePointer<ulong, {GenerateType(list[2].Type.AsCompiletime())}>) ({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state.Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})")
+				list => $"CompareAndSwap<{GenerateType(list[2].Type.AsCompiletime())}>(builder.Pointer<{GenerateType(list[2].Type.AsCompiletime())}>({GenerateExpression(list[1])}), {GenerateExpression(list[2])}, state.Exclusive{(list[2].Type is EInt(_, var sewidth) ? sewidth : throw new NotSupportedException())})")
 				.NoInterpret(); // TODO: Implement
 			
 			Statement("breakpoint", _ => EUnit.RuntimeType,

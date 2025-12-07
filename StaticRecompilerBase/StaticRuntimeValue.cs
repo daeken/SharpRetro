@@ -28,7 +28,12 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     public override IRuntimeValue<T> Add<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();
     public override IRuntimeValue<T> Sub(IRuntimeValue<T> rhs) => W(new StaticIRValue.Sub(this, W(rhs)));
     public override IRuntimeValue<T> Mul(IRuntimeValue<T> rhs) => W(new StaticIRValue.Mul(this, W(rhs)));
-    public override IRuntimeValue<T> Mul<U>(IRuntimeValue<U> rhs) where U : struct => throw new NotImplementedException();
+    public override IRuntimeValue<T> Mul<U>(IRuntimeValue<U> rhs) where U : struct =>
+        typeof(T).IsConstructedGenericType &&
+        typeof(T).GetGenericTypeDefinition() == typeof(Vector128<>) &&
+        typeof(T).GetGenericArguments()[0] == typeof(U)
+            ? W(new StaticIRValue.Mul(this, W(rhs)))
+            : throw new NotImplementedException();
     public override IRuntimeValue<T> Div(IRuntimeValue<T> rhs) => W(new StaticIRValue.Div(this, W(rhs)));
     public override IRuntimeValue<T> Mod(IRuntimeValue<T> rhs) => W(new StaticIRValue.Mod(this, W(rhs)));
 
