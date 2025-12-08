@@ -6,37 +6,61 @@ public record Block(ulong Start, Body Body);
 
 public abstract class BlockGraph(Block Block) {
     public Block Block = Block;
+    public readonly HashSet<BlockGraph> Prevs = [];
+    public abstract IEnumerable<BlockGraph> LeadsTo { get; }
 
     public void Walk(Action<BlockGraph> func) => Walk(func, []);
     public abstract void Walk(Action<BlockGraph> func, HashSet<ulong> seen);
+    
+    public abstract void SwapNode(BlockGraph prev, BlockGraph next);
     
     // Immature
     public class Unconditional(Block Block, BlockGraph Next = null) : BlockGraph(Block) {
         public BlockGraph Next = Next;
         public override string ToString() => $"Unconditional(0x{(Next != null ? Next.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get { yield return Next; }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Next.Walk(func, seen);
+        }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Next, prev)) Next = next;
         }
     }
     public class Conditional(Block Block, BlockGraph Taken = null, BlockGraph Not = null) : BlockGraph(Block) {
         public BlockGraph Taken = Taken;
         public BlockGraph Not = Not;
         public override string ToString() => $"Conditional(0x{(Taken != null ? Taken.Block.Start : 0):X}, 0x{(Not != null ? Not.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Taken;
+                yield return Not;
+            }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Taken.Walk(func, seen);
             Not.Walk(func, seen);
         }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Taken, prev)) Taken = next;
+            if(ReferenceEquals(Not, prev)) Not = next;
+        }
     }
 
     public class End(Block Block) : BlockGraph(Block) {
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get { yield break; }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
         }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {}
     }
     
     // Mature
@@ -44,16 +68,32 @@ public abstract class BlockGraph(Block Block) {
         public BlockGraph Then = Then;
         public BlockGraph Next = Next;
         public override string ToString() => $"When(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Then;
+                yield return Next;
+            }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Next.Walk(func, seen);
         }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Then, prev)) Then = next;
+            if(ReferenceEquals(Next, prev)) Next = next;
+        }
     }
     public class Unless(Block Block, BlockGraph Then, BlockGraph Next) : BlockGraph(Block) {
         public BlockGraph Then = Then;
         public BlockGraph Next = Next;
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Then;
+                yield return Next;
+            }
+        }
         public override string ToString() => $"Unless(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
@@ -61,51 +101,97 @@ public abstract class BlockGraph(Block Block) {
             Then.Walk(func, seen);
             Next.Walk(func, seen);
         }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Then, prev)) Then = next;
+            if(ReferenceEquals(Next, prev)) Next = next;
+        }
     }
     public class If(Block Block, BlockGraph Then, BlockGraph Else, BlockGraph Next) : BlockGraph(Block) {
         public BlockGraph Then = Then;
         public BlockGraph Else = Else;
         public BlockGraph Next = Next;
         public override string ToString() => $"If(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Else != null ? Else.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Then;
+                yield return Else;
+                yield return Next;
+            }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Else.Walk(func, seen);
             Next.Walk(func, seen);
+        }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Then, prev)) Then = next;
+            if(ReferenceEquals(Else, prev)) Else = next;
+            if(ReferenceEquals(Next, prev)) Next = next;
         }
     }
     public class TerminalIf(Block Block, BlockGraph Then, BlockGraph Else) : BlockGraph(Block) {
         public BlockGraph Then = Then;
         public BlockGraph Else = Else;
         public override string ToString() => $"TerminalIf(0x{(Then != null ? Then.Block.Start : 0):X}, 0x{(Else != null ? Else.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Then;
+                yield return Else;
+            }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Then.Walk(func, seen);
             Else.Walk(func, seen);
         }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Then, prev)) Then = next;
+            if(ReferenceEquals(Else, prev)) Else = next;
+        }
     }
     public class DoWhile(Block Block, BlockGraph Loop, BlockGraph Next) : BlockGraph(Block) {
         public BlockGraph Loop = Loop;
         public BlockGraph Next = Next;
         public override string ToString() => $"DoWhile(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Loop;
+                yield return Next;
+            }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Loop.Walk(func, seen);
             Next.Walk(func, seen);
         }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Loop, prev)) Loop = next;
+            if(ReferenceEquals(Next, prev)) Next = next;
+        }
     }
     public class InverseDoWhile(Block Block, BlockGraph Loop, BlockGraph Next) : BlockGraph(Block) {
         public BlockGraph Loop = Loop;
         public BlockGraph Next = Next;
         public override string ToString() => $"InverseDoWhile(0x{(Loop != null ? Loop.Block.Start : 0):X}, 0x{(Next != null ? Next.Block.Start : 0):X})";
+        public override IEnumerable<BlockGraph> LeadsTo {
+            get {
+                yield return Loop;
+                yield return Next;
+            }
+        }
         public override void Walk(Action<BlockGraph> func, HashSet<ulong> seen) {
             if(!seen.Add(Block.Start)) return;
             func(this);
             Loop.Walk(func, seen);
             Next.Walk(func, seen);
+        }
+        public override void SwapNode(BlockGraph prev, BlockGraph next) {
+            if(ReferenceEquals(Loop, prev)) Loop = next;
+            if(ReferenceEquals(Next, prev)) Next = next;
         }
     }
     
@@ -203,6 +289,13 @@ public abstract class BlockGraph(Block Block) {
         return false;
     }
 
+    static void AssignPrevs(IEnumerable<BlockGraph> blocks) {
+        foreach(var block in blocks)
+            foreach(var lead in block.LeadsTo)
+                if(!ReferenceEquals(lead, block))
+                    lead.Prevs.Add(block);
+    }
+
     static (bool Changed, Dictionary<ulong, BlockGraph> Blocks) Transform(Dictionary<ulong, BlockGraph> blocks, Func<BlockGraph, BlockGraph> func) {
         var changed = false;
         var didChange = false;
@@ -211,54 +304,18 @@ public abstract class BlockGraph(Block Block) {
             foreach(var (addr, block) in blocks) {
                 var nblock = func(block);
                 if(nblock == null || ReferenceEquals(block, nblock)) continue;
-                foreach(var (raddr, rblock) in blocks.Concat([new KeyValuePair<ulong, BlockGraph>(addr, nblock)])) {
-                    switch(rblock) {
-                        case Unconditional node: {
-                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
-                            break;
-                        }
-                        case Conditional node: {
-                            if(ReferenceEquals(block, node.Taken)) node.Taken = nblock;
-                            if(ReferenceEquals(block, node.Not)) node.Not = nblock;
-                            break;
-                        }
-                        case When node: {
-                            if(ReferenceEquals(block, node.Then)) node.Then = nblock;
-                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
-                            break;
-                        }
-                        case Unless node: {
-                            if(ReferenceEquals(block, node.Then)) node.Then = nblock;
-                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
-                            break;
-                        }
-                        case If node: {
-                            if(ReferenceEquals(block, node.Then)) node.Then = nblock;
-                            if(ReferenceEquals(block, node.Else)) node.Else = nblock;
-                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
-                            break;
-                        }
-                        case TerminalIf node: {
-                            if(ReferenceEquals(block, node.Then)) node.Then = nblock;
-                            if(ReferenceEquals(block, node.Else)) node.Else = nblock;
-                            break;
-                        }
-                        case DoWhile node: {
-                            if(ReferenceEquals(block, node.Loop)) node.Loop = nblock;
-                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
-                            break;
-                        }
-                        case InverseDoWhile node: {
-                            if(ReferenceEquals(block, node.Loop)) node.Loop = nblock;
-                            if(ReferenceEquals(block, node.Next)) node.Next = nblock;
-                            break;
-                        }
+                foreach(var prev in block.Prevs)
+                    nblock.Prevs.Add(prev);
+                foreach(var next in nblock.LeadsTo)
+                    if(!ReferenceEquals(next, block)) {
+                        next.Prevs.Remove(block);
+                        next.Prevs.Add(nblock);
                     }
-                }
+                foreach(var rblock in block.Prevs.Concat([nblock]))
+                    rblock.SwapNode(block, nblock);
                 blocks[addr] = nblock;
                 changed = true;
                 didChange = true;
-                break;
             }
         } while(changed);
         return (didChange, blocks);
@@ -291,13 +348,20 @@ public abstract class BlockGraph(Block Block) {
     }
 
     public static Dictionary<ulong, BlockGraph> Reduce(Dictionary<ulong, BlockGraph> blocks, HashSet<ulong> funcs) {
+        AssignPrevs(blocks.Values);
         bool IsPeninsula(BlockGraph node) {
             var subGraph = new List<ulong>();
             node.Walk(sub => subGraph.Add(sub.Block.Start));
             int Check(BlockGraph other) => subGraph.Contains(other.Block.Start) ? 1 : 0;
 
             var found = 0;
-            foreach(var block in blocks.Values) {
+            var subPrevs = subGraph
+                .Select(x => blocks[x].Prevs)
+                .Aggregate(new HashSet<BlockGraph>(), (acc, b) => {
+                    acc.UnionWith(b);
+                    return acc;
+                });
+            foreach(var block in subPrevs) {
                 if(subGraph.Contains(block.Block.Start)) continue;
                 found += block switch {
                     Unconditional v => Check(v.Next),

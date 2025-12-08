@@ -146,7 +146,7 @@ public partial class CoreRecompiler {
         if(nlit != null) return new StaticIRValue.Literal(nlit, typeof(bool));
         return null;
     }
-    bool FoldConstants() {
+    bool FoldConstants(BlockGraph node) {
         var foldedAny = false;
         var regs = new StaticIRValue[31];
         StaticIRValue N = null;
@@ -158,211 +158,209 @@ public partial class CoreRecompiler {
             StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V, 
             Dictionary<string, StaticIRValue> Vars
             )>();
-        foreach(var node in WholeBlockGraph.Values) {
-            var block = node.Block;
-            var body = block.Body;
-            try {
-                var folded = false;
-                do {
-                    for(var i = 0; i < 31; ++i)
-                        regs[i] = null;
-                    N = Z = C = V = null;
-                    vars.Clear();
-                    stack.Clear();
-                    folded = false;
-                    FoldList(body);
+        var block = node.Block;
+        var body = block.Body;
+        try {
+            var folded = false;
+            do {
+                for(var i = 0; i < 31; ++i)
+                    regs[i] = null;
+                N = Z = C = V = null;
+                vars.Clear();
+                stack.Clear();
+                folded = false;
+                FoldList(body);
 
-                    void Push() {
-                        stack.Push((regs, N, Z, C, V, vars));
-                        regs = regs.ToArray();
-                        vars = vars.ToDictionary();
-                    }
-                    (
-                        StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V, 
-                        Dictionary<string, StaticIRValue> Vars
-                    ) Pop() {
-                        var ret = (regs, N, Z, C, V, vars);
-                        (regs, N, Z, C, V, vars) = stack.Pop();
-                        return ret;
-                    }
+                void Push() {
+                    stack.Push((regs, N, Z, C, V, vars));
+                    regs = regs.ToArray();
+                    vars = vars.ToDictionary();
+                }
+                (
+                    StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V, 
+                    Dictionary<string, StaticIRValue> Vars
+                ) Pop() {
+                    var ret = (regs, N, Z, C, V, vars);
+                    (regs, N, Z, C, V, vars) = stack.Pop();
+                    return ret;
+                }
 
-                    void MergeScopes(params (
-                        StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V,
-                        Dictionary<string, StaticIRValue> Vars
-                    )[] scopes) {
-                        Debug.Assert(scopes.Length <= 2);
-                        if(scopes.Length == 1) {
-                            var (tregs, tn, tz, tc, tv, _) = scopes[0];
-                            regs = regs.Zip(tregs).Select(x => x.First == x.Second ? x.First : null).ToArray();
-                            if(tn != N) N = null;
-                            if(tz != Z) Z = null;
-                            if(tc != C) C = null;
-                            if(tv != V) V = null;
-                        } else {
-                            var (aregs, an, az, ac, av, _) = scopes[0];
-                            var (bregs, bn, bz, bc, bv, _) = scopes[1];
-                            regs = aregs.Zip(bregs).Select(x => x.First == x.Second ? x.First : null).ToArray();
-                            N = an == bn ? an : null;
-                            Z = az == bz ? az : null;
-                            C = ac == bc ? ac : null;
-                            V = av == bv ? av : null;
-                        }
+                void MergeScopes(params (
+                    StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V,
+                    Dictionary<string, StaticIRValue> Vars
+                )[] scopes) {
+                    Debug.Assert(scopes.Length <= 2);
+                    if(scopes.Length == 1) {
+                        var (tregs, tn, tz, tc, tv, _) = scopes[0];
+                        regs = regs.Zip(tregs).Select(x => x.First == x.Second ? x.First : null).ToArray();
+                        if(tn != N) N = null;
+                        if(tz != Z) Z = null;
+                        if(tc != C) C = null;
+                        if(tv != V) V = null;
+                    } else {
+                        var (aregs, an, az, ac, av, _) = scopes[0];
+                        var (bregs, bn, bz, bc, bv, _) = scopes[1];
+                        regs = aregs.Zip(bregs).Select(x => x.First == x.Second ? x.First : null).ToArray();
+                        N = an == bn ? an : null;
+                        Z = az == bz ? az : null;
+                        C = ac == bc ? ac : null;
+                        V = av == bv ? av : null;
                     }
-                    void FoldList(List<StaticIRStatement> body) {
-                        for(var i = 0; i < body.Count; ++i) {
-                            var stmt = body[i];
-                            switch(stmt) {
-                                case StaticIRStatement.If(var cond, var left, var right): {
-                                    cond = Fold(cond) ?? cond;
-                                    Push();
-                                    var stmts = left is StaticIRStatement.Body lbody ? lbody.Stmts : [left];
-                                    FoldList(stmts);
-                                    left = new StaticIRStatement.Body(stmts);
-                                    var lscope = Pop();
-                                    Push();
-                                    stmts = right is StaticIRStatement.Body rbody ? rbody.Stmts : [right];
-                                    FoldList(stmts);
-                                    right = new StaticIRStatement.Body(stmts);
-                                    var rscope = Pop();
-                                    MergeScopes(lscope, rscope);
-                                    body[i] = new StaticIRStatement.If(cond, left, right);
-                                    break;
-                                }
-                                case StaticIRStatement.When(var cond, var then): {
-                                    cond = Fold(cond) ?? cond;
-                                    Push();
-                                    var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
-                                    FoldList(stmts);
-                                    then = new StaticIRStatement.Body(stmts);
-                                    var scope = Pop();
-                                    MergeScopes(scope);
-                                    body[i] = new StaticIRStatement.When(cond, then);
-                                    break;
-                                }
-                                case StaticIRStatement.Unless(var cond, var then): {
-                                    cond = Fold(cond) ?? cond;
-                                    Push();
-                                    var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
-                                    FoldList(stmts);
-                                    then = new StaticIRStatement.Body(stmts);
-                                    var scope = Pop();
-                                    MergeScopes(scope);
-                                    body[i] = new StaticIRStatement.Unless(cond, then);
-                                    break;
-                                }
-                                case StaticIRStatement.While(var cond, var then): {
-                                    cond = Fold(cond) ?? cond;
-                                    Push();
-                                    var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
-                                    FoldList(stmts);
-                                    then = new StaticIRStatement.Body(stmts);
-                                    var scope = Pop();
-                                    MergeScopes(scope);
-                                    body[i] = new StaticIRStatement.While(cond, then);
-                                    break;
-                                }
-                                case StaticIRStatement.DoWhile(var then, var cond): {
-                                    Push();
-                                    var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
-                                    FoldList(stmts);
-                                    then = new StaticIRStatement.Body(stmts);
-                                    var scope = Pop();
-                                    MergeScopes(scope);
-                                    cond = Fold(cond) ?? cond;
-                                    body[i] = new StaticIRStatement.DoWhile(then, cond);
-                                    break;
-                                }
-                                case StaticIRStatement.Body(var stmts):
-                                    FoldList(stmts);
-                                    break;
-                                case SvcStmt(_, _, var outRegs): {
-                                    foreach(var outReg in outRegs)
-                                        if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
-                                            regs[regIndex] = null; // Can't know the results of svc calls
-                                    break;
-                                }
-                                case LinkedBranch: {
-                                    for(var j = 0; j < 31; ++j)
-                                        regs[j] = null;
-                                    N = Z = C = V = null;
-                                    break;
-                                }
-                                case StaticIRStatement.Assign(var name, var value): {
-                                    var foldedVal = Fold(value);
-                                    if(foldedVal != null)
-                                        body[i] = new StaticIRStatement.Assign(name, foldedVal);
-                                    vars[name] = foldedVal ?? value;
-                                    break;
-                                }
-                                case StaticIRStatement.SetFieldIndex(
-                                    StaticIRValue.Named("State", _) ptr, "X", var reg, var val): {
-                                    var foldedVal = Fold(val);
-                                    if(foldedVal != null)
-                                        body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
-                                    regs[reg] = foldedVal ?? val;
-                                    break;
-                                }
-                                case StaticIRStatement.SetField(
-                                    StaticIRValue.Named("State", _) fptr, var fname, var fval) when
-                                    fname is "NZCV_N" or "NZCV_Z" or "NZCV_C" or "NZCV_V": {
-                                    var foldedVal = Fold(fval);
-                                    if(foldedVal != null)
-                                        body[i] = new StaticIRStatement.SetField(fptr, fname, foldedVal);
-                                    foldedVal ??= fval;
-                                    switch(fname) {
-                                        case "NZCV_N": N = foldedVal; break;
-                                        case "NZCV_Z": Z = foldedVal; break;
-                                        case "NZCV_C": C = foldedVal; break;
-                                        case "NZCV_V": V = foldedVal; break;
-                                    }
-                                    break;
-                                }
+                }
+                void FoldList(List<StaticIRStatement> body) {
+                    for(var i = 0; i < body.Count; ++i) {
+                        var stmt = body[i];
+                        switch(stmt) {
+                            case StaticIRStatement.If(var cond, var left, var right): {
+                                cond = Fold(cond) ?? cond;
+                                Push();
+                                var stmts = left is StaticIRStatement.Body lbody ? lbody.Stmts : [left];
+                                FoldList(stmts);
+                                left = new StaticIRStatement.Body(stmts);
+                                var lscope = Pop();
+                                Push();
+                                stmts = right is StaticIRStatement.Body rbody ? rbody.Stmts : [right];
+                                FoldList(stmts);
+                                right = new StaticIRStatement.Body(stmts);
+                                var rscope = Pop();
+                                MergeScopes(lscope, rscope);
+                                body[i] = new StaticIRStatement.If(cond, left, right);
+                                break;
                             }
-                            StaticIRValue Fold(StaticIRValue val) {
-                                var foldedVal = val.Transform(x => {
-                                    return x switch {
-                                        StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.And(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right),
-                                        StaticIRValue.EQ(var left, var right) => FoldComp(x, left, right),
-                                        StaticIRValue.NE(var left, var right) => FoldComp(x, left, right),
-                                        StaticIRValue.LT(var left, var right) => FoldComp(x, left, right),
-                                        StaticIRValue.LTE(var left, var right) => FoldComp(x, left, right),
-                                        StaticIRValue.GT(var left, var right) => FoldComp(x, left, right),
-                                        StaticIRValue.GTE(var left, var right) => FoldComp(x, left, right),
-                                        StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) =>
-                                            regs[regIndex] switch {
-                                                StaticIRValue.Literal lit => lit,
-                                                _ => null,
-                                            },
-                                        StaticIRValue.Named(var name, _) when vars.TryGetValue(name, out var val) =>
-                                            val switch {
-                                                StaticIRValue.Literal lit => lit,
-                                                _ => null,
-                                            },
-                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_N", _) => N,
-                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_Z", _) => Z,
-                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_C", _) => C,
-                                        StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_V", _) => V,
-                                        _ => null,
-                                    };
-                                });
-                                if(foldedVal == null || ReferenceEquals(foldedVal, val)) return null;
-                                folded = true;
-                                foldedAny = true;
-                                return foldedVal;
+                            case StaticIRStatement.When(var cond, var then): {
+                                cond = Fold(cond) ?? cond;
+                                Push();
+                                var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
+                                FoldList(stmts);
+                                then = new StaticIRStatement.Body(stmts);
+                                var scope = Pop();
+                                MergeScopes(scope);
+                                body[i] = new StaticIRStatement.When(cond, then);
+                                break;
+                            }
+                            case StaticIRStatement.Unless(var cond, var then): {
+                                cond = Fold(cond) ?? cond;
+                                Push();
+                                var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
+                                FoldList(stmts);
+                                then = new StaticIRStatement.Body(stmts);
+                                var scope = Pop();
+                                MergeScopes(scope);
+                                body[i] = new StaticIRStatement.Unless(cond, then);
+                                break;
+                            }
+                            case StaticIRStatement.While(var cond, var then): {
+                                cond = Fold(cond) ?? cond;
+                                Push();
+                                var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
+                                FoldList(stmts);
+                                then = new StaticIRStatement.Body(stmts);
+                                var scope = Pop();
+                                MergeScopes(scope);
+                                body[i] = new StaticIRStatement.While(cond, then);
+                                break;
+                            }
+                            case StaticIRStatement.DoWhile(var then, var cond): {
+                                Push();
+                                var stmts = then is StaticIRStatement.Body tbody ? tbody.Stmts : [then];
+                                FoldList(stmts);
+                                then = new StaticIRStatement.Body(stmts);
+                                var scope = Pop();
+                                MergeScopes(scope);
+                                cond = Fold(cond) ?? cond;
+                                body[i] = new StaticIRStatement.DoWhile(then, cond);
+                                break;
+                            }
+                            case StaticIRStatement.Body(var stmts):
+                                FoldList(stmts);
+                                break;
+                            case SvcStmt(_, _, var outRegs): {
+                                foreach(var outReg in outRegs)
+                                    if(outReg is StaticIRValue.GetFieldIndex(_, _, var regIndex, _))
+                                        regs[regIndex] = null; // Can't know the results of svc calls
+                                break;
+                            }
+                            case LinkedBranch: {
+                                for(var j = 0; j < 31; ++j)
+                                    regs[j] = null;
+                                N = Z = C = V = null;
+                                break;
+                            }
+                            case StaticIRStatement.Assign(var name, var value): {
+                                var foldedVal = Fold(value);
+                                if(foldedVal != null)
+                                    body[i] = new StaticIRStatement.Assign(name, foldedVal);
+                                vars[name] = foldedVal ?? value;
+                                break;
+                            }
+                            case StaticIRStatement.SetFieldIndex(
+                                StaticIRValue.Named("State", _) ptr, "X", var reg, var val): {
+                                var foldedVal = Fold(val);
+                                if(foldedVal != null)
+                                    body[i] = new StaticIRStatement.SetFieldIndex(ptr, "X", reg, foldedVal);
+                                regs[reg] = foldedVal ?? val;
+                                break;
+                            }
+                            case StaticIRStatement.SetField(
+                                StaticIRValue.Named("State", _) fptr, var fname, var fval) when
+                                fname is "NZCV_N" or "NZCV_Z" or "NZCV_C" or "NZCV_V": {
+                                var foldedVal = Fold(fval);
+                                if(foldedVal != null)
+                                    body[i] = new StaticIRStatement.SetField(fptr, fname, foldedVal);
+                                foldedVal ??= fval;
+                                switch(fname) {
+                                    case "NZCV_N": N = foldedVal; break;
+                                    case "NZCV_Z": Z = foldedVal; break;
+                                    case "NZCV_C": C = foldedVal; break;
+                                    case "NZCV_V": V = foldedVal; break;
+                                }
+                                break;
                             }
                         }
+                        StaticIRValue Fold(StaticIRValue val) {
+                            var foldedVal = val.Transform(x => {
+                                return x switch {
+                                    StaticIRValue.Add(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.Sub(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.And(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.Or(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.Xor(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.LeftShift(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.RightShift(var left, var right) => FoldBinary(x, left, right),
+                                    StaticIRValue.EQ(var left, var right) => FoldComp(x, left, right),
+                                    StaticIRValue.NE(var left, var right) => FoldComp(x, left, right),
+                                    StaticIRValue.LT(var left, var right) => FoldComp(x, left, right),
+                                    StaticIRValue.LTE(var left, var right) => FoldComp(x, left, right),
+                                    StaticIRValue.GT(var left, var right) => FoldComp(x, left, right),
+                                    StaticIRValue.GTE(var left, var right) => FoldComp(x, left, right),
+                                    StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var regIndex, _) =>
+                                        regs[regIndex] switch {
+                                            StaticIRValue.Literal lit => lit,
+                                            _ => null,
+                                        },
+                                    StaticIRValue.Named(var name, _) when vars.TryGetValue(name, out var val) =>
+                                        val switch {
+                                            StaticIRValue.Literal lit => lit,
+                                            _ => null,
+                                        },
+                                    StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_N", _) => N,
+                                    StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_Z", _) => Z,
+                                    StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_C", _) => C,
+                                    StaticIRValue.GetField(StaticIRValue.Named("State", _), "NZCV_V", _) => V,
+                                    _ => null,
+                                };
+                            });
+                            if(foldedVal == null || ReferenceEquals(foldedVal, val)) return null;
+                            folded = true;
+                            foldedAny = true;
+                            return foldedVal;
+                        }
                     }
-                } while(folded);
-            } catch(Exception e) {
-                Console.WriteLine($"Constant folding failed for block 0x{block.Start:X}");
-                Console.WriteLine(e);
-            }
+                }
+            } while(folded);
+        } catch(Exception e) {
+            Console.WriteLine($"Constant folding failed for block 0x{block.Start:X}");
+            Console.WriteLine(e);
         }
         return foldedAny;
     }

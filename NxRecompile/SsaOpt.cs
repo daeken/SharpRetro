@@ -77,9 +77,12 @@ public partial class CoreRecompiler {
                         break;
                     case IStaticControlFlowStatement:
                         break;
-                    case StaticIRStatement.SetField(StaticIRValue.Named("State", _), _, var fvalue): {
-                        if(fvalue is not StaticIRValue.Named(var fname, _) { SsaId: var fid })
+                    case StaticIRStatement.SetField(StaticIRValue.Named("State", _), var field, var fvalue): {
+                        if(fvalue is not StaticIRValue.Named(var fname, _) { SsaId: var fid }) {
+                            if(field.StartsWith("Exclusive"))
+                                break;
                             throw new NotSupportedException();
+                        }
                         if(!toStore.ContainsKey(fname)) toStore[fname] = [];
                         toStore[fname].Add(fid);
                         break;
