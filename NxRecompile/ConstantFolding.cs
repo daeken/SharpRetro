@@ -148,23 +148,28 @@ public partial class CoreRecompiler {
     }
     bool FoldConstants() {
         var foldedAny = false;
+        var regs = new StaticIRValue[31];
+        StaticIRValue N = null;
+        StaticIRValue Z = null;
+        StaticIRValue C = null;
+        StaticIRValue V = null;
+        var vars = new Dictionary<string, StaticIRValue>();
+        var stack = new Stack<(
+            StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V, 
+            Dictionary<string, StaticIRValue> Vars
+            )>();
         foreach(var node in WholeBlockGraph.Values) {
             var block = node.Block;
             var body = block.Body;
             try {
                 var folded = false;
                 do {
+                    for(var i = 0; i < 31; ++i)
+                        regs[i] = null;
+                    N = Z = C = V = null;
+                    vars.Clear();
+                    stack.Clear();
                     folded = false;
-                    var regs = new StaticIRValue[32];
-                    StaticIRValue N = null;
-                    StaticIRValue Z = null;
-                    StaticIRValue C = null;
-                    StaticIRValue V = null;
-                    var vars = new Dictionary<string, StaticIRValue>();
-                    var stack = new Stack<(
-                        StaticIRValue[] Regs, StaticIRValue N, StaticIRValue Z, StaticIRValue C, StaticIRValue V, 
-                        Dictionary<string, StaticIRValue> Vars
-                    )>();
                     FoldList(body);
 
                     void Push() {
@@ -277,7 +282,7 @@ public partial class CoreRecompiler {
                                     break;
                                 }
                                 case LinkedBranch: {
-                                    for(var j = 0; j < 32; ++j)
+                                    for(var j = 0; j < 31; ++j)
                                         regs[j] = null;
                                     N = Z = C = V = null;
                                     break;

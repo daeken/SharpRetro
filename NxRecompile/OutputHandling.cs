@@ -224,52 +224,47 @@ public partial class CoreRecompiler {
                     ushort v => $"(uint16_t) 0x{v:X}U",
                     uint v => $"0x{v:X}U",
                     ulong v => $"0x{v:X}ULL",
-                    float v => $"{v:0.0###############}f",
-                    double v => $"{v:0.0###############}",
+                    float v =>
+                        float.IsNaN(v)
+                            ? "std::numeric_limits<float>::quiet_NaN()"
+                            : $"{v:0.0###############}f",
+                    double v =>
+                        double.IsNaN(v)
+                            ? "std::numeric_limits<double>::quiet_NaN()"
+                            : $"{v:0.0###############}",
                     System.Runtime.Intrinsics.Vector128<byte> v => $"(v16u) {{ {string.Join(", ", Enumerable.Range(0, 16).Select(i => v[i]))} }}",
                     UInt128 v => $"(uint128_t) 0x{v:X}ULL", // TODO: Make 128-bit literals. Fakin' it for now
                     Int128 v => $"(int128_t) {v}LL", // TODO: Make 128-bit literals
                     _ => throw new NotImplementedException($"Literal value type {type}")
                 };
             }
-            case StaticIRValue.Named(var name, _) { SsaId: var ssaId }: {
+            case StaticIRValue.Named(var name, _) { SsaId: var ssaId }:
                 return ssaId == -1 ? name : $"{name}/*{ssaId}*/";
-            }
-            case StaticIRValue.NamedOut(var name, _) { SsaId: var ssaId }: {
+            case StaticIRValue.NamedOut(var name, _) { SsaId: var ssaId }:
                 return ssaId == -1 ? name : $"{name}/*{ssaId}*/";
-            }
-            case StaticIRValue.Add(var left, var right): {
+            case StaticIRValue.Add(var left, var right):
                 return EnsureSize(left.Type, $"{POutput(left)} + {POutput(right)}");
-            }
-            case StaticIRValue.Sub(var left, var right): {
+            case StaticIRValue.Sub(var left, var right):
                 return EnsureSize(left.Type, $"{POutput(left)} - {POutput(right)}");
-            }
-            case StaticIRValue.Mul(var left, var right): {
+            case StaticIRValue.Mul(var left, var right):
                 return EnsureSize(left.Type, $"{POutput(left)} * {POutput(right)}");
-            }
-            case StaticIRValue.Div(var left, var right): {
+            case StaticIRValue.Div(var left, var right):
                 return EnsureSize(left.Type, $"{POutput(left)} / {POutput(right)}");
-            }
-            case StaticIRValue.Mod(var left, var right): {
+            case StaticIRValue.Mod(var left, var right):
                 return EnsureSize(left.Type, $"{POutput(left)} % {POutput(right)}");
-            }
-            case StaticIRValue.And(var left, var right): {
+            case StaticIRValue.And(var left, var right):
                 return BitwiseOp("&", left, right);
-            }
-            case StaticIRValue.Or(var left, var right): {
+            case StaticIRValue.Or(var left, var right):
                 return BitwiseOp("|", left, right);
-            }
-            case StaticIRValue.Xor(var left, var right): {
+            case StaticIRValue.Xor(var left, var right):
                 return BitwiseOp("^", left, right);
-            }
-            case StaticIRValue.LeftShift(var left, var right): {
-                return $"{POutput(left)} << {POutput(right)}";
-            }
-            case StaticIRValue.RightShift(var left, var right): {
-                return $"{POutput(left)} >> {POutput(right)}";
-            }
+            case StaticIRValue.LeftShift(var left, var right):
+                return EnsureSize(left.Type, $"{POutput(left)} << {POutput(right)}");
+            case StaticIRValue.RightShift(var left, var right):
+                return EnsureSize(left.Type, $"{POutput(left)} >> {POutput(right)}");
             case StaticIRValue.Negate(var value): {
-                return $"-{POutput(value)}";
+                var str = POutput(value);
+                return str.StartsWith('-') ? $"-({str})" : $"-{str}";
             }
             case StaticIRValue.Not(var value): {
                 var sexpr = POutput(value);
@@ -278,87 +273,95 @@ public partial class CoreRecompiler {
                     return $"__builtin_bit_cast(v4f, ~__builtin_bit_cast(v16u, {sexpr}))";
                 return $"~{sexpr}";
             }
-            case StaticIRValue.EQ(var left, var right): {
+            case StaticIRValue.EQ(var left, var right):
                 return $"{POutput(left)} == {POutput(right)}";
-            }
-            case StaticIRValue.NE(var left, var right): {
+            case StaticIRValue.NE(var left, var right):
                 return $"{POutput(left)} != {POutput(right)}";
-            }
-            case StaticIRValue.LT(var left, var right): {
+            case StaticIRValue.LT(var left, var right):
                 return $"{POutput(left)} < {POutput(right)}";
-            }
-            case StaticIRValue.LTE(var left, var right): {
+            case StaticIRValue.LTE(var left, var right):
                 return $"{POutput(left)} <= {POutput(right)}";
-            }
-            case StaticIRValue.GT(var left, var right): {
+            case StaticIRValue.GT(var left, var right):
                 return $"{POutput(left)} > {POutput(right)}";
-            }
-            case StaticIRValue.GTE(var left, var right): {
+            case StaticIRValue.GTE(var left, var right):
                 return $"{POutput(left)} >= {POutput(right)}";
-            }
-            case StaticIRValue.Dereference(var addr, var type): {
+            case StaticIRValue.Dereference(var addr, var type):
                 return $"*({Output(type)} *) {POutput(addr)}";
-            }
-            case StaticIRValue.GetField(var addr, var field, _): {
+            case StaticIRValue.GetField(var addr, var field, _):
                 return $"{POutput(addr)}->{field}";
-            }
-            case StaticIRValue.GetFieldIndex(var addr, var field, var index, _): {
+            case StaticIRValue.GetFieldIndex(var addr, var field, var index, _):
                 return $"{POutput(addr)}->{field}[{index}]";
-            }
-            case StaticIRValue.Store(var value): {
+            case StaticIRValue.Store(var value):
                 return Output(value);
-            }
-            case StaticIRValue.Cast(var value, var type): {
+            case StaticIRValue.Cast(var value, var type):
                 if(type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(System.Runtime.Intrinsics.Vector128<>))
                     return $"std::bit_cast<{Output(type)}>({Output(value)})";
                 return $"static_cast<{Output(type)}>({Output(value)})";
-            }
-            case StaticIRValue.Bitcast(var value, var type): {
+            case StaticIRValue.Bitcast(var value, var type):
                 return $"std::bit_cast<{Output(type)}>({Output(value)})";
-            }
-            case StaticIRValue.Ternary(var cond, var taken, var not): {
+            case StaticIRValue.Ternary(var cond, var taken, var not):
                 return $"{POutput(cond)} ? {POutput(taken)} : {POutput(not)}";
-            }
-            case StaticIRValue.CreateVector(var value): {
+            case StaticIRValue.CreateVector(var value):
                 if(value.Type == typeof(float))
                     return $"(v4f) {{ {Output(value)} }}";
                 return $"std::bit_cast<v4f>(({Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(value.Type))}) {{ {Output(value)} }})";
-            }
             case StaticIRValue.CreateFullVector(var values): {
                 var vals = string.Join(", ", values.Select(Output));
                 var vec = $"({Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(values[0].Type))}) {{ {vals} }}";
                 return values[0].Type == typeof(float) ? vec : $"std::bit_cast<v4f>({vec})";
             }
-            case StaticIRValue.SignExt(var value, var width, var type): {
-                return $"signext_{Output(value.Type)}_{Output(type)}({Output(value)}, {width})";
-            }
-            case StaticIRValue.ReverseBits(var value): {
+            case StaticIRValue.SignExt(var value, var width, var type):
+                return $"signext_{Output(type)}({Output(value)}, {width})";
+            case StaticIRValue.ReverseBits(var value):
                 return $"__builtin_bitreverse{Marshal.SizeOf(value.Type) * 8}({Output(value)})";
-            }
-            case StaticIRValue.CountLeadingZeros(var value): {
+            case StaticIRValue.CountLeadingZeros(var value):
                 return $"__builtin_clzg({Output(value)})";
-            }
-            case StaticIRValue.SetElement(var vector, var index, var element): {
-                return $"setElement_{Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(element.Type))}({Output(vector)}, {Output(index)}, {Output(element)})";
-            }
-            case StaticIRValue.GetElement(var vector, var index, var etype): {
+            case StaticIRValue.SetElement(var vector, var index, var element):
+                return $"setElement({Output(vector)}, {Output(index)}, {Output(element)})";
+            case StaticIRValue.GetElement(var vector, var index, var etype):
                 return $"reinterpret_cast<{Output(typeof(System.Runtime.Intrinsics.Vector128<>).MakeGenericType(etype))}>({Output(vector)})[{Output(index)}]";
-            }
-            case StaticIRValue.IsNaN(var value): {
+            case StaticIRValue.IsNaN(var value):
                 return $"isnan({Output(value)})";
-            }
-            case StaticIRValue.ZeroTop(var value): {
-                return $"zerotop_{Output(value.Type)}({Output(value)})";
-            }
+            case StaticIRValue.ZeroTop(var value):
+                return $"zerotop({Output(value)})";
             case StaticIRValue.Abs(var value):
                 return $"abs({Output(value)})";
             case StaticIRValue.Round(var value):
                 return $"round({Output(value)})";
             case StaticIRValue.RoundTowardZero(var value):
                 return $"trunc({Output(value)})";
-            case ReadSr(var op0, var op1, var crn, var crm, var op2): {
+            case StaticIRValue.RoundHalfDown(var value):
+                if(value.Type == typeof(float))
+                    return $"std::ceil({POutput(value)} - 0.5f)";
+                if(value.Type == typeof(double))
+                    return $"std::ceil({POutput(value)} - 0.5)";
+                throw new NotSupportedException($"RoundHalfDown on {value.Type}");
+            case StaticIRValue.RoundHalfUp(var value):
+                if(value.Type == typeof(float))
+                    return $"std::floor({POutput(value)} + 0.5f)";
+                if(value.Type == typeof(double))
+                    return $"std::floor({POutput(value)} + 0.5)";
+                throw new NotSupportedException($"RoundHalfUp on {value.Type}");
+            case StaticIRValue.Ceil(var value):
+                return $"std::ceil({Output(value)})";
+            case StaticIRValue.Floor(var value):
+                return $"std::ceil({Output(value)})";
+            case FloatToFixed(var value, var fbits, var otype):
+                return $"floatToFixed_{Output(otype)}({Output(value)}, {fbits})";
+            case CompareAndSwap(var pointer, var value, var comparand):
+                return $"compareAndSwap(reinterpret_cast<{Output(value.Type)} *>({Output(pointer)}), {Output(value)}, {Output(comparand)})";
+            case StaticIRValue.Sqrt(var value):
+                return $"std::sqrt({Output(value)})";
+            case ReadSr(var op0, var op1, var crn, var crm, var op2):
                 return $"Callbacks->readSr({op0}, {op1}, {crn}, {crm}, {op2})";
-            }
+            case StaticIRValue.VectorSumUnsigned(var vec, var eSize, var count):
+                return $"vectorSumUnsigned({Output(vec)}, {Output(eSize)}, {Output(count)})";
+            case StaticIRValue.VectorCountBits(var vec, var elems):
+                return $"vectorCountBits({Output(vec)}, {Output(elems)})";
+            case StaticIRValue.VectorExtract(var a, var b, var q, var index):
+                return $"vectorExtract({Output(a)}, {Output(b)}, {Output(q)}, {Output(index)})";
+            case StaticIRValue.VectorFrsqrte(var vec, var bits, var elems):
+                return $"vectorFrsqrte({Output(vec)}, {Output(bits)}, {Output(elems)})";
             case StaticIRValue.Phi(var values): {
                 return $"Phi({string.Join(", ", values.Select(Output))})";
             }

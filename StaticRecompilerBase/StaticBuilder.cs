@@ -9,10 +9,11 @@ public class StaticBuilder<AddrT> : IBuilder<AddrT> where AddrT : struct {
     public StaticBuilder() => ScopeStack.Push(BodyStmts);
     public StaticIRStatement.Body Body => new(BodyStmts);
 
-    StaticIRStatement.Body Scoped(Action func) {
+    public StaticIRStatement.Body Scoped(Action func) => new(ScopedStatements(func));
+    public List<StaticIRStatement> ScopedStatements(Action func) {
         ScopeStack.Push([]);
         func();
-        return new(ScopeStack.Pop());
+        return ScopeStack.Pop();
     }
     public void Add(StaticIRStatement stmt) => ScopeStack.Peek().Add(stmt);
 

@@ -6,6 +6,10 @@ typedef uint8_t v16u __attribute__((ext_vector_type(16)));
 typedef uint16_t v8u __attribute__((ext_vector_type(8)));
 typedef uint32_t v4u __attribute__((ext_vector_type(4)));
 typedef uint64_t v2u __attribute__((ext_vector_type(2)));
+typedef int8_t v16i __attribute__((ext_vector_type(16)));
+typedef int16_t v8i __attribute__((ext_vector_type(8)));
+typedef int32_t v4i __attribute__((ext_vector_type(4)));
+typedef int64_t v2i __attribute__((ext_vector_type(2)));
 typedef double v2d __attribute__((ext_vector_type(2)));
 typedef float v4f __attribute__((ext_vector_type(4)));
 

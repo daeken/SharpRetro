@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using K4os.Compression.LZ4;
+using LibSharpRetro;
 
 namespace NxRecompile;
 
@@ -57,13 +58,22 @@ enum DynamicKey {
     RELRENT,
 }
 
+enum RelocationType {
+    R_AARCH64_ABS64 = 257,
+    R_AARCH64_JUMP_SLOT = 1026,
+    R_AARCH64_RELATIVE = 1027,
+}
+
 public class ExeModule {
+    public record Symbol(string Name, byte Info, byte Other, ushort Shndx, ulong Value, ulong Size);
+    
     public readonly Memory<byte> Binary;
     public readonly ulong LoadBase;
     public readonly ulong TextStart, TextEnd;
     public readonly ulong RoStart, RoEnd;
     public readonly ulong DataStart, DataEnd;
     public readonly ulong BssStart, BssEnd;
+    public readonly List<Symbol> Symbols = [];
     
     unsafe ExeModule(ulong loadBase, uint textOffset, Span<byte> text, uint roOffset, Span<byte> ro, uint dataOffset, Span<byte> data) {
         LoadBase = loadBase;
@@ -99,13 +109,70 @@ public class ExeModule {
         }
         
         var dynstr = Encoding.ASCII.GetString(Binary.Slice((int) dynamic[DynamicKey.STRTAB], (int) dynamic[DynamicKey.STRSZ]).Span);
+        Debug.Assert(dynamic[DynamicKey.SYMTAB] < dynamic[DynamicKey.STRTAB]);
+        string GetDynstr(ulong i) => dynstr.Substring((int) i, dynstr.IndexOf('\0', (int) i) - (int) i);
+        for(var i = dynamic[DynamicKey.SYMTAB]; i < dynamic[DynamicKey.STRTAB]; i += 24) {
+            Symbols.Add(new Symbol(
+                GetDynstr(Read<uint>(i)),
+                Read<byte>(i + 4),
+                Read<byte>(i + 5),
+                Read<ushort>(i + 6),
+                Read<ulong>(i + 8),
+                Read<ulong>(i + 16)
+            ));
+        }
+
+        if(dynamic.TryGetValue(DynamicKey.REL, out var start)) {
+            var rels = Binary.Read<ulong, uint, uint>(start, (int) dynamic[DynamicKey.RELENT]);
+            foreach(var (offset, type, sym) in rels)
+                Relocate(offset, type, sym, 0);
+        }
+        if(dynamic.TryGetValue(DynamicKey.RELA, out start)) {
+            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) dynamic[DynamicKey.RELAENT]);
+            foreach(var (offset, type, sym, addend) in rels)
+                Relocate(offset, type, sym, addend);
+        }
+        if(dynamic.TryGetValue(DynamicKey.RELR, out start))
+            foreach(var offset in Binary.Read<ulong>(start, (int) dynamic[DynamicKey.RELRENT]))
+                Relocate(offset, RelocationType.R_AARCH64_RELATIVE, 0, 0);
+        /*if(dynamic.TryGetValue(DynamicKey.JMPREL, out start)) {
+            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) dynamic[DynamicKey.PLTRELSZ]);
+            foreach(var (offset, type, sym, addend) in rels)
+                Relocate(offset, type, sym, addend);
+        }*/
     }
 
+    void Relocate(ulong offset, uint type, uint sym, long addend) =>
+        Relocate(offset, (RelocationType) type, sym, addend);
+    void Relocate(ulong offset, RelocationType type, uint sym, long addend) {
+        switch(type) {
+            case RelocationType.R_AARCH64_JUMP_SLOT:
+                break;
+            case RelocationType.R_AARCH64_RELATIVE:
+                if(sym != 0) throw new NotSupportedException();
+                Write(offset, unchecked(LoadBase + Read<ulong>(offset) + (ulong) addend));
+                break;
+            default:
+                throw new NotSupportedException($"Relocation type {type} not supported");
+        }
+    }
+
+    T Read<T>(ulong offset) where T : struct => Read<T>((uint) offset);
     T Read<T>(uint offset) where T : struct {
         var size = Marshal.SizeOf<T>();
         if(size + offset > Binary.Length)
             throw new IndexOutOfRangeException($"Tried to read {size} bytes from offset {offset}; only {Binary.Length} bytes available");
         return MemoryMarshal.Cast<byte, T>(Binary.Slice((int) offset, size).Span)[0];
+    }
+    
+    void Write<T>(ulong offset, T value) where T : struct => Write<T>((uint) offset, value);
+    void Write<T>(uint offset, T value) where T : struct {
+        var size = Marshal.SizeOf<T>();
+        if (size + offset > Binary.Length)
+            throw new IndexOutOfRangeException($"Tried to write {size} bytes at offset {offset}; only {Binary.Length} bytes available");
+        var dest = Binary.Slice((int)offset, size).Span;
+        var src  = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
+        src.CopyTo(dest);
     }
 
     public T Load<T>(ulong addr) where T : struct {

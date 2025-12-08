@@ -45,19 +45,30 @@ public partial class CoreRecompiler : Recompiler {
     public void Recompile() {
         KnownBlocks.Add(ExeLoader.EntryPoint);
         KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
+        Console.WriteLine("Doing linear scan");
         LinearScan();
+        Console.WriteLine("Rewriting stores");
         RewriteStores();
+        Console.WriteLine("Ditching X31");
         DitchX31();
+        Console.WriteLine("Building block graph");
         WholeBlockGraph = BuildBlockGraph();
+        Console.WriteLine("Finding padding");
         FindPadding();
         //DumpDotGraph(0x7100005680);
-        WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions);
+        //Console.WriteLine("Reducing graph");
+        //WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions);
         //DumpDotGraph(0x7100005680);
-        while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
+        Console.WriteLine("Folding");
+        //while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
+        /*Console.WriteLine("Rewriting functions");
         RewriteFunctions();
+        Console.WriteLine("Folding");
         while(FoldConstants() || RemoveRedundancies() || ResolveRoData()) {}
+        Console.WriteLine("Unregistering");
         Unregister();
-        SsaOpt();
+        Console.WriteLine("Optimizing");
+        SsaOpt();*/
         //FindSignatures();
 
         foreach(var (addr, taddr) in ProbablePadding.ToDictionary())
@@ -298,20 +309,26 @@ public partial class CoreRecompiler : Recompiler {
     public void LinearScan() {
         foreach(var (arr, module) in AllInstructions.Zip(ExeLoader.ExeModules)) {
             var i = 0;
+            Builder = new StaticBuilder<ulong>();
+            State = new StaticStructRef<ulong, CpuState>(Builder, new StaticRuntimeValue<ulong>(new StaticIRValue.Named("State", typeof(ulong))));
             for(var addr = module.TextStart; addr <= module.TextEnd; addr += 4, ++i) {
-                Builder = new StaticBuilder<ulong>();
                 PC = addr;
-                State = new StaticStructRef<ulong, CpuState>(Builder, new StaticRuntimeValue<ulong>(new StaticIRValue.Named("State", typeof(ulong))));
                 var insn = ExeLoader.Load<uint>(PC);
-                var dasm = Disassemble(PC, insn);
+                /*var dasm = Disassemble(PC, insn);
                 if(dasm == null) {
                     Console.WriteLine($"{PC:X}: Invalid instruction {insn & 0xFF:X02} {(insn >> 8) & 0xFF:X02} {(insn >> 16) & 0xFF:X02} {(insn >> 24) & 0xFF:X02}");
                     continue;
                 }
-                Console.WriteLine($"{PC:X}: {dasm}");
-                //Builder.Add(new DebugStmt(PC, dasm));
-                if(RecompileOne(Builder, State, insn, PC))
-                    arr[i] = Builder.BodyStmts;
+                //Console.WriteLine($"{PC:X}: {dasm}");
+                //Builder.Add(new DebugStmt(PC, dasm));*/
+                var success = false;
+                var stmts = Builder.ScopedStatements(() => {
+                    success = RecompileOne(Builder, State, insn, PC);
+                });
+                if(success)
+                    arr[i] = stmts;
+                else
+                    Console.WriteLine($"{PC:X}: Invalid instruction {insn & 0xFF:X02} {(insn >> 8) & 0xFF:X02} {(insn >> 16) & 0xFF:X02} {(insn >> 24) & 0xFF:X02}");
             }
         }
     }
@@ -403,18 +420,18 @@ public partial class CoreRecompiler : Recompiler {
 
     protected override void Branch(ulong addr) {
         Builder.Add(new StaticIRStatement.Branch(new  StaticIRValue.Literal(addr, typeof(ulong))));
-        Console.WriteLine($"Branching to {addr:X}");
+        //Console.WriteLine($"Branching to {addr:X}");
         if(IsValidCodeAt(addr))
             KnownBlocks.Add(addr);
     }
 
     protected override void Branch(IRuntimeValue<ulong> addr) {
         Builder.Add(new StaticIRStatement.Branch(StaticBuilder<ulong>.W(addr)));
-        Console.WriteLine("Branching to a runtime address!");
+        //Console.WriteLine("Branching to a runtime address!");
     }
 
     protected override void BranchLinked(ulong addr) {
-        Console.WriteLine($"Branching with link to {addr:X}");
+        //Console.WriteLine($"Branching with link to {addr:X}");
         State.X[30] = Builder.LiteralValue(PC + 4); // need this temporarily...
         Builder.Add(new LinkedBranch(new StaticIRValue.Literal(addr, typeof(ulong))));
         if(IsValidCodeAt(addr)) {
@@ -424,7 +441,7 @@ public partial class CoreRecompiler : Recompiler {
     }
 
     protected override void BranchLinked(IRuntimeValue<ulong> addr) {
-        Console.WriteLine("Branching with link to a runtime address!");
+        //Console.WriteLine("Branching with link to a runtime address!");
         State.X[30] = Builder.LiteralValue(PC + 4); // need this temporarily...
         Builder.Add(new LinkedBranch(StaticBuilder<ulong>.W(addr)));
         // TODO: Work out symbolic execution nonsense
