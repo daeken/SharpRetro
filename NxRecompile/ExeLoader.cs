@@ -75,7 +75,7 @@ public class ExeModule {
     public readonly ulong BssStart, BssEnd;
     public readonly List<Symbol> Symbols = [];
     
-    unsafe ExeModule(ulong loadBase, uint textOffset, Span<byte> text, uint roOffset, Span<byte> ro, uint dataOffset, Span<byte> data) {
+    unsafe ExeModule(ulong loadBase, uint textOffset, Span<byte> text, uint roOffset, Span<byte> ro, uint dataOffset, Span<byte> data, bool doRelocate = true) {
         LoadBase = loadBase;
         TextStart = loadBase + textOffset;
         TextEnd = loadBase + textOffset + (ulong) text.Length;
@@ -122,6 +122,7 @@ public class ExeModule {
             ));
         }
 
+        if(!doRelocate) return;
         if(dynamic.TryGetValue(DynamicKey.REL, out var start)) {
             var rels = Binary.Read<ulong, uint, uint>(start, (int) dynamic[DynamicKey.RELENT]);
             foreach(var (offset, type, sym) in rels)
@@ -188,7 +189,7 @@ public class ExeModule {
         var ro = data.Slice((int) rloc, ReadFrom<int>(data, 0x2C));
         var dloc = ReadFrom<uint>(data, 0x30);
         var _data = data.Slice((int) dloc, ReadFrom<int>(data, 0x34));
-        return new(loadBase, tloc, text, rloc, ro, dloc, _data);
+        return new(loadBase, tloc, text, rloc, ro, dloc, _data, doRelocate: false);
     }
 
     [Flags]

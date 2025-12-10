@@ -1,22 +1,9 @@
-﻿using CoreArchCompiler;
-using LibSharpRetro;
-using NxRecompile;
+﻿using NxRecompile;
 
 var exe = new ExeLoader(args[0]);
 if(true) {
     var recompiler = new CoreRecompiler(exe);
     recompiler.Recompile();
-    var cb = new CodeBuilder();
-    Console.WriteLine("Outputting");
-    recompiler.Output(cb);
-    File.WriteAllText("test.cpp", cb.Code);
+    Directory.CreateDirectory("recompiledModules");
+    recompiler.BuildAndLink("recompiledModules", "libtest.dylib");
 }
-
-/*try {
-    Sh.Run("clang-format", "-i", "-style=file", "test.c");
-} catch(Exception ex) {
-    Console.Error.WriteLine(ex);
-}*/
-
-// /opt/homebrew/opt/llvm/bin/clang-tidy --fix --fix-notes --fix-errors test.c -- -isysroot"$(xcrun --sdk macosx --show-sdk-path)" -DBUILD_LIB -Wno-shift-count-overflow -Wno-unused-value
-//Sh.Run("/opt/homebrew/opt/llvm/bin/clang-tidy", "--fix", "test.c");

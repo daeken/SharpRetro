@@ -1,3 +1,6 @@
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+
 namespace LibSharpRetro; 
 
 public static class UsefulExtensions {
@@ -6,14 +9,16 @@ public static class UsefulExtensions {
 	public static uint ToBit(this bool v, int bit) => v ? 1U << bit : 0;
 
 
-	public static void ForEach<T>(this IEnumerable<T> seq, Action<T> func) {
-		foreach(var elem in seq)
-			func(elem);
-	}
+	extension<T>(IEnumerable<T> seq) {
+		public void ForEach(Action<T> func) {
+			foreach(var elem in seq)
+				func(elem);
+		}
 
-	public static void ForEach<T>(this IEnumerable<T> seq, Action<T, int> func) {
-		var i = 0;
-		foreach(var elem in seq)
-			func(elem, i++);
+		public void ForEach(Action<T, int> func) {
+			var i = 0;
+			foreach(var elem in seq)
+				func(elem, i++);
+		}
 	}
 }
