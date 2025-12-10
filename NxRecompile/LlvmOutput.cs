@@ -4,6 +4,7 @@ using LibSharpRetro;
 using LLVMSharp.Interop;
 using System.Runtime.Intrinsics;
 using Aarch64Cpu;
+using LLVMSharp;
 using StaticRecompilerBase;
 using static NxRecompile.LlvmExtensions;
 
@@ -33,6 +34,124 @@ public unsafe partial class CoreRecompiler {
         new LlvmOutput().BuildModule(name, targetTriple, targetMachine,
             WholeBlockGraph.OrderBy(x => x.Key).Select(x => x.Value));
         yield return name + ".o";
+
+        name = Path.Join(objectDir, "glue");
+        BuildGlue(name, targetTriple, targetMachine);
+        yield return name + ".o";
+    }
+
+    ulong ResolvePadding(ulong addr) {
+        while(ProbablePadding.TryGetValue(addr, out var taddr))
+            addr = taddr;
+        return addr;
+    }
+
+    void BuildGlue(string path, string targetTriple, LLVMTargetMachineRef targetMachine) {
+        var module = LLVMModuleRef.CreateWithName(Path.GetFileName(path));
+        module.Target = targetTriple;
+
+        var funcPtrType = LLVMTypeRef.CreatePointer(LlvmType<Func<ulong, ulong>>(), 0);
+        var jumpTables = ExeLoader.ExeModules.Select(mod => {
+            var funcs = new Dictionary<ulong, LLVMValueRef>();
+            LLVMValueRef GetFunc(ulong addr) =>
+                funcs.TryGetValue(addr, out var func)
+                    ? func
+                    : funcs[addr] = module.AddFunction($"f_{addr:X}", LlvmType<Func<ulong, ulong>>());
+            var elems = new LLVMValueRef[(mod.TextEnd - mod.TextStart) / 4];
+            var i = 0;
+            for(var addr = mod.TextStart; addr < mod.TextEnd; addr += 4) {
+                if(WholeBlockGraph.ContainsKey(addr))
+                    elems[i++] = GetFunc(addr);
+                else if(ProbablePadding.ContainsKey(addr))
+                    elems[i++] = GetFunc(ResolvePadding(addr));
+                else
+                    elems[i++] = LLVMValueRef.CreateConstPointerNull(funcPtrType);
+            }
+            var jumpTable = module.AddGlobal(
+                LLVMTypeRef.CreateArray(funcPtrType, (uint) elems.Length),
+                $"jumpTable_{mod.LoadBase:X}"
+            );
+            jumpTable.Linkage = LLVMLinkage.LLVMInternalLinkage;
+            jumpTable.Initializer = LLVMValueRef.CreateConstArray(funcPtrType, elems);
+            return jumpTable;
+        }).ToArray();
+
+        var jumptableType = LLVMTypeRef.CreatePointer(funcPtrType, 0);
+        var topTable = module.AddGlobal(
+            LLVMTypeRef.CreateArray(jumptableType, (uint) jumpTables.Length),
+            "jumpTable"
+        );
+        topTable.Linkage = LLVMLinkage.LLVMInternalLinkage;
+        topTable.Initializer = LLVMValueRef.CreateConstArray(jumptableType, jumpTables);
+        
+        var function = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong, ulong>>());
+        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        LLVMBuilderRef builder = LLVM.CreateBuilder();
+        var passManager = LLVM.CreateFunctionPassManagerForModule(module);
+        
+        LLVM.AddReassociatePass(passManager);
+        LLVM.AddCFGSimplificationPass(passManager);
+        LLVM.AddGVNPass(passManager);
+        LLVM.AddPromoteMemoryToRegisterPass(passManager);
+        LLVM.AddSLPVectorizePass(passManager);
+        LLVM.AddDeadStoreEliminationPass(passManager);
+        LLVM.AddAggressiveDCEPass(passManager);
+        LLVM.AddPartiallyInlineLibCallsPass(passManager);
+        LLVM.InitializeFunctionPassManager(passManager);
+
+        var entry = function.AppendBasicBlock("entry");
+        var loop = function.AppendBasicBlock("loop");
+        var end =  function.AppendBasicBlock("end");
+        
+        builder.PositionAtEnd(entry);
+        var addr = builder.BuildAlloca(LlvmType<ulong>(), "addr");
+        builder.BuildStore(function.GetParam(1), addr);
+        builder.BuildCondBr(
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, builder.BuildLoad2(LlvmType<ulong>(), addr), function.GetParam(2)),
+            end, loop
+        );
+        
+        builder.PositionAtEnd(loop);
+        var modIndex = builder.BuildLShr(builder.BuildSub(
+            builder.BuildLoad2(LlvmType<ulong>(), addr),
+            LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0x71_0000_0000UL)
+        ), LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 32UL));
+        var tableIndex = builder.BuildLShr(builder.BuildAnd(
+            builder.BuildLoad2(LlvmType<ulong>(), addr),
+            LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0xFFFF_FFFFUL)
+        ), LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 2UL));
+
+        var jumpTable = builder.BuildLoad2(jumptableType, 
+            builder.BuildGEP2(
+                jumptableType,
+                topTable,
+                [modIndex]
+            ));
+        var funcPtr = builder.BuildLoad2(funcPtrType, 
+            builder.BuildGEP2(
+                funcPtrType,
+                jumpTable,
+                [tableIndex]
+            ));
+        var naddr = builder.BuildCall2(LlvmType<Func<ulong, ulong>>(), funcPtr, [function.GetParam(0)]);
+        builder.BuildStore(naddr, addr);
+        
+        builder.BuildCondBr(
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, builder.BuildLoad2(LlvmType<ulong>(), addr), function.GetParam(2)),
+            end, loop
+        );
+        
+        builder.PositionAtEnd(end);
+        builder.BuildRetVoid();
+        
+        //LLVM.DumpValue(function);
+        LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        if(!function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
+            throw new("Program verification failed");
+        LLVM.RunFunctionPassManager(passManager, function);
+        //LLVM.DumpValue(function);
+        
+        targetMachine.EmitToFile(module, path + ".o", LLVMCodeGenFileType.LLVMObjectFile);
     }
 }
 
@@ -54,7 +173,7 @@ unsafe class LlvmOutput {
         module.Target = targetTriple;
         // TODO: How tf do you set the data layout? It should come from targetMachine somehow
 
-        RunFrom = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong>>());
+        RunFrom = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong, ulong>>());
         RunFrom.Linkage = LLVMLinkage.LLVMExternalLinkage;
         BitReverse8 = module.AddFunction("llvm.bitreverse.i8",  LlvmType<Func<byte, byte>>());
         BitReverse16 = module.AddFunction("llvm.bitreverse.i16",  LlvmType<Func<ushort, ushort>>());
@@ -85,7 +204,6 @@ unsafe class LlvmOutput {
     }
 
     LLVMValueRef BuildFunction(LLVMModuleRef module, BlockGraph node) {
-        Console.WriteLine($"Foo? 0x{node.Block.Start:X}");
         Locals.Clear();
         Builder = LLVM.CreateBuilder();
         var passManager = LLVM.CreateFunctionPassManagerForModule(module);
@@ -102,7 +220,8 @@ unsafe class LlvmOutput {
         
         Function = module.AddFunction($"f_{node.Block.Start:X}", LlvmType<Func<ulong, ulong>>());
         CpuStateRef = LLVM.GetParam(Function, 0);
-        LLVM.SetLinkage(Function, LLVMLinkage.LLVMLinkerPrivateLinkage);
+        Function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        Function.Visibility = LLVMVisibility.LLVMHiddenVisibility;
         LLVM.PositionBuilderAtEnd(Builder, CurrentBlock = Function.AppendBasicBlock("entrypoint"));
 
         /*Gprs = Enumerable.Range(0, 31)
@@ -233,7 +352,14 @@ unsafe class LlvmOutput {
                 Builder.BuildRet(Compile(addr));
                 return true;
             case LinkedBranch(var target):
-                Builder.BuildCall2(LlvmType<Action<ulong, ulong>>(), RunFrom, [CpuStateRef, Compile(target)]);
+                Builder.BuildCall2(LlvmType<Action<ulong, ulong, ulong>>(), RunFrom, [
+                    CpuStateRef, 
+                    Compile(target), 
+                    Compile(new StaticIRValue.GetFieldIndex(
+                        new StaticIRValue.Named("State", typeof(void)), 
+                        "X", 30, typeof(ulong))
+                    ),
+                ]);
                 return false;
             case WriteSrStmt:
                 // TODO: Implement
