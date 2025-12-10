@@ -56,34 +56,35 @@ unsafe class LlvmOutput {
 
         RunFrom = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong>>());
         RunFrom.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        BitReverse8 = module.AddFunction("@llvm.bitreverse.i8",  LlvmType<Func<byte, byte>>());
-        BitReverse16 = module.AddFunction("@llvm.bitreverse.i16",  LlvmType<Func<ushort, ushort>>());
-        BitReverse32 = module.AddFunction("@llvm.bitreverse.i32",  LlvmType<Func<uint, uint>>());
-        BitReverse64 = module.AddFunction("@llvm.bitreverse.i64",  LlvmType<Func<ulong, ulong>>());
-        Clz8 = module.AddFunction("@llvm.ctlz.i8", LlvmType<Func<byte, Bit, byte>>());
-        Clz16 = module.AddFunction("@llvm.ctlz.i16", LlvmType<Func<ushort, Bit, ushort>>());
-        Clz32 = module.AddFunction("@llvm.ctlz.i32", LlvmType<Func<uint, Bit, uint>>());
-        Clz64 = module.AddFunction("@llvm.ctlz.i64", LlvmType<Func<ulong, Bit, ulong>>());
-        Abs8 = module.AddFunction("@llvm.abs.i8", LlvmType<Func<byte, Bit, byte>>());
-        Abs16 = module.AddFunction("@llvm.abs.i16", LlvmType<Func<ushort, Bit, ushort>>());
-        Abs32 = module.AddFunction("@llvm.abs.i32", LlvmType<Func<uint, Bit, uint>>());
-        Abs64 = module.AddFunction("@llvm.abs.i64", LlvmType<Func<ulong, Bit, ulong>>());
-        Fabs32 = module.AddFunction("@llvm.fabs.f32", LlvmType<Func<float, Bit, float>>());
-        Fabs64 = module.AddFunction("@llvm.fabs.f64", LlvmType<Func<double, Bit, double>>());
-        Trunc32 = module.AddFunction("@llvm.trunc.f32", LlvmType<Func<float, float>>());
-        Trunc64 = module.AddFunction("@llvm.trunc.f64", LlvmType<Func<double, double>>());
-        Round32 = module.AddFunction("@llvm.round.f32", LlvmType<Func<float, float>>());
-        Round64 = module.AddFunction("@llvm.round.f64", LlvmType<Func<double, double>>());
-        Ceil32 = module.AddFunction("@llvm.ceil.f32", LlvmType<Func<float, float>>());
-        Ceil64 = module.AddFunction("@llvm.ceil.f64", LlvmType<Func<double, double>>());
-        Floor32 = module.AddFunction("@llvm.floor.f32", LlvmType<Func<float, float>>());
-        Floor64 = module.AddFunction("@llvm.floor.f64", LlvmType<Func<double, double>>());
+        BitReverse8 = module.AddFunction("llvm.bitreverse.i8",  LlvmType<Func<byte, byte>>());
+        BitReverse16 = module.AddFunction("llvm.bitreverse.i16",  LlvmType<Func<ushort, ushort>>());
+        BitReverse32 = module.AddFunction("llvm.bitreverse.i32",  LlvmType<Func<uint, uint>>());
+        BitReverse64 = module.AddFunction("llvm.bitreverse.i64",  LlvmType<Func<ulong, ulong>>());
+        Clz8 = module.AddFunction("llvm.ctlz.i8", LlvmType<Func<byte, Bit, byte>>());
+        Clz16 = module.AddFunction("llvm.ctlz.i16", LlvmType<Func<ushort, Bit, ushort>>());
+        Clz32 = module.AddFunction("llvm.ctlz.i32", LlvmType<Func<uint, Bit, uint>>());
+        Clz64 = module.AddFunction("llvm.ctlz.i64", LlvmType<Func<ulong, Bit, ulong>>());
+        Abs8 = module.AddFunction("llvm.abs.i8", LlvmType<Func<byte, Bit, byte>>());
+        Abs16 = module.AddFunction("llvm.abs.i16", LlvmType<Func<ushort, Bit, ushort>>());
+        Abs32 = module.AddFunction("llvm.abs.i32", LlvmType<Func<uint, Bit, uint>>());
+        Abs64 = module.AddFunction("llvm.abs.i64", LlvmType<Func<ulong, Bit, ulong>>());
+        Fabs32 = module.AddFunction("llvm.fabs.f32", LlvmType<Func<float, float>>());
+        Fabs64 = module.AddFunction("llvm.fabs.f64", LlvmType<Func<double, double>>());
+        Trunc32 = module.AddFunction("llvm.trunc.f32", LlvmType<Func<float, float>>());
+        Trunc64 = module.AddFunction("llvm.trunc.f64", LlvmType<Func<double, double>>());
+        Round32 = module.AddFunction("llvm.round.f32", LlvmType<Func<float, float>>());
+        Round64 = module.AddFunction("llvm.round.f64", LlvmType<Func<double, double>>());
+        Ceil32 = module.AddFunction("llvm.ceil.f32", LlvmType<Func<float, float>>());
+        Ceil64 = module.AddFunction("llvm.ceil.f64", LlvmType<Func<double, double>>());
+        Floor32 = module.AddFunction("llvm.floor.f32", LlvmType<Func<float, float>>());
+        Floor64 = module.AddFunction("llvm.floor.f64", LlvmType<Func<double, double>>());
 
-        foreach(var node in nodes)
-            BuildFunction(module, node);
+        var funcs = nodes.Select(node => (node.Block.Start, BuildFunction(module, node))).ToList();
+        
+        targetMachine.EmitToFile(module, path + ".o", LLVMCodeGenFileType.LLVMObjectFile);
     }
 
-    void BuildFunction(LLVMModuleRef module, BlockGraph node) {
+    LLVMValueRef BuildFunction(LLVMModuleRef module, BlockGraph node) {
         Console.WriteLine($"Foo? 0x{node.Block.Start:X}");
         Locals.Clear();
         Builder = LLVM.CreateBuilder();
@@ -122,25 +123,25 @@ unsafe class LlvmOutput {
         });
 
         var body = new StaticIRStatement.Body(node.Block.Body);
-        Console.WriteLine(body);
         Compile(body);
 
-        LLVM.DumpValue(Function);
+        //LLVM.DumpValue(Function);
         LLVM.VerifyFunction(Function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
         if(!Function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
             throw new("Program verification failed");
         LLVM.RunFunctionPassManager(passManager, Function);
-        LLVM.DumpValue(Function);
+        //LLVM.DumpValue(Function);
+
+        return Function;
     }
 
     bool Compile(StaticIRStatement stmt) {
         switch(stmt) {
-            case StaticIRStatement.Body(var stmts): {
-                var branched = false;
+            case StaticIRStatement.Body(var stmts):
                 foreach(var sub in stmts)
-                    branched |= Compile(sub);
-                return branched;
-            }
+                    if(Compile(sub))
+                        return true;
+                return false;
             case StaticIRStatement.If(var cond, var taken, var not): {
                 var ifLabel = Function.AppendBasicBlock("");
                 var elseLabel = Function.AppendBasicBlock("");
@@ -440,8 +441,8 @@ unsafe class LlvmOutput {
                             _ => throw new NotImplementedException($"Can't abs {left.Type}"),
                         }
                         : left.Type.ByteCount switch {
-                            4 => Builder.BuildCall2(LlvmType<Func<float, Bit, float>>(), Fabs32, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                            8 => Builder.BuildCall2(LlvmType<Func<double, Bit, double>>(), Fabs64, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            4 => Builder.BuildCall2(LlvmType<Func<float, float>>(), Fabs32, [Compile(left)]),
+                            8 => Builder.BuildCall2(LlvmType<Func<double, double>>(), Fabs64, [Compile(left)]),
                             _ => throw new NotImplementedException($"Can't abs {left.Type}"),
                         };
                 case StaticIRValue.Round(var left):
