@@ -39,6 +39,10 @@ public unsafe partial class CoreRecompiler {
 unsafe class LlvmOutput {
     LLVMBuilderRef Builder;
     LLVMValueRef Function, RunFrom, CpuStateRef;
+    LLVMValueRef BitReverse8, BitReverse16, BitReverse32, BitReverse64;
+    LLVMValueRef Clz8, Clz16, Clz32, Clz64;
+    LLVMValueRef Abs8, Abs16, Abs32, Abs64, Fabs32, Fabs64;
+    LLVMValueRef Trunc32, Trunc64, Round32, Round64, Ceil32, Ceil64, Floor32, Floor64;
     LLVMBasicBlockRef CurrentBlock;
     readonly Dictionary<string, LLVMValueRef> Locals = new();
     LLVMValueRef[] Gprs;
@@ -52,12 +56,35 @@ unsafe class LlvmOutput {
 
         RunFrom = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong>>());
         RunFrom.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        BitReverse8 = module.AddFunction("@llvm.bitreverse.i8",  LlvmType<Func<byte, byte>>());
+        BitReverse16 = module.AddFunction("@llvm.bitreverse.i16",  LlvmType<Func<ushort, ushort>>());
+        BitReverse32 = module.AddFunction("@llvm.bitreverse.i32",  LlvmType<Func<uint, uint>>());
+        BitReverse64 = module.AddFunction("@llvm.bitreverse.i64",  LlvmType<Func<ulong, ulong>>());
+        Clz8 = module.AddFunction("@llvm.ctlz.i8", LlvmType<Func<byte, Bit, byte>>());
+        Clz16 = module.AddFunction("@llvm.ctlz.i16", LlvmType<Func<ushort, Bit, ushort>>());
+        Clz32 = module.AddFunction("@llvm.ctlz.i32", LlvmType<Func<uint, Bit, uint>>());
+        Clz64 = module.AddFunction("@llvm.ctlz.i64", LlvmType<Func<ulong, Bit, ulong>>());
+        Abs8 = module.AddFunction("@llvm.abs.i8", LlvmType<Func<byte, Bit, byte>>());
+        Abs16 = module.AddFunction("@llvm.abs.i16", LlvmType<Func<ushort, Bit, ushort>>());
+        Abs32 = module.AddFunction("@llvm.abs.i32", LlvmType<Func<uint, Bit, uint>>());
+        Abs64 = module.AddFunction("@llvm.abs.i64", LlvmType<Func<ulong, Bit, ulong>>());
+        Fabs32 = module.AddFunction("@llvm.fabs.f32", LlvmType<Func<float, Bit, float>>());
+        Fabs64 = module.AddFunction("@llvm.fabs.f64", LlvmType<Func<double, Bit, double>>());
+        Trunc32 = module.AddFunction("@llvm.trunc.f32", LlvmType<Func<float, float>>());
+        Trunc64 = module.AddFunction("@llvm.trunc.f64", LlvmType<Func<double, double>>());
+        Round32 = module.AddFunction("@llvm.round.f32", LlvmType<Func<float, float>>());
+        Round64 = module.AddFunction("@llvm.round.f64", LlvmType<Func<double, double>>());
+        Ceil32 = module.AddFunction("@llvm.ceil.f32", LlvmType<Func<float, float>>());
+        Ceil64 = module.AddFunction("@llvm.ceil.f64", LlvmType<Func<double, double>>());
+        Floor32 = module.AddFunction("@llvm.floor.f32", LlvmType<Func<float, float>>());
+        Floor64 = module.AddFunction("@llvm.floor.f64", LlvmType<Func<double, double>>());
 
         foreach(var node in nodes)
             BuildFunction(module, node);
     }
 
     void BuildFunction(LLVMModuleRef module, BlockGraph node) {
+        Console.WriteLine($"Foo? 0x{node.Block.Start:X}");
         Locals.Clear();
         Builder = LLVM.CreateBuilder();
         var passManager = LLVM.CreateFunctionPassManagerForModule(module);
@@ -93,8 +120,10 @@ unsafe class LlvmOutput {
             if(!Locals.ContainsKey(name))
                 Locals[name] = Builder.BuildAlloca(value.Type.ToLLVMType(), name);
         });
-        
-        Compile(new StaticIRStatement.Body(node.Block.Body));
+
+        var body = new StaticIRStatement.Body(node.Block.Body);
+        Console.WriteLine(body);
+        Compile(body);
 
         LLVM.DumpValue(Function);
         LLVM.VerifyFunction(Function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
@@ -106,9 +135,12 @@ unsafe class LlvmOutput {
 
     bool Compile(StaticIRStatement stmt) {
         switch(stmt) {
-            case StaticIRStatement.Body(var stmts):
-                stmts.Take(stmts.Count - 1).ForEach(x => Compile(x));
-                return stmts.Count > 0 && Compile(stmts.Last());
+            case StaticIRStatement.Body(var stmts): {
+                var branched = false;
+                foreach(var sub in stmts)
+                    branched |= Compile(sub);
+                return branched;
+            }
             case StaticIRStatement.If(var cond, var taken, var not): {
                 var ifLabel = Function.AppendBasicBlock("");
                 var elseLabel = Function.AppendBasicBlock("");
@@ -160,6 +192,20 @@ unsafe class LlvmOutput {
                 Builder.PositionAtEnd(CurrentBlock = endLabel);
                 return false;
             }
+            case StaticIRStatement.DoWhile(var taken, var cond): {
+                var loopLabel = Function.AppendBasicBlock("");
+                var endLabel = Function.AppendBasicBlock("");
+                Builder.BuildBr(loopLabel);
+                
+                Builder.PositionAtEnd(CurrentBlock = loopLabel);
+                var takenBranches = Compile(taken);
+                if(!takenBranches) { // TODO: Figure out why this would ever not happen
+                    var asBool = Builder.BuildCast(LLVMOpcode.LLVMTrunc, Compile(cond), LLVMTypeRef.Int1);
+                    Builder.BuildCondBr(asBool, loopLabel, endLabel);
+                }
+                Builder.PositionAtEnd(CurrentBlock = endLabel);
+                return false;
+            }
             case StaticIRStatement.Assign(var name, var value):
                 Builder.BuildStore(Compile(value), Locals[name]);
                 return false;
@@ -191,6 +237,9 @@ unsafe class LlvmOutput {
             case WriteSrStmt:
                 // TODO: Implement
                 return false;
+            case SvcStmt:
+                // TODO: Implement
+                return false;
             default:
                 throw new NotSupportedException($"Unknown statement: {stmt}");
         }
@@ -200,6 +249,10 @@ unsafe class LlvmOutput {
         var op = comp switch {
             StaticIRValue.EQ => LLVMIntPredicate.LLVMIntEQ, 
             StaticIRValue.NE => LLVMIntPredicate.LLVMIntNE,
+            StaticIRValue.GT => left.Type.IsSigned ? LLVMIntPredicate.LLVMIntSGT : LLVMIntPredicate.LLVMIntUGT,
+            StaticIRValue.GTE => left.Type.IsSigned ? LLVMIntPredicate.LLVMIntSGE : LLVMIntPredicate.LLVMIntUGE,
+            StaticIRValue.LT => left.Type.IsSigned ? LLVMIntPredicate.LLVMIntSLT : LLVMIntPredicate.LLVMIntULT,
+            StaticIRValue.LTE => left.Type.IsSigned ? LLVMIntPredicate.LLVMIntSLE : LLVMIntPredicate.LLVMIntULE,
             _ => throw new NotImplementedException($"Unknown operator: {comp}"),
         };
         var val = Builder.BuildICmp(op, Compile(left), Compile(right));
@@ -236,6 +289,8 @@ unsafe class LlvmOutput {
                             (ulong) (UInt128) v,
                             (ulong) ((UInt128) v >> 64),
                         ]),
+                        float v => LLVMValueRef.CreateConstReal(LlvmType<float>(), v),
+                        double v => LLVMValueRef.CreateConstReal(LlvmType<double>(), v),
                         bool v => LLVMValueRef.CreateConstInt(LlvmType<ulong>(), v ? 1UL : 0UL),
                         _ => throw new NotSupportedException($"Unsupported literal type: {value}"),
                     };
@@ -265,29 +320,83 @@ unsafe class LlvmOutput {
                     return left.Type.IsFloat
                         ? Builder.BuildFSub(Compile(left), Compile(right))
                         : Builder.BuildSub(Compile(left), Compile(right));
+                case StaticIRValue.Mul(var left, var right):
+                    return left.Type.IsFloat
+                        ? Builder.BuildFMul(Compile(left), Compile(right))
+                        : Builder.BuildMul(Compile(left), Compile(right));
+                case StaticIRValue.Div(var left, var right):
+                    return left.Type.IsFloat
+                        ? Builder.BuildFDiv(Compile(left), Compile(right))
+                        : left.Type.IsSigned
+                            ? Builder.BuildSDiv(Compile(left), Compile(right))
+                            : Builder.BuildUDiv(Compile(left), Compile(right));
+                case StaticIRValue.Mod(var left, var right):
+                    return left.Type.IsFloat
+                        ? Builder.BuildFRem(Compile(left), Compile(right))
+                        : left.Type.IsSigned
+                            ? Builder.BuildSRem(Compile(left), Compile(right))
+                            : Builder.BuildURem(Compile(left), Compile(right));
                 case StaticIRValue.And(var left, var right):
-                    return Builder.BuildAnd(Compile(left), Compile(right));
+                    return left.Type.IsVector
+                        ? Builder.BuildBitCast(Builder.BuildAnd(
+                            Builder.BuildBitCast(Compile(left), LlvmType<Vector128<ulong>>()), 
+                            Builder.BuildBitCast(Compile(right), LlvmType<Vector128<ulong>>()) 
+                        ), left.Type.ToLLVMType())
+                        : Builder.BuildAnd(Compile(left), Compile(right));
                 case StaticIRValue.Or(var left, var right):
-                    return Builder.BuildOr(Compile(left), Compile(right));
+                    return left.Type.IsVector
+                        ? Builder.BuildBitCast(Builder.BuildOr(
+                            Builder.BuildBitCast(Compile(left), LlvmType<Vector128<ulong>>()), 
+                            Builder.BuildBitCast(Compile(right), LlvmType<Vector128<ulong>>()) 
+                        ), left.Type.ToLLVMType())
+                        : Builder.BuildOr(Compile(left), Compile(right));
                 case StaticIRValue.Xor(var left, var right):
-                    return Builder.BuildXor(Compile(left), Compile(right));
+                    return left.Type.IsVector
+                        ? Builder.BuildBitCast(Builder.BuildXor(
+                                Builder.BuildBitCast(Compile(left), LlvmType<Vector128<ulong>>()), 
+                                Builder.BuildBitCast(Compile(right), LlvmType<Vector128<ulong>>()) 
+                            ), left.Type.ToLLVMType())
+                        : Builder.BuildXor(Compile(left), Compile(right));
                 case StaticIRValue.LeftShift(var left, var right):
                     return Builder.BuildShl(Compile(left), Compile(right));
                 case StaticIRValue.RightShift(var left, var right):
                     return left.Type.IsSigned
                         ? Builder.BuildAShr(Compile(left), Compile(right))
                         : Builder.BuildLShr(Compile(left), Compile(right));
-                case StaticIRValue.EQ(var left, var right):
-                    return Compare(value, left, right);
-                case StaticIRValue.NE(var left, var right):
-                    return Compare(value, left, right);
+                case StaticIRValue.Negate(var left):
+                    return left.Type.IsFloat
+                        ? Builder.BuildFNeg(Compile(left))
+                        : Builder.BuildNeg(Compile(left));
+                case StaticIRValue.EQ(var left, var right): return Compare(value, left, right);
+                case StaticIRValue.NE(var left, var right): return Compare(value, left, right);
+                case StaticIRValue.GT(var left, var right): return Compare(value, left, right);
+                case StaticIRValue.GTE(var left, var right): return Compare(value, left, right);
+                case StaticIRValue.LT(var left, var right): return Compare(value, left, right);
+                case StaticIRValue.LTE(var left, var right): return Compare(value, left, right);
                 case StaticIRValue.Not(var left):
-                    return Builder.BuildNot(Compile(left));
+                    return left.Type.IsVector
+                        ? Builder.BuildBitCast(Builder.BuildNot(
+                            Builder.BuildBitCast(Compile(left), LlvmType<Vector128<ulong>>()) 
+                        ), left.Type.ToLLVMType())
+                        : Builder.BuildNot(Compile(left));
                 case StaticIRValue.Cast(var left, var type): {
+                    if(left.Type == type) return Compile(left);
                     var fw = left.Type.ByteCount;
                     var sw = type.ByteCount;
                     var fs = left.Type.IsSigned;
                     var ss = type.IsSigned;
+                    if(left.Type.IsFloat && !left.Type.IsVector) {
+                        if(type.IsFloat)
+                            return Builder.BuildFPCast(Compile(left), type.ToLLVMType());
+                        return type.IsSigned
+                            ? Builder.BuildFPToSI(Compile(left), type.ToLLVMType())
+                            : Builder.BuildFPToUI(Compile(left), type.ToLLVMType());
+                    }
+                    if(type.IsFloat && !type.IsVector) {
+                        return type.IsSigned
+                            ? Builder.BuildSIToFP(Compile(left), type.ToLLVMType())
+                            : Builder.BuildUIToFP(Compile(left), type.ToLLVMType());
+                    }
 
                     var opcode = LLVMOpcode.LLVMTrunc;
                     if(fw == sw)
@@ -297,6 +406,52 @@ unsafe class LlvmOutput {
 
                     return Builder.BuildCast(opcode, Compile(left), type.ToLLVMType());
                 }
+                case StaticIRValue.Bitcast(var left, var type):
+                    return Builder.BuildBitCast(Compile(left), type.ToLLVMType());
+                case StaticIRValue.SignExt(var left, var width, var type): {
+                    var totalBits = type.ByteCount * 8;
+                    var shift = LLVMValueRef.CreateConstInt(type.ToLLVMType(), (ulong) (totalBits - width));
+                    var val = Builder.BuildSExtOrBitCast(Compile(left), type.ToLLVMType());
+                    return Builder.BuildAShr(Builder.BuildShl(val, shift), shift);
+                }
+                case StaticIRValue.ReverseBits(var left):
+                    return left.Type.ByteCount switch {
+                        1 => Builder.BuildCall2(LlvmType<Func<byte, byte>>(), BitReverse8, [Compile(left)]),
+                        2 => Builder.BuildCall2(LlvmType<Func<ushort, ushort>>(), BitReverse16, [Compile(left)]),
+                        4 => Builder.BuildCall2(LlvmType<Func<uint, uint>>(), BitReverse32, [Compile(left)]),
+                        8 => Builder.BuildCall2(LlvmType<Func<ulong, ulong>>(), BitReverse64, [Compile(left)]),
+                        _ => throw new NotImplementedException($"Can't bitreverse {left.Type}"),
+                    };
+                case StaticIRValue.CountLeadingZeros(var left):
+                    return left.Type.ByteCount switch {
+                        1 => Builder.BuildCall2(LlvmType<Func<byte, Bit, byte>>(), Clz8, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                        2 => Builder.BuildCall2(LlvmType<Func<ushort, Bit, ushort>>(), Clz16, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                        4 => Builder.BuildCall2(LlvmType<Func<uint, Bit, uint>>(), Clz32, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                        8 => Builder.BuildCall2(LlvmType<Func<ulong, Bit, ulong>>(), Clz64, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                        _ => throw new NotImplementedException($"Can't clz {left.Type}"),
+                    };
+                case StaticIRValue.Abs(var left):
+                    return !left.Type.IsFloat
+                        ? left.Type.ByteCount switch {
+                            1 => Builder.BuildCall2(LlvmType<Func<byte, Bit, byte>>(), Abs8, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            2 => Builder.BuildCall2(LlvmType<Func<ushort, Bit, ushort>>(), Abs16, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            4 => Builder.BuildCall2(LlvmType<Func<uint, Bit, uint>>(), Abs32, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            8 => Builder.BuildCall2(LlvmType<Func<ulong, Bit, ulong>>(), Abs64, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            _ => throw new NotImplementedException($"Can't abs {left.Type}"),
+                        }
+                        : left.Type.ByteCount switch {
+                            4 => Builder.BuildCall2(LlvmType<Func<float, Bit, float>>(), Fabs32, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            8 => Builder.BuildCall2(LlvmType<Func<double, Bit, double>>(), Fabs64, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            _ => throw new NotImplementedException($"Can't abs {left.Type}"),
+                        };
+                case StaticIRValue.Round(var left):
+                    return left.Type == typeof(float)
+                        ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Round32, [Compile(left)])
+                        : Builder.BuildCall2(LlvmType<Func<double, double>>(), Round64, [Compile(left)]);
+                case StaticIRValue.RoundTowardZero(var left):
+                    return left.Type == typeof(float)
+                        ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Trunc32, [Compile(left)])
+                        : Builder.BuildCall2(LlvmType<Func<double, double>>(), Trunc64, [Compile(left)]);
                 case StaticIRValue.Ternary(var cond, var a, var b): {
                     var ifLabel = Function.AppendBasicBlock("");
                     var elseLabel = Function.AppendBasicBlock("");
@@ -320,6 +475,54 @@ unsafe class LlvmOutput {
                     phi.AddIncoming(new[] { left, right }, new[] { leftBlockEnd, rightBlockEnd }, 2);
                     return phi;
                 }
+                case StaticIRValue.CreateVector(var val): {
+                    var elem = Compile(val);
+                    var count = 16 / val.Type.ByteCount;
+                    LLVMValueRef lvec;
+                    if(elem.IsConstant)
+                        lvec = LLVMValueRef.CreateConstVector(Enumerable.Range(0, count).Select(_ => elem).ToArray());
+                    else {
+                        lvec = LLVM.GetUndef(
+                            typeof(Vector128<>).MakeGenericType(val.Type).ToLLVMType());
+                        for(var i = 0; i < count; ++i)
+                            lvec = Builder.BuildInsertElement(lvec, elem,
+                                LLVMValueRef.CreateConstInt(LlvmType<int>(), (ulong) i));
+                    }
+                    return lvec;
+                }
+                case StaticIRValue.CreateFullVector(var values): {
+                    var lvalues = values.Select(Compile).ToArray();
+                    LLVMValueRef lvec;
+                    if(lvalues.All(x => x.IsConstant))
+                        lvec = LLVMValueRef.CreateConstVector(lvalues);
+                    else {
+                        lvec = LLVM.GetUndef(
+                            typeof(Vector128<>).MakeGenericType(values[0].Type).ToLLVMType());
+                        for(var i = 0; i < lvalues.Length; ++i)
+                            lvec = Builder.BuildInsertElement(lvec, lvalues[i],
+                                LLVMValueRef.CreateConstInt(LlvmType<int>(), (ulong) i));
+                    }
+                    return values[0].Type == typeof(float)
+                        ? lvec
+                        : Builder.BuildBitCast(lvec, LlvmType<Vector128<float>>());
+                }
+                case StaticIRValue.ZeroTop(var left):
+                    return Compile(left); // TODO: Implement this. Or don't; it's probably fine.
+                case StaticIRValue.SetElement(var vec, var index, var elem): {
+                    if(elem.Type == vec.Type.GetGenericArguments()[0])
+                        return Builder.BuildInsertElement(Compile(vec), Compile(elem), Compile(index));
+                    var bvec = Builder.BuildBitCast(Compile(vec), typeof(Vector128<>).MakeGenericType(elem.Type).ToLLVMType());
+                    bvec = Builder.BuildInsertElement(bvec, Compile(elem), Compile(index));
+                    return Builder.BuildBitCast(bvec, LlvmType<Vector128<float>>());
+                }
+                case StaticIRValue.GetElement(var vec, var index, var type): {
+                    var lvec = type == typeof(float)
+                        ? Compile(vec)
+                        : Builder.BuildBitCast(Compile(vec), typeof(Vector128<>).MakeGenericType(type).ToLLVMType());
+                    return Builder.BuildExtractElement(lvec, Compile(index));
+                }
+                case ReadSr(var op0, var op1, var crn, var crm, var op2):
+                    return LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0); // TODO: Implement
                 default:
                     throw new NotSupportedException($"Unknown value: {value}");
             }

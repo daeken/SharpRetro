@@ -4,6 +4,10 @@ using LLVMSharp.Interop;
 
 namespace NxRecompile;
 
+// This is literally just a way to represent i1
+struct Bit {
+}
+
 public static unsafe class LlvmExtensions {
     public static readonly sbyte* EmptyString;
 
@@ -26,6 +30,8 @@ public static unsafe class LlvmExtensions {
             type == typeof(Vector128<float>) || type == typeof(Vector128<double>);
         public bool IsSigned =>
             type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long) || type == typeof(Int128);
+        public bool IsVector =>
+            type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Vector128<>);
         public LLVMTypeRef ToLLVMType() {
             if(type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Vector128<>)) {
                 var et = type.GetGenericArguments()[0];
@@ -48,6 +54,7 @@ public static unsafe class LlvmExtensions {
                 float => LLVMTypeRef.Float, 
                 double => LLVMTypeRef.Double, 
                 bool => LLVMTypeRef.Int64, 
+                Bit => LLVMTypeRef.Int1,
                 _ => throw new NotSupportedException(type.Name)
             };
         }

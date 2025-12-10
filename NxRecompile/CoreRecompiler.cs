@@ -60,14 +60,15 @@ public partial class CoreRecompiler : Recompiler {
         Time("Ditching X31", DitchX31);
         Time("Building block graph", () => WholeBlockGraph = BuildBlockGraph());
         Time("Finding padding", FindPadding);
-        //DumpDotGraph(0x7100005680);
+        DumpDotGraph(0x710002B6A0);
         Time("Reducing graph", () => WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions));
-        //DumpDotGraph(0x7100005680);
+        DumpDotGraph(0x710002B6A0);
         Time("Doing naive optimizations", NaiveOpt);
         Time("Rewriting functions", RewriteFunctions);
         Time("Doing naive optimizations", NaiveOpt);
         Time("Unregistering", Unregister);
         Time("SSA optimizing", SsaOpt);
+        Time("Removing empty bodies", CullBodies);
         //FindSignatures();
 
         foreach(var (addr, taddr) in ProbablePadding.ToDictionary())
@@ -76,6 +77,16 @@ public partial class CoreRecompiler : Recompiler {
         foreach(var (addr, taddr) in ProbablePadding)
             if(WholeBlockGraph.ContainsKey(taddr) || ProbablePadding.ContainsKey(taddr))
                 WholeBlockGraph.Remove(addr);
+    }
+
+    void CullBodies() {
+        foreach(var node in WholeBlockGraph.Values) {
+            node.Block = node.Block with { Body = node.Block.Body.Transform(stmt => {
+                if(stmt is not StaticIRStatement.Body(var stmts)) return null;
+                var nstmts = stmts.Where(sub => sub is not StaticIRStatement.Body([])).ToList();
+                return nstmts.Count != stmts.Count ? new StaticIRStatement.Body(nstmts) : null;
+            }) };
+        }
     }
 
     void FindPadding() {
