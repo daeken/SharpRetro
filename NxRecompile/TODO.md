@@ -27,4 +27,4 @@
 - Divide WholeBlockGraph into minimal subgraphs (both for optimization of the graph logic, and for easier reasoning)
 - ~~Implement NSO loading~~
 - Implement RTLD replacement
-- Swap C++ backend for LLVM IR
+- ~~Swap C++ backend for LLVM IR~~
