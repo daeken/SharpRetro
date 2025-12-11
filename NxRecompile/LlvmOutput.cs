@@ -84,11 +84,7 @@ public unsafe partial class CoreRecompiler {
         topTable.Linkage = LLVMLinkage.LLVMInternalLinkage;
         topTable.Initializer = LLVMValueRef.CreateConstArray(jumptableType, jumpTables);
         
-        var function = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong, ulong>>());
-        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        LLVMBuilderRef builder = LLVM.CreateBuilder();
         var passManager = LLVM.CreateFunctionPassManagerForModule(module);
-        
         LLVM.AddReassociatePass(passManager);
         LLVM.AddCFGSimplificationPass(passManager);
         LLVM.AddGVNPass(passManager);
@@ -98,6 +94,10 @@ public unsafe partial class CoreRecompiler {
         LLVM.AddAggressiveDCEPass(passManager);
         LLVM.AddPartiallyInlineLibCallsPass(passManager);
         LLVM.InitializeFunctionPassManager(passManager);
+
+        var function = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong, ulong>>());
+        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        LLVMBuilderRef builder = LLVM.CreateBuilder();
 
         var entry = function.AppendBasicBlock("entry");
         var loop = function.AppendBasicBlock("loop");
@@ -150,14 +150,109 @@ public unsafe partial class CoreRecompiler {
             throw new("Program verification failed");
         LLVM.RunFunctionPassManager(passManager, function);
         //LLVM.DumpValue(function);
+
+        function = module.AddFunction("setup", LlvmType<Action<ulong>>());
+        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        builder = LLVM.CreateBuilder();
+        builder.PositionAtEnd(function.AppendBasicBlock("entry"));
+
+        var cbtTy = LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), 0);
+        var callbackTable = module.AddGlobal(cbtTy, "Callbacks");
+        callbackTable.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        callbackTable.IsGlobalConstant = false;
+        callbackTable.Initializer = LLVMValueRef.CreateConstPointerNull(cbtTy);
+        
+        builder.BuildStore(function.GetParam(0), callbackTable);
+
+        foreach(var mod in ExeLoader.ExeModules) {
+            var size = mod.Binary.Length;
+            if(mod.BssEnd > mod.LoadBase + (ulong) size)
+                size = (int) (mod.BssEnd - mod.LoadBase);
+            while(size % 16384 != 0) size++;
+            var data = new byte[size];
+            mod.Binary.CopyTo(data);
+            var arr = module.AddGlobal(
+                LLVMTypeRef.CreateArray(LlvmType<byte>(), (uint) size), 
+                $"module_{mod.LoadBase:X}_data"
+            );
+            arr.Linkage = LLVMLinkage.LLVMInternalLinkage;
+            arr.Initializer = LLVMValueRef.CreateConstArray(LlvmType<byte>(), data.Select(x =>
+                LLVMValueRef.CreateConstInt(LlvmType<byte>(), x)).ToArray());
+            CallbackCaller.CallLoadModule(builder, callbackTable, 
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.LoadBase),
+                arr,
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), (ulong) size)
+            );
+        }
+        builder.BuildRetVoid();
+        
+        //LLVM.DumpValue(function);
+        LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        if(!function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
+            throw new("Program verification failed");
+        LLVM.RunFunctionPassManager(passManager, function);
+        //LLVM.DumpValue(function);
         
         targetMachine.EmitToFile(module, path + ".o", LLVMCodeGenFileType.LLVMObjectFile);
     }
 }
 
+static unsafe class CallbackCaller {
+    public static LLVMValueRef GetFunc(LLVMBuilderRef builder, LLVMTypeRef type, LLVMValueRef callbackTable, int index) {
+        var fptr = builder.BuildGEP2(
+            LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(type, 0), 0), 
+            builder.BuildLoad2(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), callbackTable), 
+            [
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), (ulong) index),
+            ]
+        );
+        return builder.BuildLoad2(
+            LLVMTypeRef.CreatePointer(type, 0),
+            fptr
+        );
+    }
+    
+    public static LLVMValueRef CallOne(LLVMBuilderRef builder, LLVMTypeRef type, LLVMValueRef callbackTable, int index, params LLVMValueRef[] args) => 
+        builder.BuildCall2(type, GetFunc(builder, type, callbackTable, index), args);
+
+    public static void CallLoadModule(
+        LLVMBuilderRef builder, LLVMValueRef callbackTable, 
+        LLVMValueRef loadBase, LLVMValueRef data, LLVMValueRef size
+    ) {
+        CallOne(
+            builder,
+            LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [
+                LlvmType<ulong>(), LLVMTypeRef.CreatePointer(LlvmType<byte>(), 0), LlvmType<ulong>()]),
+            callbackTable, 1, 
+            loadBase, data, size
+        );
+    }
+
+    public static LLVMValueRef ReadSr(
+        LLVMBuilderRef builder, LLVMValueRef callbackTable,
+        LLVMValueRef op0, LLVMValueRef op1, LLVMValueRef crn, LLVMValueRef crm, LLVMValueRef op2
+    ) =>
+        CallOne(
+            builder, LlvmType<Func<uint, uint, uint, uint, uint, ulong>>(),
+            callbackTable, 2,
+            op0, op1, crn, crm, op2
+        );
+
+    public static void WriteSr(
+        LLVMBuilderRef builder, LLVMValueRef callbackTable,
+        LLVMValueRef op0, LLVMValueRef op1, LLVMValueRef crn, LLVMValueRef crm, LLVMValueRef op2,
+        LLVMValueRef value
+    ) =>
+        CallOne(
+            builder, LlvmType<Action<uint, uint, uint, uint, uint, ulong>>(),
+            callbackTable, 3,
+            op0, op1, crn, crm, op2, value
+        );
+}
+
 unsafe class LlvmOutput {
     LLVMBuilderRef Builder;
-    LLVMValueRef Function, RunFrom, CpuStateRef;
+    LLVMValueRef Function, RunFrom, CpuStateRef, CallbackTable;
     LLVMValueRef BitReverse8, BitReverse16, BitReverse32, BitReverse64;
     LLVMValueRef Clz8, Clz16, Clz32, Clz64;
     LLVMValueRef Abs8, Abs16, Abs32, Abs64, Fabs32, Fabs64;
@@ -197,6 +292,11 @@ unsafe class LlvmOutput {
         Ceil64 = module.AddFunction("llvm.ceil.f64", LlvmType<Func<double, double>>());
         Floor32 = module.AddFunction("llvm.floor.f32", LlvmType<Func<float, float>>());
         Floor64 = module.AddFunction("llvm.floor.f64", LlvmType<Func<double, double>>());
+        CallbackTable = module.AddGlobal(
+            LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), 0), 
+            "Callbacks"
+        );
+        CallbackTable.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
         var funcs = nodes.Select(node => (node.Block.Start, BuildFunction(module, node))).ToList();
         
@@ -361,12 +461,52 @@ unsafe class LlvmOutput {
                     ),
                 ]);
                 return false;
-            case WriteSrStmt:
-                // TODO: Implement
+            case WriteSrStmt(var op0, var op1, var crn, var crm, var op2, var value):
+                CallbackCaller.WriteSr(
+                    Builder, CallbackTable,
+                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), op0),
+                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), op1),
+                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), crn),
+                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), crm),
+                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), op2),
+                    Compile(value)
+                );
                 return false;
-            case SvcStmt:
-                // TODO: Implement
+            case SvcStmt(var name, var inRegs, var outRegs): {
+                var cbIndex = ((int) Marshal.OffsetOf<CallbackTableOffsets>($"svc{name}")) / 8;
+                var funcTy = LLVMTypeRef.CreateFunction(
+                    outRegs.Length == 0 ? LLVMTypeRef.Void : LlvmType<ulong>(),
+                    inRegs.Select(_ => LlvmType<ulong>())
+                        .Concat(outRegs.Skip(1).Select(_ => LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0))).ToArray()
+                );
+                var args = inRegs.Select(Compile).ToList();
+                foreach(var reg in outRegs.Skip(1))
+                    if(reg is StaticIRValue.NamedOut(var rname, _))
+                        args.Add(Locals[rname]);
+                    else if(reg is StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var index, _))
+                        args.Add(Builder.BuildAdd(
+                            CpuStateRef,
+                            LLVMValueRef.CreateConstInt(LlvmType<ulong>(),
+                                (ulong) (Marshal.OffsetOf<CpuState>("X") + index * 8))
+                        ));
+                    else
+                        throw new NotSupportedException($"Unsupported outReg: {reg}");
+                var call = CallbackCaller.CallOne(Builder, funcTy, CallbackTable, cbIndex, args.ToArray());
+                if(outRegs.Length == 0) return false;
+                if(outRegs[0] is StaticIRValue.NamedOut(var tname, _))
+                    Builder.BuildStore(call, Locals[tname]);
+                else if(outRegs[0] is StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var index, _)) {
+                    var rptr = Builder.BuildAdd(
+                        CpuStateRef,
+                        LLVMValueRef.CreateConstInt(LlvmType<ulong>(),
+                            (ulong) (Marshal.OffsetOf<CpuState>("X") + index * 8))
+                    );
+                    rptr = Builder.BuildIntToPtr(rptr, LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0));
+                    Builder.BuildStore(call, rptr);
+                } else
+                    throw new NotSupportedException($"Unsupported outReg: {outRegs[0]}");
                 return false;
+            }
             default:
                 throw new NotSupportedException($"Unknown statement: {stmt}");
         }
@@ -649,7 +789,14 @@ unsafe class LlvmOutput {
                     return Builder.BuildExtractElement(lvec, Compile(index));
                 }
                 case ReadSr(var op0, var op1, var crn, var crm, var op2):
-                    return LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0); // TODO: Implement
+                    return CallbackCaller.ReadSr(
+                        Builder, CallbackTable,
+                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), op0),
+                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), op1),
+                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), crn),
+                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), crm),
+                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), op2)
+                    );
                 default:
                     throw new NotSupportedException($"Unknown value: {value}");
             }
