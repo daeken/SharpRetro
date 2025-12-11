@@ -59,17 +59,17 @@ public partial class CoreRecompiler : Recompiler {
         Time("Rewriting stores", RewriteStores);
         Time("Ditching X31", DitchX31);
         Time("Building block graph", () => WholeBlockGraph = BuildBlockGraph());
-        Time("Finding padding", FindPadding);
-        DumpDotGraph(0x710002B6A0);
+        /*Time("Finding padding", FindPadding);
+        //DumpDotGraph(0x710002B6A0);
         Time("Reducing graph", () => WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions));
-        DumpDotGraph(0x710002B6A0);
+        //DumpDotGraph(0x710002B6A0);
         Time("Doing naive optimizations", NaiveOpt);
         Time("Rewriting functions", RewriteFunctions);
         Time("Doing naive optimizations", NaiveOpt);
         Time("Unregistering", Unregister);
         Time("SSA optimizing", SsaOpt);
         Time("Removing empty bodies", CullBodies);
-        //FindSignatures();
+        //FindSignatures();*/
 
         foreach(var (addr, taddr) in ProbablePadding.ToDictionary())
             if(!WholeBlockGraph.ContainsKey(taddr))

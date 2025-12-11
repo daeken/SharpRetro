@@ -30,14 +30,18 @@ public unsafe partial class CoreRecompiler {
             LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault, LLVMRelocMode.LLVMRelocDefault,
             LLVMCodeModel.LLVMCodeModelDefault);
 
-        var name = Path.Join(objectDir, "module");
-        new LlvmOutput().BuildModule(name, targetTriple, targetMachine,
-            WholeBlockGraph.OrderBy(x => x.Key).Select(x => x.Value));
-        yield return name + ".o";
+        var blocks = WholeBlockGraph.OrderBy(x => x.Key)
+            .Select(x => x.Value).ToList();
+        var cut = 5_000;
+        for(var i = 0; i < blocks.Count; i += cut) {
+            var name = Path.Join(objectDir, $"module_{i / cut}");
+            new LlvmOutput().BuildModule(name, targetTriple, targetMachine, blocks.Skip(i).Take(cut));
+            yield return name + ".o";
+        }
 
-        name = Path.Join(objectDir, "glue");
-        BuildGlue(name, targetTriple, targetMachine);
-        yield return name + ".o";
+        var fname = Path.Join(objectDir, "glue");
+        BuildGlue(fname, targetTriple, targetMachine);
+        yield return fname + ".o";
     }
 
     ulong ResolvePadding(ulong addr) {
@@ -257,6 +261,7 @@ unsafe class LlvmOutput {
     LLVMValueRef Clz8, Clz16, Clz32, Clz64;
     LLVMValueRef Abs8, Abs16, Abs32, Abs64, Fabs32, Fabs64;
     LLVMValueRef Trunc32, Trunc64, Round32, Round64, Ceil32, Ceil64, Floor32, Floor64;
+    LLVMValueRef Sqrt32, Sqrt64;
     LLVMBasicBlockRef CurrentBlock;
     readonly Dictionary<string, LLVMValueRef> Locals = new();
     LLVMValueRef[] Gprs;
@@ -292,6 +297,8 @@ unsafe class LlvmOutput {
         Ceil64 = module.AddFunction("llvm.ceil.f64", LlvmType<Func<double, double>>());
         Floor32 = module.AddFunction("llvm.floor.f32", LlvmType<Func<float, float>>());
         Floor64 = module.AddFunction("llvm.floor.f64", LlvmType<Func<double, double>>());
+        Sqrt32 = module.AddFunction("llvm.sqrt.f32", LlvmType<Func<float, float>>());
+        Sqrt64 = module.AddFunction("llvm.sqrt.f64", LlvmType<Func<double, double>>());
         CallbackTable = module.AddGlobal(
             LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), 0), 
             "Callbacks"
@@ -477,7 +484,7 @@ unsafe class LlvmOutput {
                 var funcTy = LLVMTypeRef.CreateFunction(
                     outRegs.Length == 0 ? LLVMTypeRef.Void : LlvmType<ulong>(),
                     inRegs.Select(_ => LlvmType<ulong>())
-                        .Concat(outRegs.Skip(1).Select(_ => LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0))).ToArray()
+                        .Concat(outRegs.Skip(1).Select(_ => LlvmType<ulong>())).ToArray()
                 );
                 var args = inRegs.Select(Compile).ToList();
                 foreach(var reg in outRegs.Skip(1))
@@ -507,12 +514,30 @@ unsafe class LlvmOutput {
                     throw new NotSupportedException($"Unsupported outReg: {outRegs[0]}");
                 return false;
             }
+            case StaticIRStatement.Sink(var value):
+                Compile(value);
+                return false;
             default:
                 throw new NotSupportedException($"Unknown statement: {stmt}");
         }
     }
 
+    LLVMValueRef CompareFloat(StaticIRValue comp, StaticIRValue left, StaticIRValue right) {
+        var op = comp switch {
+            StaticIRValue.EQ => LLVMRealPredicate.LLVMRealOEQ,
+            StaticIRValue.NE => LLVMRealPredicate.LLVMRealUNE,
+            StaticIRValue.GT => LLVMRealPredicate.LLVMRealOGT,
+            StaticIRValue.GTE => LLVMRealPredicate.LLVMRealOGE,
+            StaticIRValue.LT => LLVMRealPredicate.LLVMRealOLT,
+            StaticIRValue.LTE => LLVMRealPredicate.LLVMRealOLE,
+            _ => throw new NotImplementedException($"Unknown operator: {comp}"),
+        };
+        var val = Builder.BuildFCmp(op, Compile(left), Compile(right));
+        return Builder.BuildCast(LLVMOpcode.LLVMZExt, val, LlvmType<ulong>());
+    }
+
     LLVMValueRef Compare(StaticIRValue comp, StaticIRValue left, StaticIRValue right) {
+        if(left.Type.IsFloat) return CompareFloat(comp, left, right);
         var op = comp switch {
             StaticIRValue.EQ => LLVMIntPredicate.LLVMIntEQ, 
             StaticIRValue.NE => LLVMIntPredicate.LLVMIntNE,
@@ -711,6 +736,18 @@ unsafe class LlvmOutput {
                             8 => Builder.BuildCall2(LlvmType<Func<double, double>>(), Fabs64, [Compile(left)]),
                             _ => throw new NotImplementedException($"Can't abs {left.Type}"),
                         };
+                case StaticIRValue.Sqrt(var left):
+                    return left.Type == typeof(float)
+                        ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Sqrt32, [Compile(left)])
+                        : Builder.BuildCall2(LlvmType<Func<double, double>>(), Sqrt64, [Compile(left)]);
+                case StaticIRValue.Floor(var left):
+                    return left.Type == typeof(float)
+                        ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Floor32, [Compile(left)])
+                        : Builder.BuildCall2(LlvmType<Func<double, double>>(), Floor64, [Compile(left)]);
+                case StaticIRValue.Ceil(var left):
+                    return left.Type == typeof(float)
+                        ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Ceil32, [Compile(left)])
+                        : Builder.BuildCall2(LlvmType<Func<double, double>>(), Ceil64, [Compile(left)]);
                 case StaticIRValue.Round(var left):
                     return left.Type == typeof(float)
                         ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Round32, [Compile(left)])
@@ -719,6 +756,31 @@ unsafe class LlvmOutput {
                     return left.Type == typeof(float)
                         ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Trunc32, [Compile(left)])
                         : Builder.BuildCall2(LlvmType<Func<double, double>>(), Trunc64, [Compile(left)]);
+                case StaticIRValue.RoundHalfUp(var left):
+                    return Compile(
+                        new StaticIRValue.Floor(
+                            new StaticIRValue.Add(
+                                left,
+                                left.Type == typeof(float)
+                                    ? new StaticIRValue.Literal(0.5f, typeof(float))
+                                    : new StaticIRValue.Literal(0.5, typeof(double))
+                            )
+                        )
+                    );
+                case StaticIRValue.RoundHalfDown(var left):
+                    return Compile(
+                        new StaticIRValue.Ceil(
+                            new StaticIRValue.Sub(
+                                left,
+                                left.Type == typeof(float)
+                                    ? new StaticIRValue.Literal(0.5f, typeof(float))
+                                    : new StaticIRValue.Literal(0.5, typeof(double))
+                            )
+                        )
+                    );
+                case FloatToFixed(var left, var fbits, var dtype): {
+                    return LLVMValueRef.CreateConstInt(dtype.ToLLVMType(), 0); // TODO: Implement
+                }
                 case StaticIRValue.Ternary(var cond, var a, var b): {
                     var ifLabel = Function.AppendBasicBlock("");
                     var elseLabel = Function.AppendBasicBlock("");
@@ -787,6 +849,27 @@ unsafe class LlvmOutput {
                         ? Compile(vec)
                         : Builder.BuildBitCast(Compile(vec), typeof(Vector128<>).MakeGenericType(type).ToLLVMType());
                     return Builder.BuildExtractElement(lvec, Compile(index));
+                }
+                case StaticIRValue.IsNaN(var left): {
+                    var val = Compile(left);
+                    return Builder.BuildCast(LLVMOpcode.LLVMZExt, 
+                        Builder.BuildFCmp(LLVMRealPredicate.LLVMRealUNO, val, val), 
+                        LlvmType<ulong>());
+                }
+                case StaticIRValue.VectorFrsqrte(var vec, var bits, var elems): {
+                    return Compile(vec); // TODO: Implement
+                }
+                case StaticIRValue.VectorExtract(var a, var b, var q, var index): {
+                    return Compile(a); // TODO: Implement
+                }
+                case StaticIRValue.VectorCountBits(var vec, var elems): {
+                    return Compile(vec); // TODO: Implement
+                }
+                case StaticIRValue.VectorSumUnsigned(var vec, var count, var elems): {
+                    return Compile(new StaticIRValue.Literal(0UL, typeof(ulong))); // TODO: Implement
+                }
+                case CompareAndSwap(var ptr, var val, var comparand): {
+                    return Compile(new StaticIRValue.Literal((byte) 0, typeof(byte))); // TODO: Implement
                 }
                 case ReadSr(var op0, var op1, var crn, var crm, var op2):
                     return CallbackCaller.ReadSr(
