@@ -1,5 +1,11 @@
+using NxCommon;
+
 namespace UmbraCore;
 
-public static class Rtld {
-    
+public class Rtld {
+    public Rtld(List<ExeModule> modules) {
+        foreach(var module in modules) {
+            Console.WriteLine($"Module at {module.LoadBase:X} has {module.Symbols.Count} symbols");
+        }
+    }
 }

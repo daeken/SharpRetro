@@ -3,16 +3,28 @@ using Aarch64Cpu;
 
 namespace UmbraCore;
 
+public delegate void SetupDelegate(ref Callbacks callbacks);
+public unsafe delegate void RunFromDelegate(CpuState* state, ulong addr, ulong until);
+
 public unsafe class GameWrapper {
-    [DllImport("../NxRecompile/libtest.dylib")]
-    public static extern void setup(ref Callbacks callbacks);
-    [DllImport("../NxRecompile/libtest.dylib")]
-    public static extern void runFrom(CpuState* state, ulong addr, ulong until);
+	readonly SetupDelegate _Setup;
+	readonly RunFromDelegate _RunFrom;
+	
+	public Callbacks Callbacks = new();
+	
+	public GameWrapper(string libPath) {
+		var lib = NativeLibrary.Load(libPath);
+		_Setup = Marshal.GetDelegateForFunctionPointer<SetupDelegate>(NativeLibrary.GetExport(lib, "setup"));
+		_RunFrom = Marshal.GetDelegateForFunctionPointer<RunFromDelegate>(NativeLibrary.GetExport(lib, "runFrom"));
+	}
+
+	public void Setup() => _Setup(ref Callbacks);
+	public void RunFrom(CpuState* state, ulong addr, ulong until) => _RunFrom(state, addr, until);
 }
 
 public delegate void StubDelegate();
 public delegate void DebugDelegate(ulong pc, string dasm);
-public unsafe delegate void LoadModuleDelegate(ulong loadBase, byte* data, int size);
+public unsafe delegate void LoadModuleDelegate(ulong loadBase, byte* data, ulong size, ulong textStart, ulong textEnd, ulong roStart, ulong roEnd, ulong dataStart, ulong dataEnd);
 public delegate ulong ReadSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2);
 public delegate void WriteSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2, ulong value);
 public delegate ulong SetHeapSizeDelegate(ulong in_1, ref ulong out_1);

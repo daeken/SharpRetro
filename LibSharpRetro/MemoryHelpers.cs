@@ -1,8 +1,19 @@
+using System.Buffers;
 using System.Runtime.InteropServices;
 
 namespace LibSharpRetro;
 
 public static class MemoryHelpers {
+    unsafe class UnsafeMemoryManager<T>(void* Pointer, int Length) : MemoryManager<T> {
+        protected override void Dispose(bool disposing) {}
+        public override Span<T> GetSpan() => new(Pointer, Length);
+        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotImplementedException();
+        public override void Unpin() {}
+    }
+
+    public static unsafe Memory<T> AsMemory<T>(void* pointer, int length) =>
+        new UnsafeMemoryManager<T>(pointer, length).Memory;
+    
     extension(Memory<byte> memory) {
         public T[] Read<T>(uint offset, int count) where T : unmanaged {
             var size = Marshal.SizeOf<T>();

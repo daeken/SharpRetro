@@ -64,7 +64,7 @@ enum RelocationType {
     R_AARCH64_RELATIVE = 1027,
 }
 
-public class ExeModule {
+public unsafe class ExeModule {
     public record Symbol(string Name, byte Info, byte Other, ushort Shndx, ulong Value, ulong Size);
     
     public readonly Memory<byte> Binary;
@@ -74,8 +74,21 @@ public class ExeModule {
     public readonly ulong DataStart, DataEnd;
     public readonly ulong BssStart, BssEnd;
     public readonly List<Symbol> Symbols = [];
+
+    public ExeModule(ulong loadBase, ulong size, ulong textStart, ulong textEnd, ulong roStart, ulong roEnd, ulong dataStart, ulong dataEnd) {
+        LoadBase = loadBase;
+        TextStart = textStart;
+        TextEnd = textEnd;
+        RoStart = roStart;
+        RoEnd = roEnd;
+        DataStart = dataStart;
+        DataEnd = dataEnd;
+
+        Binary = MemoryHelpers.AsMemory<byte>((void*) loadBase, (int) size);
+        (BssStart, BssEnd) = Load(false);
+    }
     
-    unsafe ExeModule(ulong loadBase, uint textOffset, Span<byte> text, uint roOffset, Span<byte> ro, uint dataOffset, Span<byte> data, bool doRelocate = true) {
+    ExeModule(ulong loadBase, uint textOffset, Span<byte> text, uint roOffset, Span<byte> ro, uint dataOffset, Span<byte> data, bool doRelocate = true) {
         LoadBase = loadBase;
         TextStart = loadBase + textOffset;
         TextEnd = loadBase + textOffset + (ulong) text.Length;
@@ -89,13 +102,17 @@ public class ExeModule {
         ro.CopyTo(Binary[(int) roOffset..].Span);
         data.CopyTo(Binary[(int) dataOffset..].Span);
 
+        (BssStart, BssEnd) = Load(doRelocate);
+    }
+
+    (ulong BssStart, ulong BssEnd) Load(bool doRelocate) {
         var modOff = Read<uint>(4);
         var header = Read<ModHeader>(modOff);
         if(Encoding.ASCII.GetString(new Span<byte>(header.Magic, 4)) != "MOD0")
             throw new NotSupportedException("Missing MOD0 magic");
         
-        BssStart = loadBase + header.BssStartOffset;
-        BssEnd = loadBase + header.BssEndOffset;
+        var bssStart = LoadBase + header.BssStartOffset;
+        var bssEnd = LoadBase + header.BssEndOffset;
 
         var dynamic = new Dictionary<DynamicKey, ulong>();
         var dynOff = modOff + header.DynamicOffset;
@@ -122,7 +139,7 @@ public class ExeModule {
             ));
         }
 
-        if(!doRelocate) return;
+        if(!doRelocate) return (bssStart, bssEnd);
         if(dynamic.TryGetValue(DynamicKey.REL, out var start)) {
             var rels = Binary.Read<ulong, uint, uint>(start, (int) dynamic[DynamicKey.RELENT]);
             foreach(var (offset, type, sym) in rels)
@@ -141,6 +158,8 @@ public class ExeModule {
             foreach(var (offset, type, sym, addend) in rels)
                 Relocate(offset, type, sym, addend);
         }*/
+        
+        return (bssStart, bssEnd);
     }
 
     void Relocate(ulong offset, uint type, uint sym, long addend) =>

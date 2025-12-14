@@ -1,3 +1,3 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using UmbraCore;
 
-Console.WriteLine("Hello, World!");
+var mainLoop = new MainLoop(args[0], args[1]);
