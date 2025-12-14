@@ -40,7 +40,7 @@ class VectorMath : Builtin {
 			.Interpret((list, state) => state.Evaluate(list[1]).As(TypeFromName(list[3]))[(int) state.Evaluate(list[2])]);
 		Expression("vector-extract", list => EType.Vector.AsRuntime(list[1].Type.Runtime || list[2].Type.Runtime), 
 				list => $"Math.VectorExtract({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])}, {GenerateExpression(list[4])})", 
-				list => $"({GenerateExpression(list[1])}).VectorExtract({GenerateExpression(list[2])}, (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[3])}), (IRuntimeValue<uint>) builder.EnsureRuntime({GenerateExpression(list[4])}))")
+				list => $"({GenerateExpression(list[1])}).VectorExtract({GenerateExpression(list[2])}, (uint) {GenerateExpression(list[3])}, (uint) {GenerateExpression(list[4])})")
 			.NoInterpret(); // TODO: Implement
 
 		Expression("vector-count-bits", _ => EType.Vector, 
@@ -50,7 +50,7 @@ class VectorMath : Builtin {
 
 		Expression("vector-sum-unsigned", _ => new EInt(false, 64),
 				list => $"Math.VectorSumUnsigned({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"builder.EnsureRuntime({GenerateExpression(list[1])}).VectorSumUnsigned((IRuntimeValue<byte>) builder.EnsureRuntime({GenerateExpression(list[2])}), (IRuntimeValue<byte>) builder.EnsureRuntime({GenerateExpression(list[3])}))")
+				list => $"builder.EnsureRuntime({GenerateExpression(list[1])}).VectorSumUnsigned({GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
 			.Interpret((list, state) => {
 				var esize = (int) state.Evaluate(list[2]);
 				var count = (int) state.Evaluate(list[3]);
@@ -90,7 +90,7 @@ class VectorMath : Builtin {
 
 		Expression("vec-frsqrte", list => EType.Vector.AsRuntime(list.AnyRuntime), 
 				list => $"Math.VectorFrsqrte({GenerateExpression(list[1])}, {GenerateExpression(list[2])}, {GenerateExpression(list[3])})", 
-				list => $"({GenerateExpression(list[1])}).VectorFrsqrte((IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[2])}), (IRuntimeValue<int>) builder.EnsureRuntime({GenerateExpression(list[3])}))")
+				list => $"({GenerateExpression(list[1])}).VectorFrsqrte({GenerateExpression(list[2])}, {GenerateExpression(list[3])})")
 			.Interpret((list, state) => {
 				var vector = state.Evaluate(list[1]);
 				switch((int) state.Evaluate(list[2])) {

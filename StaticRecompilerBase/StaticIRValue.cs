@@ -702,27 +702,16 @@ public abstract record StaticIRValue(Type Type) {
         }
     }
 
-    public record VectorSumUnsigned(StaticIRValue Vector, StaticIRValue ESize, StaticIRValue Count) : StaticIRValue(typeof(ulong)) {
+    public record VectorSumUnsigned(StaticIRValue Vector, int ESize, int Count) : StaticIRValue(typeof(ulong)) {
         public override void Walk(Action<StaticIRValue> func) {
             func(this);
             Vector.Walk(func);
-            ESize.Walk(func);
-            Count.Walk(func);
         }
 
         public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
             var vector = Vector.Transform(func);
-            var esize = ESize.Transform(func);
-            var count = Count.Transform(func);
-            var nthis = 
-                    (vector != null && !ReferenceEquals(vector, Vector)) || 
-                    (esize != null && !ReferenceEquals(esize, ESize)) || 
-                    (count != null && !ReferenceEquals(count, Count))
-                ? this with {
-                        Vector = vector != null && !ReferenceEquals(vector, Vector) ? vector : Vector, 
-                        ESize = esize != null && !ReferenceEquals(esize, ESize) ? esize : ESize,
-                        Count = count != null && !ReferenceEquals(count, Count) ? count : Count
-                    }
+            var nthis = vector != null && !ReferenceEquals(vector, Vector)
+                ? this with { Vector = vector }
                 : this;
             return func(nthis) ?? nthis;
         }
@@ -748,55 +737,39 @@ public abstract record StaticIRValue(Type Type) {
             return func(nthis) ?? nthis;
         }
     }
-    public record VectorExtract(StaticIRValue A, StaticIRValue B, StaticIRValue Q, StaticIRValue Index) : StaticIRValue(typeof(Vector128<float>)) {
+    public record VectorExtract(StaticIRValue A, StaticIRValue B, uint Q, uint Index) : StaticIRValue(typeof(Vector128<float>)) {
         public override void Walk(Action<StaticIRValue> func) {
             func(this);
             A.Walk(func);
             B.Walk(func);
-            Q.Walk(func);
-            Index.Walk(func);
         }
 
         public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
             var a = A.Transform(func);
             var b = B.Transform(func);
-            var q = Q.Transform(func);
-            var index = Index.Transform(func);
             var nthis = 
                     (a != null && !ReferenceEquals(a, A)) || 
-                    (b != null && !ReferenceEquals(b, B)) || 
-                    (q != null && !ReferenceEquals(q, Q)) ||
-                    (index != null && !ReferenceEquals(index, Index))
+                    (b != null && !ReferenceEquals(b, B))
                 ? this with {
                         A = a != null && !ReferenceEquals(a, A) ? a : A, 
                         B = b != null && !ReferenceEquals(b, B) ? b : B,
-                        Q = q != null && !ReferenceEquals(q, Q) ? q : Q,
-                        Index = index != null && !ReferenceEquals(index, Index) ? index : Index
                     }
                 : this;
             return func(nthis) ?? nthis;
         }
     }
-    public record VectorFrsqrte(StaticIRValue Vector, StaticIRValue Bits, StaticIRValue Elems) : StaticIRValue(typeof(Vector128<float>)) {
+    public record VectorFrsqrte(StaticIRValue Vector, int bits, int elements) : StaticIRValue(typeof(Vector128<float>)) {
         public override void Walk(Action<StaticIRValue> func) {
             func(this);
             Vector.Walk(func);
-            Bits.Walk(func);
-            Elems.Walk(func);
         }
 
         public override StaticIRValue Transform(Func<StaticIRValue, StaticIRValue> func) {
             var vector = Vector.Transform(func);
-            var bits = Bits.Transform(func);
-            var elems = Elems.Transform(func);
             var nthis = 
-                    (vector != null && !ReferenceEquals(vector, Vector)) ||
-                    (bits != null && !ReferenceEquals(bits, Bits)) ||
-                    (elems != null && !ReferenceEquals(elems, Elems))
+                    vector != null && !ReferenceEquals(vector, Vector)
                 ? this with {
-                        Vector = vector != null && !ReferenceEquals(vector, Vector) ? vector : Vector,
-                        Bits = bits != null && !ReferenceEquals(bits, Bits) ? bits : Bits,
-                        Elems = elems != null && !ReferenceEquals(elems, Elems) ? elems : Elems
+                        Vector = vector != null && !ReferenceEquals(vector, Vector) ? vector : Vector
                     }
                 : this;
             return func(nthis) ?? nthis;

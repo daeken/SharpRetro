@@ -4,17 +4,17 @@ namespace NxRecompile;
 
 public partial class CoreRecompiler {
     void SsaOpt() {
-        foreach(var (addr, node) in WholeBlockGraph) {
-            // We only want to operate on single blocks && functions
-            if(node is not BlockGraph.End || !KnownFunctions.Contains(addr)) continue;
-
+        var sub = WholeBlockGraph
+            .Where(x => KnownFunctions.Contains(x.Key) && x.Value is BlockGraph.End)
+            .Select(x => x.Value);
+        Parallel.ForEach(sub, node => {
             var temp = new StaticIRStatement.Body(node.Block.Body);
             temp = Ssaify.StripSsa(temp);
             var body = new Ssaify().Transform(temp).Stmts;
             body = DeadCodeElimination(body, node.Block.Start);
             body = ((StaticIRStatement.Body) Ssaify.CullPhi(new StaticIRStatement.Body(body))).Stmts;
             node.Block = node.Block with { Body = body };
-        }
+        });
     }
 
     static bool IsEmpty(StaticIRStatement stmt) {

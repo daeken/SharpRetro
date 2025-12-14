@@ -80,14 +80,15 @@ public class StaticRuntimeValue<T>(StaticIRValue value) : IRuntimeValue<T> where
     public override IRuntimeValue<T> ZeroTop() => W(new StaticIRValue.ZeroTop(this));
     
     public override IRuntimeValue<Vector128<T>> CreateVector() => W<Vector128<T>>(new StaticIRValue.CreateVector(this));
-    public override IRuntimeValue<ulong> VectorSumUnsigned(IRuntimeValue<byte> esize, IRuntimeValue<byte> count) => W<ulong>(new StaticIRValue.VectorSumUnsigned(this, W(esize), W(count)));
+    public override IRuntimeValue<ulong> VectorSumUnsigned(byte esize, byte count) =>
+        W<ulong>(new StaticIRValue.VectorSumUnsigned(this, (int) esize, (int) count));
 
     public override IRuntimeValue<Vector128<float>> VectorCountBits(IRuntimeValue<long> elems) =>
         W<Vector128<float>>(new StaticIRValue.VectorCountBits(this, W(elems)));
 
-    public override IRuntimeValue<Vector128<float>> VectorExtract(IRuntimeValue<Vector128<float>> _b, IRuntimeValue<uint> Q, IRuntimeValue<uint> _index) =>
-        W<Vector128<float>>(new StaticIRValue.VectorExtract(this, W(_b), W(Q), W(_index)));
+    public override IRuntimeValue<Vector128<float>> VectorExtract(IRuntimeValue<Vector128<float>> _b, uint Q, uint _index) =>
+        W<Vector128<float>>(new StaticIRValue.VectorExtract(this, W(_b), Q, _index));
 
-    public override IRuntimeValue<Vector128<float>> VectorFrsqrte(IRuntimeValue<int> bits, IRuntimeValue<int> elements) =>
-        W<Vector128<float>>(new StaticIRValue.VectorFrsqrte(this, W(bits), W(elements)));
+    public override IRuntimeValue<Vector128<float>> VectorFrsqrte(int bits, int elements) =>
+        W<Vector128<float>>(new StaticIRValue.VectorFrsqrte(this, bits, elements));
 }

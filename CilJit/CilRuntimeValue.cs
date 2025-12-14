@@ -98,8 +98,8 @@ public class CilRuntimeValue<T, DelegateT> : IRuntimeValue<T> where T : struct {
 
 	public override IRuntimeValue<T> ZeroTop() => throw new NotImplementedException();
 	public override IRuntimeValue<Vector128<T>> CreateVector() => throw new NotImplementedException();
-	public override IRuntimeValue<ulong> VectorSumUnsigned(IRuntimeValue<byte> esize, IRuntimeValue<byte> count) => throw new NotImplementedException();
+	public override IRuntimeValue<ulong> VectorSumUnsigned(byte esize, byte count) => throw new NotImplementedException();
 	public override IRuntimeValue<Vector128<float>> VectorCountBits(IRuntimeValue<long> elems) => throw new NotImplementedException();
-	public override IRuntimeValue<Vector128<float>> VectorExtract(IRuntimeValue<Vector128<float>> _b, IRuntimeValue<uint> Q, IRuntimeValue<uint> _index) => throw new NotImplementedException();
-	public override IRuntimeValue<Vector128<float>> VectorFrsqrte(IRuntimeValue<int> bits, IRuntimeValue<int> elements) => throw new NotImplementedException();
+	public override IRuntimeValue<Vector128<float>> VectorExtract(IRuntimeValue<Vector128<float>> _b, uint Q, uint _index) => throw new NotImplementedException();
+	public override IRuntimeValue<Vector128<float>> VectorFrsqrte(int bits, int elements) => throw new NotImplementedException();
 }

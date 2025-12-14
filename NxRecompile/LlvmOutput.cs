@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using LibSharpRetro;
 using LLVMSharp.Interop;
 using System.Runtime.Intrinsics;
 using Aarch64Cpu;
+using DoubleSharp.Linq;
+using DoubleSharp.Progress;
 using LLVMSharp;
 using StaticRecompilerBase;
 using static NxRecompile.LlvmExtensions;
@@ -13,7 +16,7 @@ namespace NxRecompile;
 public unsafe partial class CoreRecompiler {
     public void BuildAndLink(string objectDir, string libPath) {
         var modules = Output(objectDir);
-        if(Sh.Run("clang", new[] { "-dynamiclib", "-o", libPath }.Concat(modules).ToArray()) != 0)
+        if(Sh.Run("clang", new[] { "-dynamiclib", "-o", libPath, "-exported_symbols_list", "exports.txt" }.Concat(modules).ToArray()) != 0)
             Console.WriteLine($"Linking shared library failed!");
     }
 
@@ -32,12 +35,17 @@ public unsafe partial class CoreRecompiler {
 
         var blocks = WholeBlockGraph.OrderBy(x => x.Key)
             .Select(x => x.Value).ToList();
-        var cut = 5_000;
-        for(var i = 0; i < blocks.Count; i += cut) {
-            var name = Path.Join(objectDir, $"module_{i / cut}");
-            new LlvmOutput().BuildModule(name, targetTriple, targetMachine, blocks.Skip(i).Take(cut));
-            yield return name + ".o";
-        }
+        var cut = 10_000;
+        var iter = (0, blocks.Count, cut).Range().ToList().WithTimedProgress(constantUpdate: true)
+            .Select(i => {
+                var name = Path.Join(objectDir, $"module_{i / cut}");
+                new LlvmOutput().BuildModule(name, targetTriple, targetMachine,
+                    blocks.Skip(i).Take(cut)
+                        .Select(x => (BlockNames[x.Block.Start], x))
+                );
+                return name + ".o";
+            });
+        foreach(var elem in iter) yield return elem;
 
         var fname = Path.Join(objectDir, "glue");
         BuildGlue(fname, targetTriple, targetMachine);
@@ -54,13 +62,13 @@ public unsafe partial class CoreRecompiler {
         var module = LLVMModuleRef.CreateWithName(Path.GetFileName(path));
         module.Target = targetTriple;
 
-        var funcPtrType = LLVMTypeRef.CreatePointer(LlvmType<Func<ulong, ulong>>(), 0);
+        var funcPtrType = LlvmType<Func<ulong, ulong>>().ToPointer();
         var jumpTables = ExeLoader.ExeModules.Select(mod => {
             var funcs = new Dictionary<ulong, LLVMValueRef>();
             LLVMValueRef GetFunc(ulong addr) =>
                 funcs.TryGetValue(addr, out var func)
                     ? func
-                    : funcs[addr] = module.AddFunction($"f_{addr:X}", LlvmType<Func<ulong, ulong>>());
+                    : funcs[addr] = module.AddFunction(BlockNames[addr], LlvmType<Func<ulong, ulong>>());
             var elems = new LLVMValueRef[(mod.TextEnd - mod.TextStart) / 4];
             var i = 0;
             for(var addr = mod.TextStart; addr < mod.TextEnd; addr += 4) {
@@ -80,7 +88,7 @@ public unsafe partial class CoreRecompiler {
             return jumpTable;
         }).ToArray();
 
-        var jumptableType = LLVMTypeRef.CreatePointer(funcPtrType, 0);
+        var jumptableType = funcPtrType.ToPointer();
         var topTable = module.AddGlobal(
             LLVMTypeRef.CreateArray(jumptableType, (uint) jumpTables.Length),
             "jumpTable"
@@ -160,7 +168,7 @@ public unsafe partial class CoreRecompiler {
         builder = LLVM.CreateBuilder();
         builder.PositionAtEnd(function.AppendBasicBlock("entry"));
 
-        var cbtTy = LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), 0);
+        var cbtTy = LlvmType<ulong>().ToPointer().ToPointer();
         var callbackTable = module.AddGlobal(cbtTy, "Callbacks");
         callbackTable.Linkage = LLVMLinkage.LLVMExternalLinkage;
         callbackTable.IsGlobalConstant = false;
@@ -204,16 +212,13 @@ public unsafe partial class CoreRecompiler {
 static unsafe class CallbackCaller {
     public static LLVMValueRef GetFunc(LLVMBuilderRef builder, LLVMTypeRef type, LLVMValueRef callbackTable, int index) {
         var fptr = builder.BuildGEP2(
-            LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(type, 0), 0), 
-            builder.BuildLoad2(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), callbackTable), 
+            type.ToPointer().ToPointer(), 
+            builder.BuildLoad2(LlvmType<ulong>().ToPointer(), callbackTable), 
             [
                 LLVMValueRef.CreateConstInt(LlvmType<ulong>(), (ulong) index),
             ]
         );
-        return builder.BuildLoad2(
-            LLVMTypeRef.CreatePointer(type, 0),
-            fptr
-        );
+        return builder.BuildLoad2(type.ToPointer(), fptr);
     }
     
     public static LLVMValueRef CallOne(LLVMBuilderRef builder, LLVMTypeRef type, LLVMValueRef callbackTable, int index, params LLVMValueRef[] args) => 
@@ -226,7 +231,7 @@ static unsafe class CallbackCaller {
         CallOne(
             builder,
             LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [
-                LlvmType<ulong>(), LLVMTypeRef.CreatePointer(LlvmType<byte>(), 0), LlvmType<ulong>()]),
+                LlvmType<ulong>(), LlvmType<byte>().ToPointer(), LlvmType<ulong>()]),
             callbackTable, 1, 
             loadBase, data, size
         );
@@ -262,13 +267,14 @@ unsafe class LlvmOutput {
     LLVMValueRef Abs8, Abs16, Abs32, Abs64, Fabs32, Fabs64;
     LLVMValueRef Trunc32, Trunc64, Round32, Round64, Ceil32, Ceil64, Floor32, Floor64;
     LLVMValueRef Sqrt32, Sqrt64;
+    LLVMValueRef PopCntV16;
     LLVMBasicBlockRef CurrentBlock;
     readonly Dictionary<string, LLVMValueRef> Locals = new();
     LLVMValueRef[] Gprs;
     LLVMValueRef[] Vecs;
     LLVMValueRef SP, N, Z, C, V, TlsBase;
     
-    internal void BuildModule(string path, string targetTriple, LLVMTargetMachineRef targetMachine, IEnumerable<BlockGraph> nodes) {
+    internal void BuildModule(string path, string targetTriple, LLVMTargetMachineRef targetMachine, IEnumerable<(string Name, BlockGraph Node)> nodes) {
         var module = LLVMModuleRef.CreateWithName(Path.GetFileName(path));
         module.Target = targetTriple;
         // TODO: How tf do you set the data layout? It should come from targetMachine somehow
@@ -299,21 +305,33 @@ unsafe class LlvmOutput {
         Floor64 = module.AddFunction("llvm.floor.f64", LlvmType<Func<double, double>>());
         Sqrt32 = module.AddFunction("llvm.sqrt.f32", LlvmType<Func<float, float>>());
         Sqrt64 = module.AddFunction("llvm.sqrt.f64", LlvmType<Func<double, double>>());
-        CallbackTable = module.AddGlobal(
-            LLVMTypeRef.CreatePointer(LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0), 0), 
-            "Callbacks"
-        );
+        PopCntV16 = module.AddFunction("llvm.ctpop.v16i8", LlvmType<Func<Vector128<byte>, Vector128<byte>>>());
+        CallbackTable = module.AddGlobal(LlvmType<ulong>().ToPointer().ToPointer(), "Callbacks");
         CallbackTable.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
-        var funcs = nodes.Select(node => (node.Block.Start, BuildFunction(module, node))).ToList();
+        var funcs = nodes.Select(node => (node.Node.Block.Start, BuildFunction(module, node.Name, node.Node))).ToList();
         
         targetMachine.EmitToFile(module, path + ".o", LLVMCodeGenFileType.LLVMObjectFile);
+        module.Dispose();
     }
 
-    LLVMValueRef BuildFunction(LLVMModuleRef module, BlockGraph node) {
+    static LLVMValueRef Const(byte v) => LLVMValueRef.CreateConstInt(LlvmType<byte>(), v);
+    static LLVMValueRef Const(ushort v) => LLVMValueRef.CreateConstInt(LlvmType<ushort>(), v);
+    static LLVMValueRef Const(uint v) => LLVMValueRef.CreateConstInt(LlvmType<uint>(), v);
+    static LLVMValueRef Const(ulong v) => LLVMValueRef.CreateConstInt(LlvmType<ulong>(), v);
+    static LLVMValueRef Const(sbyte v) => LLVMValueRef.CreateConstInt(LlvmType<sbyte>(), unchecked((byte) v));
+    static LLVMValueRef Const(short v) => LLVMValueRef.CreateConstInt(LlvmType<short>(), unchecked((ushort) v));
+    static LLVMValueRef Const(int v) => LLVMValueRef.CreateConstInt(LlvmType<int>(), unchecked((uint) v));
+    static LLVMValueRef Const(long v) => LLVMValueRef.CreateConstInt(LlvmType<long>(), unchecked((ulong) v));
+    static LLVMValueRef Const(float v) => LLVMValueRef.CreateConstReal(LlvmType<float>(), v);
+    static LLVMValueRef Const(double v) => LLVMValueRef.CreateConstReal(LlvmType<double>(), v);
+    static LLVMValueRef Const(bool v) => LLVMValueRef.CreateConstInt(LlvmType<bool>(), v ? 1UL : 0);
+    static LLVMValueRef ConstBit(bool v) => LLVMValueRef.CreateConstInt(LlvmType<Bit>(), v ? 1UL : 0);
+
+    LLVMValueRef BuildFunction(LLVMModuleRef module, string name, BlockGraph node) {
         Locals.Clear();
         Builder = LLVM.CreateBuilder();
-        var passManager = LLVM.CreateFunctionPassManagerForModule(module);
+        var passManager = (LLVMPassManagerRef) LLVM.CreateFunctionPassManagerForModule(module);
         
         LLVM.AddReassociatePass(passManager);
         LLVM.AddCFGSimplificationPass(passManager);
@@ -325,7 +343,7 @@ unsafe class LlvmOutput {
         LLVM.AddPartiallyInlineLibCallsPass(passManager);
         LLVM.InitializeFunctionPassManager(passManager);
         
-        Function = module.AddFunction($"f_{node.Block.Start:X}", LlvmType<Func<ulong, ulong>>());
+        Function = module.AddFunction(name, LlvmType<Func<ulong, ulong>>());
         CpuStateRef = LLVM.GetParam(Function, 0);
         Function.Linkage = LLVMLinkage.LLVMExternalLinkage;
         Function.Visibility = LLVMVisibility.LLVMHiddenVisibility;
@@ -357,6 +375,9 @@ unsafe class LlvmOutput {
             throw new("Program verification failed");
         LLVM.RunFunctionPassManager(passManager, Function);
         //LLVM.DumpValue(Function);
+        
+        passManager.Dispose();
+        Builder.Dispose();
 
         return Function;
     }
@@ -438,14 +459,14 @@ unsafe class LlvmOutput {
                 return false;
             case StaticIRStatement.SetFieldIndex(StaticIRValue.Named("State", _), var name, var index, var value): {
                 var offset = (ulong) Marshal.OffsetOf<CpuState>(name) + (ulong) (value.Type.ByteCount * index);
-                var addr = Builder.BuildAdd(CpuStateRef, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), offset));
+                var addr = Builder.BuildAdd(CpuStateRef, Const(offset));
                 var ptr = Builder.BuildIntToPtr(addr, LLVM.PointerType(value.Type.ToLLVMType(), 0), $"{name}[{index}]");
                 Builder.BuildStore(Compile(value), ptr);
                 return false;
             }
             case StaticIRStatement.SetField(StaticIRValue.Named("State", _), var name, var value): {
                 var offset = (ulong) Marshal.OffsetOf<CpuState>(name);
-                var addr = Builder.BuildAdd(CpuStateRef, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), offset));
+                var addr = Builder.BuildAdd(CpuStateRef, Const(offset));
                 var ptr = Builder.BuildIntToPtr(addr, LLVM.PointerType(value.Type.ToLLVMType(), 0), name);
                 Builder.BuildStore(Compile(value), ptr);
                 return false;
@@ -471,11 +492,11 @@ unsafe class LlvmOutput {
             case WriteSrStmt(var op0, var op1, var crn, var crm, var op2, var value):
                 CallbackCaller.WriteSr(
                     Builder, CallbackTable,
-                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), op0),
-                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), op1),
-                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), crn),
-                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), crm),
-                    LLVMValueRef.CreateConstInt(LlvmType<uint>(), op2),
+                    Const(op0),
+                    Const(op1),
+                    Const(crn),
+                    Const(crm),
+                    Const(op2),
                     Compile(value)
                 );
                 return false;
@@ -493,8 +514,7 @@ unsafe class LlvmOutput {
                     else if(reg is StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var index, _))
                         args.Add(Builder.BuildAdd(
                             CpuStateRef,
-                            LLVMValueRef.CreateConstInt(LlvmType<ulong>(),
-                                (ulong) (Marshal.OffsetOf<CpuState>("X") + index * 8))
+                            Const((ulong) (Marshal.OffsetOf<CpuState>("X") + index * 8))
                         ));
                     else
                         throw new NotSupportedException($"Unsupported outReg: {reg}");
@@ -505,10 +525,9 @@ unsafe class LlvmOutput {
                 else if(outRegs[0] is StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), "X", var index, _)) {
                     var rptr = Builder.BuildAdd(
                         CpuStateRef,
-                        LLVMValueRef.CreateConstInt(LlvmType<ulong>(),
-                            (ulong) (Marshal.OffsetOf<CpuState>("X") + index * 8))
+                        Const((ulong) (Marshal.OffsetOf<CpuState>("X") + index * 8))
                     );
-                    rptr = Builder.BuildIntToPtr(rptr, LLVMTypeRef.CreatePointer(LlvmType<ulong>(), 0));
+                    rptr = Builder.BuildIntToPtr(rptr, LlvmType<ulong>().ToPointer());
                     Builder.BuildStore(call, rptr);
                 } else
                     throw new NotSupportedException($"Unsupported outReg: {outRegs[0]}");
@@ -565,14 +584,14 @@ unsafe class LlvmOutput {
                     return Compile(left);
                 case StaticIRValue.Literal(var lval, var type):
                     return lval switch {
-                        byte v => LLVMValueRef.CreateConstInt(LlvmType<byte>(), v),
-                        sbyte v => LLVMValueRef.CreateConstInt(LlvmType<byte>(), (byte) v),
-                        ushort v => LLVMValueRef.CreateConstInt(LlvmType<ushort>(), v),
-                        short v => LLVMValueRef.CreateConstInt(LlvmType<short>(), (ushort) v),
-                        uint v => LLVMValueRef.CreateConstInt(LlvmType<uint>(), v),
-                        int v => LLVMValueRef.CreateConstInt(LlvmType<int>(), (uint) v),
-                        ulong v => LLVMValueRef.CreateConstInt(LlvmType<ulong>(), v),
-                        long v => LLVMValueRef.CreateConstInt(LlvmType<long>(), (ulong) v),
+                        byte v => Const(v),
+                        sbyte v => Const(v),
+                        ushort v => Const(v),
+                        short v => Const(v),
+                        uint v => Const(v),
+                        int v => Const(v),
+                        ulong v => Const(v),
+                        long v => Const(v),
                         UInt128 v => LLVMValueRef.CreateConstIntOfArbitraryPrecision(LlvmType<UInt128>(), [
                             (ulong) v,
                             (ulong) (v >> 64),
@@ -581,22 +600,22 @@ unsafe class LlvmOutput {
                             (ulong) (UInt128) v,
                             (ulong) ((UInt128) v >> 64),
                         ]),
-                        float v => LLVMValueRef.CreateConstReal(LlvmType<float>(), v),
-                        double v => LLVMValueRef.CreateConstReal(LlvmType<double>(), v),
-                        bool v => LLVMValueRef.CreateConstInt(LlvmType<ulong>(), v ? 1UL : 0UL),
+                        float v => Const(v),
+                        double v => Const(v),
+                        bool v => Const(v),
                         _ => throw new NotSupportedException($"Unsupported literal type: {value}"),
                     };
                 case StaticIRValue.Named(var name, var type):
                     return Builder.BuildLoad2(type.ToLLVMType(), Locals[name]);
                 case StaticIRValue.GetField(StaticIRValue.Named("State", _), var name, var type): {
                     var offset = (ulong) Marshal.OffsetOf<CpuState>(name);
-                    var addr = Builder.BuildAdd(CpuStateRef, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), offset));
+                    var addr = Builder.BuildAdd(CpuStateRef, Const(offset));
                     var ptr = Builder.BuildIntToPtr(addr, LLVM.PointerType(type.ToLLVMType(), 0));
                     return Builder.BuildLoad2(type.ToLLVMType(), ptr, name);
                 }
                 case StaticIRValue.GetFieldIndex(StaticIRValue.Named("State", _), var name, var index, var type): {
                     var offset = (ulong) Marshal.OffsetOf<CpuState>(name) + (ulong) (type.ByteCount * index);
-                    var addr = Builder.BuildAdd(CpuStateRef, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), offset));
+                    var addr = Builder.BuildAdd(CpuStateRef, Const(offset));
                     var ptr = Builder.BuildIntToPtr(addr, LLVM.PointerType(type.ToLLVMType(), 0));
                     return Builder.BuildLoad2(type.ToLLVMType(), ptr, $"{name}[{index}]");
                 }
@@ -613,6 +632,10 @@ unsafe class LlvmOutput {
                         ? Builder.BuildFSub(Compile(left), Compile(right))
                         : Builder.BuildSub(Compile(left), Compile(right));
                 case StaticIRValue.Mul(var left, var right):
+                    if(left.Type.IsVector && !right.Type.IsVector)
+                        return Compile(new StaticIRValue.Mul(left, new StaticIRValue.CreateVector(right)));
+                    if(!left.Type.IsVector && right.Type.IsVector)
+                        return Compile(new StaticIRValue.Mul(new StaticIRValue.CreateVector(left), right));
                     return left.Type.IsFloat
                         ? Builder.BuildFMul(Compile(left), Compile(right))
                         : Builder.BuildMul(Compile(left), Compile(right));
@@ -716,19 +739,19 @@ unsafe class LlvmOutput {
                     };
                 case StaticIRValue.CountLeadingZeros(var left):
                     return left.Type.ByteCount switch {
-                        1 => Builder.BuildCall2(LlvmType<Func<byte, Bit, byte>>(), Clz8, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                        2 => Builder.BuildCall2(LlvmType<Func<ushort, Bit, ushort>>(), Clz16, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                        4 => Builder.BuildCall2(LlvmType<Func<uint, Bit, uint>>(), Clz32, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                        8 => Builder.BuildCall2(LlvmType<Func<ulong, Bit, ulong>>(), Clz64, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                        1 => Builder.BuildCall2(LlvmType<Func<byte, Bit, byte>>(), Clz8, [Compile(left), ConstBit(false)]),
+                        2 => Builder.BuildCall2(LlvmType<Func<ushort, Bit, ushort>>(), Clz16, [Compile(left), ConstBit(false)]),
+                        4 => Builder.BuildCall2(LlvmType<Func<uint, Bit, uint>>(), Clz32, [Compile(left), ConstBit(false)]),
+                        8 => Builder.BuildCall2(LlvmType<Func<ulong, Bit, ulong>>(), Clz64, [Compile(left), ConstBit(false)]),
                         _ => throw new NotImplementedException($"Can't clz {left.Type}"),
                     };
                 case StaticIRValue.Abs(var left):
                     return !left.Type.IsFloat
                         ? left.Type.ByteCount switch {
-                            1 => Builder.BuildCall2(LlvmType<Func<byte, Bit, byte>>(), Abs8, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                            2 => Builder.BuildCall2(LlvmType<Func<ushort, Bit, ushort>>(), Abs16, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                            4 => Builder.BuildCall2(LlvmType<Func<uint, Bit, uint>>(), Abs32, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
-                            8 => Builder.BuildCall2(LlvmType<Func<ulong, Bit, ulong>>(), Abs64, [Compile(left), LLVMValueRef.CreateConstInt(LlvmType<Bit>(), 0)]),
+                            1 => Builder.BuildCall2(LlvmType<Func<byte, Bit, byte>>(), Abs8, [Compile(left), ConstBit(false)]),
+                            2 => Builder.BuildCall2(LlvmType<Func<ushort, Bit, ushort>>(), Abs16, [Compile(left), ConstBit(false)]),
+                            4 => Builder.BuildCall2(LlvmType<Func<uint, Bit, uint>>(), Abs32, [Compile(left), ConstBit(false)]),
+                            8 => Builder.BuildCall2(LlvmType<Func<ulong, Bit, ulong>>(), Abs64, [Compile(left), ConstBit(false)]),
                             _ => throw new NotImplementedException($"Can't abs {left.Type}"),
                         }
                         : left.Type.ByteCount switch {
@@ -779,7 +802,16 @@ unsafe class LlvmOutput {
                         )
                     );
                 case FloatToFixed(var left, var fbits, var dtype): {
-                    return LLVMValueRef.CreateConstInt(dtype.ToLLVMType(), 0); // TODO: Implement
+                    var pval = Builder.BuildFMul(
+                        Compile(left),
+                        left.Type == typeof(float)
+                            ? Const((float) (1 << fbits))
+                            : Const((double) (1 << fbits))
+                    );
+                    var rval = left.Type == typeof(float)
+                        ? Builder.BuildCall2(LlvmType<Func<float, float>>(), Round32, [pval])
+                        : Builder.BuildCall2(LlvmType<Func<double, double>>(), Round64, [pval]);
+                    return Builder.BuildFPToSI(rval, dtype.ToLLVMType());
                 }
                 case StaticIRValue.Ternary(var cond, var a, var b): {
                     var ifLabel = Function.AppendBasicBlock("");
@@ -814,8 +846,7 @@ unsafe class LlvmOutput {
                         lvec = LLVM.GetUndef(
                             typeof(Vector128<>).MakeGenericType(val.Type).ToLLVMType());
                         for(var i = 0; i < count; ++i)
-                            lvec = Builder.BuildInsertElement(lvec, elem,
-                                LLVMValueRef.CreateConstInt(LlvmType<int>(), (ulong) i));
+                            lvec = Builder.BuildInsertElement(lvec, elem, Const(i));
                     }
                     return lvec;
                 }
@@ -828,8 +859,7 @@ unsafe class LlvmOutput {
                         lvec = LLVM.GetUndef(
                             typeof(Vector128<>).MakeGenericType(values[0].Type).ToLLVMType());
                         for(var i = 0; i < lvalues.Length; ++i)
-                            lvec = Builder.BuildInsertElement(lvec, lvalues[i],
-                                LLVMValueRef.CreateConstInt(LlvmType<int>(), (ulong) i));
+                            lvec = Builder.BuildInsertElement(lvec, lvalues[i], Const(i));
                     }
                     return values[0].Type == typeof(float)
                         ? lvec
@@ -857,28 +887,124 @@ unsafe class LlvmOutput {
                         LlvmType<ulong>());
                 }
                 case StaticIRValue.VectorFrsqrte(var vec, var bits, var elems): {
-                    return Compile(vec); // TODO: Implement
+                    LLVMValueRef FastInvsqrtFloat(LLVMValueRef elem) {
+                        var i = Builder.BuildBitCast(elem, LlvmType<uint>());
+                        i = Builder.BuildSub(Const(0x5f3759dfU), Builder.BuildLShr(i, Const(1U)));
+                        var f = Builder.BuildBitCast(i, LlvmType<float>());
+                        return Builder.BuildFMul(f,
+                            Builder.BuildFSub(
+                                Const(1.5f),
+                                Builder.BuildFMul(f, Builder.BuildFMul(f, Const(0.5f)))));
+                    }
+                    LLVMValueRef FastInvsqrtDouble(LLVMValueRef elem) {
+                        var i = Builder.BuildBitCast(elem, LlvmType<ulong>());
+                        i = Builder.BuildSub(Const(0x5fe6eb50c7b537a9ul), Builder.BuildLShr(i, Const(1UL)));
+                        var f = Builder.BuildBitCast(i, LlvmType<double>());
+                        return Builder.BuildFMul(f,
+                            Builder.BuildFSub(
+                                Const(1.5f),
+                                Builder.BuildFMul(f, Builder.BuildFMul(f, Builder.BuildFMul(elem, Const(0.5))))));
+                    }
+                    if(bits == 64) {
+                        var ivec = Builder.BuildBitCast(Compile(vec), LlvmType<Vector128<double>>());
+                        var ovec = LLVM.GetUndef(LlvmType<Vector128<double>>());
+                        ovec = Builder.BuildInsertElement(ovec,
+                            FastInvsqrtDouble(Builder.BuildExtractElement(ivec, Const(0))),
+                            Const(0)
+                        );
+                        ovec = Builder.BuildInsertElement(ovec,
+                            FastInvsqrtDouble(Builder.BuildExtractElement(ivec, Const(1))),
+                            Const(1)
+                        );
+                        return Builder.BuildBitCast(ovec, LlvmType<Vector128<float>>());
+                    } else {
+                        var ivec = Compile(vec);
+                        var ovec = LLVM.GetUndef(LlvmType<Vector128<float>>());
+                        for(var i = 0; i < 4; ++i) {
+                            if(i >= elems)
+                                ovec = Builder.BuildInsertElement(ovec, Const(i), Const(0f));
+                            else
+                                ovec = Builder.BuildInsertElement(ovec,
+                                    FastInvsqrtFloat(Builder.BuildExtractElement(ivec, Const(i))), 
+                                    Const(i)
+                                );
+                        }
+                        return ovec;
+                    }
                 }
                 case StaticIRValue.VectorExtract(var a, var b, var q, var index): {
-                    return Compile(a); // TODO: Implement
+                    var lvec = LLVM.GetUndef( LlvmType<Vector128<byte>>());
+                    var ab = Builder.BuildBitCast(Compile(a), LlvmType<Vector128<byte>>());
+                    var bb = Builder.BuildBitCast(Compile(b), LlvmType<Vector128<byte>>());
+                    if(q == 0) {
+                        for(var i = index; i < 8; ++i)
+                            lvec = Builder.BuildInsertElement(
+                                lvec, 
+                                Builder.BuildExtractElement(ab, Const(i)),
+                                Const(i));
+                        var offset = 8 - index;
+                        for(var i = offset; i < 8; ++i)
+                            lvec = Builder.BuildInsertElement(
+                                lvec, 
+                                Builder.BuildExtractElement(bb, Const(i - offset)),
+                                Const(i));
+                    } else {
+                        for(var i = index; i < 16; ++i)
+                            lvec = Builder.BuildInsertElement(
+                                lvec, 
+                                Builder.BuildExtractElement(ab, Const(i)),
+                                Const(i));
+                        var offset = 16 - index;
+                        for(var i = offset; i < 16; ++i)
+                            lvec = Builder.BuildInsertElement(
+                                lvec, 
+                                Builder.BuildExtractElement(bb, Const(i - offset)),
+                                Const(i));
+                    }
+                    return Builder.BuildBitCast(lvec, LlvmType<Vector128<float>>());
                 }
                 case StaticIRValue.VectorCountBits(var vec, var elems): {
-                    return Compile(vec); // TODO: Implement
+                    // TODO: Implement doing only the lower half when elems == 8
+                    var bvec = Builder.BuildBitCast(Compile(vec), LlvmType<Vector128<byte>>());
+                    bvec = Builder.BuildCall2(LlvmType<Func<Vector128<byte>, Vector128<byte>>>(), PopCntV16, [bvec]);
+                    return Builder.BuildBitCast(bvec, LlvmType<Vector128<float>>());
                 }
-                case StaticIRValue.VectorSumUnsigned(var vec, var count, var elems): {
-                    return Compile(new StaticIRValue.Literal(0UL, typeof(ulong))); // TODO: Implement
+                case StaticIRValue.VectorSumUnsigned(var vec, var esize, var elems): {
+                    switch(esize) {
+                        case 8: {
+                            var lvec = Builder.BuildBitCast(Compile(vec), LlvmType<Vector128<byte>>());
+                            var sum = Const(0UL);
+                            for(var i = 0; i < elems; ++i)
+                                sum = Builder.BuildAdd(sum, 
+                                    Builder.BuildZExt(Builder.BuildExtractElement(lvec, Const(i)), LlvmType<ulong>()));
+                            return sum;
+                        }
+                        default:
+                            throw new NotImplementedException($"Unhandled esize for VectorSumUnsigned: {esize}");
+                    }
                 }
                 case CompareAndSwap(var ptr, var val, var comparand): {
-                    return Compile(new StaticIRValue.Literal((byte) 0, typeof(byte))); // TODO: Implement
+                    var xchg = LLVM.BuildAtomicCmpXchg(
+                        Builder,
+                        Builder.BuildIntToPtr(Compile(ptr), val.Type.ToLLVMType().ToPointer()), 
+                        Compile(comparand), Compile(val),
+                        LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent,
+                        LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent,
+                        0
+                    );
+                    return Builder.BuildSelect(
+                        Builder.BuildExtractValue(xchg, 1, ""), 
+                        Const((byte) 0), Const((byte) 1)
+                    );
                 }
                 case ReadSr(var op0, var op1, var crn, var crm, var op2):
                     return CallbackCaller.ReadSr(
                         Builder, CallbackTable,
-                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), op0),
-                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), op1),
-                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), crn),
-                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), crm),
-                        LLVMValueRef.CreateConstInt(LlvmType<uint>(), op2)
+                        Const(op0),
+                        Const(op1),
+                        Const(crn),
+                        Const(crm),
+                        Const(op2)
                     );
                 default:
                     throw new NotSupportedException($"Unknown value: {value}");

@@ -5,8 +5,9 @@ namespace NxRecompile;
 
 public partial class CoreRecompiler {
     void NaiveOpt() {
-        foreach(var node in WholeBlockGraph.Values)
+        Parallel.ForEach(WholeBlockGraph.Values, node => {
             while(FoldConstants(node) || RemoveRedundancies(node) || ResolveRoData(node)) { }
+        });
     }
     
     static StaticIRValue CombineMasks(StaticIRValue a, StaticIRValue b) =>

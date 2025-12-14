@@ -17,6 +17,7 @@ public partial class CoreRecompiler : Recompiler {
     readonly Dictionary<ulong, ulong> ProbablePadding = [];
     readonly Dictionary<ulong, (List<StaticIRValue.Named> In, List<StaticIRValue.Named> Out)> FunctionSignatures = [];
     Dictionary<ulong, BlockGraph> WholeBlockGraph;
+    readonly Dictionary<ulong, string> BlockNames = [];
     
     ulong PC;
     StaticBuilder<ulong> Builder;
@@ -59,7 +60,7 @@ public partial class CoreRecompiler : Recompiler {
         Time("Rewriting stores", RewriteStores);
         Time("Ditching X31", DitchX31);
         Time("Building block graph", () => WholeBlockGraph = BuildBlockGraph());
-        /*Time("Finding padding", FindPadding);
+        Time("Finding padding", FindPadding);
         //DumpDotGraph(0x710002B6A0);
         Time("Reducing graph", () => WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions));
         //DumpDotGraph(0x710002B6A0);
@@ -69,7 +70,7 @@ public partial class CoreRecompiler : Recompiler {
         Time("Unregistering", Unregister);
         Time("SSA optimizing", SsaOpt);
         Time("Removing empty bodies", CullBodies);
-        //FindSignatures();*/
+        //FindSignatures();
 
         foreach(var (addr, taddr) in ProbablePadding.ToDictionary())
             if(!WholeBlockGraph.ContainsKey(taddr))
@@ -77,6 +78,30 @@ public partial class CoreRecompiler : Recompiler {
         foreach(var (addr, taddr) in ProbablePadding)
             if(WholeBlockGraph.ContainsKey(taddr) || ProbablePadding.ContainsKey(taddr))
                 WholeBlockGraph.Remove(addr);
+
+        Time("Finding block names...", FindBlockNames);
+    }
+
+    void FindBlockNames() {
+        var used = new HashSet<string>();
+        foreach(var addr in WholeBlockGraph.Keys) {
+            var module = ExeLoader.ExeModules[(int) ((addr - 0x71_0000_0000UL) >> 32)];
+            var taddr = addr - module.LoadBase;
+            var name = $"f_{addr:X}";
+            foreach(var sym in module.Symbols) {
+                if(!(sym.Value <= taddr && taddr < sym.Value + sym.Size) || sym.Name == "") continue;
+                name = sym.Value == taddr ? sym.Name : $"{sym.Name}_{addr:X}";
+                break;
+            }
+            var nameI = 0;
+            if(used.Contains(name)) {
+                while(used.Contains($"name_{nameI}"))
+                    nameI++;
+                name = $"name_{nameI}";
+            }
+            used.Add(name);
+            BlockNames[addr] = name;
+        }
     }
 
     void CullBodies() {

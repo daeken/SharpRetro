@@ -59,6 +59,10 @@ public static unsafe class LlvmExtensions {
             };
         }
     }
+
+    extension(LLVMTypeRef type) {
+        public LLVMTypeRef ToPointer() => LLVMTypeRef.CreatePointer(type, 0);
+    }
 	
     public static LLVMTypeRef LlvmType<T>() => typeof(T).ToLLVMType();
 }
