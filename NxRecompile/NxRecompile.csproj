@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Aarch64Cpu\Aarch64Cpu.csproj" />
+      <ProjectReference Include="..\NxCommon\NxCommon.csproj" />
       <ProjectReference Include="..\StaticRecompilerBase\StaticRecompilerBase.csproj" />
     </ItemGroup>
 

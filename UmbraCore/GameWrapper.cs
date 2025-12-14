@@ -5,9 +5,9 @@ namespace UmbraCore;
 
 public unsafe class GameWrapper {
     [DllImport("../NxRecompile/libtest.dylib")]
-    public static extern void setup(CpuState* state, ref Callbacks callbacks);
+    public static extern void setup(ref Callbacks callbacks);
     [DllImport("../NxRecompile/libtest.dylib")]
-    public static extern void runFrom(ulong addr, ulong until);
+    public static extern void runFrom(CpuState* state, ulong addr, ulong until);
 }
 
 public delegate void StubDelegate();

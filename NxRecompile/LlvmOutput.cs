@@ -33,6 +33,10 @@ public unsafe partial class CoreRecompiler {
             LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault, LLVMRelocMode.LLVMRelocDefault,
             LLVMCodeModel.LLVMCodeModelDefault);
 
+        var fname = Path.Join(objectDir, "glue");
+        BuildGlue(fname, targetTriple, targetMachine);
+        yield return fname + ".o";
+        
         var blocks = WholeBlockGraph.OrderBy(x => x.Key)
             .Select(x => x.Value).ToList();
         var cut = 10_000;
@@ -46,10 +50,6 @@ public unsafe partial class CoreRecompiler {
                 return name + ".o";
             });
         foreach(var elem in iter) yield return elem;
-
-        var fname = Path.Join(objectDir, "glue");
-        BuildGlue(fname, targetTriple, targetMachine);
-        yield return fname + ".o";
     }
 
     ulong ResolvePadding(ulong addr) {
@@ -113,6 +113,9 @@ public unsafe partial class CoreRecompiler {
 
         var entry = function.AppendBasicBlock("entry");
         var loop = function.AppendBasicBlock("loop");
+        var native = function.AppendBasicBlock("native");
+        var emulated = function.AppendBasicBlock("emulated");
+        var loopEnd = function.AppendBasicBlock("loopEnd");
         var end =  function.AppendBasicBlock("end");
         
         builder.PositionAtEnd(entry);
@@ -124,12 +127,31 @@ public unsafe partial class CoreRecompiler {
         );
         
         builder.PositionAtEnd(loop);
+        var taddr = builder.BuildLoad2(LlvmType<ulong>(), addr);
+        builder.BuildCondBr(
+            builder.BuildTrunc(
+                builder.BuildLShr(taddr, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 63)),
+                LlvmType<Bit>()
+            ), 
+            native, emulated
+        );
+        
+        builder.PositionAtEnd(native);
+        var funcPtr = builder.BuildIntToPtr(
+            builder.BuildAnd(taddr, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0x7FFF_FFFF_FFFF_FFFFUL)),
+            funcPtrType
+        );
+        var naddr = builder.BuildCall2(LlvmType<Func<ulong, ulong>>(), funcPtr, [function.GetParam(0)]);
+        builder.BuildStore(naddr, addr);
+        builder.BuildBr(loopEnd);
+        
+        builder.PositionAtEnd(emulated);
         var modIndex = builder.BuildLShr(builder.BuildSub(
-            builder.BuildLoad2(LlvmType<ulong>(), addr),
+            taddr,
             LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0x71_0000_0000UL)
         ), LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 32UL));
         var tableIndex = builder.BuildLShr(builder.BuildAnd(
-            builder.BuildLoad2(LlvmType<ulong>(), addr),
+            taddr,
             LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 0xFFFF_FFFFUL)
         ), LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 2UL));
 
@@ -139,15 +161,17 @@ public unsafe partial class CoreRecompiler {
                 topTable,
                 [modIndex]
             ));
-        var funcPtr = builder.BuildLoad2(funcPtrType, 
+        funcPtr = builder.BuildLoad2(funcPtrType, 
             builder.BuildGEP2(
                 funcPtrType,
                 jumpTable,
                 [tableIndex]
             ));
-        var naddr = builder.BuildCall2(LlvmType<Func<ulong, ulong>>(), funcPtr, [function.GetParam(0)]);
+        naddr = builder.BuildCall2(LlvmType<Func<ulong, ulong>>(), funcPtr, [function.GetParam(0)]);
         builder.BuildStore(naddr, addr);
+        builder.BuildBr(loopEnd);
         
+        builder.PositionAtEnd(loopEnd);
         builder.BuildCondBr(
             builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, builder.BuildLoad2(LlvmType<ulong>(), addr), function.GetParam(2)),
             end, loop
@@ -193,7 +217,13 @@ public unsafe partial class CoreRecompiler {
             CallbackCaller.CallLoadModule(builder, callbackTable, 
                 LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.LoadBase),
                 arr,
-                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), (ulong) size)
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), (ulong) size),
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.TextStart),
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.TextEnd),
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.RoStart),
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.RoEnd),
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.DataStart),
+                LLVMValueRef.CreateConstInt(LlvmType<ulong>(), mod.DataEnd)
             );
         }
         builder.BuildRetVoid();
@@ -226,14 +256,24 @@ static unsafe class CallbackCaller {
 
     public static void CallLoadModule(
         LLVMBuilderRef builder, LLVMValueRef callbackTable, 
-        LLVMValueRef loadBase, LLVMValueRef data, LLVMValueRef size
+        LLVMValueRef loadBase, LLVMValueRef data, LLVMValueRef size,
+        LLVMValueRef textStart, LLVMValueRef textEnd,
+        LLVMValueRef roStart, LLVMValueRef roEnd,
+        LLVMValueRef dataStart, LLVMValueRef dataEnd
     ) {
         CallOne(
             builder,
             LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [
-                LlvmType<ulong>(), LlvmType<byte>().ToPointer(), LlvmType<ulong>()]),
+                LlvmType<ulong>(), LlvmType<byte>().ToPointer(), LlvmType<ulong>(),
+                LlvmType<ulong>(), LlvmType<ulong>(),
+                LlvmType<ulong>(), LlvmType<ulong>(),
+                LlvmType<ulong>(), LlvmType<ulong>(),
+            ]),
             callbackTable, 1, 
-            loadBase, data, size
+            loadBase, data, size,
+            textStart, textEnd,
+            roStart, roEnd,
+            dataStart, dataEnd
         );
     }
 

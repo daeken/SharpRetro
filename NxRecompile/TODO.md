@@ -28,4 +28,4 @@
 - ~~Implement NSO loading~~
 - Implement RTLD replacement
 - ~~Swap C++ backend for LLVM IR~~
-- Implement VectorFrsqrte
+- ~~Implement VectorFrsqrte~~

@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbraCore", "UmbraCore\Umbr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbraCli", "UmbraCli\UmbraCli.csproj", "{9CCB2EB0-9F84-415A-A191-694270BAB27A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NxCommon", "NxCommon\NxCommon.csproj", "{C3A4356A-704D-4D9C-A58E-2691D2A89E9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -156,5 +158,9 @@ Global
 		{9CCB2EB0-9F84-415A-A191-694270BAB27A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CCB2EB0-9F84-415A-A191-694270BAB27A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CCB2EB0-9F84-415A-A191-694270BAB27A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3A4356A-704D-4D9C-A58E-2691D2A89E9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3A4356A-704D-4D9C-A58E-2691D2A89E9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3A4356A-704D-4D9C-A58E-2691D2A89E9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3A4356A-704D-4D9C-A58E-2691D2A89E9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
