@@ -9,9 +9,4 @@ public class Rtld {
             Console.WriteLine($"Module at {module.LoadBase:X} has {module.Symbols.Count} symbols");
         }
     }
-
-    [Hook("someSymbol")]
-    public static Int128 SomeHook() {
-        return 0;
-    }
 }

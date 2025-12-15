@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -18,6 +19,14 @@ public class HookGenerator : ISourceGenerator {
         new(id: "HOOK002",
             title: "Hook method must be static",
             messageFormat: "Hook method '{0}' must be static",
+            category: "HookGen",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+    static readonly DiagnosticDescriptor UnsupportedType =
+        new(id: "HOOK003",
+            title: "Unsupported type in hook",
+            messageFormat: "Hook method '{0}' uses unsupported type '{1}'",
             category: "HookGen",
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -46,7 +55,9 @@ public class HookGenerator : ISourceGenerator {
             var symbol = attr.ConstructorArguments[0].Value as string;
             hooks.Add(GenerateHook(
                 $"{ims.ContainingType.ToDisplayString()}.{ims.Name}",
-                symbol, ims.ReturnType, ims.Parameters.Select(x => x.Type).ToList()));
+                symbol, ims.ReturnType, ims.Parameters.Select(x => x.Type).ToList(),
+                type => context.ReportDiagnostic(Diagnostic.Create(UnsupportedType, mds.GetLocation(), ims.Name, type))
+            ));
         }
         
         context.AddSource("HookWrappers.g.cs", $@"
@@ -59,11 +70,34 @@ public partial class HookManager {{
 ");
     }
 
-    string GenerateHook(string name, string symbol, ITypeSymbol returnType, List<ITypeSymbol> args) {
+    string GenerateHook(string name, string symbol, ITypeSymbol returnType, List<ITypeSymbol> args, Action<string> typeError) {
         string Canon(ITypeSymbol type) => type.ToDisplayString();
         
         var code = $"\t\tRegister(\"{symbol}\", cpuState => {{\n";
         var argCode = new List<string>();
+
+        var xI = 0;
+        var vI = 0;
+        foreach(var arg in args) {
+            if(arg is IPointerTypeSymbol) {
+                argCode.Add($"({Canon(arg)}) cpuState->X{xI++}");
+                continue;
+            }
+            switch(Canon(arg)) {
+                case "ulong":
+                    Debug.Assert(xI != 7);
+                    argCode.Add($"cpuState->X{xI++}");
+                    break;
+                case "uint":
+                    Debug.Assert(xI != 7);
+                    argCode.Add($"unchecked((uint) cpuState->X{xI++})");
+                    break;
+                default:
+                    typeError(Canon(arg));
+                    break;
+            }
+        }
+        
         var call = $"{name}({string.Join(", ", argCode)})";
         switch(Canon(returnType)) {
             case "void":
@@ -95,7 +129,10 @@ public partial class HookManager {{
                 code += "\t\t\tcpuState->X1 = (ulong) (temp >> 64);\n";
                 break;
             default:
-                code += $"#error Unsupported hook return type {Canon(returnType)}\n";
+                if(returnType is IPointerTypeSymbol)
+                    code += $"\t\t\tcpuState->X0 = (ulong) {call};\n";
+                else
+                    typeError(Canon(returnType));
                 break;
         }
         code += "\t\t\treturn cpuState->X30;\n";
