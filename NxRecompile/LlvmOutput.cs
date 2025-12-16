@@ -39,7 +39,7 @@ public unsafe partial class CoreRecompiler {
         
         var blocks = WholeBlockGraph.OrderBy(x => x.Key)
             .Select(x => x.Value).ToList();
-        var cut = 10_000;
+        var cut = 1;
         var iter = (0, blocks.Count, cut).Range().ToList().WithTimedProgress(constantUpdate: true)
             .Select(i => {
                 var name = Path.Join(objectDir, $"module_{i / cut}");
@@ -61,6 +61,12 @@ public unsafe partial class CoreRecompiler {
     void BuildGlue(string path, string targetTriple, LLVMTargetMachineRef targetMachine) {
         var module = LLVMModuleRef.CreateWithName(Path.GetFileName(path));
         module.Target = targetTriple;
+        
+        var cbtTy = LlvmType<ulong>().ToPointer().ToPointer();
+        var callbackTable = module.AddGlobal(cbtTy, "Callbacks");
+        callbackTable.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        callbackTable.IsGlobalConstant = false;
+        callbackTable.Initializer = LLVMValueRef.CreateConstPointerNull(cbtTy);
 
         var funcPtrType = LlvmType<Func<ulong, ulong>>().ToPointer();
         var jumpTables = ExeLoader.ExeModules.Select(mod => {
@@ -128,6 +134,7 @@ public unsafe partial class CoreRecompiler {
         
         builder.PositionAtEnd(loop);
         var taddr = builder.BuildLoad2(LlvmType<ulong>(), addr);
+        CallbackCaller.CallDebug(builder, callbackTable, taddr);
         builder.BuildCondBr(
             builder.BuildTrunc(
                 builder.BuildLShr(taddr, LLVMValueRef.CreateConstInt(LlvmType<ulong>(), 63)),
@@ -192,12 +199,6 @@ public unsafe partial class CoreRecompiler {
         builder = LLVM.CreateBuilder();
         builder.PositionAtEnd(function.AppendBasicBlock("entry"));
 
-        var cbtTy = LlvmType<ulong>().ToPointer().ToPointer();
-        var callbackTable = module.AddGlobal(cbtTy, "Callbacks");
-        callbackTable.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        callbackTable.IsGlobalConstant = false;
-        callbackTable.Initializer = LLVMValueRef.CreateConstPointerNull(cbtTy);
-        
         builder.BuildStore(function.GetParam(0), callbackTable);
 
         foreach(var mod in ExeLoader.ExeModules) {
@@ -253,6 +254,9 @@ static unsafe class CallbackCaller {
     
     public static LLVMValueRef CallOne(LLVMBuilderRef builder, LLVMTypeRef type, LLVMValueRef callbackTable, int index, params LLVMValueRef[] args) => 
         builder.BuildCall2(type, GetFunc(builder, type, callbackTable, index), args);
+
+    public static void CallDebug(LLVMBuilderRef builder, LLVMValueRef callbackTable, LLVMValueRef pc) =>
+        CallOne(builder, LlvmType<Action<ulong>>(), callbackTable, 0, pc);
 
     public static void CallLoadModule(
         LLVMBuilderRef builder, LLVMValueRef callbackTable, 
@@ -375,11 +379,11 @@ unsafe class LlvmOutput {
         
         LLVM.AddReassociatePass(passManager);
         LLVM.AddCFGSimplificationPass(passManager);
-        LLVM.AddGVNPass(passManager);
+        //LLVM.AddGVNPass(passManager);
         LLVM.AddPromoteMemoryToRegisterPass(passManager);
         LLVM.AddSLPVectorizePass(passManager);
-        LLVM.AddDeadStoreEliminationPass(passManager);
-        LLVM.AddAggressiveDCEPass(passManager);
+        //LLVM.AddDeadStoreEliminationPass(passManager);
+        //LLVM.AddAggressiveDCEPass(passManager);
         LLVM.AddPartiallyInlineLibCallsPass(passManager);
         LLVM.InitializeFunctionPassManager(passManager);
         
@@ -409,12 +413,15 @@ unsafe class LlvmOutput {
         var body = new StaticIRStatement.Body(node.Block.Body);
         Compile(body);
 
-        //LLVM.DumpValue(Function);
+        LLVM.DumpValue(Function);
         LLVM.VerifyFunction(Function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
         if(!Function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
             throw new("Program verification failed");
         LLVM.RunFunctionPassManager(passManager, Function);
-        //LLVM.DumpValue(Function);
+        LLVM.DumpValue(Function);
+        LLVM.VerifyFunction(Function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        if(!Function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
+            throw new("Program verification failed");
         
         passManager.Dispose();
         Builder.Dispose();

@@ -10,7 +10,7 @@ public class MemoryManager {
     ulong Alloc(ulong size) => throw new NotImplementedException();
     void Free(ulong addr) => throw new NotImplementedException();
 
-    public static void Mmap(ulong addr, ulong size) {
+    public void Mmap(ulong addr, ulong size) {
         if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
             if(addr != mmapMac(addr, size, 3, 0x1000 | 0x0010 | 0x0002, -1, 0))
                 throw new Exception($"Couldn't allocate memory at 0x{addr:X}-0x{addr + size - 1:X}");

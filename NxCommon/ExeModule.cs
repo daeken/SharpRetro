@@ -7,7 +7,7 @@ using LibSharpRetro;
 namespace NxCommon;
 
 [StructLayout(LayoutKind.Explicit, Pack = 1)]
-unsafe struct ModHeader {
+public unsafe struct ModHeader {
     [FieldOffset(0x00)] public fixed byte Magic[4];
     [FieldOffset(0x04)] public uint DynamicOffset;
     [FieldOffset(0x08)] public uint BssStartOffset;
@@ -17,7 +17,7 @@ unsafe struct ModHeader {
     [FieldOffset(0x18)] public uint ModuleOffset;
 }
 
-enum DynamicKey {
+public enum DynamicKey {
     NULL,
     NEEDED,
     PLTRELSZ,
@@ -56,9 +56,13 @@ enum DynamicKey {
     RELRSZ,
     RELR,
     RELRENT,
+    RELRCOUNT = 0x6fffe005,
+    GNU_HASH = 0x6ffffef5,
+    RELCOUNT = 0x6ffffffa,
+    RELACOUNT = 0x6ffffff9,
 }
 
-enum RelocationType {
+public enum RelocationType {
     R_AARCH64_ABS64 = 257,
     R_AARCH64_JUMP_SLOT = 1026,
     R_AARCH64_RELATIVE = 1027,
@@ -72,8 +76,10 @@ public unsafe class ExeModule {
     public readonly ulong TextStart, TextEnd;
     public readonly ulong RoStart, RoEnd;
     public readonly ulong DataStart, DataEnd;
-    public readonly ulong BssStart, BssEnd;
+    public ulong BssStart, BssEnd;
+    public string Dynstr;
     public readonly List<Symbol> Symbols = [];
+    public readonly Dictionary<DynamicKey, ulong> Dynamic = [];
 
     public ExeModule(ulong loadBase, ulong size, ulong textStart, ulong textEnd, ulong roStart, ulong roEnd, ulong dataStart, ulong dataEnd) {
         LoadBase = loadBase;
@@ -85,7 +91,7 @@ public unsafe class ExeModule {
         DataEnd = dataEnd;
 
         Binary = MemoryHelpers.AsMemory<byte>((void*) loadBase, (int) size);
-        (BssStart, BssEnd) = Load(false);
+        Load(false);
     }
     
     ExeModule(ulong loadBase, uint textOffset, Span<byte> text, uint roOffset, Span<byte> ro, uint dataOffset, Span<byte> data, bool doRelocate = true) {
@@ -102,19 +108,19 @@ public unsafe class ExeModule {
         ro.CopyTo(Binary[(int) roOffset..].Span);
         data.CopyTo(Binary[(int) dataOffset..].Span);
 
-        (BssStart, BssEnd) = Load(doRelocate);
+        //Load(doRelocate);
+        Load(false);
     }
 
-    (ulong BssStart, ulong BssEnd) Load(bool doRelocate) {
+    void Load(bool doRelocate) {
         var modOff = Read<uint>(4);
         var header = Read<ModHeader>(modOff);
         if(Encoding.ASCII.GetString(new Span<byte>(header.Magic, 4)) != "MOD0")
             throw new NotSupportedException("Missing MOD0 magic");
         
-        var bssStart = LoadBase + header.BssStartOffset;
-        var bssEnd = LoadBase + header.BssEndOffset;
+        BssStart = LoadBase + header.BssStartOffset;
+        BssEnd = LoadBase + header.BssEndOffset;
 
-        var dynamic = new Dictionary<DynamicKey, ulong>();
         var dynOff = modOff + header.DynamicOffset;
         while(true) {
             var (tag, val) = ((DynamicKey) Read<ulong>(dynOff), Read<ulong>(dynOff + 8));
@@ -122,13 +128,12 @@ public unsafe class ExeModule {
             if(tag == DynamicKey.NULL)
                 break;
             if(tag != DynamicKey.NEEDED)
-                dynamic[tag] = val;
+                Dynamic[tag] = val;
         }
         
-        var dynstr = Encoding.ASCII.GetString(Binary.Slice((int) dynamic[DynamicKey.STRTAB], (int) dynamic[DynamicKey.STRSZ]).Span);
-        Debug.Assert(dynamic[DynamicKey.SYMTAB] < dynamic[DynamicKey.STRTAB]);
-        string GetDynstr(ulong i) => dynstr.Substring((int) i, dynstr.IndexOf('\0', (int) i) - (int) i);
-        for(var i = dynamic[DynamicKey.SYMTAB]; i < dynamic[DynamicKey.STRTAB]; i += 24) {
+        Dynstr = Encoding.ASCII.GetString(Binary.Slice((int) Dynamic[DynamicKey.STRTAB], (int) Dynamic[DynamicKey.STRSZ]).Span);
+        Debug.Assert(Dynamic[DynamicKey.SYMTAB] < Dynamic[DynamicKey.STRTAB]);
+        for(var i = Dynamic[DynamicKey.SYMTAB]; i < Dynamic[DynamicKey.STRTAB]; i += 24) {
             Symbols.Add(new Symbol(
                 GetDynstr(Read<uint>(i)),
                 Read<byte>(i + 4),
@@ -139,38 +144,37 @@ public unsafe class ExeModule {
             ));
         }
 
-        if(!doRelocate) return (bssStart, bssEnd);
-        if(dynamic.TryGetValue(DynamicKey.REL, out var start)) {
-            var rels = Binary.Read<ulong, uint, uint>(start, (int) dynamic[DynamicKey.RELENT]);
+        using var fp = File.OpenWrite($"{LoadBase:X}_unreloc.bin");
+        fp.Write(Binary.Span);
+        if(!doRelocate) return;
+        if(Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
+            var rels = Binary.Read<ulong, uint, uint>(start, (int) Dynamic[DynamicKey.RELCOUNT]);
             foreach(var (offset, type, sym) in rels)
-                Relocate(offset, type, sym, 0);
+                Relocate(offset, type, sym, 0, true);
         }
-        if(dynamic.TryGetValue(DynamicKey.RELA, out start)) {
-            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) dynamic[DynamicKey.RELAENT]);
+        if(Dynamic.TryGetValue(DynamicKey.RELA, out start)) {
+            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) Dynamic[DynamicKey.RELACOUNT]);
             foreach(var (offset, type, sym, addend) in rels)
-                Relocate(offset, type, sym, addend);
+                Relocate(offset, type, sym, addend, false);
         }
-        if(dynamic.TryGetValue(DynamicKey.RELR, out start))
-            foreach(var offset in Binary.Read<ulong>(start, (int) dynamic[DynamicKey.RELRENT]))
-                Relocate(offset, RelocationType.R_AARCH64_RELATIVE, 0, 0);
-        /*if(dynamic.TryGetValue(DynamicKey.JMPREL, out start)) {
-            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) dynamic[DynamicKey.PLTRELSZ]);
-            foreach(var (offset, type, sym, addend) in rels)
-                Relocate(offset, type, sym, addend);
-        }*/
-        
-        return (bssStart, bssEnd);
+        if(Dynamic.TryGetValue(DynamicKey.RELR, out start))
+            foreach(var offset in Binary.Read<ulong>(start, (int) Dynamic[DynamicKey.RELRCOUNT]))
+                Relocate(offset, RelocationType.R_AARCH64_RELATIVE, 0, 0, true);
+        using var nfp = File.OpenWrite($"{LoadBase:X}_reloc.bin");
+        nfp.Write(Binary.Span);
     }
+    
+    public string GetDynstr(ulong i) => Dynstr.Substring((int) i, Dynstr.IndexOf('\0', (int) i) - (int) i);
 
-    void Relocate(ulong offset, uint type, uint sym, long addend) =>
-        Relocate(offset, (RelocationType) type, sym, addend);
-    void Relocate(ulong offset, RelocationType type, uint sym, long addend) {
+    void Relocate(ulong offset, uint type, uint sym, long addend, bool isRel) =>
+        Relocate(offset, (RelocationType) type, sym, addend, isRel);
+    void Relocate(ulong offset, RelocationType type, uint sym, long addend, bool isRel) {
         switch(type) {
             case RelocationType.R_AARCH64_JUMP_SLOT:
                 break;
             case RelocationType.R_AARCH64_RELATIVE:
                 if(sym != 0) throw new NotSupportedException();
-                Write(offset, unchecked(LoadBase + Read<ulong>(offset) + (ulong) addend));
+                Write(offset, unchecked(LoadBase + (isRel ? Read<ulong>(offset) : 0) + (ulong) addend));
                 break;
             default:
                 throw new NotSupportedException($"Relocation type {type} not supported");

@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using Aarch64Cpu;
 using CoreArchCompiler;
 using JitBase;
+using LibSharpRetro;
+using NxCommon;
 using StaticRecompilerBase;
 
 namespace NxRecompile;
@@ -56,19 +58,30 @@ public partial class CoreRecompiler : Recompiler {
             KnownBlocks.Add(ExeLoader.EntryPoint);
             KnownFunctions.Add(ExeLoader.EntryPoint); // TODO: Should we be calling the ep a known *function*?
         }
+        foreach(var mod in ExeLoader.ExeModules) {
+            foreach(var sym in mod.Symbols)
+                if(sym.Name != "" && sym.Value != 0) {
+                    var addr = mod.LoadBase + sym.Value;
+                    KnownBlocks.Add(addr);
+                    KnownFunctions.Add(addr);
+                }
+            if(mod.Dynamic.TryGetValue(DynamicKey.INIT_ARRAY, out var initPtr))
+                foreach(var initAddr in mod.Binary.Read<ulong>(initPtr, (int) mod.Dynamic[DynamicKey.INIT_ARRAYSZ] / 8))
+                    KnownBlocks.Add(initAddr);
+        }
         Time("Linear scanning", LinearScan);
         Time("Rewriting stores", RewriteStores);
         Time("Ditching X31", DitchX31);
         Time("Building block graph", () => WholeBlockGraph = BuildBlockGraph());
         Time("Finding padding", FindPadding);
-        //DumpDotGraph(0x710002B6A0);
+        /*//DumpDotGraph(0x710002B6A0);
         Time("Reducing graph", () => WholeBlockGraph = BlockGraph.Reduce(WholeBlockGraph, KnownFunctions));
         //DumpDotGraph(0x710002B6A0);
         Time("Doing naive optimizations", NaiveOpt);
         Time("Rewriting functions", RewriteFunctions);
         Time("Doing naive optimizations", NaiveOpt);
         Time("Unregistering", Unregister);
-        Time("SSA optimizing", SsaOpt);
+        Time("SSA optimizing", SsaOpt);*/
         Time("Removing empty bodies", CullBodies);
         //FindSignatures();
 

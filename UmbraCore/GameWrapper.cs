@@ -23,7 +23,7 @@ public unsafe class GameWrapper {
 }
 
 public delegate void StubDelegate();
-public delegate void DebugDelegate(ulong pc, string dasm);
+public delegate void DebugDelegate(ulong pc);
 public unsafe delegate void LoadModuleDelegate(ulong loadBase, byte* data, ulong size, ulong textStart, ulong textEnd, ulong roStart, ulong roEnd, ulong dataStart, ulong dataEnd);
 public delegate ulong ReadSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2);
 public delegate void WriteSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2, ulong value);
