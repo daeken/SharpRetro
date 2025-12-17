@@ -19,8 +19,8 @@
     <ItemGroup>
       <PackageReference Include="DoubleSharp" Version="0.0.3" />
       <PackageReference Include="K4os.Compression.LZ4" Version="1.3.8" />
-      <PackageReference Include="libLLVM.runtime.osx-arm64" Version="16.0.6" />
-      <PackageReference Include="LLVMSharp" Version="16.0.0" />
+      <PackageReference Include="libLLVM.runtime.osx-arm64" Version="20.1.2" />
+      <PackageReference Include="LLVMSharp" Version="20.1.2" />
     </ItemGroup>
 
 </Project>

@@ -6603,20 +6603,24 @@ public partial class Recompiler {
 					goto insn_252;
 			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			if((bool) (((byte) (size)) == ((byte) 0x0))) {
-				var src = ((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))).Store();
-				var wmask = (uint) ((uint) ((ulong) (MakeWMask(N, imms, immr, (byte) 0x20, (byte) 0x0))));
-				var tmask = (uint) ((uint) ((ulong) (MakeTMask(N, imms, immr, (byte) 0x20, (byte) 0x0))));
-				var bot = ((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((src).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(32 - (immr))))) | ((src).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(immr)))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(wmask)))))).Store();
-				var top = ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) ((uint) ((byte) 0x0)))))) - ((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((src).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(imms)))))) & ((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x1))))))))))))).Store();
-				state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(top))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (~(tmask)))))))))) | ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(bot))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(tmask)))))))))));
+			if((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) & ((bool) ((((bool) (((byte) (immr)) == ((byte) 0x0))) & ((bool) (((byte) (imms)) == ((byte) 0x1F))))))))) {
+				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<long>) (((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))).SignExt<long>(32)));
 			} else {
-				var src = ((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn])).Store();
-				var wmask = (ulong) (MakeWMask(N, imms, immr, (byte) 0x40, (byte) 0x0));
-				var tmask = (ulong) (MakeTMask(N, imms, immr, (byte) 0x40, (byte) 0x0));
-				var bot = ((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) (((src).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime(64 - (immr))))) | ((src).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(immr)))))) & ((IRuntimeValue<ulong>) (builder.EnsureRuntime(wmask)))))).Store();
-				var top = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((ulong) ((ulong) ((byte) 0x0)))))) - ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((src).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(imms)))))) & ((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x1))))))))))))).Store();
-				state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime(top))) & ((IRuntimeValue<ulong>) (builder.EnsureRuntime((ulong) (~(tmask)))))))))) | ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime(bot))) & ((IRuntimeValue<ulong>) (builder.EnsureRuntime(tmask)))))))))));
+				if((bool) (((byte) (size)) == ((byte) 0x0))) {
+					var src = ((IRuntimeValue<uint>) ((rn) == 31 ? builder.Zero<uint>() : (IRuntimeValue<uint>) (state.X[(int) rn]))).Store();
+					var wmask = (uint) ((uint) ((ulong) (MakeWMask(N, imms, immr, (byte) 0x20, (byte) 0x0))));
+					var tmask = (uint) ((uint) ((ulong) (MakeTMask(N, imms, immr, (byte) 0x20, (byte) 0x0))));
+					var bot = ((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) (((src).LeftShift((IRuntimeValue<uint>) builder.EnsureRuntime(32 - (immr))))) | ((src).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(immr)))))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(wmask)))))).Store();
+					var top = ((IRuntimeValue<uint>) (((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) ((uint) ((byte) 0x0)))))) - ((IRuntimeValue<uint>) (IRuntimeValue<uint>) ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((src).RightShift((IRuntimeValue<uint>) builder.EnsureRuntime(imms)))))) & ((IRuntimeValue<uint>) ((IRuntimeValue<uint>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x1))))))))))))).Store();
+					state.X[(int) rd] = (IRuntimeValue<ulong>) (IRuntimeValue<uint>) builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(top))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime((uint) (~(tmask)))))))))) | ((IRuntimeValue<uint>) (builder.EnsureRuntime((IRuntimeValue<uint>) ((((IRuntimeValue<uint>) (builder.EnsureRuntime(bot))) & ((IRuntimeValue<uint>) (builder.EnsureRuntime(tmask)))))))))));
+				} else {
+					var src = ((IRuntimeValue<ulong>) ((rn) == 31 ? builder.Zero<ulong>() : state.X[(int) rn])).Store();
+					var wmask = (ulong) (MakeWMask(N, imms, immr, (byte) 0x40, (byte) 0x0));
+					var tmask = (ulong) (MakeTMask(N, imms, immr, (byte) 0x40, (byte) 0x0));
+					var bot = ((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) (((src).LeftShift((IRuntimeValue<ulong>) builder.EnsureRuntime(64 - (immr))))) | ((src).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(immr)))))) & ((IRuntimeValue<ulong>) (builder.EnsureRuntime(wmask)))))).Store();
+					var top = ((IRuntimeValue<ulong>) (((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((ulong) ((ulong) ((byte) 0x0)))))) - ((IRuntimeValue<ulong>) (IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((src).RightShift((IRuntimeValue<ulong>) builder.EnsureRuntime(imms)))))) & ((IRuntimeValue<ulong>) ((IRuntimeValue<ulong>) ((IRuntimeValue<byte>) (builder.EnsureRuntime((byte) 0x1))))))))))))).Store();
+					state.X[(int) rd] = (IRuntimeValue<ulong>) builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime(top))) & ((IRuntimeValue<ulong>) (builder.EnsureRuntime((ulong) (~(tmask)))))))))) | ((IRuntimeValue<ulong>) (builder.EnsureRuntime((IRuntimeValue<ulong>) ((((IRuntimeValue<ulong>) (builder.EnsureRuntime(bot))) & ((IRuntimeValue<ulong>) (builder.EnsureRuntime(tmask)))))))))));
+				}
 			}
 			return true;
 		}

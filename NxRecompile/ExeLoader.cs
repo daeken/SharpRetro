@@ -12,7 +12,7 @@ public class ExeLoader {
     public readonly List<ExeModule> ExeModules = new();
     public readonly ulong EntryPoint;
     static readonly string[] LoadOrder = [
-        "rtld", 
+        //"rtld", 
         "main", "subsdk0", "subsdk1", "subsdk2", "subsdk3",
         "subsdk4", "subsdk5", "subsdk6", "subsdk7", "subsdk8", "subsdk9",
         "sdk",

@@ -155,262 +155,263 @@ public delegate void UnmapInsecurePhysicalMemoryDelegate();
 
 [StructLayout(LayoutKind.Sequential)]
 public struct Callbacks() {
+	static readonly List<Delegate> Delegates = [];
     IntPtr debug = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("debug"));
-    public DebugDelegate Debug { set => debug = Marshal.GetFunctionPointerForDelegate(value); }
+    public DebugDelegate Debug { set { debug = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr loadModule = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("loadModule"));
-    public LoadModuleDelegate LoadModule { set => loadModule = Marshal.GetFunctionPointerForDelegate(value); }
+    public LoadModuleDelegate LoadModule { set { loadModule = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr readSr = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("readSr"));
-    public ReadSrDelegate ReadSr { set => readSr = Marshal.GetFunctionPointerForDelegate(value); }
+    public ReadSrDelegate ReadSr { set { readSr = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr writeSr = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("writeSr"));
-    public WriteSrDelegate WriteSr { set => writeSr = Marshal.GetFunctionPointerForDelegate(value); }
+    public WriteSrDelegate WriteSr { set { writeSr = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetHeapSize = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetHeapSize"));
-	public SetHeapSizeDelegate SetHeapSize { set => svcSetHeapSize = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetHeapSizeDelegate SetHeapSize { set { svcSetHeapSize = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetMemoryPermission = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetMemoryPermission"));
-	public SetMemoryPermissionDelegate SetMemoryPermission { set => svcSetMemoryPermission = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetMemoryPermissionDelegate SetMemoryPermission { set { svcSetMemoryPermission = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetMemoryAttribute = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetMemoryAttribute"));
-	public SetMemoryAttributeDelegate SetMemoryAttribute { set => svcSetMemoryAttribute = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetMemoryAttributeDelegate SetMemoryAttribute { set { svcSetMemoryAttribute = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapMemory"));
-	public MapMemoryDelegate MapMemory { set => svcMapMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapMemoryDelegate MapMemory { set { svcMapMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapMemory"));
-	public UnmapMemoryDelegate UnmapMemory { set => svcUnmapMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapMemoryDelegate UnmapMemory { set { svcUnmapMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcQueryMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcQueryMemory"));
-	public QueryMemoryDelegate QueryMemory { set => svcQueryMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public QueryMemoryDelegate QueryMemory { set { svcQueryMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcExitProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcExitProcess"));
-	public ExitProcessDelegate ExitProcess { set => svcExitProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public ExitProcessDelegate ExitProcess { set { svcExitProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateThread = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateThread"));
-	public CreateThreadDelegate CreateThread { set => svcCreateThread = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateThreadDelegate CreateThread { set { svcCreateThread = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcStartThread = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcStartThread"));
-	public StartThreadDelegate StartThread { set => svcStartThread = Marshal.GetFunctionPointerForDelegate(value); }
+	public StartThreadDelegate StartThread { set { svcStartThread = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcExitThread = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcExitThread"));
-	public ExitThreadDelegate ExitThread { set => svcExitThread = Marshal.GetFunctionPointerForDelegate(value); }
+	public ExitThreadDelegate ExitThread { set { svcExitThread = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSleepThread = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSleepThread"));
-	public SleepThreadDelegate SleepThread { set => svcSleepThread = Marshal.GetFunctionPointerForDelegate(value); }
+	public SleepThreadDelegate SleepThread { set { svcSleepThread = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetThreadPriority = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetThreadPriority"));
-	public GetThreadPriorityDelegate GetThreadPriority { set => svcGetThreadPriority = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetThreadPriorityDelegate GetThreadPriority { set { svcGetThreadPriority = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetThreadPriority = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetThreadPriority"));
-	public SetThreadPriorityDelegate SetThreadPriority { set => svcSetThreadPriority = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetThreadPriorityDelegate SetThreadPriority { set { svcSetThreadPriority = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetThreadCoreMask = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetThreadCoreMask"));
-	public GetThreadCoreMaskDelegate GetThreadCoreMask { set => svcGetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetThreadCoreMaskDelegate GetThreadCoreMask { set { svcGetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetThreadCoreMask = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetThreadCoreMask"));
-	public SetThreadCoreMaskDelegate SetThreadCoreMask { set => svcSetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetThreadCoreMaskDelegate SetThreadCoreMask { set { svcSetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetCurrentProcessorNumber = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetCurrentProcessorNumber"));
-	public GetCurrentProcessorNumberDelegate GetCurrentProcessorNumber { set => svcGetCurrentProcessorNumber = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetCurrentProcessorNumberDelegate GetCurrentProcessorNumber { set { svcGetCurrentProcessorNumber = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSignalEvent = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSignalEvent"));
-	public SignalEventDelegate SignalEvent { set => svcSignalEvent = Marshal.GetFunctionPointerForDelegate(value); }
+	public SignalEventDelegate SignalEvent { set { svcSignalEvent = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcClearEvent = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcClearEvent"));
-	public ClearEventDelegate ClearEvent { set => svcClearEvent = Marshal.GetFunctionPointerForDelegate(value); }
+	public ClearEventDelegate ClearEvent { set { svcClearEvent = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapSharedMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapSharedMemory"));
-	public MapSharedMemoryDelegate MapSharedMemory { set => svcMapSharedMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapSharedMemoryDelegate MapSharedMemory { set { svcMapSharedMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapSharedMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapSharedMemory"));
-	public UnmapSharedMemoryDelegate UnmapSharedMemory { set => svcUnmapSharedMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapSharedMemoryDelegate UnmapSharedMemory { set { svcUnmapSharedMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateTransferMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateTransferMemory"));
-	public CreateTransferMemoryDelegate CreateTransferMemory { set => svcCreateTransferMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateTransferMemoryDelegate CreateTransferMemory { set { svcCreateTransferMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCloseHandle = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCloseHandle"));
-	public CloseHandleDelegate CloseHandle { set => svcCloseHandle = Marshal.GetFunctionPointerForDelegate(value); }
+	public CloseHandleDelegate CloseHandle { set { svcCloseHandle = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcResetSignal = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcResetSignal"));
-	public ResetSignalDelegate ResetSignal { set => svcResetSignal = Marshal.GetFunctionPointerForDelegate(value); }
+	public ResetSignalDelegate ResetSignal { set { svcResetSignal = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcWaitSynchronization = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcWaitSynchronization"));
-	public WaitSynchronizationDelegate WaitSynchronization { set => svcWaitSynchronization = Marshal.GetFunctionPointerForDelegate(value); }
+	public WaitSynchronizationDelegate WaitSynchronization { set { svcWaitSynchronization = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCancelSynchronization = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCancelSynchronization"));
-	public CancelSynchronizationDelegate CancelSynchronization { set => svcCancelSynchronization = Marshal.GetFunctionPointerForDelegate(value); }
+	public CancelSynchronizationDelegate CancelSynchronization { set { svcCancelSynchronization = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcArbitrateLock = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcArbitrateLock"));
-	public ArbitrateLockDelegate ArbitrateLock { set => svcArbitrateLock = Marshal.GetFunctionPointerForDelegate(value); }
+	public ArbitrateLockDelegate ArbitrateLock { set { svcArbitrateLock = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcArbitrateUnlock = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcArbitrateUnlock"));
-	public ArbitrateUnlockDelegate ArbitrateUnlock { set => svcArbitrateUnlock = Marshal.GetFunctionPointerForDelegate(value); }
+	public ArbitrateUnlockDelegate ArbitrateUnlock { set { svcArbitrateUnlock = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcWaitProcessWideKeyAtomic = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcWaitProcessWideKeyAtomic"));
-	public WaitProcessWideKeyAtomicDelegate WaitProcessWideKeyAtomic { set => svcWaitProcessWideKeyAtomic = Marshal.GetFunctionPointerForDelegate(value); }
+	public WaitProcessWideKeyAtomicDelegate WaitProcessWideKeyAtomic { set { svcWaitProcessWideKeyAtomic = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSignalProcessWideKey = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSignalProcessWideKey"));
-	public SignalProcessWideKeyDelegate SignalProcessWideKey { set => svcSignalProcessWideKey = Marshal.GetFunctionPointerForDelegate(value); }
+	public SignalProcessWideKeyDelegate SignalProcessWideKey { set { svcSignalProcessWideKey = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetSystemTick = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetSystemTick"));
-	public GetSystemTickDelegate GetSystemTick { set => svcGetSystemTick = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetSystemTickDelegate GetSystemTick { set { svcGetSystemTick = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcConnectToNamedPort = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcConnectToNamedPort"));
-	public ConnectToNamedPortDelegate ConnectToNamedPort { set => svcConnectToNamedPort = Marshal.GetFunctionPointerForDelegate(value); }
+	public ConnectToNamedPortDelegate ConnectToNamedPort { set { svcConnectToNamedPort = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSendSyncRequestLight = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSendSyncRequestLight"));
-	public SendSyncRequestLightDelegate SendSyncRequestLight { set => svcSendSyncRequestLight = Marshal.GetFunctionPointerForDelegate(value); }
+	public SendSyncRequestLightDelegate SendSyncRequestLight { set { svcSendSyncRequestLight = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSendSyncRequest = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSendSyncRequest"));
-	public SendSyncRequestDelegate SendSyncRequest { set => svcSendSyncRequest = Marshal.GetFunctionPointerForDelegate(value); }
+	public SendSyncRequestDelegate SendSyncRequest { set { svcSendSyncRequest = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSendSyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSendSyncRequestWithUserBuffer"));
-	public SendSyncRequestWithUserBufferDelegate SendSyncRequestWithUserBuffer { set => svcSendSyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(value); }
+	public SendSyncRequestWithUserBufferDelegate SendSyncRequestWithUserBuffer { set { svcSendSyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSendAsyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSendAsyncRequestWithUserBuffer"));
-	public SendAsyncRequestWithUserBufferDelegate SendAsyncRequestWithUserBuffer { set => svcSendAsyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(value); }
+	public SendAsyncRequestWithUserBufferDelegate SendAsyncRequestWithUserBuffer { set { svcSendAsyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetProcessId = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetProcessId"));
-	public GetProcessIdDelegate GetProcessId { set => svcGetProcessId = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetProcessIdDelegate GetProcessId { set { svcGetProcessId = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetThreadId = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetThreadId"));
-	public GetThreadIdDelegate GetThreadId { set => svcGetThreadId = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetThreadIdDelegate GetThreadId { set { svcGetThreadId = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcBreak = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcBreak"));
-	public BreakDelegate Break { set => svcBreak = Marshal.GetFunctionPointerForDelegate(value); }
+	public BreakDelegate Break { set { svcBreak = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcOutputDebugString = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcOutputDebugString"));
-	public OutputDebugStringDelegate OutputDebugString { set => svcOutputDebugString = Marshal.GetFunctionPointerForDelegate(value); }
+	public OutputDebugStringDelegate OutputDebugString { set { svcOutputDebugString = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcReturnFromException = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcReturnFromException"));
-	public ReturnFromExceptionDelegate ReturnFromException { set => svcReturnFromException = Marshal.GetFunctionPointerForDelegate(value); }
+	public ReturnFromExceptionDelegate ReturnFromException { set { svcReturnFromException = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetInfo = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetInfo"));
-	public GetInfoDelegate GetInfo { set => svcGetInfo = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetInfoDelegate GetInfo { set { svcGetInfo = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcFlushEntireDataCache = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcFlushEntireDataCache"));
-	public FlushEntireDataCacheDelegate FlushEntireDataCache { set => svcFlushEntireDataCache = Marshal.GetFunctionPointerForDelegate(value); }
+	public FlushEntireDataCacheDelegate FlushEntireDataCache { set { svcFlushEntireDataCache = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcFlushDataCache = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcFlushDataCache"));
-	public FlushDataCacheDelegate FlushDataCache { set => svcFlushDataCache = Marshal.GetFunctionPointerForDelegate(value); }
+	public FlushDataCacheDelegate FlushDataCache { set { svcFlushDataCache = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapPhysicalMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapPhysicalMemory"));
-	public MapPhysicalMemoryDelegate MapPhysicalMemory { set => svcMapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapPhysicalMemoryDelegate MapPhysicalMemory { set { svcMapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapPhysicalMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapPhysicalMemory"));
-	public UnmapPhysicalMemoryDelegate UnmapPhysicalMemory { set => svcUnmapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapPhysicalMemoryDelegate UnmapPhysicalMemory { set { svcUnmapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetDebugFutureThreadInfo = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetDebugFutureThreadInfo"));
-	public GetDebugFutureThreadInfoDelegate GetDebugFutureThreadInfo { set => svcGetDebugFutureThreadInfo = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetDebugFutureThreadInfoDelegate GetDebugFutureThreadInfo { set { svcGetDebugFutureThreadInfo = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetLastThreadInfo = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetLastThreadInfo"));
-	public GetLastThreadInfoDelegate GetLastThreadInfo { set => svcGetLastThreadInfo = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetLastThreadInfoDelegate GetLastThreadInfo { set { svcGetLastThreadInfo = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetResourceLimitLimitValue"));
-	public GetResourceLimitLimitValueDelegate GetResourceLimitLimitValue { set => svcGetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetResourceLimitLimitValueDelegate GetResourceLimitLimitValue { set { svcGetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetResourceLimitCurrentValue = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetResourceLimitCurrentValue"));
-	public GetResourceLimitCurrentValueDelegate GetResourceLimitCurrentValue { set => svcGetResourceLimitCurrentValue = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetResourceLimitCurrentValueDelegate GetResourceLimitCurrentValue { set { svcGetResourceLimitCurrentValue = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetThreadActivity = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetThreadActivity"));
-	public SetThreadActivityDelegate SetThreadActivity { set => svcSetThreadActivity = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetThreadActivityDelegate SetThreadActivity { set { svcSetThreadActivity = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetThreadContext3 = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetThreadContext3"));
-	public GetThreadContext3Delegate GetThreadContext3 { set => svcGetThreadContext3 = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetThreadContext3Delegate GetThreadContext3 { set { svcGetThreadContext3 = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcWaitForAddress = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcWaitForAddress"));
-	public WaitForAddressDelegate WaitForAddress { set => svcWaitForAddress = Marshal.GetFunctionPointerForDelegate(value); }
+	public WaitForAddressDelegate WaitForAddress { set { svcWaitForAddress = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSignalToAddress = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSignalToAddress"));
-	public SignalToAddressDelegate SignalToAddress { set => svcSignalToAddress = Marshal.GetFunctionPointerForDelegate(value); }
+	public SignalToAddressDelegate SignalToAddress { set { svcSignalToAddress = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSynchronizePreemptionState = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSynchronizePreemptionState"));
-	public SynchronizePreemptionStateDelegate SynchronizePreemptionState { set => svcSynchronizePreemptionState = Marshal.GetFunctionPointerForDelegate(value); }
+	public SynchronizePreemptionStateDelegate SynchronizePreemptionState { set { svcSynchronizePreemptionState = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetResourceLimitPeakValue = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetResourceLimitPeakValue"));
-	public GetResourceLimitPeakValueDelegate GetResourceLimitPeakValue { set => svcGetResourceLimitPeakValue = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetResourceLimitPeakValueDelegate GetResourceLimitPeakValue { set { svcGetResourceLimitPeakValue = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateIoPool = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateIoPool"));
-	public CreateIoPoolDelegate CreateIoPool { set => svcCreateIoPool = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateIoPoolDelegate CreateIoPool { set { svcCreateIoPool = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateIoRegion = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateIoRegion"));
-	public CreateIoRegionDelegate CreateIoRegion { set => svcCreateIoRegion = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateIoRegionDelegate CreateIoRegion { set { svcCreateIoRegion = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcKernelDebug = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcKernelDebug"));
-	public KernelDebugDelegate KernelDebug { set => svcKernelDebug = Marshal.GetFunctionPointerForDelegate(value); }
+	public KernelDebugDelegate KernelDebug { set { svcKernelDebug = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcChangeKernelTraceState = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcChangeKernelTraceState"));
-	public ChangeKernelTraceStateDelegate ChangeKernelTraceState { set => svcChangeKernelTraceState = Marshal.GetFunctionPointerForDelegate(value); }
+	public ChangeKernelTraceStateDelegate ChangeKernelTraceState { set { svcChangeKernelTraceState = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateSession = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateSession"));
-	public CreateSessionDelegate CreateSession { set => svcCreateSession = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateSessionDelegate CreateSession { set { svcCreateSession = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcAcceptSession = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcAcceptSession"));
-	public AcceptSessionDelegate AcceptSession { set => svcAcceptSession = Marshal.GetFunctionPointerForDelegate(value); }
+	public AcceptSessionDelegate AcceptSession { set { svcAcceptSession = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcReplyAndReceiveLight = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcReplyAndReceiveLight"));
-	public ReplyAndReceiveLightDelegate ReplyAndReceiveLight { set => svcReplyAndReceiveLight = Marshal.GetFunctionPointerForDelegate(value); }
+	public ReplyAndReceiveLightDelegate ReplyAndReceiveLight { set { svcReplyAndReceiveLight = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcReplyAndReceive = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcReplyAndReceive"));
-	public ReplyAndReceiveDelegate ReplyAndReceive { set => svcReplyAndReceive = Marshal.GetFunctionPointerForDelegate(value); }
+	public ReplyAndReceiveDelegate ReplyAndReceive { set { svcReplyAndReceive = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcReplyAndReceiveWithUserBuffer = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcReplyAndReceiveWithUserBuffer"));
-	public ReplyAndReceiveWithUserBufferDelegate ReplyAndReceiveWithUserBuffer { set => svcReplyAndReceiveWithUserBuffer = Marshal.GetFunctionPointerForDelegate(value); }
+	public ReplyAndReceiveWithUserBufferDelegate ReplyAndReceiveWithUserBuffer { set { svcReplyAndReceiveWithUserBuffer = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateEvent = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateEvent"));
-	public CreateEventDelegate CreateEvent { set => svcCreateEvent = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateEventDelegate CreateEvent { set { svcCreateEvent = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapIoRegion = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapIoRegion"));
-	public MapIoRegionDelegate MapIoRegion { set => svcMapIoRegion = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapIoRegionDelegate MapIoRegion { set { svcMapIoRegion = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapIoRegion = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapIoRegion"));
-	public UnmapIoRegionDelegate UnmapIoRegion { set => svcUnmapIoRegion = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapIoRegionDelegate UnmapIoRegion { set { svcUnmapIoRegion = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapPhysicalMemoryUnsafe"));
-	public MapPhysicalMemoryUnsafeDelegate MapPhysicalMemoryUnsafe { set => svcMapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapPhysicalMemoryUnsafeDelegate MapPhysicalMemoryUnsafe { set { svcMapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapPhysicalMemoryUnsafe"));
-	public UnmapPhysicalMemoryUnsafeDelegate UnmapPhysicalMemoryUnsafe { set => svcUnmapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapPhysicalMemoryUnsafeDelegate UnmapPhysicalMemoryUnsafe { set { svcUnmapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetUnsafeLimit = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetUnsafeLimit"));
-	public SetUnsafeLimitDelegate SetUnsafeLimit { set => svcSetUnsafeLimit = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetUnsafeLimitDelegate SetUnsafeLimit { set { svcSetUnsafeLimit = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateCodeMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateCodeMemory"));
-	public CreateCodeMemoryDelegate CreateCodeMemory { set => svcCreateCodeMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateCodeMemoryDelegate CreateCodeMemory { set { svcCreateCodeMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcControlCodeMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcControlCodeMemory"));
-	public ControlCodeMemoryDelegate ControlCodeMemory { set => svcControlCodeMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public ControlCodeMemoryDelegate ControlCodeMemory { set { svcControlCodeMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSleepSystem = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSleepSystem"));
-	public SleepSystemDelegate SleepSystem { set => svcSleepSystem = Marshal.GetFunctionPointerForDelegate(value); }
+	public SleepSystemDelegate SleepSystem { set { svcSleepSystem = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcReadWriteRegister = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcReadWriteRegister"));
-	public ReadWriteRegisterDelegate ReadWriteRegister { set => svcReadWriteRegister = Marshal.GetFunctionPointerForDelegate(value); }
+	public ReadWriteRegisterDelegate ReadWriteRegister { set { svcReadWriteRegister = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetProcessActivity = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetProcessActivity"));
-	public SetProcessActivityDelegate SetProcessActivity { set => svcSetProcessActivity = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetProcessActivityDelegate SetProcessActivity { set { svcSetProcessActivity = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateSharedMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateSharedMemory"));
-	public CreateSharedMemoryDelegate CreateSharedMemory { set => svcCreateSharedMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateSharedMemoryDelegate CreateSharedMemory { set { svcCreateSharedMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapTransferMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapTransferMemory"));
-	public MapTransferMemoryDelegate MapTransferMemory { set => svcMapTransferMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapTransferMemoryDelegate MapTransferMemory { set { svcMapTransferMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapTransferMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapTransferMemory"));
-	public UnmapTransferMemoryDelegate UnmapTransferMemory { set => svcUnmapTransferMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapTransferMemoryDelegate UnmapTransferMemory { set { svcUnmapTransferMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateInterruptEvent = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateInterruptEvent"));
-	public CreateInterruptEventDelegate CreateInterruptEvent { set => svcCreateInterruptEvent = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateInterruptEventDelegate CreateInterruptEvent { set { svcCreateInterruptEvent = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcQueryPhysicalAddress = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcQueryPhysicalAddress"));
-	public QueryPhysicalAddressDelegate QueryPhysicalAddress { set => svcQueryPhysicalAddress = Marshal.GetFunctionPointerForDelegate(value); }
+	public QueryPhysicalAddressDelegate QueryPhysicalAddress { set { svcQueryPhysicalAddress = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcQueryMemoryMapping = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcQueryMemoryMapping"));
-	public QueryMemoryMappingDelegate QueryMemoryMapping { set => svcQueryMemoryMapping = Marshal.GetFunctionPointerForDelegate(value); }
+	public QueryMemoryMappingDelegate QueryMemoryMapping { set { svcQueryMemoryMapping = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateDeviceAddressSpace"));
-	public CreateDeviceAddressSpaceDelegate CreateDeviceAddressSpace { set => svcCreateDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateDeviceAddressSpaceDelegate CreateDeviceAddressSpace { set { svcCreateDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcAttachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcAttachDeviceAddressSpace"));
-	public AttachDeviceAddressSpaceDelegate AttachDeviceAddressSpace { set => svcAttachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); }
+	public AttachDeviceAddressSpaceDelegate AttachDeviceAddressSpace { set { svcAttachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcDetachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcDetachDeviceAddressSpace"));
-	public DetachDeviceAddressSpaceDelegate DetachDeviceAddressSpace { set => svcDetachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); }
+	public DetachDeviceAddressSpaceDelegate DetachDeviceAddressSpace { set { svcDetachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapDeviceAddressSpaceByForce = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapDeviceAddressSpaceByForce"));
-	public MapDeviceAddressSpaceByForceDelegate MapDeviceAddressSpaceByForce { set => svcMapDeviceAddressSpaceByForce = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapDeviceAddressSpaceByForceDelegate MapDeviceAddressSpaceByForce { set { svcMapDeviceAddressSpaceByForce = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapDeviceAddressSpaceAligned = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapDeviceAddressSpaceAligned"));
-	public MapDeviceAddressSpaceAlignedDelegate MapDeviceAddressSpaceAligned { set => svcMapDeviceAddressSpaceAligned = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapDeviceAddressSpaceAlignedDelegate MapDeviceAddressSpaceAligned { set { svcMapDeviceAddressSpaceAligned = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapDeviceAddressSpace"));
-	public MapDeviceAddressSpaceDelegate MapDeviceAddressSpace { set => svcMapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapDeviceAddressSpaceDelegate MapDeviceAddressSpace { set { svcMapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapDeviceAddressSpace"));
-	public UnmapDeviceAddressSpaceDelegate UnmapDeviceAddressSpace { set => svcUnmapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapDeviceAddressSpaceDelegate UnmapDeviceAddressSpace { set { svcUnmapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcInvalidateProcessDataCache = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcInvalidateProcessDataCache"));
-	public InvalidateProcessDataCacheDelegate InvalidateProcessDataCache { set => svcInvalidateProcessDataCache = Marshal.GetFunctionPointerForDelegate(value); }
+	public InvalidateProcessDataCacheDelegate InvalidateProcessDataCache { set { svcInvalidateProcessDataCache = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcStoreProcessDataCache = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcStoreProcessDataCache"));
-	public StoreProcessDataCacheDelegate StoreProcessDataCache { set => svcStoreProcessDataCache = Marshal.GetFunctionPointerForDelegate(value); }
+	public StoreProcessDataCacheDelegate StoreProcessDataCache { set { svcStoreProcessDataCache = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcFlushProcessDataCache = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcFlushProcessDataCache"));
-	public FlushProcessDataCacheDelegate FlushProcessDataCache { set => svcFlushProcessDataCache = Marshal.GetFunctionPointerForDelegate(value); }
+	public FlushProcessDataCacheDelegate FlushProcessDataCache { set { svcFlushProcessDataCache = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcDebugActiveProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcDebugActiveProcess"));
-	public DebugActiveProcessDelegate DebugActiveProcess { set => svcDebugActiveProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public DebugActiveProcessDelegate DebugActiveProcess { set { svcDebugActiveProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcBreakDebugProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcBreakDebugProcess"));
-	public BreakDebugProcessDelegate BreakDebugProcess { set => svcBreakDebugProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public BreakDebugProcessDelegate BreakDebugProcess { set { svcBreakDebugProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcTerminateDebugProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcTerminateDebugProcess"));
-	public TerminateDebugProcessDelegate TerminateDebugProcess { set => svcTerminateDebugProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public TerminateDebugProcessDelegate TerminateDebugProcess { set { svcTerminateDebugProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetDebugEvent = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetDebugEvent"));
-	public GetDebugEventDelegate GetDebugEvent { set => svcGetDebugEvent = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetDebugEventDelegate GetDebugEvent { set { svcGetDebugEvent = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcContinueDebugEvent = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcContinueDebugEvent"));
-	public ContinueDebugEventDelegate ContinueDebugEvent { set => svcContinueDebugEvent = Marshal.GetFunctionPointerForDelegate(value); }
+	public ContinueDebugEventDelegate ContinueDebugEvent { set { svcContinueDebugEvent = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetProcessList = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetProcessList"));
-	public GetProcessListDelegate GetProcessList { set => svcGetProcessList = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetProcessListDelegate GetProcessList { set { svcGetProcessList = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetThreadList = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetThreadList"));
-	public GetThreadListDelegate GetThreadList { set => svcGetThreadList = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetThreadListDelegate GetThreadList { set { svcGetThreadList = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetDebugThreadContext = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetDebugThreadContext"));
-	public GetDebugThreadContextDelegate GetDebugThreadContext { set => svcGetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetDebugThreadContextDelegate GetDebugThreadContext { set { svcGetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetDebugThreadContext = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetDebugThreadContext"));
-	public SetDebugThreadContextDelegate SetDebugThreadContext { set => svcSetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetDebugThreadContextDelegate SetDebugThreadContext { set { svcSetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcQueryDebugProcessMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcQueryDebugProcessMemory"));
-	public QueryDebugProcessMemoryDelegate QueryDebugProcessMemory { set => svcQueryDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public QueryDebugProcessMemoryDelegate QueryDebugProcessMemory { set { svcQueryDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcReadDebugProcessMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcReadDebugProcessMemory"));
-	public ReadDebugProcessMemoryDelegate ReadDebugProcessMemory { set => svcReadDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public ReadDebugProcessMemoryDelegate ReadDebugProcessMemory { set { svcReadDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcWriteDebugProcessMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcWriteDebugProcessMemory"));
-	public WriteDebugProcessMemoryDelegate WriteDebugProcessMemory { set => svcWriteDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public WriteDebugProcessMemoryDelegate WriteDebugProcessMemory { set { svcWriteDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetHardwareBreakPoint = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetHardwareBreakPoint"));
-	public SetHardwareBreakPointDelegate SetHardwareBreakPoint { set => svcSetHardwareBreakPoint = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetHardwareBreakPointDelegate SetHardwareBreakPoint { set { svcSetHardwareBreakPoint = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetDebugThreadParam = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetDebugThreadParam"));
-	public GetDebugThreadParamDelegate GetDebugThreadParam { set => svcGetDebugThreadParam = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetDebugThreadParamDelegate GetDebugThreadParam { set { svcGetDebugThreadParam = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetSystemInfo = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetSystemInfo"));
-	public GetSystemInfoDelegate GetSystemInfo { set => svcGetSystemInfo = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetSystemInfoDelegate GetSystemInfo { set { svcGetSystemInfo = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreatePort = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreatePort"));
-	public CreatePortDelegate CreatePort { set => svcCreatePort = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreatePortDelegate CreatePort { set { svcCreatePort = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcManageNamedPort = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcManageNamedPort"));
-	public ManageNamedPortDelegate ManageNamedPort { set => svcManageNamedPort = Marshal.GetFunctionPointerForDelegate(value); }
+	public ManageNamedPortDelegate ManageNamedPort { set { svcManageNamedPort = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcConnectToPort = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcConnectToPort"));
-	public ConnectToPortDelegate ConnectToPort { set => svcConnectToPort = Marshal.GetFunctionPointerForDelegate(value); }
+	public ConnectToPortDelegate ConnectToPort { set { svcConnectToPort = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetProcessMemoryPermission = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetProcessMemoryPermission"));
-	public SetProcessMemoryPermissionDelegate SetProcessMemoryPermission { set => svcSetProcessMemoryPermission = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetProcessMemoryPermissionDelegate SetProcessMemoryPermission { set { svcSetProcessMemoryPermission = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapProcessMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapProcessMemory"));
-	public MapProcessMemoryDelegate MapProcessMemory { set => svcMapProcessMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapProcessMemoryDelegate MapProcessMemory { set { svcMapProcessMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapProcessMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapProcessMemory"));
-	public UnmapProcessMemoryDelegate UnmapProcessMemory { set => svcUnmapProcessMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapProcessMemoryDelegate UnmapProcessMemory { set { svcUnmapProcessMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcQueryProcessMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcQueryProcessMemory"));
-	public QueryProcessMemoryDelegate QueryProcessMemory { set => svcQueryProcessMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public QueryProcessMemoryDelegate QueryProcessMemory { set { svcQueryProcessMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapProcessCodeMemory"));
-	public MapProcessCodeMemoryDelegate MapProcessCodeMemory { set => svcMapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapProcessCodeMemoryDelegate MapProcessCodeMemory { set { svcMapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapProcessCodeMemory"));
-	public UnmapProcessCodeMemoryDelegate UnmapProcessCodeMemory { set => svcUnmapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapProcessCodeMemoryDelegate UnmapProcessCodeMemory { set { svcUnmapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateProcess"));
-	public CreateProcessDelegate CreateProcess { set => svcCreateProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateProcessDelegate CreateProcess { set { svcCreateProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcStartProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcStartProcess"));
-	public StartProcessDelegate StartProcess { set => svcStartProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public StartProcessDelegate StartProcess { set { svcStartProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcTerminateProcess = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcTerminateProcess"));
-	public TerminateProcessDelegate TerminateProcess { set => svcTerminateProcess = Marshal.GetFunctionPointerForDelegate(value); }
+	public TerminateProcessDelegate TerminateProcess { set { svcTerminateProcess = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcGetProcessInfo = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcGetProcessInfo"));
-	public GetProcessInfoDelegate GetProcessInfo { set => svcGetProcessInfo = Marshal.GetFunctionPointerForDelegate(value); }
+	public GetProcessInfoDelegate GetProcessInfo { set { svcGetProcessInfo = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCreateResourceLimit = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCreateResourceLimit"));
-	public CreateResourceLimitDelegate CreateResourceLimit { set => svcCreateResourceLimit = Marshal.GetFunctionPointerForDelegate(value); }
+	public CreateResourceLimitDelegate CreateResourceLimit { set { svcCreateResourceLimit = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetResourceLimitLimitValue"));
-	public SetResourceLimitLimitValueDelegate SetResourceLimitLimitValue { set => svcSetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetResourceLimitLimitValueDelegate SetResourceLimitLimitValue { set { svcSetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcCallSecureMonitor = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcCallSecureMonitor"));
-	public CallSecureMonitorDelegate CallSecureMonitor { set => svcCallSecureMonitor = Marshal.GetFunctionPointerForDelegate(value); }
+	public CallSecureMonitorDelegate CallSecureMonitor { set { svcCallSecureMonitor = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcSetMemoryAttribute2 = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcSetMemoryAttribute2"));
-	public SetMemoryAttribute2Delegate SetMemoryAttribute2 { set => svcSetMemoryAttribute2 = Marshal.GetFunctionPointerForDelegate(value); }
+	public SetMemoryAttribute2Delegate SetMemoryAttribute2 { set { svcSetMemoryAttribute2 = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcMapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcMapInsecurePhysicalMemory"));
-	public MapInsecurePhysicalMemoryDelegate MapInsecurePhysicalMemory { set => svcMapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public MapInsecurePhysicalMemoryDelegate MapInsecurePhysicalMemory { set { svcMapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
     IntPtr svcUnmapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate<StubDelegate>(() => throw new NotImplementedException("svcUnmapInsecurePhysicalMemory"));
-	public UnmapInsecurePhysicalMemoryDelegate UnmapInsecurePhysicalMemory { set => svcUnmapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); }
+	public UnmapInsecurePhysicalMemoryDelegate UnmapInsecurePhysicalMemory { set { svcUnmapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(value); Delegates.Add(value); } }
 }

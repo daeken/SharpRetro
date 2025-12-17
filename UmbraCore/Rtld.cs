@@ -57,7 +57,7 @@ public class Rtld {
         }
         
         Run("__nnDetailInitLibc0");
-        *(ulong*) 0x77006c45f0 = (ulong) Marshal.AllocHGlobal(0x1000); // nn::os::detail::g_OsBootParamter (sic)
+        //*(ulong*) 0x77006c45f0 = (ulong) Marshal.AllocHGlobal(0x1000); // nn::os::detail::g_OsBootParamter (sic)
         Run("nnosInitialize", 0xf00b, 0xdeadbee0);
         foreach(var module in modules.ToArray().Reverse()) {
             if(module.Dynamic.TryGetValue(DynamicKey.INIT, out var init)) {

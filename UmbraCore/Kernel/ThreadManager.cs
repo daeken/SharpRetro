@@ -35,4 +35,6 @@ public class ThreadManager {
     public ThreadManager() {
         Threads.Add(_CurrentThread.Value = new());
     }
+
+    public void Setup(GameWrapper game) { }
 }

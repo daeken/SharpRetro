@@ -108,8 +108,8 @@ public unsafe class ExeModule {
         ro.CopyTo(Binary[(int) roOffset..].Span);
         data.CopyTo(Binary[(int) dataOffset..].Span);
 
-        //Load(doRelocate);
-        Load(false);
+        Load(doRelocate);
+        //Load(false);
     }
 
     void Load(bool doRelocate) {

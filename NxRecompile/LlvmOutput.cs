@@ -39,7 +39,7 @@ public unsafe partial class CoreRecompiler {
         
         var blocks = WholeBlockGraph.OrderBy(x => x.Key)
             .Select(x => x.Value).ToList();
-        var cut = 1;
+        var cut = 10_000;
         var iter = (0, blocks.Count, cut).Range().ToList().WithTimedProgress(constantUpdate: true)
             .Select(i => {
                 var name = Path.Join(objectDir, $"module_{i / cut}");
@@ -103,14 +103,14 @@ public unsafe partial class CoreRecompiler {
         topTable.Initializer = LLVMValueRef.CreateConstArray(jumptableType, jumpTables);
         
         var passManager = LLVM.CreateFunctionPassManagerForModule(module);
-        LLVM.AddReassociatePass(passManager);
+        /*LLVM.AddReassociatePass(passManager);
         LLVM.AddCFGSimplificationPass(passManager);
         LLVM.AddGVNPass(passManager);
         LLVM.AddPromoteMemoryToRegisterPass(passManager);
         LLVM.AddSLPVectorizePass(passManager);
         LLVM.AddDeadStoreEliminationPass(passManager);
         LLVM.AddAggressiveDCEPass(passManager);
-        LLVM.AddPartiallyInlineLibCallsPass(passManager);
+        LLVM.AddPartiallyInlineLibCallsPass(passManager);*/
         LLVM.InitializeFunctionPassManager(passManager);
 
         var function = module.AddFunction("runFrom", LlvmType<Action<ulong, ulong, ulong>>());
@@ -377,14 +377,14 @@ unsafe class LlvmOutput {
         Builder = LLVM.CreateBuilder();
         var passManager = (LLVMPassManagerRef) LLVM.CreateFunctionPassManagerForModule(module);
         
-        LLVM.AddReassociatePass(passManager);
+        /*LLVM.AddReassociatePass(passManager);
         LLVM.AddCFGSimplificationPass(passManager);
         //LLVM.AddGVNPass(passManager);
         LLVM.AddPromoteMemoryToRegisterPass(passManager);
         LLVM.AddSLPVectorizePass(passManager);
         //LLVM.AddDeadStoreEliminationPass(passManager);
         //LLVM.AddAggressiveDCEPass(passManager);
-        LLVM.AddPartiallyInlineLibCallsPass(passManager);
+        LLVM.AddPartiallyInlineLibCallsPass(passManager);*/
         LLVM.InitializeFunctionPassManager(passManager);
         
         Function = module.AddFunction(name, LlvmType<Func<ulong, ulong>>());
@@ -413,12 +413,14 @@ unsafe class LlvmOutput {
         var body = new StaticIRStatement.Body(node.Block.Body);
         Compile(body);
 
-        LLVM.DumpValue(Function);
+        if(node.Block.Start == 0x71_0000_001c) LLVM.DumpValue(Function);
+        //LLVM.DumpValue(Function);
         LLVM.VerifyFunction(Function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
         if(!Function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
             throw new("Program verification failed");
         LLVM.RunFunctionPassManager(passManager, Function);
-        LLVM.DumpValue(Function);
+        if(node.Block.Start == 0x71_0000_001c) LLVM.DumpValue(Function);
+        //LLVM.DumpValue(Function);
         LLVM.VerifyFunction(Function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
         if(!Function.VerifyFunction(LLVMVerifierFailureAction.LLVMReturnStatusAction))
             throw new("Program verification failed");
@@ -548,7 +550,7 @@ unsafe class LlvmOutput {
                 );
                 return false;
             case SvcStmt(var name, var inRegs, var outRegs): {
-                var cbIndex = ((int) Marshal.OffsetOf<CallbackTableOffsets>($"svc{name}")) / 8;
+                var cbIndex = (int) Marshal.OffsetOf<CallbackTableOffsets>($"svc{name}") / 8;
                 var funcTy = LLVMTypeRef.CreateFunction(
                     outRegs.Length == 0 ? LLVMTypeRef.Void : LlvmType<ulong>(),
                     inRegs.Select(_ => LlvmType<ulong>())
@@ -719,12 +721,27 @@ unsafe class LlvmOutput {
                                 Builder.BuildBitCast(Compile(right), LlvmType<Vector128<ulong>>()) 
                             ), left.Type.ToLLVMType())
                         : Builder.BuildXor(Compile(left), Compile(right));
-                case StaticIRValue.LeftShift(var left, var right):
-                    return Builder.BuildShl(Compile(left), Compile(right));
-                case StaticIRValue.RightShift(var left, var right):
-                    return left.Type.IsSigned
-                        ? Builder.BuildAShr(Compile(left), Compile(right))
-                        : Builder.BuildLShr(Compile(left), Compile(right));
+                case StaticIRValue.LeftShift(var left, var right): {
+                    var rval = Compile(right);
+                    return Builder.BuildSelect(
+                        Builder.BuildICmp(LLVMIntPredicate.LLVMIntUGE, rval, 
+                            LLVMValueRef.CreateConstInt(right.Type.ToLLVMType(), (ulong) left.Type.ByteCount * 8)),
+                        LLVMValueRef.CreateConstInt(left.Type.ToLLVMType(), 0),
+                        Builder.BuildShl(Compile(left), rval)
+                    );
+                }
+                case StaticIRValue.RightShift(var left, var right): {
+                    var rval = Compile(right);
+                    var shift = left.Type.IsSigned
+                        ? Builder.BuildAShr(Compile(left), rval)
+                        : Builder.BuildLShr(Compile(left), rval);
+                    return Builder.BuildSelect(
+                        Builder.BuildICmp(LLVMIntPredicate.LLVMIntUGE, rval, 
+                            LLVMValueRef.CreateConstInt(right.Type.ToLLVMType(), (ulong) left.Type.ByteCount * 8)),
+                        LLVMValueRef.CreateConstInt(left.Type.ToLLVMType(), 0),
+                        shift
+                    );
+                }
                 case StaticIRValue.Negate(var left):
                     return left.Type.IsFloat
                         ? Builder.BuildFNeg(Compile(left))
@@ -771,10 +788,8 @@ unsafe class LlvmOutput {
                 case StaticIRValue.Bitcast(var left, var type):
                     return Builder.BuildBitCast(Compile(left), type.ToLLVMType());
                 case StaticIRValue.SignExt(var left, var width, var type): {
-                    var totalBits = type.ByteCount * 8;
-                    var shift = LLVMValueRef.CreateConstInt(type.ToLLVMType(), (ulong) (totalBits - width));
-                    var val = Builder.BuildSExtOrBitCast(Compile(left), type.ToLLVMType());
-                    return Builder.BuildAShr(Builder.BuildShl(val, shift), shift);
+                    Debug.Assert(width == left.Type.ByteCount * 8);
+                    return Builder.BuildSExtOrBitCast(Compile(left), type.ToLLVMType());
                 }
                 case StaticIRValue.ReverseBits(var left):
                     return left.Type.ByteCount switch {

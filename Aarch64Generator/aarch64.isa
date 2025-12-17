@@ -4255,21 +4255,23 @@
             (requires N)
             (requires (== N 0)))
         (let r (if (== size 0) "W" "X")))
-    (if (== size 0)
-        (block
-            (let src (gpr32 rn))
-            (let wmask (u32 (make-wmask N imms immr 0 32)))
-            (let tmask (u32 (make-tmask N imms immr 0 32)))
-            (let bot (& (>>> src immr) wmask))
-            (let top (- (u32 0) (& (>> src imms) 1)))
-            (= (gpr32 rd) (| (& top (~ tmask)) (& bot tmask))))
-        (block
-            (let src (gpr64 rn))
-            (let wmask (make-wmask N imms immr 0 64))
-            (let tmask (make-tmask N imms immr 0 64))
-            (let bot (& (>>> src immr) wmask))
-            (let top (- (u64 0) (& (>> src imms) 1)))
-            (= (gpr64 rd) (| (& top (~ tmask)) (& bot tmask))))))
+    (if (& (== size 1) (& (== immr 0b000000) (== imms 0b011111)))
+        (= (gpr64 rd) (signext (gpr32 rn) i64))
+        (if (== size 0)
+            (block
+                (let src (gpr32 rn))
+                (let wmask (u32 (make-wmask N imms immr 0 32)))
+                (let tmask (u32 (make-tmask N imms immr 0 32)))
+                (let bot (& (>>> src immr) wmask))
+                (let top (- (u32 0) (& (>> src imms) 1)))
+                (= (gpr32 rd) (| (& top (~ tmask)) (& bot tmask))))
+            (block
+                (let src (gpr64 rn))
+                (let wmask (make-wmask N imms immr 0 64))
+                (let tmask (make-tmask N imms immr 0 64))
+                (let bot (& (>>> src immr) wmask))
+                (let top (- (u64 0) (& (>> src imms) 1)))
+                (= (gpr64 rd) (| (& top (~ tmask)) (& bot tmask)))))))
 
 (def SCVTF-scalar-integer
     "s 0 0 11110 tt 1 00 010 000000 nnnnn ddddd"

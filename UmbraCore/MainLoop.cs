@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using System.Text;
 using NxCommon;
 using UmbraCore.Kernel;
 
@@ -15,13 +17,15 @@ public class MainLoop {
 
         Game.Callbacks.Debug = pc => {
             Console.WriteLine($"Running from 0x{pc:X}");
-            var thread =  Globals.ThreadManager.CurrentThread;
+            var thread = Globals.ThreadManager.CurrentThread;
             for(var i = 0; i < 31; ++i) {
                 Console.Write($"X{i}: 0x{thread.CpuState->X[i]:X} ");
                 if(i != 0 && i % 4 == 0)
                     Console.WriteLine();
             }
             Console.WriteLine();
+            if(*(ulong*) 0x78006c45f0 != 0) // nn::os::detail::g_OsBootParamter (sic))
+                Console.WriteLine($"g_OsBootParamter set! {*(ulong*) 0x78006c45f0:X}");
         };
         Game.Callbacks.LoadModule =
             (loadBase, data, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd) => {
@@ -33,6 +37,12 @@ public class MainLoop {
         Game.Callbacks.WriteSr = (_, _, _, _, _, _) => {
             Console.WriteLine($"WriteSR attempted");
         };
+        Game.Callbacks.OutputDebugString = (addr, size) => {
+            Console.WriteLine($"Foo? {addr:X} {size}");
+            Console.WriteLine($"Debug string: {Encoding.ASCII.GetString(new Span<byte>((void*) addr, (int) size))}");
+            return 0;
+        };
+        Globals.Setup(Game);
         Game.Setup();
         var thread = Globals.ThreadManager.CurrentThread;
         thread.CpuState->X0 = 0;
