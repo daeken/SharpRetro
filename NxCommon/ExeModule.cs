@@ -118,8 +118,8 @@ public unsafe class ExeModule {
         if(Encoding.ASCII.GetString(new Span<byte>(header.Magic, 4)) != "MOD0")
             throw new NotSupportedException("Missing MOD0 magic");
         
-        BssStart = LoadBase + header.BssStartOffset;
-        BssEnd = LoadBase + header.BssEndOffset;
+        BssStart = LoadBase + modOff + header.BssStartOffset;
+        BssEnd = LoadBase + modOff + header.BssEndOffset;
 
         var dynOff = modOff + header.DynamicOffset;
         while(true) {
@@ -226,7 +226,7 @@ public unsafe class ExeModule {
         ExecuteOnlyMemory =  1 << 6,
     }
 
-    public static ExeModule LoadNso(Memory<byte> data, ulong loadBase) {
+    public static ExeModule LoadNso(Memory<byte> data, ulong loadBase, bool doRelocate) {
         if(ReadFrom<uint>(data, 0) != 0x304f534e) // NSO0
             throw new NotSupportedException();
         var flags = (NsoFlags) ReadFrom<uint>(data, 0xC);
@@ -246,7 +246,7 @@ public unsafe class ExeModule {
         var textData = ReadSegment(0x10, 0x60, NsoFlags.TextCompress, out var textOffset);
         var roData = ReadSegment(0x20, 0x64, NsoFlags.RoCompress, out var roOffset);
         var dataData = ReadSegment(0x30, 0x68, NsoFlags.DataCompress, out var dataOffset);
-        return new ExeModule(loadBase, textOffset, textData.Span, roOffset, roData.Span, dataOffset, dataData.Span);
+        return new ExeModule(loadBase, textOffset, textData.Span, roOffset, roData.Span, dataOffset, dataData.Span, doRelocate);
     }
 
     static T ReadFrom<T>(Memory<byte> data, int offset) where T : struct =>

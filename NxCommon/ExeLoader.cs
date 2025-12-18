@@ -1,33 +1,28 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
-using K4os.Compression.LZ4;
-using LibSharpRetro;
-using NxCommon;
-
-namespace NxRecompile;
+namespace NxCommon;
 
 public class ExeLoader {
     public const ulong InitialLoadBase = 0x71_0000_0000;
     public readonly List<ExeModule> ExeModules = new();
     public readonly ulong EntryPoint;
-    static readonly string[] LoadOrder = [
-        //"rtld", 
-        "main", "subsdk0", "subsdk1", "subsdk2", "subsdk3",
-        "subsdk4", "subsdk5", "subsdk6", "subsdk7", "subsdk8", "subsdk9",
-        "sdk",
-    ];
-    public ExeLoader(string path) {
+    public ExeLoader(string path, bool includeRtld = false, bool doRelocate = true) {
+        string[] loadOrder = [
+            "rtld", 
+            "main", "subsdk0", "subsdk1", "subsdk2", "subsdk3",
+            "subsdk4", "subsdk5", "subsdk6", "subsdk7", "subsdk8", "subsdk9",
+            "sdk",
+        ];
+        if(!includeRtld) loadOrder = loadOrder[1..];
         if(!Path.Exists(path)) throw new FileNotFoundException(path);
         if(File.GetAttributes(path).HasFlag(FileAttributes.Directory)) {
             var files = Directory.EnumerateFiles(path)
                 .Select(Path.GetFileName)
-                .Where(x => LoadOrder.Contains(x))
-                .OrderBy(x => LoadOrder.IndexOf(x))
+                .Where(x => loadOrder.Contains(x))
+                .OrderBy(x => loadOrder.IndexOf(x))
                 .ToList();
             //EntryPoint = InitialLoadBase;
             ExeModules.AddRange(files.Select((x, i) =>
-                ExeModule.LoadNso(File.ReadAllBytes(Path.Join(path, x)), InitialLoadBase + 0x1_0000_0000UL * (ulong) i)));
+                ExeModule.LoadNso(File.ReadAllBytes(Path.Join(path, x)), InitialLoadBase + 0x1_0000_0000UL * (ulong) i, doRelocate)));
             return;
         }
 
