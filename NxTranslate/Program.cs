@@ -1,17 +1,103 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using LibSharpRetro;
 using NxCommon;
 using NxTranslate;
 
-var exeLoader = new ExeLoader(args[0], includeRtld: true, doRelocate: false);
+void SaveLoadAll(Assembler asm, Action<Assembler> func) {
+    asm.StpPreindex(R.X29, R.X30, R.SP, -256); // Save all GPRs
+    asm.Stp(R.X27, R.X28, R.SP, 16 * 1);
+    asm.Stp(R.X25, R.X26, R.SP, 16 * 2);
+    asm.Stp(R.X23, R.X24, R.SP, 16 * 3);
+    asm.Stp(R.X21, R.X22, R.SP, 16 * 4);
+    asm.Stp(R.X19, R.X20, R.SP, 16 * 5);
+    asm.Stp(R.X17, R.X18, R.SP, 16 * 6);
+    asm.Stp(R.X15, R.X16, R.SP, 16 * 7);
+    asm.Stp(R.X13, R.X14, R.SP, 16 * 8);
+    asm.Stp(R.X11, R.X12, R.SP, 16 * 9);
+    asm.Stp(R.X9, R.X10, R.SP, 16 * 10);
+    asm.Stp(R.X7, R.X8, R.SP, 16 * 11);
+    asm.Stp(R.X5, R.X6, R.SP, 16 * 12);
+    asm.Stp(R.X3, R.X4, R.SP, 16 * 13);
+    asm.Stp(R.X1, R.X2, R.SP, 16 * 14);
+    asm.Stp(R.X0, R.XZR, R.SP, 16 * 15);
+    asm.Mov(R.X29, R.SP);
+    func(asm);
+    asm.Ldp(R.X0, R.XZR, R.SP, 16 * 15);
+    asm.Ldp(R.X1, R.X2, R.SP, 16 * 14);
+    asm.Ldp(R.X3, R.X4, R.SP, 16 * 13);
+    asm.Ldp(R.X5, R.X6, R.SP, 16 * 12);
+    asm.Ldp(R.X7, R.X8, R.SP, 16 * 11);
+    asm.Ldp(R.X9, R.X10, R.SP, 16 * 10);
+    asm.Ldp(R.X11, R.X12, R.SP, 16 * 9);
+    asm.Ldp(R.X13, R.X14, R.SP, 16 * 8);
+    asm.Ldp(R.X15, R.X16, R.SP, 16 * 7);
+    asm.Ldp(R.X17, R.X18, R.SP, 16 * 6);
+    asm.Ldp(R.X19, R.X20, R.SP, 16 * 5);
+    asm.Ldp(R.X21, R.X22, R.SP, 16 * 4);
+    asm.Ldp(R.X23, R.X24, R.SP, 16 * 3);
+    asm.Ldp(R.X25, R.X26, R.SP, 16 * 2);
+    asm.Ldp(R.X27, R.X28, R.SP, 16 * 1);
+    asm.LdpPostindex(R.X29, R.X30, R.SP, 256);
+}
+
+byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List<(ulong Addr, Instruction Instruction)> insns, Memory<byte> text) {
+    insns = insns.OrderByDescending(x => x.Addr).ToList(); // Work back to front to maximize odds of being in range
+    var asm = new Assembler(0xC000);
+    foreach(var (i, (addr, insn)) in insns.Index()) {
+        var pc = asm.PC;
+        asm.PC = 0xC000 - (ulong) (i + 1) * 4;
+        var tasm = new Assembler(4);
+        tasm.B((long) (trampBase + asm.PC) - (long) (textBase + addr));
+        tasm.AsBytes.CopyTo(text[(int) addr..].Span);
+        asm.B((long) pc - (long) asm.PC);
+        
+        asm.PC = pc;
+        SaveLoadAll(asm, _ => {
+            asm.BlSelf();
+            asm.Mov(R.X9, asm.PC + trampBase - trampRwBase);
+            asm.Sub(R.X9, R.X30, R.X9);
+            asm.Ldr(R.X8, R.X9); // callbacks pointer
+            asm.Mov(R.X0, R.X29);
+            switch(insn) {
+                case Instruction.Brk(var imm):
+                    asm.Mov(R.X1, 0);
+                    asm.Mov(R.X2, imm);
+                    break;
+                case Instruction.Svc(var svc):
+                    asm.Mov(R.X1, 1);
+                    asm.Mov(R.X2, svc);
+                    break;
+                case Instruction.Msr(var op0, var op1, var crn, var crm, var op2, var reg):
+                    asm.Mov(R.X1, 2);
+                    asm.Mov(R.X2, ((0b10 | op0) << 14) | (op1 << 11) | (crn << 7) | (crm << 3) | op2);
+                    asm.Mov(R.X3, reg);
+                    break;
+                case Instruction.Mrs(var op0, var op1, var crn, var crm, var op2, var reg):
+                    asm.Mov(R.X1, 3);
+                    asm.Mov(R.X2, ((0b10 | op0) << 14) | (op1 << 11) | (crn << 7) | (crm << 3) | op2);
+                    asm.Mov(R.X3, reg);
+                    break;
+            }
+            asm.Add(R.X8, R.X8, (ushort) Marshal.OffsetOf<CallbackTableOffsets>("nativeReentry"));
+            asm.Ldr(R.X8, R.X8);
+            asm.Blr(R.X8);
+        });
+        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+    }
+    return asm.AsBytes;
+}
+
+var exeLoader = new ExeLoader(args[0], includeRtld: false, doRelocate: false);
 var macho = new MachoWriter();
 var loadBase = 0UL;
+var modules = new List<(ulong TrampRW, ulong TrampX, ulong Start, ulong Size)>();
 foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     var problematic = new List<(ulong Addr, Instruction Instruction)>();
     for(var j = mod.TextStart; j < mod.TextEnd; j += 4) {
         var insn = Instruction.Decode(mod.Load<uint>(j));
         if(insn == null) continue;
-        problematic.Add((j, insn));
+        problematic.Add((j - mod.TextStart, insn));
     }
 
     var textStart = mod.TextStart - mod.LoadBase;
@@ -22,6 +108,10 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     var dataEnd = mod.DataEnd - mod.LoadBase;
     var bssStart = mod.BssStart - mod.LoadBase;
     var bssEnd = mod.BssEnd - mod.LoadBase;
+    Console.WriteLine($"Text? {textStart:X}-{textEnd:X}");
+    Console.WriteLine($"Ro? {roStart:X}-{roEnd:X}");
+    Console.WriteLine($"Data? {dataStart:X}-{dataEnd:X}");
+    Console.WriteLine($"Bss? {bssStart:X}-{bssEnd:X}");
     Debug.Assert(bssStart >= dataEnd);
     Debug.Assert(dataStart >= roEnd);
     Debug.Assert(roStart >= textEnd);
@@ -54,11 +144,17 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     Debug.Assert(dataStart % 0x4000 == 0);
     Debug.Assert(dataEnd % 0x4000 == 0);
 
+    var tramprw = ulong.MaxValue;
+    var trampx = ulong.MaxValue;
     if(problematic.Count != 0) {
+        tramprw = loadBase;
+        trampx = loadBase + 0x4000;
+        var trampolines = BuildTrampolines(loadBase + 0x10000, loadBase + 0x4000, loadBase, problematic, mod.Binary[(int) textStart..]);
         macho.AddSegment($".tramprw_{i}", loadBase, 0x4000, [], MemoryProtection.Read | MemoryProtection.Write);
-        macho.AddSegment($".trampx_{i}", loadBase + 0x4000, 0xC000, [], MemoryProtection.Read | MemoryProtection.Execute);
+        macho.AddSegment($".trampx_{i}", loadBase + 0x4000, 0xC000, trampolines, MemoryProtection.Read | MemoryProtection.Execute);
         loadBase += 0x10000;
     }
+    modules.Add((tramprw, trampx, loadBase, dataEnd - textStart));
     foreach(var symbol in mod.Symbols)
         if(symbol.Value != 0 && symbol.Name != "")
             macho.AddSymbol(symbol.Name, loadBase + symbol.Value);
@@ -77,7 +173,56 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
         MemoryProtection.Read | MemoryProtection.Write);
     loadBase += dataEnd;
 }
-macho.AddSegment(".glue", loadBase, 0x4000, [], MemoryProtection.Read | MemoryProtection.Execute);
+
+var glue = new Assembler(0x4000);
+macho.AddSymbol("_setup", loadBase + glue.PC);
+glue.StpPreindex(R.X29, R.X30, R.SP, -16);
+glue.Mov(R.X29, R.SP);
+glue.BlSelf();
+var curPos = loadBase + glue.PC;
+glue.Mov(R.X19, R.X0); // Save our callbacks pointer here
+glue.Mov(R.X20, curPos);
+glue.Sub(R.X20, R.X30, R.X20); // Slide
+
+foreach(var (tramprw, trampx, start, size) in modules) {
+    if(tramprw != ulong.MaxValue) {
+        glue.Mov(R.X0, tramprw);
+        glue.Add(R.X0, R.X0, R.X20);
+        glue.Str(R.X19, R.X0);
+    }
+    glue.Mov(R.X0, start);
+    glue.Add(R.X0, R.X0, R.X20);
+    glue.Mov(R.X1, size);
+    glue.Add(R.X2, R.X19, (ushort) Marshal.OffsetOf<CallbackTableOffsets>("initModule"));
+    glue.Ldr(R.X2, R.X2);
+    glue.Blr(R.X2);
+}
+
+glue.LdpPostindex(R.X29, R.X30, R.SP, 16);
+glue.Ret();
+macho.AddSymbol("_runFrom", loadBase + glue.PC);
+SaveLoadAll(glue, asm => {
+    asm.Mov(R.X30, R.X0);
+    asm.Mov(R.X8, R.X1);
+    asm.Ldp(R.X0, R.X1, R.X30, 16 * 0);
+    asm.Ldp(R.X2, R.X3, R.X30, 16 * 1);
+    asm.Ldp(R.X4, R.X5, R.X30, 16 * 2);
+    asm.Ldp(R.X6, R.X7, R.X30, 16 * 3);
+    asm.Ldp(R.XZR, R.X9, R.X30, 16 * 4);
+    asm.Ldp(R.X10, R.X11, R.X30, 16 * 5);
+    asm.Ldp(R.X12, R.X13, R.X30, 16 * 6);
+    asm.Ldp(R.X14, R.X15, R.X30, 16 * 7);
+    asm.Ldp(R.X16, R.X17, R.X30, 16 * 8);
+    asm.Ldp(R.X18, R.X19, R.X30, 16 * 9);
+    asm.Ldp(R.X20, R.X21, R.X30, 16 * 10);
+    asm.Ldp(R.X22, R.X23, R.X30, 16 * 11);
+    asm.Ldp(R.X24, R.X25, R.X30, 16 * 12);
+    asm.Ldp(R.X26, R.X27, R.X30, 16 * 13);
+    asm.Ldp(R.X28, R.X29, R.X30, 16 * 14);
+    asm.Blr(R.X8);
+});
+glue.Ret();
+macho.AddSegment(".glue", loadBase, glue.Size, glue.AsBytes, MemoryProtection.Read | MemoryProtection.Execute);
 
 macho.Write(args[1]);
 Sh.Run("ldid", "-S", args[1]);

@@ -8,6 +8,7 @@ using Aarch64Cpu;
 using DoubleSharp.Linq;
 using DoubleSharp.Progress;
 using LLVMSharp;
+using NxCommon;
 using StaticRecompilerBase;
 using static NxRecompile.LlvmExtensions;
 

@@ -34,21 +34,28 @@ public class MainLoop {
                 Buffer.MemoryCopy(data, (void*) loadBase, size, size);
                 Modules.Add(new(loadBase, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd));
             };
+        Game.Callbacks.InitModule = (loadBase, size) => {
+            Console.WriteLine($"Module loaded at 0x{loadBase:X}-0x{loadBase+size:X}");
+            Globals.MemoryManager.Regions[loadBase] = (size, 0);
+            Modules.Add(new(loadBase, size, doRelocate: true));
+        };
         Game.Callbacks.WriteSr = (_, _, _, _, _, _) => {
             Console.WriteLine($"WriteSR attempted");
         };
         Game.Callbacks.OutputDebugString = (addr, size) => {
-            Console.WriteLine($"Foo? {addr:X} {size}");
             Console.WriteLine($"Debug string: {Encoding.ASCII.GetString(new Span<byte>((void*) addr, (int) size))}");
             return 0;
         };
         Globals.Setup(Game);
         Game.Setup();
-        var thread = Globals.ThreadManager.CurrentThread;
-        thread.CpuState->X0 = 0;
-        thread.CpuState->X1 = 0xFFFF8001; // thread handle
-        thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;
-        thread.RunFrom(0x71_0000_0000UL, 0xCAFEBABEDEADBEEFUL);
-        //_ = new Rtld(Modules);
+        Console.WriteLine("Done with setup!");
+        if(false) {
+            var thread = Globals.ThreadManager.CurrentThread;
+            thread.CpuState->X0 = 0;
+            thread.CpuState->X1 = 0xFFFF8001; // thread handle
+            thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;
+            thread.RunFrom(Modules[0].LoadBase, 0xCAFEBABEDEADBEEFUL);
+        } else
+            _ = new Rtld(Modules);
     }
 }

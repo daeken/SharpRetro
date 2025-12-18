@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace UmbraCore.Kernel;
@@ -21,13 +22,13 @@ public class MemoryManager {
     public struct MemoryInfo {
         public ulong Begin, Size;
         public uint MemoryType, MemoryAttribute;
-        public uint Permission, DeviceRefCount, IpcRefCount;
+        public uint Permission, IpcRefCount, DeviceRefCount;
         public uint __padding;
     }
     
     public unsafe void Setup(GameWrapper game) {
         game.Callbacks.QueryMemory = (memoryInfoPtr, addr, ref pageInfo) => {
-            Console.WriteLine($"Querying memory for {addr:X}");
+            Console.WriteLine($"Querying memory for {addr:X} -- pointer is {memoryInfoPtr:X}");
             var memoryInfo = (MemoryInfo*) memoryInfoPtr;
             foreach(var (resident, start, size, flags) in AllRegions()) {
                 if(start <= addr && addr < start + size) {
@@ -37,8 +38,8 @@ public class MemoryManager {
                     memoryInfo->MemoryAttribute = 0;
                     memoryInfo->Permission = resident ? 5U : 0; // RX
                     memoryInfo->DeviceRefCount = memoryInfo->IpcRefCount = memoryInfo->__padding = 0;
-                    pageInfo = 0;
-                    Console.WriteLine($"Found?? {start:X} - {start + size:X}");
+                    *(uint*) pageInfo = 0;
+                    Console.WriteLine($"Found?? {start:X} - {start + size:X} {resident}");
                     break;
                 }
             }

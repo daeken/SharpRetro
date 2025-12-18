@@ -17,7 +17,6 @@ public class Rtld {
         foreach(var (name, (_, addr)) in Globals.HookManager.Hooks)
             SymbolAddrs[name] = 0x8000_0000_0000_0000UL | addr;
         foreach(var module in modules) {
-            foreach(var (key, value) in module.Dynamic) Console.WriteLine($"{module.LoadBase:X} {key} -- 0x{value:X}");
             if(
                 module.Dynamic.TryGetValue(DynamicKey.PLTREL, out var pltType) &&
                 module.Dynamic.TryGetValue(DynamicKey.JMPREL, out var start)
@@ -44,9 +43,11 @@ public class Rtld {
 
         var thread = Globals.ThreadManager.CurrentThread;
 
-        void Run(string name, ulong x0 = 0, ulong x1 = 0) {
+        void Run(string name, ulong x0 = 0, ulong x1 = 0, ulong x2 = 0, ulong x3 = 0) {
             thread.CpuState->X0 = x0;
             thread.CpuState->X1 = x1;
+            thread.CpuState->X2 = x2;
+            thread.CpuState->X3 = x3;
             thread.CpuState->X30 = 0;
             Console.WriteLine($"Running {name}");
             if(SymbolAddrs.TryGetValue(name, out var addr))
@@ -55,17 +56,37 @@ public class Rtld {
                 Console.WriteLine($"Warning: Couldn't find init symbol '{name}'");
             Console.WriteLine("Done");
         }
-        
-        Run("__nnDetailInitLibc0");
-        //*(ulong*) 0x77006c45f0 = (ulong) Marshal.AllocHGlobal(0x1000); // nn::os::detail::g_OsBootParamter (sic)
-        Run("nnosInitialize", 0xf00b, 0xdeadbee0);
-        foreach(var module in modules.ToArray().Reverse()) {
-            if(module.Dynamic.TryGetValue(DynamicKey.INIT, out var init)) {
-                Console.WriteLine($"Running init function: {module.LoadBase + init:X}");
-                thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;
-                thread.RunFrom(module.LoadBase + init, 0xCAFEBABEDEADBEEFUL);
-                Console.WriteLine("Done");
+
+        void NotifyExceptionHandlerReady() =>
+            Console.WriteLine("Exception handler ready!");
+        void RunInitializers() {
+            Console.WriteLine("Running initializers!");
+            foreach(var module in modules.ToArray().Reverse()) {
+                if(module.Dynamic.TryGetValue(DynamicKey.INIT, out var init)) {
+                    Console.WriteLine($"Running init function: {module.LoadBase + init:X}");
+                    thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;
+                    thread.RunFrom(module.LoadBase + init, 0xCAFEBABEDEADBEEFUL);
+                    Console.WriteLine("Done");
+                }
             }
+        }
+
+        if(SymbolAddrs.ContainsKey("_ZN2nn4init5StartEmmPFvvES2_")) {
+            Run(
+                "_ZN2nn4init5StartEmmPFvvES2_",
+                0xf00b,
+                0x13_0000_0F00,
+                (ulong) Marshal.GetFunctionPointerForDelegate(NotifyExceptionHandlerReady),
+                (ulong) Marshal.GetFunctionPointerForDelegate(RunInitializers)
+            );
+        } else {
+            Run("__nnDetailInitLibc0");
+            var ptr = (ulong) Marshal.AllocHGlobal(0x1000);
+            for(var i = 0; i < 0x1000; i += 8)
+                *(ulong*) (ptr + (ulong) i) = 0xCAFEBABEDEADBEEFUL;
+            *(ulong*) (modules[^1].LoadBase + 0x6cbff8UL) = ptr; // nn::os::detail::g_OsBootParamter (sic)
+            Run("nnosInitialize", 0xf00b, 0xdeadbee0);
+            RunInitializers();
         }
     }
 }

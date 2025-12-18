@@ -112,6 +112,12 @@ public unsafe class ExeModule {
         //Load(false);
     }
 
+    public ExeModule(ulong loadBase, ulong size, bool doRelocate = true) {
+        LoadBase = loadBase;
+        Binary = MemoryHelpers.AsMemory<byte>((void*) loadBase, (int) size);
+        Load(doRelocate);
+    }
+
     void Load(bool doRelocate) {
         var modOff = Read<uint>(4);
         var header = Read<ModHeader>(modOff);
