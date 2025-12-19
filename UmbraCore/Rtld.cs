@@ -17,22 +17,26 @@ public class Rtld {
         foreach(var (name, (_, addr)) in Globals.HookManager.Hooks)
             SymbolAddrs[name] = 0x8000_0000_0000_0000UL | addr;
         foreach(var module in modules) {
+            if(module.Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
+                var rels = module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.RELCOUNT]);
+                foreach(var (offset, type, sym) in rels)
+                    Relocate(module, offset, type, sym, 0, true);
+            }
+            if(module.Dynamic.TryGetValue(DynamicKey.RELA, out start)) {
+                var rels = module.Binary.Read<ulong, uint, uint, long>(start, (int) module.Dynamic[DynamicKey.RELASZ] / 0x18);
+                foreach(var (offset, type, sym, addend) in rels)
+                    Relocate(module, offset, type, sym, addend, false);
+            }
             if(
                 module.Dynamic.TryGetValue(DynamicKey.PLTREL, out var pltType) &&
-                module.Dynamic.TryGetValue(DynamicKey.JMPREL, out var start)
+                module.Dynamic.TryGetValue(DynamicKey.JMPREL, out start)
             ) {
                 var relocs = pltType == 7 // DT_RELA
                     ? module.Binary.Read<ulong, uint, uint, long>(start, (int) module.Dynamic[DynamicKey.PLTRELSZ] / 24)
                     : module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.PLTRELSZ] / 16)
                         .Select(x => (x.Item1, x.Item2, x.Item3, 0L)).ToArray();
-                foreach(var (offset, type, sym, addend) in relocs) {
-                    Debug.Assert(sym != 0);
-                    var name = module.Symbols[(int) sym].Name;
-                    if(SymbolAddrs.TryGetValue(name, out var addr))
-                        *(ulong*) (module.LoadBase + offset) = unchecked(addr + (ulong) addend);
-                    else
-                        Console.WriteLine($"Warning: Couldn't resolve symbol '{name}'");
-                }
+                foreach(var (offset, type, sym, addend) in relocs)
+                    Relocate(module, offset, type, sym, addend, pltType != 7);
             }
             if(module.Dynamic.TryGetValue(DynamicKey.PLTGOT, out var got)) {
                 var plt = (ulong*) (module.LoadBase + got);
@@ -81,12 +85,35 @@ public class Rtld {
             );
         } else {
             Run("__nnDetailInitLibc0");
-            var ptr = (ulong) Marshal.AllocHGlobal(0x1000);
-            for(var i = 0; i < 0x1000; i += 8)
-                *(ulong*) (ptr + (ulong) i) = 0xCAFEBABEDEADBEEFUL;
-            *(ulong*) (modules[^1].LoadBase + 0x6cbff8UL) = ptr; // nn::os::detail::g_OsBootParamter (sic)
             Run("nnosInitialize", 0xf00b, 0xdeadbee0);
             RunInitializers();
+        }
+    }
+    
+    void Relocate(ExeModule module, ulong offset, uint type, uint sym, long addend, bool isRel) =>
+        Relocate(module, offset, (RelocationType) type, sym, addend, isRel);
+    unsafe void Relocate(ExeModule module, ulong offset, RelocationType type, uint sym, long addend, bool isRel) {
+        if(sym == 0) return;
+        ulong addr;
+        var symbol = module.Symbols[(int) sym];
+        if(symbol.Value != 0)
+            addr = module.LoadBase + symbol.Value;
+        else {
+            var name = symbol.Name;
+            if(!SymbolAddrs.TryGetValue(name, out addr)) {
+                Console.WriteLine($"Warning: Couldn't resolve symbol '{name}'");
+                return;
+            }
+        }
+
+        switch(type) {
+            case RelocationType.R_AARCH64_JUMP_SLOT:
+            case RelocationType.R_AARCH64_ABS64:
+            case RelocationType.R_AARCH64_GLOB_DAT:
+                *(ulong*) (module.LoadBase + offset) = unchecked(addr + (ulong) addend);
+                break;
+            default:
+                throw new NotSupportedException($"Rtld relocation type {type} not supported");
         }
     }
 }

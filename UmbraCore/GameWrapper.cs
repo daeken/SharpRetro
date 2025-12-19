@@ -18,7 +18,8 @@ public unsafe class GameWrapper {
 		_Setup = Marshal.GetDelegateForFunctionPointer<SetupDelegate>(NativeLibrary.GetExport(lib, "setup"));
 		_RunFrom = Marshal.GetDelegateForFunctionPointer<RunFromDelegate>(NativeLibrary.GetExport(lib, "runFrom"));
 
-        Callbacks.NativeReentry = (state, op, a, b) => {
+        Callbacks.NativeReentry = (state, op, a, b, replAddr) => {
+            Console.WriteLine($"Native reentry from {0x71_00000000 + replAddr:X}");
             switch(op) {
 				case 0:
 					throw new NotImplementedException($"Brk? 0x{a:X}");
@@ -398,23 +399,23 @@ public unsafe class GameWrapper {
                     }
                     break;
                 case 2: {
-                    var ip = (uint) state->X2;
+                    var ip = (uint) a;
                     var op2 = ip & 0b111U;
                     var crm = (ip >> 3) & 0b1111U;
                     var crn = (ip >> 7) & 0b1111U;
                     var op1 = (ip >> 11) & 0b111U;
                     var op0 = (ip >> 14) & 0b1U;
-                    Callbacks.WriteSr(op0, op1, crn, crm, op2, *GetRegisterPointer(state, (int) state->X3));
+                    Callbacks.WriteSr(op0, op1, crn, crm, op2, *GetRegisterPointer(state, (int) b));
                     break;
                 }
                 case 3: {
-                    var ip = (uint) state->X2;
+                    var ip = (uint) a;
                     var op2 = ip & 0b111U;
                     var crm = (ip >> 3) & 0b1111U;
                     var crn = (ip >> 7) & 0b1111U;
                     var op1 = (ip >> 11) & 0b111U;
                     var op0 = (ip >> 14) & 0b1U;
-                    *GetRegisterPointer(state, (int) state->X3) = Callbacks.ReadSr(op0, op1, crn, crm, op2);
+                    *GetRegisterPointer(state, (int) b) = Callbacks.ReadSr(op0, op1, crn, crm, op2);
                     break;
                 }
                 default:
@@ -452,7 +453,7 @@ public delegate void StubDelegate();
 public delegate void DebugDelegate(ulong pc);
 public unsafe delegate void LoadModuleDelegate(ulong loadBase, byte* data, ulong size, ulong textStart, ulong textEnd, ulong roStart, ulong roEnd, ulong dataStart, ulong dataEnd);
 public delegate void InitModuleDelegate(ulong loadBase, ulong size);
-public unsafe delegate void NativeReentryDelegate(NativeState* state, uint op, ulong a, ulong b);
+public unsafe delegate void NativeReentryDelegate(NativeState* state, uint op, ulong a, ulong b, ulong repl);
 public delegate ulong ReadSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2);
 public delegate void WriteSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2, ulong value);
 public delegate ulong SetHeapSizeDelegate(ulong in_1, ref ulong out_1);

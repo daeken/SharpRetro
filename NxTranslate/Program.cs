@@ -59,6 +59,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
             asm.Sub(R.X9, R.X30, R.X9);
             asm.Ldr(R.X8, R.X9); // callbacks pointer
             asm.Mov(R.X0, R.X29);
+            asm.Mov(R.X4, addr);
             switch(insn) {
                 case Instruction.Brk(var imm):
                     asm.Mov(R.X1, 0);
@@ -70,12 +71,12 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                     break;
                 case Instruction.Msr(var op0, var op1, var crn, var crm, var op2, var reg):
                     asm.Mov(R.X1, 2);
-                    asm.Mov(R.X2, ((0b10 | op0) << 14) | (op1 << 11) | (crn << 7) | (crm << 3) | op2);
+                    asm.Mov(R.X2, ((op0 & 0b1) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111));
                     asm.Mov(R.X3, reg);
                     break;
                 case Instruction.Mrs(var op0, var op1, var crn, var crm, var op2, var reg):
                     asm.Mov(R.X1, 3);
-                    asm.Mov(R.X2, ((0b10 | op0) << 14) | (op1 << 11) | (crn << 7) | (crm << 3) | op2);
+                    asm.Mov(R.X2, ((op0 & 0b1) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111));
                     asm.Mov(R.X3, reg);
                     break;
             }
@@ -108,10 +109,6 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     var dataEnd = mod.DataEnd - mod.LoadBase;
     var bssStart = mod.BssStart - mod.LoadBase;
     var bssEnd = mod.BssEnd - mod.LoadBase;
-    Console.WriteLine($"Text? {textStart:X}-{textEnd:X}");
-    Console.WriteLine($"Ro? {roStart:X}-{roEnd:X}");
-    Console.WriteLine($"Data? {dataStart:X}-{dataEnd:X}");
-    Console.WriteLine($"Bss? {bssStart:X}-{bssEnd:X}");
     Debug.Assert(bssStart >= dataEnd);
     Debug.Assert(dataStart >= roEnd);
     Debug.Assert(roStart >= textEnd);

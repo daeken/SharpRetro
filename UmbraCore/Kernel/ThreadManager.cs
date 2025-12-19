@@ -5,7 +5,7 @@ namespace UmbraCore.Kernel;
 
 public unsafe class KThread {
     public CpuState* CpuState;
-    readonly IntPtr State, Stack, TlsBase;
+    public readonly IntPtr State, Stack, TlsBase;
 
     public unsafe KThread(ulong stackSize = 8 * 1024 * 1024) {
         State = Marshal.AllocHGlobal(Marshal.SizeOf<CpuState>());
@@ -36,5 +36,10 @@ public class ThreadManager {
         Threads.Add(_CurrentThread.Value = new());
     }
 
-    public void Setup(GameWrapper game) { }
+    public void Setup(GameWrapper game) {
+        game.Callbacks.GetThreadPriority = (handle, ref priority) => {
+            priority = 5;
+            return 0;
+        };
+    }
 }

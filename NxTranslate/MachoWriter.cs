@@ -249,6 +249,5 @@ public unsafe class MachoWriter {
         }
         fp.Seek(binEnd + linkEditSize, SeekOrigin.Begin);
         fp.WriteByte(0);
-        Console.WriteLine(fp.Position);
     }
 }

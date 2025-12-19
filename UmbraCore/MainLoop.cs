@@ -24,8 +24,6 @@ public class MainLoop {
                     Console.WriteLine();
             }
             Console.WriteLine();
-            if(*(ulong*) 0x78006c45f0 != 0) // nn::os::detail::g_OsBootParamter (sic))
-                Console.WriteLine($"g_OsBootParamter set! {*(ulong*) 0x78006c45f0:X}");
         };
         Game.Callbacks.LoadModule =
             (loadBase, data, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd) => {
@@ -41,6 +39,26 @@ public class MainLoop {
         };
         Game.Callbacks.WriteSr = (_, _, _, _, _, _) => {
             Console.WriteLine($"WriteSR attempted");
+        };
+        Game.Callbacks.ReadSr = (op0, op1, crn, crm, op2) => {
+            var reg = ((0b10 | (op0 & 0b1)) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111);
+            var (found, value) = reg switch {
+                0b11_011_0000_0000_001 => // CtrEl0
+                    (true, 0x8444c004UL),
+                0b11_011_0100_0100_000 => // FPCR
+                    (true, 0UL),
+                0b11_011_0100_0100_001 => // FPSR
+                    (true, 0UL),
+                0b11_011_1101_0000_011 => // TPIDR
+                    (true, (ulong) Globals.ThreadManager.CurrentThread.TlsBase),
+                0b11_011_1110_0000_001 => // CntpctEl0
+                    (true, 0UL),
+                0b11_011_0000_0000_111 => // DCZID_EL0
+                    (true, 0UL),
+                _ => (false, 0UL),
+            };
+            if(!found) Console.WriteLine($"Unknown SR: S{op0 | 2}_{op1}_{crn}_{crm}_{op2}");
+            return value;
         };
         Game.Callbacks.OutputDebugString = (addr, size) => {
             Console.WriteLine($"Debug string: {Encoding.ASCII.GetString(new Span<byte>((void*) addr, (int) size))}");

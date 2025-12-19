@@ -64,6 +64,7 @@ public enum DynamicKey {
 
 public enum RelocationType {
     R_AARCH64_ABS64 = 257,
+    R_AARCH64_GLOB_DAT = 1025,
     R_AARCH64_JUMP_SLOT = 1026,
     R_AARCH64_RELATIVE = 1027,
 }
@@ -150,8 +151,6 @@ public unsafe class ExeModule {
             ));
         }
 
-        using var fp = File.OpenWrite($"{LoadBase:X}_unreloc.bin");
-        fp.Write(Binary.Span);
         if(!doRelocate) return;
         if(Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
             var rels = Binary.Read<ulong, uint, uint>(start, (int) Dynamic[DynamicKey.RELCOUNT]);
@@ -159,15 +158,13 @@ public unsafe class ExeModule {
                 Relocate(offset, type, sym, 0, true);
         }
         if(Dynamic.TryGetValue(DynamicKey.RELA, out start)) {
-            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) Dynamic[DynamicKey.RELACOUNT]);
+            var rels = Binary.Read<ulong, uint, uint, long>(start, (int) Dynamic[DynamicKey.RELASZ] / 0x18);
             foreach(var (offset, type, sym, addend) in rels)
                 Relocate(offset, type, sym, addend, false);
         }
         if(Dynamic.TryGetValue(DynamicKey.RELR, out start))
             foreach(var offset in Binary.Read<ulong>(start, (int) Dynamic[DynamicKey.RELRCOUNT]))
                 Relocate(offset, RelocationType.R_AARCH64_RELATIVE, 0, 0, true);
-        using var nfp = File.OpenWrite($"{LoadBase:X}_reloc.bin");
-        nfp.Write(Binary.Span);
     }
     
     public string GetDynstr(ulong i) => Dynstr.Substring((int) i, Dynstr.IndexOf('\0', (int) i) - (int) i);
@@ -176,6 +173,16 @@ public unsafe class ExeModule {
         Relocate(offset, (RelocationType) type, sym, addend, isRel);
     void Relocate(ulong offset, RelocationType type, uint sym, long addend, bool isRel) {
         switch(type) {
+            case RelocationType.R_AARCH64_ABS64:
+                break;
+            case RelocationType.R_AARCH64_GLOB_DAT:
+                if(sym != 0 && Symbols[(int) sym].Value == 0)
+                    break;
+                if(sym != 0)
+                    Write(offset, unchecked(LoadBase + Symbols[(int) sym].Value + (ulong) addend));
+                else
+                    Write(offset, unchecked(LoadBase + (isRel ? Read<ulong>(offset) : 0) + (ulong) addend));
+                break;
             case RelocationType.R_AARCH64_JUMP_SLOT:
                 break;
             case RelocationType.R_AARCH64_RELATIVE:
