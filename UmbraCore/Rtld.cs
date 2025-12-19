@@ -15,7 +15,7 @@ public class Rtld {
                 SymbolAddrs[symbol.Name] = module.LoadBase + symbol.Value;
             }
         foreach(var (name, (_, addr)) in Globals.HookManager.Hooks)
-            SymbolAddrs[name] = 0x8000_0000_0000_0000UL | addr;
+            SymbolAddrs[name] = (Globals.IsNative ? 0 : 0x8000_0000_0000_0000UL) | addr;
         foreach(var module in modules) {
             if(module.Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
                 var rels = module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.RELCOUNT]);

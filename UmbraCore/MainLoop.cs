@@ -33,6 +33,7 @@ public class MainLoop {
                 Modules.Add(new(loadBase, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd));
             };
         Game.Callbacks.InitModule = (loadBase, size) => {
+            Globals.IsNative = true;
             Console.WriteLine($"Module loaded at 0x{loadBase:X}-0x{loadBase+size:X}");
             Globals.MemoryManager.Regions[loadBase] = (size, 0);
             Modules.Add(new(loadBase, size, doRelocate: true));
