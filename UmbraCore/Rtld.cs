@@ -6,16 +6,19 @@ using UmbraCore.Kernel;
 
 namespace UmbraCore;
 
+delegate ulong MallocHook(ulong size);
 public class Rtld {
     public readonly Dictionary<string, ulong> SymbolAddrs = [];
+
     public unsafe Rtld(List<ExeModule> modules) {
         foreach(var module in modules)
             foreach(var symbol in module.Symbols) {
                 if(symbol.Value == 0 || symbol.Name == "") continue;
                 SymbolAddrs[symbol.Name] = module.LoadBase + symbol.Value;
+                Kernel.Kernel.Symbols[(module.LoadBase + symbol.Value, module.LoadBase + symbol.Value + symbol.Size)] = symbol.Name;
             }
-        foreach(var (name, (_, addr)) in Globals.HookManager.Hooks)
-            SymbolAddrs[name] = (Globals.IsNative ? 0 : 0x8000_0000_0000_0000UL) | addr;
+        foreach(var (name, (_, addr)) in Kernel.Kernel.HookManager.Hooks)
+            SymbolAddrs[name] = (Kernel.Kernel.IsNative ? 0 : 0x8000_0000_0000_0000UL) | addr;
         foreach(var module in modules) {
             if(module.Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
                 var rels = module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.RELCOUNT]);
@@ -45,7 +48,7 @@ public class Rtld {
             }
         }
 
-        var thread = Globals.ThreadManager.CurrentThread;
+        var thread = Kernel.Kernel.ThreadManager.CurrentThread;
 
         void Run(string name, ulong x0 = 0, ulong x1 = 0, ulong x2 = 0, ulong x3 = 0) {
             thread.CpuState->X0 = x0;
@@ -65,9 +68,9 @@ public class Rtld {
             Console.WriteLine("Exception handler ready!");
         void RunInitializers() {
             Console.WriteLine("Running initializers!");
-            foreach(var module in modules.ToArray().Reverse()) {
+            foreach(var (i, module) in modules.Index()) {
                 if(module.Dynamic.TryGetValue(DynamicKey.INIT, out var init)) {
-                    Console.WriteLine($"Running init function: {module.LoadBase + init:X}");
+                    Console.WriteLine($"Running init function: {module.LoadBase + init:X} (0x{0x71_00000000UL + 0x1_00000000UL * (ulong) i + init:X})");
                     thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;
                     thread.RunFrom(module.LoadBase + init, 0xCAFEBABEDEADBEEFUL);
                     Console.WriteLine("Done");
@@ -86,7 +89,14 @@ public class Rtld {
         } else {
             Run("__nnDetailInitLibc0");
             Run("nnosInitialize", 0xf00b, 0xdeadbee0);
+            Run("__nnDetailInitLibc1");
+            Run("nndiagStartup");
+            Run("nninitInitializeSdkModule");
+            Run("nninitInitializeAbortObserver");
+            Run("nninitStartup");
+            Run("__nnDetailInitLibc2");
             RunInitializers();
+            Run("nnMain");
         }
     }
     

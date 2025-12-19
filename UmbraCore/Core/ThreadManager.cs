@@ -12,14 +12,14 @@ public unsafe class KThread {
         CpuState = (CpuState*) State;
         Stack = Marshal.AllocHGlobal((int) stackSize);
         CpuState->SP = (ulong) Stack + stackSize;
-        TlsBase = Marshal.AllocHGlobal(0x11C0);
+        TlsBase = Marshal.AllocHGlobal(0x200);
         CpuState->TlsBase = (ulong) TlsBase;
-        var tls = (ulong*) CpuState->TlsBase;
+        /*var tls = (ulong*) CpuState->TlsBase;
         tls[63] = CpuState->TlsBase + 0x1000;
         tls = (ulong*) tls[63];
         tls[9] = tls[10] = CpuState->SP;
         tls[11] = stackSize;
-        tls[54] = 0xcafe000f; // thread handle
+        tls[54] = 0xcafe000f; // thread handle*/
     }
 
     public unsafe void RunFrom(ulong addr, ulong until) {

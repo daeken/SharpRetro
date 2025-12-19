@@ -17,4 +17,8 @@
     <ItemGroup>
         <ProjectReference Include="..\UmbraGenerators\UmbraGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CxxDemangler" Version="0.2.4.11" />
+    </ItemGroup>
 </Project>

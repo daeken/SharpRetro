@@ -1,11 +1,19 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace UmbraCore.Kernel;
 
 public class MemoryManager {
-    public ulong Heap;
+    public ulong HeapAddress, HeapSize;
     public readonly Dictionary<ulong, (ulong Size, ulong Flags)> Regions = [];
+
+    public MemoryManager() {
+        HeapSize = 0x100000;
+        HeapAddress = (ulong) Marshal.AllocHGlobal((int) HeapSize);
+        Regions[HeapAddress] = (HeapSize, 1);
+    }
+
+    public bool IsKnownPointer(ulong addr) =>
+        Regions.Any(x => x.Key <= addr && addr < x.Key + x.Value.Size);
 
     IEnumerable<(bool Resident, ulong Start, ulong Size, ulong Flags)> AllRegions() {
         var cur = 0UL;
@@ -15,7 +23,7 @@ public class MemoryManager {
             yield return (true, start, size, flags);
             cur = start + size;
         }
-        yield return (false, cur, 0xFFFF_FFFF_FFFF_FFFF - cur + 1, 0);
+        yield return (false, cur, 0x0FFF_FFFF_FFFF_FFFF - cur + 1, 0);
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -36,10 +44,9 @@ public class MemoryManager {
                     memoryInfo->Size = size;
                     memoryInfo->MemoryType = resident ? 3U : 0;
                     memoryInfo->MemoryAttribute = 0;
-                    memoryInfo->Permission = resident ? 5U : 0; // RX
+                    memoryInfo->Permission = resident ? (flags == 1 ? 3U : 5U) : 0; // RX for code, RW for heap
                     memoryInfo->DeviceRefCount = memoryInfo->IpcRefCount = memoryInfo->__padding = 0;
                     *(uint*) pageInfo = 0;
-                    Console.WriteLine($"Found?? {start:X} - {start + size:X} {resident}");
                     break;
                 }
             }
