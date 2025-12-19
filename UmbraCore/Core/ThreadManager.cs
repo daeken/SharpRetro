@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Aarch64Cpu;
 
-namespace UmbraCore.Kernel;
+namespace UmbraCore.Core;
 
 public unsafe class KThread {
     public CpuState* CpuState;

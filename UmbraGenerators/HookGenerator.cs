@@ -61,7 +61,7 @@ public class HookGenerator : ISourceGenerator {
         }
         
         context.AddSource("HookWrappers.g.cs", $@"
-namespace UmbraCore.Kernel;
+namespace UmbraCore.Core;
 public partial class HookManager {{
 	public unsafe void InitializeWrappers() {{
 {string.Join("\n", hooks)}

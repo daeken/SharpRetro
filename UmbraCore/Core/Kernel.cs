@@ -1,8 +1,8 @@
-namespace UmbraCore.Kernel;
+namespace UmbraCore.Core;
 
 public static class Kernel {
     public static bool IsNative;
-    public static readonly HookManager HookManager = new();
+    public static readonly Core.HookManager HookManager = new();
     public static readonly IpcManager IpcManager = new();
     public static readonly MemoryManager MemoryManager = new();
     public static readonly ThreadManager ThreadManager = new();

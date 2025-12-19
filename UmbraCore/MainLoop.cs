@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using NxCommon;
-using UmbraCore.Kernel;
+using UmbraCore.Core;
 
 namespace UmbraCore;
 
@@ -17,7 +17,7 @@ public class MainLoop {
 
         Game.Callbacks.Debug = pc => {
             Console.WriteLine($"Running from 0x{pc:X}");
-            var thread = Kernel.Kernel.ThreadManager.CurrentThread;
+            var thread = Kernel.ThreadManager.CurrentThread;
             for(var i = 0; i < 31; ++i) {
                 Console.Write($"X{i}: 0x{thread.CpuState->X[i]:X} ");
                 if(i != 0 && i % 4 == 0)
@@ -28,14 +28,14 @@ public class MainLoop {
         Game.Callbacks.LoadModule =
             (loadBase, data, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd) => {
                 Console.WriteLine($"Loading module at 0x{loadBase:X}");
-                Kernel.Kernel.MemoryManager.Mmap(loadBase, size);
+                Kernel.MemoryManager.Mmap(loadBase, size);
                 Buffer.MemoryCopy(data, (void*) loadBase, size, size);
                 Modules.Add(new(loadBase, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd));
             };
         Game.Callbacks.InitModule = (loadBase, size) => {
-            Kernel.Kernel.IsNative = true;
+            Kernel.IsNative = true;
             Console.WriteLine($"Module loaded at 0x{loadBase:X}-0x{loadBase+size:X}");
-            Kernel.Kernel.MemoryManager.Regions[loadBase] = (size, 0);
+            Kernel.MemoryManager.Regions[loadBase] = (size, 0);
             Modules.Add(new(loadBase, size, doRelocate: true));
         };
         Game.Callbacks.WriteSr = (_, _, _, _, _, _) => {
@@ -51,7 +51,7 @@ public class MainLoop {
                 0b11_011_0100_0100_001 => // FPSR
                     (true, 0UL),
                 0b11_011_1101_0000_011 => // TPIDR
-                    (true, (ulong) Kernel.Kernel.ThreadManager.CurrentThread.TlsBase),
+                    (true, (ulong) Kernel.ThreadManager.CurrentThread.TlsBase),
                 0b11_011_1110_0000_001 => // CntpctEl0
                     (true, 0UL),
                 0b11_011_0000_0000_111 => // DCZID_EL0
@@ -65,11 +65,11 @@ public class MainLoop {
             Console.WriteLine($"Debug string: {Encoding.ASCII.GetString(new Span<byte>((void*) addr, (int) size))}");
             return 0;
         };
-        Kernel.Kernel.Setup(Game);
+        Kernel.Setup(Game);
         Game.Setup();
         Console.WriteLine("Done with setup!");
         if(false) {
-            var thread = Kernel.Kernel.ThreadManager.CurrentThread;
+            var thread = Kernel.ThreadManager.CurrentThread;
             thread.CpuState->X0 = 0;
             thread.CpuState->X1 = 0xFFFF8001; // thread handle
             thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;

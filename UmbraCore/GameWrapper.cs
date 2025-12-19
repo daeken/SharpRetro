@@ -20,7 +20,7 @@ public unsafe class GameWrapper {
 
         Callbacks.NativeReentry = (state, op, a, b, replAddr) => {
             Console.WriteLine($"Native reentry from {0x71_00000000 + replAddr:X} ({op})");
-            Kernel.Kernel.StackTrace((ulong*) state);
+            Core.Kernel.StackTrace((ulong*) state);
             switch(op) {
 				case 0:
 					throw new NotImplementedException($"Brk? 0x{a:X}");

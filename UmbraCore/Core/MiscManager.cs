@@ -1,4 +1,4 @@
-namespace UmbraCore.Kernel;
+namespace UmbraCore.Core;
 
 public class MiscManager {
     public void Setup(GameWrapper game) {

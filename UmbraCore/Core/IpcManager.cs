@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace UmbraCore.Kernel;
+namespace UmbraCore.Core;
 
 public class IpcManager {
     public void Setup(GameWrapper game) {

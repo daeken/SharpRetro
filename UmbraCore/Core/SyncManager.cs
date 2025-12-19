@@ -1,4 +1,4 @@
-namespace UmbraCore.Kernel;
+namespace UmbraCore.Core;
 
 public abstract class Waitable : KObject {
     public readonly Queue<Func<bool, int>> Waiters = [];
@@ -114,11 +114,11 @@ public class SyncManager {
     
     public void Setup(GameWrapper game) {
         game.Callbacks.ClearEvent = handle => {
-            Kernel.Get<Event>(handle).Triggered = false;
+            Core.Kernel.Get<Event>(handle).Triggered = false;
             return 0;
         };
         game.Callbacks.ResetSignal = handle => {
-            Kernel.Get<Event>(handle).Triggered = false;
+            Core.Kernel.Get<Event>(handle).Triggered = false;
             return 0;
         };
         game.Callbacks.SignalProcessWideKey = (semaAddr, target) => {
