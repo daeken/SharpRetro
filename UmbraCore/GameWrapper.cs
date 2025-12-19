@@ -582,137 +582,664 @@ public delegate void SetMemoryAttribute2Delegate();
 public delegate void MapInsecurePhysicalMemoryDelegate();
 public delegate void UnmapInsecurePhysicalMemoryDelegate();
 
-public class Callbacks {
+public unsafe class Callbacks {
     public CallbackTableOffsets CallbackTable;
-    public DebugDelegate Debug { get => debug; set => CallbackTable.debug = Marshal.GetFunctionPointerForDelegate(debug = value); } DebugDelegate debug;
-    public LoadModuleDelegate LoadModule { get => loadModule; set => CallbackTable.loadModule = Marshal.GetFunctionPointerForDelegate(loadModule = value); } LoadModuleDelegate loadModule;
-    public InitModuleDelegate InitModule { get => initModule; set => CallbackTable.initModule = Marshal.GetFunctionPointerForDelegate(initModule = value); } InitModuleDelegate initModule;
-    public NativeReentryDelegate NativeReentry { get => nativeReentry; set => CallbackTable.nativeReentry = Marshal.GetFunctionPointerForDelegate(nativeReentry = value); } NativeReentryDelegate nativeReentry;
-    public ReadSrDelegate ReadSr { get => readSr; set => CallbackTable.readSr = Marshal.GetFunctionPointerForDelegate(readSr = value); } ReadSrDelegate readSr;
-    public WriteSrDelegate WriteSr { get => writeSr; set => CallbackTable.writeSr = Marshal.GetFunctionPointerForDelegate(writeSr = value); } WriteSrDelegate writeSr;
-    public SetHeapSizeDelegate SetHeapSize { get => setHeapSize; set => CallbackTable.svcSetHeapSize = Marshal.GetFunctionPointerForDelegate(setHeapSize = value); } SetHeapSizeDelegate setHeapSize;
-    public SetMemoryPermissionDelegate SetMemoryPermission { get => setMemoryPermission; set => CallbackTable.svcSetMemoryPermission = Marshal.GetFunctionPointerForDelegate(setMemoryPermission = value); } SetMemoryPermissionDelegate setMemoryPermission;
-    public SetMemoryAttributeDelegate SetMemoryAttribute { get => setMemoryAttribute; set => CallbackTable.svcSetMemoryAttribute = Marshal.GetFunctionPointerForDelegate(setMemoryAttribute = value); } SetMemoryAttributeDelegate setMemoryAttribute;
-    public MapMemoryDelegate MapMemory { get => mapMemory; set => CallbackTable.svcMapMemory = Marshal.GetFunctionPointerForDelegate(mapMemory = value); } MapMemoryDelegate mapMemory;
-    public UnmapMemoryDelegate UnmapMemory { get => unmapMemory; set => CallbackTable.svcUnmapMemory = Marshal.GetFunctionPointerForDelegate(unmapMemory = value); } UnmapMemoryDelegate unmapMemory;
-    public QueryMemoryDelegate QueryMemory { get => queryMemory; set => CallbackTable.svcQueryMemory = Marshal.GetFunctionPointerForDelegate(queryMemory = value); } QueryMemoryDelegate queryMemory;
-    public ExitProcessDelegate ExitProcess { get => exitProcess; set => CallbackTable.svcExitProcess = Marshal.GetFunctionPointerForDelegate(exitProcess = value); } ExitProcessDelegate exitProcess;
-    public CreateThreadDelegate CreateThread { get => createThread; set => CallbackTable.svcCreateThread = Marshal.GetFunctionPointerForDelegate(createThread = value); } CreateThreadDelegate createThread;
-    public StartThreadDelegate StartThread { get => startThread; set => CallbackTable.svcStartThread = Marshal.GetFunctionPointerForDelegate(startThread = value); } StartThreadDelegate startThread;
-    public ExitThreadDelegate ExitThread { get => exitThread; set => CallbackTable.svcExitThread = Marshal.GetFunctionPointerForDelegate(exitThread = value); } ExitThreadDelegate exitThread;
-    public SleepThreadDelegate SleepThread { get => sleepThread; set => CallbackTable.svcSleepThread = Marshal.GetFunctionPointerForDelegate(sleepThread = value); } SleepThreadDelegate sleepThread;
-    public GetThreadPriorityDelegate GetThreadPriority { get => getThreadPriority; set => CallbackTable.svcGetThreadPriority = Marshal.GetFunctionPointerForDelegate(getThreadPriority = value); } GetThreadPriorityDelegate getThreadPriority;
-    public SetThreadPriorityDelegate SetThreadPriority { get => setThreadPriority; set => CallbackTable.svcSetThreadPriority = Marshal.GetFunctionPointerForDelegate(setThreadPriority = value); } SetThreadPriorityDelegate setThreadPriority;
-    public GetThreadCoreMaskDelegate GetThreadCoreMask { get => getThreadCoreMask; set => CallbackTable.svcGetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(getThreadCoreMask = value); } GetThreadCoreMaskDelegate getThreadCoreMask;
-    public SetThreadCoreMaskDelegate SetThreadCoreMask { get => setThreadCoreMask; set => CallbackTable.svcSetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(setThreadCoreMask = value); } SetThreadCoreMaskDelegate setThreadCoreMask;
-    public GetCurrentProcessorNumberDelegate GetCurrentProcessorNumber { get => getCurrentProcessorNumber; set => CallbackTable.svcGetCurrentProcessorNumber = Marshal.GetFunctionPointerForDelegate(getCurrentProcessorNumber = value); } GetCurrentProcessorNumberDelegate getCurrentProcessorNumber;
-    public SignalEventDelegate SignalEvent { get => signalEvent; set => CallbackTable.svcSignalEvent = Marshal.GetFunctionPointerForDelegate(signalEvent = value); } SignalEventDelegate signalEvent;
-    public ClearEventDelegate ClearEvent { get => clearEvent; set => CallbackTable.svcClearEvent = Marshal.GetFunctionPointerForDelegate(clearEvent = value); } ClearEventDelegate clearEvent;
-    public MapSharedMemoryDelegate MapSharedMemory { get => mapSharedMemory; set => CallbackTable.svcMapSharedMemory = Marshal.GetFunctionPointerForDelegate(mapSharedMemory = value); } MapSharedMemoryDelegate mapSharedMemory;
-    public UnmapSharedMemoryDelegate UnmapSharedMemory { get => unmapSharedMemory; set => CallbackTable.svcUnmapSharedMemory = Marshal.GetFunctionPointerForDelegate(unmapSharedMemory = value); } UnmapSharedMemoryDelegate unmapSharedMemory;
-    public CreateTransferMemoryDelegate CreateTransferMemory { get => createTransferMemory; set => CallbackTable.svcCreateTransferMemory = Marshal.GetFunctionPointerForDelegate(createTransferMemory = value); } CreateTransferMemoryDelegate createTransferMemory;
-    public CloseHandleDelegate CloseHandle { get => closeHandle; set => CallbackTable.svcCloseHandle = Marshal.GetFunctionPointerForDelegate(closeHandle = value); } CloseHandleDelegate closeHandle;
-    public ResetSignalDelegate ResetSignal { get => resetSignal; set => CallbackTable.svcResetSignal = Marshal.GetFunctionPointerForDelegate(resetSignal = value); } ResetSignalDelegate resetSignal;
-    public WaitSynchronizationDelegate WaitSynchronization { get => waitSynchronization; set => CallbackTable.svcWaitSynchronization = Marshal.GetFunctionPointerForDelegate(waitSynchronization = value); } WaitSynchronizationDelegate waitSynchronization;
-    public CancelSynchronizationDelegate CancelSynchronization { get => cancelSynchronization; set => CallbackTable.svcCancelSynchronization = Marshal.GetFunctionPointerForDelegate(cancelSynchronization = value); } CancelSynchronizationDelegate cancelSynchronization;
-    public ArbitrateLockDelegate ArbitrateLock { get => arbitrateLock; set => CallbackTable.svcArbitrateLock = Marshal.GetFunctionPointerForDelegate(arbitrateLock = value); } ArbitrateLockDelegate arbitrateLock;
-    public ArbitrateUnlockDelegate ArbitrateUnlock { get => arbitrateUnlock; set => CallbackTable.svcArbitrateUnlock = Marshal.GetFunctionPointerForDelegate(arbitrateUnlock = value); } ArbitrateUnlockDelegate arbitrateUnlock;
-    public WaitProcessWideKeyAtomicDelegate WaitProcessWideKeyAtomic { get => waitProcessWideKeyAtomic; set => CallbackTable.svcWaitProcessWideKeyAtomic = Marshal.GetFunctionPointerForDelegate(waitProcessWideKeyAtomic = value); } WaitProcessWideKeyAtomicDelegate waitProcessWideKeyAtomic;
-    public SignalProcessWideKeyDelegate SignalProcessWideKey { get => signalProcessWideKey; set => CallbackTable.svcSignalProcessWideKey = Marshal.GetFunctionPointerForDelegate(signalProcessWideKey = value); } SignalProcessWideKeyDelegate signalProcessWideKey;
-    public GetSystemTickDelegate GetSystemTick { get => getSystemTick; set => CallbackTable.svcGetSystemTick = Marshal.GetFunctionPointerForDelegate(getSystemTick = value); } GetSystemTickDelegate getSystemTick;
-    public ConnectToNamedPortDelegate ConnectToNamedPort { get => connectToNamedPort; set => CallbackTable.svcConnectToNamedPort = Marshal.GetFunctionPointerForDelegate(connectToNamedPort = value); } ConnectToNamedPortDelegate connectToNamedPort;
-    public SendSyncRequestLightDelegate SendSyncRequestLight { get => sendSyncRequestLight; set => CallbackTable.svcSendSyncRequestLight = Marshal.GetFunctionPointerForDelegate(sendSyncRequestLight = value); } SendSyncRequestLightDelegate sendSyncRequestLight;
-    public SendSyncRequestDelegate SendSyncRequest { get => sendSyncRequest; set => CallbackTable.svcSendSyncRequest = Marshal.GetFunctionPointerForDelegate(sendSyncRequest = value); } SendSyncRequestDelegate sendSyncRequest;
-    public SendSyncRequestWithUserBufferDelegate SendSyncRequestWithUserBuffer { get => sendSyncRequestWithUserBuffer; set => CallbackTable.svcSendSyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(sendSyncRequestWithUserBuffer = value); } SendSyncRequestWithUserBufferDelegate sendSyncRequestWithUserBuffer;
-    public SendAsyncRequestWithUserBufferDelegate SendAsyncRequestWithUserBuffer { get => sendAsyncRequestWithUserBuffer; set => CallbackTable.svcSendAsyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(sendAsyncRequestWithUserBuffer = value); } SendAsyncRequestWithUserBufferDelegate sendAsyncRequestWithUserBuffer;
-    public GetProcessIdDelegate GetProcessId { get => getProcessId; set => CallbackTable.svcGetProcessId = Marshal.GetFunctionPointerForDelegate(getProcessId = value); } GetProcessIdDelegate getProcessId;
-    public GetThreadIdDelegate GetThreadId { get => getThreadId; set => CallbackTable.svcGetThreadId = Marshal.GetFunctionPointerForDelegate(getThreadId = value); } GetThreadIdDelegate getThreadId;
-    public BreakDelegate Break { get => sbreak; set => CallbackTable.svcBreak = Marshal.GetFunctionPointerForDelegate(sbreak = value); } BreakDelegate sbreak;
-    public OutputDebugStringDelegate OutputDebugString { get => outputDebugString; set => CallbackTable.svcOutputDebugString = Marshal.GetFunctionPointerForDelegate(outputDebugString = value); } OutputDebugStringDelegate outputDebugString;
-    public ReturnFromExceptionDelegate ReturnFromException { get => returnFromException; set => CallbackTable.svcReturnFromException = Marshal.GetFunctionPointerForDelegate(returnFromException = value); } ReturnFromExceptionDelegate returnFromException;
-    public GetInfoDelegate GetInfo { get => getInfo; set => CallbackTable.svcGetInfo = Marshal.GetFunctionPointerForDelegate(getInfo = value); } GetInfoDelegate getInfo;
-    public FlushEntireDataCacheDelegate FlushEntireDataCache { get => flushEntireDataCache; set => CallbackTable.svcFlushEntireDataCache = Marshal.GetFunctionPointerForDelegate(flushEntireDataCache = value); } FlushEntireDataCacheDelegate flushEntireDataCache;
-    public FlushDataCacheDelegate FlushDataCache { get => flushDataCache; set => CallbackTable.svcFlushDataCache = Marshal.GetFunctionPointerForDelegate(flushDataCache = value); } FlushDataCacheDelegate flushDataCache;
-    public MapPhysicalMemoryDelegate MapPhysicalMemory { get => mapPhysicalMemory; set => CallbackTable.svcMapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(mapPhysicalMemory = value); } MapPhysicalMemoryDelegate mapPhysicalMemory;
-    public UnmapPhysicalMemoryDelegate UnmapPhysicalMemory { get => unmapPhysicalMemory; set => CallbackTable.svcUnmapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(unmapPhysicalMemory = value); } UnmapPhysicalMemoryDelegate unmapPhysicalMemory;
-    public GetDebugFutureThreadInfoDelegate GetDebugFutureThreadInfo { get => getDebugFutureThreadInfo; set => CallbackTable.svcGetDebugFutureThreadInfo = Marshal.GetFunctionPointerForDelegate(getDebugFutureThreadInfo = value); } GetDebugFutureThreadInfoDelegate getDebugFutureThreadInfo;
-    public GetLastThreadInfoDelegate GetLastThreadInfo { get => getLastThreadInfo; set => CallbackTable.svcGetLastThreadInfo = Marshal.GetFunctionPointerForDelegate(getLastThreadInfo = value); } GetLastThreadInfoDelegate getLastThreadInfo;
-    public GetResourceLimitLimitValueDelegate GetResourceLimitLimitValue { get => getResourceLimitLimitValue; set => CallbackTable.svcGetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(getResourceLimitLimitValue = value); } GetResourceLimitLimitValueDelegate getResourceLimitLimitValue;
-    public GetResourceLimitCurrentValueDelegate GetResourceLimitCurrentValue { get => getResourceLimitCurrentValue; set => CallbackTable.svcGetResourceLimitCurrentValue = Marshal.GetFunctionPointerForDelegate(getResourceLimitCurrentValue = value); } GetResourceLimitCurrentValueDelegate getResourceLimitCurrentValue;
-    public SetThreadActivityDelegate SetThreadActivity { get => setThreadActivity; set => CallbackTable.svcSetThreadActivity = Marshal.GetFunctionPointerForDelegate(setThreadActivity = value); } SetThreadActivityDelegate setThreadActivity;
-    public GetThreadContext3Delegate GetThreadContext3 { get => getThreadContext3; set => CallbackTable.svcGetThreadContext3 = Marshal.GetFunctionPointerForDelegate(getThreadContext3 = value); } GetThreadContext3Delegate getThreadContext3;
-    public WaitForAddressDelegate WaitForAddress { get => waitForAddress; set => CallbackTable.svcWaitForAddress = Marshal.GetFunctionPointerForDelegate(waitForAddress = value); } WaitForAddressDelegate waitForAddress;
-    public SignalToAddressDelegate SignalToAddress { get => signalToAddress; set => CallbackTable.svcSignalToAddress = Marshal.GetFunctionPointerForDelegate(signalToAddress = value); } SignalToAddressDelegate signalToAddress;
-    public SynchronizePreemptionStateDelegate SynchronizePreemptionState { get => synchronizePreemptionState; set => CallbackTable.svcSynchronizePreemptionState = Marshal.GetFunctionPointerForDelegate(synchronizePreemptionState = value); } SynchronizePreemptionStateDelegate synchronizePreemptionState;
-    public GetResourceLimitPeakValueDelegate GetResourceLimitPeakValue { get => getResourceLimitPeakValue; set => CallbackTable.svcGetResourceLimitPeakValue = Marshal.GetFunctionPointerForDelegate(getResourceLimitPeakValue = value); } GetResourceLimitPeakValueDelegate getResourceLimitPeakValue;
-    public CreateIoPoolDelegate CreateIoPool { get => createIoPool; set => CallbackTable.svcCreateIoPool = Marshal.GetFunctionPointerForDelegate(createIoPool = value); } CreateIoPoolDelegate createIoPool;
-    public CreateIoRegionDelegate CreateIoRegion { get => createIoRegion; set => CallbackTable.svcCreateIoRegion = Marshal.GetFunctionPointerForDelegate(createIoRegion = value); } CreateIoRegionDelegate createIoRegion;
-    public KernelDebugDelegate KernelDebug { get => kernelDebug; set => CallbackTable.svcKernelDebug = Marshal.GetFunctionPointerForDelegate(kernelDebug = value); } KernelDebugDelegate kernelDebug;
-    public ChangeKernelTraceStateDelegate ChangeKernelTraceState { get => changeKernelTraceState; set => CallbackTable.svcChangeKernelTraceState = Marshal.GetFunctionPointerForDelegate(changeKernelTraceState = value); } ChangeKernelTraceStateDelegate changeKernelTraceState;
-    public CreateSessionDelegate CreateSession { get => createSession; set => CallbackTable.svcCreateSession = Marshal.GetFunctionPointerForDelegate(createSession = value); } CreateSessionDelegate createSession;
-    public AcceptSessionDelegate AcceptSession { get => acceptSession; set => CallbackTable.svcAcceptSession = Marshal.GetFunctionPointerForDelegate(acceptSession = value); } AcceptSessionDelegate acceptSession;
-    public ReplyAndReceiveLightDelegate ReplyAndReceiveLight { get => replyAndReceiveLight; set => CallbackTable.svcReplyAndReceiveLight = Marshal.GetFunctionPointerForDelegate(replyAndReceiveLight = value); } ReplyAndReceiveLightDelegate replyAndReceiveLight;
-    public ReplyAndReceiveDelegate ReplyAndReceive { get => replyAndReceive; set => CallbackTable.svcReplyAndReceive = Marshal.GetFunctionPointerForDelegate(replyAndReceive = value); } ReplyAndReceiveDelegate replyAndReceive;
-    public ReplyAndReceiveWithUserBufferDelegate ReplyAndReceiveWithUserBuffer { get => replyAndReceiveWithUserBuffer; set => CallbackTable.svcReplyAndReceiveWithUserBuffer = Marshal.GetFunctionPointerForDelegate(replyAndReceiveWithUserBuffer = value); } ReplyAndReceiveWithUserBufferDelegate replyAndReceiveWithUserBuffer;
-    public CreateEventDelegate CreateEvent { get => createEvent; set => CallbackTable.svcCreateEvent = Marshal.GetFunctionPointerForDelegate(createEvent = value); } CreateEventDelegate createEvent;
-    public MapIoRegionDelegate MapIoRegion { get => mapIoRegion; set => CallbackTable.svcMapIoRegion = Marshal.GetFunctionPointerForDelegate(mapIoRegion = value); } MapIoRegionDelegate mapIoRegion;
-    public UnmapIoRegionDelegate UnmapIoRegion { get => unmapIoRegion; set => CallbackTable.svcUnmapIoRegion = Marshal.GetFunctionPointerForDelegate(unmapIoRegion = value); } UnmapIoRegionDelegate unmapIoRegion;
-    public MapPhysicalMemoryUnsafeDelegate MapPhysicalMemoryUnsafe { get => mapPhysicalMemoryUnsafe; set => CallbackTable.svcMapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(mapPhysicalMemoryUnsafe = value); } MapPhysicalMemoryUnsafeDelegate mapPhysicalMemoryUnsafe;
-    public UnmapPhysicalMemoryUnsafeDelegate UnmapPhysicalMemoryUnsafe { get => unmapPhysicalMemoryUnsafe; set => CallbackTable.svcUnmapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(unmapPhysicalMemoryUnsafe = value); } UnmapPhysicalMemoryUnsafeDelegate unmapPhysicalMemoryUnsafe;
-    public SetUnsafeLimitDelegate SetUnsafeLimit { get => setUnsafeLimit; set => CallbackTable.svcSetUnsafeLimit = Marshal.GetFunctionPointerForDelegate(setUnsafeLimit = value); } SetUnsafeLimitDelegate setUnsafeLimit;
-    public CreateCodeMemoryDelegate CreateCodeMemory { get => createCodeMemory; set => CallbackTable.svcCreateCodeMemory = Marshal.GetFunctionPointerForDelegate(createCodeMemory = value); } CreateCodeMemoryDelegate createCodeMemory;
-    public ControlCodeMemoryDelegate ControlCodeMemory { get => controlCodeMemory; set => CallbackTable.svcControlCodeMemory = Marshal.GetFunctionPointerForDelegate(controlCodeMemory = value); } ControlCodeMemoryDelegate controlCodeMemory;
-    public SleepSystemDelegate SleepSystem { get => sleepSystem; set => CallbackTable.svcSleepSystem = Marshal.GetFunctionPointerForDelegate(sleepSystem = value); } SleepSystemDelegate sleepSystem;
-    public ReadWriteRegisterDelegate ReadWriteRegister { get => readWriteRegister; set => CallbackTable.svcReadWriteRegister = Marshal.GetFunctionPointerForDelegate(readWriteRegister = value); } ReadWriteRegisterDelegate readWriteRegister;
-    public SetProcessActivityDelegate SetProcessActivity { get => setProcessActivity; set => CallbackTable.svcSetProcessActivity = Marshal.GetFunctionPointerForDelegate(setProcessActivity = value); } SetProcessActivityDelegate setProcessActivity;
-    public CreateSharedMemoryDelegate CreateSharedMemory { get => createSharedMemory; set => CallbackTable.svcCreateSharedMemory = Marshal.GetFunctionPointerForDelegate(createSharedMemory = value); } CreateSharedMemoryDelegate createSharedMemory;
-    public MapTransferMemoryDelegate MapTransferMemory { get => mapTransferMemory; set => CallbackTable.svcMapTransferMemory = Marshal.GetFunctionPointerForDelegate(mapTransferMemory = value); } MapTransferMemoryDelegate mapTransferMemory;
-    public UnmapTransferMemoryDelegate UnmapTransferMemory { get => unmapTransferMemory; set => CallbackTable.svcUnmapTransferMemory = Marshal.GetFunctionPointerForDelegate(unmapTransferMemory = value); } UnmapTransferMemoryDelegate unmapTransferMemory;
-    public CreateInterruptEventDelegate CreateInterruptEvent { get => createInterruptEvent; set => CallbackTable.svcCreateInterruptEvent = Marshal.GetFunctionPointerForDelegate(createInterruptEvent = value); } CreateInterruptEventDelegate createInterruptEvent;
-    public QueryPhysicalAddressDelegate QueryPhysicalAddress { get => queryPhysicalAddress; set => CallbackTable.svcQueryPhysicalAddress = Marshal.GetFunctionPointerForDelegate(queryPhysicalAddress = value); } QueryPhysicalAddressDelegate queryPhysicalAddress;
-    public QueryMemoryMappingDelegate QueryMemoryMapping { get => queryMemoryMapping; set => CallbackTable.svcQueryMemoryMapping = Marshal.GetFunctionPointerForDelegate(queryMemoryMapping = value); } QueryMemoryMappingDelegate queryMemoryMapping;
-    public CreateDeviceAddressSpaceDelegate CreateDeviceAddressSpace { get => createDeviceAddressSpace; set => CallbackTable.svcCreateDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(createDeviceAddressSpace = value); } CreateDeviceAddressSpaceDelegate createDeviceAddressSpace;
-    public AttachDeviceAddressSpaceDelegate AttachDeviceAddressSpace { get => attachDeviceAddressSpace; set => CallbackTable.svcAttachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(attachDeviceAddressSpace = value); } AttachDeviceAddressSpaceDelegate attachDeviceAddressSpace;
-    public DetachDeviceAddressSpaceDelegate DetachDeviceAddressSpace { get => detachDeviceAddressSpace; set => CallbackTable.svcDetachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(detachDeviceAddressSpace = value); } DetachDeviceAddressSpaceDelegate detachDeviceAddressSpace;
-    public MapDeviceAddressSpaceByForceDelegate MapDeviceAddressSpaceByForce { get => mapDeviceAddressSpaceByForce; set => CallbackTable.svcMapDeviceAddressSpaceByForce = Marshal.GetFunctionPointerForDelegate(mapDeviceAddressSpaceByForce = value); } MapDeviceAddressSpaceByForceDelegate mapDeviceAddressSpaceByForce;
-    public MapDeviceAddressSpaceAlignedDelegate MapDeviceAddressSpaceAligned { get => mapDeviceAddressSpaceAligned; set => CallbackTable.svcMapDeviceAddressSpaceAligned = Marshal.GetFunctionPointerForDelegate(mapDeviceAddressSpaceAligned = value); } MapDeviceAddressSpaceAlignedDelegate mapDeviceAddressSpaceAligned;
-    public MapDeviceAddressSpaceDelegate MapDeviceAddressSpace { get => mapDeviceAddressSpace; set => CallbackTable.svcMapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(mapDeviceAddressSpace = value); } MapDeviceAddressSpaceDelegate mapDeviceAddressSpace;
-    public UnmapDeviceAddressSpaceDelegate UnmapDeviceAddressSpace { get => unmapDeviceAddressSpace; set => CallbackTable.svcUnmapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(unmapDeviceAddressSpace = value); } UnmapDeviceAddressSpaceDelegate unmapDeviceAddressSpace;
-    public InvalidateProcessDataCacheDelegate InvalidateProcessDataCache { get => invalidateProcessDataCache; set => CallbackTable.svcInvalidateProcessDataCache = Marshal.GetFunctionPointerForDelegate(invalidateProcessDataCache = value); } InvalidateProcessDataCacheDelegate invalidateProcessDataCache;
-    public StoreProcessDataCacheDelegate StoreProcessDataCache { get => storeProcessDataCache; set => CallbackTable.svcStoreProcessDataCache = Marshal.GetFunctionPointerForDelegate(storeProcessDataCache = value); } StoreProcessDataCacheDelegate storeProcessDataCache;
-    public FlushProcessDataCacheDelegate FlushProcessDataCache { get => flushProcessDataCache; set => CallbackTable.svcFlushProcessDataCache = Marshal.GetFunctionPointerForDelegate(flushProcessDataCache = value); } FlushProcessDataCacheDelegate flushProcessDataCache;
-    public DebugActiveProcessDelegate DebugActiveProcess { get => debugActiveProcess; set => CallbackTable.svcDebugActiveProcess = Marshal.GetFunctionPointerForDelegate(debugActiveProcess = value); } DebugActiveProcessDelegate debugActiveProcess;
-    public BreakDebugProcessDelegate BreakDebugProcess { get => breakDebugProcess; set => CallbackTable.svcBreakDebugProcess = Marshal.GetFunctionPointerForDelegate(breakDebugProcess = value); } BreakDebugProcessDelegate breakDebugProcess;
-    public TerminateDebugProcessDelegate TerminateDebugProcess { get => terminateDebugProcess; set => CallbackTable.svcTerminateDebugProcess = Marshal.GetFunctionPointerForDelegate(terminateDebugProcess = value); } TerminateDebugProcessDelegate terminateDebugProcess;
-    public GetDebugEventDelegate GetDebugEvent { get => getDebugEvent; set => CallbackTable.svcGetDebugEvent = Marshal.GetFunctionPointerForDelegate(getDebugEvent = value); } GetDebugEventDelegate getDebugEvent;
-    public ContinueDebugEventDelegate ContinueDebugEvent { get => continueDebugEvent; set => CallbackTable.svcContinueDebugEvent = Marshal.GetFunctionPointerForDelegate(continueDebugEvent = value); } ContinueDebugEventDelegate continueDebugEvent;
-    public GetProcessListDelegate GetProcessList { get => getProcessList; set => CallbackTable.svcGetProcessList = Marshal.GetFunctionPointerForDelegate(getProcessList = value); } GetProcessListDelegate getProcessList;
-    public GetThreadListDelegate GetThreadList { get => getThreadList; set => CallbackTable.svcGetThreadList = Marshal.GetFunctionPointerForDelegate(getThreadList = value); } GetThreadListDelegate getThreadList;
-    public GetDebugThreadContextDelegate GetDebugThreadContext { get => getDebugThreadContext; set => CallbackTable.svcGetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(getDebugThreadContext = value); } GetDebugThreadContextDelegate getDebugThreadContext;
-    public SetDebugThreadContextDelegate SetDebugThreadContext { get => setDebugThreadContext; set => CallbackTable.svcSetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(setDebugThreadContext = value); } SetDebugThreadContextDelegate setDebugThreadContext;
-    public QueryDebugProcessMemoryDelegate QueryDebugProcessMemory { get => queryDebugProcessMemory; set => CallbackTable.svcQueryDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(queryDebugProcessMemory = value); } QueryDebugProcessMemoryDelegate queryDebugProcessMemory;
-    public ReadDebugProcessMemoryDelegate ReadDebugProcessMemory { get => readDebugProcessMemory; set => CallbackTable.svcReadDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(readDebugProcessMemory = value); } ReadDebugProcessMemoryDelegate readDebugProcessMemory;
-    public WriteDebugProcessMemoryDelegate WriteDebugProcessMemory { get => writeDebugProcessMemory; set => CallbackTable.svcWriteDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(writeDebugProcessMemory = value); } WriteDebugProcessMemoryDelegate writeDebugProcessMemory;
-    public SetHardwareBreakPointDelegate SetHardwareBreakPoint { get => setHardwareBreakPoint; set => CallbackTable.svcSetHardwareBreakPoint = Marshal.GetFunctionPointerForDelegate(setHardwareBreakPoint = value); } SetHardwareBreakPointDelegate setHardwareBreakPoint;
-    public GetDebugThreadParamDelegate GetDebugThreadParam { get => getDebugThreadParam; set => CallbackTable.svcGetDebugThreadParam = Marshal.GetFunctionPointerForDelegate(getDebugThreadParam = value); } GetDebugThreadParamDelegate getDebugThreadParam;
-    public GetSystemInfoDelegate GetSystemInfo { get => getSystemInfo; set => CallbackTable.svcGetSystemInfo = Marshal.GetFunctionPointerForDelegate(getSystemInfo = value); } GetSystemInfoDelegate getSystemInfo;
-    public CreatePortDelegate CreatePort { get => createPort; set => CallbackTable.svcCreatePort = Marshal.GetFunctionPointerForDelegate(createPort = value); } CreatePortDelegate createPort;
-    public ManageNamedPortDelegate ManageNamedPort { get => manageNamedPort; set => CallbackTable.svcManageNamedPort = Marshal.GetFunctionPointerForDelegate(manageNamedPort = value); } ManageNamedPortDelegate manageNamedPort;
-    public ConnectToPortDelegate ConnectToPort { get => connectToPort; set => CallbackTable.svcConnectToPort = Marshal.GetFunctionPointerForDelegate(connectToPort = value); } ConnectToPortDelegate connectToPort;
-    public SetProcessMemoryPermissionDelegate SetProcessMemoryPermission { get => setProcessMemoryPermission; set => CallbackTable.svcSetProcessMemoryPermission = Marshal.GetFunctionPointerForDelegate(setProcessMemoryPermission = value); } SetProcessMemoryPermissionDelegate setProcessMemoryPermission;
-    public MapProcessMemoryDelegate MapProcessMemory { get => mapProcessMemory; set => CallbackTable.svcMapProcessMemory = Marshal.GetFunctionPointerForDelegate(mapProcessMemory = value); } MapProcessMemoryDelegate mapProcessMemory;
-    public UnmapProcessMemoryDelegate UnmapProcessMemory { get => unmapProcessMemory; set => CallbackTable.svcUnmapProcessMemory = Marshal.GetFunctionPointerForDelegate(unmapProcessMemory = value); } UnmapProcessMemoryDelegate unmapProcessMemory;
-    public QueryProcessMemoryDelegate QueryProcessMemory { get => queryProcessMemory; set => CallbackTable.svcQueryProcessMemory = Marshal.GetFunctionPointerForDelegate(queryProcessMemory = value); } QueryProcessMemoryDelegate queryProcessMemory;
-    public MapProcessCodeMemoryDelegate MapProcessCodeMemory { get => mapProcessCodeMemory; set => CallbackTable.svcMapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(mapProcessCodeMemory = value); } MapProcessCodeMemoryDelegate mapProcessCodeMemory;
-    public UnmapProcessCodeMemoryDelegate UnmapProcessCodeMemory { get => unmapProcessCodeMemory; set => CallbackTable.svcUnmapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(unmapProcessCodeMemory = value); } UnmapProcessCodeMemoryDelegate unmapProcessCodeMemory;
-    public CreateProcessDelegate CreateProcess { get => createProcess; set => CallbackTable.svcCreateProcess = Marshal.GetFunctionPointerForDelegate(createProcess = value); } CreateProcessDelegate createProcess;
-    public StartProcessDelegate StartProcess { get => startProcess; set => CallbackTable.svcStartProcess = Marshal.GetFunctionPointerForDelegate(startProcess = value); } StartProcessDelegate startProcess;
-    public TerminateProcessDelegate TerminateProcess { get => terminateProcess; set => CallbackTable.svcTerminateProcess = Marshal.GetFunctionPointerForDelegate(terminateProcess = value); } TerminateProcessDelegate terminateProcess;
-    public GetProcessInfoDelegate GetProcessInfo { get => getProcessInfo; set => CallbackTable.svcGetProcessInfo = Marshal.GetFunctionPointerForDelegate(getProcessInfo = value); } GetProcessInfoDelegate getProcessInfo;
-    public CreateResourceLimitDelegate CreateResourceLimit { get => createResourceLimit; set => CallbackTable.svcCreateResourceLimit = Marshal.GetFunctionPointerForDelegate(createResourceLimit = value); } CreateResourceLimitDelegate createResourceLimit;
-    public SetResourceLimitLimitValueDelegate SetResourceLimitLimitValue { get => setResourceLimitLimitValue; set => CallbackTable.svcSetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(setResourceLimitLimitValue = value); } SetResourceLimitLimitValueDelegate setResourceLimitLimitValue;
-    public CallSecureMonitorDelegate CallSecureMonitor { get => callSecureMonitor; set => CallbackTable.svcCallSecureMonitor = Marshal.GetFunctionPointerForDelegate(callSecureMonitor = value); } CallSecureMonitorDelegate callSecureMonitor;
-    public SetMemoryAttribute2Delegate SetMemoryAttribute2 { get => setMemoryAttribute2; set => CallbackTable.svcSetMemoryAttribute2 = Marshal.GetFunctionPointerForDelegate(setMemoryAttribute2 = value); } SetMemoryAttribute2Delegate setMemoryAttribute2;
-    public MapInsecurePhysicalMemoryDelegate MapInsecurePhysicalMemory { get => mapInsecurePhysicalMemory; set => CallbackTable.svcMapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(mapInsecurePhysicalMemory = value); } MapInsecurePhysicalMemoryDelegate mapInsecurePhysicalMemory;
-    public UnmapInsecurePhysicalMemoryDelegate UnmapInsecurePhysicalMemory { get => unmapInsecurePhysicalMemory; set => CallbackTable.svcUnmapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(unmapInsecurePhysicalMemory = value); } UnmapInsecurePhysicalMemoryDelegate unmapInsecurePhysicalMemory;
+
+    public DebugDelegate Debug {
+        get;
+        set => CallbackTable.debug = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("Debug not implemented");
+
+    public LoadModuleDelegate LoadModule {
+        get;
+        set => CallbackTable.loadModule = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _, _, _, _) => throw new NotImplementedException("LoadModule not implemented");
+
+    public InitModuleDelegate InitModule {
+        get;
+        set => CallbackTable.initModule = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("InitModule not implemented");
+
+    public NativeReentryDelegate NativeReentry {
+        get;
+        set => CallbackTable.nativeReentry = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _) => throw new NotImplementedException("NativeReentry not implemented");
+
+    public ReadSrDelegate ReadSr {
+        get;
+        set => CallbackTable.readSr = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _) => throw new NotImplementedException("ReadSr not implemented");
+
+    public WriteSrDelegate WriteSr {
+        get;
+        set => CallbackTable.writeSr = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _) => throw new NotImplementedException("WriteSr not implemented");
+
+    public SetHeapSizeDelegate SetHeapSize {
+        get;
+        set => CallbackTable.svcSetHeapSize = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("SetHeapSize not implemented");
+
+    public SetMemoryPermissionDelegate SetMemoryPermission {
+        get;
+        set => CallbackTable.svcSetMemoryPermission = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("SetMemoryPermission not implemented");
+
+    public SetMemoryAttributeDelegate SetMemoryAttribute {
+        get;
+        set => CallbackTable.svcSetMemoryAttribute = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("SetMemoryAttribute not implemented");
+
+    public MapMemoryDelegate MapMemory {
+        get;
+        set => CallbackTable.svcMapMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("MapMemory not implemented");
+
+    public UnmapMemoryDelegate UnmapMemory {
+        get;
+        set => CallbackTable.svcUnmapMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("UnmapMemory not implemented");
+
+    public QueryMemoryDelegate QueryMemory {
+        get;
+        set => CallbackTable.svcQueryMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("QueryMemory not implemented");
+
+    public ExitProcessDelegate ExitProcess {
+        get;
+        set => CallbackTable.svcExitProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("ExitProcess not implemented");
+
+    public CreateThreadDelegate CreateThread {
+        get;
+        set => CallbackTable.svcCreateThread = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, ref _) => throw new NotImplementedException("CreateThread not implemented");
+
+    public StartThreadDelegate StartThread {
+        get;
+        set => CallbackTable.svcStartThread = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("StartThread not implemented");
+
+    public ExitThreadDelegate ExitThread {
+        get;
+        set => CallbackTable.svcExitThread = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("ExitThread not implemented");
+
+    public SleepThreadDelegate SleepThread {
+        get;
+        set => CallbackTable.svcSleepThread = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("SleepThread not implemented");
+
+    public GetThreadPriorityDelegate GetThreadPriority {
+        get;
+        set => CallbackTable.svcGetThreadPriority = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("GetThreadPriority not implemented");
+
+    public SetThreadPriorityDelegate SetThreadPriority {
+        get;
+        set => CallbackTable.svcSetThreadPriority = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("SetThreadPriority not implemented");
+
+    public GetThreadCoreMaskDelegate GetThreadCoreMask {
+        get;
+        set => CallbackTable.svcGetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _, ref _) => throw new NotImplementedException("GetThreadCoreMask not implemented");
+
+    public SetThreadCoreMaskDelegate SetThreadCoreMask {
+        get;
+        set => CallbackTable.svcSetThreadCoreMask = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("SetThreadCoreMask not implemented");
+
+    public GetCurrentProcessorNumberDelegate GetCurrentProcessorNumber {
+        get;
+        set => CallbackTable.svcGetCurrentProcessorNumber = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("GetCurrentProcessorNumber not implemented");
+
+    public SignalEventDelegate SignalEvent {
+        get;
+        set => CallbackTable.svcSignalEvent = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("SignalEvent not implemented");
+
+    public ClearEventDelegate ClearEvent {
+        get;
+        set => CallbackTable.svcClearEvent = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("ClearEvent not implemented");
+
+    public MapSharedMemoryDelegate MapSharedMemory {
+        get;
+        set => CallbackTable.svcMapSharedMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("MapSharedMemory not implemented");
+
+    public UnmapSharedMemoryDelegate UnmapSharedMemory {
+        get;
+        set => CallbackTable.svcUnmapSharedMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("UnmapSharedMemory not implemented");
+
+    public CreateTransferMemoryDelegate CreateTransferMemory {
+        get;
+        set => CallbackTable.svcCreateTransferMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("CreateTransferMemory not implemented");
+
+    public CloseHandleDelegate CloseHandle {
+        get;
+        set => CallbackTable.svcCloseHandle = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("CloseHandle not implemented");
+
+    public ResetSignalDelegate ResetSignal {
+        get;
+        set => CallbackTable.svcResetSignal = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("ResetSignal not implemented");
+
+    public WaitSynchronizationDelegate WaitSynchronization {
+        get;
+        set => CallbackTable.svcWaitSynchronization = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("WaitSynchronization not implemented");
+
+    public CancelSynchronizationDelegate CancelSynchronization {
+        get;
+        set => CallbackTable.svcCancelSynchronization = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("CancelSynchronization not implemented");
+
+    public ArbitrateLockDelegate ArbitrateLock {
+        get;
+        set => CallbackTable.svcArbitrateLock = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("ArbitrateLock not implemented");
+
+    public ArbitrateUnlockDelegate ArbitrateUnlock {
+        get;
+        set => CallbackTable.svcArbitrateUnlock = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("ArbitrateUnlock not implemented");
+
+    public WaitProcessWideKeyAtomicDelegate WaitProcessWideKeyAtomic {
+        get;
+        set => CallbackTable.svcWaitProcessWideKeyAtomic = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("WaitProcessWideKeyAtomic not implemented");
+
+    public SignalProcessWideKeyDelegate SignalProcessWideKey {
+        get;
+        set => CallbackTable.svcSignalProcessWideKey = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("SignalProcessWideKey not implemented");
+
+    public GetSystemTickDelegate GetSystemTick {
+        get;
+        set => CallbackTable.svcGetSystemTick = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("GetSystemTick not implemented");
+
+    public ConnectToNamedPortDelegate ConnectToNamedPort {
+        get;
+        set => CallbackTable.svcConnectToNamedPort = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("ConnectToNamedPort not implemented");
+
+    public SendSyncRequestLightDelegate SendSyncRequestLight {
+        get;
+        set => CallbackTable.svcSendSyncRequestLight = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("SendSyncRequestLight not implemented");
+
+    public SendSyncRequestDelegate SendSyncRequest {
+        get;
+        set => CallbackTable.svcSendSyncRequest = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("SendSyncRequest not implemented");
+
+    public SendSyncRequestWithUserBufferDelegate SendSyncRequestWithUserBuffer {
+        get;
+        set => CallbackTable.svcSendSyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("SendSyncRequestWithUserBuffer not implemented");
+
+    public SendAsyncRequestWithUserBufferDelegate SendAsyncRequestWithUserBuffer {
+        get;
+        set => CallbackTable.svcSendAsyncRequestWithUserBuffer = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("SendAsyncRequestWithUserBuffer not implemented");
+
+    public GetProcessIdDelegate GetProcessId {
+        get;
+        set => CallbackTable.svcGetProcessId = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("GetProcessId not implemented");
+
+    public GetThreadIdDelegate GetThreadId {
+        get;
+        set => CallbackTable.svcGetThreadId = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("GetThreadId not implemented");
+
+    public BreakDelegate Break {
+        get;
+        set => CallbackTable.svcBreak = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("Break not implemented");
+
+    public OutputDebugStringDelegate OutputDebugString {
+        get;
+        set => CallbackTable.svcOutputDebugString = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("OutputDebugString not implemented");
+
+    public ReturnFromExceptionDelegate ReturnFromException {
+        get;
+        set => CallbackTable.svcReturnFromException = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("ReturnFromException not implemented");
+
+    public GetInfoDelegate GetInfo {
+        get;
+        set => CallbackTable.svcGetInfo = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("GetInfo not implemented");
+
+    public FlushEntireDataCacheDelegate FlushEntireDataCache {
+        get;
+        set => CallbackTable.svcFlushEntireDataCache = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("FlushEntireDataCache not implemented");
+
+    public FlushDataCacheDelegate FlushDataCache {
+        get;
+        set => CallbackTable.svcFlushDataCache = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("FlushDataCache not implemented");
+
+    public MapPhysicalMemoryDelegate MapPhysicalMemory {
+        get;
+        set => CallbackTable.svcMapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("MapPhysicalMemory not implemented");
+
+    public UnmapPhysicalMemoryDelegate UnmapPhysicalMemory {
+        get;
+        set => CallbackTable.svcUnmapPhysicalMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("UnmapPhysicalMemory not implemented");
+
+    public GetDebugFutureThreadInfoDelegate GetDebugFutureThreadInfo {
+        get;
+        set => CallbackTable.svcGetDebugFutureThreadInfo = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _, ref _, ref _, ref _, ref _, ref _) =>
+        throw new NotImplementedException("GetDebugFutureThreadInfo not implemented");
+
+    public GetLastThreadInfoDelegate GetLastThreadInfo {
+        get;
+        set => CallbackTable.svcGetLastThreadInfo = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (ref _, ref _, ref _, ref _, ref _, ref _) =>
+        throw new NotImplementedException("GetLastThreadInfo not implemented");
+
+    public GetResourceLimitLimitValueDelegate GetResourceLimitLimitValue {
+        get;
+        set => CallbackTable.svcGetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("GetResourceLimitLimitValue not implemented");
+
+    public GetResourceLimitCurrentValueDelegate GetResourceLimitCurrentValue {
+        get;
+        set => CallbackTable.svcGetResourceLimitCurrentValue = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("GetResourceLimitCurrentValue not implemented");
+
+    public SetThreadActivityDelegate SetThreadActivity {
+        get;
+        set => CallbackTable.svcSetThreadActivity = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("SetThreadActivity not implemented");
+
+    public GetThreadContext3Delegate GetThreadContext3 {
+        get;
+        set => CallbackTable.svcGetThreadContext3 = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("GetThreadContext3 not implemented");
+
+    public WaitForAddressDelegate WaitForAddress {
+        get;
+        set => CallbackTable.svcWaitForAddress = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("WaitForAddress not implemented");
+
+    public SignalToAddressDelegate SignalToAddress {
+        get;
+        set => CallbackTable.svcSignalToAddress = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("SignalToAddress not implemented");
+
+    public SynchronizePreemptionStateDelegate SynchronizePreemptionState {
+        get;
+        set => CallbackTable.svcSynchronizePreemptionState = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("SynchronizePreemptionState not implemented");
+
+    public GetResourceLimitPeakValueDelegate GetResourceLimitPeakValue {
+        get;
+        set => CallbackTable.svcGetResourceLimitPeakValue = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("GetResourceLimitPeakValue not implemented");
+
+    public CreateIoPoolDelegate CreateIoPool {
+        get;
+        set => CallbackTable.svcCreateIoPool = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("CreateIoPool not implemented");
+
+    public CreateIoRegionDelegate CreateIoRegion {
+        get;
+        set => CallbackTable.svcCreateIoRegion = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("CreateIoRegion not implemented");
+
+    public KernelDebugDelegate KernelDebug {
+        get;
+        set => CallbackTable.svcKernelDebug = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("KernelDebug not implemented");
+
+    public ChangeKernelTraceStateDelegate ChangeKernelTraceState {
+        get;
+        set => CallbackTable.svcChangeKernelTraceState = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("ChangeKernelTraceState not implemented");
+
+    public CreateSessionDelegate CreateSession {
+        get;
+        set => CallbackTable.svcCreateSession = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _, ref _) => throw new NotImplementedException("CreateSession not implemented");
+
+    public AcceptSessionDelegate AcceptSession {
+        get;
+        set => CallbackTable.svcAcceptSession = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("AcceptSession not implemented");
+
+    public ReplyAndReceiveLightDelegate ReplyAndReceiveLight {
+        get;
+        set => CallbackTable.svcReplyAndReceiveLight = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("ReplyAndReceiveLight not implemented");
+
+    public ReplyAndReceiveDelegate ReplyAndReceive {
+        get;
+        set => CallbackTable.svcReplyAndReceive = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, ref _) => throw new NotImplementedException("ReplyAndReceive not implemented");
+
+    public ReplyAndReceiveWithUserBufferDelegate ReplyAndReceiveWithUserBuffer {
+        get;
+        set => CallbackTable.svcReplyAndReceiveWithUserBuffer = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _, ref _) => throw new NotImplementedException("ReplyAndReceiveWithUserBuffer not implemented");
+
+    public CreateEventDelegate CreateEvent {
+        get;
+        set => CallbackTable.svcCreateEvent = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (ref _, ref _) => throw new NotImplementedException("CreateEvent not implemented");
+
+    public MapIoRegionDelegate MapIoRegion {
+        get;
+        set => CallbackTable.svcMapIoRegion = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("MapIoRegion not implemented");
+
+    public UnmapIoRegionDelegate UnmapIoRegion {
+        get;
+        set => CallbackTable.svcUnmapIoRegion = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("UnmapIoRegion not implemented");
+
+    public MapPhysicalMemoryUnsafeDelegate MapPhysicalMemoryUnsafe {
+        get;
+        set => CallbackTable.svcMapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("MapPhysicalMemoryUnsafe not implemented");
+
+    public UnmapPhysicalMemoryUnsafeDelegate UnmapPhysicalMemoryUnsafe {
+        get;
+        set => CallbackTable.svcUnmapPhysicalMemoryUnsafe = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("UnmapPhysicalMemoryUnsafe not implemented");
+
+    public SetUnsafeLimitDelegate SetUnsafeLimit {
+        get;
+        set => CallbackTable.svcSetUnsafeLimit = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("SetUnsafeLimit not implemented");
+
+    public CreateCodeMemoryDelegate CreateCodeMemory {
+        get;
+        set => CallbackTable.svcCreateCodeMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("CreateCodeMemory not implemented");
+
+    public ControlCodeMemoryDelegate ControlCodeMemory {
+        get;
+        set => CallbackTable.svcControlCodeMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _) => throw new NotImplementedException("ControlCodeMemory not implemented");
+
+    public SleepSystemDelegate SleepSystem {
+        get;
+        set => CallbackTable.svcSleepSystem = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("SleepSystem not implemented");
+
+    public ReadWriteRegisterDelegate ReadWriteRegister {
+        get;
+        set => CallbackTable.svcReadWriteRegister = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("ReadWriteRegister not implemented");
+
+    public SetProcessActivityDelegate SetProcessActivity {
+        get;
+        set => CallbackTable.svcSetProcessActivity = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("SetProcessActivity not implemented");
+
+    public CreateSharedMemoryDelegate CreateSharedMemory {
+        get;
+        set => CallbackTable.svcCreateSharedMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("CreateSharedMemory not implemented");
+
+    public MapTransferMemoryDelegate MapTransferMemory {
+        get;
+        set => CallbackTable.svcMapTransferMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("MapTransferMemory not implemented");
+
+    public UnmapTransferMemoryDelegate UnmapTransferMemory {
+        get;
+        set => CallbackTable.svcUnmapTransferMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("UnmapTransferMemory not implemented");
+
+    public CreateInterruptEventDelegate CreateInterruptEvent {
+        get;
+        set => CallbackTable.svcCreateInterruptEvent = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("CreateInterruptEvent not implemented");
+
+    public QueryPhysicalAddressDelegate QueryPhysicalAddress {
+        get;
+        set => CallbackTable.svcQueryPhysicalAddress = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _, ref _, ref _) => throw new NotImplementedException("QueryPhysicalAddress not implemented");
+
+    public QueryMemoryMappingDelegate QueryMemoryMapping {
+        get;
+        set => CallbackTable.svcQueryMemoryMapping = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("QueryMemoryMapping not implemented");
+
+    public CreateDeviceAddressSpaceDelegate CreateDeviceAddressSpace {
+        get;
+        set => CallbackTable.svcCreateDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("CreateDeviceAddressSpace not implemented");
+
+    public AttachDeviceAddressSpaceDelegate AttachDeviceAddressSpace {
+        get;
+        set => CallbackTable.svcAttachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("AttachDeviceAddressSpace not implemented");
+
+    public DetachDeviceAddressSpaceDelegate DetachDeviceAddressSpace {
+        get;
+        set => CallbackTable.svcDetachDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("DetachDeviceAddressSpace not implemented");
+
+    public MapDeviceAddressSpaceByForceDelegate MapDeviceAddressSpaceByForce {
+        get;
+        set => CallbackTable.svcMapDeviceAddressSpaceByForce = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _) => throw new NotImplementedException("MapDeviceAddressSpaceByForce not implemented");
+
+    public MapDeviceAddressSpaceAlignedDelegate MapDeviceAddressSpaceAligned {
+        get;
+        set => CallbackTable.svcMapDeviceAddressSpaceAligned = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _) => throw new NotImplementedException("MapDeviceAddressSpaceAligned not implemented");
+
+    public MapDeviceAddressSpaceDelegate MapDeviceAddressSpace {
+        get;
+        set => CallbackTable.svcMapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _, ref _) => throw new NotImplementedException("MapDeviceAddressSpace not implemented");
+
+    public UnmapDeviceAddressSpaceDelegate UnmapDeviceAddressSpace {
+        get;
+        set => CallbackTable.svcUnmapDeviceAddressSpace = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _) => throw new NotImplementedException("UnmapDeviceAddressSpace not implemented");
+
+    public InvalidateProcessDataCacheDelegate InvalidateProcessDataCache {
+        get;
+        set => CallbackTable.svcInvalidateProcessDataCache = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("InvalidateProcessDataCache not implemented");
+
+    public StoreProcessDataCacheDelegate StoreProcessDataCache {
+        get;
+        set => CallbackTable.svcStoreProcessDataCache = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("StoreProcessDataCache not implemented");
+
+    public FlushProcessDataCacheDelegate FlushProcessDataCache {
+        get;
+        set => CallbackTable.svcFlushProcessDataCache = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("FlushProcessDataCache not implemented");
+
+    public DebugActiveProcessDelegate DebugActiveProcess {
+        get;
+        set => CallbackTable.svcDebugActiveProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("DebugActiveProcess not implemented");
+
+    public BreakDebugProcessDelegate BreakDebugProcess {
+        get;
+        set => CallbackTable.svcBreakDebugProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("BreakDebugProcess not implemented");
+
+    public TerminateDebugProcessDelegate TerminateDebugProcess {
+        get;
+        set => CallbackTable.svcTerminateDebugProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("TerminateDebugProcess not implemented");
+
+    public GetDebugEventDelegate GetDebugEvent {
+        get;
+        set => CallbackTable.svcGetDebugEvent = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _) => throw new NotImplementedException("GetDebugEvent not implemented");
+
+    public ContinueDebugEventDelegate ContinueDebugEvent {
+        get;
+        set => CallbackTable.svcContinueDebugEvent = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("ContinueDebugEvent not implemented");
+
+    public GetProcessListDelegate GetProcessList {
+        get;
+        set => CallbackTable.svcGetProcessList = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("GetProcessList not implemented");
+
+    public GetThreadListDelegate GetThreadList {
+        get;
+        set => CallbackTable.svcGetThreadList = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("GetThreadList not implemented");
+
+    public GetDebugThreadContextDelegate GetDebugThreadContext {
+        get;
+        set => CallbackTable.svcGetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("GetDebugThreadContext not implemented");
+
+    public SetDebugThreadContextDelegate SetDebugThreadContext {
+        get;
+        set => CallbackTable.svcSetDebugThreadContext = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("SetDebugThreadContext not implemented");
+
+    public QueryDebugProcessMemoryDelegate QueryDebugProcessMemory {
+        get;
+        set => CallbackTable.svcQueryDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("QueryDebugProcessMemory not implemented");
+
+    public ReadDebugProcessMemoryDelegate ReadDebugProcessMemory {
+        get;
+        set => CallbackTable.svcReadDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("ReadDebugProcessMemory not implemented");
+
+    public WriteDebugProcessMemoryDelegate WriteDebugProcessMemory {
+        get;
+        set => CallbackTable.svcWriteDebugProcessMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("WriteDebugProcessMemory not implemented");
+
+    public SetHardwareBreakPointDelegate SetHardwareBreakPoint {
+        get;
+        set => CallbackTable.svcSetHardwareBreakPoint = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("SetHardwareBreakPoint not implemented");
+
+    public GetDebugThreadParamDelegate GetDebugThreadParam {
+        get;
+        set => CallbackTable.svcGetDebugThreadParam = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _, ref _) => throw new NotImplementedException("GetDebugThreadParam not implemented");
+
+    public GetSystemInfoDelegate GetSystemInfo {
+        get;
+        set => CallbackTable.svcGetSystemInfo = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("GetSystemInfo not implemented");
+
+    public CreatePortDelegate CreatePort {
+        get;
+        set => CallbackTable.svcCreatePort = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _, ref _) => throw new NotImplementedException("CreatePort not implemented");
+
+    public ManageNamedPortDelegate ManageNamedPort {
+        get;
+        set => CallbackTable.svcManageNamedPort = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("ManageNamedPort not implemented");
+
+    public ConnectToPortDelegate ConnectToPort {
+        get;
+        set => CallbackTable.svcConnectToPort = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, ref _) => throw new NotImplementedException("ConnectToPort not implemented");
+
+    public SetProcessMemoryPermissionDelegate SetProcessMemoryPermission {
+        get;
+        set => CallbackTable.svcSetProcessMemoryPermission = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("SetProcessMemoryPermission not implemented");
+
+    public MapProcessMemoryDelegate MapProcessMemory {
+        get;
+        set => CallbackTable.svcMapProcessMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("MapProcessMemory not implemented");
+
+    public UnmapProcessMemoryDelegate UnmapProcessMemory {
+        get;
+        set => CallbackTable.svcUnmapProcessMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("UnmapProcessMemory not implemented");
+
+    public QueryProcessMemoryDelegate QueryProcessMemory {
+        get;
+        set => CallbackTable.svcQueryProcessMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("QueryProcessMemory not implemented");
+
+    public MapProcessCodeMemoryDelegate MapProcessCodeMemory {
+        get;
+        set => CallbackTable.svcMapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("MapProcessCodeMemory not implemented");
+
+    public UnmapProcessCodeMemoryDelegate UnmapProcessCodeMemory {
+        get;
+        set => CallbackTable.svcUnmapProcessCodeMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("UnmapProcessCodeMemory not implemented");
+
+    public CreateProcessDelegate CreateProcess {
+        get;
+        set => CallbackTable.svcCreateProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, ref _) => throw new NotImplementedException("CreateProcess not implemented");
+
+    public StartProcessDelegate StartProcess {
+        get;
+        set => CallbackTable.svcStartProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _) => throw new NotImplementedException("StartProcess not implemented");
+
+    public TerminateProcessDelegate TerminateProcess {
+        get;
+        set => CallbackTable.svcTerminateProcess = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = _ => throw new NotImplementedException("TerminateProcess not implemented");
+
+    public GetProcessInfoDelegate GetProcessInfo {
+        get;
+        set => CallbackTable.svcGetProcessInfo = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, ref _) => throw new NotImplementedException("GetProcessInfo not implemented");
+
+    public CreateResourceLimitDelegate CreateResourceLimit {
+        get;
+        set => CallbackTable.svcCreateResourceLimit = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (ref _) => throw new NotImplementedException("CreateResourceLimit not implemented");
+
+    public SetResourceLimitLimitValueDelegate SetResourceLimitLimitValue {
+        get;
+        set => CallbackTable.svcSetResourceLimitLimitValue = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _) => throw new NotImplementedException("SetResourceLimitLimitValue not implemented");
+
+    public CallSecureMonitorDelegate CallSecureMonitor {
+        get;
+        set => CallbackTable.svcCallSecureMonitor = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = (_, _, _, _, _, _, _, _, ref _, ref _, ref _, ref _, ref _, ref _, ref _) =>
+        throw new NotImplementedException("CallSecureMonitor not implemented");
+
+    public SetMemoryAttribute2Delegate SetMemoryAttribute2 {
+        get;
+        set => CallbackTable.svcSetMemoryAttribute2 = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("SetMemoryAttribute2 not implemented");
+
+    public MapInsecurePhysicalMemoryDelegate MapInsecurePhysicalMemory {
+        get;
+        set => CallbackTable.svcMapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("MapInsecurePhysicalMemory not implemented");
+
+    public UnmapInsecurePhysicalMemoryDelegate UnmapInsecurePhysicalMemory {
+        get;
+        set => CallbackTable.svcUnmapInsecurePhysicalMemory = Marshal.GetFunctionPointerForDelegate(field = value);
+    } = () => throw new NotImplementedException("UnmapInsecurePhysicalMemory not implemented");
 }
