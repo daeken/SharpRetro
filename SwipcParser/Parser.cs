@@ -101,8 +101,24 @@ public partial class Parser {
     static List<SwipcNode> Parse(Template template) =>
         template?.Head.Concat([template.Tail]).Select(Transform).ToList();
     static ulong Parse(Number number) => Convert.ToUInt64(number.Value, number.Value.StartsWith("0x") ? 16 : 10);
+    static Version Parse(VersionNumber ver) =>
+        new(
+            (int) Parse(ver.Value.Item1),
+            (int) Parse(ver.Value.Item3),
+            (int) Parse(ver.Value.Item5)
+        );
     static Versions ParseVersions(List<Parser> decorators) {
-        // TODO: Implement
+        if(decorators == null) return new Versions.All();
+        foreach(var decorator in decorators) {
+            if(decorator is not DecoratorType { type: "version" } dec) continue;
+            var startVersion = Parse(dec.startVersion);
+            return dec.postfix switch {
+                null => new Versions.Range(startVersion, startVersion),
+                Ongoing => new Versions.Ongoing(startVersion),
+                Ended ended => new Versions.Range(startVersion, Parse(ended.version)),
+                _ => throw new NotSupportedException(),
+            };
+        }
         return new Versions.All();
     }
 }
