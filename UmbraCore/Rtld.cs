@@ -6,7 +6,6 @@ using UmbraCore.Core;
 
 namespace UmbraCore;
 
-delegate ulong MallocHook(ulong size);
 public class Rtld {
     public readonly Dictionary<string, ulong> SymbolAddrs = [];
 

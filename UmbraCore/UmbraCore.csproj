@@ -21,4 +21,8 @@
     <ItemGroup>
       <PackageReference Include="CxxDemangler" Version="0.2.4.11" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Services\" />
+    </ItemGroup>
 </Project>

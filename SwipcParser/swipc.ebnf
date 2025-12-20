@@ -1,0 +1,59 @@
+%class SwipcParser.Parser;
+
+Start = Defs:Def+ $ ;
+
+Number
+	=
+	  /0x[0-9a-fA-F]+/
+	| /[0-9]+/
+	;
+
+Def
+	=
+	  TypeDef
+	| Interface
+	;
+
+Expression
+	=
+	  Type
+	| Number
+	;
+
+Name = /[a-zA-Z_][a-zA-Z0-9_:]*/ ;
+SName = /[a-zA-Z_][a-zA-Z0-9_:\-]*/ ;
+SubServiceNameList = @:SName ',' ;
+ServiceNameList = Head:SubServiceNameList* Tail:SName ;
+SubTemplate = @:Expression ',' ;
+Template = '<' Head:SubTemplate* Tail:Expression '>' ;
+ArrayLength = '[' [ length:Number ] ']' ;
+StructField = doc:Comment* type:Type name:Name ';' ;
+EnumField = doc:Comment* name:Name '=' value:Number ';' ;
+StructType = 'struct' template:[ Template ] '{' structFields:StructField+ '}' ;
+EnumType = 'enum' template:Template '{' enumFields:EnumField+ '}' ;
+ConcreteType = name:Name template:[ Template ] length:[ ArrayLength ] ;
+Type =
+      StructType
+    | EnumType
+    | ConcreteType
+    ;
+
+TypeDef = doc:Comment* decorators:Decorator* 'type' name:Name '=' type:Type ';' ;
+
+Interface = doc:Comment* decorators:Decorator* 'interface' name:Name [ 'is' serviceNames:ServiceNameList ] '{' functions:FuncDef* '}' ;
+NamedType = Type [ Name ] ;
+SubNamedTuple = @:NamedType ',' ;
+NamedTuple = '(' Head:SubNamedTuple* Tail:[ NamedType ] ')' ;
+Comment = '#' line:/[^\n]*/;
+Range = [start:(Number '.' Number '.' Number)] '-' [end:(Number '.' Number '.' Number)] ;
+Decorator = '@' @:DecoratorType ;
+VersionNumber = Number '.' Number '.' Number ;
+Ongoing = '+' ;
+Ended = '-' version:VersionNumber ;
+DecoratorType
+	=
+	  type:'version' '(' startVersion:VersionNumber postfix:[(Ongoing | Ended)] ')'
+	| type:'undocumented'
+	;
+
+FuncDef = doc:Comment* decorators:Decorator* '[' cmdId:Number ']' name:Name inputs:NamedTuple [ '->' outputs:( NamedType | NamedTuple ) ] ';' ;
