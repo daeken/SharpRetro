@@ -25,6 +25,13 @@ public readonly struct Bobbin {
 		
     public Bobbin Forward(int count) => new(this, Start + count);
 
+    public bool StartsWith(string comp) {
+        for(var i = 0; i < comp.Length; i++)
+            if(TotalLength <= Start + i || comp[i] != String[Start + i])
+                return false;
+        return true;
+    }
+
     public override string ToString() => Start == 0 && End == TotalLength ? String : String.Substring(Start, Length);
 		
     public static implicit operator Bobbin(string value) => new(value);

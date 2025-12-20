@@ -83,7 +83,7 @@ public static class Patterns {
 
 	public static Pattern SavePass(Pattern sub) =>
 		text => {
-			if(BindStack.Count == 0)
+			//if(BindStack.Count == 0)
 				return sub(text);
 			var saved = BindStack.Pop();
 			BindStack.Push(saved.Copy());
@@ -157,7 +157,7 @@ public static class Patterns {
 		};
 
 	public static Pattern Literal(string val) =>
-		Cache(val, text => text.ToString().StartsWith(val) ? (text.Forward(val.Length), val) : None);
+		Cache(val, text => text.StartsWith(val) ? (text.Forward(val.Length), val) : None);
 
 	public static Pattern Regex(Regex regex) =>
 		Cache(regex, text => {
