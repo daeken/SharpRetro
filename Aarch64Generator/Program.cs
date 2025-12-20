@@ -1,4 +1,6 @@
-﻿namespace Aarch64Generator;
+﻿using LibSharpRetro;
+
+namespace Aarch64Generator;
 
 using CoreArchCompiler;
 

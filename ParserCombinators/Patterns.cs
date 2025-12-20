@@ -165,7 +165,7 @@ public static class Patterns {
 			return match.Success ? (text.Forward(match.Length), match.Value) : None;
 		});
 
-	public static Pattern Regex(string regex) => Regex(new Regex(regex));
+	public static Pattern Regex(string regex) => Regex(new Regex(regex, RegexOptions.Compiled));
 
 	public class NamedAst(string Name) {
 		public object Value;

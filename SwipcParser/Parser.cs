@@ -12,20 +12,20 @@ public abstract record SwipcNode {
     public abstract record Type :  SwipcNode;
     public record Concrete(string Name, IReadOnlyList<SwipcNode> Template, (bool Present, ulong? Length) Array) : Type {
         public override string ToString() =>
-            $"Concrete {{ Name = {Name}, Template = {(Template == null ? "" : string.Join(", ", Template))}, Array = {Array} }}";
+            $"Concrete {{ Name = {Name}, Template = {(Template == null ? "" : $"[{string.Join(", ", Template)}]")}, Array = {Array} }}";
     }
     public record Enum(IReadOnlyList<SwipcNode> Template, IReadOnlyList<(string Name, ulong Value)> Members) : Type {
         public override string ToString() =>
-            $"Enum {{ Template = {(Template == null ? "" : string.Join(", ", Template))}, Members = [\n{Indent(string.Join("\n", Members.Select(x => x.ToString())))}\n] }}";
+            $"Enum {{ Template = {(Template == null ? "" : $"[{string.Join(", ", Template)}]")}, Members = [\n{Indent(string.Join("\n", Members.Select(x => x.ToString())))}\n] }}";
     }
     public record Struct(IReadOnlyList<SwipcNode> Template, IReadOnlyList<(Type Type, string Name)> Members) : Type {
         public override string ToString() =>
-            $"Struct {{ Template = {(Template == null ? "" : string.Join(", ", Template))}, Members = [\n{Indent(string.Join("\n", Members.Select(x => x.ToString())))}\n] }}";
+            $"Struct {{ Template = {(Template == null ? "" : $"[{string.Join(", ", Template)}]")}, Members = [\n{Indent(string.Join("\n", Members.Select(x => x.ToString())))}\n] }}";
     }
 
     public record Typedef(Versions Versions, string Name, IReadOnlyList<SwipcNode> Template, Type Of) : SwipcNode {
         public override string ToString() =>
-            $"Typedef {{ Versions = {Versions}, Name = {Name}, Template = {(Template == null ? "" : string.Join(", ", Template))}, Of = {Of} }}";
+            $"Typedef {{ Versions = {Versions}, Name = {Name}, Template = {(Template == null ? "" : $"[{string.Join(", ", Template)}]")}, Of = {Of} }}";
     }
     public record Interface(Versions Versions, string Name, IReadOnlyList<string> ServiceNames, IReadOnlyList<Function> Functions) : SwipcNode {
         public override string ToString() =>
@@ -38,7 +38,7 @@ public abstract record SwipcNode {
     
     public record Number(ulong Value) : SwipcNode;
     
-    static string Indent(string text) => string.Join('\n', text.Split('\n').Select(x => $"\t{x}"));
+    public static string Indent(string text) => string.Join('\n', text.Split('\n').Select(x => $"\t{x}"));
 }
 
 public partial class Parser {

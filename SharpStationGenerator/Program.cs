@@ -1,4 +1,6 @@
-﻿namespace SharpStationGenerator;
+﻿using LibSharpRetro;
+
+namespace SharpStationGenerator;
 using CoreArchCompiler;
 
 public class Program : Core {

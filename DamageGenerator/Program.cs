@@ -1,4 +1,6 @@
-﻿namespace DamageGenerator;
+﻿using LibSharpRetro;
+
+namespace DamageGenerator;
 using CoreArchCompiler;
 
 public class Program : Core {

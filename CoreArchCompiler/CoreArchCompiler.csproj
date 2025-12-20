@@ -21,4 +21,8 @@
       <PackageReference Include="UltimateOrb.Int128" Version="1.0.8" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LibSharpRetro\LibSharpRetro.csproj" />
+    </ItemGroup>
+
 </Project>

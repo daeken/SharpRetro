@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Text;
 
-namespace CoreArchCompiler; 
+namespace LibSharpRetro; 
 
 public class CodeBuilder {
 	readonly StringBuilder Builder = new();

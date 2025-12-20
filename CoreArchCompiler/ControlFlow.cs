@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using DoubleSharp.Linq;
+using LibSharpRetro;
 
 namespace CoreArchCompiler; 
 
@@ -23,7 +24,7 @@ class ControlFlow : Builtin {
 					: throw new BailoutException());
 			
 		Statement("block", list => list.Last().Type,
-				(c, list) => list.Skip(1).ForEach(x => GenerateStatement(c, (PList) x)))
+				(c, list) => LinqExtensions.ForEach(list.Skip(1), x => GenerateStatement(c, (PList) x)))
 			.Interpret((list, state) => state.Evaluate(list.Skip(1)));
 			
 		Expression("block", list => list.Last().Type, 
@@ -174,7 +175,7 @@ class ControlFlow : Builtin {
 				for(var i = start; i < end; i += step) {
 					var pi = new PInt(i);
 					pi.Type = new EInt(true, 32);
-					list.Skip(2).ForEach(x => GenerateStatement(c, ((PList) x).MapLeaves(y => y is PName pn && pn.Name == name ? pi : y)));
+					LinqExtensions.ForEach(list.Skip(2), x => GenerateStatement(c, ((PList) x).MapLeaves(y => y is PName pn && pn.Name == name ? pi : y)));
 				}
 			}).Interpret((list, state) => {
 			var rlist = (PList) list[1];
@@ -206,7 +207,7 @@ class ControlFlow : Builtin {
 			(c, list) => {
 				c += $"if({GenerateExpression(EnsureBool(list[1]))}) {{";
 				c++;
-				list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
+				LinqExtensions.ForEach(list.Skip(2), x => GenerateStatement(c, (PList) x));
 				c--;
 				c += "}";
 			}, (c, list) => {
@@ -216,14 +217,14 @@ class ControlFlow : Builtin {
 					c += $"{GenerateExpression(EnsureBool(list[1]))}, ";
 					c += "() => {";
 					c++;
-					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
+					LinqExtensions.ForEach(list.Skip(2), x => GenerateStatement(c, (PList) x));
 					c--;
 					c += "});";
 					c--;
 				} else {
 					c += $"if({GenerateExpression(EnsureBool(list[1]))}) {{";
 					c++;
-					list.Skip(2).ForEach(x => GenerateStatement(c, (PList) x));
+					LinqExtensions.ForEach(list.Skip(2), x => GenerateStatement(c, (PList) x));
 					c--;
 					c += "}";
 				}

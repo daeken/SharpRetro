@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using PrettyPrinter;
 using DoubleSharp.Linq;
+using LibSharpRetro;
 
 namespace CoreArchCompiler; 
 
@@ -145,9 +146,8 @@ public class Core {
 
 	static Core() {
 		try {
-			AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-				.Where(x => x.IsSubclassOf(typeof(Builtin)))
-				.ForEach(x => ((Builtin) Activator.CreateInstance(x)).Define());
+			LinqExtensions.ForEach(AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+					.Where(x => x.IsSubclassOf(typeof(Builtin))), x => ((Builtin) Activator.CreateInstance(x)).Define());
 		} catch(Exception e) {
 			Console.WriteLine(e);
 		}
@@ -322,7 +322,7 @@ public class Core {
 					RedirectStandardOutput = true
 				}
 			};
-			args.ForEach(process.StartInfo.ArgumentList.Add);
+			LinqExtensions.ForEach(args, process.StartInfo.ArgumentList.Add);
 
 			var ret = "";
 			void Capture(object sender, DataReceivedEventArgs evt) => ret += evt.Data + "\n";

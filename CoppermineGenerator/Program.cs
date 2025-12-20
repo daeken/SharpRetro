@@ -1,4 +1,6 @@
-﻿namespace CoppermineGenerator;
+﻿using LibSharpRetro;
+
+namespace CoppermineGenerator;
 
 using CoreArchCompiler;
 
