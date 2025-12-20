@@ -1,1 +1,57 @@
+using UmbraCore.Core;
+// ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Uart;
+public partial class IManager : _IManager_Base;
+public abstract class _IManager_Base : IpcInterface {
+	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+		switch(im.CommandId) {
+			case 0x0: // DoesUartExist
+				break;
+			case 0x1: // DoesUartExistForTest
+				break;
+			case 0x2: // SetUartBaudrate
+				break;
+			case 0x3: // SetUartBaudrateForTest
+				break;
+			case 0x4: // IsSomethingUartValid
+				break;
+			case 0x5: // IsSomethingUartValidForTest
+				break;
+			case 0x6: // GetSession
+				break;
+			case 0x7: // IsSomethingUartValid2
+				break;
+			case 0x8: // IsSomethingUartValid2ForTest
+				break;
+			default:
+				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Uart.IManager");
+		}
+	}
+}
+
+public partial class IPortSession : _IPortSession_Base;
+public abstract class _IPortSession_Base : IpcInterface {
+	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+		switch(im.CommandId) {
+			case 0x0: // OpenSession
+				break;
+			case 0x1: // OpenSessionForTest
+				break;
+			case 0x2: // Unknown2
+				break;
+			case 0x3: // Unknown3
+				break;
+			case 0x4: // Unknown4
+				break;
+			case 0x5: // Unknown5
+				break;
+			case 0x6: // Unknown6
+				break;
+			case 0x7: // Unknown7
+				break;
+			default:
+				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Uart.IPortSession");
+		}
+	}
+}
+

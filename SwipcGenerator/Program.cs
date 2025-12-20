@@ -43,7 +43,36 @@ return;
 static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, Dictionary<string, Interface> interfaces) {
     var csns = RenameNamespace(nsName);
     var cb = new CodeBuilder();
+    cb += "using UmbraCore.Core;";
+    cb += "// ReSharper disable once CheckNamespace";
     cb += $"namespace UmbraCore.Services.{csns};";
+
+    foreach(var (name, iface) in interfaces) {
+        cb += $"public partial class {Rename(name)} : _{Rename(name)}_Base;";
+        cb += $"public abstract class _{Rename(name)}_Base : IpcInterface {{";
+        cb++;
+        cb += "protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {";
+        cb++;
+        cb += "switch(im.CommandId) {";
+        cb++;
+        foreach(var function in iface.Functions) {
+            cb += $"case 0x{function.CmdId:X}: // {function.Name}";
+            cb++;
+            cb += "break;";
+            cb--;
+        }
+        cb += "default:";
+        cb++;
+        cb += $"throw new NotImplementedException($\"Got unhandled command 0x{{im.CommandId:X}} in {csns}.{Rename(name)}\");";
+        cb--;
+        cb--;
+        cb += "}";
+        cb--;
+        cb += "}";
+        cb--;
+        cb += "}";
+        cb += "";
+    }
     
     File.WriteAllText($"../UmbraCore/Services/Generated/{csns}.cs", cb.Code);
 }

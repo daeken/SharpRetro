@@ -1,1 +1,21 @@
+using UmbraCore.Core;
+// ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Migration.Detail;
+public partial class IAsyncContext : _IAsyncContext_Base;
+public abstract class _IAsyncContext_Base : IpcInterface {
+	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+		switch(im.CommandId) {
+			case 0x0: // Unknown0
+				break;
+			case 0x1: // Unknown1
+				break;
+			case 0x2: // Unknown2
+				break;
+			case 0x3: // Unknown3
+				break;
+			default:
+				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Migration.Detail.IAsyncContext");
+		}
+	}
+}
+

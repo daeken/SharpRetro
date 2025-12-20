@@ -37,13 +37,23 @@ public class Concretize {
                 y.CmdId,
                 y.Inputs.Select(z => (Parse(z.Type), z.Name)).ToList(),
                 y.Outputs.Select(z => (Parse(z.Type), z.Name)).ToList()
-            )).ToList()
+            )).GroupBy(y => y.CmdId)
+            .Select(y => FindCanonical(y.ToList()))
+            .OrderBy(y => y.CmdId).ToList()
         )).ToList();
         Interfaces = Interfaces.GroupBy(x => x.Name).Select(x => x.Last()).ToList();
 
         Typedefs = Concretized;
         Forward.Clear();
     }
+
+    Function FindCanonical(List<Function> functions) =>
+        functions.OrderByDescending(x => x.Versions switch {
+            Versions.All => 0xFFFF_FFFF_FFFFUL,
+            Versions.Range(_, var (major, minor, point)) => ((ulong) major << 32) | ((ulong) minor << 16) | (uint) point,
+            Versions.Ongoing(var (major, minor, point)) => ((ulong) major << 32) | ((ulong) minor << 16) | (uint) point,
+            _ => throw new NotSupportedException(),
+        }).First();
 
     IpcType Resolve(string name, SwipcNode.Type type) {
         Forward.Remove(name);
