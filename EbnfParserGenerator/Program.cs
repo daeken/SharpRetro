@@ -124,9 +124,11 @@ static class Program {
 				case PatternType.Named:
 					body = $"Patterns.Bind<{ClassName}.{elem}>({body})";
 					break;
-				case PatternType.ByValue:
-					body = $"Patterns.Bind<{ClassName}.{elem}>(Patterns.With<{ClassName}.{elem}>((x, d) => x.Value = d, {body}))";
+				case PatternType.ByValue: {
+					var type = BuildType(rule.Expression);
+					body = $"Patterns.Bind<{ClassName}.{elem}>(Patterns.With<{ClassName}.{elem}>((x, d) => x.Value = ({type}) d, {body}))";
 					break;
+				}
 				case PatternType.ValueOverride:
 					if(body.StartsWith("Patterns.PushValue("))
 						body = body.Substring(19, body.Length - 19 - 1);
@@ -171,6 +173,7 @@ static class Program {
 			case EbnfParser.Sequence s: return s.Items.Count == 1 ? Generate(s.Items[0]) : $"Patterns.TupleLooseSequence([{string.Join(", ", s.Items.Select(x => $"typeof({BuildType(x)})"))}], {string.Join(", ", s.Items.Select(Generate))})";
 			case EbnfParser.Element e:
 				var type = BuildType(e.Body);
+				var cast = e.Modifiers is "*" or "+" ? $"List<{type}>" : type;
 				var body = Generate(e.Body);
 				if(e.Modifiers == "*")
 					body = $"Patterns.ZeroOrMore<{type}>(Patterns.IgnoreLeadingWhitespace({body}))";
@@ -186,10 +189,10 @@ static class Program {
 						return body;
 					case {} when name.EndsWith('+'):
 						name = name.Substring(0, name.Length - 1);
-						return $"Patterns.With<{ClassName}.{CurrentRuleName}>((x, d) => (x.{name} = x.{name} ?? new List<{type}>()).Add(d), {body})";
+						return $"Patterns.With<{ClassName}.{CurrentRuleName}>((x, d) => (x.{name} = x.{name} ?? new List<{type}>()).Add(({cast}) d), {body})";
 					default:
 						return
-							$"Patterns.With<{ClassName}.{CurrentRuleName}>((x, d) => x.{name} = d, {body})";
+							$"Patterns.With<{ClassName}.{CurrentRuleName}>((x, d) => x.{name} = ({cast}) d, {body})";
 				}
 			case EbnfParser.RuleReference r: return "_" + r.Name;
 			case EbnfParser.Optional o: return $"Patterns.IgnoreLeadingWhitespace(Patterns.Optional({Generate(o.Expression)}))";

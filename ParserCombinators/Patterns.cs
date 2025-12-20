@@ -16,7 +16,7 @@ public static class Patterns {
 				? text.Memoization[(sub, text.Start)]
 				: text.Memoization[(sub, text.Start)] = sub(text);
 
-	static readonly (Bobbin, dynamic)? None = null;
+	static readonly (Bobbin, object)? None = null;
 	
 	public static readonly Pattern End =
 		text => text.Length == 0 ? (text, null) : None;
@@ -38,7 +38,7 @@ public static class Patterns {
 	
 	public static Pattern Sequence(params Pattern[] elems) =>
 		text => {
-			var list = new List<dynamic>();
+			var list = new List<object>();
 			foreach(var elem in elems) {
 				var match = elem(text);
 				if(match == null) return null;
@@ -66,7 +66,7 @@ public static class Patterns {
 		}
 		
 		return text => {
-			var list = new List<dynamic>();
+			var list = new List<object>();
 			foreach(var elem in elems) {
 				var match = elem(text);
 				if(match == null) return null;
@@ -103,7 +103,7 @@ public static class Patterns {
 	public static Pattern ZeroOrMore(Pattern sub) =>
 		text => {
 			sub = SavePass(sub);
-			var list = new List<dynamic>();
+			var list = new List<object>();
 			while(text.Length != 0) {
 				var match = sub(text);
 				if(match == null) break;
@@ -121,7 +121,7 @@ public static class Patterns {
 				var match = sub(text);
 				if(match == null) break;
 				text = match.Value.Item1;
-				list.Add(match.Value.Item2);
+				list.Add((T) match.Value.Item2);
 			}
 			return (text, list);
 		};
@@ -129,7 +129,7 @@ public static class Patterns {
 	public static Pattern OneOrMore(Pattern sub) =>
 		text => {
 			sub = SavePass(sub);
-			var list = new List<dynamic>();
+			var list = new List<object>();
 			while(text.Length != 0) {
 				var match = sub(text);
 				if(match == null) break;
@@ -149,7 +149,7 @@ public static class Patterns {
 				var match = sub(text);
 				if(match == null) break;
 				text = match.Value.Item1;
-				list.Add(match.Value.Item2);
+				list.Add((T) match.Value.Item2);
 			}
 
 			if(list.Count == 0) return null;
@@ -168,8 +168,8 @@ public static class Patterns {
 	public static Pattern Regex(string regex) => Regex(new Regex(regex));
 
 	public class NamedAst(string Name) {
-		public dynamic Value;
-		public readonly Dictionary<string, dynamic> Elements = [];
+		public object Value;
+		public readonly Dictionary<string, object> Elements = [];
 	}
 
 	public static Pattern NamedPattern(string name, Pattern sub) =>
@@ -216,7 +216,7 @@ public static class Patterns {
 			return (ret.Value.Item1, obj);
 		};
 
-	public static Pattern With<T>(Action<T, dynamic> setter, Pattern sub) =>
+	public static Pattern With<T>(Action<T, object> setter, Pattern sub) =>
 		text => {
 			var ret = sub(text);
 			if(ret == null) return null;
@@ -243,10 +243,10 @@ public static class Patterns {
 
 	public static Pattern ValueList(Pattern sub) =>
 		text => {
-			var value = new List<dynamic>();
+			var value = new List<object>();
 			BindStack.Push(value);
 			var ret = sub(text);
-			value = (List<dynamic>) BindStack.Pop();
+			value = (List<object>) BindStack.Pop();
 			if(ret == null) return null;
 			return (ret.Value.Item1, value);
 		};
@@ -255,7 +255,7 @@ public static class Patterns {
 		text => {
 			var ret = sub(text);
 			if(ret == null) return null;
-			((List<dynamic>) BindStack.Peek()).Add(ret.Value.Item2);
+			((List<object>) BindStack.Peek()).Add(ret.Value.Item2);
 			return ret;
 		};
 }

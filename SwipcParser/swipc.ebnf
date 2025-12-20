@@ -38,7 +38,7 @@ Type =
     | ConcreteType
     ;
 
-TypeDef = doc:Comment* decorators:Decorator* 'type' name:Name '=' type:Type ';' ;
+TypeDef = doc:Comment* decorators:Decorator* 'type' name:Type '=' type:Type ';' ;
 
 Interface = doc:Comment* decorators:Decorator* 'interface' name:Name [ 'is' serviceNames:ServiceNameList ] '{' functions:FuncDef* '}' ;
 NamedType = Type [ Name ] ;

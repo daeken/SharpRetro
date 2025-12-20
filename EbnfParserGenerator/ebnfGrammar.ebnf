@@ -1,0 +1,17 @@
+%class EbnfParserGenerator.EbnfParser;
+
+Start = TypeDecl:[TypeDecl] Rules:Rule* $;
+TypeDecl = '%class' Name:/[a-zA-Z_][a-zA-Z0-9_.]*/ ';';
+Rule = Name:Identifier Operator:('=' | ':=') Expression:Expression ';';
+Expression := Choice | Sequence;
+Choice = Choices+:Sequence ('|' Choices+:Sequence)+;
+Sequence = Items:Element+;
+Element = [Name:ElementIdentifier ':'] Body:(Group | Optional | RuleReference | StringLiteral | RegexLiteral | End) Modifiers:['*' | '+'];
+RuleReference = Name:Identifier;
+End = '$';
+Group = '(' @:Expression ')';
+Optional = '[' Expression:Expression ']';
+Identifier := /[a-zA-Z_][a-zA-Z0-9_]*/;
+ElementIdentifier := /([a-zA-Z_][a-zA-Z0-9_]*|@)\+?/;
+StringLiteral = /"([^"\n]|\\"|\\)*"/ | /'([^'\n]|\\'|\\)*'/;
+RegexLiteral = /\/(\\\/|\\\\|[^\/\n])+\/[imsx]*/;

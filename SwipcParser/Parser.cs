@@ -22,8 +22,11 @@ public abstract record SwipcNode {
         public override string ToString() =>
             $"Struct {{ Template = {(Template == null ? "" : string.Join(", ", Template))}, Members = [\n{Indent(string.Join("\n", Members.Select(x => x.ToString())))}\n] }}";
     }
-    
-    public record Typedef(Versions Versions, string Name, Type Of) : SwipcNode;
+
+    public record Typedef(Versions Versions, string Name, IReadOnlyList<SwipcNode> Template, Type Of) : SwipcNode {
+        public override string ToString() =>
+            $"Typedef {{ Versions = {Versions}, Name = {Name}, Template = {(Template == null ? "" : string.Join(", ", Template))}, Of = {Of} }}";
+    }
     public record Interface(Versions Versions, string Name, IReadOnlyList<string> ServiceNames, IReadOnlyList<Function> Functions) : SwipcNode {
         public override string ToString() =>
             $"Interface {{ Versions = {Versions}, Name = {Name}, ServiceNames = [{string.Join(", ", ServiceNames)}], Functions = [\n{Indent(string.Join("\n", Functions.Select(x => x.ToString())))}\n] }}";
@@ -46,17 +49,22 @@ public partial class Parser {
     
     public Parser(string defs) {
         var ast = Parse(defs);
+        if(ast == null) throw new Exception("Could not parse definitions");
         var nodes = ast.Defs.Select(x => Transform(x.Value)).ToList();
         Typedefs = nodes.OfType<SwipcNode.Typedef>().ToList();
         Interfaces = nodes.OfType<SwipcNode.Interface>().ToList();
     }
 
     static SwipcNode Transform(Parser node) => node switch {
-        TypeDef td => new SwipcNode.Typedef(
-            ParseVersions(td.decorators),
-            td.name.Value, 
-            (SwipcNode.Type) Transform(td.type)
-        ),
+        TypeDef td =>
+            td.name.Value is ConcreteType tdt
+                ? new SwipcNode.Typedef(
+                    ParseVersions(td.decorators),
+                    tdt.name.Value,
+                    Parse(tdt.template),
+                    (SwipcNode.Type) Transform(td.type)
+                )
+                : throw new NotSupportedException(),
         Type type => Transform(type.Value),
         ConcreteType ct => new SwipcNode.Concrete(
             ct.name.Value,
