@@ -1,3 +1,5 @@
+using LibSharpRetro;
+
 namespace UmbraCore.Core;
 
 public abstract class Waitable : KObject {
@@ -101,8 +103,10 @@ public class SyncManager {
     readonly Dictionary<ulong, Semaphore> Semaphores = [];
     readonly Dictionary<ulong, Mutex> Mutexes = [];
     
-    static TimeSpan? ConvertTimeout(ulong timeout) =>
-        timeout != uint.MaxValue ? (TimeSpan?) new TimeSpan((long) (timeout / 100)) : null;
+    static TimeSpan ConvertTimeout(ulong timeout) =>
+        timeout != ulong.MaxValue
+            ? new TimeSpan((long) (timeout / 100))
+            : new TimeSpan(0, 0, 0, 0, -1);
 
     Semaphore EnsureSemaphore(ulong addr) => Semaphores.TryGetValue(addr, out var sema)
         ? sema
@@ -112,7 +116,7 @@ public class SyncManager {
         ? mutex
         : Mutexes[addr] = new Mutex();
     
-    public void Setup(GameWrapper game) {
+    public unsafe void Setup(GameWrapper game) {
         game.Callbacks.ClearEvent = handle => {
             Core.Kernel.Get<Event>(handle).Triggered = false;
             return 0;
@@ -129,6 +133,28 @@ public class SyncManager {
             else if(target == 0xFFFFFFFF)
                 semaphore.Signal();
             return 0;
+        };
+        game.Callbacks.WaitSynchronization = (handlesAddr, numHandles, timeout, ref _activated) => {
+            var handles = new Buffer<uint>(handlesAddr, numHandles * 4);
+            var waitHandle = new AutoResetEvent(false);
+            var activated = uint.MaxValue;
+            var completed = false;
+            Enumerable.Range(0, (int) numHandles).ForEach(i =>
+                Kernel.Get<Waitable>(handles[i]).Wait(() => {
+                    if(completed) return -1;
+                    lock(waitHandle) {
+                        activated = (uint) i;
+                        waitHandle.Set();
+                        return 1;
+                    }
+                }));
+            if(waitHandle.WaitOne(ConvertTimeout(timeout))) {
+                completed = true;
+                _activated = activated;
+                return 0;
+            }
+            completed = true;
+            return 0xea01;
         };
     }
 }

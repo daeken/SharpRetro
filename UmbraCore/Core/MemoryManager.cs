@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace UmbraCore.Core;
@@ -5,12 +6,6 @@ namespace UmbraCore.Core;
 public class MemoryManager {
     public ulong HeapAddress, HeapSize;
     public readonly Dictionary<ulong, (ulong Size, ulong Flags)> Regions = [];
-
-    public MemoryManager() {
-        HeapSize = 0x100000;
-        HeapAddress = (ulong) Marshal.AllocHGlobal((int) HeapSize);
-        Regions[HeapAddress] = (HeapSize, 1);
-    }
 
     public bool IsKnownPointer(ulong addr) =>
         Regions.Any(x => x.Key <= addr && addr < x.Key + x.Value.Size);
@@ -50,6 +45,14 @@ public class MemoryManager {
                     break;
                 }
             }
+            return 0;
+        };
+        game.Callbacks.SetHeapSize = (size, ref ptr) => {
+            Debug.Assert(HeapAddress == 0);
+            HeapSize = size;
+            HeapAddress = (ulong) Marshal.AllocHGlobal((int) HeapSize);
+            Regions[HeapAddress] = (HeapSize, 1);
+            ptr = HeapAddress;
             return 0;
         };
     }

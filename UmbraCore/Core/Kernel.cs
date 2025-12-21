@@ -19,6 +19,12 @@ public static class Kernel {
         ThreadManager.Setup(game);
         MiscManager.Setup(game);
         SyncManager.Setup(game);
+
+        game.Callbacks.CloseHandle = handle => {
+            if(Handles.TryGetValue((uint) handle, out var obj))
+                Close(obj);
+            return 0;
+        };
     }
     
     public static uint Add(KObject obj) {
