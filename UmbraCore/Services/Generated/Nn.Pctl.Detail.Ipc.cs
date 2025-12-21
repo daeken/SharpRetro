@@ -1,8 +1,195 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Pctl.Detail.Ipc;
 public partial class IParentalControlService : _IParentalControlService_Base;
 public abstract class _IParentalControlService_Base : IpcInterface {
+	protected virtual void Initialize() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.Initialize");
+	protected virtual void CheckFreeCommunicationPermission() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.CheckFreeCommunicationPermission");
+	protected virtual void ConfirmLaunchApplicationPermission(byte _0, ulong _1, Span<sbyte> _2) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmLaunchApplicationPermission");
+	protected virtual void ConfirmResumeApplicationPermission(byte _0, ulong _1, Span<sbyte> _2) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmResumeApplicationPermission");
+	protected virtual void ConfirmSnsPostPermission() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmSnsPostPermission");
+	protected virtual void ConfirmSystemSettingsPermission() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmSystemSettingsPermission");
+	protected virtual byte IsRestrictionTemporaryUnlocked() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsRestrictionTemporaryUnlocked not implemented");
+	protected virtual void RevertRestrictionTemporaryUnlocked() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.RevertRestrictionTemporaryUnlocked");
+	protected virtual void EnterRestrictedSystemSettings() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.EnterRestrictedSystemSettings");
+	protected virtual void LeaveRestrictedSystemSettings() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.LeaveRestrictedSystemSettings");
+	protected virtual byte IsRestrictedSystemSettingsEntered() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsRestrictedSystemSettingsEntered not implemented");
+	protected virtual void RevertRestrictedSystemSettingsEntered() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.RevertRestrictedSystemSettingsEntered");
+	protected virtual uint GetRestrictedFeatures() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetRestrictedFeatures not implemented");
+	protected virtual void ConfirmStereoVisionPermission() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmStereoVisionPermission");
+	protected virtual void ConfirmPlayableApplicationVideoOld() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmPlayableApplicationVideoOld");
+	protected virtual void ConfirmPlayableApplicationVideo() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmPlayableApplicationVideo");
+	protected virtual byte IsRestrictionEnabled() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsRestrictionEnabled not implemented");
+	protected virtual uint GetSafetyLevel() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSafetyLevel not implemented");
+	protected virtual void SetSafetyLevel(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetSafetyLevel");
+	protected virtual void GetSafetyLevelSettings(uint _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSafetyLevelSettings not implemented");
+	protected virtual void GetCurrentSettings() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetCurrentSettings not implemented");
+	protected virtual void SetCustomSafetyLevelSettings(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetCustomSafetyLevelSettings");
+	protected virtual uint GetDefaultRatingOrganization() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetDefaultRatingOrganization not implemented");
+	protected virtual void SetDefaultRatingOrganization(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetDefaultRatingOrganization");
+	protected virtual uint GetFreeCommunicationApplicationListCount() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetFreeCommunicationApplicationListCount not implemented");
+	protected virtual void AddToFreeCommunicationApplicationList(ulong _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.AddToFreeCommunicationApplicationList");
+	protected virtual void DeleteSettings() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DeleteSettings");
+	protected virtual void GetFreeCommunicationApplicationList(uint _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetFreeCommunicationApplicationList not implemented");
+	protected virtual void UpdateFreeCommunicationApplicationList(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.UpdateFreeCommunicationApplicationList");
+	protected virtual void DisableFeaturesForReset() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DisableFeaturesForReset");
+	protected virtual void NotifyApplicationDownloadStarted(ulong _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.NotifyApplicationDownloadStarted");
+	protected virtual void ConfirmStereoVisionRestrictionConfigurable() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ConfirmStereoVisionRestrictionConfigurable");
+	protected virtual byte GetStereoVisionRestriction() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetStereoVisionRestriction not implemented");
+	protected virtual void SetStereoVisionRestriction(byte _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetStereoVisionRestriction");
+	protected virtual void ResetConfirmedStereoVisionPermission() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ResetConfirmedStereoVisionPermission");
+	protected virtual void IsStereoVisionPermitted() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.IsStereoVisionPermitted");
+	protected virtual void UnlockRestrictionTemporarily(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.UnlockRestrictionTemporarily");
+	protected virtual void UnlockSystemSettingsRestriction(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.UnlockSystemSettingsRestriction");
+	protected virtual void SetPinCode(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetPinCode");
+	protected virtual void GenerateInquiryCode() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GenerateInquiryCode not implemented");
+	protected virtual byte CheckMasterKey(Span<byte> _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.CheckMasterKey not implemented");
+	protected virtual uint GetPinCodeLength() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPinCodeLength not implemented");
+	protected virtual KObject GetPinCodeChangedEvent() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPinCodeChangedEvent not implemented");
+	protected virtual void GetPinCode() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPinCode not implemented");
+	protected virtual byte IsPairingActive() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsPairingActive not implemented");
+	protected virtual ulong GetSettingsLastUpdated() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSettingsLastUpdated not implemented");
+	protected virtual void GetPairingAccountInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPairingAccountInfo not implemented");
+	protected virtual void GetAccountNickname(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountNickname not implemented");
+	protected virtual uint GetAccountState(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountState not implemented");
+	protected virtual KObject GetSynchronizationEvent() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSynchronizationEvent not implemented");
+	protected virtual void StartPlayTimer() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.StartPlayTimer");
+	protected virtual void StopPlayTimer() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.StopPlayTimer");
+	protected virtual byte IsPlayTimerEnabled() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsPlayTimerEnabled not implemented");
+	protected virtual ulong GetPlayTimerRemainingTime() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerRemainingTime not implemented");
+	protected virtual byte IsRestrictedByPlayTimer() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsRestrictedByPlayTimer not implemented");
+	protected virtual void GetPlayTimerSettings() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerSettings not implemented");
+	protected virtual KObject GetPlayTimerEventToRequestSuspension() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerEventToRequestSuspension not implemented");
+	protected virtual byte IsPlayTimerAlarmDisabled() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsPlayTimerAlarmDisabled not implemented");
+	protected virtual void NotifyWrongPinCodeInputManyTimes() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.NotifyWrongPinCodeInputManyTimes");
+	protected virtual void CancelNetworkRequest() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.CancelNetworkRequest");
+	protected virtual KObject GetUnlinkedEvent() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetUnlinkedEvent not implemented");
+	protected virtual void ClearUnlinkedEvent() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ClearUnlinkedEvent");
+	protected virtual byte DisableAllFeatures() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.DisableAllFeatures not implemented");
+	protected virtual byte PostEnableAllFeatures() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.PostEnableAllFeatures not implemented");
+	protected virtual void IsAllFeaturesDisabled() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsAllFeaturesDisabled not implemented");
+	protected virtual void DeleteFromFreeCommunicationApplicationListForDebug(ulong _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DeleteFromFreeCommunicationApplicationListForDebug");
+	protected virtual void ClearFreeCommunicationApplicationListForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ClearFreeCommunicationApplicationListForDebug");
+	protected virtual void GetExemptApplicationListCountForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.GetExemptApplicationListCountForDebug");
+	protected virtual void GetExemptApplicationListForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.GetExemptApplicationListForDebug");
+	protected virtual void UpdateExemptApplicationListForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.UpdateExemptApplicationListForDebug");
+	protected virtual void AddToExemptApplicationListForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.AddToExemptApplicationListForDebug");
+	protected virtual void DeleteFromExemptApplicationListForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DeleteFromExemptApplicationListForDebug");
+	protected virtual void ClearExemptApplicationListForDebug() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.ClearExemptApplicationListForDebug");
+	protected virtual void DeletePairing() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DeletePairing");
+	protected virtual void SetPlayTimerSettingsForDebug(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetPlayTimerSettingsForDebug");
+	protected virtual ulong GetPlayTimerSpentTimeForTest() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerSpentTimeForTest not implemented");
+	protected virtual void SetPlayTimerAlarmDisabledForDebug(byte _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetPlayTimerAlarmDisabledForDebug");
+	protected virtual void RequestPairingAsync(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.RequestPairingAsync not implemented");
+	protected virtual void FinishRequestPairing(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishRequestPairing not implemented");
+	protected virtual void AuthorizePairingAsync(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.AuthorizePairingAsync not implemented");
+	protected virtual void FinishAuthorizePairing(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishAuthorizePairing not implemented");
+	protected virtual void RetrievePairingInfoAsync() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.RetrievePairingInfoAsync not implemented");
+	protected virtual void FinishRetrievePairingInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishRetrievePairingInfo not implemented");
+	protected virtual void UnlinkPairingAsync(byte _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.UnlinkPairingAsync not implemented");
+	protected virtual void FinishUnlinkPairing(byte _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.FinishUnlinkPairing");
+	protected virtual void GetAccountMiiImageAsync(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountMiiImageAsync not implemented");
+	protected virtual void FinishGetAccountMiiImage(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishGetAccountMiiImage not implemented");
+	protected virtual void GetAccountMiiImageContentTypeAsync(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountMiiImageContentTypeAsync not implemented");
+	protected virtual void FinishGetAccountMiiImageContentType(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishGetAccountMiiImageContentType not implemented");
+	protected virtual void SynchronizeParentalControlSettingsAsync() =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.SynchronizeParentalControlSettingsAsync not implemented");
+	protected virtual void FinishSynchronizeParentalControlSettings(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.FinishSynchronizeParentalControlSettings");
+	protected virtual ulong FinishSynchronizeParentalControlSettingsWithLastUpdated(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishSynchronizeParentalControlSettingsWithLastUpdated not implemented");
+	protected virtual void RequestUpdateExemptionListAsync() =>
+		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.RequestUpdateExemptionListAsync");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: // Initialize
@@ -199,6 +386,10 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 
 public partial class IParentalControlServiceFactory : _IParentalControlServiceFactory_Base;
 public abstract class _IParentalControlServiceFactory_Base : IpcInterface {
+	protected virtual Nn.Pctl.Detail.Ipc.IParentalControlService CreateService(ulong _0, ulong _1) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlServiceFactory.CreateService not implemented");
+	protected virtual Nn.Pctl.Detail.Ipc.IParentalControlService CreateServiceWithoutInitialize(ulong _0, ulong _1) =>
+		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlServiceFactory.CreateServiceWithoutInitialize not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // CreateService

@@ -1,8 +1,35 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Ncm;
 public partial class IContentManager : _IContentManager_Base;
 public abstract class _IContentManager_Base : IpcInterface {
+	protected virtual void CreateContentStorage(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CreateContentStorage");
+	protected virtual void CreateContentMetaDatabase(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CreateContentMetaDatabase");
+	protected virtual void VerifyContentStorage(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.VerifyContentStorage");
+	protected virtual void VerifyContentMetaDatabase(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.VerifyContentMetaDatabase");
+	protected virtual Nn.Ncm.IContentStorage OpenContentStorage(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentManager.OpenContentStorage not implemented");
+	protected virtual Nn.Ncm.IContentMetaDatabase OpenContentMetaDatabase(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentManager.OpenContentMetaDatabase not implemented");
+	protected virtual void CloseContentStorageForcibly(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentStorageForcibly");
+	protected virtual void CloseContentMetaDatabaseForcibly(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentMetaDatabaseForcibly");
+	protected virtual void CleanupContentMetaDatabase(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CleanupContentMetaDatabase");
+	protected virtual void OpenContentStorage2(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.OpenContentStorage2");
+	protected virtual void CloseContentStorage(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentStorage");
+	protected virtual void OpenContentMetaDatabase2(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.OpenContentMetaDatabase2");
+	protected virtual void CloseContentMetaDatabase(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentMetaDatabase");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // CreateContentStorage
@@ -39,6 +66,48 @@ public abstract class _IContentManager_Base : IpcInterface {
 
 public partial class IContentMetaDatabase : _IContentMetaDatabase_Base;
 public abstract class _IContentMetaDatabase_Base : IpcInterface {
+	protected virtual void Set(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Set");
+	protected virtual void Get(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.Get not implemented");
+	protected virtual void Remove(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Remove");
+	protected virtual void GetContentIdByType(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetContentIdByType not implemented");
+	protected virtual void ListContentInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.ListContentInfo not implemented");
+	protected virtual void List(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.List not implemented");
+	protected virtual void GetLatestContentMetaKey(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetLatestContentMetaKey not implemented");
+	protected virtual void ListApplication(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.ListApplication not implemented");
+	protected virtual void Has(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.Has not implemented");
+	protected virtual void HasAll(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.HasAll not implemented");
+	protected virtual void GetSize(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetSize not implemented");
+	protected virtual void GetRequiredSystemVersion(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetRequiredSystemVersion not implemented");
+	protected virtual void GetPatchId(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetPatchId not implemented");
+	protected virtual void DisableForcibly() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.DisableForcibly");
+	protected virtual void LookupOrphanContent(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.LookupOrphanContent not implemented");
+	protected virtual void Commit() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Commit");
+	protected virtual void HasContent(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.HasContent not implemented");
+	protected virtual void ListContentMetaInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.ListContentMetaInfo not implemented");
+	protected virtual void GetAttributes(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetAttributes not implemented");
+	protected virtual void GetRequiredApplicationVersion(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetRequiredApplicationVersion not implemented");
+	protected virtual void Unknown20() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Unknown20");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // Set
@@ -91,6 +160,60 @@ public abstract class _IContentMetaDatabase_Base : IpcInterface {
 
 public partial class IContentStorage : _IContentStorage_Base;
 public abstract class _IContentStorage_Base : IpcInterface {
+	protected virtual void GeneratePlaceHolderId() =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GeneratePlaceHolderId not implemented");
+	protected virtual void CreatePlaceHolder(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.CreatePlaceHolder");
+	protected virtual void DeletePlaceHolder(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.DeletePlaceHolder");
+	protected virtual void HasPlaceHolder(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.HasPlaceHolder not implemented");
+	protected virtual void WritePlaceHolder(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.WritePlaceHolder");
+	protected virtual void Register(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.Register");
+	protected virtual void Delete(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.Delete");
+	protected virtual void Has(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.Has not implemented");
+	protected virtual void GetPath(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetPath not implemented");
+	protected virtual void GetPlaceHolderPath(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetPlaceHolderPath not implemented");
+	protected virtual void CleanupAllPlaceHolder() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.CleanupAllPlaceHolder");
+	protected virtual void ListPlaceHolder() =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.ListPlaceHolder not implemented");
+	protected virtual void GetContentCount() =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetContentCount not implemented");
+	protected virtual void ListContentId(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.ListContentId not implemented");
+	protected virtual void GetSize(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetSize not implemented");
+	protected virtual void DisableForcibly() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.DisableForcibly");
+	protected virtual void RevertToPlaceHolder(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.RevertToPlaceHolder");
+	protected virtual void SetPlaceHolderSize(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.SetPlaceHolderSize");
+	protected virtual void ReadContentIdFile(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.ReadContentIdFile not implemented");
+	protected virtual void GetRightsIdFromPlaceHolderId(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetRightsIdFromPlaceHolderId not implemented");
+	protected virtual void GetRightsIdFromContentId(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetRightsIdFromContentId not implemented");
+	protected virtual void WriteContentForDebug(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.WriteContentForDebug");
+	protected virtual void GetFreeSpaceSize() =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetFreeSpaceSize not implemented");
+	protected virtual void GetTotalSpaceSize() =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetTotalSpaceSize not implemented");
+	protected virtual void FlushStorage() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.FlushStorage");
+	protected virtual void Unknown25(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Ncm.IContentStorage.Unknown25 not implemented");
+	protected virtual void Unknown26() =>
+		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.Unknown26");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // GeneratePlaceHolderId

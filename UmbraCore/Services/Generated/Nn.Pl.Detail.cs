@@ -1,8 +1,21 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Pl.Detail;
 public partial class ISharedFontManager : _ISharedFontManager_Base;
 public abstract class _ISharedFontManager_Base : IpcInterface {
+	protected virtual void RequestLoad(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pl.Detail.ISharedFontManager.RequestLoad");
+	protected virtual uint GetLoadState(uint _0) =>
+		throw new NotImplementedException("Nn.Pl.Detail.ISharedFontManager.GetLoadState not implemented");
+	protected virtual uint GetSize(uint _0) =>
+		throw new NotImplementedException("Nn.Pl.Detail.ISharedFontManager.GetSize not implemented");
+	protected virtual uint GetSharedMemoryAddressOffset(uint _0) =>
+		throw new NotImplementedException("Nn.Pl.Detail.ISharedFontManager.GetSharedMemoryAddressOffset not implemented");
+	protected virtual KObject GetSharedMemoryNativeHandle() =>
+		throw new NotImplementedException("Nn.Pl.Detail.ISharedFontManager.GetSharedMemoryNativeHandle not implemented");
+	protected virtual void GetSharedFontInOrderOfPriority(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Pl.Detail.ISharedFontManager.GetSharedFontInOrderOfPriority not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // RequestLoad

@@ -1,8 +1,27 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Aocsrv.Detail;
 public partial class IAddOnContentManager : _IAddOnContentManager_Base;
 public abstract class _IAddOnContentManager_Base : IpcInterface {
+	protected virtual uint CountAddOnContentByApplicationId(ulong _0) =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.CountAddOnContentByApplicationId not implemented");
+	protected virtual void ListAddOnContentByApplicationId(uint _0, uint _1, ulong _2) =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.ListAddOnContentByApplicationId not implemented");
+	protected virtual uint CountAddOnContent(ulong _0, ulong _1) =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.CountAddOnContent not implemented");
+	protected virtual void ListAddOnContent(uint _0, uint _1, ulong _2, ulong _3) =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.ListAddOnContent not implemented");
+	protected virtual ulong GetAddOnContentBaseIdByApplicationId(ulong _0) =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.GetAddOnContentBaseIdByApplicationId not implemented");
+	protected virtual ulong GetAddOnContentBaseId(ulong _0, ulong _1) =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.GetAddOnContentBaseId not implemented");
+	protected virtual void PrepareAddOnContentByApplicationId(uint _0, ulong _1) =>
+		Console.WriteLine("Stub hit for Nn.Aocsrv.Detail.IAddOnContentManager.PrepareAddOnContentByApplicationId");
+	protected virtual void PrepareAddOnContent(uint _0, ulong _1, ulong _2) =>
+		Console.WriteLine("Stub hit for Nn.Aocsrv.Detail.IAddOnContentManager.PrepareAddOnContent");
+	protected virtual KObject GetAddOnContentListChangedEvent() =>
+		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.GetAddOnContentListChangedEvent not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // CountAddOnContentByApplicationId

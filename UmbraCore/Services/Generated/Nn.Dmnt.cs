@@ -1,8 +1,111 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Dmnt;
 public partial class IInterface : _IInterface_Base;
 public abstract class _IInterface_Base : IpcInterface {
+	protected virtual void BreakDebugProcess() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.BreakDebugProcess");
+	protected virtual void TerminateDebugProcess() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TerminateDebugProcess");
+	protected virtual void CloseHandle() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.CloseHandle");
+	protected virtual void LoadImage() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.LoadImage");
+	protected virtual void GetProcessId() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetProcessId");
+	protected virtual void GetProcessHandle() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetProcessHandle");
+	protected virtual void WaitSynchronization() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.WaitSynchronization");
+	protected virtual void GetDebugEvent() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetDebugEvent");
+	protected virtual void GetProcessModuleInfo() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetProcessModuleInfo");
+	protected virtual void GetProcessList() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetProcessList");
+	protected virtual void GetThreadList() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetThreadList");
+	protected virtual void GetDebugThreadContext() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetDebugThreadContext");
+	protected virtual void ContinueDebugEvent() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.ContinueDebugEvent");
+	protected virtual void ReadDebugProcessMemory() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.ReadDebugProcessMemory");
+	protected virtual void WriteDebugProcessMemory() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.WriteDebugProcessMemory");
+	protected virtual void SetDebugThreadContext() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.SetDebugThreadContext");
+	protected virtual void GetDebugThreadParam() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetDebugThreadParam");
+	protected virtual void InitializeThreadInfo() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.InitializeThreadInfo");
+	protected virtual void SetHardwareBreakPoint() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.SetHardwareBreakPoint");
+	protected virtual void QueryDebugProcessMemory() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.QueryDebugProcessMemory");
+	protected virtual void GetProcessMemoryDetails() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetProcessMemoryDetails");
+	protected virtual void AttachByProgramId() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.AttachByProgramId");
+	protected virtual void AttachOnLaunch() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.AttachOnLaunch");
+	protected virtual void GetDebugMonitorProcessId() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetDebugMonitorProcessId");
+	protected virtual void GetJitDebugProcessList() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetJitDebugProcessList");
+	protected virtual void CreateCoreDump() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.CreateCoreDump");
+	protected virtual void GetAllDebugThreadInfo() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.GetAllDebugThreadInfo");
+	protected virtual void TargetIO_FileOpen() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileOpen");
+	protected virtual void TargetIO_FileClose() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileClose");
+	protected virtual void TargetIO_FileRead() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileRead");
+	protected virtual void TargetIO_FileWrite() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileWrite");
+	protected virtual void TargetIO_FileSetAttributes() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileSetAttributes");
+	protected virtual void TargetIO_FileGetInformation() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileGetInformation");
+	protected virtual void TargetIO_FileSetTime() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileSetTime");
+	protected virtual void TargetIO_FileSetSize() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileSetSize");
+	protected virtual void TargetIO_FileDelete() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileDelete");
+	protected virtual void TargetIO_FileMove() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_FileMove");
+	protected virtual void TargetIO_DirectoryCreate() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryCreate");
+	protected virtual void TargetIO_DirectoryDelete() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryDelete");
+	protected virtual void TargetIO_DirectoryRename() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryRename");
+	protected virtual void TargetIO_DirectoryGetCount() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryGetCount");
+	protected virtual void TargetIO_DirectoryOpen() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryOpen");
+	protected virtual void TargetIO_DirectoryGetNext() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryGetNext");
+	protected virtual void TargetIO_DirectoryClose() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_DirectoryClose");
+	protected virtual void TargetIO_GetFreeSpace() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_GetFreeSpace");
+	protected virtual void TargetIO_GetVolumeInformation() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.TargetIO_GetVolumeInformation");
+	protected virtual void InitiateCoreDump() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.InitiateCoreDump");
+	protected virtual void ContinueCoreDump() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.ContinueCoreDump");
+	protected virtual void AddTTYToCoreDump() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.AddTTYToCoreDump");
+	protected virtual void AddImageToCoreDump() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.AddImageToCoreDump");
+	protected virtual void CloseCoreDump() =>
+		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.CloseCoreDump");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // BreakDebugProcess

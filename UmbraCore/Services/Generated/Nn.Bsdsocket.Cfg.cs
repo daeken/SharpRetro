@@ -1,8 +1,35 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Bsdsocket.Cfg;
 public partial class ServerInterface : _ServerInterface_Base;
 public abstract class _ServerInterface_Base : IpcInterface {
+	protected virtual void SetIfUp(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.SetIfUp");
+	protected virtual KObject SetIfUpWithEvent(Span<byte> _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.SetIfUpWithEvent not implemented");
+	protected virtual void CancelIf(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.CancelIf");
+	protected virtual void SetIfDown(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.SetIfDown");
+	protected virtual void GetIfState(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.GetIfState not implemented");
+	protected virtual void DhcpRenew(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.DhcpRenew");
+	protected virtual void AddStaticArpEntry(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.AddStaticArpEntry");
+	protected virtual void RemoveArpEntry(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.RemoveArpEntry");
+	protected virtual void LookupArpEntry(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.LookupArpEntry not implemented");
+	protected virtual void LookupArpEntry2(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.LookupArpEntry2 not implemented");
+	protected virtual void ClearArpEntries() =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.ClearArpEntries");
+	protected virtual void ClearArpEntries2(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.ClearArpEntries2");
+	protected virtual void PrintArpEntries() =>
+		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.PrintArpEntries");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // SetIfUp

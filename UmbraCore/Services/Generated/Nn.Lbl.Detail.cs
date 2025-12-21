@@ -1,8 +1,67 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Lbl.Detail;
 public partial class ILblController : _ILblController_Base;
 public abstract class _ILblController_Base : IpcInterface {
+	protected virtual void Unknown0() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown0");
+	protected virtual void Unknown1() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown1");
+	protected virtual void Unknown2(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown2");
+	protected virtual void Unknown3() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown3 not implemented");
+	protected virtual void Unknown4() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown4");
+	protected virtual void Unknown5() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown5 not implemented");
+	protected virtual void TurnOnBacklight(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.TurnOnBacklight");
+	protected virtual void TurnOffBacklight(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.TurnOffBacklight");
+	protected virtual void GetBacklightStatus() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.GetBacklightStatus not implemented");
+	protected virtual void Unknown9() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown9");
+	protected virtual void Unknown10() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown10");
+	protected virtual void Unknown11() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown11 not implemented");
+	protected virtual void Unknown12() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown12");
+	protected virtual void Unknown13() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown13");
+	protected virtual void Unknown14() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown14 not implemented");
+	protected virtual void Unknown15(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown15");
+	protected virtual void ReadRawLightSensor() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.ReadRawLightSensor not implemented");
+	protected virtual void Unknown17(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown17");
+	protected virtual void Unknown18(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown18 not implemented");
+	protected virtual void Unknown19(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown19");
+	protected virtual void Unknown20() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown20 not implemented");
+	protected virtual void Unknown21(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown21");
+	protected virtual void Unknown22() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown22 not implemented");
+	protected virtual void Unknown23() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown23 not implemented");
+	protected virtual void Unknown24(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown24");
+	protected virtual void Unknown25() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown25 not implemented");
+	protected virtual void EnableVrMode() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.EnableVrMode");
+	protected virtual void DisableVrMode() =>
+		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.DisableVrMode");
+	protected virtual void GetVrMode() =>
+		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.GetVrMode not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // Unknown0

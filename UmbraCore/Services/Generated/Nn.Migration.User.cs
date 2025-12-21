@@ -1,8 +1,49 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Migration.User;
 public partial class IClient : _IClient_Base;
 public abstract class _IClient_Base : IpcInterface {
+	protected virtual void GetClientProfile() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetClientProfile not implemented");
+	protected virtual void CreateLoginSession() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.CreateLoginSession not implemented");
+	protected virtual void GetNetworkServiceAccountId() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetNetworkServiceAccountId not implemented");
+	protected virtual void GetUserNickname() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetUserNickname not implemented");
+	protected virtual void GetUserProfileImage() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetUserProfileImage not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext PrepareAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.PrepareAsync not implemented");
+	protected virtual void GetConnectionRequirement() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetConnectionRequirement not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext ScanServersAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.ScanServersAsync not implemented");
+	protected virtual void ListServers() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.ListServers not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext ConnectByServerIdAsync(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.ConnectByServerIdAsync not implemented");
+	protected virtual void GetStorageShortfall() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetStorageShortfall not implemented");
+	protected virtual void GetTotalTransferInfo() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetTotalTransferInfo not implemented");
+	protected virtual void GetImmigrantUid() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetImmigrantUid not implemented");
+	protected virtual void GetCurrentTransferInfo() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetCurrentTransferInfo not implemented");
+	protected virtual void GetCurrentRelatedApplications() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.GetCurrentRelatedApplications not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext TransferNextAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.TransferNextAsync not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext SuspendAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.SuspendAsync not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext CompleteAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.CompleteAsync not implemented");
+	protected virtual void Abort() =>
+		Console.WriteLine("Stub hit for Nn.Migration.User.IClient.Abort");
+	protected virtual Nn.Migration.Detail.IAsyncContext DebugSynchronizeStateInFinalizationAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IClient.DebugSynchronizeStateInFinalizationAsync not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // GetClientProfile
@@ -53,6 +94,28 @@ public abstract class _IClient_Base : IpcInterface {
 
 public partial class IServer : _IServer_Base;
 public abstract class _IServer_Base : IpcInterface {
+	protected virtual void GetUid() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.GetUid not implemented");
+	protected virtual void GetServerProfile() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.GetServerProfile not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext PrepareAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.PrepareAsync not implemented");
+	protected virtual void GetConnectionRequirement() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.GetConnectionRequirement not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext WaitConnectionAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.WaitConnectionAsync not implemented");
+	protected virtual void GetClientProfile() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.GetClientProfile not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext AcceptConnectionAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.AcceptConnectionAsync not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext DeclineConnectionAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.DeclineConnectionAsync not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext ProcessTransferAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.ProcessTransferAsync not implemented");
+	protected virtual Nn.Migration.Detail.IAsyncContext CompleteAsync() =>
+		throw new NotImplementedException("Nn.Migration.User.IServer.CompleteAsync not implemented");
+	protected virtual void Abort() =>
+		Console.WriteLine("Stub hit for Nn.Migration.User.IServer.Abort");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // GetUid
@@ -85,6 +148,16 @@ public abstract class _IServer_Base : IpcInterface {
 
 public partial class IService : _IService_Base;
 public abstract class _IService_Base : IpcInterface {
+	protected virtual void TryGetLastMigrationInfo() =>
+		throw new NotImplementedException("Nn.Migration.User.IService.TryGetLastMigrationInfo not implemented");
+	protected virtual Nn.Migration.User.IServer CreateServer(Span<byte> _0, KObject _1, Span<byte> _2) =>
+		throw new NotImplementedException("Nn.Migration.User.IService.CreateServer not implemented");
+	protected virtual Nn.Migration.User.IServer ResumeServer(Span<byte> _0, KObject _1) =>
+		throw new NotImplementedException("Nn.Migration.User.IService.ResumeServer not implemented");
+	protected virtual Nn.Migration.User.IClient CreateClient(Span<byte> _0, KObject _1, Span<byte> _2) =>
+		throw new NotImplementedException("Nn.Migration.User.IService.CreateClient not implemented");
+	protected virtual Nn.Migration.User.IClient ResumeClient(Span<byte> _0, KObject _1) =>
+		throw new NotImplementedException("Nn.Migration.User.IService.ResumeClient not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xA: // TryGetLastMigrationInfo
@@ -105,6 +178,14 @@ public abstract class _IService_Base : IpcInterface {
 
 public partial class IAsyncContext : _IAsyncContext_Base;
 public abstract class _IAsyncContext_Base : IpcInterface {
+	protected virtual void GetSystemEvent() =>
+		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.GetSystemEvent");
+	protected virtual void Cancel() =>
+		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.Cancel");
+	protected virtual void HasDone() =>
+		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.HasDone");
+	protected virtual void GetResult() =>
+		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.GetResult");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // GetSystemEvent

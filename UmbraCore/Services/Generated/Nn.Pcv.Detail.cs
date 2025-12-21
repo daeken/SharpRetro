@@ -1,8 +1,63 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Pcv.Detail;
 public partial class IPcvService : _IPcvService_Base;
 public abstract class _IPcvService_Base : IpcInterface {
+	protected virtual void SetPowerEnabled(byte _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetPowerEnabled");
+	protected virtual void SetClockEnabled(byte _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetClockEnabled");
+	protected virtual void SetClockRate(uint _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetClockRate");
+	protected virtual uint GetClockRate(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetClockRate not implemented");
+	protected virtual void GetState(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.GetState");
+	protected virtual void GetPossibleClockRates(uint _0, uint _1) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetPossibleClockRates not implemented");
+	protected virtual void SetMinVClockRate(uint _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetMinVClockRate");
+	protected virtual void SetReset(byte _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetReset");
+	protected virtual void SetVoltageEnabled(byte _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetVoltageEnabled");
+	protected virtual byte GetVoltageEnabled(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetVoltageEnabled not implemented");
+	protected virtual void GetVoltageRange(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetVoltageRange not implemented");
+	protected virtual void SetVoltageValue(uint _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetVoltageValue");
+	protected virtual uint GetVoltageValue(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetVoltageValue not implemented");
+	protected virtual void GetTemperatureThresholds(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetTemperatureThresholds not implemented");
+	protected virtual void SetTemperature(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetTemperature");
+	protected virtual void Initialize() =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.Initialize");
+	protected virtual byte IsInitialized() =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.IsInitialized not implemented");
+	protected virtual void Finalize() =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.Finalize");
+	protected virtual void PowerOn(uint _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.PowerOn");
+	protected virtual void PowerOff(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.PowerOff");
+	protected virtual void ChangeVoltage(uint _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.ChangeVoltage");
+	protected virtual KObject GetPowerClockInfoEvent() =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetPowerClockInfoEvent not implemented");
+	protected virtual uint GetOscillatorClock() =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetOscillatorClock not implemented");
+	protected virtual void GetDvfsTable(uint _0, uint _1) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetDvfsTable not implemented");
+	protected virtual void GetModuleStateTable(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetModuleStateTable not implemented");
+	protected virtual void GetPowerDomainStateTable(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetPowerDomainStateTable not implemented");
+	protected virtual void GetFuseInfo(uint _0) =>
+		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetFuseInfo not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // SetPowerEnabled

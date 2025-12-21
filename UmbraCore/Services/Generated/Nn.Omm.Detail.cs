@@ -1,8 +1,57 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Omm.Detail;
 public partial class IOperationModeManager : _IOperationModeManager_Base;
 public abstract class _IOperationModeManager_Base : IpcInterface {
+	protected virtual void GetOperationMode() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetOperationMode not implemented");
+	protected virtual KObject GetOperationModeChangeEvent() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetOperationModeChangeEvent not implemented");
+	protected virtual void EnableAudioVisual() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.EnableAudioVisual");
+	protected virtual void DisableAudioVisual() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.DisableAudioVisual");
+	protected virtual void EnterSleepAndWait(KObject _0) =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.EnterSleepAndWait");
+	protected virtual void GetCradleStatus() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetCradleStatus not implemented");
+	protected virtual void FadeInDisplay() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeInDisplay");
+	protected virtual void FadeOutDisplay() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeOutDisplay");
+	protected virtual void Unknown8() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown8 not implemented");
+	protected virtual void Unknown9() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown9");
+	protected virtual void Unknown10(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown10");
+	protected virtual void Unknown11() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown11 not implemented");
+	protected virtual KObject Unknown12() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown12 not implemented");
+	protected virtual void Unknown13() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown13");
+	protected virtual void Unknown14() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown14 not implemented");
+	protected virtual void Unknown15() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown15");
+	protected virtual void Unknown16() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown16");
+	protected virtual void Unknown17() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown17");
+	protected virtual void Unknown18() =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown18");
+	protected virtual KObject Unknown19() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown19 not implemented");
+	protected virtual void Unknown20() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown20 not implemented");
+	protected virtual void Unknown21(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown21");
+	protected virtual KObject Unknown22() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown22 not implemented");
+	protected virtual void Unknown23() =>
+		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown23 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // GetOperationMode

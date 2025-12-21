@@ -1,8 +1,21 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Nim.Detail;
 public partial class IAsyncData : _IAsyncData_Base;
 public abstract class _IAsyncData_Base : IpcInterface {
+	protected virtual void Unknown0() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncData.Unknown0");
+	protected virtual void Unknown1() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncData.Unknown1");
+	protected virtual void Unknown2() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncData.Unknown2 not implemented");
+	protected virtual void Unknown3(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncData.Unknown3 not implemented");
+	protected virtual void Unknown4() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncData.Unknown4 not implemented");
+	protected virtual void Unknown5() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncData.Unknown5 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // Unknown0
@@ -25,6 +38,14 @@ public abstract class _IAsyncData_Base : IpcInterface {
 
 public partial class IAsyncProgressResult : _IAsyncProgressResult_Base;
 public abstract class _IAsyncProgressResult_Base : IpcInterface {
+	protected virtual void Unknown0() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncProgressResult.Unknown0");
+	protected virtual void Unknown1() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncProgressResult.Unknown1");
+	protected virtual void Unknown2() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncProgressResult.Unknown2 not implemented");
+	protected virtual void Unknown3() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncProgressResult.Unknown3 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // Unknown0
@@ -43,6 +64,12 @@ public abstract class _IAsyncProgressResult_Base : IpcInterface {
 
 public partial class IAsyncResult : _IAsyncResult_Base;
 public abstract class _IAsyncResult_Base : IpcInterface {
+	protected virtual void Unknown0() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncResult.Unknown0");
+	protected virtual void Unknown1() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncResult.Unknown1");
+	protected virtual void Unknown2() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncResult.Unknown2 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // Unknown0
@@ -59,6 +86,14 @@ public abstract class _IAsyncResult_Base : IpcInterface {
 
 public partial class IAsyncValue : _IAsyncValue_Base;
 public abstract class _IAsyncValue_Base : IpcInterface {
+	protected virtual void Unknown0() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncValue.Unknown0 not implemented");
+	protected virtual void Unknown1() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncValue.Unknown1 not implemented");
+	protected virtual void Unknown2() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncValue.Unknown2");
+	protected virtual void Unknown3() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IAsyncValue.Unknown3 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // Unknown0
@@ -77,6 +112,98 @@ public abstract class _IAsyncValue_Base : IpcInterface {
 
 public partial class INetworkInstallManager : _INetworkInstallManager_Base;
 public abstract class _INetworkInstallManager_Base : IpcInterface {
+	protected virtual void CreateSystemUpdateTask(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CreateSystemUpdateTask not implemented");
+	protected virtual void DestroySystemUpdateTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroySystemUpdateTask");
+	protected virtual void ListSystemUpdateTask() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListSystemUpdateTask not implemented");
+	protected virtual void RequestSystemUpdateTaskRun(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestSystemUpdateTaskRun not implemented");
+	protected virtual void GetSystemUpdateTaskInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetSystemUpdateTaskInfo not implemented");
+	protected virtual void CommitSystemUpdateTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitSystemUpdateTask");
+	protected virtual void CreateNetworkInstallTask(Span<byte> _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CreateNetworkInstallTask not implemented");
+	protected virtual void DestroyNetworkInstallTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroyNetworkInstallTask");
+	protected virtual void ListNetworkInstallTask() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListNetworkInstallTask not implemented");
+	protected virtual void RequestNetworkInstallTaskRun(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestNetworkInstallTaskRun not implemented");
+	protected virtual void GetNetworkInstallTaskInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetNetworkInstallTaskInfo not implemented");
+	protected virtual void CommitNetworkInstallTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitNetworkInstallTask");
+	protected virtual void RequestLatestSystemUpdateMeta() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestLatestSystemUpdateMeta not implemented");
+	protected virtual void ListApplicationNetworkInstallTask(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplicationNetworkInstallTask not implemented");
+	protected virtual void ListNetworkInstallTaskContentMeta(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListNetworkInstallTaskContentMeta not implemented");
+	protected virtual void RequestLatestVersion(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestLatestVersion not implemented");
+	protected virtual void SetNetworkInstallTaskAttribute(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.SetNetworkInstallTaskAttribute");
+	protected virtual void AddNetworkInstallTaskContentMeta(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.AddNetworkInstallTaskContentMeta");
+	protected virtual void GetDownloadedSystemDataPath(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetDownloadedSystemDataPath not implemented");
+	protected virtual void CalculateNetworkInstallTaskRequiredSize(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CalculateNetworkInstallTaskRequiredSize not implemented");
+	protected virtual void IsExFatDriverIncluded(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.IsExFatDriverIncluded not implemented");
+	protected virtual void GetBackgroundDownloadStressTaskInfo() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetBackgroundDownloadStressTaskInfo not implemented");
+	protected virtual void RequestDeviceAuthenticationToken() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestDeviceAuthenticationToken not implemented");
+	protected virtual void RequestGameCardRegistrationStatus(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestGameCardRegistrationStatus not implemented");
+	protected virtual void RequestRegisterGameCard(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestRegisterGameCard not implemented");
+	protected virtual void RequestRegisterNotificationToken(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestRegisterNotificationToken not implemented");
+	protected virtual void RequestDownloadTaskList(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestDownloadTaskList not implemented");
+	protected virtual void RequestApplicationControl(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestApplicationControl not implemented");
+	protected virtual void RequestLatestApplicationControl(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestLatestApplicationControl not implemented");
+	protected virtual void RequestVersionList(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestVersionList not implemented");
+	protected virtual void CreateApplyDeltaTask(Span<byte> _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CreateApplyDeltaTask not implemented");
+	protected virtual void DestroyApplyDeltaTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroyApplyDeltaTask");
+	protected virtual void ListApplicationApplyDeltaTask(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplicationApplyDeltaTask not implemented");
+	protected virtual void RequestApplyDeltaTaskRun(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestApplyDeltaTaskRun not implemented");
+	protected virtual void GetApplyDeltaTaskInfo(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetApplyDeltaTaskInfo not implemented");
+	protected virtual void ListApplyDeltaTask(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplyDeltaTask not implemented");
+	protected virtual void CommitApplyDeltaTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitApplyDeltaTask");
+	protected virtual void CalculateApplyDeltaTaskRequiredSize(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CalculateApplyDeltaTaskRequiredSize not implemented");
+	protected virtual void PrepareShutdown() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.PrepareShutdown");
+	protected virtual void ListApplyDeltaTask2() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplyDeltaTask2 not implemented");
+	protected virtual void ClearNotEnoughSpaceStateOfApplyDeltaTask(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.ClearNotEnoughSpaceStateOfApplyDeltaTask");
+	protected virtual void Unknown42(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.Unknown42 not implemented");
+	protected virtual void Unknown43() =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.Unknown43 not implemented");
+	protected virtual void Unknown44(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.Unknown44 not implemented");
+	protected virtual void Unknown45(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.Unknown45 not implemented");
+	protected virtual void Unknown46() =>
+		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.Unknown46");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // CreateSystemUpdateTask
@@ -179,6 +306,50 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 
 public partial class IShopServiceManager : _IShopServiceManager_Base;
 public abstract class _IShopServiceManager_Base : IpcInterface {
+	protected virtual void RequestDeviceAuthenticationToken() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestDeviceAuthenticationToken not implemented");
+	protected virtual void RequestCachedDeviceAuthenticationToken(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestCachedDeviceAuthenticationToken not implemented");
+	protected virtual void RequestRegisterDeviceAccount() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestRegisterDeviceAccount not implemented");
+	protected virtual void RequestUnregisterDeviceAccount() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestUnregisterDeviceAccount not implemented");
+	protected virtual void RequestDeviceAccountStatus() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestDeviceAccountStatus not implemented");
+	protected virtual void GetDeviceAccountInfo() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.GetDeviceAccountInfo not implemented");
+	protected virtual void RequestDeviceRegistrationInfo() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestDeviceRegistrationInfo not implemented");
+	protected virtual void RequestTransferDeviceAccount() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestTransferDeviceAccount not implemented");
+	protected virtual void RequestSyncRegistration() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestSyncRegistration not implemented");
+	protected virtual void IsOwnDeviceId(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.IsOwnDeviceId not implemented");
+	protected virtual void RequestRegisterNotificationToken(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestRegisterNotificationToken not implemented");
+	protected virtual void RequestUnlinkDevice(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestUnlinkDevice not implemented");
+	protected virtual void RequestUnlinkDeviceIntegrated(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestUnlinkDeviceIntegrated not implemented");
+	protected virtual void RequestLinkDevice(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestLinkDevice not implemented");
+	protected virtual void HasDeviceLink(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.HasDeviceLink not implemented");
+	protected virtual void RequestUnlinkDeviceAll() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestUnlinkDeviceAll not implemented");
+	protected virtual void RequestCreateVirtualAccount(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestCreateVirtualAccount not implemented");
+	protected virtual void RequestDeviceLinkStatus(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestDeviceLinkStatus not implemented");
+	protected virtual void GetAccountByVirtualAccount(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.GetAccountByVirtualAccount not implemented");
+	protected virtual void RequestSyncTicket() =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestSyncTicket not implemented");
+	protected virtual void RequestDownloadTicket(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestDownloadTicket not implemented");
+	protected virtual void RequestDownloadTicketForPrepurchasedContents(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nim.Detail.IShopServiceManager.RequestDownloadTicketForPrepurchasedContents not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // RequestDeviceAuthenticationToken

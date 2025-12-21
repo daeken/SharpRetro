@@ -1,8 +1,33 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Spsm.Detail;
 public partial class IPowerStateInterface : _IPowerStateInterface_Base;
 public abstract class _IPowerStateInterface_Base : IpcInterface {
+	protected virtual void GetState() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.GetState not implemented");
+	protected virtual KObject SleepSystemAndWaitAwake() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.SleepSystemAndWaitAwake not implemented");
+	protected virtual void Unknown2() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.Unknown2 not implemented");
+	protected virtual void Unknown3(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown3");
+	protected virtual KObject GetNotificationMessageEventHandle() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.GetNotificationMessageEventHandle not implemented");
+	protected virtual void Unknown5() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.Unknown5 not implemented");
+	protected virtual void Unknown6() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.Unknown6 not implemented");
+	protected virtual void Unknown7() =>
+		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown7");
+	protected virtual void AnalyzePerformanceLogForLastSleepWakeSequence() =>
+		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.AnalyzePerformanceLogForLastSleepWakeSequence not implemented");
+	protected virtual void ChangeHomeButtonLongPressingTime(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.ChangeHomeButtonLongPressingTime");
+	protected virtual void Unknown10() =>
+		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown10");
+	protected virtual void Unknown11(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown11");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // GetState

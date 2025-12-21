@@ -1,8 +1,11 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Pcv;
 public partial class IArbitrationManager : _IArbitrationManager_Base;
 public abstract class _IArbitrationManager_Base : IpcInterface {
+	protected virtual void ReleaseControl(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.IArbitrationManager.ReleaseControl");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // ReleaseControl
@@ -15,6 +18,8 @@ public abstract class _IArbitrationManager_Base : IpcInterface {
 
 public partial class IImmediateManager : _IImmediateManager_Base;
 public abstract class _IImmediateManager_Base : IpcInterface {
+	protected virtual void SetClockRate(uint _0, uint _1) =>
+		Console.WriteLine("Stub hit for Nn.Pcv.IImmediateManager.SetClockRate");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // SetClockRate

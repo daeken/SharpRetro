@@ -1,8 +1,43 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Nsd.Detail;
 public partial class IManager : _IManager_Base;
 public abstract class _IManager_Base : IpcInterface {
+	protected virtual void GetSettingName() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetSettingName not implemented");
+	protected virtual void GetEnvironmentIdentifier() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetEnvironmentIdentifier not implemented");
+	protected virtual void GetDeviceId() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetDeviceId not implemented");
+	protected virtual void DeleteSettings(uint _0) =>
+		Console.WriteLine("Stub hit for Nn.Nsd.Detail.IManager.DeleteSettings");
+	protected virtual void ImportSettings(uint _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.ImportSettings not implemented");
+	protected virtual void Resolve(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.Resolve not implemented");
+	protected virtual void ResolveEx(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.ResolveEx not implemented");
+	protected virtual void GetNasServiceSetting(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetNasServiceSetting not implemented");
+	protected virtual void GetNasServiceSettingEx(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetNasServiceSettingEx not implemented");
+	protected virtual void GetNasRequestFqdn() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetNasRequestFqdn not implemented");
+	protected virtual void GetNasRequestFqdnEx() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetNasRequestFqdnEx not implemented");
+	protected virtual void GetNasApiFqdn() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetNasApiFqdn not implemented");
+	protected virtual void GetNasApiFqdnEx() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetNasApiFqdnEx not implemented");
+	protected virtual void GetCurrentSetting() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetCurrentSetting not implemented");
+	protected virtual void ReadSaveDataFromFsForTest() =>
+		throw new NotImplementedException("Nn.Nsd.Detail.IManager.ReadSaveDataFromFsForTest not implemented");
+	protected virtual void WriteSaveDataToFsForTest(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Nsd.Detail.IManager.WriteSaveDataToFsForTest");
+	protected virtual void DeleteSaveDataOfFsForTest() =>
+		Console.WriteLine("Stub hit for Nn.Nsd.Detail.IManager.DeleteSaveDataOfFsForTest");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xA: // GetSettingName

@@ -20,6 +20,7 @@ var concrete = new Concretize(typedefs, interfaces);
 var namespaceNames = concrete.Typedefs.Keys.Concat(concrete.Interfaces.Select(x => x.Name))
     .Select(GetNamespaceName).ToHashSet();
 var nstd = concrete.Typedefs
+    .Where(x => x.Value is IpcType.StructType or IpcType.EnumType)
     .Select(x => (GetNamespaceName(x.Key), GetName(x.Key), x.Value))
     .GroupBy(x => x.Item1)
     .Select(x => (x.Key, x.Select(y => (y.Item2, y.Value)).ToDictionary()))
@@ -34,7 +35,7 @@ var namespaces = namespaceNames.Select(name => (
     (
         Typedefs: nstd.TryGetValue(name, out var tds) ? tds : [],
         Interfaces: nsid.TryGetValue(name, out var ids) ? ids : []
-    ))).ToDictionary();
+    ))).Where(x => x.Item2.Interfaces.Count != 0 || x.Item2.Typedefs.Count != 0).ToDictionary();
 
 foreach(var (name, (tds, ids)) in namespaces)
     BuildNamespace(name, tds, ids);
@@ -43,14 +44,54 @@ return;
 static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, Dictionary<string, Interface> interfaces) {
     var csns = RenameNamespace(nsName);
     var cb = new CodeBuilder();
+    cb += "using System.Runtime.InteropServices;";
     cb += "using UmbraCore.Core;";
     cb += "// ReSharper disable once CheckNamespace";
     cb += $"namespace UmbraCore.Services.{csns};";
+
+    foreach(var (name, typedef) in typedefs) {
+        if(typedef is IpcType.EnumType edef) {
+            cb += $"public enum {Rename(name)} : {GenType(edef.UnderlyingType)} {{";
+            cb++;
+            foreach(var (vname, value) in edef.Options)
+                cb += $"{Rename(vname)} = 0x{value:X},";
+            cb--;
+            cb += "}";
+        } else if(typedef is IpcType.StructType sdef) {
+            cb += "[StructLayout(LayoutKind.Sequential, Pack = 1)]";
+            cb += $"public unsafe struct {Rename(name)} {{";
+            cb++;
+            foreach(var (vname, vtype) in sdef.Fields) {
+                if(vtype is IpcType.BytesType(-1, _))
+                    cb += $"public byte _{Rename(vname)};";
+                else if(vtype is IpcType.BytesType(var size, _))
+                    cb += $"public fixed byte {Rename(vname)}[{size}];";
+                else
+                    cb += $"public {GenType(vtype)} {Rename(vname)};";
+            }
+            cb--;
+            cb += "}";
+        }
+    }
 
     foreach(var (name, iface) in interfaces) {
         cb += $"public partial class {Rename(name)} : _{Rename(name)}_Base;";
         cb += $"public abstract class _{Rename(name)}_Base : IpcInterface {{";
         cb++;
+        foreach(var func in iface.Functions) {
+            Console.WriteLine($"{csns}.{Rename(name)}.{Rename(func.Name)}");
+            var retType = func.Outputs.Count == 1 && func.Outputs[0].Type is not IpcType.BytesType and not IpcType.BufferType
+                ? GenType(func.Outputs[0].Type)
+                : "void";
+            var args = func.Inputs.Select((x, i) => $"{GenType(x.Type)} {x.Name ?? $"_{i}"}").ToList();
+            cb += $"protected virtual {retType} {Rename(func.Name)}({string.Join(", ", args)}) =>";
+            cb++;
+            if(func.Outputs.Count == 0)
+                cb += $"Console.WriteLine(\"Stub hit for {csns}.{Rename(name)}.{Rename(func.Name)}\");";
+            else
+                cb += $"throw new NotImplementedException(\"{csns}.{Rename(name)}.{Rename(func.Name)} not implemented\");";
+            cb--;
+        }
         cb += "protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {";
         cb++;
         cb += "switch(im.CommandId) {";
@@ -76,6 +117,35 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
     
     File.WriteAllText($"../UmbraCore/Services/Generated/{csns}.cs", cb.Code);
 }
+
+static string GenType(IpcType type) => type switch {
+    IpcType.BoolType => "bool",
+    IpcType.IntType(8, false) => "byte",
+    IpcType.IntType(8, true) => "sbyte",
+    IpcType.IntType(16, false) => "ushort",
+    IpcType.IntType(16, true) => "short",
+    IpcType.IntType(32, false) => "uint",
+    IpcType.IntType(32, true) => "int",
+    IpcType.IntType(64, false) => "ulong",
+    IpcType.IntType(64, true) => "long",
+    IpcType.IntType(128, false) => "UInt128",
+    IpcType.IntType(128, true) => "Int128",
+    IpcType.FloatType(32) => "float",
+    IpcType.FloatType(64) => "double",
+    IpcType.HandleType(HandleStyle.Copy) => "KObject",
+    IpcType.HandleType(HandleStyle.Move) => "IpcInterface",
+    IpcType.ObjectType("unknown") => "IpcInterface",
+    IpcType.ObjectType(var name) => RenameNamespace(name),
+    IpcType.EnumType { Name: {} name } => RenameNamespace(name),
+    IpcType.StructType { Name: {} name } => RenameNamespace(name),
+    IpcType.BytesType => "Span<byte>",
+    IpcType.PidType => "ulong",
+    IpcType.BufferType(IpcType.BytesType, _) => "Span<byte>",
+    IpcType.BufferType(IpcType.UnknownType, _) => "Span<byte>",
+    IpcType.BufferType(IpcType.ArrayType(var dataType, _), _) => $"Span<{GenType(dataType)}>",
+    IpcType.BufferType(var dataType, _) => $"Span<{GenType(dataType)}>",
+    _ => throw new NotImplementedException($"Can't generate C# type for {type}"),
+};
 
 static string Rename(string name) => new string([name[0]]).ToUpper() + name[1..];
 static string RenameNamespace(string name) => string.Join(".", name.Split("::").Select(Rename));

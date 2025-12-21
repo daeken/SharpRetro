@@ -1,8 +1,67 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Npns;
 public partial class INpnsSystem : _INpnsSystem_Base;
 public abstract class _INpnsSystem_Base : IpcInterface {
+	protected virtual void Unknown1() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown1");
+	protected virtual void Unknown2(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown2");
+	protected virtual void Unknown3(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown3 not implemented");
+	protected virtual void Unknown4(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown4 not implemented");
+	protected virtual KObject Unknown5() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown5 not implemented");
+	protected virtual void Unknown6() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown6");
+	protected virtual KObject Unknown7() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown7 not implemented");
+	protected virtual void Unknown11(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown11");
+	protected virtual void Unknown12(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown12");
+	protected virtual void Unknown13(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown13 not implemented");
+	protected virtual void Unknown21(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown21 not implemented");
+	protected virtual void Unknown22(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown22 not implemented");
+	protected virtual void Unknown23(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown23");
+	protected virtual void Unknown24(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown24");
+	protected virtual void Unknown25(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown25 not implemented");
+	protected virtual void Unknown31(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown31");
+	protected virtual void Unknown32(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown32");
+	protected virtual void Unknown101() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown101");
+	protected virtual void Unknown102() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown102");
+	protected virtual void Unknown103() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown103 not implemented");
+	protected virtual void Unknown104() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown104 not implemented");
+	protected virtual KObject Unknown105() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown105 not implemented");
+	protected virtual void Unknown111() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown111 not implemented");
+	protected virtual void Unknown112() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown112");
+	protected virtual void Unknown113() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown113");
+	protected virtual void Unknown114(Span<byte> _0, Span<byte> _1) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown114");
+	protected virtual void Unknown115() =>
+		throw new NotImplementedException("Nn.Npns.INpnsSystem.Unknown115 not implemented");
+	protected virtual void Unknown201(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown201");
+	protected virtual void Unknown202(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsSystem.Unknown202");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: // Unknown1
@@ -71,6 +130,34 @@ public abstract class _INpnsSystem_Base : IpcInterface {
 
 public partial class INpnsUser : _INpnsUser_Base;
 public abstract class _INpnsUser_Base : IpcInterface {
+	protected virtual void Unknown1() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsUser.Unknown1");
+	protected virtual void Unknown2(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsUser.Unknown2");
+	protected virtual void Unknown3(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown3 not implemented");
+	protected virtual void Unknown4(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown4 not implemented");
+	protected virtual KObject Unknown5() =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown5 not implemented");
+	protected virtual KObject Unknown7() =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown7 not implemented");
+	protected virtual void Unknown21(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown21 not implemented");
+	protected virtual void Unknown23(Span<byte> _0) =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsUser.Unknown23");
+	protected virtual void Unknown25(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown25 not implemented");
+	protected virtual void Unknown101() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsUser.Unknown101");
+	protected virtual void Unknown102() =>
+		Console.WriteLine("Stub hit for Nn.Npns.INpnsUser.Unknown102");
+	protected virtual void Unknown103() =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown103 not implemented");
+	protected virtual void Unknown104() =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown104 not implemented");
+	protected virtual void Unknown111() =>
+		throw new NotImplementedException("Nn.Npns.INpnsUser.Unknown111 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: // Unknown1

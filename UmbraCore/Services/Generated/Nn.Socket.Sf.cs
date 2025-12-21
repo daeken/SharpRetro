@@ -1,8 +1,71 @@
+using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Socket.Sf;
 public partial class IClient : _IClient_Base;
 public abstract class _IClient_Base : IpcInterface {
+	protected virtual uint RegisterClient(Nn.Socket.BsdBufferConfig config, ulong pid, ulong transferMemorySize, KObject _3, ulong _4) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.RegisterClient not implemented");
+	protected virtual void StartMonitoring(ulong pid, ulong _1) =>
+		Console.WriteLine("Stub hit for Nn.Socket.Sf.IClient.StartMonitoring");
+	protected virtual void Socket(uint domain, uint type, uint protocol) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Socket not implemented");
+	protected virtual void SocketExempt(uint _0, uint _1, uint _2) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.SocketExempt not implemented");
+	protected virtual void Open(uint _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Open not implemented");
+	protected virtual void Select(uint nfds, Nn.Socket.Timeout timeout, Span<byte> readfds_in, Span<byte> writefds_in, Span<byte> errorfds_in) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Select not implemented");
+	protected virtual void Poll(uint _0, uint _1, Span<byte> _2) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Poll not implemented");
+	protected virtual void Sysctl(Span<byte> _0, Span<byte> _1) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Sysctl not implemented");
+	protected virtual void Recv(uint socket, uint flags) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Recv not implemented");
+	protected virtual void RecvFrom(uint sock, uint flags) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.RecvFrom not implemented");
+	protected virtual void Send(uint socket, uint flags, Span<byte> _2) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Send not implemented");
+	protected virtual void SendTo(uint socket, uint flags, Span<byte> _2, Span<Nn.Socket.Sockaddr> _3) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.SendTo not implemented");
+	protected virtual void Accept(uint socket) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Accept not implemented");
+	protected virtual void Bind(uint socket, Span<Nn.Socket.Sockaddr> _1) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Bind not implemented");
+	protected virtual void Connect(uint socket, Span<Nn.Socket.Sockaddr> _1) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Connect not implemented");
+	protected virtual void GetPeerName(uint socket) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.GetPeerName not implemented");
+	protected virtual void GetSockName(uint socket) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.GetSockName not implemented");
+	protected virtual void GetSockOpt(uint _0, uint _1, uint _2) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.GetSockOpt not implemented");
+	protected virtual void Listen(uint socket, uint backlog) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Listen not implemented");
+	protected virtual void Ioctl(uint _0, uint _1, uint _2, Span<byte> _3, Span<byte> _4, Span<byte> _5, Span<byte> _6) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Ioctl not implemented");
+	protected virtual void Fcntl(uint _0, uint _1, uint _2) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Fcntl not implemented");
+	protected virtual void SetSockOpt(uint socket, uint level, uint option_name, Span<byte> _3) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.SetSockOpt not implemented");
+	protected virtual void Shutdown(uint socket, uint how) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Shutdown not implemented");
+	protected virtual void ShutdownAllSockets(uint how) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.ShutdownAllSockets not implemented");
+	protected virtual void Write(uint socket, Span<byte> message) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Write not implemented");
+	protected virtual void Read(uint socket) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Read not implemented");
+	protected virtual void Close(uint socket) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.Close not implemented");
+	protected virtual void DuplicateSocket(uint _0, ulong _1) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.DuplicateSocket not implemented");
+	protected virtual void GetResourceStatistics(uint _0, uint _1, ulong _2, ulong _3) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.GetResourceStatistics not implemented");
+	protected virtual void RecvMMsg(uint _0, uint _1, uint _2, UInt128 _3) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.RecvMMsg not implemented");
+	protected virtual void SendMMsg(uint _0, uint _1, uint _2, Span<byte> _3, Span<byte> _4) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient.SendMMsg not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: // RegisterClient

@@ -35,10 +35,16 @@ public class Concretize {
                 y.Versions,
                 y.Name,
                 y.CmdId,
-                y.Inputs.Select(z => (Parse(z.Type), z.Name)).ToList(),
-                y.Outputs.Select(z => (Parse(z.Type), z.Name)).ToList()
+                y.Inputs.Select(z => (Parse(z.Type), z.Name)).Where(z => z.Item1 is not UnknownType).ToList(),
+                y.Outputs.Select(z => (Parse(z.Type), z.Name)).Where(z => z.Item1 is not UnknownType).ToList()
             )).GroupBy(y => y.CmdId)
             .Select(y => FindCanonical(y.ToList()))
+            .GroupBy(y => y.Name)
+            .Select(y => y.ToList())
+            .Select(y => y.Count == 1 ? y : y.Index().Select(z => z.Item with {
+                Name = $"{z.Item.Name}_{z.Index}"
+            }))
+            .SelectMany(y => y)
             .OrderBy(y => y.CmdId).ToList()
         )).ToList();
         Interfaces = Interfaces.GroupBy(x => x.Name).Select(x => x.Last()).ToList();
@@ -57,7 +63,7 @@ public class Concretize {
 
     IpcType Resolve(string name, SwipcNode.Type type) {
         Forward.Remove(name);
-        return Concretized[name] = Parse(type);
+        return Concretized[name] = Parse(type) with { Name = name };
     }
     
     IpcType Parse(SwipcNode.Type type) => type switch {
