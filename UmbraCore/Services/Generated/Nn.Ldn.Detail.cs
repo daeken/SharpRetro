@@ -6,15 +6,15 @@ public partial class IMonitorService : _IMonitorService_Base;
 public abstract class _IMonitorService_Base : IpcInterface {
 	protected virtual uint GetStateForMonitor() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetStateForMonitor not implemented");
-	protected virtual void GetNetworkInfoForMonitor() =>
+	protected virtual void GetNetworkInfoForMonitor(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetNetworkInfoForMonitor not implemented");
-	protected virtual void GetIpv4AddressForMonitor() =>
+	protected virtual void GetIpv4AddressForMonitor(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetIpv4AddressForMonitor not implemented");
 	protected virtual ushort GetDisconnectReasonForMonitor() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetDisconnectReasonForMonitor not implemented");
-	protected virtual void GetSecurityParameterForMonitor() =>
+	protected virtual void GetSecurityParameterForMonitor(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetSecurityParameterForMonitor not implemented");
-	protected virtual void GetNetworkConfigForMonitor() =>
+	protected virtual void GetNetworkConfigForMonitor(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetNetworkConfigForMonitor not implemented");
 	protected virtual void InitializeMonitor() =>
 		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IMonitorService.InitializeMonitor");
@@ -22,22 +22,30 @@ public abstract class _IMonitorService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IMonitorService.FinalizeMonitor");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetStateForMonitor
+			case 0x0: { // GetStateForMonitor
 				break;
-			case 0x1: // GetNetworkInfoForMonitor
+			}
+			case 0x1: { // GetNetworkInfoForMonitor
 				break;
-			case 0x2: // GetIpv4AddressForMonitor
+			}
+			case 0x2: { // GetIpv4AddressForMonitor
 				break;
-			case 0x3: // GetDisconnectReasonForMonitor
+			}
+			case 0x3: { // GetDisconnectReasonForMonitor
 				break;
-			case 0x4: // GetSecurityParameterForMonitor
+			}
+			case 0x4: { // GetSecurityParameterForMonitor
 				break;
-			case 0x5: // GetNetworkConfigForMonitor
+			}
+			case 0x5: { // GetNetworkConfigForMonitor
 				break;
-			case 0x64: // InitializeMonitor
+			}
+			case 0x64: { // InitializeMonitor
 				break;
-			case 0x65: // FinalizeMonitor
+			}
+			case 0x65: { // FinalizeMonitor
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldn.Detail.IMonitorService");
 		}
@@ -50,8 +58,9 @@ public abstract class _IMonitorServiceCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorServiceCreator.CreateMonitorService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateMonitorService
+			case 0x0: { // CreateMonitorService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldn.Detail.IMonitorServiceCreator");
 		}
@@ -62,23 +71,23 @@ public partial class ISystemLocalCommunicationService : _ISystemLocalCommunicati
 public abstract class _ISystemLocalCommunicationService_Base : IpcInterface {
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetState not implemented");
-	protected virtual void GetNetworkInfo() =>
+	protected virtual void GetNetworkInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetNetworkInfo not implemented");
-	protected virtual void GetIpv4Address() =>
+	protected virtual void GetIpv4Address(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetIpv4Address not implemented");
 	protected virtual ushort GetDisconnectReason() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetDisconnectReason not implemented");
-	protected virtual void GetSecurityParameter() =>
+	protected virtual void GetSecurityParameter(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetSecurityParameter not implemented");
-	protected virtual void GetNetworkConfig() =>
+	protected virtual void GetNetworkConfig(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetNetworkConfig not implemented");
 	protected virtual KObject AttachStateChangeEvent() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.AttachStateChangeEvent not implemented");
-	protected virtual void GetNetworkInfoLatestUpdate() =>
+	protected virtual void GetNetworkInfoLatestUpdate(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.GetNetworkInfoLatestUpdate not implemented");
-	protected virtual void Scan(ushort _0, Span<byte> _1) =>
+	protected virtual void Scan(ushort _0, Span<byte> _1, out ushort _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.Scan not implemented");
-	protected virtual void ScanPrivate(ushort _0, Span<byte> _1) =>
+	protected virtual void ScanPrivate(ushort _0, Span<byte> _1, out ushort _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.ScanPrivate not implemented");
 	protected virtual void OpenAccessPoint() =>
 		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.OpenAccessPoint");
@@ -116,60 +125,87 @@ public abstract class _ISystemLocalCommunicationService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.FinalizeSystem");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetState
+			case 0x0: { // GetState
 				break;
-			case 0x1: // GetNetworkInfo
+			}
+			case 0x1: { // GetNetworkInfo
 				break;
-			case 0x2: // GetIpv4Address
+			}
+			case 0x2: { // GetIpv4Address
 				break;
-			case 0x3: // GetDisconnectReason
+			}
+			case 0x3: { // GetDisconnectReason
 				break;
-			case 0x4: // GetSecurityParameter
+			}
+			case 0x4: { // GetSecurityParameter
 				break;
-			case 0x5: // GetNetworkConfig
+			}
+			case 0x5: { // GetNetworkConfig
 				break;
-			case 0x64: // AttachStateChangeEvent
+			}
+			case 0x64: { // AttachStateChangeEvent
 				break;
-			case 0x65: // GetNetworkInfoLatestUpdate
+			}
+			case 0x65: { // GetNetworkInfoLatestUpdate
 				break;
-			case 0x66: // Scan
+			}
+			case 0x66: { // Scan
 				break;
-			case 0x67: // ScanPrivate
+			}
+			case 0x67: { // ScanPrivate
 				break;
-			case 0xC8: // OpenAccessPoint
+			}
+			case 0xC8: { // OpenAccessPoint
 				break;
-			case 0xC9: // CloseAccessPoint
+			}
+			case 0xC9: { // CloseAccessPoint
 				break;
-			case 0xCA: // CreateNetwork
+			}
+			case 0xCA: { // CreateNetwork
 				break;
-			case 0xCB: // CreateNetworkPrivate
+			}
+			case 0xCB: { // CreateNetworkPrivate
 				break;
-			case 0xCC: // DestroyNetwork
+			}
+			case 0xCC: { // DestroyNetwork
 				break;
-			case 0xCD: // Reject
+			}
+			case 0xCD: { // Reject
 				break;
-			case 0xCE: // SetAdvertiseData
+			}
+			case 0xCE: { // SetAdvertiseData
 				break;
-			case 0xCF: // SetStationAcceptPolicy
+			}
+			case 0xCF: { // SetStationAcceptPolicy
 				break;
-			case 0xD0: // AddAcceptFilterEntry
+			}
+			case 0xD0: { // AddAcceptFilterEntry
 				break;
-			case 0xD1: // ClearAcceptFilter
+			}
+			case 0xD1: { // ClearAcceptFilter
 				break;
-			case 0x12C: // OpenStation
+			}
+			case 0x12C: { // OpenStation
 				break;
-			case 0x12D: // CloseStation
+			}
+			case 0x12D: { // CloseStation
 				break;
-			case 0x12E: // Connect
+			}
+			case 0x12E: { // Connect
 				break;
-			case 0x12F: // ConnectPrivate
+			}
+			case 0x12F: { // ConnectPrivate
 				break;
-			case 0x130: // Disconnect
+			}
+			case 0x130: { // Disconnect
 				break;
-			case 0x190: // InitializeSystem
+			}
+			case 0x190: { // InitializeSystem
 				break;
-			case 0x191: // FinalizeSystem
+			}
+			case 0x191: { // FinalizeSystem
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldn.Detail.ISystemLocalCommunicationService");
 		}
@@ -182,8 +218,9 @@ public abstract class _ISystemServiceCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemServiceCreator.CreateSystemLocalCommunicationService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateSystemLocalCommunicationService
+			case 0x0: { // CreateSystemLocalCommunicationService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldn.Detail.ISystemServiceCreator");
 		}
@@ -194,23 +231,23 @@ public partial class IUserLocalCommunicationService : _IUserLocalCommunicationSe
 public abstract class _IUserLocalCommunicationService_Base : IpcInterface {
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetState not implemented");
-	protected virtual void GetNetworkInfo() =>
+	protected virtual void GetNetworkInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetNetworkInfo not implemented");
-	protected virtual void GetIpv4Address() =>
+	protected virtual void GetIpv4Address(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetIpv4Address not implemented");
 	protected virtual ushort GetDisconnectReason() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetDisconnectReason not implemented");
-	protected virtual void GetSecurityParameter() =>
+	protected virtual void GetSecurityParameter(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetSecurityParameter not implemented");
-	protected virtual void GetNetworkConfig() =>
+	protected virtual void GetNetworkConfig(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetNetworkConfig not implemented");
 	protected virtual KObject AttachStateChangeEvent() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.AttachStateChangeEvent not implemented");
-	protected virtual void GetNetworkInfoLatestUpdate() =>
+	protected virtual void GetNetworkInfoLatestUpdate(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.GetNetworkInfoLatestUpdate not implemented");
-	protected virtual void Scan(ushort _0, Span<byte> _1) =>
+	protected virtual void Scan(ushort _0, Span<byte> _1, out ushort _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.Scan not implemented");
-	protected virtual void ScanPrivate(ushort _0, Span<byte> _1) =>
+	protected virtual void ScanPrivate(ushort _0, Span<byte> _1, out ushort _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.ScanPrivate not implemented");
 	protected virtual void OpenAccessPoint() =>
 		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.OpenAccessPoint");
@@ -248,60 +285,87 @@ public abstract class _IUserLocalCommunicationService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Finalize");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetState
+			case 0x0: { // GetState
 				break;
-			case 0x1: // GetNetworkInfo
+			}
+			case 0x1: { // GetNetworkInfo
 				break;
-			case 0x2: // GetIpv4Address
+			}
+			case 0x2: { // GetIpv4Address
 				break;
-			case 0x3: // GetDisconnectReason
+			}
+			case 0x3: { // GetDisconnectReason
 				break;
-			case 0x4: // GetSecurityParameter
+			}
+			case 0x4: { // GetSecurityParameter
 				break;
-			case 0x5: // GetNetworkConfig
+			}
+			case 0x5: { // GetNetworkConfig
 				break;
-			case 0x64: // AttachStateChangeEvent
+			}
+			case 0x64: { // AttachStateChangeEvent
 				break;
-			case 0x65: // GetNetworkInfoLatestUpdate
+			}
+			case 0x65: { // GetNetworkInfoLatestUpdate
 				break;
-			case 0x66: // Scan
+			}
+			case 0x66: { // Scan
 				break;
-			case 0x67: // ScanPrivate
+			}
+			case 0x67: { // ScanPrivate
 				break;
-			case 0xC8: // OpenAccessPoint
+			}
+			case 0xC8: { // OpenAccessPoint
 				break;
-			case 0xC9: // CloseAccessPoint
+			}
+			case 0xC9: { // CloseAccessPoint
 				break;
-			case 0xCA: // CreateNetwork
+			}
+			case 0xCA: { // CreateNetwork
 				break;
-			case 0xCB: // CreateNetworkPrivate
+			}
+			case 0xCB: { // CreateNetworkPrivate
 				break;
-			case 0xCC: // DestroyNetwork
+			}
+			case 0xCC: { // DestroyNetwork
 				break;
-			case 0xCD: // Reject
+			}
+			case 0xCD: { // Reject
 				break;
-			case 0xCE: // SetAdvertiseData
+			}
+			case 0xCE: { // SetAdvertiseData
 				break;
-			case 0xCF: // SetStationAcceptPolicy
+			}
+			case 0xCF: { // SetStationAcceptPolicy
 				break;
-			case 0xD0: // AddAcceptFilterEntry
+			}
+			case 0xD0: { // AddAcceptFilterEntry
 				break;
-			case 0xD1: // ClearAcceptFilter
+			}
+			case 0xD1: { // ClearAcceptFilter
 				break;
-			case 0x12C: // OpenStation
+			}
+			case 0x12C: { // OpenStation
 				break;
-			case 0x12D: // CloseStation
+			}
+			case 0x12D: { // CloseStation
 				break;
-			case 0x12E: // Connect
+			}
+			case 0x12E: { // Connect
 				break;
-			case 0x12F: // ConnectPrivate
+			}
+			case 0x12F: { // ConnectPrivate
 				break;
-			case 0x130: // Disconnect
+			}
+			case 0x130: { // Disconnect
 				break;
-			case 0x190: // Initialize
+			}
+			case 0x190: { // Initialize
 				break;
-			case 0x191: // Finalize
+			}
+			case 0x191: { // Finalize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldn.Detail.IUserLocalCommunicationService");
 		}
@@ -314,8 +378,9 @@ public abstract class _IUserServiceCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserServiceCreator.CreateUserLocalCommunicationService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateUserLocalCommunicationService
+			case 0x0: { // CreateUserLocalCommunicationService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldn.Detail.IUserServiceCreator");
 		}

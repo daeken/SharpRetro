@@ -24,44 +24,58 @@ public abstract class _IBcatService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.BlockDeliveryTask");
 	protected virtual void UnblockDeliveryTask(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.UnblockDeliveryTask");
-	protected virtual void EnumerateBackgroundDeliveryTask() =>
+	protected virtual void EnumerateBackgroundDeliveryTask(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.EnumerateBackgroundDeliveryTask not implemented");
-	protected virtual void GetDeliveryList(ulong _0) =>
+	protected virtual void GetDeliveryList(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.GetDeliveryList not implemented");
 	protected virtual void ClearDeliveryCacheStorage(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.ClearDeliveryCacheStorage");
-	protected virtual void GetPushNotificationLog() =>
+	protected virtual void GetPushNotificationLog(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.GetPushNotificationLog not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x2774: // RequestSyncDeliveryCache
+			case 0x2774: { // RequestSyncDeliveryCache
 				break;
-			case 0x2775: // RequestSyncDeliveryCacheWithDirectoryName
+			}
+			case 0x2775: { // RequestSyncDeliveryCacheWithDirectoryName
 				break;
-			case 0x27D8: // CancelSyncDeliveryCacheRequest
+			}
+			case 0x27D8: { // CancelSyncDeliveryCacheRequest
 				break;
-			case 0x4E84: // RequestSyncDeliveryCacheWithApplicationId
+			}
+			case 0x4E84: { // RequestSyncDeliveryCacheWithApplicationId
 				break;
-			case 0x4E85: // RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName
+			}
+			case 0x4E85: { // RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName
 				break;
-			case 0x7594: // SetPassphrase
+			}
+			case 0x7594: { // SetPassphrase
 				break;
-			case 0x75F8: // RegisterBackgroundDeliveryTask
+			}
+			case 0x75F8: { // RegisterBackgroundDeliveryTask
 				break;
-			case 0x75F9: // UnregisterBackgroundDeliveryTask
+			}
+			case 0x75F9: { // UnregisterBackgroundDeliveryTask
 				break;
-			case 0x75FA: // BlockDeliveryTask
+			}
+			case 0x75FA: { // BlockDeliveryTask
 				break;
-			case 0x75FB: // UnblockDeliveryTask
+			}
+			case 0x75FB: { // UnblockDeliveryTask
 				break;
-			case 0x15FF4: // EnumerateBackgroundDeliveryTask
+			}
+			case 0x15FF4: { // EnumerateBackgroundDeliveryTask
 				break;
-			case 0x16058: // GetDeliveryList
+			}
+			case 0x16058: { // GetDeliveryList
 				break;
-			case 0x16059: // ClearDeliveryCacheStorage
+			}
+			case 0x16059: { // ClearDeliveryCacheStorage
 				break;
-			case 0x160BC: // GetPushNotificationLog
+			}
+			case 0x160BC: { // GetPushNotificationLog
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Bcat.Detail.Ipc.IBcatService");
 		}
@@ -72,18 +86,21 @@ public partial class IDeliveryCacheDirectoryService : _IDeliveryCacheDirectorySe
 public abstract class _IDeliveryCacheDirectoryService_Base : IpcInterface {
 	protected virtual void Open(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService.Open");
-	protected virtual void Read() =>
+	protected virtual void Read(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService.Read not implemented");
 	protected virtual uint GetCount() =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService.GetCount not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Open
+			case 0x0: { // Open
 				break;
-			case 0x1: // Read
+			}
+			case 0x1: { // Read
 				break;
-			case 0x2: // GetCount
+			}
+			case 0x2: { // GetCount
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService");
 		}
@@ -94,22 +111,26 @@ public partial class IDeliveryCacheFileService : _IDeliveryCacheFileService_Base
 public abstract class _IDeliveryCacheFileService_Base : IpcInterface {
 	protected virtual void Open(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.Open");
-	protected virtual void Read(ulong _0) =>
+	protected virtual void Read(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.Read not implemented");
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.GetSize not implemented");
-	protected virtual void GetDigest() =>
+	protected virtual void GetDigest(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.GetDigest not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Open
+			case 0x0: { // Open
 				break;
-			case 0x1: // Read
+			}
+			case 0x1: { // Read
 				break;
-			case 0x2: // GetSize
+			}
+			case 0x2: { // GetSize
 				break;
-			case 0x3: // GetDigest
+			}
+			case 0x3: { // GetDigest
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService");
 		}
@@ -120,14 +141,16 @@ public partial class IDeliveryCacheProgressService : _IDeliveryCacheProgressServ
 public abstract class _IDeliveryCacheProgressService_Base : IpcInterface {
 	protected virtual KObject GetEvent() =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheProgressService.GetEvent not implemented");
-	protected virtual void GetImpl() =>
+	protected virtual void GetImpl(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheProgressService.GetImpl not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetEvent
+			case 0x0: { // GetEvent
 				break;
-			case 0x1: // GetImpl
+			}
+			case 0x1: { // GetImpl
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Bcat.Detail.Ipc.IDeliveryCacheProgressService");
 		}
@@ -140,16 +163,19 @@ public abstract class _IDeliveryCacheStorageService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheStorageService.CreateFileService not implemented");
 	protected virtual Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService CreateDirectoryService() =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheStorageService.CreateDirectoryService not implemented");
-	protected virtual void EnumerateDeliveryCacheDirectory() =>
+	protected virtual void EnumerateDeliveryCacheDirectory(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheStorageService.EnumerateDeliveryCacheDirectory not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateFileService
+			case 0x0: { // CreateFileService
 				break;
-			case 0x1: // CreateDirectoryService
+			}
+			case 0x1: { // CreateDirectoryService
 				break;
-			case 0xA: // EnumerateDeliveryCacheDirectory
+			}
+			case 0xA: { // EnumerateDeliveryCacheDirectory
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Bcat.Detail.Ipc.IDeliveryCacheStorageService");
 		}
@@ -166,12 +192,15 @@ public abstract class _IServiceCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IServiceCreator.CreateDeliveryCacheStorageServiceWithApplicationId not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateBcatService
+			case 0x0: { // CreateBcatService
 				break;
-			case 0x1: // CreateDeliveryCacheStorageService
+			}
+			case 0x1: { // CreateDeliveryCacheStorageService
 				break;
-			case 0x2: // CreateDeliveryCacheStorageServiceWithApplicationId
+			}
+			case 0x2: { // CreateDeliveryCacheStorageServiceWithApplicationId
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Bcat.Detail.Ipc.IServiceCreator");
 		}

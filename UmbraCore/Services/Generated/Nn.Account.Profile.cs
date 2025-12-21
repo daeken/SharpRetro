@@ -4,24 +4,28 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Account.Profile;
 public partial class IProfile : _IProfile_Base;
 public abstract class _IProfile_Base : IpcInterface {
-	protected virtual void Get() =>
+	protected virtual void Get(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfile.Get not implemented");
-	protected virtual void GetBase() =>
+	protected virtual void GetBase(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfile.GetBase not implemented");
 	protected virtual uint GetImageSize() =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfile.GetImageSize not implemented");
-	protected virtual void LoadImage() =>
+	protected virtual void LoadImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfile.LoadImage not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Get
+			case 0x0: { // Get
 				break;
-			case 0x1: // GetBase
+			}
+			case 0x1: { // GetBase
 				break;
-			case 0xA: // GetImageSize
+			}
+			case 0xA: { // GetImageSize
 				break;
-			case 0xB: // LoadImage
+			}
+			case 0xB: { // LoadImage
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Profile.IProfile");
 		}
@@ -30,13 +34,13 @@ public abstract class _IProfile_Base : IpcInterface {
 
 public partial class IProfileEditor : _IProfileEditor_Base;
 public abstract class _IProfileEditor_Base : IpcInterface {
-	protected virtual void Get() =>
+	protected virtual void Get(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfileEditor.Get not implemented");
-	protected virtual void GetBase() =>
+	protected virtual void GetBase(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfileEditor.GetBase not implemented");
 	protected virtual uint GetImageSize() =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfileEditor.GetImageSize not implemented");
-	protected virtual void LoadImage() =>
+	protected virtual void LoadImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfileEditor.LoadImage not implemented");
 	protected virtual void Store(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Account.Profile.IProfileEditor.Store");
@@ -44,18 +48,24 @@ public abstract class _IProfileEditor_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Account.Profile.IProfileEditor.StoreWithImage");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Get
+			case 0x0: { // Get
 				break;
-			case 0x1: // GetBase
+			}
+			case 0x1: { // GetBase
 				break;
-			case 0xA: // GetImageSize
+			}
+			case 0xA: { // GetImageSize
 				break;
-			case 0xB: // LoadImage
+			}
+			case 0xB: { // LoadImage
 				break;
-			case 0x64: // Store
+			}
+			case 0x64: { // Store
 				break;
-			case 0x65: // StoreWithImage
+			}
+			case 0x65: { // StoreWithImage
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Profile.IProfileEditor");
 		}

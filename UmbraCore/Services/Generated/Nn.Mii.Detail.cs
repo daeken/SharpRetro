@@ -10,21 +10,21 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.IsFullDatabase not implemented");
 	protected virtual uint GetCount(uint _0) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.GetCount not implemented");
-	protected virtual void Get(uint _0) =>
+	protected virtual void Get(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.Get not implemented");
-	protected virtual void Get1(uint _0) =>
+	protected virtual void Get1(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.Get1 not implemented");
-	protected virtual void UpdateLatest(Span<byte> _0, uint _1) =>
+	protected virtual void UpdateLatest(Span<byte> _0, uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.UpdateLatest not implemented");
-	protected virtual void BuildRandom(uint _0, uint _1, uint _2) =>
+	protected virtual void BuildRandom(uint _0, uint _1, uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.BuildRandom not implemented");
-	protected virtual void BuildDefault(uint _0) =>
+	protected virtual void BuildDefault(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.BuildDefault not implemented");
-	protected virtual void Get2(uint _0) =>
+	protected virtual void Get2(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.Get2 not implemented");
-	protected virtual void Get3(uint _0) =>
+	protected virtual void Get3(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.Get3 not implemented");
-	protected virtual void UpdateLatest1(Span<byte> _0, uint _1) =>
+	protected virtual void UpdateLatest1(Span<byte> _0, uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.UpdateLatest1 not implemented");
 	protected virtual uint FindIndex(Span<byte> _0, byte _1) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.FindIndex not implemented");
@@ -42,7 +42,7 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Format");
 	protected virtual void Import(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Import");
-	protected virtual void Export() =>
+	protected virtual void Export(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.Export not implemented");
 	protected virtual byte IsBrokenDatabaseWithClearFlag() =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.IsBrokenDatabaseWithClearFlag not implemented");
@@ -54,54 +54,78 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Convert");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // IsUpdated
+			case 0x0: { // IsUpdated
 				break;
-			case 0x1: // IsFullDatabase
+			}
+			case 0x1: { // IsFullDatabase
 				break;
-			case 0x2: // GetCount
+			}
+			case 0x2: { // GetCount
 				break;
-			case 0x3: // Get
+			}
+			case 0x3: { // Get
 				break;
-			case 0x4: // Get1
+			}
+			case 0x4: { // Get1
 				break;
-			case 0x5: // UpdateLatest
+			}
+			case 0x5: { // UpdateLatest
 				break;
-			case 0x6: // BuildRandom
+			}
+			case 0x6: { // BuildRandom
 				break;
-			case 0x7: // BuildDefault
+			}
+			case 0x7: { // BuildDefault
 				break;
-			case 0x8: // Get2
+			}
+			case 0x8: { // Get2
 				break;
-			case 0x9: // Get3
+			}
+			case 0x9: { // Get3
 				break;
-			case 0xA: // UpdateLatest1
+			}
+			case 0xA: { // UpdateLatest1
 				break;
-			case 0xB: // FindIndex
+			}
+			case 0xB: { // FindIndex
 				break;
-			case 0xC: // Move
+			}
+			case 0xC: { // Move
 				break;
-			case 0xD: // AddOrReplace
+			}
+			case 0xD: { // AddOrReplace
 				break;
-			case 0xE: // Delete
+			}
+			case 0xE: { // Delete
 				break;
-			case 0xF: // DestroyFile
+			}
+			case 0xF: { // DestroyFile
 				break;
-			case 0x10: // DeleteFile
+			}
+			case 0x10: { // DeleteFile
 				break;
-			case 0x11: // Format
+			}
+			case 0x11: { // Format
 				break;
-			case 0x12: // Import
+			}
+			case 0x12: { // Import
 				break;
-			case 0x13: // Export
+			}
+			case 0x13: { // Export
 				break;
-			case 0x14: // IsBrokenDatabaseWithClearFlag
+			}
+			case 0x14: { // IsBrokenDatabaseWithClearFlag
 				break;
-			case 0x15: // GetIndex
+			}
+			case 0x15: { // GetIndex
 				break;
-			case 0x16: // SetInterfaceVersion
+			}
+			case 0x16: { // SetInterfaceVersion
 				break;
-			case 0x17: // Convert
+			}
+			case 0x17: { // Convert
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Mii.Detail.IDatabaseService");
 		}
@@ -114,8 +138,9 @@ public abstract class _IStaticService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Mii.Detail.IStaticService.GetDatabaseService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetDatabaseService
+			case 0x0: { // GetDatabaseService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Mii.Detail.IStaticService");
 		}
@@ -154,34 +179,48 @@ public abstract class _IImageDatabaseService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.ForceInitialize");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0xA: // Reload
+			}
+			case 0xA: { // Reload
 				break;
-			case 0xB: // GetCount
+			}
+			case 0xB: { // GetCount
 				break;
-			case 0xC: // IsEmpty
+			}
+			case 0xC: { // IsEmpty
 				break;
-			case 0xD: // IsFull
+			}
+			case 0xD: { // IsFull
 				break;
-			case 0xE: // GetAttribute
+			}
+			case 0xE: { // GetAttribute
 				break;
-			case 0xF: // LoadImage
+			}
+			case 0xF: { // LoadImage
 				break;
-			case 0x10: // AddOrUpdateImage
+			}
+			case 0x10: { // AddOrUpdateImage
 				break;
-			case 0x11: // DeleteImages
+			}
+			case 0x11: { // DeleteImages
 				break;
-			case 0x64: // DeleteFile
+			}
+			case 0x64: { // DeleteFile
 				break;
-			case 0x65: // DestroyFile
+			}
+			case 0x65: { // DestroyFile
 				break;
-			case 0x66: // ImportFile
+			}
+			case 0x66: { // ImportFile
 				break;
-			case 0x67: // ExportFile
+			}
+			case 0x67: { // ExportFile
 				break;
-			case 0x68: // ForceInitialize
+			}
+			case 0x68: { // ForceInitialize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Mii.Detail.IImageDatabaseService");
 		}

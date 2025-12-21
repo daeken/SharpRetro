@@ -10,10 +10,12 @@ public abstract class _IManagerInterface_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Sm.Detail.IManagerInterface.UnregisterProcess");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // RegisterProcess
+			case 0x0: { // RegisterProcess
 				break;
-			case 0x1: // UnregisterProcess
+			}
+			case 0x1: { // UnregisterProcess
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Sm.Detail.IManagerInterface");
 		}
@@ -32,14 +34,18 @@ public abstract class _IUserInterface_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Sm.Detail.IUserInterface.UnregisterService");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // GetService
+			}
+			case 0x1: { // GetService
 				break;
-			case 0x2: // RegisterService
+			}
+			case 0x2: { // RegisterService
 				break;
-			case 0x3: // UnregisterService
+			}
+			case 0x3: { // UnregisterService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Sm.Detail.IUserInterface");
 		}

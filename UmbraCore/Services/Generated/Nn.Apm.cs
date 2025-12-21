@@ -4,20 +4,23 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Apm;
 public partial class IDebugManager : _IDebugManager_Base;
 public abstract class _IDebugManager_Base : IpcInterface {
-	protected virtual void GetThrottlingState() =>
+	protected virtual void GetThrottlingState(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Apm.IDebugManager.GetThrottlingState not implemented");
-	protected virtual void GetLastThrottlingState() =>
+	protected virtual void GetLastThrottlingState(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Apm.IDebugManager.GetLastThrottlingState not implemented");
 	protected virtual void ClearLastThrottlingState() =>
 		Console.WriteLine("Stub hit for Nn.Apm.IDebugManager.ClearLastThrottlingState");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetThrottlingState
+			case 0x0: { // GetThrottlingState
 				break;
-			case 0x1: // GetLastThrottlingState
+			}
+			case 0x1: { // GetLastThrottlingState
 				break;
-			case 0x2: // ClearLastThrottlingState
+			}
+			case 0x2: { // ClearLastThrottlingState
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Apm.IDebugManager");
 		}
@@ -32,10 +35,12 @@ public abstract class _IManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Apm.IManager.GetPerformanceMode not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenSession
+			case 0x0: { // OpenSession
 				break;
-			case 0x1: // GetPerformanceMode
+			}
+			case 0x1: { // GetPerformanceMode
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Apm.IManager");
 		}
@@ -48,8 +53,9 @@ public abstract class _IManagerPrivileged_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Apm.IManagerPrivileged.OpenSession not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenSession
+			case 0x0: { // OpenSession
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Apm.IManagerPrivileged");
 		}
@@ -64,10 +70,12 @@ public abstract class _ISession_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Apm.ISession.GetPerformanceConfiguration not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetPerformanceConfiguration
+			case 0x0: { // SetPerformanceConfiguration
 				break;
-			case 0x1: // GetPerformanceConfiguration
+			}
+			case 0x1: { // GetPerformanceConfiguration
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Apm.ISession");
 		}
@@ -80,9 +88,9 @@ public abstract class _ISystemManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Apm.ISystemManager.RequestPerformanceMode");
 	protected virtual KObject GetPerformanceEvent(uint _0) =>
 		throw new NotImplementedException("Nn.Apm.ISystemManager.GetPerformanceEvent not implemented");
-	protected virtual void GetThrottlingState() =>
+	protected virtual void GetThrottlingState(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Apm.ISystemManager.GetThrottlingState not implemented");
-	protected virtual void GetLastThrottlingState() =>
+	protected virtual void GetLastThrottlingState(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Apm.ISystemManager.GetLastThrottlingState not implemented");
 	protected virtual void ClearLastThrottlingState() =>
 		Console.WriteLine("Stub hit for Nn.Apm.ISystemManager.ClearLastThrottlingState");
@@ -90,18 +98,24 @@ public abstract class _ISystemManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Apm.ISystemManager.LoadAndApplySettings");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // RequestPerformanceMode
+			case 0x0: { // RequestPerformanceMode
 				break;
-			case 0x1: // GetPerformanceEvent
+			}
+			case 0x1: { // GetPerformanceEvent
 				break;
-			case 0x2: // GetThrottlingState
+			}
+			case 0x2: { // GetThrottlingState
 				break;
-			case 0x3: // GetLastThrottlingState
+			}
+			case 0x3: { // GetLastThrottlingState
 				break;
-			case 0x4: // ClearLastThrottlingState
+			}
+			case 0x4: { // ClearLastThrottlingState
 				break;
-			case 0x5: // LoadAndApplySettings
+			}
+			case 0x5: { // LoadAndApplySettings
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Apm.ISystemManager");
 		}

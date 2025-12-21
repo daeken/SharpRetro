@@ -38,15 +38,15 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.IsSdCardInserted not implemented");
 	protected virtual ulong GetSdCardSpeedMode() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetSdCardSpeedMode not implemented");
-	protected virtual void GetSdCardCid(ulong _0) =>
+	protected virtual void GetSdCardCid(ulong _0, Span<byte> cid) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetSdCardCid not implemented");
 	protected virtual ulong GetSdCardUserAreaSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetSdCardUserAreaSize not implemented");
 	protected virtual ulong GetSdCardProtectedAreaSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetSdCardProtectedAreaSize not implemented");
-	protected virtual void GetAndClearSdCardErrorInfo(ulong _0) =>
+	protected virtual void GetAndClearSdCardErrorInfo(ulong _0, Span<byte> _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetAndClearSdCardErrorInfo not implemented");
-	protected virtual void GetMmcCid(ulong _0) =>
+	protected virtual void GetMmcCid(ulong _0, Span<byte> cid) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcCid not implemented");
 	protected virtual ulong GetMmcSpeedMode() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcSpeedMode not implemented");
@@ -56,9 +56,9 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcPartitionSize not implemented");
 	protected virtual uint GetMmcPatrolCount() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcPatrolCount not implemented");
-	protected virtual void GetAndClearMmcErrorInfo(ulong _0) =>
+	protected virtual void GetAndClearMmcErrorInfo(ulong _0, Span<byte> _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetAndClearMmcErrorInfo not implemented");
-	protected virtual void GetMmcExtendedCsd(ulong _0) =>
+	protected virtual void GetMmcExtendedCsd(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcExtendedCsd not implemented");
 	protected virtual void SuspendMmcPatrol() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.SuspendMmcPatrol");
@@ -70,37 +70,37 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.EraseGameCard");
 	protected virtual uint GetGameCardHandle() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardHandle not implemented");
-	protected virtual void GetGameCardUpdatePartitionInfo(uint _0) =>
+	protected virtual void GetGameCardUpdatePartitionInfo(uint _0, out uint version, out ulong tid) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardUpdatePartitionInfo not implemented");
 	protected virtual void FinalizeGameCardDriver() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.FinalizeGameCardDriver");
 	protected virtual byte GetGameCardAttribute(uint _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardAttribute not implemented");
-	protected virtual void GetGameCardDeviceCertificate(uint _0, ulong _1) =>
+	protected virtual void GetGameCardDeviceCertificate(uint _0, ulong _1, Span<byte> certificate) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardDeviceCertificate not implemented");
-	protected virtual void GetGameCardAsicInfo(ulong _0, ulong _1, Span<byte> _2) =>
+	protected virtual void GetGameCardAsicInfo(ulong _0, ulong _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardAsicInfo not implemented");
-	protected virtual void GetGameCardIdSet(ulong _0) =>
+	protected virtual void GetGameCardIdSet(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardIdSet not implemented");
-	protected virtual void WriteToGameCard(ulong _0, ulong _1) =>
+	protected virtual void WriteToGameCard(ulong _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.WriteToGameCard not implemented");
 	protected virtual void SetVerifyWriteEnalbleFlag(byte flag) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.SetVerifyWriteEnalbleFlag");
-	protected virtual void GetGameCardImageHash(uint _0, ulong _1) =>
+	protected virtual void GetGameCardImageHash(uint _0, ulong _1, Span<byte> image_hash) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardImageHash not implemented");
-	protected virtual void GetGameCardErrorInfo(ulong _0, ulong _1, Span<byte> _2) =>
+	protected virtual void GetGameCardErrorInfo(ulong _0, ulong _1, Span<byte> _2, Span<byte> error_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardErrorInfo not implemented");
 	protected virtual void EraseAndWriteParamDirectly(ulong _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.EraseAndWriteParamDirectly");
-	protected virtual void ReadParamDirectly(ulong _0) =>
+	protected virtual void ReadParamDirectly(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.ReadParamDirectly not implemented");
 	protected virtual void ForceEraseGameCard() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.ForceEraseGameCard");
-	protected virtual void GetGameCardErrorInfo2() =>
+	protected virtual void GetGameCardErrorInfo2(Span<byte> error_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardErrorInfo2 not implemented");
-	protected virtual void GetGameCardErrorReportInfo() =>
+	protected virtual void GetGameCardErrorReportInfo(Span<byte> error_report_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardErrorReportInfo not implemented");
-	protected virtual void GetGameCardDeviceId(ulong _0) =>
+	protected virtual void GetGameCardDeviceId(ulong _0, Span<byte> device_id) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardDeviceId not implemented");
 	protected virtual void SetSpeedEmulationMode(uint emu_mode) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.SetSpeedEmulationMode");
@@ -112,82 +112,120 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.ResumeSdmmcControl");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // IsSdCardInserted
+			case 0x0: { // IsSdCardInserted
 				break;
-			case 0x1: // GetSdCardSpeedMode
+			}
+			case 0x1: { // GetSdCardSpeedMode
 				break;
-			case 0x2: // GetSdCardCid
+			}
+			case 0x2: { // GetSdCardCid
 				break;
-			case 0x3: // GetSdCardUserAreaSize
+			}
+			case 0x3: { // GetSdCardUserAreaSize
 				break;
-			case 0x4: // GetSdCardProtectedAreaSize
+			}
+			case 0x4: { // GetSdCardProtectedAreaSize
 				break;
-			case 0x5: // GetAndClearSdCardErrorInfo
+			}
+			case 0x5: { // GetAndClearSdCardErrorInfo
 				break;
-			case 0x64: // GetMmcCid
+			}
+			case 0x64: { // GetMmcCid
 				break;
-			case 0x65: // GetMmcSpeedMode
+			}
+			case 0x65: { // GetMmcSpeedMode
 				break;
-			case 0x6E: // EraseMmc
+			}
+			case 0x6E: { // EraseMmc
 				break;
-			case 0x6F: // GetMmcPartitionSize
+			}
+			case 0x6F: { // GetMmcPartitionSize
 				break;
-			case 0x70: // GetMmcPatrolCount
+			}
+			case 0x70: { // GetMmcPatrolCount
 				break;
-			case 0x71: // GetAndClearMmcErrorInfo
+			}
+			case 0x71: { // GetAndClearMmcErrorInfo
 				break;
-			case 0x72: // GetMmcExtendedCsd
+			}
+			case 0x72: { // GetMmcExtendedCsd
 				break;
-			case 0x73: // SuspendMmcPatrol
+			}
+			case 0x73: { // SuspendMmcPatrol
 				break;
-			case 0x74: // ResumeMmcPatrol
+			}
+			case 0x74: { // ResumeMmcPatrol
 				break;
-			case 0xC8: // IsGameCardInserted
+			}
+			case 0xC8: { // IsGameCardInserted
 				break;
-			case 0xC9: // EraseGameCard
+			}
+			case 0xC9: { // EraseGameCard
 				break;
-			case 0xCA: // GetGameCardHandle
+			}
+			case 0xCA: { // GetGameCardHandle
 				break;
-			case 0xCB: // GetGameCardUpdatePartitionInfo
+			}
+			case 0xCB: { // GetGameCardUpdatePartitionInfo
 				break;
-			case 0xCC: // FinalizeGameCardDriver
+			}
+			case 0xCC: { // FinalizeGameCardDriver
 				break;
-			case 0xCD: // GetGameCardAttribute
+			}
+			case 0xCD: { // GetGameCardAttribute
 				break;
-			case 0xCE: // GetGameCardDeviceCertificate
+			}
+			case 0xCE: { // GetGameCardDeviceCertificate
 				break;
-			case 0xCF: // GetGameCardAsicInfo
+			}
+			case 0xCF: { // GetGameCardAsicInfo
 				break;
-			case 0xD0: // GetGameCardIdSet
+			}
+			case 0xD0: { // GetGameCardIdSet
 				break;
-			case 0xD1: // WriteToGameCard
+			}
+			case 0xD1: { // WriteToGameCard
 				break;
-			case 0xD2: // SetVerifyWriteEnalbleFlag
+			}
+			case 0xD2: { // SetVerifyWriteEnalbleFlag
 				break;
-			case 0xD3: // GetGameCardImageHash
+			}
+			case 0xD3: { // GetGameCardImageHash
 				break;
-			case 0xD4: // GetGameCardErrorInfo
+			}
+			case 0xD4: { // GetGameCardErrorInfo
 				break;
-			case 0xD5: // EraseAndWriteParamDirectly
+			}
+			case 0xD5: { // EraseAndWriteParamDirectly
 				break;
-			case 0xD6: // ReadParamDirectly
+			}
+			case 0xD6: { // ReadParamDirectly
 				break;
-			case 0xD7: // ForceEraseGameCard
+			}
+			case 0xD7: { // ForceEraseGameCard
 				break;
-			case 0xD8: // GetGameCardErrorInfo2
+			}
+			case 0xD8: { // GetGameCardErrorInfo2
 				break;
-			case 0xD9: // GetGameCardErrorReportInfo
+			}
+			case 0xD9: { // GetGameCardErrorReportInfo
 				break;
-			case 0xDA: // GetGameCardDeviceId
+			}
+			case 0xDA: { // GetGameCardDeviceId
 				break;
-			case 0x12C: // SetSpeedEmulationMode
+			}
+			case 0x12C: { // SetSpeedEmulationMode
 				break;
-			case 0x12D: // GetSpeedEmulationMode
+			}
+			case 0x12D: { // GetSpeedEmulationMode
 				break;
-			case 0x190: // SuspendSdmmcControl
+			}
+			case 0x190: { // SuspendSdmmcControl
 				break;
-			case 0x191: // ResumeSdmmcControl
+			}
+			case 0x191: { // ResumeSdmmcControl
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IDeviceOperator");
 		}
@@ -196,16 +234,18 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 
 public partial class IDirectory : _IDirectory_Base;
 public abstract class _IDirectory_Base : IpcInterface {
-	protected virtual void Read() =>
+	protected virtual void Read(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDirectory.Read not implemented");
 	protected virtual ulong GetEntryCount() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDirectory.GetEntryCount not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Read
+			case 0x0: { // Read
 				break;
-			case 0x1: // GetEntryCount
+			}
+			case 0x1: { // GetEntryCount
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IDirectory");
 		}
@@ -218,8 +258,9 @@ public abstract class _IEventNotifier_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IEventNotifier.GetEventHandle not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetEventHandle
+			case 0x0: { // GetEventHandle
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IEventNotifier");
 		}
@@ -228,7 +269,7 @@ public abstract class _IEventNotifier_Base : IpcInterface {
 
 public partial class IFile : _IFile_Base;
 public abstract class _IFile_Base : IpcInterface {
-	protected virtual void Read(uint _0, ulong offset, ulong size) =>
+	protected virtual void Read(uint _0, ulong offset, ulong size, out ulong out_size, Span<byte> out_buf) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFile.Read not implemented");
 	protected virtual void Write(uint _0, ulong offset, ulong size, Span<byte> in_buf) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFile.Write");
@@ -238,22 +279,28 @@ public abstract class _IFile_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFile.SetSize");
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFile.GetSize not implemented");
-	protected virtual void OperateRange(uint _0, ulong _1, ulong _2) =>
+	protected virtual void OperateRange(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFile.OperateRange not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Read
+			case 0x0: { // Read
 				break;
-			case 0x1: // Write
+			}
+			case 0x1: { // Write
 				break;
-			case 0x2: // Flush
+			}
+			case 0x2: { // Flush
 				break;
-			case 0x3: // SetSize
+			}
+			case 0x3: { // SetSize
 				break;
-			case 0x4: // GetSize
+			}
+			case 0x4: { // GetSize
 				break;
-			case 0x5: // OperateRange
+			}
+			case 0x5: { // OperateRange
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IFile");
 		}
@@ -290,44 +337,60 @@ public abstract class _IFileSystem_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystem.GetTotalSpaceSize not implemented");
 	protected virtual void CleanDirectoryRecursively(Span<byte> path) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystem.CleanDirectoryRecursively");
-	protected virtual void GetFileTimeStampRaw(Span<byte> path) =>
+	protected virtual void GetFileTimeStampRaw(Span<byte> path, Span<byte> timestamp) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystem.GetFileTimeStampRaw not implemented");
-	protected virtual void QueryEntry(uint _0, Span<byte> path, Span<byte> _2) =>
+	protected virtual void QueryEntry(uint _0, Span<byte> path, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystem.QueryEntry not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateFile
+			case 0x0: { // CreateFile
 				break;
-			case 0x1: // DeleteFile
+			}
+			case 0x1: { // DeleteFile
 				break;
-			case 0x2: // CreateDirectory
+			}
+			case 0x2: { // CreateDirectory
 				break;
-			case 0x3: // DeleteDirectory
+			}
+			case 0x3: { // DeleteDirectory
 				break;
-			case 0x4: // DeleteDirectoryRecursively
+			}
+			case 0x4: { // DeleteDirectoryRecursively
 				break;
-			case 0x5: // RenameFile
+			}
+			case 0x5: { // RenameFile
 				break;
-			case 0x6: // RenameDirectory
+			}
+			case 0x6: { // RenameDirectory
 				break;
-			case 0x7: // GetEntryType
+			}
+			case 0x7: { // GetEntryType
 				break;
-			case 0x8: // OpenFile
+			}
+			case 0x8: { // OpenFile
 				break;
-			case 0x9: // OpenDirectory
+			}
+			case 0x9: { // OpenDirectory
 				break;
-			case 0xA: // Commit
+			}
+			case 0xA: { // Commit
 				break;
-			case 0xB: // GetFreeSpaceSize
+			}
+			case 0xB: { // GetFreeSpaceSize
 				break;
-			case 0xC: // GetTotalSpaceSize
+			}
+			case 0xC: { // GetTotalSpaceSize
 				break;
-			case 0xD: // CleanDirectoryRecursively
+			}
+			case 0xD: { // CleanDirectoryRecursively
 				break;
-			case 0xE: // GetFileTimeStampRaw
+			}
+			case 0xE: { // GetFileTimeStampRaw
 				break;
-			case 0xF: // QueryEntry
+			}
+			case 0xF: { // QueryEntry
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IFileSystem");
 		}
@@ -392,9 +455,9 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenSaveDataFileSystemBySystemSaveDataId not implemented");
 	protected virtual Nn.Fssrv.Sf.IFileSystem OpenReadOnlySaveDataFileSystem(byte save_data_space_id, Span<byte> save_struct) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenReadOnlySaveDataFileSystem not implemented");
-	protected virtual void ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(byte _0, ulong _1) =>
+	protected virtual void ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(byte _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.ReadSaveDataFileSystemExtraDataBySaveDataSpaceId not implemented");
-	protected virtual void ReadSaveDataFileSystemExtraData(ulong _0) =>
+	protected virtual void ReadSaveDataFileSystemExtraData(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.ReadSaveDataFileSystemExtraData not implemented");
 	protected virtual void WriteSaveDataFileSystemExtraData(byte _0, ulong _1, Span<byte> _2) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.WriteSaveDataFileSystemExtraData");
@@ -442,7 +505,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetCurrentPosixTime");
 	protected virtual ulong QuerySaveDataTotalSize(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.QuerySaveDataTotalSize not implemented");
-	protected virtual void VerifySaveDataFileSystem(ulong _0) =>
+	protected virtual void VerifySaveDataFileSystem(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.VerifySaveDataFileSystem not implemented");
 	protected virtual void CorruptSaveDataFileSystem(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CorruptSaveDataFileSystem");
@@ -450,21 +513,21 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CreatePaddingFile");
 	protected virtual void DeleteAllPaddingFiles() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.DeleteAllPaddingFiles");
-	protected virtual void GetRightsId(byte _0, ulong _1) =>
+	protected virtual void GetRightsId(byte _0, ulong _1, Span<byte> rights) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetRightsId not implemented");
 	protected virtual void RegisterExternalKey(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.RegisterExternalKey");
 	protected virtual void UnregisterAllExternalKey() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.UnregisterAllExternalKey");
-	protected virtual void GetRightsIdByPath(Span<byte> _0) =>
+	protected virtual void GetRightsIdByPath(Span<byte> _0, Span<byte> rights) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetRightsIdByPath not implemented");
-	protected virtual void GetRightsIdAndKeyGenerationByPath(Span<byte> _0) =>
+	protected virtual void GetRightsIdAndKeyGenerationByPath(Span<byte> _0, out byte _1, Span<byte> rights) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetRightsIdAndKeyGenerationByPath not implemented");
 	protected virtual void SetCurrentPosixTimeWithTimeDifference(uint _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetCurrentPosixTimeWithTimeDifference");
 	protected virtual ulong GetFreeSpaceSizeForSaveData(byte _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetFreeSpaceSizeForSaveData not implemented");
-	protected virtual void VerifySaveDataFileSystemBySaveDataSpaceId(byte _0, ulong _1) =>
+	protected virtual void VerifySaveDataFileSystemBySaveDataSpaceId(byte _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.VerifySaveDataFileSystemBySaveDataSpaceId not implemented");
 	protected virtual void CorruptSaveDataFileSystemBySaveDataSpaceId(byte _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CorruptSaveDataFileSystemBySaveDataSpaceId");
@@ -488,7 +551,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.ResolveAccessFailure");
 	protected virtual void AbandonAccessFailure() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.AbandonAccessFailure");
-	protected virtual void GetAndClearFileSystemProxyErrorInfo() =>
+	protected virtual void GetAndClearFileSystemProxyErrorInfo(Span<byte> error_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetAndClearFileSystemProxyErrorInfo not implemented");
 	protected virtual void SetBisRootForHost(uint _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetBisRootForHost");
@@ -508,7 +571,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.RegisterUpdatePartition");
 	protected virtual Nn.Fssrv.Sf.IFileSystem OpenRegisteredUpdatePartition() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenRegisteredUpdatePartition not implemented");
-	protected virtual void GetAndClearMemoryReportInfo() =>
+	protected virtual void GetAndClearMemoryReportInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetAndClearMemoryReportInfo not implemented");
 	protected virtual void Unknown1010() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.Unknown1010");
@@ -516,184 +579,273 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.OverrideSaveDataTransferTokenSignVerificationKey");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenFileSystem
+			case 0x0: { // OpenFileSystem
 				break;
-			case 0x1: // SetCurrentProcess
+			}
+			case 0x1: { // SetCurrentProcess
 				break;
-			case 0x2: // OpenDataFileSystemByCurrentProcess
+			}
+			case 0x2: { // OpenDataFileSystemByCurrentProcess
 				break;
-			case 0x7: // OpenFileSystemWithPatch
+			}
+			case 0x7: { // OpenFileSystemWithPatch
 				break;
-			case 0x8: // OpenFileSystemWithId
+			}
+			case 0x8: { // OpenFileSystemWithId
 				break;
-			case 0x9: // OpenDataFileSystemByApplicationId
+			}
+			case 0x9: { // OpenDataFileSystemByApplicationId
 				break;
-			case 0xB: // OpenBisFileSystem
+			}
+			case 0xB: { // OpenBisFileSystem
 				break;
-			case 0xC: // OpenBisStorage
+			}
+			case 0xC: { // OpenBisStorage
 				break;
-			case 0xD: // InvalidateBisCache
+			}
+			case 0xD: { // InvalidateBisCache
 				break;
-			case 0x11: // OpenHostFileSystem
+			}
+			case 0x11: { // OpenHostFileSystem
 				break;
-			case 0x12: // OpenSdCardFileSystem
+			}
+			case 0x12: { // OpenSdCardFileSystem
 				break;
-			case 0x13: // FormatSdCardFileSystem
+			}
+			case 0x13: { // FormatSdCardFileSystem
 				break;
-			case 0x15: // DeleteSaveDataFileSystem
+			}
+			case 0x15: { // DeleteSaveDataFileSystem
 				break;
-			case 0x16: // CreateSaveDataFileSystem
+			}
+			case 0x16: { // CreateSaveDataFileSystem
 				break;
-			case 0x17: // CreateSaveDataFileSystemBySystemSaveDataId
+			}
+			case 0x17: { // CreateSaveDataFileSystemBySystemSaveDataId
 				break;
-			case 0x18: // RegisterSaveDataFileSystemAtomicDeletion
+			}
+			case 0x18: { // RegisterSaveDataFileSystemAtomicDeletion
 				break;
-			case 0x19: // DeleteSaveDataFileSystemBySaveDataSpaceId
+			}
+			case 0x19: { // DeleteSaveDataFileSystemBySaveDataSpaceId
 				break;
-			case 0x1A: // FormatSdCardDryRun
+			}
+			case 0x1A: { // FormatSdCardDryRun
 				break;
-			case 0x1B: // IsExFatSupported
+			}
+			case 0x1B: { // IsExFatSupported
 				break;
-			case 0x1C: // DeleteSaveDataFileSystemBySaveDataAttribute
+			}
+			case 0x1C: { // DeleteSaveDataFileSystemBySaveDataAttribute
 				break;
-			case 0x1E: // OpenGameCardStorage
+			}
+			case 0x1E: { // OpenGameCardStorage
 				break;
-			case 0x1F: // OpenGameCardFileSystem
+			}
+			case 0x1F: { // OpenGameCardFileSystem
 				break;
-			case 0x20: // ExtendSaveDataFileSystem
+			}
+			case 0x20: { // ExtendSaveDataFileSystem
 				break;
-			case 0x21: // DeleteCacheStorage
+			}
+			case 0x21: { // DeleteCacheStorage
 				break;
-			case 0x22: // GetCacheStorageSize
+			}
+			case 0x22: { // GetCacheStorageSize
 				break;
-			case 0x33: // OpenSaveDataFileSystem
+			}
+			case 0x33: { // OpenSaveDataFileSystem
 				break;
-			case 0x34: // OpenSaveDataFileSystemBySystemSaveDataId
+			}
+			case 0x34: { // OpenSaveDataFileSystemBySystemSaveDataId
 				break;
-			case 0x35: // OpenReadOnlySaveDataFileSystem
+			}
+			case 0x35: { // OpenReadOnlySaveDataFileSystem
 				break;
-			case 0x39: // ReadSaveDataFileSystemExtraDataBySaveDataSpaceId
+			}
+			case 0x39: { // ReadSaveDataFileSystemExtraDataBySaveDataSpaceId
 				break;
-			case 0x3A: // ReadSaveDataFileSystemExtraData
+			}
+			case 0x3A: { // ReadSaveDataFileSystemExtraData
 				break;
-			case 0x3B: // WriteSaveDataFileSystemExtraData
+			}
+			case 0x3B: { // WriteSaveDataFileSystemExtraData
 				break;
-			case 0x3C: // OpenSaveDataInfoReader
+			}
+			case 0x3C: { // OpenSaveDataInfoReader
 				break;
-			case 0x3D: // OpenSaveDataInfoReaderBySaveDataSpaceId
+			}
+			case 0x3D: { // OpenSaveDataInfoReaderBySaveDataSpaceId
 				break;
-			case 0x3E: // OpenCacheStorageList
+			}
+			case 0x3E: { // OpenCacheStorageList
 				break;
-			case 0x40: // OpenSaveDataInternalStorageFileSystem
+			}
+			case 0x40: { // OpenSaveDataInternalStorageFileSystem
 				break;
-			case 0x41: // UpdateSaveDataMacForDebug
+			}
+			case 0x41: { // UpdateSaveDataMacForDebug
 				break;
-			case 0x42: // WriteSaveDataFileSystemExtraData2
+			}
+			case 0x42: { // WriteSaveDataFileSystemExtraData2
 				break;
-			case 0x50: // OpenSaveDataMetaFile
+			}
+			case 0x50: { // OpenSaveDataMetaFile
 				break;
-			case 0x51: // OpenSaveDataTransferManager
+			}
+			case 0x51: { // OpenSaveDataTransferManager
 				break;
-			case 0x52: // OpenSaveDataTransferManagerVersion2
+			}
+			case 0x52: { // OpenSaveDataTransferManagerVersion2
 				break;
-			case 0x64: // OpenImageDirectoryFileSystem
+			}
+			case 0x64: { // OpenImageDirectoryFileSystem
 				break;
-			case 0x6E: // OpenContentStorageFileSystem
+			}
+			case 0x6E: { // OpenContentStorageFileSystem
 				break;
-			case 0xC8: // OpenDataStorageByCurrentProcess
+			}
+			case 0xC8: { // OpenDataStorageByCurrentProcess
 				break;
-			case 0xC9: // OpenDataStorageByProgramId
+			}
+			case 0xC9: { // OpenDataStorageByProgramId
 				break;
-			case 0xCA: // OpenDataStorageByDataId
+			}
+			case 0xCA: { // OpenDataStorageByDataId
 				break;
-			case 0xCB: // OpenPatchDataStorageByCurrentProcess
+			}
+			case 0xCB: { // OpenPatchDataStorageByCurrentProcess
 				break;
-			case 0x190: // OpenDeviceOperator
+			}
+			case 0x190: { // OpenDeviceOperator
 				break;
-			case 0x1F4: // OpenSdCardDetectionEventNotifier
+			}
+			case 0x1F4: { // OpenSdCardDetectionEventNotifier
 				break;
-			case 0x1F5: // OpenGameCardDetectionEventNotifier
+			}
+			case 0x1F5: { // OpenGameCardDetectionEventNotifier
 				break;
-			case 0x1FE: // OpenSystemDataUpdateEventNotifier
+			}
+			case 0x1FE: { // OpenSystemDataUpdateEventNotifier
 				break;
-			case 0x1FF: // NotifySystemDataUpdateEvent
+			}
+			case 0x1FF: { // NotifySystemDataUpdateEvent
 				break;
-			case 0x258: // SetCurrentPosixTime
+			}
+			case 0x258: { // SetCurrentPosixTime
 				break;
-			case 0x259: // QuerySaveDataTotalSize
+			}
+			case 0x259: { // QuerySaveDataTotalSize
 				break;
-			case 0x25A: // VerifySaveDataFileSystem
+			}
+			case 0x25A: { // VerifySaveDataFileSystem
 				break;
-			case 0x25B: // CorruptSaveDataFileSystem
+			}
+			case 0x25B: { // CorruptSaveDataFileSystem
 				break;
-			case 0x25C: // CreatePaddingFile
+			}
+			case 0x25C: { // CreatePaddingFile
 				break;
-			case 0x25D: // DeleteAllPaddingFiles
+			}
+			case 0x25D: { // DeleteAllPaddingFiles
 				break;
-			case 0x25E: // GetRightsId
+			}
+			case 0x25E: { // GetRightsId
 				break;
-			case 0x25F: // RegisterExternalKey
+			}
+			case 0x25F: { // RegisterExternalKey
 				break;
-			case 0x260: // UnregisterAllExternalKey
+			}
+			case 0x260: { // UnregisterAllExternalKey
 				break;
-			case 0x261: // GetRightsIdByPath
+			}
+			case 0x261: { // GetRightsIdByPath
 				break;
-			case 0x262: // GetRightsIdAndKeyGenerationByPath
+			}
+			case 0x262: { // GetRightsIdAndKeyGenerationByPath
 				break;
-			case 0x263: // SetCurrentPosixTimeWithTimeDifference
+			}
+			case 0x263: { // SetCurrentPosixTimeWithTimeDifference
 				break;
-			case 0x264: // GetFreeSpaceSizeForSaveData
+			}
+			case 0x264: { // GetFreeSpaceSizeForSaveData
 				break;
-			case 0x265: // VerifySaveDataFileSystemBySaveDataSpaceId
+			}
+			case 0x265: { // VerifySaveDataFileSystemBySaveDataSpaceId
 				break;
-			case 0x266: // CorruptSaveDataFileSystemBySaveDataSpaceId
+			}
+			case 0x266: { // CorruptSaveDataFileSystemBySaveDataSpaceId
 				break;
-			case 0x267: // QuerySaveDataInternalStorageTotalSize
+			}
+			case 0x267: { // QuerySaveDataInternalStorageTotalSize
 				break;
-			case 0x26C: // SetSdCardEncryptionSeed
+			}
+			case 0x26C: { // SetSdCardEncryptionSeed
 				break;
-			case 0x276: // SetSdCardAccessibility
+			}
+			case 0x276: { // SetSdCardAccessibility
 				break;
-			case 0x277: // IsSdCardAccessible
+			}
+			case 0x277: { // IsSdCardAccessible
 				break;
-			case 0x280: // IsSignedSystemPartitionOnSdCardValid
+			}
+			case 0x280: { // IsSignedSystemPartitionOnSdCardValid
 				break;
-			case 0x2BC: // OpenAccessFailureResolver
+			}
+			case 0x2BC: { // OpenAccessFailureResolver
 				break;
-			case 0x2BD: // GetAccessFailureDetectionEvent
+			}
+			case 0x2BD: { // GetAccessFailureDetectionEvent
 				break;
-			case 0x2BE: // IsAccessFailureDetected
+			}
+			case 0x2BE: { // IsAccessFailureDetected
 				break;
-			case 0x2C6: // ResolveAccessFailure
+			}
+			case 0x2C6: { // ResolveAccessFailure
 				break;
-			case 0x2D0: // AbandonAccessFailure
+			}
+			case 0x2D0: { // AbandonAccessFailure
 				break;
-			case 0x320: // GetAndClearFileSystemProxyErrorInfo
+			}
+			case 0x320: { // GetAndClearFileSystemProxyErrorInfo
 				break;
-			case 0x3E8: // SetBisRootForHost
+			}
+			case 0x3E8: { // SetBisRootForHost
 				break;
-			case 0x3E9: // SetSaveDataSize
+			}
+			case 0x3E9: { // SetSaveDataSize
 				break;
-			case 0x3EA: // SetSaveDataRootPath
+			}
+			case 0x3EA: { // SetSaveDataRootPath
 				break;
-			case 0x3EB: // DisableAutoSaveDataCreation
+			}
+			case 0x3EB: { // DisableAutoSaveDataCreation
 				break;
-			case 0x3EC: // SetGlobalAccessLogMode
+			}
+			case 0x3EC: { // SetGlobalAccessLogMode
 				break;
-			case 0x3ED: // GetGlobalAccessLogMode
+			}
+			case 0x3ED: { // GetGlobalAccessLogMode
 				break;
-			case 0x3EE: // OutputAccessLogToSdCard
+			}
+			case 0x3EE: { // OutputAccessLogToSdCard
 				break;
-			case 0x3EF: // RegisterUpdatePartition
+			}
+			case 0x3EF: { // RegisterUpdatePartition
 				break;
-			case 0x3F0: // OpenRegisteredUpdatePartition
+			}
+			case 0x3F0: { // OpenRegisteredUpdatePartition
 				break;
-			case 0x3F1: // GetAndClearMemoryReportInfo
+			}
+			case 0x3F1: { // GetAndClearMemoryReportInfo
 				break;
-			case 0x3F2: // Unknown1010
+			}
+			case 0x3F2: { // Unknown1010
 				break;
-			case 0x44C: // OverrideSaveDataTransferTokenSignVerificationKey
+			}
+			case 0x44C: { // OverrideSaveDataTransferTokenSignVerificationKey
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IFileSystemProxy");
 		}
@@ -710,12 +862,15 @@ public abstract class _IFileSystemProxyForLoader_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxyForLoader.SetCurrentProcess");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenCodeFileSystem
+			case 0x0: { // OpenCodeFileSystem
 				break;
-			case 0x1: // IsArchivedProgram
+			}
+			case 0x1: { // IsArchivedProgram
 				break;
-			case 0x2: // SetCurrentProcess
+			}
+			case 0x2: { // SetCurrentProcess
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IFileSystemProxyForLoader");
 		}
@@ -734,14 +889,18 @@ public abstract class _IProgramRegistry_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IProgramRegistry.SetEnabledProgramVerification");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // RegisterProgram
+			case 0x0: { // RegisterProgram
 				break;
-			case 0x1: // UnregisterProgram
+			}
+			case 0x1: { // UnregisterProgram
 				break;
-			case 0x2: // SetCurrentProcess
+			}
+			case 0x2: { // SetCurrentProcess
 				break;
-			case 0x100: // SetEnabledProgramVerification
+			}
+			case 0x100: { // SetEnabledProgramVerification
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IProgramRegistry");
 		}
@@ -750,24 +909,28 @@ public abstract class _IProgramRegistry_Base : IpcInterface {
 
 public partial class ISaveDataExporter : _ISaveDataExporter_Base;
 public abstract class _ISaveDataExporter_Base : IpcInterface {
-	protected virtual void Unknown0() =>
+	protected virtual void Unknown0(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataExporter.Unknown0 not implemented");
 	protected virtual ulong Unknown1() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataExporter.Unknown1 not implemented");
-	protected virtual void Unknown16() =>
+	protected virtual void Unknown16(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataExporter.Unknown16 not implemented");
-	protected virtual void Unknown17() =>
+	protected virtual void Unknown17(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataExporter.Unknown17 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Unknown0
+			case 0x0: { // Unknown0
 				break;
-			case 0x1: // Unknown1
+			}
+			case 0x1: { // Unknown1
 				break;
-			case 0x10: // Unknown16
+			}
+			case 0x10: { // Unknown16
 				break;
-			case 0x11: // Unknown17
+			}
+			case 0x11: { // Unknown17
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.ISaveDataExporter");
 		}
@@ -776,7 +939,7 @@ public abstract class _ISaveDataExporter_Base : IpcInterface {
 
 public partial class ISaveDataImporter : _ISaveDataImporter_Base;
 public abstract class _ISaveDataImporter_Base : IpcInterface {
-	protected virtual void Unknown0() =>
+	protected virtual void Unknown0(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataImporter.Unknown0 not implemented");
 	protected virtual ulong Unknown1() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataImporter.Unknown1 not implemented");
@@ -786,14 +949,18 @@ public abstract class _ISaveDataImporter_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.ISaveDataImporter.Unknown17");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Unknown0
+			case 0x0: { // Unknown0
 				break;
-			case 0x1: // Unknown1
+			}
+			case 0x1: { // Unknown1
 				break;
-			case 0x10: // Unknown16
+			}
+			case 0x10: { // Unknown16
 				break;
-			case 0x11: // Unknown17
+			}
+			case 0x11: { // Unknown17
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.ISaveDataImporter");
 		}
@@ -802,12 +969,13 @@ public abstract class _ISaveDataImporter_Base : IpcInterface {
 
 public partial class ISaveDataInfoReader : _ISaveDataInfoReader_Base;
 public abstract class _ISaveDataInfoReader_Base : IpcInterface {
-	protected virtual void ReadSaveDataInfo() =>
+	protected virtual void ReadSaveDataInfo(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataInfoReader.ReadSaveDataInfo not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ReadSaveDataInfo
+			case 0x0: { // ReadSaveDataInfo
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.ISaveDataInfoReader");
 		}
@@ -816,24 +984,28 @@ public abstract class _ISaveDataInfoReader_Base : IpcInterface {
 
 public partial class ISaveDataTransferManager : _ISaveDataTransferManager_Base;
 public abstract class _ISaveDataTransferManager_Base : IpcInterface {
-	protected virtual void Unknown0() =>
+	protected virtual void Unknown0(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown0 not implemented");
 	protected virtual void Unknown16(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown16");
 	protected virtual Nn.Fssrv.Sf.ISaveDataExporter Unknown32(byte _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown32 not implemented");
-	protected virtual void Unknown64(byte _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown64(byte _0, Span<byte> _1, Span<byte> _2, out ulong _3, out Nn.Fssrv.Sf.ISaveDataImporter _4) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown64 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Unknown0
+			case 0x0: { // Unknown0
 				break;
-			case 0x10: // Unknown16
+			}
+			case 0x10: { // Unknown16
 				break;
-			case 0x20: // Unknown32
+			}
+			case 0x20: { // Unknown32
 				break;
-			case 0x40: // Unknown64
+			}
+			case 0x40: { // Unknown64
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.ISaveDataTransferManager");
 		}
@@ -842,7 +1014,7 @@ public abstract class _ISaveDataTransferManager_Base : IpcInterface {
 
 public partial class IStorage : _IStorage_Base;
 public abstract class _IStorage_Base : IpcInterface {
-	protected virtual void Read(ulong offset, ulong length) =>
+	protected virtual void Read(ulong offset, ulong length, Span<byte> data) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IStorage.Read not implemented");
 	protected virtual void Write(ulong offset, ulong length, Span<byte> data) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IStorage.Write");
@@ -852,22 +1024,28 @@ public abstract class _IStorage_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IStorage.SetSize");
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IStorage.GetSize not implemented");
-	protected virtual void OperateRange(uint _0, ulong _1, ulong _2) =>
+	protected virtual void OperateRange(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IStorage.OperateRange not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Read
+			case 0x0: { // Read
 				break;
-			case 0x1: // Write
+			}
+			case 0x1: { // Write
 				break;
-			case 0x2: // Flush
+			}
+			case 0x2: { // Flush
 				break;
-			case 0x3: // SetSize
+			}
+			case 0x3: { // SetSize
 				break;
-			case 0x4: // GetSize
+			}
+			case 0x4: { // GetSize
 				break;
-			case 0x5: // OperateRange
+			}
+			case 0x5: { // OperateRange
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fssrv.Sf.IStorage");
 		}

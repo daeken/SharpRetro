@@ -28,9 +28,9 @@ public abstract class _IStaticService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.IsStandardNetworkSystemClockAccuracySufficient not implemented");
 	protected virtual ulong CalculateMonotonicSystemClockBaseTimePoint(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.CalculateMonotonicSystemClockBaseTimePoint not implemented");
-	protected virtual void GetClockSnapshot(byte _0) =>
+	protected virtual void GetClockSnapshot(byte _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.GetClockSnapshot not implemented");
-	protected virtual void GetClockSnapshotFromSystemClockContext(byte _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void GetClockSnapshotFromSystemClockContext(byte _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.GetClockSnapshotFromSystemClockContext not implemented");
 	protected virtual ulong CalculateStandardUserSystemClockDifferenceByUser(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.CalculateStandardUserSystemClockDifferenceByUser not implemented");
@@ -38,38 +38,54 @@ public abstract class _IStaticService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.CalculateSpanBetween not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetStandardUserSystemClock
+			case 0x0: { // GetStandardUserSystemClock
 				break;
-			case 0x1: // GetStandardNetworkSystemClock
+			}
+			case 0x1: { // GetStandardNetworkSystemClock
 				break;
-			case 0x2: // GetStandardSteadyClock
+			}
+			case 0x2: { // GetStandardSteadyClock
 				break;
-			case 0x3: // GetTimeZoneService
+			}
+			case 0x3: { // GetTimeZoneService
 				break;
-			case 0x4: // GetStandardLocalSystemClock
+			}
+			case 0x4: { // GetStandardLocalSystemClock
 				break;
-			case 0x5: // GetEphemeralNetworkSystemClock
+			}
+			case 0x5: { // GetEphemeralNetworkSystemClock
 				break;
-			case 0x32: // SetStandardSteadyClockInternalOffset
+			}
+			case 0x32: { // SetStandardSteadyClockInternalOffset
 				break;
-			case 0x64: // IsStandardUserSystemClockAutomaticCorrectionEnabled
+			}
+			case 0x64: { // IsStandardUserSystemClockAutomaticCorrectionEnabled
 				break;
-			case 0x65: // SetStandardUserSystemClockAutomaticCorrectionEnabled
+			}
+			case 0x65: { // SetStandardUserSystemClockAutomaticCorrectionEnabled
 				break;
-			case 0x66: // GetStandardUserSystemClockInitialYear
+			}
+			case 0x66: { // GetStandardUserSystemClockInitialYear
 				break;
-			case 0xC8: // IsStandardNetworkSystemClockAccuracySufficient
+			}
+			case 0xC8: { // IsStandardNetworkSystemClockAccuracySufficient
 				break;
-			case 0x12C: // CalculateMonotonicSystemClockBaseTimePoint
+			}
+			case 0x12C: { // CalculateMonotonicSystemClockBaseTimePoint
 				break;
-			case 0x190: // GetClockSnapshot
+			}
+			case 0x190: { // GetClockSnapshot
 				break;
-			case 0x191: // GetClockSnapshotFromSystemClockContext
+			}
+			case 0x191: { // GetClockSnapshotFromSystemClockContext
 				break;
-			case 0x1F4: // CalculateStandardUserSystemClockDifferenceByUser
+			}
+			case 0x1F4: { // CalculateStandardUserSystemClockDifferenceByUser
 				break;
-			case 0x1F5: // CalculateSpanBetween
+			}
+			case 0x1F5: { // CalculateSpanBetween
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Timesrv.Detail.Service.IStaticService");
 		}
@@ -78,7 +94,7 @@ public abstract class _IStaticService_Base : IpcInterface {
 
 public partial class ISteadyClock : _ISteadyClock_Base;
 public abstract class _ISteadyClock_Base : IpcInterface {
-	protected virtual void GetCurrentTimePoint() =>
+	protected virtual void GetCurrentTimePoint(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISteadyClock.GetCurrentTimePoint not implemented");
 	protected virtual ulong GetTestOffset() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISteadyClock.GetTestOffset not implemented");
@@ -96,22 +112,30 @@ public abstract class _ISteadyClock_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISteadyClock.SetInternalOffset");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCurrentTimePoint
+			case 0x0: { // GetCurrentTimePoint
 				break;
-			case 0x2: // GetTestOffset
+			}
+			case 0x2: { // GetTestOffset
 				break;
-			case 0x3: // SetTestOffset
+			}
+			case 0x3: { // SetTestOffset
 				break;
-			case 0x64: // GetRtcValue
+			}
+			case 0x64: { // GetRtcValue
 				break;
-			case 0x65: // IsRtcResetDetected
+			}
+			case 0x65: { // IsRtcResetDetected
 				break;
-			case 0x66: // GetSetupResultValue
+			}
+			case 0x66: { // GetSetupResultValue
 				break;
-			case 0xC8: // GetInternalOffset
+			}
+			case 0xC8: { // GetInternalOffset
 				break;
-			case 0xC9: // SetInternalOffset
+			}
+			case 0xC9: { // SetInternalOffset
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Timesrv.Detail.Service.ISteadyClock");
 		}
@@ -124,20 +148,24 @@ public abstract class _ISystemClock_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISystemClock.GetCurrentTime not implemented");
 	protected virtual void SetCurrentTime(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISystemClock.SetCurrentTime");
-	protected virtual void GetSystemClockContext() =>
+	protected virtual void GetSystemClockContext(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISystemClock.GetSystemClockContext not implemented");
 	protected virtual void SetSystemClockContext(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISystemClock.SetSystemClockContext");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCurrentTime
+			case 0x0: { // GetCurrentTime
 				break;
-			case 0x1: // SetCurrentTime
+			}
+			case 0x1: { // SetCurrentTime
 				break;
-			case 0x2: // GetSystemClockContext
+			}
+			case 0x2: { // GetSystemClockContext
 				break;
-			case 0x3: // SetSystemClockContext
+			}
+			case 0x3: { // SetSystemClockContext
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Timesrv.Detail.Service.ISystemClock");
 		}
@@ -146,48 +174,58 @@ public abstract class _ISystemClock_Base : IpcInterface {
 
 public partial class ITimeZoneService : _ITimeZoneService_Base;
 public abstract class _ITimeZoneService_Base : IpcInterface {
-	protected virtual void GetDeviceLocationName() =>
+	protected virtual void GetDeviceLocationName(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.GetDeviceLocationName not implemented");
 	protected virtual void SetDeviceLocationName(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ITimeZoneService.SetDeviceLocationName");
 	protected virtual uint GetTotalLocationNameCount() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.GetTotalLocationNameCount not implemented");
-	protected virtual void LoadLocationNameList(uint _0) =>
+	protected virtual void LoadLocationNameList(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.LoadLocationNameList not implemented");
-	protected virtual void LoadTimeZoneRule(Span<byte> _0) =>
+	protected virtual void LoadTimeZoneRule(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.LoadTimeZoneRule not implemented");
-	protected virtual void GetTimeZoneRuleVersion() =>
+	protected virtual void GetTimeZoneRuleVersion(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.GetTimeZoneRuleVersion not implemented");
-	protected virtual void ToCalendarTime(ulong _0, Span<byte> _1) =>
+	protected virtual void ToCalendarTime(ulong _0, Span<byte> _1, Nn.Time.CalendarTime _2, Nn.Time.Sf.CalendarAdditionalInfo _3) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.ToCalendarTime not implemented");
-	protected virtual void ToCalendarTimeWithMyRule(ulong _0) =>
+	protected virtual void ToCalendarTimeWithMyRule(ulong _0, Nn.Time.CalendarTime _1, Nn.Time.Sf.CalendarAdditionalInfo _2) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.ToCalendarTimeWithMyRule not implemented");
-	protected virtual void ToPosixTime(Nn.Time.CalendarTime _0, Span<byte> _1) =>
+	protected virtual void ToPosixTime(Nn.Time.CalendarTime _0, Span<byte> _1, out uint _2, Span<ulong> _3) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.ToPosixTime not implemented");
-	protected virtual void ToPosixTimeWithMyRule(Nn.Time.CalendarTime _0) =>
+	protected virtual void ToPosixTimeWithMyRule(Nn.Time.CalendarTime _0, out uint _1, Span<ulong> _2) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.ToPosixTimeWithMyRule not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetDeviceLocationName
+			case 0x0: { // GetDeviceLocationName
 				break;
-			case 0x1: // SetDeviceLocationName
+			}
+			case 0x1: { // SetDeviceLocationName
 				break;
-			case 0x2: // GetTotalLocationNameCount
+			}
+			case 0x2: { // GetTotalLocationNameCount
 				break;
-			case 0x3: // LoadLocationNameList
+			}
+			case 0x3: { // LoadLocationNameList
 				break;
-			case 0x4: // LoadTimeZoneRule
+			}
+			case 0x4: { // LoadTimeZoneRule
 				break;
-			case 0x5: // GetTimeZoneRuleVersion
+			}
+			case 0x5: { // GetTimeZoneRuleVersion
 				break;
-			case 0x64: // ToCalendarTime
+			}
+			case 0x64: { // ToCalendarTime
 				break;
-			case 0x65: // ToCalendarTimeWithMyRule
+			}
+			case 0x65: { // ToCalendarTimeWithMyRule
 				break;
-			case 0xC9: // ToPosixTime
+			}
+			case 0xC9: { // ToPosixTime
 				break;
-			case 0xCA: // ToPosixTimeWithMyRule
+			}
+			case 0xCA: { // ToPosixTimeWithMyRule
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Timesrv.Detail.Service.ITimeZoneService");
 		}

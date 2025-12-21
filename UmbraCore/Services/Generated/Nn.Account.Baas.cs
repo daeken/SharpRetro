@@ -10,7 +10,7 @@ public abstract class _IAdministrator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.GetAccountId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.EnsureIdTokenCacheAsync not implemented");
-	protected virtual void LoadIdTokenCache() =>
+	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.LoadIdTokenCache not implemented");
 	protected virtual void SetSystemProgramIdentification(ulong _0, ulong _1, Span<byte> _2) =>
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.SetSystemProgramIdentification");
@@ -22,11 +22,11 @@ public abstract class _IAdministrator_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.InvalidateTokenCache");
 	protected virtual ulong GetNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.GetNintendoAccountId not implemented");
-	protected virtual void GetNintendoAccountUserResourceCache() =>
+	protected virtual void GetNintendoAccountUserResourceCache(out ulong _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.GetNintendoAccountUserResourceCache not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext RefreshNintendoAccountUserResourceCacheAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.RefreshNintendoAccountUserResourceCacheAsync not implemented");
-	protected virtual void RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(uint _0) =>
+	protected virtual void RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(uint _0, out byte _1, out Nn.Account.Detail.IAsyncContext _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed not implemented");
 	protected virtual void GetNetworkServiceLicenseCache() =>
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.GetNetworkServiceLicenseCache");
@@ -48,7 +48,7 @@ public abstract class _IAdministrator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.SynchronizeProfileAsync not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext UploadProfileAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.UploadProfileAsync not implemented");
-	protected virtual void SynchronizeProfileAsyncIfSecondsElapsed(uint _0) =>
+	protected virtual void SynchronizeProfileAsyncIfSecondsElapsed(uint _0, out byte _1, out Nn.Account.Detail.IAsyncContext _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.SynchronizeProfileAsyncIfSecondsElapsed not implemented");
 	protected virtual byte IsLinkedWithNintendoAccount() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.IsLinkedWithNintendoAccount not implemented");
@@ -72,72 +72,105 @@ public abstract class _IAdministrator_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.DebugSetAvailabilityErrorDetail");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CheckAvailability
+			case 0x0: { // CheckAvailability
 				break;
-			case 0x1: // GetAccountId
+			}
+			case 0x1: { // GetAccountId
 				break;
-			case 0x2: // EnsureIdTokenCacheAsync
+			}
+			case 0x2: { // EnsureIdTokenCacheAsync
 				break;
-			case 0x3: // LoadIdTokenCache
+			}
+			case 0x3: { // LoadIdTokenCache
 				break;
-			case 0x64: // SetSystemProgramIdentification
+			}
+			case 0x64: { // SetSystemProgramIdentification
 				break;
-			case 0x6E: // GetServiceEntryRequirementCache
+			}
+			case 0x6E: { // GetServiceEntryRequirementCache
 				break;
-			case 0x6F: // InvalidateServiceEntryRequirementCache
+			}
+			case 0x6F: { // InvalidateServiceEntryRequirementCache
 				break;
-			case 0x70: // InvalidateTokenCache
+			}
+			case 0x70: { // InvalidateTokenCache
 				break;
-			case 0x78: // GetNintendoAccountId
+			}
+			case 0x78: { // GetNintendoAccountId
 				break;
-			case 0x82: // GetNintendoAccountUserResourceCache
+			}
+			case 0x82: { // GetNintendoAccountUserResourceCache
 				break;
-			case 0x83: // RefreshNintendoAccountUserResourceCacheAsync
+			}
+			case 0x83: { // RefreshNintendoAccountUserResourceCacheAsync
 				break;
-			case 0x84: // RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed
+			}
+			case 0x84: { // RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed
 				break;
-			case 0x8C: // GetNetworkServiceLicenseCache
+			}
+			case 0x8C: { // GetNetworkServiceLicenseCache
 				break;
-			case 0x8D: // RefreshNetworkServiceLicenseCacheAsync
+			}
+			case 0x8D: { // RefreshNetworkServiceLicenseCacheAsync
 				break;
-			case 0x8E: // RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed
+			}
+			case 0x8E: { // RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed
 				break;
-			case 0x96: // CreateAuthorizationRequest
+			}
+			case 0x96: { // CreateAuthorizationRequest
 				break;
-			case 0xC8: // IsRegistered
+			}
+			case 0xC8: { // IsRegistered
 				break;
-			case 0xC9: // RegisterAsync
+			}
+			case 0xC9: { // RegisterAsync
 				break;
-			case 0xCA: // UnregisterAsync
+			}
+			case 0xCA: { // UnregisterAsync
 				break;
-			case 0xCB: // DeleteRegistrationInfoLocally
+			}
+			case 0xCB: { // DeleteRegistrationInfoLocally
 				break;
-			case 0xDC: // SynchronizeProfileAsync
+			}
+			case 0xDC: { // SynchronizeProfileAsync
 				break;
-			case 0xDD: // UploadProfileAsync
+			}
+			case 0xDD: { // UploadProfileAsync
 				break;
-			case 0xDE: // SynchronizeProfileAsyncIfSecondsElapsed
+			}
+			case 0xDE: { // SynchronizeProfileAsyncIfSecondsElapsed
 				break;
-			case 0xFA: // IsLinkedWithNintendoAccount
+			}
+			case 0xFA: { // IsLinkedWithNintendoAccount
 				break;
-			case 0xFB: // CreateProcedureToLinkWithNintendoAccount
+			}
+			case 0xFB: { // CreateProcedureToLinkWithNintendoAccount
 				break;
-			case 0xFC: // ResumeProcedureToLinkWithNintendoAccount
+			}
+			case 0xFC: { // ResumeProcedureToLinkWithNintendoAccount
 				break;
-			case 0xFF: // CreateProcedureToUpdateLinkageStateOfNintendoAccount
+			}
+			case 0xFF: { // CreateProcedureToUpdateLinkageStateOfNintendoAccount
 				break;
-			case 0x100: // ResumeProcedureToUpdateLinkageStateOfNintendoAccount
+			}
+			case 0x100: { // ResumeProcedureToUpdateLinkageStateOfNintendoAccount
 				break;
-			case 0x104: // CreateProcedureToLinkNnidWithNintendoAccount
+			}
+			case 0x104: { // CreateProcedureToLinkNnidWithNintendoAccount
 				break;
-			case 0x105: // ResumeProcedureToLinkNnidWithNintendoAccount
+			}
+			case 0x105: { // ResumeProcedureToLinkNnidWithNintendoAccount
 				break;
-			case 0x118: // ProxyProcedureToAcquireApplicationAuthorizationForNintendoAccount
+			}
+			case 0x118: { // ProxyProcedureToAcquireApplicationAuthorizationForNintendoAccount
 				break;
-			case 0x3E5: // DebugUnlinkNintendoAccountAsync
+			}
+			case 0x3E5: { // DebugUnlinkNintendoAccountAsync
 				break;
-			case 0x3E6: // DebugSetAvailabilityErrorDetail
+			}
+			case 0x3E6: { // DebugSetAvailabilityErrorDetail
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Baas.IAdministrator");
 		}
@@ -146,19 +179,19 @@ public abstract class _IAdministrator_Base : IpcInterface {
 
 public partial class IFloatingRegistrationRequest : _IFloatingRegistrationRequest_Base;
 public abstract class _IFloatingRegistrationRequest_Base : IpcInterface {
-	protected virtual void GetSessionId() =>
+	protected virtual void GetSessionId(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.GetSessionId not implemented");
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.GetAccountId not implemented");
 	protected virtual ulong GetLinkedNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.GetLinkedNintendoAccountId not implemented");
-	protected virtual void GetNickname() =>
+	protected virtual void GetNickname(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.GetNickname not implemented");
-	protected virtual void GetProfileImage() =>
+	protected virtual void GetProfileImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.GetProfileImage not implemented");
-	protected virtual void LoadIdTokenCache() =>
+	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.LoadIdTokenCache not implemented");
-	protected virtual void RegisterUser() =>
+	protected virtual void RegisterUser(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.RegisterUser not implemented");
 	protected virtual void RegisterUserWithUid(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IFloatingRegistrationRequest.RegisterUserWithUid");
@@ -172,30 +205,42 @@ public abstract class _IFloatingRegistrationRequest_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.EnsureIdTokenCacheAsync not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSessionId
+			case 0x0: { // GetSessionId
 				break;
-			case 0xC: // GetAccountId
+			}
+			case 0xC: { // GetAccountId
 				break;
-			case 0xD: // GetLinkedNintendoAccountId
+			}
+			case 0xD: { // GetLinkedNintendoAccountId
 				break;
-			case 0xE: // GetNickname
+			}
+			case 0xE: { // GetNickname
 				break;
-			case 0xF: // GetProfileImage
+			}
+			case 0xF: { // GetProfileImage
 				break;
-			case 0x15: // LoadIdTokenCache
+			}
+			case 0x15: { // LoadIdTokenCache
 				break;
-			case 0x64: // RegisterUser
+			}
+			case 0x64: { // RegisterUser
 				break;
-			case 0x65: // RegisterUserWithUid
+			}
+			case 0x65: { // RegisterUserWithUid
 				break;
-			case 0x66: // RegisterNetworkServiceAccountAsync
+			}
+			case 0x66: { // RegisterNetworkServiceAccountAsync
 				break;
-			case 0x67: // RegisterNetworkServiceAccountWithUidAsync
+			}
+			case 0x67: { // RegisterNetworkServiceAccountWithUidAsync
 				break;
-			case 0x6E: // SetSystemProgramIdentification
+			}
+			case 0x6E: { // SetSystemProgramIdentification
 				break;
-			case 0x6F: // EnsureIdTokenCacheAsync
+			}
+			case 0x6F: { // EnsureIdTokenCacheAsync
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Baas.IFloatingRegistrationRequest");
 		}
@@ -204,32 +249,38 @@ public abstract class _IFloatingRegistrationRequest_Base : IpcInterface {
 
 public partial class IGuestLoginRequest : _IGuestLoginRequest_Base;
 public abstract class _IGuestLoginRequest_Base : IpcInterface {
-	protected virtual void GetSessionId() =>
+	protected virtual void GetSessionId(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IGuestLoginRequest.GetSessionId not implemented");
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IGuestLoginRequest.GetAccountId not implemented");
 	protected virtual ulong GetLinkedNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IGuestLoginRequest.GetLinkedNintendoAccountId not implemented");
-	protected virtual void GetNickname() =>
+	protected virtual void GetNickname(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IGuestLoginRequest.GetNickname not implemented");
-	protected virtual void GetProfileImage() =>
+	protected virtual void GetProfileImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IGuestLoginRequest.GetProfileImage not implemented");
-	protected virtual void LoadIdTokenCache() =>
+	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IGuestLoginRequest.LoadIdTokenCache not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSessionId
+			case 0x0: { // GetSessionId
 				break;
-			case 0xC: // GetAccountId
+			}
+			case 0xC: { // GetAccountId
 				break;
-			case 0xD: // GetLinkedNintendoAccountId
+			}
+			case 0xD: { // GetLinkedNintendoAccountId
 				break;
-			case 0xE: // GetNickname
+			}
+			case 0xE: { // GetNickname
 				break;
-			case 0xF: // GetProfileImage
+			}
+			case 0xF: { // GetProfileImage
 				break;
-			case 0x15: // LoadIdTokenCache
+			}
+			case 0x15: { // LoadIdTokenCache
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Baas.IGuestLoginRequest");
 		}
@@ -244,9 +295,9 @@ public abstract class _IManagerForApplication_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.GetAccountId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.EnsureIdTokenCacheAsync not implemented");
-	protected virtual void LoadIdTokenCache() =>
+	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.LoadIdTokenCache not implemented");
-	protected virtual void GetNintendoAccountUserResourceCacheForApplication() =>
+	protected virtual void GetNintendoAccountUserResourceCacheForApplication(out ulong _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.GetNintendoAccountUserResourceCacheForApplication not implemented");
 	protected virtual Nn.Account.Nas.IAuthorizationRequest CreateAuthorizationRequest(uint _0, KObject _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.CreateAuthorizationRequest not implemented");
@@ -254,20 +305,27 @@ public abstract class _IManagerForApplication_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForApplication.StoreOpenContext");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CheckAvailability
+			case 0x0: { // CheckAvailability
 				break;
-			case 0x1: // GetAccountId
+			}
+			case 0x1: { // GetAccountId
 				break;
-			case 0x2: // EnsureIdTokenCacheAsync
+			}
+			case 0x2: { // EnsureIdTokenCacheAsync
 				break;
-			case 0x3: // LoadIdTokenCache
+			}
+			case 0x3: { // LoadIdTokenCache
 				break;
-			case 0x82: // GetNintendoAccountUserResourceCacheForApplication
+			}
+			case 0x82: { // GetNintendoAccountUserResourceCacheForApplication
 				break;
-			case 0x96: // CreateAuthorizationRequest
+			}
+			case 0x96: { // CreateAuthorizationRequest
 				break;
-			case 0xA0: // StoreOpenContext
+			}
+			case 0xA0: { // StoreOpenContext
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Baas.IManagerForApplication");
 		}
@@ -282,7 +340,7 @@ public abstract class _IManagerForSystemService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.GetAccountId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.EnsureIdTokenCacheAsync not implemented");
-	protected virtual void LoadIdTokenCache() =>
+	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.LoadIdTokenCache not implemented");
 	protected virtual void SetSystemProgramIdentification(ulong _0, ulong _1, Span<byte> _2) =>
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.SetSystemProgramIdentification");
@@ -294,11 +352,11 @@ public abstract class _IManagerForSystemService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.InvalidateTokenCache");
 	protected virtual ulong GetNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.GetNintendoAccountId not implemented");
-	protected virtual void GetNintendoAccountUserResourceCache() =>
+	protected virtual void GetNintendoAccountUserResourceCache(out ulong _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.GetNintendoAccountUserResourceCache not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext RefreshNintendoAccountUserResourceCacheAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.RefreshNintendoAccountUserResourceCacheAsync not implemented");
-	protected virtual void RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(uint _0) =>
+	protected virtual void RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(uint _0, out byte _1, out Nn.Account.Detail.IAsyncContext _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed not implemented");
 	protected virtual void GetNetworkServiceLicenseCache() =>
 		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.GetNetworkServiceLicenseCache");
@@ -310,38 +368,54 @@ public abstract class _IManagerForSystemService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.CreateAuthorizationRequest not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CheckAvailability
+			case 0x0: { // CheckAvailability
 				break;
-			case 0x1: // GetAccountId
+			}
+			case 0x1: { // GetAccountId
 				break;
-			case 0x2: // EnsureIdTokenCacheAsync
+			}
+			case 0x2: { // EnsureIdTokenCacheAsync
 				break;
-			case 0x3: // LoadIdTokenCache
+			}
+			case 0x3: { // LoadIdTokenCache
 				break;
-			case 0x64: // SetSystemProgramIdentification
+			}
+			case 0x64: { // SetSystemProgramIdentification
 				break;
-			case 0x6E: // GetServiceEntryRequirementCache
+			}
+			case 0x6E: { // GetServiceEntryRequirementCache
 				break;
-			case 0x6F: // InvalidateServiceEntryRequirementCache
+			}
+			case 0x6F: { // InvalidateServiceEntryRequirementCache
 				break;
-			case 0x70: // InvalidateTokenCache
+			}
+			case 0x70: { // InvalidateTokenCache
 				break;
-			case 0x78: // GetNintendoAccountId
+			}
+			case 0x78: { // GetNintendoAccountId
 				break;
-			case 0x82: // GetNintendoAccountUserResourceCache
+			}
+			case 0x82: { // GetNintendoAccountUserResourceCache
 				break;
-			case 0x83: // RefreshNintendoAccountUserResourceCacheAsync
+			}
+			case 0x83: { // RefreshNintendoAccountUserResourceCacheAsync
 				break;
-			case 0x84: // RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed
+			}
+			case 0x84: { // RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed
 				break;
-			case 0x8C: // GetNetworkServiceLicenseCache
+			}
+			case 0x8C: { // GetNetworkServiceLicenseCache
 				break;
-			case 0x8D: // RefreshNetworkServiceLicenseCacheAsync
+			}
+			case 0x8D: { // RefreshNetworkServiceLicenseCacheAsync
 				break;
-			case 0x8E: // RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed
+			}
+			case 0x8E: { // RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed
 				break;
-			case 0x96: // CreateAuthorizationRequest
+			}
+			case 0x96: { // CreateAuthorizationRequest
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Baas.IManagerForSystemService");
 		}

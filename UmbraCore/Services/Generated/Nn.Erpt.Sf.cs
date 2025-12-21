@@ -20,20 +20,27 @@ public abstract class _IContext_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown6");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SubmitContext
+			case 0x0: { // SubmitContext
 				break;
-			case 0x1: // CreateReport
+			}
+			case 0x1: { // CreateReport
 				break;
-			case 0x2: // Unknown2
+			}
+			case 0x2: { // Unknown2
 				break;
-			case 0x3: // Unknown3
+			}
+			case 0x3: { // Unknown3
 				break;
-			case 0x4: // Unknown4
+			}
+			case 0x4: { // Unknown4
 				break;
-			case 0x5: // Unknown5
+			}
+			case 0x5: { // Unknown5
 				break;
-			case 0x6: // Unknown6
+			}
+			case 0x6: { // Unknown6
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Erpt.Sf.IContext");
 		}
@@ -42,7 +49,7 @@ public abstract class _IContext_Base : IpcInterface {
 
 public partial class IManager : _IManager_Base;
 public abstract class _IManager_Base : IpcInterface {
-	protected virtual void GetReportList(Span<byte> _0) =>
+	protected virtual void GetReportList(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IManager.GetReportList not implemented");
 	protected virtual KObject GetEvent() =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IManager.GetEvent not implemented");
@@ -54,16 +61,21 @@ public abstract class _IManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IManager.Unknown4");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetReportList
+			case 0x0: { // GetReportList
 				break;
-			case 0x1: // GetEvent
+			}
+			case 0x1: { // GetEvent
 				break;
-			case 0x2: // Unknown2
+			}
+			case 0x2: { // Unknown2
 				break;
-			case 0x3: // Unknown3
+			}
+			case 0x3: { // Unknown3
 				break;
-			case 0x4: // Unknown4
+			}
+			case 0x4: { // Unknown4
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Erpt.Sf.IManager");
 		}
@@ -74,30 +86,36 @@ public partial class IReport : _IReport_Base;
 public abstract class _IReport_Base : IpcInterface {
 	protected virtual void Open(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.Open");
-	protected virtual void Read() =>
+	protected virtual void Read(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.Read not implemented");
 	protected virtual void SetFlags(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.SetFlags");
-	protected virtual void GetFlags() =>
+	protected virtual void GetFlags(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.GetFlags not implemented");
 	protected virtual void Close() =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.Close");
-	protected virtual void GetSize() =>
+	protected virtual void GetSize(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.GetSize not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Open
+			case 0x0: { // Open
 				break;
-			case 0x1: // Read
+			}
+			case 0x1: { // Read
 				break;
-			case 0x2: // SetFlags
+			}
+			case 0x2: { // SetFlags
 				break;
-			case 0x3: // GetFlags
+			}
+			case 0x3: { // GetFlags
 				break;
-			case 0x4: // Close
+			}
+			case 0x4: { // Close
 				break;
-			case 0x5: // GetSize
+			}
+			case 0x5: { // GetSize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Erpt.Sf.IReport");
 		}
@@ -112,10 +130,12 @@ public abstract class _ISession_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Erpt.Sf.ISession.OpenManager not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenReport
+			case 0x0: { // OpenReport
 				break;
-			case 0x1: // OpenManager
+			}
+			case 0x1: { // OpenManager
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Erpt.Sf.ISession");
 		}

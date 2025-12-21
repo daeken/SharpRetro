@@ -18,21 +18,21 @@ public abstract class _IFriendService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetCompletionEvent not implemented");
 	protected virtual void Cancel() =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.Cancel");
-	protected virtual void GetFriendListIds(uint _0, Span<byte> _1, Span<byte> _2, ulong _3, ulong _4) =>
+	protected virtual void GetFriendListIds(uint _0, Span<byte> _1, Span<byte> _2, ulong _3, ulong _4, out uint _5, Span<ulong> _6) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendListIds not implemented");
-	protected virtual void GetFriendList(uint _0, Span<byte> _1, Span<byte> _2, ulong _3, ulong _4) =>
+	protected virtual void GetFriendList(uint _0, Span<byte> _1, Span<byte> _2, ulong _3, ulong _4, out uint _5, Span<byte> _6) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendList not implemented");
-	protected virtual void UpdateFriendInfo(Span<byte> _0, ulong _1, ulong _2, Span<ulong> _3) =>
+	protected virtual void UpdateFriendInfo(Span<byte> _0, ulong _1, ulong _2, Span<ulong> _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.UpdateFriendInfo not implemented");
-	protected virtual void GetFriendProfileImage(Span<byte> _0, ulong _1) =>
+	protected virtual void GetFriendProfileImage(Span<byte> _0, ulong _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendProfileImage not implemented");
 	protected virtual void SendFriendRequestForApplication(Span<byte> _0, ulong _1, ulong _2, ulong _3, Span<byte> _4, Span<byte> _5) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.SendFriendRequestForApplication");
 	protected virtual void AddFacedFriendRequestForApplication(Span<byte> _0, Span<byte> _1, Span<byte> _2, ulong _3, ulong _4, Span<byte> _5, Span<byte> _6, Span<byte> _7) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.AddFacedFriendRequestForApplication");
-	protected virtual void GetBlockedUserListIds(uint _0, Span<byte> _1) =>
+	protected virtual void GetBlockedUserListIds(uint _0, Span<byte> _1, out uint _2, Span<ulong> _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetBlockedUserListIds not implemented");
-	protected virtual void GetProfileList(Span<byte> _0, Span<ulong> _1) =>
+	protected virtual void GetProfileList(Span<byte> _0, Span<ulong> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetProfileList not implemented");
 	protected virtual void DeclareOpenOnlinePlaySession(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.DeclareOpenOnlinePlaySession");
@@ -40,33 +40,33 @@ public abstract class _IFriendService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.DeclareCloseOnlinePlaySession");
 	protected virtual void UpdateUserPresence(Span<byte> _0, ulong _1, ulong _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.UpdateUserPresence");
-	protected virtual void GetPlayHistoryRegistrationKey(byte _0, Span<byte> _1) =>
+	protected virtual void GetPlayHistoryRegistrationKey(byte _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetPlayHistoryRegistrationKey not implemented");
-	protected virtual void GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId(byte _0, ulong _1) =>
+	protected virtual void GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId(byte _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId not implemented");
 	protected virtual void AddPlayHistory(Span<byte> _0, ulong _1, ulong _2, Span<byte> _3, Span<byte> _4, Span<byte> _5) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.AddPlayHistory");
-	protected virtual void GetProfileImageUrl(Span<byte> _0, uint _1) =>
+	protected virtual void GetProfileImageUrl(Span<byte> _0, uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetProfileImageUrl not implemented");
 	protected virtual uint GetFriendCount(Span<byte> _0, Span<byte> _1, ulong _2, ulong _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendCount not implemented");
 	protected virtual uint GetNewlyFriendCount(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetNewlyFriendCount not implemented");
-	protected virtual void GetFriendDetailedInfo(Span<byte> _0, ulong _1) =>
+	protected virtual void GetFriendDetailedInfo(Span<byte> _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendDetailedInfo not implemented");
 	protected virtual void SyncFriendList(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.SyncFriendList");
 	protected virtual void RequestSyncFriendList(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.RequestSyncFriendList");
-	protected virtual void LoadFriendSetting(Span<byte> _0, ulong _1) =>
+	protected virtual void LoadFriendSetting(Span<byte> _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.LoadFriendSetting not implemented");
-	protected virtual void GetReceivedFriendRequestCount(Span<byte> _0) =>
+	protected virtual void GetReceivedFriendRequestCount(Span<byte> _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetReceivedFriendRequestCount not implemented");
-	protected virtual void GetFriendRequestList(uint _0, uint _1, Span<byte> _2) =>
+	protected virtual void GetFriendRequestList(uint _0, uint _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendRequestList not implemented");
-	protected virtual void GetFriendCandidateList(uint _0, Span<byte> _1) =>
+	protected virtual void GetFriendCandidateList(uint _0, Span<byte> _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFriendCandidateList not implemented");
-	protected virtual void GetNintendoNetworkIdInfo(uint _0, Span<byte> _1) =>
+	protected virtual void GetNintendoNetworkIdInfo(uint _0, Span<byte> _1, out uint _2, Span<byte> _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetNintendoNetworkIdInfo not implemented");
 	protected virtual void GetSnsAccountLinkage() =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.GetSnsAccountLinkage");
@@ -74,27 +74,27 @@ public abstract class _IFriendService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.GetSnsAccountProfile");
 	protected virtual void GetSnsAccountFriendList() =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.GetSnsAccountFriendList");
-	protected virtual void GetBlockedUserList(uint _0, Span<byte> _1) =>
+	protected virtual void GetBlockedUserList(uint _0, Span<byte> _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetBlockedUserList not implemented");
 	protected virtual void SyncBlockedUserList(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.SyncBlockedUserList");
-	protected virtual void GetProfileExtraList(Span<byte> _0, Span<ulong> _1) =>
+	protected virtual void GetProfileExtraList(Span<byte> _0, Span<ulong> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetProfileExtraList not implemented");
-	protected virtual void GetRelationship(Span<byte> _0, ulong _1) =>
+	protected virtual void GetRelationship(Span<byte> _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetRelationship not implemented");
-	protected virtual void GetUserPresenceView(Span<byte> _0) =>
+	protected virtual void GetUserPresenceView(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetUserPresenceView not implemented");
-	protected virtual void GetPlayHistoryList(uint _0, Span<byte> _1) =>
+	protected virtual void GetPlayHistoryList(uint _0, Span<byte> _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetPlayHistoryList not implemented");
-	protected virtual void GetPlayHistoryStatistics(Span<byte> _0) =>
+	protected virtual void GetPlayHistoryStatistics(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetPlayHistoryStatistics not implemented");
-	protected virtual void LoadUserSetting(Span<byte> _0) =>
+	protected virtual void LoadUserSetting(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.LoadUserSetting not implemented");
 	protected virtual void SyncUserSetting(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.SyncUserSetting");
 	protected virtual void RequestListSummaryOverlayNotification() =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.RequestListSummaryOverlayNotification");
-	protected virtual void GetExternalApplicationCatalog(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetExternalApplicationCatalog(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetExternalApplicationCatalog not implemented");
 	protected virtual void DropFriendNewlyFlags(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.DropFriendNewlyFlags");
@@ -118,15 +118,15 @@ public abstract class _IFriendService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.RejectFriendRequest");
 	protected virtual void ReadFriendRequest(Span<byte> _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.ReadFriendRequest");
-	protected virtual void GetFacedFriendRequestRegistrationKey(Span<byte> _0) =>
+	protected virtual void GetFacedFriendRequestRegistrationKey(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFacedFriendRequestRegistrationKey not implemented");
 	protected virtual void AddFacedFriendRequest(Span<byte> _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.AddFacedFriendRequest");
 	protected virtual void CancelFacedFriendRequest(Span<byte> _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.CancelFacedFriendRequest");
-	protected virtual void GetFacedFriendRequestProfileImage(Span<byte> _0, ulong _1) =>
+	protected virtual void GetFacedFriendRequestProfileImage(Span<byte> _0, ulong _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFacedFriendRequestProfileImage not implemented");
-	protected virtual void GetFacedFriendRequestProfileImageFromPath(Span<byte> _0) =>
+	protected virtual void GetFacedFriendRequestProfileImageFromPath(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetFacedFriendRequestProfileImageFromPath not implemented");
 	protected virtual void SendFriendRequestWithExternalApplicationCatalogId(uint _0, Span<byte> _1, ulong _2, Span<byte> _3, Span<byte> _4, Span<byte> _5) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.SendFriendRequestWithExternalApplicationCatalogId");
@@ -144,7 +144,7 @@ public abstract class _IFriendService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.BlockUserWithApplicationInfo");
 	protected virtual void UnblockUser(Span<byte> _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.UnblockUser");
-	protected virtual void GetProfileExtraFromFriendCode(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetProfileExtraFromFriendCode(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendService.GetProfileExtraFromFriendCode not implemented");
 	protected virtual void DeletePlayHistory(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.DeletePlayHistory");
@@ -162,152 +162,225 @@ public abstract class _IFriendService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.IFriendService.DeleteNetworkServiceAccountCache");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCompletionEvent
+			case 0x0: { // GetCompletionEvent
 				break;
-			case 0x1: // Cancel
+			}
+			case 0x1: { // Cancel
 				break;
-			case 0x2774: // GetFriendListIds
+			}
+			case 0x2774: { // GetFriendListIds
 				break;
-			case 0x2775: // GetFriendList
+			}
+			case 0x2775: { // GetFriendList
 				break;
-			case 0x2776: // UpdateFriendInfo
+			}
+			case 0x2776: { // UpdateFriendInfo
 				break;
-			case 0x277E: // GetFriendProfileImage
+			}
+			case 0x277E: { // GetFriendProfileImage
 				break;
-			case 0x27D8: // SendFriendRequestForApplication
+			}
+			case 0x27D8: { // SendFriendRequestForApplication
 				break;
-			case 0x27E3: // AddFacedFriendRequestForApplication
+			}
+			case 0x27E3: { // AddFacedFriendRequestForApplication
 				break;
-			case 0x28A0: // GetBlockedUserListIds
+			}
+			case 0x28A0: { // GetBlockedUserListIds
 				break;
-			case 0x2904: // GetProfileList
+			}
+			case 0x2904: { // GetProfileList
 				break;
-			case 0x2968: // DeclareOpenOnlinePlaySession
+			}
+			case 0x2968: { // DeclareOpenOnlinePlaySession
 				break;
-			case 0x2969: // DeclareCloseOnlinePlaySession
+			}
+			case 0x2969: { // DeclareCloseOnlinePlaySession
 				break;
-			case 0x2972: // UpdateUserPresence
+			}
+			case 0x2972: { // UpdateUserPresence
 				break;
-			case 0x29CC: // GetPlayHistoryRegistrationKey
+			}
+			case 0x29CC: { // GetPlayHistoryRegistrationKey
 				break;
-			case 0x29CD: // GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId
+			}
+			case 0x29CD: { // GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId
 				break;
-			case 0x29CE: // AddPlayHistory
+			}
+			case 0x29CE: { // AddPlayHistory
 				break;
-			case 0x2AF8: // GetProfileImageUrl
+			}
+			case 0x2AF8: { // GetProfileImageUrl
 				break;
-			case 0x4E84: // GetFriendCount
+			}
+			case 0x4E84: { // GetFriendCount
 				break;
-			case 0x4E85: // GetNewlyFriendCount
+			}
+			case 0x4E85: { // GetNewlyFriendCount
 				break;
-			case 0x4E86: // GetFriendDetailedInfo
+			}
+			case 0x4E86: { // GetFriendDetailedInfo
 				break;
-			case 0x4E87: // SyncFriendList
+			}
+			case 0x4E87: { // SyncFriendList
 				break;
-			case 0x4E88: // RequestSyncFriendList
+			}
+			case 0x4E88: { // RequestSyncFriendList
 				break;
-			case 0x4E8E: // LoadFriendSetting
+			}
+			case 0x4E8E: { // LoadFriendSetting
 				break;
-			case 0x4EE8: // GetReceivedFriendRequestCount
+			}
+			case 0x4EE8: { // GetReceivedFriendRequestCount
 				break;
-			case 0x4EE9: // GetFriendRequestList
+			}
+			case 0x4EE9: { // GetFriendRequestList
 				break;
-			case 0x4F4C: // GetFriendCandidateList
+			}
+			case 0x4F4C: { // GetFriendCandidateList
 				break;
-			case 0x4F4D: // GetNintendoNetworkIdInfo
+			}
+			case 0x4F4D: { // GetNintendoNetworkIdInfo
 				break;
-			case 0x4F4E: // GetSnsAccountLinkage
+			}
+			case 0x4F4E: { // GetSnsAccountLinkage
 				break;
-			case 0x4F4F: // GetSnsAccountProfile
+			}
+			case 0x4F4F: { // GetSnsAccountProfile
 				break;
-			case 0x4F50: // GetSnsAccountFriendList
+			}
+			case 0x4F50: { // GetSnsAccountFriendList
 				break;
-			case 0x4FB0: // GetBlockedUserList
+			}
+			case 0x4FB0: { // GetBlockedUserList
 				break;
-			case 0x4FB1: // SyncBlockedUserList
+			}
+			case 0x4FB1: { // SyncBlockedUserList
 				break;
-			case 0x5014: // GetProfileExtraList
+			}
+			case 0x5014: { // GetProfileExtraList
 				break;
-			case 0x5015: // GetRelationship
+			}
+			case 0x5015: { // GetRelationship
 				break;
-			case 0x5078: // GetUserPresenceView
+			}
+			case 0x5078: { // GetUserPresenceView
 				break;
-			case 0x50DC: // GetPlayHistoryList
+			}
+			case 0x50DC: { // GetPlayHistoryList
 				break;
-			case 0x50DD: // GetPlayHistoryStatistics
+			}
+			case 0x50DD: { // GetPlayHistoryStatistics
 				break;
-			case 0x5140: // LoadUserSetting
+			}
+			case 0x5140: { // LoadUserSetting
 				break;
-			case 0x5141: // SyncUserSetting
+			}
+			case 0x5141: { // SyncUserSetting
 				break;
-			case 0x51A4: // RequestListSummaryOverlayNotification
+			}
+			case 0x51A4: { // RequestListSummaryOverlayNotification
 				break;
-			case 0x5208: // GetExternalApplicationCatalog
+			}
+			case 0x5208: { // GetExternalApplicationCatalog
 				break;
-			case 0x7594: // DropFriendNewlyFlags
+			}
+			case 0x7594: { // DropFriendNewlyFlags
 				break;
-			case 0x7595: // DeleteFriend
+			}
+			case 0x7595: { // DeleteFriend
 				break;
-			case 0x759E: // DropFriendNewlyFlag
+			}
+			case 0x759E: { // DropFriendNewlyFlag
 				break;
-			case 0x75A8: // ChangeFriendFavoriteFlag
+			}
+			case 0x75A8: { // ChangeFriendFavoriteFlag
 				break;
-			case 0x75A9: // ChangeFriendOnlineNotificationFlag
+			}
+			case 0x75A9: { // ChangeFriendOnlineNotificationFlag
 				break;
-			case 0x75F8: // SendFriendRequest
+			}
+			case 0x75F8: { // SendFriendRequest
 				break;
-			case 0x75F9: // SendFriendRequestWithApplicationInfo
+			}
+			case 0x75F9: { // SendFriendRequestWithApplicationInfo
 				break;
-			case 0x75FA: // CancelFriendRequest
+			}
+			case 0x75FA: { // CancelFriendRequest
 				break;
-			case 0x75FB: // AcceptFriendRequest
+			}
+			case 0x75FB: { // AcceptFriendRequest
 				break;
-			case 0x75FC: // RejectFriendRequest
+			}
+			case 0x75FC: { // RejectFriendRequest
 				break;
-			case 0x75FD: // ReadFriendRequest
+			}
+			case 0x75FD: { // ReadFriendRequest
 				break;
-			case 0x7602: // GetFacedFriendRequestRegistrationKey
+			}
+			case 0x7602: { // GetFacedFriendRequestRegistrationKey
 				break;
-			case 0x7603: // AddFacedFriendRequest
+			}
+			case 0x7603: { // AddFacedFriendRequest
 				break;
-			case 0x7604: // CancelFacedFriendRequest
+			}
+			case 0x7604: { // CancelFacedFriendRequest
 				break;
-			case 0x7605: // GetFacedFriendRequestProfileImage
+			}
+			case 0x7605: { // GetFacedFriendRequestProfileImage
 				break;
-			case 0x7606: // GetFacedFriendRequestProfileImageFromPath
+			}
+			case 0x7606: { // GetFacedFriendRequestProfileImageFromPath
 				break;
-			case 0x7607: // SendFriendRequestWithExternalApplicationCatalogId
+			}
+			case 0x7607: { // SendFriendRequestWithExternalApplicationCatalogId
 				break;
-			case 0x7608: // ResendFacedFriendRequest
+			}
+			case 0x7608: { // ResendFacedFriendRequest
 				break;
-			case 0x7609: // SendFriendRequestWithNintendoNetworkIdInfo
+			}
+			case 0x7609: { // SendFriendRequestWithNintendoNetworkIdInfo
 				break;
-			case 0x765C: // GetSnsAccountLinkPageUrl
+			}
+			case 0x765C: { // GetSnsAccountLinkPageUrl
 				break;
-			case 0x765D: // UnlinkSnsAccount
+			}
+			case 0x765D: { // UnlinkSnsAccount
 				break;
-			case 0x76C0: // BlockUser
+			}
+			case 0x76C0: { // BlockUser
 				break;
-			case 0x76C1: // BlockUserWithApplicationInfo
+			}
+			case 0x76C1: { // BlockUserWithApplicationInfo
 				break;
-			case 0x76C2: // UnblockUser
+			}
+			case 0x76C2: { // UnblockUser
 				break;
-			case 0x7724: // GetProfileExtraFromFriendCode
+			}
+			case 0x7724: { // GetProfileExtraFromFriendCode
 				break;
-			case 0x77EC: // DeletePlayHistory
+			}
+			case 0x77EC: { // DeletePlayHistory
 				break;
-			case 0x785A: // ChangePresencePermission
+			}
+			case 0x785A: { // ChangePresencePermission
 				break;
-			case 0x785B: // ChangeFriendRequestReception
+			}
+			case 0x785B: { // ChangeFriendRequestReception
 				break;
-			case 0x785C: // ChangePlayLogPermission
+			}
+			case 0x785C: { // ChangePlayLogPermission
 				break;
-			case 0x7864: // IssueFriendCode
+			}
+			case 0x7864: { // IssueFriendCode
 				break;
-			case 0x786E: // ClearPlayLog
+			}
+			case 0x786E: { // ClearPlayLog
 				break;
-			case 0xC2EC: // DeleteNetworkServiceAccountCache
+			}
+			case 0xC2EC: { // DeleteNetworkServiceAccountCache
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Friends.Detail.Ipc.IFriendService");
 		}
@@ -320,8 +393,9 @@ public abstract class _IFriendServiceCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IFriendServiceCreator.Create not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Create
+			case 0x0: { // Create
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Friends.Detail.Ipc.IFriendServiceCreator");
 		}
@@ -334,16 +408,19 @@ public abstract class _INotificationService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.INotificationService.GetEvent not implemented");
 	protected virtual void Clear() =>
 		Console.WriteLine("Stub hit for Nn.Friends.Detail.Ipc.INotificationService.Clear");
-	protected virtual void Pop() =>
+	protected virtual void Pop(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.INotificationService.Pop not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetEvent
+			case 0x0: { // GetEvent
 				break;
-			case 0x1: // Clear
+			}
+			case 0x1: { // Clear
 				break;
-			case 0x2: // Pop
+			}
+			case 0x2: { // Pop
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Friends.Detail.Ipc.INotificationService");
 		}
@@ -360,12 +437,15 @@ public abstract class _IServiceCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IServiceCreator.CreateDaemonSuspendSessionService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateFriendService
+			case 0x0: { // CreateFriendService
 				break;
-			case 0x1: // CreateNotificationService
+			}
+			case 0x1: { // CreateNotificationService
 				break;
-			case 0x2: // CreateDaemonSuspendSessionService
+			}
+			case 0x2: { // CreateDaemonSuspendSessionService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Friends.Detail.Ipc.IServiceCreator");
 		}

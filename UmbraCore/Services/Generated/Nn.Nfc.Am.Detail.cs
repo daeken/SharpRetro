@@ -12,12 +12,15 @@ public abstract class _IAm_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfc.Am.Detail.IAm.NotifyForegroundApplet");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // Finalize
+			}
+			case 0x1: { // Finalize
 				break;
-			case 0x2: // NotifyForegroundApplet
+			}
+			case 0x2: { // NotifyForegroundApplet
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfc.Am.Detail.IAm");
 		}
@@ -30,8 +33,9 @@ public abstract class _IAmManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfc.Am.Detail.IAmManager.CreateAmInterface not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateAmInterface
+			case 0x0: { // CreateAmInterface
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfc.Am.Detail.IAmManager");
 		}

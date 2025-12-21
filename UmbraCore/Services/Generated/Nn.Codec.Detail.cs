@@ -4,12 +4,13 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Codec.Detail;
 public partial class JpegDecoder : _JpegDecoder_Base;
 public abstract class _JpegDecoder_Base : IpcInterface {
-	protected virtual void Unknown3001(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown3001(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Codec.Detail.JpegDecoder.Unknown3001 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0xBB9: // Unknown3001
+			case 0xBB9: { // Unknown3001
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Codec.Detail.JpegDecoder");
 		}
@@ -18,32 +19,38 @@ public abstract class _JpegDecoder_Base : IpcInterface {
 
 public partial class IHardwareOpusDecoder : _IHardwareOpusDecoder_Base;
 public abstract class _IHardwareOpusDecoder_Base : IpcInterface {
-	protected virtual void DecodeInterleaved(Span<byte> _0) =>
+	protected virtual void DecodeInterleaved(Span<byte> _0, out uint _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.DecodeInterleaved not implemented");
 	protected virtual void SetContext(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Codec.Detail.IHardwareOpusDecoder.SetContext");
-	protected virtual void Unknown2(Span<byte> _0) =>
+	protected virtual void Unknown2(Span<byte> _0, out uint _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.Unknown2 not implemented");
 	protected virtual void Unknown3(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Codec.Detail.IHardwareOpusDecoder.Unknown3");
-	protected virtual void Unknown4(Span<byte> _0) =>
+	protected virtual void Unknown4(Span<byte> _0, out uint _1, out uint _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.Unknown4 not implemented");
-	protected virtual void Unknown5(Span<byte> _0) =>
+	protected virtual void Unknown5(Span<byte> _0, out uint _1, out uint _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.Unknown5 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // DecodeInterleaved
+			case 0x0: { // DecodeInterleaved
 				break;
-			case 0x1: // SetContext
+			}
+			case 0x1: { // SetContext
 				break;
-			case 0x2: // Unknown2
+			}
+			case 0x2: { // Unknown2
 				break;
-			case 0x3: // Unknown3
+			}
+			case 0x3: { // Unknown3
 				break;
-			case 0x4: // Unknown4
+			}
+			case 0x4: { // Unknown4
 				break;
-			case 0x5: // Unknown5
+			}
+			case 0x5: { // Unknown5
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Codec.Detail.IHardwareOpusDecoder");
 		}
@@ -62,14 +69,18 @@ public abstract class _IHardwareOpusDecoderManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoderManager.GetWorkBufferSizeMultiStream not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // GetWorkBufferSize
+			}
+			case 0x1: { // GetWorkBufferSize
 				break;
-			case 0x2: // InitializeMultiStream
+			}
+			case 0x2: { // InitializeMultiStream
 				break;
-			case 0x3: // GetWorkBufferSizeMultiStream
+			}
+			case 0x3: { // GetWorkBufferSizeMultiStream
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Codec.Detail.IHardwareOpusDecoderManager");
 		}

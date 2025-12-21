@@ -18,7 +18,7 @@ public abstract class _IIrSensorServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorServer.RunClusteringProcessor");
 	protected virtual void RunImageTransferProcessor(uint _0, ulong _1, Span<byte> _2, ulong _3, ulong _4, KObject _5) =>
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorServer.RunImageTransferProcessor");
-	protected virtual void GetImageTransferProcessorState(uint _0, ulong _1, ulong _2) =>
+	protected virtual void GetImageTransferProcessorState(uint _0, ulong _1, ulong _2, Span<byte> _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Irsensor.IIrSensorServer.GetImageTransferProcessorState not implemented");
 	protected virtual void RunTeraPluginProcessor(uint _0, Span<byte> _1, ulong _2, ulong _3) =>
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorServer.RunTeraPluginProcessor");
@@ -42,42 +42,60 @@ public abstract class _IIrSensorServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorServer.ActivateIrsensorWithFunctionLevel");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x12E: // ActivateIrsensor
+			case 0x12E: { // ActivateIrsensor
 				break;
-			case 0x12F: // DeactivateIrsensor
+			}
+			case 0x12F: { // DeactivateIrsensor
 				break;
-			case 0x130: // GetIrsensorSharedMemoryHandle
+			}
+			case 0x130: { // GetIrsensorSharedMemoryHandle
 				break;
-			case 0x131: // StopImageProcessor
+			}
+			case 0x131: { // StopImageProcessor
 				break;
-			case 0x132: // RunMomentProcessor
+			}
+			case 0x132: { // RunMomentProcessor
 				break;
-			case 0x133: // RunClusteringProcessor
+			}
+			case 0x133: { // RunClusteringProcessor
 				break;
-			case 0x134: // RunImageTransferProcessor
+			}
+			case 0x134: { // RunImageTransferProcessor
 				break;
-			case 0x135: // GetImageTransferProcessorState
+			}
+			case 0x135: { // GetImageTransferProcessorState
 				break;
-			case 0x136: // RunTeraPluginProcessor
+			}
+			case 0x136: { // RunTeraPluginProcessor
 				break;
-			case 0x137: // GetNpadIrCameraHandle
+			}
+			case 0x137: { // GetNpadIrCameraHandle
 				break;
-			case 0x138: // RunPointingProcessor
+			}
+			case 0x138: { // RunPointingProcessor
 				break;
-			case 0x139: // SuspendImageProcessor
+			}
+			case 0x139: { // SuspendImageProcessor
 				break;
-			case 0x13A: // CheckFirmwareVersion
+			}
+			case 0x13A: { // CheckFirmwareVersion
 				break;
-			case 0x13B: // SetFunctionLevel
+			}
+			case 0x13B: { // SetFunctionLevel
 				break;
-			case 0x13C: // RunImageTransferExProcessor
+			}
+			case 0x13C: { // RunImageTransferExProcessor
 				break;
-			case 0x13D: // RunIrLedProcessor
+			}
+			case 0x13D: { // RunIrLedProcessor
 				break;
-			case 0x13E: // StopImageProcessorAsync
+			}
+			case 0x13E: { // StopImageProcessorAsync
 				break;
-			case 0x13F: // ActivateIrsensorWithFunctionLevel
+			}
+			case 0x13F: { // ActivateIrsensorWithFunctionLevel
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Irsensor.IIrSensorServer");
 		}
@@ -96,14 +114,18 @@ public abstract class _IIrSensorSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorSystemServer.EnableAppletToGetInput");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1F4: // SetAppletResourceUserId
+			case 0x1F4: { // SetAppletResourceUserId
 				break;
-			case 0x1F5: // RegisterAppletResourceUserId
+			}
+			case 0x1F5: { // RegisterAppletResourceUserId
 				break;
-			case 0x1F6: // UnregisterAppletResourceUserId
+			}
+			case 0x1F6: { // UnregisterAppletResourceUserId
 				break;
-			case 0x1F7: // EnableAppletToGetInput
+			}
+			case 0x1F7: { // EnableAppletToGetInput
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Irsensor.IIrSensorSystemServer");
 		}

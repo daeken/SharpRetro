@@ -52,7 +52,6 @@ public unsafe struct Usb_bos_dev_capability_descriptor {
 	public byte BLength;
 	public byte BDescriptorType;
 	public byte BDevCapabilityType;
-	public Span<byte> Dev_capability_data;
 }
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public unsafe struct Usb_bos_descriptor {
@@ -60,7 +59,6 @@ public unsafe struct Usb_bos_descriptor {
 	public byte BDescriptorType;
 	public ushort WTotalLength;
 	public byte BNumDeviceCaps;
-	public Span<Nn.Usb.Usb_bos_dev_capability_descriptor> Dev_capability;
 }
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public unsafe struct Usb_endpoint_descriptor {

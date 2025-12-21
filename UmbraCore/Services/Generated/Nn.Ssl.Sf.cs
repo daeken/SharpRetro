@@ -14,7 +14,7 @@ public abstract class _ISslConnection_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetIoMode");
 	protected virtual uint GetSocketDescriptor() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetSocketDescriptor not implemented");
-	protected virtual void GetHostName() =>
+	protected virtual void GetHostName(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetHostName not implemented");
 	protected virtual uint GetVerifyOption() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetVerifyOption not implemented");
@@ -22,15 +22,15 @@ public abstract class _ISslConnection_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetIoMode not implemented");
 	protected virtual void DoHandshake() =>
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.DoHandshake");
-	protected virtual void DoHandshakeGetServerCert() =>
+	protected virtual void DoHandshakeGetServerCert(out uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.DoHandshakeGetServerCert not implemented");
-	protected virtual void Read() =>
+	protected virtual void Read(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.Read not implemented");
 	protected virtual uint Write(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.Write not implemented");
 	protected virtual uint Pending() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.Pending not implemented");
-	protected virtual void Peek() =>
+	protected virtual void Peek(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.Peek not implemented");
 	protected virtual uint Poll(uint _0, uint _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.Poll not implemented");
@@ -52,64 +52,90 @@ public abstract class _ISslConnection_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetOption");
 	protected virtual byte GetOption(uint _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetOption not implemented");
-	protected virtual void GetVerifyCertErrors() =>
+	protected virtual void GetVerifyCertErrors(out uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetVerifyCertErrors not implemented");
-	protected virtual void GetCipherInfo(uint _0) =>
+	protected virtual void GetCipherInfo(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetCipherInfo not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetSocketDescriptor
+			case 0x0: { // SetSocketDescriptor
 				break;
-			case 0x1: // SetHostName
+			}
+			case 0x1: { // SetHostName
 				break;
-			case 0x2: // SetVerifyOption
+			}
+			case 0x2: { // SetVerifyOption
 				break;
-			case 0x3: // SetIoMode
+			}
+			case 0x3: { // SetIoMode
 				break;
-			case 0x4: // GetSocketDescriptor
+			}
+			case 0x4: { // GetSocketDescriptor
 				break;
-			case 0x5: // GetHostName
+			}
+			case 0x5: { // GetHostName
 				break;
-			case 0x6: // GetVerifyOption
+			}
+			case 0x6: { // GetVerifyOption
 				break;
-			case 0x7: // GetIoMode
+			}
+			case 0x7: { // GetIoMode
 				break;
-			case 0x8: // DoHandshake
+			}
+			case 0x8: { // DoHandshake
 				break;
-			case 0x9: // DoHandshakeGetServerCert
+			}
+			case 0x9: { // DoHandshakeGetServerCert
 				break;
-			case 0xA: // Read
+			}
+			case 0xA: { // Read
 				break;
-			case 0xB: // Write
+			}
+			case 0xB: { // Write
 				break;
-			case 0xC: // Pending
+			}
+			case 0xC: { // Pending
 				break;
-			case 0xD: // Peek
+			}
+			case 0xD: { // Peek
 				break;
-			case 0xE: // Poll
+			}
+			case 0xE: { // Poll
 				break;
-			case 0xF: // GetVerifyCertError
+			}
+			case 0xF: { // GetVerifyCertError
 				break;
-			case 0x10: // GetNeededServerCertBufferSize
+			}
+			case 0x10: { // GetNeededServerCertBufferSize
 				break;
-			case 0x11: // SetSessionCacheMode
+			}
+			case 0x11: { // SetSessionCacheMode
 				break;
-			case 0x12: // GetSessionCacheMode
+			}
+			case 0x12: { // GetSessionCacheMode
 				break;
-			case 0x13: // FlushSessionCache
+			}
+			case 0x13: { // FlushSessionCache
 				break;
-			case 0x14: // SetRenegotiationMode
+			}
+			case 0x14: { // SetRenegotiationMode
 				break;
-			case 0x15: // GetRenegotiationMode
+			}
+			case 0x15: { // GetRenegotiationMode
 				break;
-			case 0x16: // SetOption
+			}
+			case 0x16: { // SetOption
 				break;
-			case 0x17: // GetOption
+			}
+			case 0x17: { // GetOption
 				break;
-			case 0x18: // GetVerifyCertErrors
+			}
+			case 0x18: { // GetVerifyCertErrors
 				break;
-			case 0x19: // GetCipherInfo
+			}
+			case 0x19: { // GetCipherInfo
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ssl.Sf.ISslConnection");
 		}
@@ -144,30 +170,42 @@ public abstract class _ISslContext_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.RemoveCrl");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetOption
+			case 0x0: { // SetOption
 				break;
-			case 0x1: // GetOption
+			}
+			case 0x1: { // GetOption
 				break;
-			case 0x2: // CreateConnection
+			}
+			case 0x2: { // CreateConnection
 				break;
-			case 0x3: // GetConnectionCount
+			}
+			case 0x3: { // GetConnectionCount
 				break;
-			case 0x4: // ImportServerPki
+			}
+			case 0x4: { // ImportServerPki
 				break;
-			case 0x5: // ImportClientPki
+			}
+			case 0x5: { // ImportClientPki
 				break;
-			case 0x6: // RemoveServerPki
+			}
+			case 0x6: { // RemoveServerPki
 				break;
-			case 0x7: // RemoveClientPki
+			}
+			case 0x7: { // RemoveClientPki
 				break;
-			case 0x8: // RegisterInternalPki
+			}
+			case 0x8: { // RegisterInternalPki
 				break;
-			case 0x9: // AddPolicyOid
+			}
+			case 0x9: { // AddPolicyOid
 				break;
-			case 0xA: // ImportCrl
+			}
+			case 0xA: { // ImportCrl
 				break;
-			case 0xB: // RemoveCrl
+			}
+			case 0xB: { // RemoveCrl
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ssl.Sf.ISslContext");
 		}
@@ -180,11 +218,11 @@ public abstract class _ISslService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslService.CreateContext not implemented");
 	protected virtual uint GetContextCount() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslService.GetContextCount not implemented");
-	protected virtual void GetCertificates(Span<byte> _0) =>
+	protected virtual void GetCertificates(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslService.GetCertificates not implemented");
 	protected virtual uint GetCertificateBufSize(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslService.GetCertificateBufSize not implemented");
-	protected virtual void DebugIoctl(ulong _0, Span<byte> _1) =>
+	protected virtual void DebugIoctl(ulong _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslService.DebugIoctl not implemented");
 	protected virtual void SetInterfaceVersion(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslService.SetInterfaceVersion");
@@ -192,20 +230,27 @@ public abstract class _ISslService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslService.FlushSessionCache");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateContext
+			case 0x0: { // CreateContext
 				break;
-			case 0x1: // GetContextCount
+			}
+			case 0x1: { // GetContextCount
 				break;
-			case 0x2: // GetCertificates
+			}
+			case 0x2: { // GetCertificates
 				break;
-			case 0x3: // GetCertificateBufSize
+			}
+			case 0x3: { // GetCertificateBufSize
 				break;
-			case 0x4: // DebugIoctl
+			}
+			case 0x4: { // DebugIoctl
 				break;
-			case 0x5: // SetInterfaceVersion
+			}
+			case 0x5: { // SetInterfaceVersion
 				break;
-			case 0x6: // FlushSessionCache
+			}
+			case 0x6: { // FlushSessionCache
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ssl.Sf.ISslService");
 		}

@@ -14,14 +14,18 @@ public abstract class _IJitEnvironment_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitEnvironment.GetCodeAddress");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Control
+			case 0x0: { // Control
 				break;
-			case 0x1: // GenerateCode
+			}
+			case 0x1: { // GenerateCode
 				break;
-			case 0x3E8: // LoadPlugin
+			}
+			case 0x3E8: { // LoadPlugin
 				break;
-			case 0x3E9: // GetCodeAddress
+			}
+			case 0x3E9: { // GetCodeAddress
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Jitsrv.IJitEnvironment");
 		}
@@ -34,8 +38,9 @@ public abstract class _IJitService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitService.CreateJitEnvironment");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateJitEnvironment
+			case 0x0: { // CreateJitEnvironment
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Jitsrv.IJitService");
 		}

@@ -8,8 +8,9 @@ public abstract class _ILogService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Lm.ILogService.Initialize not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lm.ILogService");
 		}
@@ -24,10 +25,12 @@ public abstract class _ILogger_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Lm.ILogger.SetDestination");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // SetDestination
+			}
+			case 0x1: { // SetDestination
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lm.ILogger");
 		}
@@ -44,12 +47,15 @@ public abstract class _ILogGetter_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Lm.ILogGetter.GetLog");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // StartLogging
+			case 0x0: { // StartLogging
 				break;
-			case 0x1: // StopLogging
+			}
+			case 0x1: { // StopLogging
 				break;
-			case 0x2: // GetLog
+			}
+			case 0x2: { // GetLog
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lm.ILogGetter");
 		}

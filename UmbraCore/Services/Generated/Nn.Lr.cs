@@ -4,7 +4,7 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Lr;
 public partial class IAddOnContentLocationResolver : _IAddOnContentLocationResolver_Base;
 public abstract class _IAddOnContentLocationResolver_Base : IpcInterface {
-	protected virtual void ResolveAddOnContentPath(Span<byte> _0) =>
+	protected virtual void ResolveAddOnContentPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.IAddOnContentLocationResolver.ResolveAddOnContentPath not implemented");
 	protected virtual void RegisterAddOnContentStorage(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Lr.IAddOnContentLocationResolver.RegisterAddOnContentStorage");
@@ -12,12 +12,15 @@ public abstract class _IAddOnContentLocationResolver_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Lr.IAddOnContentLocationResolver.UnregisterAllAddOnContentPath");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ResolveAddOnContentPath
+			case 0x0: { // ResolveAddOnContentPath
 				break;
-			case 0x1: // RegisterAddOnContentStorage
+			}
+			case 0x1: { // RegisterAddOnContentStorage
 				break;
-			case 0x2: // UnregisterAllAddOnContentPath
+			}
+			case 0x2: { // UnregisterAllAddOnContentPath
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lr.IAddOnContentLocationResolver");
 		}
@@ -26,21 +29,21 @@ public abstract class _IAddOnContentLocationResolver_Base : IpcInterface {
 
 public partial class ILocationResolver : _ILocationResolver_Base;
 public abstract class _ILocationResolver_Base : IpcInterface {
-	protected virtual void ResolveProgramPath(Span<byte> _0) =>
+	protected virtual void ResolveProgramPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveProgramPath not implemented");
 	protected virtual void RedirectProgramPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectProgramPath");
-	protected virtual void ResolveApplicationControlPath(Span<byte> _0) =>
+	protected virtual void ResolveApplicationControlPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveApplicationControlPath not implemented");
-	protected virtual void ResolveApplicationHtmlDocumentPath(Span<byte> _0) =>
+	protected virtual void ResolveApplicationHtmlDocumentPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveApplicationHtmlDocumentPath not implemented");
-	protected virtual void ResolveDataPath(Span<byte> _0) =>
+	protected virtual void ResolveDataPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveDataPath not implemented");
 	protected virtual void RedirectApplicationControlPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationControlPath");
 	protected virtual void RedirectApplicationHtmlDocumentPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationHtmlDocumentPath");
-	protected virtual void ResolveApplicationLegalInformationPath(Span<byte> _0) =>
+	protected virtual void ResolveApplicationLegalInformationPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveApplicationLegalInformationPath not implemented");
 	protected virtual void RedirectApplicationLegalInformationPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationLegalInformationPath");
@@ -60,38 +63,54 @@ public abstract class _ILocationResolver_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.DeleteInfoHtmlNcaPath");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ResolveProgramPath
+			case 0x0: { // ResolveProgramPath
 				break;
-			case 0x1: // RedirectProgramPath
+			}
+			case 0x1: { // RedirectProgramPath
 				break;
-			case 0x2: // ResolveApplicationControlPath
+			}
+			case 0x2: { // ResolveApplicationControlPath
 				break;
-			case 0x3: // ResolveApplicationHtmlDocumentPath
+			}
+			case 0x3: { // ResolveApplicationHtmlDocumentPath
 				break;
-			case 0x4: // ResolveDataPath
+			}
+			case 0x4: { // ResolveDataPath
 				break;
-			case 0x5: // RedirectApplicationControlPath
+			}
+			case 0x5: { // RedirectApplicationControlPath
 				break;
-			case 0x6: // RedirectApplicationHtmlDocumentPath
+			}
+			case 0x6: { // RedirectApplicationHtmlDocumentPath
 				break;
-			case 0x7: // ResolveApplicationLegalInformationPath
+			}
+			case 0x7: { // ResolveApplicationLegalInformationPath
 				break;
-			case 0x8: // RedirectApplicationLegalInformationPath
+			}
+			case 0x8: { // RedirectApplicationLegalInformationPath
 				break;
-			case 0x9: // Refresh
+			}
+			case 0x9: { // Refresh
 				break;
-			case 0xA: // SetProgramNcaPath2
+			}
+			case 0xA: { // SetProgramNcaPath2
 				break;
-			case 0xB: // ClearLocationResolver2
+			}
+			case 0xB: { // ClearLocationResolver2
 				break;
-			case 0xC: // DeleteProgramNcaPath
+			}
+			case 0xC: { // DeleteProgramNcaPath
 				break;
-			case 0xD: // DeleteControlNcaPath
+			}
+			case 0xD: { // DeleteControlNcaPath
 				break;
-			case 0xE: // DeleteDocHtmlNcaPath
+			}
+			case 0xE: { // DeleteDocHtmlNcaPath
 				break;
-			case 0xF: // DeleteInfoHtmlNcaPath
+			}
+			case 0xF: { // DeleteInfoHtmlNcaPath
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lr.ILocationResolver");
 		}
@@ -110,14 +129,18 @@ public abstract class _ILocationResolverManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Lr.ILocationResolverManager.OpenAddOnContentLocationResolver not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenLocationResolver
+			case 0x0: { // OpenLocationResolver
 				break;
-			case 0x1: // OpenRegisteredLocationResolver
+			}
+			case 0x1: { // OpenRegisteredLocationResolver
 				break;
-			case 0x2: // RefreshLocationResolver
+			}
+			case 0x2: { // RefreshLocationResolver
 				break;
-			case 0x3: // OpenAddOnContentLocationResolver
+			}
+			case 0x3: { // OpenAddOnContentLocationResolver
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lr.ILocationResolverManager");
 		}
@@ -126,7 +149,7 @@ public abstract class _ILocationResolverManager_Base : IpcInterface {
 
 public partial class IRegisteredLocationResolver : _IRegisteredLocationResolver_Base;
 public abstract class _IRegisteredLocationResolver_Base : IpcInterface {
-	protected virtual void ResolveProgramPath(Span<byte> _0) =>
+	protected virtual void ResolveProgramPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.IRegisteredLocationResolver.ResolveProgramPath not implemented");
 	protected virtual void RegisterProgramPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RegisterProgramPath");
@@ -134,7 +157,7 @@ public abstract class _IRegisteredLocationResolver_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.UnregisterProgramPath");
 	protected virtual void RedirectProgramPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RedirectProgramPath");
-	protected virtual void ResolveHtmlDocumentPath(Span<byte> _0) =>
+	protected virtual void ResolveHtmlDocumentPath(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.IRegisteredLocationResolver.ResolveHtmlDocumentPath not implemented");
 	protected virtual void RegisterHtmlDocumentPath(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RegisterHtmlDocumentPath");
@@ -144,22 +167,30 @@ public abstract class _IRegisteredLocationResolver_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RedirectHtmlDocumentPath");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ResolveProgramPath
+			case 0x0: { // ResolveProgramPath
 				break;
-			case 0x1: // RegisterProgramPath
+			}
+			case 0x1: { // RegisterProgramPath
 				break;
-			case 0x2: // UnregisterProgramPath
+			}
+			case 0x2: { // UnregisterProgramPath
 				break;
-			case 0x3: // RedirectProgramPath
+			}
+			case 0x3: { // RedirectProgramPath
 				break;
-			case 0x4: // ResolveHtmlDocumentPath
+			}
+			case 0x4: { // ResolveHtmlDocumentPath
 				break;
-			case 0x5: // RegisterHtmlDocumentPath
+			}
+			case 0x5: { // RegisterHtmlDocumentPath
 				break;
-			case 0x6: // UnregisterHtmlDocumentPath
+			}
+			case 0x6: { // UnregisterHtmlDocumentPath
 				break;
-			case 0x7: // RedirectHtmlDocumentPath
+			}
+			case 0x7: { // RedirectHtmlDocumentPath
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Lr.IRegisteredLocationResolver");
 		}

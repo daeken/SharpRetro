@@ -8,8 +8,9 @@ public abstract class _IPrivateService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fatalsrv.IPrivateService.GetFatalEvent not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetFatalEvent
+			case 0x0: { // GetFatalEvent
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fatalsrv.IPrivateService");
 		}
@@ -26,12 +27,15 @@ public abstract class _IService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fatalsrv.IService.ThrowFatalWithCpuContext");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ThrowFatal
+			case 0x0: { // ThrowFatal
 				break;
-			case 0x1: // ThrowFatalWithPolicy
+			}
+			case 0x1: { // ThrowFatalWithPolicy
 				break;
-			case 0x2: // ThrowFatalWithCpuContext
+			}
+			case 0x2: { // ThrowFatalWithCpuContext
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fatalsrv.IService");
 		}

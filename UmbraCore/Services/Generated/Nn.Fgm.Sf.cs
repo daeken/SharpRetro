@@ -6,18 +6,21 @@ public partial class IDebugger : _IDebugger_Base;
 public abstract class _IDebugger_Base : IpcInterface {
 	protected virtual KObject Initialize(ulong _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Fgm.Sf.IDebugger.Initialize not implemented");
-	protected virtual void Read() =>
+	protected virtual void Read(out uint _0, out uint _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fgm.Sf.IDebugger.Read not implemented");
 	protected virtual void Cancel() =>
 		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IDebugger.Cancel");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // Read
+			}
+			case 0x1: { // Read
 				break;
-			case 0x2: // Cancel
+			}
+			case 0x2: { // Cancel
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fgm.Sf.IDebugger");
 		}
@@ -36,14 +39,18 @@ public abstract class _IRequest_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IRequest.Cancel");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // Set
+			}
+			case 0x1: { // Set
 				break;
-			case 0x2: // Get
+			}
+			case 0x2: { // Get
 				break;
-			case 0x3: // Cancel
+			}
+			case 0x3: { // Cancel
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fgm.Sf.IRequest");
 		}
@@ -56,8 +63,9 @@ public abstract class _ISession_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fgm.Sf.ISession.Initialize not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Fgm.Sf.ISession");
 		}

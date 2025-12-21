@@ -8,8 +8,9 @@ public abstract class _IArbitrationManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Pcv.IArbitrationManager.ReleaseControl");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ReleaseControl
+			case 0x0: { // ReleaseControl
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Pcv.IArbitrationManager");
 		}
@@ -22,8 +23,9 @@ public abstract class _IImmediateManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Pcv.IImmediateManager.SetClockRate");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetClockRate
+			case 0x0: { // SetClockRate
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Pcv.IImmediateManager");
 		}

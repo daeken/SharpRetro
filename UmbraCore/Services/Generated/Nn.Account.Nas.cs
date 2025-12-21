@@ -4,32 +4,38 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Account.Nas;
 public partial class IAuthorizationRequest : _IAuthorizationRequest_Base;
 public abstract class _IAuthorizationRequest_Base : IpcInterface {
-	protected virtual void GetSessionId() =>
+	protected virtual void GetSessionId(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IAuthorizationRequest.GetSessionId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext InvokeWithoutInteractionAsync() =>
 		throw new NotImplementedException("Nn.Account.Nas.IAuthorizationRequest.InvokeWithoutInteractionAsync not implemented");
 	protected virtual byte IsAuthorized() =>
 		throw new NotImplementedException("Nn.Account.Nas.IAuthorizationRequest.IsAuthorized not implemented");
-	protected virtual void GetAuthorizationCode() =>
+	protected virtual void GetAuthorizationCode(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IAuthorizationRequest.GetAuthorizationCode not implemented");
-	protected virtual void GetIdToken() =>
+	protected virtual void GetIdToken(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IAuthorizationRequest.GetIdToken not implemented");
-	protected virtual void GetState() =>
+	protected virtual void GetState(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IAuthorizationRequest.GetState not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSessionId
+			case 0x0: { // GetSessionId
 				break;
-			case 0xA: // InvokeWithoutInteractionAsync
+			}
+			case 0xA: { // InvokeWithoutInteractionAsync
 				break;
-			case 0x13: // IsAuthorized
+			}
+			case 0x13: { // IsAuthorized
 				break;
-			case 0x14: // GetAuthorizationCode
+			}
+			case 0x14: { // GetAuthorizationCode
 				break;
-			case 0x15: // GetIdToken
+			}
+			case 0x15: { // GetIdToken
 				break;
-			case 0x16: // GetState
+			}
+			case 0x16: { // GetState
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Nas.IAuthorizationRequest");
 		}
@@ -40,42 +46,51 @@ public partial class IOAuthProcedureForExternalNsa : _IOAuthProcedureForExternal
 public abstract class _IOAuthProcedureForExternalNsa_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext PrepareAsync() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.PrepareAsync not implemented");
-	protected virtual void GetRequest() =>
+	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Account.Nas.IOAuthProcedureForExternalNsa.ApplyResponse");
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.ApplyResponseAsync not implemented");
-	protected virtual void Suspend() =>
+	protected virtual void Suspend(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.Suspend not implemented");
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.GetAccountId not implemented");
 	protected virtual ulong GetLinkedNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.GetLinkedNintendoAccountId not implemented");
-	protected virtual void GetNickname() =>
+	protected virtual void GetNickname(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.GetNickname not implemented");
-	protected virtual void GetProfileImage() =>
+	protected virtual void GetProfileImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.GetProfileImage not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // PrepareAsync
+			case 0x0: { // PrepareAsync
 				break;
-			case 0x1: // GetRequest
+			}
+			case 0x1: { // GetRequest
 				break;
-			case 0x2: // ApplyResponse
+			}
+			case 0x2: { // ApplyResponse
 				break;
-			case 0x3: // ApplyResponseAsync
+			}
+			case 0x3: { // ApplyResponseAsync
 				break;
-			case 0xA: // Suspend
+			}
+			case 0xA: { // Suspend
 				break;
-			case 0x64: // GetAccountId
+			}
+			case 0x64: { // GetAccountId
 				break;
-			case 0x65: // GetLinkedNintendoAccountId
+			}
+			case 0x65: { // GetLinkedNintendoAccountId
 				break;
-			case 0x66: // GetNickname
+			}
+			case 0x66: { // GetNickname
 				break;
-			case 0x67: // GetProfileImage
+			}
+			case 0x67: { // GetProfileImage
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Nas.IOAuthProcedureForExternalNsa");
 		}
@@ -86,42 +101,51 @@ public partial class IOAuthProcedureForGuestLogin : _IOAuthProcedureForGuestLogi
 public abstract class _IOAuthProcedureForGuestLogin_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext PrepareAsync() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.PrepareAsync not implemented");
-	protected virtual void GetRequest() =>
+	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Account.Nas.IOAuthProcedureForGuestLogin.ApplyResponse");
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.ApplyResponseAsync not implemented");
-	protected virtual void Suspend() =>
+	protected virtual void Suspend(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.Suspend not implemented");
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.GetAccountId not implemented");
 	protected virtual ulong GetLinkedNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.GetLinkedNintendoAccountId not implemented");
-	protected virtual void GetNickname() =>
+	protected virtual void GetNickname(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.GetNickname not implemented");
-	protected virtual void GetProfileImage() =>
+	protected virtual void GetProfileImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.GetProfileImage not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // PrepareAsync
+			case 0x0: { // PrepareAsync
 				break;
-			case 0x1: // GetRequest
+			}
+			case 0x1: { // GetRequest
 				break;
-			case 0x2: // ApplyResponse
+			}
+			case 0x2: { // ApplyResponse
 				break;
-			case 0x3: // ApplyResponseAsync
+			}
+			case 0x3: { // ApplyResponseAsync
 				break;
-			case 0xA: // Suspend
+			}
+			case 0xA: { // Suspend
 				break;
-			case 0x64: // GetAccountId
+			}
+			case 0x64: { // GetAccountId
 				break;
-			case 0x65: // GetLinkedNintendoAccountId
+			}
+			case 0x65: { // GetLinkedNintendoAccountId
 				break;
-			case 0x66: // GetNickname
+			}
+			case 0x66: { // GetNickname
 				break;
-			case 0x67: // GetProfileImage
+			}
+			case 0x67: { // GetProfileImage
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Nas.IOAuthProcedureForGuestLogin");
 		}
@@ -132,38 +156,46 @@ public partial class IOAuthProcedureForNintendoAccountLinkage : _IOAuthProcedure
 public abstract class _IOAuthProcedureForNintendoAccountLinkage_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext PrepareAsync() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.PrepareAsync not implemented");
-	protected virtual void GetRequest() =>
+	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.ApplyResponse");
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.ApplyResponseAsync not implemented");
-	protected virtual void Suspend() =>
+	protected virtual void Suspend(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.Suspend not implemented");
-	protected virtual void GetRequestWithTheme(uint _0) =>
+	protected virtual void GetRequestWithTheme(uint _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.GetRequestWithTheme not implemented");
 	protected virtual byte IsNetworkServiceAccountReplaced() =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.IsNetworkServiceAccountReplaced not implemented");
-	protected virtual void GetUrlForIntroductionOfExtraMembership() =>
+	protected virtual void GetUrlForIntroductionOfExtraMembership(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.GetUrlForIntroductionOfExtraMembership not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // PrepareAsync
+			case 0x0: { // PrepareAsync
 				break;
-			case 0x1: // GetRequest
+			}
+			case 0x1: { // GetRequest
 				break;
-			case 0x2: // ApplyResponse
+			}
+			case 0x2: { // ApplyResponse
 				break;
-			case 0x3: // ApplyResponseAsync
+			}
+			case 0x3: { // ApplyResponseAsync
 				break;
-			case 0xA: // Suspend
+			}
+			case 0xA: { // Suspend
 				break;
-			case 0x64: // GetRequestWithTheme
+			}
+			case 0x64: { // GetRequestWithTheme
 				break;
-			case 0x65: // IsNetworkServiceAccountReplaced
+			}
+			case 0x65: { // IsNetworkServiceAccountReplaced
 				break;
-			case 0xC7: // GetUrlForIntroductionOfExtraMembership
+			}
+			case 0xC7: { // GetUrlForIntroductionOfExtraMembership
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage");
 		}

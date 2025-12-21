@@ -12,12 +12,15 @@ public abstract class _IProfiler_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Profiler.IProfiler.StopSignalingEvent");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSystemEvent
+			case 0x0: { // GetSystemEvent
 				break;
-			case 0x1: // StartSignalingEvent
+			}
+			case 0x1: { // StartSignalingEvent
 				break;
-			case 0x2: // StopSignalingEvent
+			}
+			case 0x2: { // StopSignalingEvent
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Profiler.IProfiler");
 		}

@@ -12,7 +12,7 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetManagerDisplayService not implemented");
 	protected virtual Nns.Hosbinder.IHOSBinderDriver GetIndirectDisplayTransactionService() =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetIndirectDisplayTransactionService not implemented");
-	protected virtual void ListDisplays() =>
+	protected virtual void ListDisplays(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.ListDisplays not implemented");
 	protected virtual ulong OpenDisplay(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.OpenDisplay not implemented");
@@ -22,13 +22,13 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.CloseDisplay");
 	protected virtual void SetDisplayEnabled(byte _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.SetDisplayEnabled");
-	protected virtual void GetDisplayResolution(ulong _0) =>
+	protected virtual void GetDisplayResolution(ulong _0, out ulong _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetDisplayResolution not implemented");
-	protected virtual void OpenLayer(Span<byte> _0, ulong _1, ulong _2, ulong _3) =>
+	protected virtual void OpenLayer(Span<byte> _0, ulong _1, ulong _2, ulong _3, out ulong _4, Span<byte> _5) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.OpenLayer not implemented");
 	protected virtual void CloseLayer(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.CloseLayer");
-	protected virtual void CreateStrayLayer(uint _0, ulong _1) =>
+	protected virtual void CreateStrayLayer(uint _0, ulong _1, out ulong _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.CreateStrayLayer not implemented");
 	protected virtual void DestroyStrayLayer(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.DestroyStrayLayer");
@@ -36,11 +36,11 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.SetLayerScalingMode");
 	protected virtual void ConvertScalingMode() =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.ConvertScalingMode");
-	protected virtual void GetIndirectLayerImageMap(ulong _0, ulong _1, ulong _2, ulong _3, ulong _4) =>
+	protected virtual void GetIndirectLayerImageMap(ulong _0, ulong _1, ulong _2, ulong _3, ulong _4, out ulong _5, out ulong _6, Span<byte> _7) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetIndirectLayerImageMap not implemented");
-	protected virtual void GetIndirectLayerImageCropMap(float _0, float _1, float _2, float _3, ulong _4, ulong _5, ulong _6, ulong _7, ulong _8) =>
+	protected virtual void GetIndirectLayerImageCropMap(float _0, float _1, float _2, float _3, ulong _4, ulong _5, ulong _6, ulong _7, ulong _8, out ulong _9, out ulong _10, Span<byte> _11) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetIndirectLayerImageCropMap not implemented");
-	protected virtual void GetIndirectLayerImageRequiredMemoryInfo(ulong _0, ulong _1) =>
+	protected virtual void GetIndirectLayerImageRequiredMemoryInfo(ulong _0, ulong _1, out ulong _2, out ulong _3) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetIndirectLayerImageRequiredMemoryInfo not implemented");
 	protected virtual KObject GetDisplayVsyncEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetDisplayVsyncEvent not implemented");
@@ -48,48 +48,69 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetDisplayVsyncEventForDebug not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x64: // GetRelayService
+			case 0x64: { // GetRelayService
 				break;
-			case 0x65: // GetSystemDisplayService
+			}
+			case 0x65: { // GetSystemDisplayService
 				break;
-			case 0x66: // GetManagerDisplayService
+			}
+			case 0x66: { // GetManagerDisplayService
 				break;
-			case 0x67: // GetIndirectDisplayTransactionService
+			}
+			case 0x67: { // GetIndirectDisplayTransactionService
 				break;
-			case 0x3E8: // ListDisplays
+			}
+			case 0x3E8: { // ListDisplays
 				break;
-			case 0x3F2: // OpenDisplay
+			}
+			case 0x3F2: { // OpenDisplay
 				break;
-			case 0x3F3: // OpenDefaultDisplay
+			}
+			case 0x3F3: { // OpenDefaultDisplay
 				break;
-			case 0x3FC: // CloseDisplay
+			}
+			case 0x3FC: { // CloseDisplay
 				break;
-			case 0x44D: // SetDisplayEnabled
+			}
+			case 0x44D: { // SetDisplayEnabled
 				break;
-			case 0x44E: // GetDisplayResolution
+			}
+			case 0x44E: { // GetDisplayResolution
 				break;
-			case 0x7E4: // OpenLayer
+			}
+			case 0x7E4: { // OpenLayer
 				break;
-			case 0x7E5: // CloseLayer
+			}
+			case 0x7E5: { // CloseLayer
 				break;
-			case 0x7EE: // CreateStrayLayer
+			}
+			case 0x7EE: { // CreateStrayLayer
 				break;
-			case 0x7EF: // DestroyStrayLayer
+			}
+			case 0x7EF: { // DestroyStrayLayer
 				break;
-			case 0x835: // SetLayerScalingMode
+			}
+			case 0x835: { // SetLayerScalingMode
 				break;
-			case 0x836: // ConvertScalingMode
+			}
+			case 0x836: { // ConvertScalingMode
 				break;
-			case 0x992: // GetIndirectLayerImageMap
+			}
+			case 0x992: { // GetIndirectLayerImageMap
 				break;
-			case 0x993: // GetIndirectLayerImageCropMap
+			}
+			case 0x993: { // GetIndirectLayerImageCropMap
 				break;
-			case 0x99C: // GetIndirectLayerImageRequiredMemoryInfo
+			}
+			case 0x99C: { // GetIndirectLayerImageRequiredMemoryInfo
 				break;
-			case 0x1452: // GetDisplayVsyncEvent
+			}
+			case 0x1452: { // GetDisplayVsyncEvent
 				break;
-			case 0x1453: // GetDisplayVsyncEventForDebug
+			}
+			case 0x1453: { // GetDisplayVsyncEventForDebug
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Visrv.Sf.IApplicationDisplayService");
 		}
@@ -102,8 +123,9 @@ public abstract class _IApplicationRootService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationRootService.GetDisplayService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetDisplayService
+			case 0x0: { // GetDisplayService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Visrv.Sf.IApplicationRootService");
 		}
@@ -116,7 +138,7 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.AllocateProcessHeapBlock not implemented");
 	protected virtual void FreeProcessHeapBlock(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FreeProcessHeapBlock");
-	protected virtual void GetDisplayResolution(ulong _0) =>
+	protected virtual void GetDisplayResolution(ulong _0, out ulong _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayResolution not implemented");
 	protected virtual ulong CreateManagedLayer(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateManagedLayer not implemented");
@@ -142,7 +164,7 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayHotplugEvent not implemented");
 	protected virtual uint GetDisplayHotplugState(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayHotplugState not implemented");
-	protected virtual void GetCompositorErrorInfo(ulong _0, ulong _1) =>
+	protected virtual void GetCompositorErrorInfo(ulong _0, ulong _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetCompositorErrorInfo not implemented");
 	protected virtual KObject GetDisplayErrorEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayErrorEvent not implemented");
@@ -230,7 +252,7 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.PresentDetachedSharedFrameBufferToLowLevelLayer");
 	protected virtual void FillDetachedSharedFrameBufferColor(uint _0, uint _1, uint _2, uint _3, uint _4, ulong _5, ulong _6) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FillDetachedSharedFrameBufferColor");
-	protected virtual void GetDetachedSharedFrameBufferImage(ulong _0, ulong _1) =>
+	protected virtual void GetDetachedSharedFrameBufferImage(ulong _0, ulong _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDetachedSharedFrameBufferImage not implemented");
 	protected virtual void SetDetachedSharedFrameBufferImage(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDetachedSharedFrameBufferImage");
@@ -238,142 +260,207 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.CopyDetachedSharedFrameBufferImage");
 	protected virtual void SetDetachedSharedFrameBufferSubImage(uint _0, uint _1, uint _2, uint _3, uint _4, uint _5, ulong _6, ulong _7, Span<byte> _8) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDetachedSharedFrameBufferSubImage");
-	protected virtual void GetSharedFrameBufferContentParameter(ulong _0, ulong _1) =>
+	protected virtual void GetSharedFrameBufferContentParameter(ulong _0, ulong _1, out uint _2, Span<byte> _3, out uint _4, out uint _5, out uint _6) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetSharedFrameBufferContentParameter not implemented");
 	protected virtual void ExpandStartupLogoOnSharedFrameBuffer() =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ExpandStartupLogoOnSharedFrameBuffer");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0xC8: // AllocateProcessHeapBlock
+			case 0xC8: { // AllocateProcessHeapBlock
 				break;
-			case 0xC9: // FreeProcessHeapBlock
+			}
+			case 0xC9: { // FreeProcessHeapBlock
 				break;
-			case 0x44E: // GetDisplayResolution
+			}
+			case 0x44E: { // GetDisplayResolution
 				break;
-			case 0x7DA: // CreateManagedLayer
+			}
+			case 0x7DA: { // CreateManagedLayer
 				break;
-			case 0x7DB: // DestroyManagedLayer
+			}
+			case 0x7DB: { // DestroyManagedLayer
 				break;
-			case 0x802: // CreateIndirectLayer
+			}
+			case 0x802: { // CreateIndirectLayer
 				break;
-			case 0x803: // DestroyIndirectLayer
+			}
+			case 0x803: { // DestroyIndirectLayer
 				break;
-			case 0x804: // CreateIndirectProducerEndPoint
+			}
+			case 0x804: { // CreateIndirectProducerEndPoint
 				break;
-			case 0x805: // DestroyIndirectProducerEndPoint
+			}
+			case 0x805: { // DestroyIndirectProducerEndPoint
 				break;
-			case 0x806: // CreateIndirectConsumerEndPoint
+			}
+			case 0x806: { // CreateIndirectConsumerEndPoint
 				break;
-			case 0x807: // DestroyIndirectConsumerEndPoint
+			}
+			case 0x807: { // DestroyIndirectConsumerEndPoint
 				break;
-			case 0x8FC: // AcquireLayerTexturePresentingEvent
+			}
+			case 0x8FC: { // AcquireLayerTexturePresentingEvent
 				break;
-			case 0x8FD: // ReleaseLayerTexturePresentingEvent
+			}
+			case 0x8FD: { // ReleaseLayerTexturePresentingEvent
 				break;
-			case 0x8FE: // GetDisplayHotplugEvent
+			}
+			case 0x8FE: { // GetDisplayHotplugEvent
 				break;
-			case 0x962: // GetDisplayHotplugState
+			}
+			case 0x962: { // GetDisplayHotplugState
 				break;
-			case 0x9C5: // GetCompositorErrorInfo
+			}
+			case 0x9C5: { // GetCompositorErrorInfo
 				break;
-			case 0xA29: // GetDisplayErrorEvent
+			}
+			case 0xA29: { // GetDisplayErrorEvent
 				break;
-			case 0x1069: // SetDisplayAlpha
+			}
+			case 0x1069: { // SetDisplayAlpha
 				break;
-			case 0x106B: // SetDisplayLayerStack
+			}
+			case 0x106B: { // SetDisplayLayerStack
 				break;
-			case 0x106D: // SetDisplayPowerState
+			}
+			case 0x106D: { // SetDisplayPowerState
 				break;
-			case 0x106E: // SetDefaultDisplay
+			}
+			case 0x106E: { // SetDefaultDisplay
 				break;
-			case 0x1770: // AddToLayerStack
+			}
+			case 0x1770: { // AddToLayerStack
 				break;
-			case 0x1771: // RemoveFromLayerStack
+			}
+			case 0x1771: { // RemoveFromLayerStack
 				break;
-			case 0x1772: // SetLayerVisibility
+			}
+			case 0x1772: { // SetLayerVisibility
 				break;
-			case 0x1773: // SetLayerConfig
+			}
+			case 0x1773: { // SetLayerConfig
 				break;
-			case 0x1774: // AttachLayerPresentationTracer
+			}
+			case 0x1774: { // AttachLayerPresentationTracer
 				break;
-			case 0x1775: // DetachLayerPresentationTracer
+			}
+			case 0x1775: { // DetachLayerPresentationTracer
 				break;
-			case 0x1776: // StartLayerPresentationRecording
+			}
+			case 0x1776: { // StartLayerPresentationRecording
 				break;
-			case 0x1777: // StopLayerPresentationRecording
+			}
+			case 0x1777: { // StopLayerPresentationRecording
 				break;
-			case 0x1778: // StartLayerPresentationFenceWait
+			}
+			case 0x1778: { // StartLayerPresentationFenceWait
 				break;
-			case 0x1779: // StopLayerPresentationFenceWait
+			}
+			case 0x1779: { // StopLayerPresentationFenceWait
 				break;
-			case 0x177A: // GetLayerPresentationAllFencesExpiredEvent
+			}
+			case 0x177A: { // GetLayerPresentationAllFencesExpiredEvent
 				break;
-			case 0x1B58: // SetContentVisibility
+			}
+			case 0x1B58: { // SetContentVisibility
 				break;
-			case 0x1F40: // SetConductorLayer
+			}
+			case 0x1F40: { // SetConductorLayer
 				break;
-			case 0x1FA4: // SetIndirectProducerFlipOffset
+			}
+			case 0x1FA4: { // SetIndirectProducerFlipOffset
 				break;
-			case 0x2008: // CreateSharedBufferStaticStorage
+			}
+			case 0x2008: { // CreateSharedBufferStaticStorage
 				break;
-			case 0x2009: // CreateSharedBufferTransferMemory
+			}
+			case 0x2009: { // CreateSharedBufferTransferMemory
 				break;
-			case 0x200A: // DestroySharedBuffer
+			}
+			case 0x200A: { // DestroySharedBuffer
 				break;
-			case 0x200B: // BindSharedLowLevelLayerToManagedLayer
+			}
+			case 0x200B: { // BindSharedLowLevelLayerToManagedLayer
 				break;
-			case 0x200C: // BindSharedLowLevelLayerToIndirectLayer
+			}
+			case 0x200C: { // BindSharedLowLevelLayerToIndirectLayer
 				break;
-			case 0x200F: // UnbindSharedLowLevelLayer
+			}
+			case 0x200F: { // UnbindSharedLowLevelLayer
 				break;
-			case 0x2010: // ConnectSharedLowLevelLayerToSharedBuffer
+			}
+			case 0x2010: { // ConnectSharedLowLevelLayerToSharedBuffer
 				break;
-			case 0x2011: // DisconnectSharedLowLevelLayerFromSharedBuffer
+			}
+			case 0x2011: { // DisconnectSharedLowLevelLayerFromSharedBuffer
 				break;
-			case 0x2012: // CreateSharedLayer
+			}
+			case 0x2012: { // CreateSharedLayer
 				break;
-			case 0x2013: // DestroySharedLayer
+			}
+			case 0x2013: { // DestroySharedLayer
 				break;
-			case 0x2018: // AttachSharedLayerToLowLevelLayer
+			}
+			case 0x2018: { // AttachSharedLayerToLowLevelLayer
 				break;
-			case 0x2019: // ForceDetachSharedLayerFromLowLevelLayer
+			}
+			case 0x2019: { // ForceDetachSharedLayerFromLowLevelLayer
 				break;
-			case 0x201A: // StartDetachSharedLayerFromLowLevelLayer
+			}
+			case 0x201A: { // StartDetachSharedLayerFromLowLevelLayer
 				break;
-			case 0x201B: // FinishDetachSharedLayerFromLowLevelLayer
+			}
+			case 0x201B: { // FinishDetachSharedLayerFromLowLevelLayer
 				break;
-			case 0x201C: // GetSharedLayerDetachReadyEvent
+			}
+			case 0x201C: { // GetSharedLayerDetachReadyEvent
 				break;
-			case 0x201D: // GetSharedLowLevelLayerSynchronizedEvent
+			}
+			case 0x201D: { // GetSharedLowLevelLayerSynchronizedEvent
 				break;
-			case 0x201E: // CheckSharedLowLevelLayerSynchronized
+			}
+			case 0x201E: { // CheckSharedLowLevelLayerSynchronized
 				break;
-			case 0x201F: // RegisterSharedBufferImporterAruid
+			}
+			case 0x201F: { // RegisterSharedBufferImporterAruid
 				break;
-			case 0x2020: // UnregisterSharedBufferImporterAruid
+			}
+			case 0x2020: { // UnregisterSharedBufferImporterAruid
 				break;
-			case 0x2023: // CreateSharedBufferProcessHeap
+			}
+			case 0x2023: { // CreateSharedBufferProcessHeap
 				break;
-			case 0x2024: // GetSharedLayerLayerStacks
+			}
+			case 0x2024: { // GetSharedLayerLayerStacks
 				break;
-			case 0x2025: // SetSharedLayerLayerStacks
+			}
+			case 0x2025: { // SetSharedLayerLayerStacks
 				break;
-			case 0x2063: // PresentDetachedSharedFrameBufferToLowLevelLayer
+			}
+			case 0x2063: { // PresentDetachedSharedFrameBufferToLowLevelLayer
 				break;
-			case 0x2064: // FillDetachedSharedFrameBufferColor
+			}
+			case 0x2064: { // FillDetachedSharedFrameBufferColor
 				break;
-			case 0x2065: // GetDetachedSharedFrameBufferImage
+			}
+			case 0x2065: { // GetDetachedSharedFrameBufferImage
 				break;
-			case 0x2066: // SetDetachedSharedFrameBufferImage
+			}
+			case 0x2066: { // SetDetachedSharedFrameBufferImage
 				break;
-			case 0x2067: // CopyDetachedSharedFrameBufferImage
+			}
+			case 0x2067: { // CopyDetachedSharedFrameBufferImage
 				break;
-			case 0x2068: // SetDetachedSharedFrameBufferSubImage
+			}
+			case 0x2068: { // SetDetachedSharedFrameBufferSubImage
 				break;
-			case 0x2069: // GetSharedFrameBufferContentParameter
+			}
+			case 0x2069: { // GetSharedFrameBufferContentParameter
 				break;
-			case 0x206A: // ExpandStartupLogoOnSharedFrameBuffer
+			}
+			case 0x206A: { // ExpandStartupLogoOnSharedFrameBuffer
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Visrv.Sf.IManagerDisplayService");
 		}
@@ -388,10 +475,12 @@ public abstract class _IManagerRootService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerRootService.GetDisplayServiceWithProxyNameExchange not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x2: // GetDisplayService
+			case 0x2: { // GetDisplayService
 				break;
-			case 0x3: // GetDisplayServiceWithProxyNameExchange
+			}
+			case 0x3: { // GetDisplayServiceWithProxyNameExchange
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Visrv.Sf.IManagerRootService");
 		}
@@ -404,7 +493,7 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetZOrderCountMin not implemented");
 	protected virtual ulong GetZOrderCountMax(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetZOrderCountMax not implemented");
-	protected virtual void GetDisplayLogicalResolution(ulong _0) =>
+	protected virtual void GetDisplayLogicalResolution(ulong _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayLogicalResolution not implemented");
 	protected virtual void SetDisplayMagnification(uint _0, uint _1, uint _2, uint _3, ulong _4) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayMagnification");
@@ -420,19 +509,19 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerVisibility");
 	protected virtual void SetLayerAlpha(float _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerAlpha");
-	protected virtual void CreateStrayLayer(uint _0, ulong _1) =>
+	protected virtual void CreateStrayLayer(uint _0, ulong _1, out ulong _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.CreateStrayLayer not implemented");
-	protected virtual void OpenIndirectLayer(ulong _0, ulong _1, ulong _2) =>
+	protected virtual void OpenIndirectLayer(ulong _0, ulong _1, ulong _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.OpenIndirectLayer not implemented");
 	protected virtual void CloseIndirectLayer(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CloseIndirectLayer");
 	protected virtual void FlipIndirectLayer(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.FlipIndirectLayer");
-	protected virtual void ListDisplayModes(ulong _0) =>
+	protected virtual void ListDisplayModes(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.ListDisplayModes not implemented");
-	protected virtual void ListDisplayRgbRanges(ulong _0) =>
+	protected virtual void ListDisplayRgbRanges(ulong _0, out ulong _1, Span<uint> _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.ListDisplayRgbRanges not implemented");
-	protected virtual void ListDisplayContentTypes(ulong _0) =>
+	protected virtual void ListDisplayContentTypes(ulong _0, out ulong _1, Span<uint> _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.ListDisplayContentTypes not implemented");
 	protected virtual void GetDisplayMode(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.GetDisplayMode");
@@ -466,7 +555,7 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayCmuLuma not implemented");
 	protected virtual void SetDisplayCmuLuma(float _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayCmuLuma");
-	protected virtual void GetSharedBufferMemoryHandleId(ulong _0, ulong _1, ulong _2) =>
+	protected virtual void GetSharedBufferMemoryHandleId(ulong _0, ulong _1, ulong _2, out uint _3, out ulong _4, Span<byte> _5) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetSharedBufferMemoryHandleId not implemented");
 	protected virtual void OpenSharedLayer(ulong _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.OpenSharedLayer");
@@ -476,7 +565,7 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.ConnectSharedLayer");
 	protected virtual void DisconnectSharedLayer(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.DisconnectSharedLayer");
-	protected virtual void AcquireSharedFrameBuffer(ulong _0) =>
+	protected virtual void AcquireSharedFrameBuffer(ulong _0, Span<byte> _1, Span<byte> _2, out ulong _3) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.AcquireSharedFrameBuffer not implemented");
 	protected virtual void PresentSharedFrameBuffer(Span<byte> _0, Span<byte> _1, uint _2, uint _3, ulong _4, ulong _5) =>
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.PresentSharedFrameBuffer");
@@ -488,92 +577,135 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CancelSharedFrameBuffer");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x4B0: // GetZOrderCountMin
+			case 0x4B0: { // GetZOrderCountMin
 				break;
-			case 0x4B2: // GetZOrderCountMax
+			}
+			case 0x4B2: { // GetZOrderCountMax
 				break;
-			case 0x4B3: // GetDisplayLogicalResolution
+			}
+			case 0x4B3: { // GetDisplayLogicalResolution
 				break;
-			case 0x4B4: // SetDisplayMagnification
+			}
+			case 0x4B4: { // SetDisplayMagnification
 				break;
-			case 0x899: // SetLayerPosition
+			}
+			case 0x899: { // SetLayerPosition
 				break;
-			case 0x89B: // SetLayerSize
+			}
+			case 0x89B: { // SetLayerSize
 				break;
-			case 0x89C: // GetLayerZ
+			}
+			case 0x89C: { // GetLayerZ
 				break;
-			case 0x89D: // SetLayerZ
+			}
+			case 0x89D: { // SetLayerZ
 				break;
-			case 0x89F: // SetLayerVisibility
+			}
+			case 0x89F: { // SetLayerVisibility
 				break;
-			case 0x8A1: // SetLayerAlpha
+			}
+			case 0x8A1: { // SetLayerAlpha
 				break;
-			case 0x908: // CreateStrayLayer
+			}
+			case 0x908: { // CreateStrayLayer
 				break;
-			case 0x960: // OpenIndirectLayer
+			}
+			case 0x960: { // OpenIndirectLayer
 				break;
-			case 0x961: // CloseIndirectLayer
+			}
+			case 0x961: { // CloseIndirectLayer
 				break;
-			case 0x962: // FlipIndirectLayer
+			}
+			case 0x962: { // FlipIndirectLayer
 				break;
-			case 0xBB8: // ListDisplayModes
+			}
+			case 0xBB8: { // ListDisplayModes
 				break;
-			case 0xBB9: // ListDisplayRgbRanges
+			}
+			case 0xBB9: { // ListDisplayRgbRanges
 				break;
-			case 0xBBA: // ListDisplayContentTypes
+			}
+			case 0xBBA: { // ListDisplayContentTypes
 				break;
-			case 0xC80: // GetDisplayMode
+			}
+			case 0xC80: { // GetDisplayMode
 				break;
-			case 0xC81: // SetDisplayMode
+			}
+			case 0xC81: { // SetDisplayMode
 				break;
-			case 0xC82: // GetDisplayUnderscan
+			}
+			case 0xC82: { // GetDisplayUnderscan
 				break;
-			case 0xC83: // SetDisplayUnderscan
+			}
+			case 0xC83: { // SetDisplayUnderscan
 				break;
-			case 0xC84: // GetDisplayContentType
+			}
+			case 0xC84: { // GetDisplayContentType
 				break;
-			case 0xC85: // SetDisplayContentType
+			}
+			case 0xC85: { // SetDisplayContentType
 				break;
-			case 0xC86: // GetDisplayRgbRange
+			}
+			case 0xC86: { // GetDisplayRgbRange
 				break;
-			case 0xC87: // SetDisplayRgbRange
+			}
+			case 0xC87: { // SetDisplayRgbRange
 				break;
-			case 0xC88: // GetDisplayCmuMode
+			}
+			case 0xC88: { // GetDisplayCmuMode
 				break;
-			case 0xC89: // SetDisplayCmuMode
+			}
+			case 0xC89: { // SetDisplayCmuMode
 				break;
-			case 0xC8A: // GetDisplayContrastRatio
+			}
+			case 0xC8A: { // GetDisplayContrastRatio
 				break;
-			case 0xC8B: // SetDisplayContrastRatio
+			}
+			case 0xC8B: { // SetDisplayContrastRatio
 				break;
-			case 0xC8E: // GetDisplayGamma
+			}
+			case 0xC8E: { // GetDisplayGamma
 				break;
-			case 0xC8F: // SetDisplayGamma
+			}
+			case 0xC8F: { // SetDisplayGamma
 				break;
-			case 0xC90: // GetDisplayCmuLuma
+			}
+			case 0xC90: { // GetDisplayCmuLuma
 				break;
-			case 0xC91: // SetDisplayCmuLuma
+			}
+			case 0xC91: { // SetDisplayCmuLuma
 				break;
-			case 0x2021: // GetSharedBufferMemoryHandleId
+			}
+			case 0x2021: { // GetSharedBufferMemoryHandleId
 				break;
-			case 0x203A: // OpenSharedLayer
+			}
+			case 0x203A: { // OpenSharedLayer
 				break;
-			case 0x203B: // CloseSharedLayer
+			}
+			case 0x203B: { // CloseSharedLayer
 				break;
-			case 0x203C: // ConnectSharedLayer
+			}
+			case 0x203C: { // ConnectSharedLayer
 				break;
-			case 0x203D: // DisconnectSharedLayer
+			}
+			case 0x203D: { // DisconnectSharedLayer
 				break;
-			case 0x203E: // AcquireSharedFrameBuffer
+			}
+			case 0x203E: { // AcquireSharedFrameBuffer
 				break;
-			case 0x203F: // PresentSharedFrameBuffer
+			}
+			case 0x203F: { // PresentSharedFrameBuffer
 				break;
-			case 0x2040: // GetSharedFrameBufferAcquirableEvent
+			}
+			case 0x2040: { // GetSharedFrameBufferAcquirableEvent
 				break;
-			case 0x2041: // FillSharedFrameBufferColor
+			}
+			case 0x2041: { // FillSharedFrameBufferColor
 				break;
-			case 0x2042: // CancelSharedFrameBuffer
+			}
+			case 0x2042: { // CancelSharedFrameBuffer
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Visrv.Sf.ISystemDisplayService");
 		}
@@ -588,10 +720,12 @@ public abstract class _ISystemRootService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemRootService.GetDisplayServiceWithProxyNameExchange not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1: // GetDisplayService
+			case 0x1: { // GetDisplayService
 				break;
-			case 0x3: // GetDisplayServiceWithProxyNameExchange
+			}
+			case 0x3: { // GetDisplayServiceWithProxyNameExchange
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Visrv.Sf.ISystemRootService");
 		}

@@ -8,7 +8,7 @@ public abstract class _IManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Tc.IManager.SetOperatingMode");
 	protected virtual KObject GetThermalEvent(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tc.IManager.GetThermalEvent not implemented");
-	protected virtual void Unknown2(Span<byte> _0) =>
+	protected virtual void Unknown2(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Tc.IManager.Unknown2 not implemented");
 	protected virtual void Unknown3(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown3");
@@ -20,28 +20,37 @@ public abstract class _IManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown6");
 	protected virtual void Unknown7() =>
 		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown7");
-	protected virtual void Unknown8() =>
+	protected virtual void Unknown8(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tc.IManager.Unknown8 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetOperatingMode
+			case 0x0: { // SetOperatingMode
 				break;
-			case 0x1: // GetThermalEvent
+			}
+			case 0x1: { // GetThermalEvent
 				break;
-			case 0x2: // Unknown2
+			}
+			case 0x2: { // Unknown2
 				break;
-			case 0x3: // Unknown3
+			}
+			case 0x3: { // Unknown3
 				break;
-			case 0x4: // Unknown4
+			}
+			case 0x4: { // Unknown4
 				break;
-			case 0x5: // Unknown5
+			}
+			case 0x5: { // Unknown5
 				break;
-			case 0x6: // Unknown6
+			}
+			case 0x6: { // Unknown6
 				break;
-			case 0x7: // Unknown7
+			}
+			case 0x7: { // Unknown7
 				break;
-			case 0x8: // Unknown8
+			}
+			case 0x8: { // Unknown8
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Tc.IManager");
 		}

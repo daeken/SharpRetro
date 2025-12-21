@@ -12,7 +12,7 @@ public abstract class _IManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Gpio.IManager.Unknown2 not implemented");
 	protected virtual byte Unknown3(uint _0) =>
 		throw new NotImplementedException("Nn.Gpio.IManager.Unknown3 not implemented");
-	protected virtual void Unknown4() =>
+	protected virtual void Unknown4(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Gpio.IManager.Unknown4 not implemented");
 	protected virtual void Unknown5(byte _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Gpio.IManager.Unknown5");
@@ -20,20 +20,27 @@ public abstract class _IManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Gpio.IManager.Unknown6");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Unknown0
+			case 0x0: { // Unknown0
 				break;
-			case 0x1: // GetPadSession
+			}
+			case 0x1: { // GetPadSession
 				break;
-			case 0x2: // Unknown2
+			}
+			case 0x2: { // Unknown2
 				break;
-			case 0x3: // Unknown3
+			}
+			case 0x3: { // Unknown3
 				break;
-			case 0x4: // Unknown4
+			}
+			case 0x4: { // Unknown4
 				break;
-			case 0x5: // Unknown5
+			}
+			case 0x5: { // Unknown5
 				break;
-			case 0x6: // Unknown6
+			}
+			case 0x6: { // Unknown6
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Gpio.IManager");
 		}
@@ -78,40 +85,57 @@ public abstract class _IPadSession_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetValueForSleepState");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetDirection
+			case 0x0: { // SetDirection
 				break;
-			case 0x1: // GetDirection
+			}
+			case 0x1: { // GetDirection
 				break;
-			case 0x2: // SetInterruptMode
+			}
+			case 0x2: { // SetInterruptMode
 				break;
-			case 0x3: // GetInterruptMode
+			}
+			case 0x3: { // GetInterruptMode
 				break;
-			case 0x4: // SetInterruptEnable
+			}
+			case 0x4: { // SetInterruptEnable
 				break;
-			case 0x5: // GetInterruptEnable
+			}
+			case 0x5: { // GetInterruptEnable
 				break;
-			case 0x6: // GetInterruptStatus
+			}
+			case 0x6: { // GetInterruptStatus
 				break;
-			case 0x7: // ClearInterruptStatus
+			}
+			case 0x7: { // ClearInterruptStatus
 				break;
-			case 0x8: // SetValue
+			}
+			case 0x8: { // SetValue
 				break;
-			case 0x9: // GetValue
+			}
+			case 0x9: { // GetValue
 				break;
-			case 0xA: // BindInterrupt
+			}
+			case 0xA: { // BindInterrupt
 				break;
-			case 0xB: // UnbindInterrupt
+			}
+			case 0xB: { // UnbindInterrupt
 				break;
-			case 0xC: // SetDebounceEnabled
+			}
+			case 0xC: { // SetDebounceEnabled
 				break;
-			case 0xD: // GetDebounceEnabled
+			}
+			case 0xD: { // GetDebounceEnabled
 				break;
-			case 0xE: // SetDebounceTime
+			}
+			case 0xE: { // SetDebounceTime
 				break;
-			case 0xF: // GetDebounceTime
+			}
+			case 0xF: { // GetDebounceTime
 				break;
-			case 0x10: // SetValueForSleepState
+			}
+			case 0x10: { // SetValueForSleepState
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Gpio.IPadSession");
 		}

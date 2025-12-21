@@ -4,24 +4,28 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Arp.Detail;
 public partial class IReader : _IReader_Base;
 public abstract class _IReader_Base : IpcInterface {
-	protected virtual void GetApplicationLaunchProperty(Span<byte> _0) =>
+	protected virtual void GetApplicationLaunchProperty(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationLaunchProperty not implemented");
-	protected virtual void GetApplicationLaunchPropertyWithApplicationId(Span<byte> _0) =>
+	protected virtual void GetApplicationLaunchPropertyWithApplicationId(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationLaunchPropertyWithApplicationId not implemented");
-	protected virtual void GetApplicationControlProperty(Span<byte> _0) =>
+	protected virtual void GetApplicationControlProperty(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationControlProperty not implemented");
-	protected virtual void GetApplicationControlPropertyWithApplicationId(Span<byte> _0) =>
+	protected virtual void GetApplicationControlPropertyWithApplicationId(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationControlPropertyWithApplicationId not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetApplicationLaunchProperty
+			case 0x0: { // GetApplicationLaunchProperty
 				break;
-			case 0x1: // GetApplicationLaunchPropertyWithApplicationId
+			}
+			case 0x1: { // GetApplicationLaunchPropertyWithApplicationId
 				break;
-			case 0x2: // GetApplicationControlProperty
+			}
+			case 0x2: { // GetApplicationControlProperty
 				break;
-			case 0x3: // GetApplicationControlPropertyWithApplicationId
+			}
+			case 0x3: { // GetApplicationControlPropertyWithApplicationId
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Arp.Detail.IReader");
 		}
@@ -38,12 +42,15 @@ public abstract class _IRegistrar_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationControlProperty");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Issue
+			case 0x0: { // Issue
 				break;
-			case 0x1: // SetApplicationLaunchProperty
+			}
+			case 0x1: { // SetApplicationLaunchProperty
 				break;
-			case 0x2: // SetApplicationControlProperty
+			}
+			case 0x2: { // SetApplicationControlProperty
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Arp.Detail.IRegistrar");
 		}
@@ -58,10 +65,12 @@ public abstract class _IWriter_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Arp.Detail.IWriter.DeleteProperties");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // AcquireRegistrar
+			case 0x0: { // AcquireRegistrar
 				break;
-			case 0x1: // DeleteProperties
+			}
+			case 0x1: { // DeleteProperties
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Arp.Detail.IWriter");
 		}

@@ -66,7 +66,8 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
                     cb += $"public byte _{Rename(vname)};";
                 else if(vtype is IpcType.BytesType(var size, _))
                     cb += $"public fixed byte {Rename(vname)}[{size}];";
-                else
+                else if(vtype is IpcType.BufferType) {
+                } else
                     cb += $"public {GenType(vtype)} {Rename(vname)};";
             }
             cb--;
@@ -84,6 +85,9 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
                 ? GenType(func.Outputs[0].Type)
                 : "void";
             var args = func.Inputs.Select((x, i) => $"{GenType(x.Type)} {x.Name ?? $"_{i}"}").ToList();
+            if(retType == "void")
+                args.AddRange(func.Outputs.Select((x, i) =>
+                    $"{(x.Type is IpcType.StructType or IpcType.BufferType or IpcType.ArrayType or IpcType.BytesType ? "" : "out ")}{GenType(x.Type)} {(x.Name == null && x.Type is IpcType.PidType ? "pid" : x.Name ?? $"_{i + func.Inputs.Count}")}"));
             cb += $"protected virtual {retType} {Rename(func.Name)}({string.Join(", ", args)}) =>";
             cb++;
             if(func.Outputs.Count == 0)
@@ -97,10 +101,11 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
         cb += "switch(im.CommandId) {";
         cb++;
         foreach(var function in iface.Functions) {
-            cb += $"case 0x{function.CmdId:X}: // {function.Name}";
+            cb += $"case 0x{function.CmdId:X}: {{ // {function.Name}";
             cb++;
             cb += "break;";
             cb--;
+            cb += "}";
         }
         cb += "default:";
         cb++;
@@ -141,9 +146,11 @@ static string GenType(IpcType type) => type switch {
     IpcType.BytesType => "Span<byte>",
     IpcType.PidType => "ulong",
     IpcType.BufferType(IpcType.BytesType, _) => "Span<byte>",
-    IpcType.BufferType(IpcType.UnknownType, _) => "Span<byte>",
+    IpcType.BufferType(IpcType.UnknownType, _) or
+        IpcType.BufferType(IpcType.ArrayType(IpcType.UnknownType, _), _) => "Span<byte>",
     IpcType.BufferType(IpcType.ArrayType(var dataType, _), _) => $"Span<{GenType(dataType)}>",
     IpcType.BufferType(var dataType, _) => $"Span<{GenType(dataType)}>",
+    IpcType.ArrayType(var dataType, _) => $"Span<{GenType(dataType)}>",
     _ => throw new NotImplementedException($"Can't generate C# type for {type}"),
 };
 

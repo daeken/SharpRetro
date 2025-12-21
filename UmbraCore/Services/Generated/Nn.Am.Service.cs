@@ -18,18 +18,24 @@ public abstract class _IAllSystemAppletProxiesService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IAllSystemAppletProxiesService.CreateSelfLibraryAppletCreatorForDevelop not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x64: // OpenSystemAppletProxy
+			case 0x64: { // OpenSystemAppletProxy
 				break;
-			case 0xC8: // OpenLibraryAppletProxyOld
+			}
+			case 0xC8: { // OpenLibraryAppletProxyOld
 				break;
-			case 0xC9: // OpenLibraryAppletProxy
+			}
+			case 0xC9: { // OpenLibraryAppletProxy
 				break;
-			case 0x12C: // OpenOverlayAppletProxy
+			}
+			case 0x12C: { // OpenOverlayAppletProxy
 				break;
-			case 0x15E: // OpenSystemApplicationProxy
+			}
+			case 0x15E: { // OpenSystemApplicationProxy
 				break;
-			case 0x190: // CreateSelfLibraryAppletCreatorForDevelop
+			}
+			case 0x190: { // CreateSelfLibraryAppletCreatorForDevelop
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IAllSystemAppletProxiesService");
 		}
@@ -52,18 +58,24 @@ public abstract class _IAppletAccessor_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IAppletAccessor.GetResult");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetAppletStateChangedEvent
+			case 0x0: { // GetAppletStateChangedEvent
 				break;
-			case 0x1: // IsCompleted
+			}
+			case 0x1: { // IsCompleted
 				break;
-			case 0xA: // Start
+			}
+			case 0xA: { // Start
 				break;
-			case 0x14: // RequestExit
+			}
+			case 0x14: { // RequestExit
 				break;
-			case 0x19: // Terminate
+			}
+			case 0x19: { // Terminate
 				break;
-			case 0x1E: // GetResult
+			}
+			case 0x1E: { // GetResult
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IAppletAccessor");
 		}
@@ -96,40 +108,54 @@ public abstract class _IApplicationAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.GetApplicationId not implemented");
 	protected virtual void PushLaunchParameter(uint _0, Nn.Am.Service.IStorage _1) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.PushLaunchParameter");
-	protected virtual void GetApplicationControlProperty() =>
+	protected virtual void GetApplicationControlProperty(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.GetApplicationControlProperty not implemented");
-	protected virtual void GetApplicationLaunchProperty() =>
+	protected virtual void GetApplicationLaunchProperty(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.GetApplicationLaunchProperty not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetAppletStateChangedEvent
+			case 0x0: { // GetAppletStateChangedEvent
 				break;
-			case 0x1: // IsCompleted
+			}
+			case 0x1: { // IsCompleted
 				break;
-			case 0xA: // Start
+			}
+			case 0xA: { // Start
 				break;
-			case 0x14: // RequestExit
+			}
+			case 0x14: { // RequestExit
 				break;
-			case 0x19: // Terminate
+			}
+			case 0x19: { // Terminate
 				break;
-			case 0x1E: // GetResult
+			}
+			case 0x1E: { // GetResult
 				break;
-			case 0x65: // RequestForApplicationToGetForeground
+			}
+			case 0x65: { // RequestForApplicationToGetForeground
 				break;
-			case 0x6E: // TerminateAllLibraryApplets
+			}
+			case 0x6E: { // TerminateAllLibraryApplets
 				break;
-			case 0x6F: // AreAnyLibraryAppletsLeft
+			}
+			case 0x6F: { // AreAnyLibraryAppletsLeft
 				break;
-			case 0x70: // GetCurrentLibraryApplet
+			}
+			case 0x70: { // GetCurrentLibraryApplet
 				break;
-			case 0x78: // GetApplicationId
+			}
+			case 0x78: { // GetApplicationId
 				break;
-			case 0x79: // PushLaunchParameter
+			}
+			case 0x79: { // PushLaunchParameter
 				break;
-			case 0x7A: // GetApplicationControlProperty
+			}
+			case 0x7A: { // GetApplicationControlProperty
 				break;
-			case 0x7B: // GetApplicationLaunchProperty
+			}
+			case 0x7B: { // GetApplicationLaunchProperty
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IApplicationAccessor");
 		}
@@ -148,14 +174,18 @@ public abstract class _IApplicationCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IApplicationCreator.PopFloatingApplicationForDevelopment not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateApplication
+			case 0x0: { // CreateApplication
 				break;
-			case 0x1: // PopLaunchRequestedApplication
+			}
+			case 0x1: { // PopLaunchRequestedApplication
 				break;
-			case 0xA: // CreateSystemApplication
+			}
+			case 0xA: { // CreateSystemApplication
 				break;
-			case 0x64: // PopFloatingApplicationForDevelopment
+			}
+			case 0x64: { // PopFloatingApplicationForDevelopment
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IApplicationCreator");
 		}
@@ -176,17 +206,17 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndRequestToStartForQuest");
 	protected virtual ulong EnsureSaveData(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.EnsureSaveData not implemented");
-	protected virtual void GetDesiredLanguage() =>
+	protected virtual void GetDesiredLanguage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetDesiredLanguage not implemented");
 	protected virtual void SetTerminateResult(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.SetTerminateResult");
-	protected virtual void GetDisplayVersion() =>
+	protected virtual void GetDisplayVersion(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetDisplayVersion not implemented");
-	protected virtual void GetLaunchStorageInfoForDebug() =>
+	protected virtual void GetLaunchStorageInfoForDebug(out byte _0, out byte _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetLaunchStorageInfoForDebug not implemented");
 	protected virtual ulong ExtendSaveData(byte _0, Span<byte> _1, ulong _2, ulong _3) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.ExtendSaveData not implemented");
-	protected virtual void GetSaveDataSize(byte _0, Span<byte> _1) =>
+	protected virtual void GetSaveDataSize(byte _0, Span<byte> _1, out ulong _2, out ulong _3) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetSaveDataSize not implemented");
 	protected virtual void BeginBlockingHomeButtonShortAndLongPressed(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.BeginBlockingHomeButtonShortAndLongPressed");
@@ -198,7 +228,7 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.EndBlockingHomeButton");
 	protected virtual byte NotifyRunning() =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.NotifyRunning not implemented");
-	protected virtual void GetPseudoDeviceId() =>
+	protected virtual void GetPseudoDeviceId(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetPseudoDeviceId not implemented");
 	protected virtual void SetMediaPlaybackStateForApplication(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.SetMediaPlaybackStateForApplication");
@@ -220,60 +250,87 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.EnableApplicationCrashReport");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1: // PopLaunchParameter
+			case 0x1: { // PopLaunchParameter
 				break;
-			case 0xA: // CreateApplicationAndPushAndRequestToStart
+			}
+			case 0xA: { // CreateApplicationAndPushAndRequestToStart
 				break;
-			case 0xB: // CreateApplicationAndPushAndRequestToStartForQuest
+			}
+			case 0xB: { // CreateApplicationAndPushAndRequestToStartForQuest
 				break;
-			case 0xC: // CreateApplicationAndRequestToStart
+			}
+			case 0xC: { // CreateApplicationAndRequestToStart
 				break;
-			case 0xD: // CreateApplicationAndRequestToStartForQuest
+			}
+			case 0xD: { // CreateApplicationAndRequestToStartForQuest
 				break;
-			case 0x14: // EnsureSaveData
+			}
+			case 0x14: { // EnsureSaveData
 				break;
-			case 0x15: // GetDesiredLanguage
+			}
+			case 0x15: { // GetDesiredLanguage
 				break;
-			case 0x16: // SetTerminateResult
+			}
+			case 0x16: { // SetTerminateResult
 				break;
-			case 0x17: // GetDisplayVersion
+			}
+			case 0x17: { // GetDisplayVersion
 				break;
-			case 0x18: // GetLaunchStorageInfoForDebug
+			}
+			case 0x18: { // GetLaunchStorageInfoForDebug
 				break;
-			case 0x19: // ExtendSaveData
+			}
+			case 0x19: { // ExtendSaveData
 				break;
-			case 0x1A: // GetSaveDataSize
+			}
+			case 0x1A: { // GetSaveDataSize
 				break;
-			case 0x1E: // BeginBlockingHomeButtonShortAndLongPressed
+			}
+			case 0x1E: { // BeginBlockingHomeButtonShortAndLongPressed
 				break;
-			case 0x1F: // EndBlockingHomeButtonShortAndLongPressed
+			}
+			case 0x1F: { // EndBlockingHomeButtonShortAndLongPressed
 				break;
-			case 0x20: // BeginBlockingHomeButton
+			}
+			case 0x20: { // BeginBlockingHomeButton
 				break;
-			case 0x21: // EndBlockingHomeButton
+			}
+			case 0x21: { // EndBlockingHomeButton
 				break;
-			case 0x28: // NotifyRunning
+			}
+			case 0x28: { // NotifyRunning
 				break;
-			case 0x32: // GetPseudoDeviceId
+			}
+			case 0x32: { // GetPseudoDeviceId
 				break;
-			case 0x3C: // SetMediaPlaybackStateForApplication
+			}
+			case 0x3C: { // SetMediaPlaybackStateForApplication
 				break;
-			case 0x41: // IsGamePlayRecordingSupported
+			}
+			case 0x41: { // IsGamePlayRecordingSupported
 				break;
-			case 0x42: // InitializeGamePlayRecording
+			}
+			case 0x42: { // InitializeGamePlayRecording
 				break;
-			case 0x43: // SetGamePlayRecordingState
+			}
+			case 0x43: { // SetGamePlayRecordingState
 				break;
-			case 0x44: // RequestFlushGamePlayingMovieForDebug
+			}
+			case 0x44: { // RequestFlushGamePlayingMovieForDebug
 				break;
-			case 0x46: // RequestToShutdown
+			}
+			case 0x46: { // RequestToShutdown
 				break;
-			case 0x47: // RequestToReboot
+			}
+			case 0x47: { // RequestToReboot
 				break;
-			case 0x50: // ExitAndRequestToShowThanksMessage
+			}
+			case 0x50: { // ExitAndRequestToShowThanksMessage
 				break;
-			case 0x5A: // EnableApplicationCrashReport
+			}
+			case 0x5A: { // EnableApplicationCrashReport
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IApplicationFunctions");
 		}
@@ -302,24 +359,33 @@ public abstract class _IApplicationProxy_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IApplicationProxy.GetDebugFunctions not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCommonStateGetter
+			case 0x0: { // GetCommonStateGetter
 				break;
-			case 0x1: // GetSelfController
+			}
+			case 0x1: { // GetSelfController
 				break;
-			case 0x2: // GetWindowController
+			}
+			case 0x2: { // GetWindowController
 				break;
-			case 0x3: // GetAudioController
+			}
+			case 0x3: { // GetAudioController
 				break;
-			case 0x4: // GetDisplayController
+			}
+			case 0x4: { // GetDisplayController
 				break;
-			case 0xA: // GetProcessWindingController
+			}
+			case 0xA: { // GetProcessWindingController
 				break;
-			case 0xB: // GetLibraryAppletCreator
+			}
+			case 0xB: { // GetLibraryAppletCreator
 				break;
-			case 0x14: // GetApplicationFunctions
+			}
+			case 0x14: { // GetApplicationFunctions
 				break;
-			case 0x3E8: // GetDebugFunctions
+			}
+			case 0x3E8: { // GetDebugFunctions
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IApplicationProxy");
 		}
@@ -332,8 +398,9 @@ public abstract class _IApplicationProxyService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IApplicationProxyService.OpenApplicationProxy not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenApplicationProxy
+			case 0x0: { // OpenApplicationProxy
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IApplicationProxyService");
 		}
@@ -354,16 +421,21 @@ public abstract class _IAudioController_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IAudioController.SetTransparentVolumeRate");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetExpectedMasterVolume
+			case 0x0: { // SetExpectedMasterVolume
 				break;
-			case 0x1: // GetMainAppletExpectedMasterVolume
+			}
+			case 0x1: { // GetMainAppletExpectedMasterVolume
 				break;
-			case 0x2: // GetLibraryAppletExpectedMasterVolume
+			}
+			case 0x2: { // GetLibraryAppletExpectedMasterVolume
 				break;
-			case 0x3: // ChangeMainAppletMasterVolume
+			}
+			case 0x3: { // ChangeMainAppletMasterVolume
 				break;
-			case 0x4: // SetTransparentVolumeRate
+			}
+			case 0x4: { // SetTransparentVolumeRate
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IAudioController");
 		}
@@ -376,7 +448,7 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetEventHandle not implemented");
 	protected virtual uint ReceiveMessage() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.ReceiveMessage not implemented");
-	protected virtual void GetThisAppletKind() =>
+	protected virtual void GetThisAppletKind(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetThisAppletKind not implemented");
 	protected virtual void AllowToEnterSleep() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.AllowToEnterSleep");
@@ -406,7 +478,7 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetHomeButtonReaderLockAccessor not implemented");
 	protected virtual Nn.Am.Service.ILockAccessor GetReaderLockAccessorEx(uint _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetReaderLockAccessorEx not implemented");
-	protected virtual void GetCradleFwVersion() =>
+	protected virtual void GetCradleFwVersion(out uint _0, out uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetCradleFwVersion not implemented");
 	protected virtual byte IsVrModeEnabled() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.IsVrModeEnabled not implemented");
@@ -416,7 +488,7 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.SetLcdBacklighOffEnabled");
 	protected virtual byte IsInControllerFirmwareUpdateSection() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.IsInControllerFirmwareUpdateSection not implemented");
-	protected virtual void GetDefaultDisplayResolution() =>
+	protected virtual void GetDefaultDisplayResolution(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetDefaultDisplayResolution not implemented");
 	protected virtual KObject GetDefaultDisplayResolutionChangeEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetDefaultDisplayResolutionChangeEvent not implemented");
@@ -426,58 +498,84 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetHdcpAuthenticationStateChangeEvent not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetEventHandle
+			case 0x0: { // GetEventHandle
 				break;
-			case 0x1: // ReceiveMessage
+			}
+			case 0x1: { // ReceiveMessage
 				break;
-			case 0x2: // GetThisAppletKind
+			}
+			case 0x2: { // GetThisAppletKind
 				break;
-			case 0x3: // AllowToEnterSleep
+			}
+			case 0x3: { // AllowToEnterSleep
 				break;
-			case 0x4: // DisallowToEnterSleep
+			}
+			case 0x4: { // DisallowToEnterSleep
 				break;
-			case 0x5: // GetOperationMode
+			}
+			case 0x5: { // GetOperationMode
 				break;
-			case 0x6: // GetPerformanceMode
+			}
+			case 0x6: { // GetPerformanceMode
 				break;
-			case 0x7: // GetCradleStatus
+			}
+			case 0x7: { // GetCradleStatus
 				break;
-			case 0x8: // GetBootMode
+			}
+			case 0x8: { // GetBootMode
 				break;
-			case 0x9: // GetCurrentFocusState
+			}
+			case 0x9: { // GetCurrentFocusState
 				break;
-			case 0xA: // RequestToAcquireSleepLock
+			}
+			case 0xA: { // RequestToAcquireSleepLock
 				break;
-			case 0xB: // ReleaseSleepLock
+			}
+			case 0xB: { // ReleaseSleepLock
 				break;
-			case 0xC: // ReleaseSleepLockTransiently
+			}
+			case 0xC: { // ReleaseSleepLockTransiently
 				break;
-			case 0xD: // GetAcquiredSleepLockEvent
+			}
+			case 0xD: { // GetAcquiredSleepLockEvent
 				break;
-			case 0x14: // PushToGeneralChannel
+			}
+			case 0x14: { // PushToGeneralChannel
 				break;
-			case 0x1E: // GetHomeButtonReaderLockAccessor
+			}
+			case 0x1E: { // GetHomeButtonReaderLockAccessor
 				break;
-			case 0x1F: // GetReaderLockAccessorEx
+			}
+			case 0x1F: { // GetReaderLockAccessorEx
 				break;
-			case 0x28: // GetCradleFwVersion
+			}
+			case 0x28: { // GetCradleFwVersion
 				break;
-			case 0x32: // IsVrModeEnabled
+			}
+			case 0x32: { // IsVrModeEnabled
 				break;
-			case 0x33: // SetVrModeEnabled
+			}
+			case 0x33: { // SetVrModeEnabled
 				break;
-			case 0x34: // SetLcdBacklighOffEnabled
+			}
+			case 0x34: { // SetLcdBacklighOffEnabled
 				break;
-			case 0x37: // IsInControllerFirmwareUpdateSection
+			}
+			case 0x37: { // IsInControllerFirmwareUpdateSection
 				break;
-			case 0x3C: // GetDefaultDisplayResolution
+			}
+			case 0x3C: { // GetDefaultDisplayResolution
 				break;
-			case 0x3D: // GetDefaultDisplayResolutionChangeEvent
+			}
+			case 0x3D: { // GetDefaultDisplayResolutionChangeEvent
 				break;
-			case 0x3E: // GetHdcpAuthenticationState
+			}
+			case 0x3E: { // GetHdcpAuthenticationState
 				break;
-			case 0x3F: // GetHdcpAuthenticationStateChangeEvent
+			}
+			case 0x3F: { // GetHdcpAuthenticationStateChangeEvent
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ICommonStateGetter");
 		}
@@ -496,14 +594,18 @@ public abstract class _IDebugFunctions_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDebugFunctions.InvalidateTransitionLayer");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // NotifyMessageToHomeMenuForDebug
+			case 0x0: { // NotifyMessageToHomeMenuForDebug
 				break;
-			case 0x1: // OpenMainApplication
+			}
+			case 0x1: { // OpenMainApplication
 				break;
-			case 0xA: // EmulateButtonEvent
+			}
+			case 0xA: { // EmulateButtonEvent
 				break;
-			case 0x14: // InvalidateTransitionLayer
+			}
+			case 0x14: { // InvalidateTransitionLayer
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IDebugFunctions");
 		}
@@ -512,21 +614,21 @@ public abstract class _IDebugFunctions_Base : IpcInterface {
 
 public partial class IDisplayController : _IDisplayController_Base;
 public abstract class _IDisplayController_Base : IpcInterface {
-	protected virtual void GetLastForegroundCaptureImage() =>
+	protected virtual void GetLastForegroundCaptureImage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastForegroundCaptureImage not implemented");
 	protected virtual void UpdateLastForegroundCaptureImage() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.UpdateLastForegroundCaptureImage");
-	protected virtual void GetLastApplicationCaptureImage() =>
+	protected virtual void GetLastApplicationCaptureImage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastApplicationCaptureImage not implemented");
-	protected virtual void GetCallerAppletCaptureImage() =>
+	protected virtual void GetCallerAppletCaptureImage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetCallerAppletCaptureImage not implemented");
 	protected virtual void UpdateCallerAppletCaptureImage() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.UpdateCallerAppletCaptureImage");
-	protected virtual void GetLastForegroundCaptureImageEx() =>
+	protected virtual void GetLastForegroundCaptureImageEx(out byte _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastForegroundCaptureImageEx not implemented");
-	protected virtual void GetLastApplicationCaptureImageEx() =>
+	protected virtual void GetLastApplicationCaptureImageEx(out byte _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastApplicationCaptureImageEx not implemented");
-	protected virtual void GetCallerAppletCaptureImageEx() =>
+	protected virtual void GetCallerAppletCaptureImageEx(out byte _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetCallerAppletCaptureImageEx not implemented");
 	protected virtual void TakeScreenShotOfOwnLayer(byte _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.TakeScreenShotOfOwnLayer");
@@ -542,82 +644,108 @@ public abstract class _IDisplayController_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireCallerAppletCaptureBuffer not implemented");
 	protected virtual void ReleaseCallerAppletCaptureBuffer() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseCallerAppletCaptureBuffer");
-	protected virtual void AcquireLastApplicationCaptureBufferEx() =>
+	protected virtual void AcquireLastApplicationCaptureBufferEx(out byte _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastApplicationCaptureBufferEx not implemented");
-	protected virtual void AcquireLastForegroundCaptureBufferEx() =>
+	protected virtual void AcquireLastForegroundCaptureBufferEx(out byte _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastForegroundCaptureBufferEx not implemented");
-	protected virtual void AcquireCallerAppletCaptureBufferEx() =>
+	protected virtual void AcquireCallerAppletCaptureBufferEx(out byte _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireCallerAppletCaptureBufferEx not implemented");
 	protected virtual void ClearCaptureBuffer(byte _0, uint _1, uint _2) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ClearCaptureBuffer");
 	protected virtual void ClearAppletTransitionBuffer(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ClearAppletTransitionBuffer");
-	protected virtual void AcquireLastApplicationCaptureSharedBuffer() =>
+	protected virtual void AcquireLastApplicationCaptureSharedBuffer(out byte _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastApplicationCaptureSharedBuffer not implemented");
 	protected virtual void ReleaseLastApplicationCaptureSharedBuffer() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastApplicationCaptureSharedBuffer");
-	protected virtual void AcquireLastForegroundCaptureSharedBuffer() =>
+	protected virtual void AcquireLastForegroundCaptureSharedBuffer(out byte _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastForegroundCaptureSharedBuffer not implemented");
 	protected virtual void ReleaseLastForegroundCaptureSharedBuffer() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastForegroundCaptureSharedBuffer");
-	protected virtual void AcquireCallerAppletCaptureSharedBuffer() =>
+	protected virtual void AcquireCallerAppletCaptureSharedBuffer(out byte _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireCallerAppletCaptureSharedBuffer not implemented");
 	protected virtual void ReleaseCallerAppletCaptureSharedBuffer() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseCallerAppletCaptureSharedBuffer");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetLastForegroundCaptureImage
+			case 0x0: { // GetLastForegroundCaptureImage
 				break;
-			case 0x1: // UpdateLastForegroundCaptureImage
+			}
+			case 0x1: { // UpdateLastForegroundCaptureImage
 				break;
-			case 0x2: // GetLastApplicationCaptureImage
+			}
+			case 0x2: { // GetLastApplicationCaptureImage
 				break;
-			case 0x3: // GetCallerAppletCaptureImage
+			}
+			case 0x3: { // GetCallerAppletCaptureImage
 				break;
-			case 0x4: // UpdateCallerAppletCaptureImage
+			}
+			case 0x4: { // UpdateCallerAppletCaptureImage
 				break;
-			case 0x5: // GetLastForegroundCaptureImageEx
+			}
+			case 0x5: { // GetLastForegroundCaptureImageEx
 				break;
-			case 0x6: // GetLastApplicationCaptureImageEx
+			}
+			case 0x6: { // GetLastApplicationCaptureImageEx
 				break;
-			case 0x7: // GetCallerAppletCaptureImageEx
+			}
+			case 0x7: { // GetCallerAppletCaptureImageEx
 				break;
-			case 0x8: // TakeScreenShotOfOwnLayer
+			}
+			case 0x8: { // TakeScreenShotOfOwnLayer
 				break;
-			case 0xA: // AcquireLastApplicationCaptureBuffer
+			}
+			case 0xA: { // AcquireLastApplicationCaptureBuffer
 				break;
-			case 0xB: // ReleaseLastApplicationCaptureBuffer
+			}
+			case 0xB: { // ReleaseLastApplicationCaptureBuffer
 				break;
-			case 0xC: // AcquireLastForegroundCaptureBuffer
+			}
+			case 0xC: { // AcquireLastForegroundCaptureBuffer
 				break;
-			case 0xD: // ReleaseLastForegroundCaptureBuffer
+			}
+			case 0xD: { // ReleaseLastForegroundCaptureBuffer
 				break;
-			case 0xE: // AcquireCallerAppletCaptureBuffer
+			}
+			case 0xE: { // AcquireCallerAppletCaptureBuffer
 				break;
-			case 0xF: // ReleaseCallerAppletCaptureBuffer
+			}
+			case 0xF: { // ReleaseCallerAppletCaptureBuffer
 				break;
-			case 0x10: // AcquireLastApplicationCaptureBufferEx
+			}
+			case 0x10: { // AcquireLastApplicationCaptureBufferEx
 				break;
-			case 0x11: // AcquireLastForegroundCaptureBufferEx
+			}
+			case 0x11: { // AcquireLastForegroundCaptureBufferEx
 				break;
-			case 0x12: // AcquireCallerAppletCaptureBufferEx
+			}
+			case 0x12: { // AcquireCallerAppletCaptureBufferEx
 				break;
-			case 0x14: // ClearCaptureBuffer
+			}
+			case 0x14: { // ClearCaptureBuffer
 				break;
-			case 0x15: // ClearAppletTransitionBuffer
+			}
+			case 0x15: { // ClearAppletTransitionBuffer
 				break;
-			case 0x16: // AcquireLastApplicationCaptureSharedBuffer
+			}
+			case 0x16: { // AcquireLastApplicationCaptureSharedBuffer
 				break;
-			case 0x17: // ReleaseLastApplicationCaptureSharedBuffer
+			}
+			case 0x17: { // ReleaseLastApplicationCaptureSharedBuffer
 				break;
-			case 0x18: // AcquireLastForegroundCaptureSharedBuffer
+			}
+			case 0x18: { // AcquireLastForegroundCaptureSharedBuffer
 				break;
-			case 0x19: // ReleaseLastForegroundCaptureSharedBuffer
+			}
+			case 0x19: { // ReleaseLastForegroundCaptureSharedBuffer
 				break;
-			case 0x1A: // AcquireCallerAppletCaptureSharedBuffer
+			}
+			case 0x1A: { // AcquireCallerAppletCaptureSharedBuffer
 				break;
-			case 0x1B: // ReleaseCallerAppletCaptureSharedBuffer
+			}
+			case 0x1B: { // ReleaseCallerAppletCaptureSharedBuffer
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IDisplayController");
 		}
@@ -650,28 +778,39 @@ public abstract class _IGlobalStateController_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IGlobalStateController.GetHdcpAuthenticationFailedEvent not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // RequestToEnterSleep
+			case 0x0: { // RequestToEnterSleep
 				break;
-			case 0x1: // EnterSleep
+			}
+			case 0x1: { // EnterSleep
 				break;
-			case 0x2: // StartSleepSequence
+			}
+			case 0x2: { // StartSleepSequence
 				break;
-			case 0x3: // StartShutdownSequence
+			}
+			case 0x3: { // StartShutdownSequence
 				break;
-			case 0x4: // StartRebootSequence
+			}
+			case 0x4: { // StartRebootSequence
 				break;
-			case 0xA: // LoadAndApplyIdlePolicySettings
+			}
+			case 0xA: { // LoadAndApplyIdlePolicySettings
 				break;
-			case 0xB: // NotifyCecSettingsChanged
+			}
+			case 0xB: { // NotifyCecSettingsChanged
 				break;
-			case 0xC: // SetDefaultHomeButtonLongPressTime
+			}
+			case 0xC: { // SetDefaultHomeButtonLongPressTime
 				break;
-			case 0xD: // UpdateDefaultDisplayResolution
+			}
+			case 0xD: { // UpdateDefaultDisplayResolution
 				break;
-			case 0xE: // ShouldSleepOnBoot
+			}
+			case 0xE: { // ShouldSleepOnBoot
 				break;
-			case 0xF: // GetHdcpAuthenticationFailedEvent
+			}
+			case 0xF: { // GetHdcpAuthenticationFailedEvent
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IGlobalStateController");
 		}
@@ -696,20 +835,27 @@ public abstract class _IHomeMenuFunctions_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IHomeMenuFunctions.GetWriterLockAccessorEx not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0xA: // RequestToGetForeground
+			case 0xA: { // RequestToGetForeground
 				break;
-			case 0xB: // LockForeground
+			}
+			case 0xB: { // LockForeground
 				break;
-			case 0xC: // UnlockForeground
+			}
+			case 0xC: { // UnlockForeground
 				break;
-			case 0x14: // PopFromGeneralChannel
+			}
+			case 0x14: { // PopFromGeneralChannel
 				break;
-			case 0x15: // GetPopFromGeneralChannelEvent
+			}
+			case 0x15: { // GetPopFromGeneralChannelEvent
 				break;
-			case 0x1E: // GetHomeButtonWriterLockAccessor
+			}
+			case 0x1E: { // GetHomeButtonWriterLockAccessor
 				break;
-			case 0x1F: // GetWriterLockAccessorEx
+			}
+			case 0x1F: { // GetWriterLockAccessorEx
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IHomeMenuFunctions");
 		}
@@ -748,7 +894,7 @@ public abstract class _ILibraryAppletAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.GetPopInteractiveOutDataEvent not implemented");
 	protected virtual byte NeedsToExitProcess() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.NeedsToExitProcess not implemented");
-	protected virtual void GetLibraryAppletInfo() =>
+	protected virtual void GetLibraryAppletInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.GetLibraryAppletInfo not implemented");
 	protected virtual void RequestForAppletToGetForeground() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.RequestForAppletToGetForeground");
@@ -756,42 +902,60 @@ public abstract class _ILibraryAppletAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.GetIndirectLayerConsumerHandle not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetAppletStateChangedEvent
+			case 0x0: { // GetAppletStateChangedEvent
 				break;
-			case 0x1: // IsCompleted
+			}
+			case 0x1: { // IsCompleted
 				break;
-			case 0xA: // Start
+			}
+			case 0xA: { // Start
 				break;
-			case 0x14: // RequestExit
+			}
+			case 0x14: { // RequestExit
 				break;
-			case 0x19: // Terminate
+			}
+			case 0x19: { // Terminate
 				break;
-			case 0x1E: // GetResult
+			}
+			case 0x1E: { // GetResult
 				break;
-			case 0x32: // SetOutOfFocusApplicationSuspendingEnabled
+			}
+			case 0x32: { // SetOutOfFocusApplicationSuspendingEnabled
 				break;
-			case 0x64: // PushInData
+			}
+			case 0x64: { // PushInData
 				break;
-			case 0x65: // PopOutData
+			}
+			case 0x65: { // PopOutData
 				break;
-			case 0x66: // PushExtraStorage
+			}
+			case 0x66: { // PushExtraStorage
 				break;
-			case 0x67: // PushInteractiveInData
+			}
+			case 0x67: { // PushInteractiveInData
 				break;
-			case 0x68: // PopInteractiveOutData
+			}
+			case 0x68: { // PopInteractiveOutData
 				break;
-			case 0x69: // GetPopOutDataEvent
+			}
+			case 0x69: { // GetPopOutDataEvent
 				break;
-			case 0x6A: // GetPopInteractiveOutDataEvent
+			}
+			case 0x6A: { // GetPopInteractiveOutDataEvent
 				break;
-			case 0x6E: // NeedsToExitProcess
+			}
+			case 0x6E: { // NeedsToExitProcess
 				break;
-			case 0x78: // GetLibraryAppletInfo
+			}
+			case 0x78: { // GetLibraryAppletInfo
 				break;
-			case 0x96: // RequestForAppletToGetForeground
+			}
+			case 0x96: { // RequestForAppletToGetForeground
 				break;
-			case 0xA0: // GetIndirectLayerConsumerHandle
+			}
+			case 0xA0: { // GetIndirectLayerConsumerHandle
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ILibraryAppletAccessor");
 		}
@@ -814,18 +978,24 @@ public abstract class _ILibraryAppletCreator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletCreator.CreateHandleStorage not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateLibraryApplet
+			case 0x0: { // CreateLibraryApplet
 				break;
-			case 0x1: // TerminateAllLibraryApplets
+			}
+			case 0x1: { // TerminateAllLibraryApplets
 				break;
-			case 0x2: // AreAnyLibraryAppletsLeft
+			}
+			case 0x2: { // AreAnyLibraryAppletsLeft
 				break;
-			case 0xA: // CreateStorage
+			}
+			case 0xA: { // CreateStorage
 				break;
-			case 0xB: // CreateTransferMemoryStorage
+			}
+			case 0xB: { // CreateTransferMemoryStorage
 				break;
-			case 0xC: // CreateHandleStorage
+			}
+			case 0xC: { // CreateHandleStorage
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ILibraryAppletCreator");
 		}
@@ -854,24 +1024,33 @@ public abstract class _ILibraryAppletProxy_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletProxy.GetDebugFunctions not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCommonStateGetter
+			case 0x0: { // GetCommonStateGetter
 				break;
-			case 0x1: // GetSelfController
+			}
+			case 0x1: { // GetSelfController
 				break;
-			case 0x2: // GetWindowController
+			}
+			case 0x2: { // GetWindowController
 				break;
-			case 0x3: // GetAudioController
+			}
+			case 0x3: { // GetAudioController
 				break;
-			case 0x4: // GetDisplayController
+			}
+			case 0x4: { // GetDisplayController
 				break;
-			case 0xA: // GetProcessWindingController
+			}
+			case 0xA: { // GetProcessWindingController
 				break;
-			case 0xB: // GetLibraryAppletCreator
+			}
+			case 0xB: { // GetLibraryAppletCreator
 				break;
-			case 0x14: // OpenLibraryAppletSelfAccessor
+			}
+			case 0x14: { // OpenLibraryAppletSelfAccessor
 				break;
-			case 0x3E8: // GetDebugFunctions
+			}
+			case 0x3E8: { // GetDebugFunctions
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ILibraryAppletProxy");
 		}
@@ -894,7 +1073,7 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetPopInteractiveInDataEvent not implemented");
 	protected virtual void ExitProcessAndReturn() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ExitProcessAndReturn");
-	protected virtual void GetLibraryAppletInfo() =>
+	protected virtual void GetLibraryAppletInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetLibraryAppletInfo not implemented");
 	protected virtual void GetMainAppletIdentityInfo() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletIdentityInfo");
@@ -902,11 +1081,11 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.CanUseApplicationCore not implemented");
 	protected virtual void GetCallerAppletIdentityInfo() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetCallerAppletIdentityInfo");
-	protected virtual void GetMainAppletApplicationControlProperty() =>
+	protected virtual void GetMainAppletApplicationControlProperty(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletApplicationControlProperty not implemented");
 	protected virtual byte GetMainAppletStorageId() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletStorageId not implemented");
-	protected virtual void GetCallerAppletIdentityInfoStack() =>
+	protected virtual void GetCallerAppletIdentityInfoStack(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetCallerAppletIdentityInfoStack not implemented");
 	protected virtual void GetNextReturnDestinationAppletIdentityInfo() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetNextReturnDestinationAppletIdentityInfo");
@@ -926,62 +1105,87 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ReportVisibleError");
 	protected virtual void ReportVisibleErrorWithErrorContext(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ReportVisibleErrorWithErrorContext");
-	protected virtual void GetMainAppletApplicationDesiredLanguage() =>
+	protected virtual void GetMainAppletApplicationDesiredLanguage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletApplicationDesiredLanguage not implemented");
 	protected virtual Nn.Grcsrv.IGameMovieTrimmer CreateGameMovieTrimmer(ulong _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.CreateGameMovieTrimmer not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // PopInData
+			case 0x0: { // PopInData
 				break;
-			case 0x1: // PushOutData
+			}
+			case 0x1: { // PushOutData
 				break;
-			case 0x2: // PopInteractiveInData
+			}
+			case 0x2: { // PopInteractiveInData
 				break;
-			case 0x3: // PushInteractiveOutData
+			}
+			case 0x3: { // PushInteractiveOutData
 				break;
-			case 0x5: // GetPopInDataEvent
+			}
+			case 0x5: { // GetPopInDataEvent
 				break;
-			case 0x6: // GetPopInteractiveInDataEvent
+			}
+			case 0x6: { // GetPopInteractiveInDataEvent
 				break;
-			case 0xA: // ExitProcessAndReturn
+			}
+			case 0xA: { // ExitProcessAndReturn
 				break;
-			case 0xB: // GetLibraryAppletInfo
+			}
+			case 0xB: { // GetLibraryAppletInfo
 				break;
-			case 0xC: // GetMainAppletIdentityInfo
+			}
+			case 0xC: { // GetMainAppletIdentityInfo
 				break;
-			case 0xD: // CanUseApplicationCore
+			}
+			case 0xD: { // CanUseApplicationCore
 				break;
-			case 0xE: // GetCallerAppletIdentityInfo
+			}
+			case 0xE: { // GetCallerAppletIdentityInfo
 				break;
-			case 0xF: // GetMainAppletApplicationControlProperty
+			}
+			case 0xF: { // GetMainAppletApplicationControlProperty
 				break;
-			case 0x10: // GetMainAppletStorageId
+			}
+			case 0x10: { // GetMainAppletStorageId
 				break;
-			case 0x11: // GetCallerAppletIdentityInfoStack
+			}
+			case 0x11: { // GetCallerAppletIdentityInfoStack
 				break;
-			case 0x12: // GetNextReturnDestinationAppletIdentityInfo
+			}
+			case 0x12: { // GetNextReturnDestinationAppletIdentityInfo
 				break;
-			case 0x13: // GetDesirableKeyboardLayout
+			}
+			case 0x13: { // GetDesirableKeyboardLayout
 				break;
-			case 0x14: // PopExtraStorage
+			}
+			case 0x14: { // PopExtraStorage
 				break;
-			case 0x19: // GetPopExtraStorageEvent
+			}
+			case 0x19: { // GetPopExtraStorageEvent
 				break;
-			case 0x1E: // UnpopInData
+			}
+			case 0x1E: { // UnpopInData
 				break;
-			case 0x1F: // UnpopExtraStorage
+			}
+			case 0x1F: { // UnpopExtraStorage
 				break;
-			case 0x28: // GetIndirectLayerProducerHandle
+			}
+			case 0x28: { // GetIndirectLayerProducerHandle
 				break;
-			case 0x32: // ReportVisibleError
+			}
+			case 0x32: { // ReportVisibleError
 				break;
-			case 0x33: // ReportVisibleErrorWithErrorContext
+			}
+			case 0x33: { // ReportVisibleErrorWithErrorContext
 				break;
-			case 0x3C: // GetMainAppletApplicationDesiredLanguage
+			}
+			case 0x3C: { // GetMainAppletApplicationDesiredLanguage
 				break;
-			case 0x64: // CreateGameMovieTrimmer
+			}
+			case 0x64: { // CreateGameMovieTrimmer
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ILibraryAppletSelfAccessor");
 		}
@@ -990,7 +1194,7 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 
 public partial class ILockAccessor : _ILockAccessor_Base;
 public abstract class _ILockAccessor_Base : IpcInterface {
-	protected virtual void TryLock(byte _0) =>
+	protected virtual void TryLock(byte _0, out byte _1, out KObject _2) =>
 		throw new NotImplementedException("Nn.Am.Service.ILockAccessor.TryLock not implemented");
 	protected virtual void Unlock() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ILockAccessor.Unlock");
@@ -998,12 +1202,15 @@ public abstract class _ILockAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ILockAccessor.GetEvent not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1: // TryLock
+			case 0x1: { // TryLock
 				break;
-			case 0x2: // Unlock
+			}
+			case 0x2: { // Unlock
 				break;
-			case 0x3: // GetEvent
+			}
+			case 0x3: { // GetEvent
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ILockAccessor");
 		}
@@ -1032,24 +1239,33 @@ public abstract class _IOverlayAppletProxy_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IOverlayAppletProxy.GetDebugFunctions not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCommonStateGetter
+			case 0x0: { // GetCommonStateGetter
 				break;
-			case 0x1: // GetSelfController
+			}
+			case 0x1: { // GetSelfController
 				break;
-			case 0x2: // GetWindowController
+			}
+			case 0x2: { // GetWindowController
 				break;
-			case 0x3: // GetAudioController
+			}
+			case 0x3: { // GetAudioController
 				break;
-			case 0x4: // GetDisplayController
+			}
+			case 0x4: { // GetDisplayController
 				break;
-			case 0xA: // GetProcessWindingController
+			}
+			case 0xA: { // GetProcessWindingController
 				break;
-			case 0xB: // GetLibraryAppletCreator
+			}
+			case 0xB: { // GetLibraryAppletCreator
 				break;
-			case 0x14: // GetOverlayFunctions
+			}
+			case 0x14: { // GetOverlayFunctions
 				break;
-			case 0x3E8: // GetDebugFunctions
+			}
+			case 0x3E8: { // GetDebugFunctions
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IOverlayAppletProxy");
 		}
@@ -1074,20 +1290,27 @@ public abstract class _IOverlayFunctions_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.SetScreenShotPermissionGlobally");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // BeginToWatchShortHomeButtonMessage
+			case 0x0: { // BeginToWatchShortHomeButtonMessage
 				break;
-			case 0x1: // EndToWatchShortHomeButtonMessage
+			}
+			case 0x1: { // EndToWatchShortHomeButtonMessage
 				break;
-			case 0x2: // GetApplicationIdForLogo
+			}
+			case 0x2: { // GetApplicationIdForLogo
 				break;
-			case 0x3: // SetGpuTimeSliceBoost
+			}
+			case 0x3: { // SetGpuTimeSliceBoost
 				break;
-			case 0x4: // SetAutoSleepTimeAndDimmingTimeEnabled
+			}
+			case 0x4: { // SetAutoSleepTimeAndDimmingTimeEnabled
 				break;
-			case 0x5: // TerminateApplicationAndSetReason
+			}
+			case 0x5: { // TerminateApplicationAndSetReason
 				break;
-			case 0x6: // SetScreenShotPermissionGlobally
+			}
+			case 0x6: { // SetScreenShotPermissionGlobally
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IOverlayFunctions");
 		}
@@ -1096,7 +1319,7 @@ public abstract class _IOverlayFunctions_Base : IpcInterface {
 
 public partial class IProcessWindingController : _IProcessWindingController_Base;
 public abstract class _IProcessWindingController_Base : IpcInterface {
-	protected virtual void GetLaunchReason() =>
+	protected virtual void GetLaunchReason(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IProcessWindingController.GetLaunchReason not implemented");
 	protected virtual Nn.Am.Service.ILibraryAppletAccessor OpenCallingLibraryApplet() =>
 		throw new NotImplementedException("Nn.Am.Service.IProcessWindingController.OpenCallingLibraryApplet not implemented");
@@ -1114,22 +1337,30 @@ public abstract class _IProcessWindingController_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IProcessWindingController.ReserveToStartAndWait");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetLaunchReason
+			case 0x0: { // GetLaunchReason
 				break;
-			case 0xB: // OpenCallingLibraryApplet
+			}
+			case 0xB: { // OpenCallingLibraryApplet
 				break;
-			case 0x15: // PushContext
+			}
+			case 0x15: { // PushContext
 				break;
-			case 0x16: // PopContext
+			}
+			case 0x16: { // PopContext
 				break;
-			case 0x17: // CancelWindingReservation
+			}
+			case 0x17: { // CancelWindingReservation
 				break;
-			case 0x1E: // WindAndDoReserved
+			}
+			case 0x1E: { // WindAndDoReserved
 				break;
-			case 0x28: // ReserveToStartAndWaitAndUnwindThis
+			}
+			case 0x28: { // ReserveToStartAndWaitAndUnwindThis
 				break;
-			case 0x29: // ReserveToStartAndWait
+			}
+			case 0x29: { // ReserveToStartAndWait
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IProcessWindingController");
 		}
@@ -1176,7 +1407,7 @@ public abstract class _ISelfController_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.CreateManagedDisplayLayer not implemented");
 	protected virtual void IsSystemBufferSharingEnabled() =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.IsSystemBufferSharingEnabled");
-	protected virtual void GetSystemSharedLayerHandle() =>
+	protected virtual void GetSystemSharedLayerHandle(out ulong _0, out ulong _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.GetSystemSharedLayerHandle not implemented");
 	protected virtual void SetHandlesRequestToDisplay(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetHandlesRequestToDisplay");
@@ -1204,70 +1435,102 @@ public abstract class _ISelfController_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetWirelessPriorityMode");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Exit
+			case 0x0: { // Exit
 				break;
-			case 0x1: // LockExit
+			}
+			case 0x1: { // LockExit
 				break;
-			case 0x2: // UnlockExit
+			}
+			case 0x2: { // UnlockExit
 				break;
-			case 0x3: // EnterFatalSection
+			}
+			case 0x3: { // EnterFatalSection
 				break;
-			case 0x4: // LeaveFatalSection
+			}
+			case 0x4: { // LeaveFatalSection
 				break;
-			case 0x9: // GetLibraryAppletLaunchableEvent
+			}
+			case 0x9: { // GetLibraryAppletLaunchableEvent
 				break;
-			case 0xA: // SetScreenShotPermission
+			}
+			case 0xA: { // SetScreenShotPermission
 				break;
-			case 0xB: // SetOperationModeChangedNotification
+			}
+			case 0xB: { // SetOperationModeChangedNotification
 				break;
-			case 0xC: // SetPerformanceModeChangedNotification
+			}
+			case 0xC: { // SetPerformanceModeChangedNotification
 				break;
-			case 0xD: // SetFocusHandlingMode
+			}
+			case 0xD: { // SetFocusHandlingMode
 				break;
-			case 0xE: // SetRestartMessageEnabled
+			}
+			case 0xE: { // SetRestartMessageEnabled
 				break;
-			case 0xF: // SetScreenShotAppletIdentityInfo
+			}
+			case 0xF: { // SetScreenShotAppletIdentityInfo
 				break;
-			case 0x10: // SetOutOfFocusSuspendingEnabled
+			}
+			case 0x10: { // SetOutOfFocusSuspendingEnabled
 				break;
-			case 0x11: // SetControllerFirmwareUpdateSection
+			}
+			case 0x11: { // SetControllerFirmwareUpdateSection
 				break;
-			case 0x12: // SetRequiresCaptureButtonShortPressedMessage
+			}
+			case 0x12: { // SetRequiresCaptureButtonShortPressedMessage
 				break;
-			case 0x13: // SetScreenShotImageOrientation
+			}
+			case 0x13: { // SetScreenShotImageOrientation
 				break;
-			case 0x14: // SetDesirableKeyboardLayout
+			}
+			case 0x14: { // SetDesirableKeyboardLayout
 				break;
-			case 0x28: // CreateManagedDisplayLayer
+			}
+			case 0x28: { // CreateManagedDisplayLayer
 				break;
-			case 0x29: // IsSystemBufferSharingEnabled
+			}
+			case 0x29: { // IsSystemBufferSharingEnabled
 				break;
-			case 0x2A: // GetSystemSharedLayerHandle
+			}
+			case 0x2A: { // GetSystemSharedLayerHandle
 				break;
-			case 0x32: // SetHandlesRequestToDisplay
+			}
+			case 0x32: { // SetHandlesRequestToDisplay
 				break;
-			case 0x33: // ApproveToDisplay
+			}
+			case 0x33: { // ApproveToDisplay
 				break;
-			case 0x3C: // OverrideAutoSleepTimeAndDimmingTime
+			}
+			case 0x3C: { // OverrideAutoSleepTimeAndDimmingTime
 				break;
-			case 0x3D: // SetMediaPlaybackState
+			}
+			case 0x3D: { // SetMediaPlaybackState
 				break;
-			case 0x3E: // SetIdleTimeDetectionExtension
+			}
+			case 0x3E: { // SetIdleTimeDetectionExtension
 				break;
-			case 0x3F: // GetIdleTimeDetectionExtension
+			}
+			case 0x3F: { // GetIdleTimeDetectionExtension
 				break;
-			case 0x40: // SetInputDetectionSourceSet
+			}
+			case 0x40: { // SetInputDetectionSourceSet
 				break;
-			case 0x41: // ReportUserIsActive
+			}
+			case 0x41: { // ReportUserIsActive
 				break;
-			case 0x42: // GetCurrentIlluminance
+			}
+			case 0x42: { // GetCurrentIlluminance
 				break;
-			case 0x43: // IsIlluminanceAvailable
+			}
+			case 0x43: { // IsIlluminanceAvailable
 				break;
-			case 0x46: // ReportMultimediaError
+			}
+			case 0x46: { // ReportMultimediaError
 				break;
-			case 0x50: // SetWirelessPriorityMode
+			}
+			case 0x50: { // SetWirelessPriorityMode
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ISelfController");
 		}
@@ -1282,10 +1545,12 @@ public abstract class _IStorage_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IStorage.Unknown1 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Unknown0
+			case 0x0: { // Unknown0
 				break;
-			case 0x1: // Unknown1
+			}
+			case 0x1: { // Unknown1
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IStorage");
 		}
@@ -1298,16 +1563,19 @@ public abstract class _IStorageAccessor_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.IStorageAccessor.GetSize not implemented");
 	protected virtual void Write(ulong _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Am.Service.IStorageAccessor.Write");
-	protected virtual void Read(ulong _0) =>
+	protected virtual void Read(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IStorageAccessor.Read not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSize
+			case 0x0: { // GetSize
 				break;
-			case 0xA: // Write
+			}
+			case 0xA: { // Write
 				break;
-			case 0xB: // Read
+			}
+			case 0xB: { // Read
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IStorageAccessor");
 		}
@@ -1340,28 +1608,39 @@ public abstract class _ISystemAppletProxy_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Am.Service.ISystemAppletProxy.GetDebugFunctions not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetCommonStateGetter
+			case 0x0: { // GetCommonStateGetter
 				break;
-			case 0x1: // GetSelfController
+			}
+			case 0x1: { // GetSelfController
 				break;
-			case 0x2: // GetWindowController
+			}
+			case 0x2: { // GetWindowController
 				break;
-			case 0x3: // GetAudioController
+			}
+			case 0x3: { // GetAudioController
 				break;
-			case 0x4: // GetDisplayController
+			}
+			case 0x4: { // GetDisplayController
 				break;
-			case 0xA: // GetProcessWindingController
+			}
+			case 0xA: { // GetProcessWindingController
 				break;
-			case 0xB: // GetLibraryAppletCreator
+			}
+			case 0xB: { // GetLibraryAppletCreator
 				break;
-			case 0x14: // GetHomeMenuFunctions
+			}
+			case 0x14: { // GetHomeMenuFunctions
 				break;
-			case 0x15: // GetGlobalStateController
+			}
+			case 0x15: { // GetGlobalStateController
 				break;
-			case 0x16: // GetApplicationCreator
+			}
+			case 0x16: { // GetApplicationCreator
 				break;
-			case 0x3E8: // GetDebugFunctions
+			}
+			case 0x3E8: { // GetDebugFunctions
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ISystemAppletProxy");
 		}
@@ -1372,14 +1651,16 @@ public partial class ITransferStorageAccessor : _ITransferStorageAccessor_Base;
 public abstract class _ITransferStorageAccessor_Base : IpcInterface {
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Am.Service.ITransferStorageAccessor.GetSize not implemented");
-	protected virtual void GetHandle() =>
+	protected virtual void GetHandle(out ulong _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ITransferStorageAccessor.GetHandle not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSize
+			case 0x0: { // GetSize
 				break;
-			case 0x1: // GetHandle
+			}
+			case 0x1: { // GetHandle
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.ITransferStorageAccessor");
 		}
@@ -1410,16 +1691,21 @@ public abstract class _IWindowController_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Am.Service.IWindowController.RejectToChangeIntoBackground");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateWindow
+			case 0x0: { // CreateWindow
 				break;
-			case 0x1: // GetAppletResourceUserId
+			}
+			case 0x1: { // GetAppletResourceUserId
 				break;
-			case 0xA: // AcquireForegroundRights
+			}
+			case 0xA: { // AcquireForegroundRights
 				break;
-			case 0xB: // ReleaseForegroundRights
+			}
+			case 0xB: { // ReleaseForegroundRights
 				break;
-			case 0xC: // RejectToChangeIntoBackground
+			}
+			case 0xC: { // RejectToChangeIntoBackground
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Am.Service.IWindowController");
 		}

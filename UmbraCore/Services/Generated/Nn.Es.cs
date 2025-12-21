@@ -18,37 +18,37 @@ public abstract class _IETicketService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllPersonalizedTicket");
 	protected virtual void DeleteAllPersonalizedTicketEx(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllPersonalizedTicketEx");
-	protected virtual void GetTitleKey_0(Span<byte> _0) =>
+	protected virtual void GetTitleKey_0(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetTitleKey_0 not implemented");
-	protected virtual void CountCommonTicket() =>
+	protected virtual void CountCommonTicket(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.CountCommonTicket not implemented");
-	protected virtual void CountPersonalizedTicket() =>
+	protected virtual void CountPersonalizedTicket(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.CountPersonalizedTicket not implemented");
-	protected virtual void ListCommonTicket() =>
+	protected virtual void ListCommonTicket(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListCommonTicket not implemented");
-	protected virtual void ListPersonalizedTicket() =>
+	protected virtual void ListPersonalizedTicket(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListPersonalizedTicket not implemented");
-	protected virtual void ListMissingPersonalizedTicket(Span<byte> _0) =>
+	protected virtual void ListMissingPersonalizedTicket(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListMissingPersonalizedTicket not implemented");
-	protected virtual void GetCommonTicketSize(Span<byte> _0) =>
+	protected virtual void GetCommonTicketSize(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetCommonTicketSize not implemented");
-	protected virtual void GetPersonalizedTicketSize(Span<byte> _0) =>
+	protected virtual void GetPersonalizedTicketSize(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetPersonalizedTicketSize not implemented");
-	protected virtual void GetCommonTicketData(Span<byte> _0) =>
+	protected virtual void GetCommonTicketData(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetCommonTicketData not implemented");
-	protected virtual void GetPersonalizedTicketData(Span<byte> _0) =>
+	protected virtual void GetPersonalizedTicketData(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetPersonalizedTicketData not implemented");
-	protected virtual void OwnTicket(Span<byte> _0) =>
+	protected virtual void OwnTicket(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.OwnTicket not implemented");
-	protected virtual void GetTicketInfo(Span<byte> _0) =>
+	protected virtual void GetTicketInfo(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetTicketInfo not implemented");
-	protected virtual void ListLightTicketInfo(Span<byte> _0) =>
+	protected virtual void ListLightTicketInfo(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListLightTicketInfo not implemented");
-	protected virtual void SignData(Span<byte> _0) =>
+	protected virtual void SignData(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.SignData not implemented");
-	protected virtual void GetCommonTicketAndCertificateSize(Span<byte> _0) =>
+	protected virtual void GetCommonTicketAndCertificateSize(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetCommonTicketAndCertificateSize not implemented");
-	protected virtual void GetCommonTicketAndCertificateData(Span<byte> _0) =>
+	protected virtual void GetCommonTicketAndCertificateData(Span<byte> _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetCommonTicketAndCertificateData not implemented");
 	protected virtual void ImportPrepurchaseRecord(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.ImportPrepurchaseRecord");
@@ -56,11 +56,11 @@ public abstract class _IETicketService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeletePrepurchaseRecord");
 	protected virtual void DeleteAllPrepurchaseRecord() =>
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllPrepurchaseRecord");
-	protected virtual void CountPrepurchaseRecord() =>
+	protected virtual void CountPrepurchaseRecord(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.CountPrepurchaseRecord not implemented");
-	protected virtual void ListPrepurchaseRecord() =>
+	protected virtual void ListPrepurchaseRecord(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListPrepurchaseRecord not implemented");
-	protected virtual void ListPrepurchaseRecordInfo(Span<byte> _0) =>
+	protected virtual void ListPrepurchaseRecordInfo(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListPrepurchaseRecordInfo not implemented");
 	protected virtual void Unknown30() =>
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown30");
@@ -138,138 +138,204 @@ public abstract class _IETicketService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown2502");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1: // ImportTicket
+			case 0x1: { // ImportTicket
 				break;
-			case 0x2: // ImportTicketCertificateSet
+			}
+			case 0x2: { // ImportTicketCertificateSet
 				break;
-			case 0x3: // DeleteTicket
+			}
+			case 0x3: { // DeleteTicket
 				break;
-			case 0x4: // DeletePersonalizedTicket
+			}
+			case 0x4: { // DeletePersonalizedTicket
 				break;
-			case 0x5: // DeleteAllCommonTicket
+			}
+			case 0x5: { // DeleteAllCommonTicket
 				break;
-			case 0x6: // DeleteAllPersonalizedTicket
+			}
+			case 0x6: { // DeleteAllPersonalizedTicket
 				break;
-			case 0x7: // DeleteAllPersonalizedTicketEx
+			}
+			case 0x7: { // DeleteAllPersonalizedTicketEx
 				break;
-			case 0x8: // GetTitleKey_0
+			}
+			case 0x8: { // GetTitleKey_0
 				break;
-			case 0x9: // CountCommonTicket
+			}
+			case 0x9: { // CountCommonTicket
 				break;
-			case 0xA: // CountPersonalizedTicket
+			}
+			case 0xA: { // CountPersonalizedTicket
 				break;
-			case 0xB: // ListCommonTicket
+			}
+			case 0xB: { // ListCommonTicket
 				break;
-			case 0xC: // ListPersonalizedTicket
+			}
+			case 0xC: { // ListPersonalizedTicket
 				break;
-			case 0xD: // ListMissingPersonalizedTicket
+			}
+			case 0xD: { // ListMissingPersonalizedTicket
 				break;
-			case 0xE: // GetCommonTicketSize
+			}
+			case 0xE: { // GetCommonTicketSize
 				break;
-			case 0xF: // GetPersonalizedTicketSize
+			}
+			case 0xF: { // GetPersonalizedTicketSize
 				break;
-			case 0x10: // GetCommonTicketData
+			}
+			case 0x10: { // GetCommonTicketData
 				break;
-			case 0x11: // GetPersonalizedTicketData
+			}
+			case 0x11: { // GetPersonalizedTicketData
 				break;
-			case 0x12: // OwnTicket
+			}
+			case 0x12: { // OwnTicket
 				break;
-			case 0x13: // GetTicketInfo
+			}
+			case 0x13: { // GetTicketInfo
 				break;
-			case 0x14: // ListLightTicketInfo
+			}
+			case 0x14: { // ListLightTicketInfo
 				break;
-			case 0x15: // SignData
+			}
+			case 0x15: { // SignData
 				break;
-			case 0x16: // GetCommonTicketAndCertificateSize
+			}
+			case 0x16: { // GetCommonTicketAndCertificateSize
 				break;
-			case 0x17: // GetCommonTicketAndCertificateData
+			}
+			case 0x17: { // GetCommonTicketAndCertificateData
 				break;
-			case 0x18: // ImportPrepurchaseRecord
+			}
+			case 0x18: { // ImportPrepurchaseRecord
 				break;
-			case 0x19: // DeletePrepurchaseRecord
+			}
+			case 0x19: { // DeletePrepurchaseRecord
 				break;
-			case 0x1A: // DeleteAllPrepurchaseRecord
+			}
+			case 0x1A: { // DeleteAllPrepurchaseRecord
 				break;
-			case 0x1B: // CountPrepurchaseRecord
+			}
+			case 0x1B: { // CountPrepurchaseRecord
 				break;
-			case 0x1C: // ListPrepurchaseRecord
+			}
+			case 0x1C: { // ListPrepurchaseRecord
 				break;
-			case 0x1D: // ListPrepurchaseRecordInfo
+			}
+			case 0x1D: { // ListPrepurchaseRecordInfo
 				break;
-			case 0x1E: // Unknown30
+			}
+			case 0x1E: { // Unknown30
 				break;
-			case 0x1F: // Unknown31
+			}
+			case 0x1F: { // Unknown31
 				break;
-			case 0x20: // Unknown32
+			}
+			case 0x20: { // Unknown32
 				break;
-			case 0x21: // Unknown33
+			}
+			case 0x21: { // Unknown33
 				break;
-			case 0x22: // Unknown34
+			}
+			case 0x22: { // Unknown34
 				break;
-			case 0x23: // Unknown35
+			}
+			case 0x23: { // Unknown35
 				break;
-			case 0x24: // Unknown36
+			}
+			case 0x24: { // Unknown36
 				break;
-			case 0x1F5: // Unknown501
+			}
+			case 0x1F5: { // Unknown501
 				break;
-			case 0x1F6: // Unknown502
+			}
+			case 0x1F6: { // Unknown502
 				break;
-			case 0x1F7: // GetTitleKey_1
+			}
+			case 0x1F7: { // GetTitleKey_1
 				break;
-			case 0x1F8: // Unknown504
+			}
+			case 0x1F8: { // Unknown504
 				break;
-			case 0x1FC: // Unknown508
+			}
+			case 0x1FC: { // Unknown508
 				break;
-			case 0x1FD: // Unknown509
+			}
+			case 0x1FD: { // Unknown509
 				break;
-			case 0x1FE: // Unknown510
+			}
+			case 0x1FE: { // Unknown510
 				break;
-			case 0x3E9: // Unknown1001
+			}
+			case 0x3E9: { // Unknown1001
 				break;
-			case 0x3EA: // Unknown1002
+			}
+			case 0x3EA: { // Unknown1002
 				break;
-			case 0x3EB: // Unknown1003
+			}
+			case 0x3EB: { // Unknown1003
 				break;
-			case 0x3EC: // Unknown1004
+			}
+			case 0x3EC: { // Unknown1004
 				break;
-			case 0x3ED: // Unknown1005
+			}
+			case 0x3ED: { // Unknown1005
 				break;
-			case 0x3EE: // Unknown1006
+			}
+			case 0x3EE: { // Unknown1006
 				break;
-			case 0x3EF: // Unknown1007
+			}
+			case 0x3EF: { // Unknown1007
 				break;
-			case 0x3F1: // Unknown1009
+			}
+			case 0x3F1: { // Unknown1009
 				break;
-			case 0x3F2: // Unknown1010
+			}
+			case 0x3F2: { // Unknown1010
 				break;
-			case 0x3F3: // Unknown1011
+			}
+			case 0x3F3: { // Unknown1011
 				break;
-			case 0x3F4: // Unknown1012
+			}
+			case 0x3F4: { // Unknown1012
 				break;
-			case 0x3F5: // Unknown1013
+			}
+			case 0x3F5: { // Unknown1013
 				break;
-			case 0x3F6: // Unknown1014
+			}
+			case 0x3F6: { // Unknown1014
 				break;
-			case 0x3F7: // Unknown1015
+			}
+			case 0x3F7: { // Unknown1015
 				break;
-			case 0x3F8: // Unknown1016
+			}
+			case 0x3F8: { // Unknown1016
 				break;
-			case 0x5DD: // Unknown1501
+			}
+			case 0x5DD: { // Unknown1501
 				break;
-			case 0x5DE: // Unknown1502
+			}
+			case 0x5DE: { // Unknown1502
 				break;
-			case 0x5DF: // Unknown1503
+			}
+			case 0x5DF: { // Unknown1503
 				break;
-			case 0x5E0: // Unknown1504
+			}
+			case 0x5E0: { // Unknown1504
 				break;
-			case 0x5E1: // Unknown1505
+			}
+			case 0x5E1: { // Unknown1505
 				break;
-			case 0x7D0: // Unknown2000
+			}
+			case 0x7D0: { // Unknown2000
 				break;
-			case 0x9C5: // Unknown2501
+			}
+			case 0x9C5: { // Unknown2501
 				break;
-			case 0x9C6: // Unknown2502
+			}
+			case 0x9C6: { // Unknown2502
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Es.IETicketService");
 		}

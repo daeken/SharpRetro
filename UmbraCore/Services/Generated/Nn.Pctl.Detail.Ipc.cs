@@ -42,9 +42,9 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSafetyLevel not implemented");
 	protected virtual void SetSafetyLevel(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetSafetyLevel");
-	protected virtual void GetSafetyLevelSettings(uint _0) =>
+	protected virtual void GetSafetyLevelSettings(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSafetyLevelSettings not implemented");
-	protected virtual void GetCurrentSettings() =>
+	protected virtual void GetCurrentSettings(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetCurrentSettings not implemented");
 	protected virtual void SetCustomSafetyLevelSettings(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetCustomSafetyLevelSettings");
@@ -58,7 +58,7 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.AddToFreeCommunicationApplicationList");
 	protected virtual void DeleteSettings() =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DeleteSettings");
-	protected virtual void GetFreeCommunicationApplicationList(uint _0) =>
+	protected virtual void GetFreeCommunicationApplicationList(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetFreeCommunicationApplicationList not implemented");
 	protected virtual void UpdateFreeCommunicationApplicationList(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.UpdateFreeCommunicationApplicationList");
@@ -82,7 +82,7 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.UnlockSystemSettingsRestriction");
 	protected virtual void SetPinCode(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetPinCode");
-	protected virtual void GenerateInquiryCode() =>
+	protected virtual void GenerateInquiryCode(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GenerateInquiryCode not implemented");
 	protected virtual byte CheckMasterKey(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.CheckMasterKey not implemented");
@@ -90,15 +90,15 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPinCodeLength not implemented");
 	protected virtual KObject GetPinCodeChangedEvent() =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPinCodeChangedEvent not implemented");
-	protected virtual void GetPinCode() =>
+	protected virtual void GetPinCode(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPinCode not implemented");
 	protected virtual byte IsPairingActive() =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsPairingActive not implemented");
 	protected virtual ulong GetSettingsLastUpdated() =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetSettingsLastUpdated not implemented");
-	protected virtual void GetPairingAccountInfo(Span<byte> _0) =>
+	protected virtual void GetPairingAccountInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPairingAccountInfo not implemented");
-	protected virtual void GetAccountNickname(Span<byte> _0) =>
+	protected virtual void GetAccountNickname(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountNickname not implemented");
 	protected virtual uint GetAccountState(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountState not implemented");
@@ -114,7 +114,7 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerRemainingTime not implemented");
 	protected virtual byte IsRestrictedByPlayTimer() =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsRestrictedByPlayTimer not implemented");
-	protected virtual void GetPlayTimerSettings() =>
+	protected virtual void GetPlayTimerSettings(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerSettings not implemented");
 	protected virtual KObject GetPlayTimerEventToRequestSuspension() =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerEventToRequestSuspension not implemented");
@@ -132,7 +132,7 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.DisableAllFeatures not implemented");
 	protected virtual byte PostEnableAllFeatures() =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.PostEnableAllFeatures not implemented");
-	protected virtual void IsAllFeaturesDisabled() =>
+	protected virtual void IsAllFeaturesDisabled(out byte _0, out byte _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.IsAllFeaturesDisabled not implemented");
 	protected virtual void DeleteFromFreeCommunicationApplicationListForDebug(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.DeleteFromFreeCommunicationApplicationListForDebug");
@@ -158,31 +158,31 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetPlayTimerSpentTimeForTest not implemented");
 	protected virtual void SetPlayTimerAlarmDisabledForDebug(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.SetPlayTimerAlarmDisabledForDebug");
-	protected virtual void RequestPairingAsync(Span<byte> _0) =>
+	protected virtual void RequestPairingAsync(Span<byte> _0, Span<byte> _1, out KObject _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.RequestPairingAsync not implemented");
-	protected virtual void FinishRequestPairing(Span<byte> _0) =>
+	protected virtual void FinishRequestPairing(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishRequestPairing not implemented");
-	protected virtual void AuthorizePairingAsync(Span<byte> _0) =>
+	protected virtual void AuthorizePairingAsync(Span<byte> _0, Span<byte> _1, out KObject _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.AuthorizePairingAsync not implemented");
-	protected virtual void FinishAuthorizePairing(Span<byte> _0) =>
+	protected virtual void FinishAuthorizePairing(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishAuthorizePairing not implemented");
-	protected virtual void RetrievePairingInfoAsync() =>
+	protected virtual void RetrievePairingInfoAsync(Span<byte> _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.RetrievePairingInfoAsync not implemented");
-	protected virtual void FinishRetrievePairingInfo(Span<byte> _0) =>
+	protected virtual void FinishRetrievePairingInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishRetrievePairingInfo not implemented");
-	protected virtual void UnlinkPairingAsync(byte _0) =>
+	protected virtual void UnlinkPairingAsync(byte _0, Span<byte> _1, out KObject _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.UnlinkPairingAsync not implemented");
 	protected virtual void FinishUnlinkPairing(byte _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.FinishUnlinkPairing");
-	protected virtual void GetAccountMiiImageAsync(Span<byte> _0) =>
+	protected virtual void GetAccountMiiImageAsync(Span<byte> _0, Span<byte> _1, out uint _2, out KObject _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountMiiImageAsync not implemented");
-	protected virtual void FinishGetAccountMiiImage(Span<byte> _0) =>
+	protected virtual void FinishGetAccountMiiImage(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishGetAccountMiiImage not implemented");
-	protected virtual void GetAccountMiiImageContentTypeAsync(Span<byte> _0) =>
+	protected virtual void GetAccountMiiImageContentTypeAsync(Span<byte> _0, Span<byte> _1, out uint _2, out KObject _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.GetAccountMiiImageContentTypeAsync not implemented");
-	protected virtual void FinishGetAccountMiiImageContentType(Span<byte> _0) =>
+	protected virtual void FinishGetAccountMiiImageContentType(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.FinishGetAccountMiiImageContentType not implemented");
-	protected virtual void SynchronizeParentalControlSettingsAsync() =>
+	protected virtual void SynchronizeParentalControlSettingsAsync(Span<byte> _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlService.SynchronizeParentalControlSettingsAsync not implemented");
 	protected virtual void FinishSynchronizeParentalControlSettings(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.FinishSynchronizeParentalControlSettings");
@@ -192,192 +192,285 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Pctl.Detail.Ipc.IParentalControlService.RequestUpdateExemptionListAsync");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1: // Initialize
+			case 0x1: { // Initialize
 				break;
-			case 0x3E9: // CheckFreeCommunicationPermission
+			}
+			case 0x3E9: { // CheckFreeCommunicationPermission
 				break;
-			case 0x3EA: // ConfirmLaunchApplicationPermission
+			}
+			case 0x3EA: { // ConfirmLaunchApplicationPermission
 				break;
-			case 0x3EB: // ConfirmResumeApplicationPermission
+			}
+			case 0x3EB: { // ConfirmResumeApplicationPermission
 				break;
-			case 0x3EC: // ConfirmSnsPostPermission
+			}
+			case 0x3EC: { // ConfirmSnsPostPermission
 				break;
-			case 0x3ED: // ConfirmSystemSettingsPermission
+			}
+			case 0x3ED: { // ConfirmSystemSettingsPermission
 				break;
-			case 0x3EE: // IsRestrictionTemporaryUnlocked
+			}
+			case 0x3EE: { // IsRestrictionTemporaryUnlocked
 				break;
-			case 0x3EF: // RevertRestrictionTemporaryUnlocked
+			}
+			case 0x3EF: { // RevertRestrictionTemporaryUnlocked
 				break;
-			case 0x3F0: // EnterRestrictedSystemSettings
+			}
+			case 0x3F0: { // EnterRestrictedSystemSettings
 				break;
-			case 0x3F1: // LeaveRestrictedSystemSettings
+			}
+			case 0x3F1: { // LeaveRestrictedSystemSettings
 				break;
-			case 0x3F2: // IsRestrictedSystemSettingsEntered
+			}
+			case 0x3F2: { // IsRestrictedSystemSettingsEntered
 				break;
-			case 0x3F3: // RevertRestrictedSystemSettingsEntered
+			}
+			case 0x3F3: { // RevertRestrictedSystemSettingsEntered
 				break;
-			case 0x3F4: // GetRestrictedFeatures
+			}
+			case 0x3F4: { // GetRestrictedFeatures
 				break;
-			case 0x3F5: // ConfirmStereoVisionPermission
+			}
+			case 0x3F5: { // ConfirmStereoVisionPermission
 				break;
-			case 0x3F6: // ConfirmPlayableApplicationVideoOld
+			}
+			case 0x3F6: { // ConfirmPlayableApplicationVideoOld
 				break;
-			case 0x3F7: // ConfirmPlayableApplicationVideo
+			}
+			case 0x3F7: { // ConfirmPlayableApplicationVideo
 				break;
-			case 0x407: // IsRestrictionEnabled
+			}
+			case 0x407: { // IsRestrictionEnabled
 				break;
-			case 0x408: // GetSafetyLevel
+			}
+			case 0x408: { // GetSafetyLevel
 				break;
-			case 0x409: // SetSafetyLevel
+			}
+			case 0x409: { // SetSafetyLevel
 				break;
-			case 0x40A: // GetSafetyLevelSettings
+			}
+			case 0x40A: { // GetSafetyLevelSettings
 				break;
-			case 0x40B: // GetCurrentSettings
+			}
+			case 0x40B: { // GetCurrentSettings
 				break;
-			case 0x40C: // SetCustomSafetyLevelSettings
+			}
+			case 0x40C: { // SetCustomSafetyLevelSettings
 				break;
-			case 0x40D: // GetDefaultRatingOrganization
+			}
+			case 0x40D: { // GetDefaultRatingOrganization
 				break;
-			case 0x40E: // SetDefaultRatingOrganization
+			}
+			case 0x40E: { // SetDefaultRatingOrganization
 				break;
-			case 0x40F: // GetFreeCommunicationApplicationListCount
+			}
+			case 0x40F: { // GetFreeCommunicationApplicationListCount
 				break;
-			case 0x412: // AddToFreeCommunicationApplicationList
+			}
+			case 0x412: { // AddToFreeCommunicationApplicationList
 				break;
-			case 0x413: // DeleteSettings
+			}
+			case 0x413: { // DeleteSettings
 				break;
-			case 0x414: // GetFreeCommunicationApplicationList
+			}
+			case 0x414: { // GetFreeCommunicationApplicationList
 				break;
-			case 0x415: // UpdateFreeCommunicationApplicationList
+			}
+			case 0x415: { // UpdateFreeCommunicationApplicationList
 				break;
-			case 0x416: // DisableFeaturesForReset
+			}
+			case 0x416: { // DisableFeaturesForReset
 				break;
-			case 0x417: // NotifyApplicationDownloadStarted
+			}
+			case 0x417: { // NotifyApplicationDownloadStarted
 				break;
-			case 0x425: // ConfirmStereoVisionRestrictionConfigurable
+			}
+			case 0x425: { // ConfirmStereoVisionRestrictionConfigurable
 				break;
-			case 0x426: // GetStereoVisionRestriction
+			}
+			case 0x426: { // GetStereoVisionRestriction
 				break;
-			case 0x427: // SetStereoVisionRestriction
+			}
+			case 0x427: { // SetStereoVisionRestriction
 				break;
-			case 0x428: // ResetConfirmedStereoVisionPermission
+			}
+			case 0x428: { // ResetConfirmedStereoVisionPermission
 				break;
-			case 0x429: // IsStereoVisionPermitted
+			}
+			case 0x429: { // IsStereoVisionPermitted
 				break;
-			case 0x4B1: // UnlockRestrictionTemporarily
+			}
+			case 0x4B1: { // UnlockRestrictionTemporarily
 				break;
-			case 0x4B2: // UnlockSystemSettingsRestriction
+			}
+			case 0x4B2: { // UnlockSystemSettingsRestriction
 				break;
-			case 0x4B3: // SetPinCode
+			}
+			case 0x4B3: { // SetPinCode
 				break;
-			case 0x4B4: // GenerateInquiryCode
+			}
+			case 0x4B4: { // GenerateInquiryCode
 				break;
-			case 0x4B5: // CheckMasterKey
+			}
+			case 0x4B5: { // CheckMasterKey
 				break;
-			case 0x4B6: // GetPinCodeLength
+			}
+			case 0x4B6: { // GetPinCodeLength
 				break;
-			case 0x4B7: // GetPinCodeChangedEvent
+			}
+			case 0x4B7: { // GetPinCodeChangedEvent
 				break;
-			case 0x4B8: // GetPinCode
+			}
+			case 0x4B8: { // GetPinCode
 				break;
-			case 0x57B: // IsPairingActive
+			}
+			case 0x57B: { // IsPairingActive
 				break;
-			case 0x57E: // GetSettingsLastUpdated
+			}
+			case 0x57E: { // GetSettingsLastUpdated
 				break;
-			case 0x583: // GetPairingAccountInfo
+			}
+			case 0x583: { // GetPairingAccountInfo
 				break;
-			case 0x58D: // GetAccountNickname
+			}
+			case 0x58D: { // GetAccountNickname
 				break;
-			case 0x590: // GetAccountState
+			}
+			case 0x590: { // GetAccountState
 				break;
-			case 0x598: // GetSynchronizationEvent
+			}
+			case 0x598: { // GetSynchronizationEvent
 				break;
-			case 0x5AB: // StartPlayTimer
+			}
+			case 0x5AB: { // StartPlayTimer
 				break;
-			case 0x5AC: // StopPlayTimer
+			}
+			case 0x5AC: { // StopPlayTimer
 				break;
-			case 0x5AD: // IsPlayTimerEnabled
+			}
+			case 0x5AD: { // IsPlayTimerEnabled
 				break;
-			case 0x5AE: // GetPlayTimerRemainingTime
+			}
+			case 0x5AE: { // GetPlayTimerRemainingTime
 				break;
-			case 0x5AF: // IsRestrictedByPlayTimer
+			}
+			case 0x5AF: { // IsRestrictedByPlayTimer
 				break;
-			case 0x5B0: // GetPlayTimerSettings
+			}
+			case 0x5B0: { // GetPlayTimerSettings
 				break;
-			case 0x5B1: // GetPlayTimerEventToRequestSuspension
+			}
+			case 0x5B1: { // GetPlayTimerEventToRequestSuspension
 				break;
-			case 0x5B2: // IsPlayTimerAlarmDisabled
+			}
+			case 0x5B2: { // IsPlayTimerAlarmDisabled
 				break;
-			case 0x5BF: // NotifyWrongPinCodeInputManyTimes
+			}
+			case 0x5BF: { // NotifyWrongPinCodeInputManyTimes
 				break;
-			case 0x5C0: // CancelNetworkRequest
+			}
+			case 0x5C0: { // CancelNetworkRequest
 				break;
-			case 0x5C1: // GetUnlinkedEvent
+			}
+			case 0x5C1: { // GetUnlinkedEvent
 				break;
-			case 0x5C2: // ClearUnlinkedEvent
+			}
+			case 0x5C2: { // ClearUnlinkedEvent
 				break;
-			case 0x641: // DisableAllFeatures
+			}
+			case 0x641: { // DisableAllFeatures
 				break;
-			case 0x642: // PostEnableAllFeatures
+			}
+			case 0x642: { // PostEnableAllFeatures
 				break;
-			case 0x643: // IsAllFeaturesDisabled
+			}
+			case 0x643: { // IsAllFeaturesDisabled
 				break;
-			case 0x76D: // DeleteFromFreeCommunicationApplicationListForDebug
+			}
+			case 0x76D: { // DeleteFromFreeCommunicationApplicationListForDebug
 				break;
-			case 0x76E: // ClearFreeCommunicationApplicationListForDebug
+			}
+			case 0x76E: { // ClearFreeCommunicationApplicationListForDebug
 				break;
-			case 0x76F: // GetExemptApplicationListCountForDebug
+			}
+			case 0x76F: { // GetExemptApplicationListCountForDebug
 				break;
-			case 0x770: // GetExemptApplicationListForDebug
+			}
+			case 0x770: { // GetExemptApplicationListForDebug
 				break;
-			case 0x771: // UpdateExemptApplicationListForDebug
+			}
+			case 0x771: { // UpdateExemptApplicationListForDebug
 				break;
-			case 0x772: // AddToExemptApplicationListForDebug
+			}
+			case 0x772: { // AddToExemptApplicationListForDebug
 				break;
-			case 0x773: // DeleteFromExemptApplicationListForDebug
+			}
+			case 0x773: { // DeleteFromExemptApplicationListForDebug
 				break;
-			case 0x774: // ClearExemptApplicationListForDebug
+			}
+			case 0x774: { // ClearExemptApplicationListForDebug
 				break;
-			case 0x795: // DeletePairing
+			}
+			case 0x795: { // DeletePairing
 				break;
-			case 0x79F: // SetPlayTimerSettingsForDebug
+			}
+			case 0x79F: { // SetPlayTimerSettingsForDebug
 				break;
-			case 0x7A0: // GetPlayTimerSpentTimeForTest
+			}
+			case 0x7A0: { // GetPlayTimerSpentTimeForTest
 				break;
-			case 0x7A1: // SetPlayTimerAlarmDisabledForDebug
+			}
+			case 0x7A1: { // SetPlayTimerAlarmDisabledForDebug
 				break;
-			case 0x7D1: // RequestPairingAsync
+			}
+			case 0x7D1: { // RequestPairingAsync
 				break;
-			case 0x7D2: // FinishRequestPairing
+			}
+			case 0x7D2: { // FinishRequestPairing
 				break;
-			case 0x7D3: // AuthorizePairingAsync
+			}
+			case 0x7D3: { // AuthorizePairingAsync
 				break;
-			case 0x7D4: // FinishAuthorizePairing
+			}
+			case 0x7D4: { // FinishAuthorizePairing
 				break;
-			case 0x7D5: // RetrievePairingInfoAsync
+			}
+			case 0x7D5: { // RetrievePairingInfoAsync
 				break;
-			case 0x7D6: // FinishRetrievePairingInfo
+			}
+			case 0x7D6: { // FinishRetrievePairingInfo
 				break;
-			case 0x7D7: // UnlinkPairingAsync
+			}
+			case 0x7D7: { // UnlinkPairingAsync
 				break;
-			case 0x7D8: // FinishUnlinkPairing
+			}
+			case 0x7D8: { // FinishUnlinkPairing
 				break;
-			case 0x7D9: // GetAccountMiiImageAsync
+			}
+			case 0x7D9: { // GetAccountMiiImageAsync
 				break;
-			case 0x7DA: // FinishGetAccountMiiImage
+			}
+			case 0x7DA: { // FinishGetAccountMiiImage
 				break;
-			case 0x7DB: // GetAccountMiiImageContentTypeAsync
+			}
+			case 0x7DB: { // GetAccountMiiImageContentTypeAsync
 				break;
-			case 0x7DC: // FinishGetAccountMiiImageContentType
+			}
+			case 0x7DC: { // FinishGetAccountMiiImageContentType
 				break;
-			case 0x7DD: // SynchronizeParentalControlSettingsAsync
+			}
+			case 0x7DD: { // SynchronizeParentalControlSettingsAsync
 				break;
-			case 0x7DE: // FinishSynchronizeParentalControlSettings
+			}
+			case 0x7DE: { // FinishSynchronizeParentalControlSettings
 				break;
-			case 0x7DF: // FinishSynchronizeParentalControlSettingsWithLastUpdated
+			}
+			case 0x7DF: { // FinishSynchronizeParentalControlSettingsWithLastUpdated
 				break;
-			case 0x7E0: // RequestUpdateExemptionListAsync
+			}
+			case 0x7E0: { // RequestUpdateExemptionListAsync
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Pctl.Detail.Ipc.IParentalControlService");
 		}
@@ -392,10 +485,12 @@ public abstract class _IParentalControlServiceFactory_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlServiceFactory.CreateServiceWithoutInitialize not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateService
+			case 0x0: { // CreateService
 				break;
-			case 0x1: // CreateServiceWithoutInitialize
+			}
+			case 0x1: { // CreateServiceWithoutInitialize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Pctl.Detail.Ipc.IParentalControlServiceFactory");
 		}

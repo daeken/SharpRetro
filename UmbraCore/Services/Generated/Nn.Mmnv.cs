@@ -22,22 +22,30 @@ public abstract class _IRequest_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Mmnv.IRequest.Get not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // InitializeOld
+			case 0x0: { // InitializeOld
 				break;
-			case 0x1: // FinalizeOld
+			}
+			case 0x1: { // FinalizeOld
 				break;
-			case 0x2: // SetAndWaitOld
+			}
+			case 0x2: { // SetAndWaitOld
 				break;
-			case 0x3: // GetOld
+			}
+			case 0x3: { // GetOld
 				break;
-			case 0x4: // Initialize
+			}
+			case 0x4: { // Initialize
 				break;
-			case 0x5: // Finalize
+			}
+			case 0x5: { // Finalize
 				break;
-			case 0x6: // SetAndWait
+			}
+			case 0x6: { // SetAndWait
 				break;
-			case 0x7: // Get
+			}
+			case 0x7: { // Get
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Mmnv.IRequest");
 		}

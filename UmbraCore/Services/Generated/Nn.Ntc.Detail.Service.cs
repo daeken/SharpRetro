@@ -18,18 +18,24 @@ public abstract class _IEnsureNetworkClockAvailabilityService_Base : IpcInterfac
 		throw new NotImplementedException("Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.GetServerTime not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // StartTask
+			case 0x0: { // StartTask
 				break;
-			case 0x1: // GetFinishNotificationEvent
+			}
+			case 0x1: { // GetFinishNotificationEvent
 				break;
-			case 0x2: // GetResult
+			}
+			case 0x2: { // GetResult
 				break;
-			case 0x3: // Cancel
+			}
+			case 0x3: { // Cancel
 				break;
-			case 0x4: // IsProcessing
+			}
+			case 0x4: { // IsProcessing
 				break;
-			case 0x5: // GetServerTime
+			}
+			case 0x5: { // GetServerTime
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService");
 		}
@@ -46,12 +52,15 @@ public abstract class _IStaticService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ntc.Detail.Service.IStaticService.ResumeAutonomicTimeCorrection");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // OpenEnsureNetworkClockAvailabilityService
+			case 0x0: { // OpenEnsureNetworkClockAvailabilityService
 				break;
-			case 0x64: // SuspendAutonomicTimeCorrection
+			}
+			case 0x64: { // SuspendAutonomicTimeCorrection
 				break;
-			case 0x65: // ResumeAutonomicTimeCorrection
+			}
+			case 0x65: { // ResumeAutonomicTimeCorrection
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ntc.Detail.Service.IStaticService");
 		}

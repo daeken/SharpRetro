@@ -4,39 +4,39 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Nifm.Detail;
 public partial class IGeneralService : _IGeneralService_Base;
 public abstract class _IGeneralService_Base : IpcInterface {
-	protected virtual void GetClientId() =>
+	protected virtual void GetClientId(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetClientId not implemented");
 	protected virtual Nn.Nifm.Detail.IScanRequest CreateScanRequest() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.CreateScanRequest not implemented");
 	protected virtual Nn.Nifm.Detail.IRequest CreateRequest(uint _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.CreateRequest not implemented");
-	protected virtual void GetCurrentNetworkProfile() =>
+	protected virtual void GetCurrentNetworkProfile(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentNetworkProfile not implemented");
-	protected virtual void EnumerateNetworkInterfaces(uint _0) =>
+	protected virtual void EnumerateNetworkInterfaces(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.EnumerateNetworkInterfaces not implemented");
-	protected virtual void EnumerateNetworkProfiles(byte _0) =>
+	protected virtual void EnumerateNetworkProfiles(byte _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.EnumerateNetworkProfiles not implemented");
-	protected virtual void GetNetworkProfile(Span<byte> _0) =>
+	protected virtual void GetNetworkProfile(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetNetworkProfile not implemented");
-	protected virtual void SetNetworkProfile(Span<byte> _0) =>
+	protected virtual void SetNetworkProfile(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.SetNetworkProfile not implemented");
 	protected virtual void RemoveNetworkProfile(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.RemoveNetworkProfile");
-	protected virtual void GetScanDataOld() =>
+	protected virtual void GetScanDataOld(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetScanDataOld not implemented");
-	protected virtual void GetCurrentIpAddress() =>
+	protected virtual void GetCurrentIpAddress(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentIpAddress not implemented");
-	protected virtual void GetCurrentAccessPointOld() =>
+	protected virtual void GetCurrentAccessPointOld(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentAccessPointOld not implemented");
-	protected virtual void CreateTemporaryNetworkProfile(Span<byte> _0) =>
+	protected virtual void CreateTemporaryNetworkProfile(Span<byte> _0, Span<byte> _1, out Nn.Nifm.Detail.INetworkProfile _2) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.CreateTemporaryNetworkProfile not implemented");
-	protected virtual void GetCurrentIpConfigInfo() =>
+	protected virtual void GetCurrentIpConfigInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentIpConfigInfo not implemented");
 	protected virtual void SetWirelessCommunicationEnabled(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetWirelessCommunicationEnabled");
 	protected virtual byte IsWirelessCommunicationEnabled() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.IsWirelessCommunicationEnabled not implemented");
-	protected virtual void GetInternetConnectionStatus() =>
+	protected virtual void GetInternetConnectionStatus(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetInternetConnectionStatus not implemented");
 	protected virtual void SetEthernetCommunicationEnabled(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetEthernetCommunicationEnabled");
@@ -50,11 +50,11 @@ public abstract class _IGeneralService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.PutToSleep");
 	protected virtual void WakeUp() =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.WakeUp");
-	protected virtual void GetSsidListVersion() =>
+	protected virtual void GetSsidListVersion(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetSsidListVersion not implemented");
 	protected virtual void SetExclusiveClient(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetExclusiveClient");
-	protected virtual void GetDefaultIpSetting() =>
+	protected virtual void GetDefaultIpSetting(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetDefaultIpSetting not implemented");
 	protected virtual void SetDefaultIpSetting(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetDefaultIpSetting");
@@ -64,92 +64,128 @@ public abstract class _IGeneralService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetEthernetCommunicationEnabledForTest");
 	protected virtual KObject GetTelemetorySystemEventReadableHandle() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetTelemetorySystemEventReadableHandle not implemented");
-	protected virtual void GetTelemetryInfo() =>
+	protected virtual void GetTelemetryInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetTelemetryInfo not implemented");
 	protected virtual void ConfirmSystemAvailability() =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.ConfirmSystemAvailability");
 	protected virtual void SetBackgroundRequestEnabled(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetBackgroundRequestEnabled");
-	protected virtual void GetScanData() =>
+	protected virtual void GetScanData(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetScanData not implemented");
-	protected virtual void GetCurrentAccessPoint() =>
+	protected virtual void GetCurrentAccessPoint(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentAccessPoint not implemented");
 	protected virtual void Shutdown() =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.Shutdown");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1: // GetClientId
+			case 0x1: { // GetClientId
 				break;
-			case 0x2: // CreateScanRequest
+			}
+			case 0x2: { // CreateScanRequest
 				break;
-			case 0x4: // CreateRequest
+			}
+			case 0x4: { // CreateRequest
 				break;
-			case 0x5: // GetCurrentNetworkProfile
+			}
+			case 0x5: { // GetCurrentNetworkProfile
 				break;
-			case 0x6: // EnumerateNetworkInterfaces
+			}
+			case 0x6: { // EnumerateNetworkInterfaces
 				break;
-			case 0x7: // EnumerateNetworkProfiles
+			}
+			case 0x7: { // EnumerateNetworkProfiles
 				break;
-			case 0x8: // GetNetworkProfile
+			}
+			case 0x8: { // GetNetworkProfile
 				break;
-			case 0x9: // SetNetworkProfile
+			}
+			case 0x9: { // SetNetworkProfile
 				break;
-			case 0xA: // RemoveNetworkProfile
+			}
+			case 0xA: { // RemoveNetworkProfile
 				break;
-			case 0xB: // GetScanDataOld
+			}
+			case 0xB: { // GetScanDataOld
 				break;
-			case 0xC: // GetCurrentIpAddress
+			}
+			case 0xC: { // GetCurrentIpAddress
 				break;
-			case 0xD: // GetCurrentAccessPointOld
+			}
+			case 0xD: { // GetCurrentAccessPointOld
 				break;
-			case 0xE: // CreateTemporaryNetworkProfile
+			}
+			case 0xE: { // CreateTemporaryNetworkProfile
 				break;
-			case 0xF: // GetCurrentIpConfigInfo
+			}
+			case 0xF: { // GetCurrentIpConfigInfo
 				break;
-			case 0x10: // SetWirelessCommunicationEnabled
+			}
+			case 0x10: { // SetWirelessCommunicationEnabled
 				break;
-			case 0x11: // IsWirelessCommunicationEnabled
+			}
+			case 0x11: { // IsWirelessCommunicationEnabled
 				break;
-			case 0x12: // GetInternetConnectionStatus
+			}
+			case 0x12: { // GetInternetConnectionStatus
 				break;
-			case 0x13: // SetEthernetCommunicationEnabled
+			}
+			case 0x13: { // SetEthernetCommunicationEnabled
 				break;
-			case 0x14: // IsEthernetCommunicationEnabled
+			}
+			case 0x14: { // IsEthernetCommunicationEnabled
 				break;
-			case 0x15: // IsAnyInternetRequestAccepted
+			}
+			case 0x15: { // IsAnyInternetRequestAccepted
 				break;
-			case 0x16: // IsAnyForegroundRequestAccepted
+			}
+			case 0x16: { // IsAnyForegroundRequestAccepted
 				break;
-			case 0x17: // PutToSleep
+			}
+			case 0x17: { // PutToSleep
 				break;
-			case 0x18: // WakeUp
+			}
+			case 0x18: { // WakeUp
 				break;
-			case 0x19: // GetSsidListVersion
+			}
+			case 0x19: { // GetSsidListVersion
 				break;
-			case 0x1A: // SetExclusiveClient
+			}
+			case 0x1A: { // SetExclusiveClient
 				break;
-			case 0x1B: // GetDefaultIpSetting
+			}
+			case 0x1B: { // GetDefaultIpSetting
 				break;
-			case 0x1C: // SetDefaultIpSetting
+			}
+			case 0x1C: { // SetDefaultIpSetting
 				break;
-			case 0x1D: // SetWirelessCommunicationEnabledForTest
+			}
+			case 0x1D: { // SetWirelessCommunicationEnabledForTest
 				break;
-			case 0x1E: // SetEthernetCommunicationEnabledForTest
+			}
+			case 0x1E: { // SetEthernetCommunicationEnabledForTest
 				break;
-			case 0x1F: // GetTelemetorySystemEventReadableHandle
+			}
+			case 0x1F: { // GetTelemetorySystemEventReadableHandle
 				break;
-			case 0x20: // GetTelemetryInfo
+			}
+			case 0x20: { // GetTelemetryInfo
 				break;
-			case 0x21: // ConfirmSystemAvailability
+			}
+			case 0x21: { // ConfirmSystemAvailability
 				break;
-			case 0x22: // SetBackgroundRequestEnabled
+			}
+			case 0x22: { // SetBackgroundRequestEnabled
 				break;
-			case 0x23: // GetScanData
+			}
+			case 0x23: { // GetScanData
 				break;
-			case 0x24: // GetCurrentAccessPoint
+			}
+			case 0x24: { // GetCurrentAccessPoint
 				break;
-			case 0x25: // Shutdown
+			}
+			case 0x25: { // Shutdown
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nifm.Detail.IGeneralService");
 		}
@@ -158,20 +194,23 @@ public abstract class _IGeneralService_Base : IpcInterface {
 
 public partial class INetworkProfile : _INetworkProfile_Base;
 public abstract class _INetworkProfile_Base : IpcInterface {
-	protected virtual void Update(Span<byte> _0) =>
+	protected virtual void Update(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.INetworkProfile.Update not implemented");
-	protected virtual void PersistOld(Span<byte> _0) =>
+	protected virtual void PersistOld(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.INetworkProfile.PersistOld not implemented");
-	protected virtual void Persist() =>
+	protected virtual void Persist(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.INetworkProfile.Persist not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Update
+			case 0x0: { // Update
 				break;
-			case 0x1: // PersistOld
+			}
+			case 0x1: { // PersistOld
 				break;
-			case 0x2: // Persist
+			}
+			case 0x2: { // Persist
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nifm.Detail.INetworkProfile");
 		}
@@ -184,7 +223,7 @@ public abstract class _IRequest_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetRequestState not implemented");
 	protected virtual void GetResult() =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.GetResult");
-	protected virtual void GetSystemEventReadableHandles() =>
+	protected virtual void GetSystemEventReadableHandles(out KObject _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetSystemEventReadableHandles not implemented");
 	protected virtual void Cancel() =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.Cancel");
@@ -216,13 +255,13 @@ public abstract class _IRequest_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetSharable");
 	protected virtual void SetRequirementByRevision(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetRequirementByRevision");
-	protected virtual void GetRequirement() =>
+	protected virtual void GetRequirement(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetRequirement not implemented");
 	protected virtual uint GetRevision() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetRevision not implemented");
-	protected virtual void GetAppletInfo(uint _0) =>
+	protected virtual void GetAppletInfo(uint _0, out uint _1, out uint _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetAppletInfo not implemented");
-	protected virtual void GetAdditionalInfo() =>
+	protected virtual void GetAdditionalInfo(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetAdditionalInfo not implemented");
 	protected virtual void SetKeptInSleep(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetKeptInSleep");
@@ -232,56 +271,81 @@ public abstract class _IRequest_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.UnregisterSocketDescriptor");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetRequestState
+			case 0x0: { // GetRequestState
 				break;
-			case 0x1: // GetResult
+			}
+			case 0x1: { // GetResult
 				break;
-			case 0x2: // GetSystemEventReadableHandles
+			}
+			case 0x2: { // GetSystemEventReadableHandles
 				break;
-			case 0x3: // Cancel
+			}
+			case 0x3: { // Cancel
 				break;
-			case 0x4: // Submit
+			}
+			case 0x4: { // Submit
 				break;
-			case 0x5: // SetRequirement
+			}
+			case 0x5: { // SetRequirement
 				break;
-			case 0x6: // SetRequirementPreset
+			}
+			case 0x6: { // SetRequirementPreset
 				break;
-			case 0x8: // SetPriority
+			}
+			case 0x8: { // SetPriority
 				break;
-			case 0x9: // SetNetworkProfileId
+			}
+			case 0x9: { // SetNetworkProfileId
 				break;
-			case 0xA: // SetRejectable
+			}
+			case 0xA: { // SetRejectable
 				break;
-			case 0xB: // SetConnectionConfirmationOption
+			}
+			case 0xB: { // SetConnectionConfirmationOption
 				break;
-			case 0xC: // SetPersistent
+			}
+			case 0xC: { // SetPersistent
 				break;
-			case 0xD: // SetInstant
+			}
+			case 0xD: { // SetInstant
 				break;
-			case 0xE: // SetSustainable
+			}
+			case 0xE: { // SetSustainable
 				break;
-			case 0xF: // SetRawPriority
+			}
+			case 0xF: { // SetRawPriority
 				break;
-			case 0x10: // SetGreedy
+			}
+			case 0x10: { // SetGreedy
 				break;
-			case 0x11: // SetSharable
+			}
+			case 0x11: { // SetSharable
 				break;
-			case 0x12: // SetRequirementByRevision
+			}
+			case 0x12: { // SetRequirementByRevision
 				break;
-			case 0x13: // GetRequirement
+			}
+			case 0x13: { // GetRequirement
 				break;
-			case 0x14: // GetRevision
+			}
+			case 0x14: { // GetRevision
 				break;
-			case 0x15: // GetAppletInfo
+			}
+			case 0x15: { // GetAppletInfo
 				break;
-			case 0x16: // GetAdditionalInfo
+			}
+			case 0x16: { // GetAdditionalInfo
 				break;
-			case 0x17: // SetKeptInSleep
+			}
+			case 0x17: { // SetKeptInSleep
 				break;
-			case 0x18: // RegisterSocketDescriptor
+			}
+			case 0x18: { // RegisterSocketDescriptor
 				break;
-			case 0x19: // UnregisterSocketDescriptor
+			}
+			case 0x19: { // UnregisterSocketDescriptor
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nifm.Detail.IRequest");
 		}
@@ -300,14 +364,18 @@ public abstract class _IScanRequest_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nifm.Detail.IScanRequest.GetSystemEventReadableHandle not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Submit
+			case 0x0: { // Submit
 				break;
-			case 0x1: // IsProcessing
+			}
+			case 0x1: { // IsProcessing
 				break;
-			case 0x2: // GetResult
+			}
+			case 0x2: { // GetResult
 				break;
-			case 0x3: // GetSystemEventReadableHandle
+			}
+			case 0x3: { // GetSystemEventReadableHandle
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nifm.Detail.IScanRequest");
 		}
@@ -322,10 +390,12 @@ public abstract class _IStaticService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nifm.Detail.IStaticService.CreateGeneralService not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x4: // CreateGeneralServiceOld
+			case 0x4: { // CreateGeneralServiceOld
 				break;
-			case 0x5: // CreateGeneralService
+			}
+			case 0x5: { // CreateGeneralService
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nifm.Detail.IStaticService");
 		}

@@ -8,7 +8,7 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.InitializeDebug");
 	protected virtual void FinalizeDebug() =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.FinalizeDebug");
-	protected virtual void ListDevices() =>
+	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.ListDevices not implemented");
 	protected virtual void StartDetection(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.StartDetection");
@@ -20,7 +20,7 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unmount");
 	protected virtual void OpenApplicationArea(Span<byte> _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.OpenApplicationArea");
-	protected virtual void GetApplicationArea(Span<byte> _0) =>
+	protected virtual void GetApplicationArea(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetApplicationArea not implemented");
 	protected virtual void SetApplicationArea(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.SetApplicationArea");
@@ -30,13 +30,13 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Restore");
 	protected virtual void CreateApplicationArea(Span<byte> _0, uint _1, Span<byte> _2) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.CreateApplicationArea");
-	protected virtual void GetTagInfo(Span<byte> _0) =>
+	protected virtual void GetTagInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetTagInfo not implemented");
-	protected virtual void GetRegisterInfo(Span<byte> _0) =>
+	protected virtual void GetRegisterInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetRegisterInfo not implemented");
-	protected virtual void GetCommonInfo(Span<byte> _0) =>
+	protected virtual void GetCommonInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetCommonInfo not implemented");
-	protected virtual void GetModelInfo(Span<byte> _0) =>
+	protected virtual void GetModelInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetModelInfo not implemented");
 	protected virtual KObject AttachActivateEvent(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.AttachActivateEvent not implemented");
@@ -56,9 +56,9 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.RecreateApplicationArea");
 	protected virtual void Format(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Format");
-	protected virtual void GetAdminInfo(Span<byte> _0) =>
+	protected virtual void GetAdminInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetAdminInfo not implemented");
-	protected virtual void GetRegisterInfo2(Span<byte> _0) =>
+	protected virtual void GetRegisterInfo2(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetRegisterInfo2 not implemented");
 	protected virtual void SetRegisterInfo(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.SetRegisterInfo");
@@ -68,7 +68,7 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.DeleteApplicationArea");
 	protected virtual byte ExistsApplicationArea(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.ExistsApplicationArea not implemented");
-	protected virtual void GetAll(Span<byte> _0) =>
+	protected virtual void GetAll(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetAll not implemented");
 	protected virtual void SetAll(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.SetAll");
@@ -76,7 +76,7 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.FlushDebug");
 	protected virtual void BreakTag(Span<byte> _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.BreakTag");
-	protected virtual void ReadBackupData() =>
+	protected virtual void ReadBackupData(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.ReadBackupData not implemented");
 	protected virtual void WriteBackupData(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.WriteBackupData");
@@ -86,15 +86,15 @@ public abstract class _IDebug_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown300");
 	protected virtual void Unknown301() =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown301");
-	protected virtual void Unknown302() =>
+	protected virtual void Unknown302(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown302 not implemented");
 	protected virtual void Unknown303(Span<byte> _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown303");
 	protected virtual void Unknown304(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown304");
-	protected virtual void Unknown305(Span<byte> _0, ulong _1, Span<byte> _2) =>
+	protected virtual void Unknown305(Span<byte> _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown305 not implemented");
-	protected virtual void Unknown306(Span<byte> _0) =>
+	protected virtual void Unknown306(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown306 not implemented");
 	protected virtual KObject Unknown307(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown307 not implemented");
@@ -114,114 +114,168 @@ public abstract class _IDebug_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown314 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // InitializeDebug
+			case 0x0: { // InitializeDebug
 				break;
-			case 0x1: // FinalizeDebug
+			}
+			case 0x1: { // FinalizeDebug
 				break;
-			case 0x2: // ListDevices
+			}
+			case 0x2: { // ListDevices
 				break;
-			case 0x3: // StartDetection
+			}
+			case 0x3: { // StartDetection
 				break;
-			case 0x4: // StopDetection
+			}
+			case 0x4: { // StopDetection
 				break;
-			case 0x5: // Mount
+			}
+			case 0x5: { // Mount
 				break;
-			case 0x6: // Unmount
+			}
+			case 0x6: { // Unmount
 				break;
-			case 0x7: // OpenApplicationArea
+			}
+			case 0x7: { // OpenApplicationArea
 				break;
-			case 0x8: // GetApplicationArea
+			}
+			case 0x8: { // GetApplicationArea
 				break;
-			case 0x9: // SetApplicationArea
+			}
+			case 0x9: { // SetApplicationArea
 				break;
-			case 0xA: // Flush
+			}
+			case 0xA: { // Flush
 				break;
-			case 0xB: // Restore
+			}
+			case 0xB: { // Restore
 				break;
-			case 0xC: // CreateApplicationArea
+			}
+			case 0xC: { // CreateApplicationArea
 				break;
-			case 0xD: // GetTagInfo
+			}
+			case 0xD: { // GetTagInfo
 				break;
-			case 0xE: // GetRegisterInfo
+			}
+			case 0xE: { // GetRegisterInfo
 				break;
-			case 0xF: // GetCommonInfo
+			}
+			case 0xF: { // GetCommonInfo
 				break;
-			case 0x10: // GetModelInfo
+			}
+			case 0x10: { // GetModelInfo
 				break;
-			case 0x11: // AttachActivateEvent
+			}
+			case 0x11: { // AttachActivateEvent
 				break;
-			case 0x12: // AttachDeactivateEvent
+			}
+			case 0x12: { // AttachDeactivateEvent
 				break;
-			case 0x13: // GetState
+			}
+			case 0x13: { // GetState
 				break;
-			case 0x14: // GetDeviceState
+			}
+			case 0x14: { // GetDeviceState
 				break;
-			case 0x15: // GetNpadId
+			}
+			case 0x15: { // GetNpadId
 				break;
-			case 0x16: // GetApplicationArea2
+			}
+			case 0x16: { // GetApplicationArea2
 				break;
-			case 0x17: // AttachAvailabilityChangeEvent
+			}
+			case 0x17: { // AttachAvailabilityChangeEvent
 				break;
-			case 0x18: // RecreateApplicationArea
+			}
+			case 0x18: { // RecreateApplicationArea
 				break;
-			case 0x64: // Format
+			}
+			case 0x64: { // Format
 				break;
-			case 0x65: // GetAdminInfo
+			}
+			case 0x65: { // GetAdminInfo
 				break;
-			case 0x66: // GetRegisterInfo2
+			}
+			case 0x66: { // GetRegisterInfo2
 				break;
-			case 0x67: // SetRegisterInfo
+			}
+			case 0x67: { // SetRegisterInfo
 				break;
-			case 0x68: // DeleteRegisterInfo
+			}
+			case 0x68: { // DeleteRegisterInfo
 				break;
-			case 0x69: // DeleteApplicationArea
+			}
+			case 0x69: { // DeleteApplicationArea
 				break;
-			case 0x6A: // ExistsApplicationArea
+			}
+			case 0x6A: { // ExistsApplicationArea
 				break;
-			case 0xC8: // GetAll
+			}
+			case 0xC8: { // GetAll
 				break;
-			case 0xC9: // SetAll
+			}
+			case 0xC9: { // SetAll
 				break;
-			case 0xCA: // FlushDebug
+			}
+			case 0xCA: { // FlushDebug
 				break;
-			case 0xCB: // BreakTag
+			}
+			case 0xCB: { // BreakTag
 				break;
-			case 0xCC: // ReadBackupData
+			}
+			case 0xCC: { // ReadBackupData
 				break;
-			case 0xCD: // WriteBackupData
+			}
+			case 0xCD: { // WriteBackupData
 				break;
-			case 0xCE: // WriteNtf
+			}
+			case 0xCE: { // WriteNtf
 				break;
-			case 0x12C: // Unknown300
+			}
+			case 0x12C: { // Unknown300
 				break;
-			case 0x12D: // Unknown301
+			}
+			case 0x12D: { // Unknown301
 				break;
-			case 0x12E: // Unknown302
+			}
+			case 0x12E: { // Unknown302
 				break;
-			case 0x12F: // Unknown303
+			}
+			case 0x12F: { // Unknown303
 				break;
-			case 0x130: // Unknown304
+			}
+			case 0x130: { // Unknown304
 				break;
-			case 0x131: // Unknown305
+			}
+			case 0x131: { // Unknown305
 				break;
-			case 0x132: // Unknown306
+			}
+			case 0x132: { // Unknown306
 				break;
-			case 0x133: // Unknown307
+			}
+			case 0x133: { // Unknown307
 				break;
-			case 0x134: // Unknown308
+			}
+			case 0x134: { // Unknown308
 				break;
-			case 0x135: // Unknown309
+			}
+			case 0x135: { // Unknown309
 				break;
-			case 0x136: // Unknown310
+			}
+			case 0x136: { // Unknown310
 				break;
-			case 0x137: // Unknown311
+			}
+			case 0x137: { // Unknown311
 				break;
-			case 0x138: // Unknown312
+			}
+			case 0x138: { // Unknown312
 				break;
-			case 0x139: // Unknown313
+			}
+			case 0x139: { // Unknown313
 				break;
-			case 0x13A: // Unknown314
+			}
+			case 0x13A: { // Unknown314
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfp.Detail.IDebug");
 		}
@@ -234,8 +288,9 @@ public abstract class _IDebugManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebugManager.CreateDebugInterface not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateDebugInterface
+			case 0x0: { // CreateDebugInterface
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfp.Detail.IDebugManager");
 		}
@@ -248,7 +303,7 @@ public abstract class _ISystem_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.InitializeSystem");
 	protected virtual void FinalizeSystem() =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.FinalizeSystem");
-	protected virtual void ListDevices() =>
+	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.ListDevices not implemented");
 	protected virtual void StartDetection(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.StartDetection");
@@ -262,13 +317,13 @@ public abstract class _ISystem_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Flush");
 	protected virtual void Restore(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Restore");
-	protected virtual void GetTagInfo(Span<byte> _0) =>
+	protected virtual void GetTagInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetTagInfo not implemented");
-	protected virtual void GetRegisterInfo(Span<byte> _0) =>
+	protected virtual void GetRegisterInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetRegisterInfo not implemented");
-	protected virtual void GetCommonInfo(Span<byte> _0) =>
+	protected virtual void GetCommonInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetCommonInfo not implemented");
-	protected virtual void GetModelInfo(Span<byte> _0) =>
+	protected virtual void GetModelInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetModelInfo not implemented");
 	protected virtual KObject AttachActivateEvent(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.AttachActivateEvent not implemented");
@@ -284,9 +339,9 @@ public abstract class _ISystem_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.AttachAvailabilityChangeEvent not implemented");
 	protected virtual void Format(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Format");
-	protected virtual void GetAdminInfo(Span<byte> _0) =>
+	protected virtual void GetAdminInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetAdminInfo not implemented");
-	protected virtual void GetRegisterInfo2(Span<byte> _0) =>
+	protected virtual void GetRegisterInfo2(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetRegisterInfo2 not implemented");
 	protected virtual void SetRegisterInfo(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.SetRegisterInfo");
@@ -298,58 +353,84 @@ public abstract class _ISystem_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.ExistsApplicationArea not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // InitializeSystem
+			case 0x0: { // InitializeSystem
 				break;
-			case 0x1: // FinalizeSystem
+			}
+			case 0x1: { // FinalizeSystem
 				break;
-			case 0x2: // ListDevices
+			}
+			case 0x2: { // ListDevices
 				break;
-			case 0x3: // StartDetection
+			}
+			case 0x3: { // StartDetection
 				break;
-			case 0x4: // StopDetection
+			}
+			case 0x4: { // StopDetection
 				break;
-			case 0x5: // Mount
+			}
+			case 0x5: { // Mount
 				break;
-			case 0x6: // Unmount
+			}
+			case 0x6: { // Unmount
 				break;
-			case 0xA: // Flush
+			}
+			case 0xA: { // Flush
 				break;
-			case 0xB: // Restore
+			}
+			case 0xB: { // Restore
 				break;
-			case 0xD: // GetTagInfo
+			}
+			case 0xD: { // GetTagInfo
 				break;
-			case 0xE: // GetRegisterInfo
+			}
+			case 0xE: { // GetRegisterInfo
 				break;
-			case 0xF: // GetCommonInfo
+			}
+			case 0xF: { // GetCommonInfo
 				break;
-			case 0x10: // GetModelInfo
+			}
+			case 0x10: { // GetModelInfo
 				break;
-			case 0x11: // AttachActivateEvent
+			}
+			case 0x11: { // AttachActivateEvent
 				break;
-			case 0x12: // AttachDeactivateEvent
+			}
+			case 0x12: { // AttachDeactivateEvent
 				break;
-			case 0x13: // GetState
+			}
+			case 0x13: { // GetState
 				break;
-			case 0x14: // GetDeviceState
+			}
+			case 0x14: { // GetDeviceState
 				break;
-			case 0x15: // GetNpadId
+			}
+			case 0x15: { // GetNpadId
 				break;
-			case 0x17: // AttachAvailabilityChangeEvent
+			}
+			case 0x17: { // AttachAvailabilityChangeEvent
 				break;
-			case 0x64: // Format
+			}
+			case 0x64: { // Format
 				break;
-			case 0x65: // GetAdminInfo
+			}
+			case 0x65: { // GetAdminInfo
 				break;
-			case 0x66: // GetRegisterInfo2
+			}
+			case 0x66: { // GetRegisterInfo2
 				break;
-			case 0x67: // SetRegisterInfo
+			}
+			case 0x67: { // SetRegisterInfo
 				break;
-			case 0x68: // DeleteRegisterInfo
+			}
+			case 0x68: { // DeleteRegisterInfo
 				break;
-			case 0x69: // DeleteApplicationArea
+			}
+			case 0x69: { // DeleteApplicationArea
 				break;
-			case 0x6A: // ExistsApplicationArea
+			}
+			case 0x6A: { // ExistsApplicationArea
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfp.Detail.ISystem");
 		}
@@ -362,8 +443,9 @@ public abstract class _ISystemManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystemManager.CreateSystemInterface not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateSystemInterface
+			case 0x0: { // CreateSystemInterface
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfp.Detail.ISystemManager");
 		}
@@ -376,7 +458,7 @@ public abstract class _IUser_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Initialize");
 	protected virtual void Finalize() =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Finalize");
-	protected virtual void ListDevices() =>
+	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.ListDevices not implemented");
 	protected virtual void StartDetection(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.StartDetection");
@@ -388,7 +470,7 @@ public abstract class _IUser_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Unmount");
 	protected virtual void OpenApplicationArea(Span<byte> _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.OpenApplicationArea");
-	protected virtual void GetApplicationArea(Span<byte> _0) =>
+	protected virtual void GetApplicationArea(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetApplicationArea not implemented");
 	protected virtual void SetApplicationArea(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.SetApplicationArea");
@@ -398,13 +480,13 @@ public abstract class _IUser_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Restore");
 	protected virtual void CreateApplicationArea(Span<byte> _0, uint _1, Span<byte> _2) =>
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.CreateApplicationArea");
-	protected virtual void GetTagInfo(Span<byte> _0) =>
+	protected virtual void GetTagInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetTagInfo not implemented");
-	protected virtual void GetRegisterInfo(Span<byte> _0) =>
+	protected virtual void GetRegisterInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetRegisterInfo not implemented");
-	protected virtual void GetCommonInfo(Span<byte> _0) =>
+	protected virtual void GetCommonInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetCommonInfo not implemented");
-	protected virtual void GetModelInfo(Span<byte> _0) =>
+	protected virtual void GetModelInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetModelInfo not implemented");
 	protected virtual KObject AttachActivateEvent(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.AttachActivateEvent not implemented");
@@ -424,56 +506,81 @@ public abstract class _IUser_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.RecreateApplicationArea");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // Finalize
+			}
+			case 0x1: { // Finalize
 				break;
-			case 0x2: // ListDevices
+			}
+			case 0x2: { // ListDevices
 				break;
-			case 0x3: // StartDetection
+			}
+			case 0x3: { // StartDetection
 				break;
-			case 0x4: // StopDetection
+			}
+			case 0x4: { // StopDetection
 				break;
-			case 0x5: // Mount
+			}
+			case 0x5: { // Mount
 				break;
-			case 0x6: // Unmount
+			}
+			case 0x6: { // Unmount
 				break;
-			case 0x7: // OpenApplicationArea
+			}
+			case 0x7: { // OpenApplicationArea
 				break;
-			case 0x8: // GetApplicationArea
+			}
+			case 0x8: { // GetApplicationArea
 				break;
-			case 0x9: // SetApplicationArea
+			}
+			case 0x9: { // SetApplicationArea
 				break;
-			case 0xA: // Flush
+			}
+			case 0xA: { // Flush
 				break;
-			case 0xB: // Restore
+			}
+			case 0xB: { // Restore
 				break;
-			case 0xC: // CreateApplicationArea
+			}
+			case 0xC: { // CreateApplicationArea
 				break;
-			case 0xD: // GetTagInfo
+			}
+			case 0xD: { // GetTagInfo
 				break;
-			case 0xE: // GetRegisterInfo
+			}
+			case 0xE: { // GetRegisterInfo
 				break;
-			case 0xF: // GetCommonInfo
+			}
+			case 0xF: { // GetCommonInfo
 				break;
-			case 0x10: // GetModelInfo
+			}
+			case 0x10: { // GetModelInfo
 				break;
-			case 0x11: // AttachActivateEvent
+			}
+			case 0x11: { // AttachActivateEvent
 				break;
-			case 0x12: // AttachDeactivateEvent
+			}
+			case 0x12: { // AttachDeactivateEvent
 				break;
-			case 0x13: // GetState
+			}
+			case 0x13: { // GetState
 				break;
-			case 0x14: // GetDeviceState
+			}
+			case 0x14: { // GetDeviceState
 				break;
-			case 0x15: // GetNpadId
+			}
+			case 0x15: { // GetNpadId
 				break;
-			case 0x16: // GetApplicationArea2
+			}
+			case 0x16: { // GetApplicationArea2
 				break;
-			case 0x17: // AttachAvailabilityChangeEvent
+			}
+			case 0x17: { // AttachAvailabilityChangeEvent
 				break;
-			case 0x18: // RecreateApplicationArea
+			}
+			case 0x18: { // RecreateApplicationArea
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfp.Detail.IUser");
 		}
@@ -486,8 +593,9 @@ public abstract class _IUserManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfp.Detail.IUserManager.CreateUserInterface not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateUserInterface
+			case 0x0: { // CreateUserInterface
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Nfp.Detail.IUserManager");
 		}

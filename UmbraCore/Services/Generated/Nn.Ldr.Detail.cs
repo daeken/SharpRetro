@@ -8,16 +8,19 @@ public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IDebugMonitorInterface.AddProcessToDebugLaunchQueue");
 	protected virtual void ClearDebugLaunchQueue() =>
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IDebugMonitorInterface.ClearDebugLaunchQueue");
-	protected virtual void GetNsoInfos(Span<byte> _0) =>
+	protected virtual void GetNsoInfos(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ldr.Detail.IDebugMonitorInterface.GetNsoInfos not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // AddProcessToDebugLaunchQueue
+			case 0x0: { // AddProcessToDebugLaunchQueue
 				break;
-			case 0x1: // ClearDebugLaunchQueue
+			}
+			case 0x1: { // ClearDebugLaunchQueue
 				break;
-			case 0x2: // GetNsoInfos
+			}
+			case 0x2: { // GetNsoInfos
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldr.Detail.IDebugMonitorInterface");
 		}
@@ -28,22 +31,26 @@ public partial class IProcessManagerInterface : _IProcessManagerInterface_Base;
 public abstract class _IProcessManagerInterface_Base : IpcInterface {
 	protected virtual IpcInterface CreateProcess(Span<byte> _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Ldr.Detail.IProcessManagerInterface.CreateProcess not implemented");
-	protected virtual void GetProgramInfo(Span<byte> _0) =>
+	protected virtual void GetProgramInfo(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ldr.Detail.IProcessManagerInterface.GetProgramInfo not implemented");
-	protected virtual void RegisterTitle(Span<byte> _0) =>
+	protected virtual void RegisterTitle(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ldr.Detail.IProcessManagerInterface.RegisterTitle not implemented");
 	protected virtual void UnregisterTitle(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IProcessManagerInterface.UnregisterTitle");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateProcess
+			case 0x0: { // CreateProcess
 				break;
-			case 0x1: // GetProgramInfo
+			}
+			case 0x1: { // GetProgramInfo
 				break;
-			case 0x2: // RegisterTitle
+			}
+			case 0x2: { // RegisterTitle
 				break;
-			case 0x3: // UnregisterTitle
+			}
+			case 0x3: { // UnregisterTitle
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldr.Detail.IProcessManagerInterface");
 		}
@@ -64,16 +71,21 @@ public abstract class _IRoInterface_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IRoInterface.Initialize");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // LoadNro
+			case 0x0: { // LoadNro
 				break;
-			case 0x1: // UnloadNro
+			}
+			case 0x1: { // UnloadNro
 				break;
-			case 0x2: // LoadNrr
+			}
+			case 0x2: { // LoadNrr
 				break;
-			case 0x3: // UnloadNrr
+			}
+			case 0x3: { // UnloadNrr
 				break;
-			case 0x4: // Initialize
+			}
+			case 0x4: { // Initialize
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldr.Detail.IRoInterface");
 		}
@@ -88,10 +100,12 @@ public abstract class _IShellInterface_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IShellInterface.ClearLaunchQueue");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // AddProcessToLaunchQueue
+			case 0x0: { // AddProcessToLaunchQueue
 				break;
-			case 0x1: // ClearLaunchQueue
+			}
+			case 0x1: { // ClearLaunchQueue
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Ldr.Detail.IShellInterface");
 		}

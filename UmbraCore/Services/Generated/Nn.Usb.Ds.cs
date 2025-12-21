@@ -10,7 +10,7 @@ public abstract class _IDsEndpoint_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.Cancel");
 	protected virtual KObject GetCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.GetCompletionEvent not implemented");
-	protected virtual void GetReportData() =>
+	protected virtual void GetReportData(Span<Nn.Usb.Usb_report_entry> entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.GetReportData not implemented");
 	protected virtual void Stall() =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.Stall");
@@ -18,18 +18,24 @@ public abstract class _IDsEndpoint_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.SetZlt");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // PostBufferAsync
+			case 0x0: { // PostBufferAsync
 				break;
-			case 0x1: // Cancel
+			}
+			case 0x1: { // Cancel
 				break;
-			case 0x2: // GetCompletionEvent
+			}
+			case 0x2: { // GetCompletionEvent
 				break;
-			case 0x3: // GetReportData
+			}
+			case 0x3: { // GetReportData
 				break;
-			case 0x4: // Stall
+			}
+			case 0x4: { // Stall
 				break;
-			case 0x5: // SetZlt
+			}
+			case 0x5: { // SetZlt
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Usb.Ds.IDsEndpoint");
 		}
@@ -42,7 +48,7 @@ public abstract class _IDsInterface_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.RegisterEndpoint not implemented");
 	protected virtual KObject GetSetupEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetSetupEvent not implemented");
-	protected virtual void GetSetupPacket() =>
+	protected virtual void GetSetupPacket(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetSetupPacket not implemented");
 	protected virtual void EnableInterface() =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.EnableInterface");
@@ -54,11 +60,11 @@ public abstract class _IDsInterface_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.CtrlOutPostBufferAsync not implemented");
 	protected virtual KObject GetCtrlInCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlInCompletionEvent not implemented");
-	protected virtual void GetCtrlInReportData() =>
+	protected virtual void GetCtrlInReportData(Span<Nn.Usb.Usb_report_entry> entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlInReportData not implemented");
 	protected virtual KObject GetCtrlOutCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlOutCompletionEvent not implemented");
-	protected virtual void GetCtrlOutReportData() =>
+	protected virtual void GetCtrlOutReportData(Span<Nn.Usb.Usb_report_entry> entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlOutReportData not implemented");
 	protected virtual void StallCtrl() =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.StallCtrl");
@@ -66,32 +72,45 @@ public abstract class _IDsInterface_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.AppendConfigurationData");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // RegisterEndpoint
+			case 0x0: { // RegisterEndpoint
 				break;
-			case 0x1: // GetSetupEvent
+			}
+			case 0x1: { // GetSetupEvent
 				break;
-			case 0x2: // GetSetupPacket
+			}
+			case 0x2: { // GetSetupPacket
 				break;
-			case 0x3: // EnableInterface
+			}
+			case 0x3: { // EnableInterface
 				break;
-			case 0x4: // DisableInterface
+			}
+			case 0x4: { // DisableInterface
 				break;
-			case 0x5: // CtrlInPostBufferAsync
+			}
+			case 0x5: { // CtrlInPostBufferAsync
 				break;
-			case 0x6: // CtrlOutPostBufferAsync
+			}
+			case 0x6: { // CtrlOutPostBufferAsync
 				break;
-			case 0x7: // GetCtrlInCompletionEvent
+			}
+			case 0x7: { // GetCtrlInCompletionEvent
 				break;
-			case 0x8: // GetCtrlInReportData
+			}
+			case 0x8: { // GetCtrlInReportData
 				break;
-			case 0x9: // GetCtrlOutCompletionEvent
+			}
+			case 0x9: { // GetCtrlOutCompletionEvent
 				break;
-			case 0xA: // GetCtrlOutReportData
+			}
+			case 0xA: { // GetCtrlOutReportData
 				break;
-			case 0xB: // StallCtrl
+			}
+			case 0xB: { // StallCtrl
 				break;
-			case 0xC: // AppendConfigurationData
+			}
+			case 0xC: { // AppendConfigurationData
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Usb.Ds.IDsInterface");
 		}
@@ -126,30 +145,42 @@ public abstract class _IDsService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.Disable");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // BindDevice
+			case 0x0: { // BindDevice
 				break;
-			case 0x1: // BindClientProcess
+			}
+			case 0x1: { // BindClientProcess
 				break;
-			case 0x2: // RegisterInterface
+			}
+			case 0x2: { // RegisterInterface
 				break;
-			case 0x3: // GetStateChangeEvent
+			}
+			case 0x3: { // GetStateChangeEvent
 				break;
-			case 0x4: // GetState
+			}
+			case 0x4: { // GetState
 				break;
-			case 0x5: // ClearDeviceData
+			}
+			case 0x5: { // ClearDeviceData
 				break;
-			case 0x6: // AddUsbStringDescriptor
+			}
+			case 0x6: { // AddUsbStringDescriptor
 				break;
-			case 0x7: // DeleteUsbStringDescriptor
+			}
+			case 0x7: { // DeleteUsbStringDescriptor
 				break;
-			case 0x8: // SetUsbDeviceDescriptor
+			}
+			case 0x8: { // SetUsbDeviceDescriptor
 				break;
-			case 0x9: // SetBinaryObjectStore
+			}
+			case 0x9: { // SetBinaryObjectStore
 				break;
-			case 0xA: // Enable
+			}
+			case 0xA: { // Enable
 				break;
-			case 0xB: // Disable
+			}
+			case 0xB: { // Disable
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Usb.Ds.IDsService");
 		}

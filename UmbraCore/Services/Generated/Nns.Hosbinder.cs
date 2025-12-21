@@ -14,14 +14,18 @@ public abstract class _IHOSBinderDriver_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nns.Hosbinder.IHOSBinderDriver.TransactParcelAuto");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // TransactParcel
+			case 0x0: { // TransactParcel
 				break;
-			case 0x1: // AdjustRefcount
+			}
+			case 0x1: { // AdjustRefcount
 				break;
-			case 0x2: // GetNativeHandle
+			}
+			case 0x2: { // GetNativeHandle
 				break;
-			case 0x3: // TransactParcelAuto
+			}
+			case 0x3: { // TransactParcelAuto
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nns.Hosbinder.IHOSBinderDriver");
 		}

@@ -4,7 +4,7 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Omm.Detail;
 public partial class IOperationModeManager : _IOperationModeManager_Base;
 public abstract class _IOperationModeManager_Base : IpcInterface {
-	protected virtual void GetOperationMode() =>
+	protected virtual void GetOperationMode(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetOperationMode not implemented");
 	protected virtual KObject GetOperationModeChangeEvent() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetOperationModeChangeEvent not implemented");
@@ -14,25 +14,25 @@ public abstract class _IOperationModeManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.DisableAudioVisual");
 	protected virtual void EnterSleepAndWait(KObject _0) =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.EnterSleepAndWait");
-	protected virtual void GetCradleStatus() =>
+	protected virtual void GetCradleStatus(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetCradleStatus not implemented");
 	protected virtual void FadeInDisplay() =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeInDisplay");
 	protected virtual void FadeOutDisplay() =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeOutDisplay");
-	protected virtual void Unknown8() =>
+	protected virtual void Unknown8(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown8 not implemented");
 	protected virtual void Unknown9() =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown9");
 	protected virtual void Unknown10(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown10");
-	protected virtual void Unknown11() =>
+	protected virtual void Unknown11(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown11 not implemented");
 	protected virtual KObject Unknown12() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown12 not implemented");
 	protected virtual void Unknown13() =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown13");
-	protected virtual void Unknown14() =>
+	protected virtual void Unknown14(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown14 not implemented");
 	protected virtual void Unknown15() =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown15");
@@ -44,64 +44,88 @@ public abstract class _IOperationModeManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown18");
 	protected virtual KObject Unknown19() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown19 not implemented");
-	protected virtual void Unknown20() =>
+	protected virtual void Unknown20(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown20 not implemented");
 	protected virtual void Unknown21(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown21");
 	protected virtual KObject Unknown22() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown22 not implemented");
-	protected virtual void Unknown23() =>
+	protected virtual void Unknown23(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown23 not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetOperationMode
+			case 0x0: { // GetOperationMode
 				break;
-			case 0x1: // GetOperationModeChangeEvent
+			}
+			case 0x1: { // GetOperationModeChangeEvent
 				break;
-			case 0x2: // EnableAudioVisual
+			}
+			case 0x2: { // EnableAudioVisual
 				break;
-			case 0x3: // DisableAudioVisual
+			}
+			case 0x3: { // DisableAudioVisual
 				break;
-			case 0x4: // EnterSleepAndWait
+			}
+			case 0x4: { // EnterSleepAndWait
 				break;
-			case 0x5: // GetCradleStatus
+			}
+			case 0x5: { // GetCradleStatus
 				break;
-			case 0x6: // FadeInDisplay
+			}
+			case 0x6: { // FadeInDisplay
 				break;
-			case 0x7: // FadeOutDisplay
+			}
+			case 0x7: { // FadeOutDisplay
 				break;
-			case 0x8: // Unknown8
+			}
+			case 0x8: { // Unknown8
 				break;
-			case 0x9: // Unknown9
+			}
+			case 0x9: { // Unknown9
 				break;
-			case 0xA: // Unknown10
+			}
+			case 0xA: { // Unknown10
 				break;
-			case 0xB: // Unknown11
+			}
+			case 0xB: { // Unknown11
 				break;
-			case 0xC: // Unknown12
+			}
+			case 0xC: { // Unknown12
 				break;
-			case 0xD: // Unknown13
+			}
+			case 0xD: { // Unknown13
 				break;
-			case 0xE: // Unknown14
+			}
+			case 0xE: { // Unknown14
 				break;
-			case 0xF: // Unknown15
+			}
+			case 0xF: { // Unknown15
 				break;
-			case 0x10: // Unknown16
+			}
+			case 0x10: { // Unknown16
 				break;
-			case 0x11: // Unknown17
+			}
+			case 0x11: { // Unknown17
 				break;
-			case 0x12: // Unknown18
+			}
+			case 0x12: { // Unknown18
 				break;
-			case 0x13: // Unknown19
+			}
+			case 0x13: { // Unknown19
 				break;
-			case 0x14: // Unknown20
+			}
+			case 0x14: { // Unknown20
 				break;
-			case 0x15: // Unknown21
+			}
+			case 0x15: { // Unknown21
 				break;
-			case 0x16: // Unknown22
+			}
+			case 0x16: { // Unknown22
 				break;
-			case 0x17: // Unknown23
+			}
+			case 0x17: { // Unknown23
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Omm.Detail.IOperationModeManager");
 		}

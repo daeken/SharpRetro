@@ -14,14 +14,18 @@ public abstract class _IControl_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IControl.SetAutoUpload");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // SetUrl
+			case 0x0: { // SetUrl
 				break;
-			case 0x1: // ImportCrt
+			}
+			case 0x1: { // ImportCrt
 				break;
-			case 0x2: // ImportPki
+			}
+			case 0x2: { // ImportPki
 				break;
-			case 0x3: // SetAutoUpload
+			}
+			case 0x3: { // SetAutoUpload
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Eupld.Sf.IControl");
 		}
@@ -36,7 +40,7 @@ public abstract class _IRequest_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.UploadAll");
 	protected virtual void UploadSelected(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.UploadSelected");
-	protected virtual void GetUploadStatus() =>
+	protected virtual void GetUploadStatus(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Eupld.Sf.IRequest.GetUploadStatus not implemented");
 	protected virtual void CancelUpload() =>
 		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.CancelUpload");
@@ -44,18 +48,24 @@ public abstract class _IRequest_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.GetResult");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Initialize
+			case 0x0: { // Initialize
 				break;
-			case 0x1: // UploadAll
+			}
+			case 0x1: { // UploadAll
 				break;
-			case 0x2: // UploadSelected
+			}
+			case 0x2: { // UploadSelected
 				break;
-			case 0x3: // GetUploadStatus
+			}
+			case 0x3: { // GetUploadStatus
 				break;
-			case 0x4: // CancelUpload
+			}
+			case 0x4: { // CancelUpload
 				break;
-			case 0x5: // GetResult
+			}
+			case 0x5: { // GetResult
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Eupld.Sf.IRequest");
 		}

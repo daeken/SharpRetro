@@ -8,8 +8,9 @@ public abstract class _IActiveVibrationDeviceList_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IActiveVibrationDeviceList.ActivateVibrationDevice");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // ActivateVibrationDevice
+			case 0x0: { // ActivateVibrationDevice
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Hid.IActiveVibrationDeviceList");
 		}
@@ -22,8 +23,9 @@ public abstract class _IAppletResource_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Hid.IAppletResource.GetSharedMemoryHandle not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetSharedMemoryHandle
+			case 0x0: { // GetSharedMemoryHandle
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Hid.IAppletResource");
 		}
@@ -88,11 +90,11 @@ public abstract class _IHidDebugServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetCaptureButtonAutoPilotState");
 	protected virtual void SetShiftAccelerometerCalibrationValue(uint _0, float _1, float _2, ulong _3, ulong _4) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetShiftAccelerometerCalibrationValue");
-	protected virtual void GetShiftAccelerometerCalibrationValue(uint _0, ulong _1, ulong _2) =>
+	protected virtual void GetShiftAccelerometerCalibrationValue(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetShiftAccelerometerCalibrationValue not implemented");
 	protected virtual void SetShiftGyroscopeCalibrationValue(uint _0, float _1, float _2, ulong _3, ulong _4) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetShiftGyroscopeCalibrationValue");
-	protected virtual void GetShiftGyroscopeCalibrationValue(uint _0, ulong _1, ulong _2) =>
+	protected virtual void GetShiftGyroscopeCalibrationValue(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetShiftGyroscopeCalibrationValue not implemented");
 	protected virtual void DeactivateConsoleSixAxisSensor() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateConsoleSixAxisSensor");
@@ -106,17 +108,17 @@ public abstract class _IHidDebugServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateFirmwareUpdate");
 	protected virtual void StartFirmwareUpdate(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.StartFirmwareUpdate");
-	protected virtual void GetFirmwareUpdateStage() =>
+	protected virtual void GetFirmwareUpdateStage(out ulong _0, out ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetFirmwareUpdateStage not implemented");
-	protected virtual void GetFirmwareVersion(uint _0, uint _1) =>
+	protected virtual void GetFirmwareVersion(uint _0, uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetFirmwareVersion not implemented");
-	protected virtual void GetDestinationFirmwareVersion(uint _0, uint _1) =>
+	protected virtual void GetDestinationFirmwareVersion(uint _0, uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetDestinationFirmwareVersion not implemented");
 	protected virtual void DiscardFirmwareInfoCacheForRevert() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DiscardFirmwareInfoCacheForRevert");
 	protected virtual void StartFirmwareUpdateForRevert(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.StartFirmwareUpdateForRevert");
-	protected virtual void GetAvailableFirmwareVersionForRevert(ulong _0) =>
+	protected virtual void GetAvailableFirmwareVersionForRevert(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetAvailableFirmwareVersionForRevert not implemented");
 	protected virtual byte IsFirmwareUpdatingDevice(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.IsFirmwareUpdatingDevice not implemented");
@@ -148,120 +150,177 @@ public abstract class _IHidDebugServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.AddRegisteredDevice");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // DeactivateDebugPad
+			case 0x0: { // DeactivateDebugPad
 				break;
-			case 0x1: // SetDebugPadAutoPilotState
+			}
+			case 0x1: { // SetDebugPadAutoPilotState
 				break;
-			case 0x2: // UnsetDebugPadAutoPilotState
+			}
+			case 0x2: { // UnsetDebugPadAutoPilotState
 				break;
-			case 0xA: // DeactivateTouchScreen
+			}
+			case 0xA: { // DeactivateTouchScreen
 				break;
-			case 0xB: // SetTouchScreenAutoPilotState
+			}
+			case 0xB: { // SetTouchScreenAutoPilotState
 				break;
-			case 0xC: // UnsetTouchScreenAutoPilotState
+			}
+			case 0xC: { // UnsetTouchScreenAutoPilotState
 				break;
-			case 0x14: // DeactivateMouse
+			}
+			case 0x14: { // DeactivateMouse
 				break;
-			case 0x15: // SetMouseAutoPilotState
+			}
+			case 0x15: { // SetMouseAutoPilotState
 				break;
-			case 0x16: // UnsetMouseAutoPilotState
+			}
+			case 0x16: { // UnsetMouseAutoPilotState
 				break;
-			case 0x1E: // DeactivateKeyboard
+			}
+			case 0x1E: { // DeactivateKeyboard
 				break;
-			case 0x1F: // SetKeyboardAutoPilotState
+			}
+			case 0x1F: { // SetKeyboardAutoPilotState
 				break;
-			case 0x20: // UnsetKeyboardAutoPilotState
+			}
+			case 0x20: { // UnsetKeyboardAutoPilotState
 				break;
-			case 0x32: // DeactivateXpad
+			}
+			case 0x32: { // DeactivateXpad
 				break;
-			case 0x33: // SetXpadAutoPilotState
+			}
+			case 0x33: { // SetXpadAutoPilotState
 				break;
-			case 0x34: // UnsetXpadAutoPilotState
+			}
+			case 0x34: { // UnsetXpadAutoPilotState
 				break;
-			case 0x3C: // DeactivateJoyXpad
+			}
+			case 0x3C: { // DeactivateJoyXpad
 				break;
-			case 0x5B: // DeactivateGesture
+			}
+			case 0x5B: { // DeactivateGesture
 				break;
-			case 0x6E: // DeactivateHomeButton
+			}
+			case 0x6E: { // DeactivateHomeButton
 				break;
-			case 0x6F: // SetHomeButtonAutoPilotState
+			}
+			case 0x6F: { // SetHomeButtonAutoPilotState
 				break;
-			case 0x70: // UnsetHomeButtonAutoPilotState
+			}
+			case 0x70: { // UnsetHomeButtonAutoPilotState
 				break;
-			case 0x78: // DeactivateSleepButton
+			}
+			case 0x78: { // DeactivateSleepButton
 				break;
-			case 0x79: // SetSleepButtonAutoPilotState
+			}
+			case 0x79: { // SetSleepButtonAutoPilotState
 				break;
-			case 0x7A: // UnsetSleepButtonAutoPilotState
+			}
+			case 0x7A: { // UnsetSleepButtonAutoPilotState
 				break;
-			case 0x7B: // DeactivateInputDetector
+			}
+			case 0x7B: { // DeactivateInputDetector
 				break;
-			case 0x82: // DeactivateCaptureButton
+			}
+			case 0x82: { // DeactivateCaptureButton
 				break;
-			case 0x83: // SetCaptureButtonAutoPilotState
+			}
+			case 0x83: { // SetCaptureButtonAutoPilotState
 				break;
-			case 0x84: // UnsetCaptureButtonAutoPilotState
+			}
+			case 0x84: { // UnsetCaptureButtonAutoPilotState
 				break;
-			case 0x85: // SetShiftAccelerometerCalibrationValue
+			}
+			case 0x85: { // SetShiftAccelerometerCalibrationValue
 				break;
-			case 0x86: // GetShiftAccelerometerCalibrationValue
+			}
+			case 0x86: { // GetShiftAccelerometerCalibrationValue
 				break;
-			case 0x87: // SetShiftGyroscopeCalibrationValue
+			}
+			case 0x87: { // SetShiftGyroscopeCalibrationValue
 				break;
-			case 0x88: // GetShiftGyroscopeCalibrationValue
+			}
+			case 0x88: { // GetShiftGyroscopeCalibrationValue
 				break;
-			case 0x8C: // DeactivateConsoleSixAxisSensor
+			}
+			case 0x8C: { // DeactivateConsoleSixAxisSensor
 				break;
-			case 0x8D: // GetConsoleSixAxisSensorSamplingFrequency
+			}
+			case 0x8D: { // GetConsoleSixAxisSensorSamplingFrequency
 				break;
-			case 0x8E: // DeactivateSevenSixAxisSensor
+			}
+			case 0x8E: { // DeactivateSevenSixAxisSensor
 				break;
-			case 0xC9: // ActivateFirmwareUpdate
+			}
+			case 0xC9: { // ActivateFirmwareUpdate
 				break;
-			case 0xCA: // DeactivateFirmwareUpdate
+			}
+			case 0xCA: { // DeactivateFirmwareUpdate
 				break;
-			case 0xCB: // StartFirmwareUpdate
+			}
+			case 0xCB: { // StartFirmwareUpdate
 				break;
-			case 0xCC: // GetFirmwareUpdateStage
+			}
+			case 0xCC: { // GetFirmwareUpdateStage
 				break;
-			case 0xCD: // GetFirmwareVersion
+			}
+			case 0xCD: { // GetFirmwareVersion
 				break;
-			case 0xCE: // GetDestinationFirmwareVersion
+			}
+			case 0xCE: { // GetDestinationFirmwareVersion
 				break;
-			case 0xCF: // DiscardFirmwareInfoCacheForRevert
+			}
+			case 0xCF: { // DiscardFirmwareInfoCacheForRevert
 				break;
-			case 0xD0: // StartFirmwareUpdateForRevert
+			}
+			case 0xD0: { // StartFirmwareUpdateForRevert
 				break;
-			case 0xD1: // GetAvailableFirmwareVersionForRevert
+			}
+			case 0xD1: { // GetAvailableFirmwareVersionForRevert
 				break;
-			case 0xD2: // IsFirmwareUpdatingDevice
+			}
+			case 0xD2: { // IsFirmwareUpdatingDevice
 				break;
-			case 0xDD: // UpdateControllerColor
+			}
+			case 0xDD: { // UpdateControllerColor
 				break;
-			case 0xDE: // ConnectUsbPadsAsync
+			}
+			case 0xDE: { // ConnectUsbPadsAsync
 				break;
-			case 0xDF: // DisconnectUsbPadsAsync
+			}
+			case 0xDF: { // DisconnectUsbPadsAsync
 				break;
-			case 0xE0: // UpdateDesignInfo
+			}
+			case 0xE0: { // UpdateDesignInfo
 				break;
-			case 0xE1: // GetUniquePadDriverState
+			}
+			case 0xE1: { // GetUniquePadDriverState
 				break;
-			case 0xE2: // GetSixAxisSensorDriverStates
+			}
+			case 0xE2: { // GetSixAxisSensorDriverStates
 				break;
-			case 0x12D: // GetAbstractedPadHandles
+			}
+			case 0x12D: { // GetAbstractedPadHandles
 				break;
-			case 0x12E: // GetAbstractedPadState
+			}
+			case 0x12E: { // GetAbstractedPadState
 				break;
-			case 0x12F: // GetAbstractedPadsState
+			}
+			case 0x12F: { // GetAbstractedPadsState
 				break;
-			case 0x141: // SetAutoPilotVirtualPadState
+			}
+			case 0x141: { // SetAutoPilotVirtualPadState
 				break;
-			case 0x142: // UnsetAutoPilotVirtualPadState
+			}
+			case 0x142: { // UnsetAutoPilotVirtualPadState
 				break;
-			case 0x143: // UnsetAllAutoPilotVirtualPadState
+			}
+			case 0x143: { // UnsetAllAutoPilotVirtualPadState
 				break;
-			case 0x15E: // AddRegisteredDevice
+			}
+			case 0x15E: { // AddRegisteredDevice
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Hid.IHidDebugServer");
 		}
@@ -288,13 +347,13 @@ public abstract class _IHidServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ReleaseXpadIdEventHandle");
 	protected virtual void ActivateXpad(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateXpad");
-	protected virtual void GetXpadIds() =>
+	protected virtual void GetXpadIds(out long _0, Span<uint> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetXpadIds not implemented");
 	protected virtual void ActivateJoyXpad(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateJoyXpad");
 	protected virtual KObject GetJoyXpadLifoHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetJoyXpadLifoHandle not implemented");
-	protected virtual void GetJoyXpadIds() =>
+	protected virtual void GetJoyXpadIds(out long _0, Span<uint> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetJoyXpadIds not implemented");
 	protected virtual void ActivateSixAxisSensor(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateSixAxisSensor");
@@ -318,13 +377,13 @@ public abstract class _IHidServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EnableSixAxisSensorFusion");
 	protected virtual void SetSixAxisSensorFusionParameters(uint _0, float _1, float _2, ulong _3, ulong _4) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetSixAxisSensorFusionParameters");
-	protected virtual void GetSixAxisSensorFusionParameters(uint _0, ulong _1, ulong _2) =>
+	protected virtual void GetSixAxisSensorFusionParameters(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetSixAxisSensorFusionParameters not implemented");
 	protected virtual void ResetSixAxisSensorFusionParameters(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetSixAxisSensorFusionParameters");
 	protected virtual void SetAccelerometerParameters(uint _0, float _1, float _2, ulong _3, ulong _4) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetAccelerometerParameters");
-	protected virtual void GetAccelerometerParameters(uint _0, ulong _1, ulong _2) =>
+	protected virtual void GetAccelerometerParameters(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetAccelerometerParameters not implemented");
 	protected virtual void ResetAccelerometerParameters(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetAccelerometerParameters");
@@ -388,9 +447,9 @@ public abstract class _IHidServer_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsUnintendedHomeButtonInputProtectionEnabled not implemented");
 	protected virtual void EnableUnintendedHomeButtonInputProtection(bool _0, uint _1, ulong _2, ulong _3) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EnableUnintendedHomeButtonInputProtection");
-	protected virtual void SetNpadJoyAssignmentModeSingleWithDestination(uint _0, ulong _1, ulong _2, ulong _3) =>
+	protected virtual void SetNpadJoyAssignmentModeSingleWithDestination(uint _0, ulong _1, ulong _2, ulong _3, out bool _4, out uint _5) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.SetNpadJoyAssignmentModeSingleWithDestination not implemented");
-	protected virtual void GetVibrationDeviceInfo(uint _0) =>
+	protected virtual void GetVibrationDeviceInfo(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetVibrationDeviceInfo not implemented");
 	protected virtual void SendVibrationValue(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SendVibrationValue");
@@ -442,11 +501,11 @@ public abstract class _IHidServer_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsUsbFullKeyControllerConnected not implemented");
 	protected virtual bool HasBattery(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.HasBattery not implemented");
-	protected virtual void HasLeftRightBattery(uint _0) =>
+	protected virtual void HasLeftRightBattery(uint _0, out bool _1, out bool _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.HasLeftRightBattery not implemented");
 	protected virtual byte GetNpadInterfaceType(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetNpadInterfaceType not implemented");
-	protected virtual void GetNpadLeftRightInterfaceType(uint _0) =>
+	protected virtual void GetNpadLeftRightInterfaceType(uint _0, out byte _1, out byte _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetNpadLeftRightInterfaceType not implemented");
 	protected virtual ulong GetPalmaConnectionHandle(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetPalmaConnectionHandle not implemented");
@@ -454,7 +513,7 @@ public abstract class _IHidServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.InitializePalma");
 	protected virtual KObject AcquirePalmaOperationCompleteEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.AcquirePalmaOperationCompleteEvent not implemented");
-	protected virtual void GetPalmaOperationInfo(ulong _0) =>
+	protected virtual void GetPalmaOperationInfo(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetPalmaOperationInfo not implemented");
 	protected virtual void PlayPalmaActivity(ulong _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.PlayPalmaActivity");
@@ -506,240 +565,357 @@ public abstract class _IHidServer_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetNpadCommunicationMode not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // CreateAppletResource
+			case 0x0: { // CreateAppletResource
 				break;
-			case 0x1: // ActivateDebugPad
+			}
+			case 0x1: { // ActivateDebugPad
 				break;
-			case 0xB: // ActivateTouchScreen
+			}
+			case 0xB: { // ActivateTouchScreen
 				break;
-			case 0x15: // ActivateMouse
+			}
+			case 0x15: { // ActivateMouse
 				break;
-			case 0x1F: // ActivateKeyboard
+			}
+			case 0x1F: { // ActivateKeyboard
 				break;
-			case 0x20: // Unknown32
+			}
+			case 0x20: { // Unknown32
 				break;
-			case 0x28: // AcquireXpadIdEventHandle
+			}
+			case 0x28: { // AcquireXpadIdEventHandle
 				break;
-			case 0x29: // ReleaseXpadIdEventHandle
+			}
+			case 0x29: { // ReleaseXpadIdEventHandle
 				break;
-			case 0x33: // ActivateXpad
+			}
+			case 0x33: { // ActivateXpad
 				break;
-			case 0x37: // GetXpadIds
+			}
+			case 0x37: { // GetXpadIds
 				break;
-			case 0x38: // ActivateJoyXpad
+			}
+			case 0x38: { // ActivateJoyXpad
 				break;
-			case 0x3A: // GetJoyXpadLifoHandle
+			}
+			case 0x3A: { // GetJoyXpadLifoHandle
 				break;
-			case 0x3B: // GetJoyXpadIds
+			}
+			case 0x3B: { // GetJoyXpadIds
 				break;
-			case 0x3C: // ActivateSixAxisSensor
+			}
+			case 0x3C: { // ActivateSixAxisSensor
 				break;
-			case 0x3D: // DeactivateSixAxisSensor
+			}
+			case 0x3D: { // DeactivateSixAxisSensor
 				break;
-			case 0x3E: // GetSixAxisSensorLifoHandle
+			}
+			case 0x3E: { // GetSixAxisSensorLifoHandle
 				break;
-			case 0x3F: // ActivateJoySixAxisSensor
+			}
+			case 0x3F: { // ActivateJoySixAxisSensor
 				break;
-			case 0x40: // DeactivateJoySixAxisSensor
+			}
+			case 0x40: { // DeactivateJoySixAxisSensor
 				break;
-			case 0x41: // GetJoySixAxisSensorLifoHandle
+			}
+			case 0x41: { // GetJoySixAxisSensorLifoHandle
 				break;
-			case 0x42: // StartSixAxisSensor
+			}
+			case 0x42: { // StartSixAxisSensor
 				break;
-			case 0x43: // StopSixAxisSensor
+			}
+			case 0x43: { // StopSixAxisSensor
 				break;
-			case 0x44: // IsSixAxisSensorFusionEnabled
+			}
+			case 0x44: { // IsSixAxisSensorFusionEnabled
 				break;
-			case 0x45: // EnableSixAxisSensorFusion
+			}
+			case 0x45: { // EnableSixAxisSensorFusion
 				break;
-			case 0x46: // SetSixAxisSensorFusionParameters
+			}
+			case 0x46: { // SetSixAxisSensorFusionParameters
 				break;
-			case 0x47: // GetSixAxisSensorFusionParameters
+			}
+			case 0x47: { // GetSixAxisSensorFusionParameters
 				break;
-			case 0x48: // ResetSixAxisSensorFusionParameters
+			}
+			case 0x48: { // ResetSixAxisSensorFusionParameters
 				break;
-			case 0x49: // SetAccelerometerParameters
+			}
+			case 0x49: { // SetAccelerometerParameters
 				break;
-			case 0x4A: // GetAccelerometerParameters
+			}
+			case 0x4A: { // GetAccelerometerParameters
 				break;
-			case 0x4B: // ResetAccelerometerParameters
+			}
+			case 0x4B: { // ResetAccelerometerParameters
 				break;
-			case 0x4C: // SetAccelerometerPlayMode
+			}
+			case 0x4C: { // SetAccelerometerPlayMode
 				break;
-			case 0x4D: // GetAccelerometerPlayMode
+			}
+			case 0x4D: { // GetAccelerometerPlayMode
 				break;
-			case 0x4E: // ResetAccelerometerPlayMode
+			}
+			case 0x4E: { // ResetAccelerometerPlayMode
 				break;
-			case 0x4F: // SetGyroscopeZeroDriftMode
+			}
+			case 0x4F: { // SetGyroscopeZeroDriftMode
 				break;
-			case 0x50: // GetGyroscopeZeroDriftMode
+			}
+			case 0x50: { // GetGyroscopeZeroDriftMode
 				break;
-			case 0x51: // ResetGyroscopeZeroDriftMode
+			}
+			case 0x51: { // ResetGyroscopeZeroDriftMode
 				break;
-			case 0x52: // IsSixAxisSensorAtRest
+			}
+			case 0x52: { // IsSixAxisSensorAtRest
 				break;
-			case 0x53: // Unknown83
+			}
+			case 0x53: { // Unknown83
 				break;
-			case 0x5B: // ActivateGesture
+			}
+			case 0x5B: { // ActivateGesture
 				break;
-			case 0x64: // SetSupportedNpadStyleSet
+			}
+			case 0x64: { // SetSupportedNpadStyleSet
 				break;
-			case 0x65: // GetSupportedNpadStyleSet
+			}
+			case 0x65: { // GetSupportedNpadStyleSet
 				break;
-			case 0x66: // SetSupportedNpadIdType
+			}
+			case 0x66: { // SetSupportedNpadIdType
 				break;
-			case 0x67: // ActivateNpad
+			}
+			case 0x67: { // ActivateNpad
 				break;
-			case 0x68: // DeactivateNpad
+			}
+			case 0x68: { // DeactivateNpad
 				break;
-			case 0x6A: // AcquireNpadStyleSetUpdateEventHandle
+			}
+			case 0x6A: { // AcquireNpadStyleSetUpdateEventHandle
 				break;
-			case 0x6B: // DisconnectNpad
+			}
+			case 0x6B: { // DisconnectNpad
 				break;
-			case 0x6C: // GetPlayerLedPattern
+			}
+			case 0x6C: { // GetPlayerLedPattern
 				break;
-			case 0x78: // SetNpadJoyHoldType
+			}
+			case 0x78: { // SetNpadJoyHoldType
 				break;
-			case 0x79: // GetNpadJoyHoldType
+			}
+			case 0x79: { // GetNpadJoyHoldType
 				break;
-			case 0x7A: // SetNpadJoyAssignmentModeSingleByDefault
+			}
+			case 0x7A: { // SetNpadJoyAssignmentModeSingleByDefault
 				break;
-			case 0x7B: // SetNpadJoyAssignmentModeSingle
+			}
+			case 0x7B: { // SetNpadJoyAssignmentModeSingle
 				break;
-			case 0x7C: // SetNpadJoyAssignmentModeDual
+			}
+			case 0x7C: { // SetNpadJoyAssignmentModeDual
 				break;
-			case 0x7D: // MergeSingleJoyAsDualJoy
+			}
+			case 0x7D: { // MergeSingleJoyAsDualJoy
 				break;
-			case 0x7E: // StartLrAssignmentMode
+			}
+			case 0x7E: { // StartLrAssignmentMode
 				break;
-			case 0x7F: // StopLrAssignmentMode
+			}
+			case 0x7F: { // StopLrAssignmentMode
 				break;
-			case 0x80: // SetNpadHandheldActivationMode
+			}
+			case 0x80: { // SetNpadHandheldActivationMode
 				break;
-			case 0x81: // GetNpadHandheldActivationMode
+			}
+			case 0x81: { // GetNpadHandheldActivationMode
 				break;
-			case 0x82: // SwapNpadAssignment
+			}
+			case 0x82: { // SwapNpadAssignment
 				break;
-			case 0x83: // IsUnintendedHomeButtonInputProtectionEnabled
+			}
+			case 0x83: { // IsUnintendedHomeButtonInputProtectionEnabled
 				break;
-			case 0x84: // EnableUnintendedHomeButtonInputProtection
+			}
+			case 0x84: { // EnableUnintendedHomeButtonInputProtection
 				break;
-			case 0x85: // SetNpadJoyAssignmentModeSingleWithDestination
+			}
+			case 0x85: { // SetNpadJoyAssignmentModeSingleWithDestination
 				break;
-			case 0xC8: // GetVibrationDeviceInfo
+			}
+			case 0xC8: { // GetVibrationDeviceInfo
 				break;
-			case 0xC9: // SendVibrationValue
+			}
+			case 0xC9: { // SendVibrationValue
 				break;
-			case 0xCA: // GetActualVibrationValue
+			}
+			case 0xCA: { // GetActualVibrationValue
 				break;
-			case 0xCB: // CreateActiveVibrationDeviceList
+			}
+			case 0xCB: { // CreateActiveVibrationDeviceList
 				break;
-			case 0xCC: // PermitVibration
+			}
+			case 0xCC: { // PermitVibration
 				break;
-			case 0xCD: // IsVibrationPermitted
+			}
+			case 0xCD: { // IsVibrationPermitted
 				break;
-			case 0xCE: // SendVibrationValues
+			}
+			case 0xCE: { // SendVibrationValues
 				break;
-			case 0xCF: // SendVibrationGcErmCommand
+			}
+			case 0xCF: { // SendVibrationGcErmCommand
 				break;
-			case 0xD0: // GetActualVibrationGcErmCommand
+			}
+			case 0xD0: { // GetActualVibrationGcErmCommand
 				break;
-			case 0xD1: // BeginPermitVibrationSession
+			}
+			case 0xD1: { // BeginPermitVibrationSession
 				break;
-			case 0xD2: // EndPermitVibrationSession
+			}
+			case 0xD2: { // EndPermitVibrationSession
 				break;
-			case 0x12C: // ActivateConsoleSixAxisSensor
+			}
+			case 0x12C: { // ActivateConsoleSixAxisSensor
 				break;
-			case 0x12D: // StartConsoleSixAxisSensor
+			}
+			case 0x12D: { // StartConsoleSixAxisSensor
 				break;
-			case 0x12E: // StopConsoleSixAxisSensor
+			}
+			case 0x12E: { // StopConsoleSixAxisSensor
 				break;
-			case 0x12F: // ActivateSevenSixAxisSensor
+			}
+			case 0x12F: { // ActivateSevenSixAxisSensor
 				break;
-			case 0x130: // StartSevenSixAxisSensor
+			}
+			case 0x130: { // StartSevenSixAxisSensor
 				break;
-			case 0x131: // StopSevenSixAxisSensor
+			}
+			case 0x131: { // StopSevenSixAxisSensor
 				break;
-			case 0x132: // InitializeSevenSixAxisSensor
+			}
+			case 0x132: { // InitializeSevenSixAxisSensor
 				break;
-			case 0x133: // FinalizeSevenSixAxisSensor
+			}
+			case 0x133: { // FinalizeSevenSixAxisSensor
 				break;
-			case 0x134: // SetSevenSixAxisSensorFusionStrength
+			}
+			case 0x134: { // SetSevenSixAxisSensorFusionStrength
 				break;
-			case 0x135: // GetSevenSixAxisSensorFusionStrength
+			}
+			case 0x135: { // GetSevenSixAxisSensorFusionStrength
 				break;
-			case 0x136: // Unknown310
+			}
+			case 0x136: { // Unknown310
 				break;
-			case 0x190: // IsUsbFullKeyControllerEnabled
+			}
+			case 0x190: { // IsUsbFullKeyControllerEnabled
 				break;
-			case 0x191: // EnableUsbFullKeyController
+			}
+			case 0x191: { // EnableUsbFullKeyController
 				break;
-			case 0x192: // IsUsbFullKeyControllerConnected
+			}
+			case 0x192: { // IsUsbFullKeyControllerConnected
 				break;
-			case 0x193: // HasBattery
+			}
+			case 0x193: { // HasBattery
 				break;
-			case 0x194: // HasLeftRightBattery
+			}
+			case 0x194: { // HasLeftRightBattery
 				break;
-			case 0x195: // GetNpadInterfaceType
+			}
+			case 0x195: { // GetNpadInterfaceType
 				break;
-			case 0x196: // GetNpadLeftRightInterfaceType
+			}
+			case 0x196: { // GetNpadLeftRightInterfaceType
 				break;
-			case 0x1F4: // GetPalmaConnectionHandle
+			}
+			case 0x1F4: { // GetPalmaConnectionHandle
 				break;
-			case 0x1F5: // InitializePalma
+			}
+			case 0x1F5: { // InitializePalma
 				break;
-			case 0x1F6: // AcquirePalmaOperationCompleteEvent
+			}
+			case 0x1F6: { // AcquirePalmaOperationCompleteEvent
 				break;
-			case 0x1F7: // GetPalmaOperationInfo
+			}
+			case 0x1F7: { // GetPalmaOperationInfo
 				break;
-			case 0x1F8: // PlayPalmaActivity
+			}
+			case 0x1F8: { // PlayPalmaActivity
 				break;
-			case 0x1F9: // SetPalmaFrModeType
+			}
+			case 0x1F9: { // SetPalmaFrModeType
 				break;
-			case 0x1FA: // ReadPalmaStep
+			}
+			case 0x1FA: { // ReadPalmaStep
 				break;
-			case 0x1FB: // EnablePalmaStep
+			}
+			case 0x1FB: { // EnablePalmaStep
 				break;
-			case 0x1FC: // ResetPalmaStep
+			}
+			case 0x1FC: { // ResetPalmaStep
 				break;
-			case 0x1FD: // ReadPalmaApplicationSection
+			}
+			case 0x1FD: { // ReadPalmaApplicationSection
 				break;
-			case 0x1FE: // WritePalmaApplicationSection
+			}
+			case 0x1FE: { // WritePalmaApplicationSection
 				break;
-			case 0x1FF: // ReadPalmaUniqueCode
+			}
+			case 0x1FF: { // ReadPalmaUniqueCode
 				break;
-			case 0x200: // SetPalmaUniqueCodeInvalid
+			}
+			case 0x200: { // SetPalmaUniqueCodeInvalid
 				break;
-			case 0x201: // WritePalmaActivityEntry
+			}
+			case 0x201: { // WritePalmaActivityEntry
 				break;
-			case 0x202: // WritePalmaRgbLedPatternEntry
+			}
+			case 0x202: { // WritePalmaRgbLedPatternEntry
 				break;
-			case 0x203: // WritePalmaWaveEntry
+			}
+			case 0x203: { // WritePalmaWaveEntry
 				break;
-			case 0x204: // SetPalmaDataBaseIdentificationVersion
+			}
+			case 0x204: { // SetPalmaDataBaseIdentificationVersion
 				break;
-			case 0x205: // GetPalmaDataBaseIdentificationVersion
+			}
+			case 0x205: { // GetPalmaDataBaseIdentificationVersion
 				break;
-			case 0x206: // SuspendPalmaFeature
+			}
+			case 0x206: { // SuspendPalmaFeature
 				break;
-			case 0x207: // GetPalmaOperationResult
+			}
+			case 0x207: { // GetPalmaOperationResult
 				break;
-			case 0x208: // ReadPalmaPlayLog
+			}
+			case 0x208: { // ReadPalmaPlayLog
 				break;
-			case 0x209: // ResetPalmaPlayLog
+			}
+			case 0x209: { // ResetPalmaPlayLog
 				break;
-			case 0x20A: // SetIsPalmaAllConnectable
+			}
+			case 0x20A: { // SetIsPalmaAllConnectable
 				break;
-			case 0x20B: // SetIsPalmaPairedConnectable
+			}
+			case 0x20B: { // SetIsPalmaPairedConnectable
 				break;
-			case 0x20C: // PairPalma
+			}
+			case 0x20C: { // PairPalma
 				break;
-			case 0x20D: // SetPalmaBoostMode
+			}
+			case 0x20D: { // SetPalmaBoostMode
 				break;
-			case 0x3E8: // SetNpadCommunicationMode
+			}
+			case 0x3E8: { // SetNpadCommunicationMode
 				break;
-			case 0x3E9: // GetNpadCommunicationMode
+			}
+			case 0x3E9: { // GetNpadCommunicationMode
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Hid.IHidServer");
 		}
@@ -764,7 +940,7 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateCaptureButton");
 	protected virtual KObject AcquireNfcDeviceUpdateEventHandle() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireNfcDeviceUpdateEventHandle not implemented");
-	protected virtual void GetNpadsWithNfc() =>
+	protected virtual void GetNpadsWithNfc(out ulong _0, Span<uint> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetNpadsWithNfc not implemented");
 	protected virtual KObject AcquireNfcActivateEventHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireNfcActivateEventHandle not implemented");
@@ -788,7 +964,7 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DisableAssigningSingleOnSlSrPress");
 	protected virtual uint GetLastActiveNpad() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetLastActiveNpad not implemented");
-	protected virtual void GetNpadSystemExtStyle(uint _0) =>
+	protected virtual void GetNpadSystemExtStyle(uint _0, out ulong _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetNpadSystemExtStyle not implemented");
 	protected virtual void ApplyNpadSystemCommonPolicyFull() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ApplyNpadSystemCommonPolicyFull");
@@ -796,7 +972,7 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetNpadFullKeyGripColor");
 	protected virtual void SetNpadPlayerLedBlinkingDevice(uint _0, uint _1, ulong _2, ulong _3) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SetNpadPlayerLedBlinkingDevice");
-	protected virtual void GetUniquePadsFromNpad(uint _0) =>
+	protected virtual void GetUniquePadsFromNpad(uint _0, out ulong _1, Span<ulong> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetUniquePadsFromNpad not implemented");
 	protected virtual ulong GetIrSensorState(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetIrSensorState not implemented");
@@ -828,11 +1004,11 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DisableHandheldHids");
 	protected virtual KObject AcquirePlayReportControllerUsageUpdateEvent() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquirePlayReportControllerUsageUpdateEvent not implemented");
-	protected virtual void GetPlayReportControllerUsages() =>
+	protected virtual void GetPlayReportControllerUsages(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetPlayReportControllerUsages not implemented");
 	protected virtual KObject AcquirePlayReportRegisteredDeviceUpdateEvent() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquirePlayReportRegisteredDeviceUpdateEvent not implemented");
-	protected virtual void GetRegisteredDevicesOld() =>
+	protected virtual void GetRegisteredDevicesOld(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetRegisteredDevicesOld not implemented");
 	protected virtual KObject AcquireConnectionTriggerTimeoutEvent() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireConnectionTriggerTimeoutEvent not implemented");
@@ -848,11 +1024,11 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateUniquePad");
 	protected virtual KObject AcquireUniquePadConnectionEventHandle() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireUniquePadConnectionEventHandle not implemented");
-	protected virtual void GetUniquePadIds() =>
+	protected virtual void GetUniquePadIds(out ulong _0, Span<ulong> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetUniquePadIds not implemented");
 	protected virtual KObject AcquireJoyDetachOnBluetoothOffEventHandle(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireJoyDetachOnBluetoothOffEventHandle not implemented");
-	protected virtual void ListSixAxisSensorHandles(ulong _0) =>
+	protected virtual void ListSixAxisSensorHandles(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.ListSixAxisSensorHandles not implemented");
 	protected virtual byte IsSixAxisSensorUserCalibrationSupported() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.IsSixAxisSensorUserCalibrationSupported not implemented");
@@ -862,7 +1038,7 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.StartSixAxisSensorUserCalibration");
 	protected virtual void CancelSixAxisSensorUserCalibration() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.CancelSixAxisSensorUserCalibration");
-	protected virtual void GetUniquePadBluetoothAddress(ulong _0) =>
+	protected virtual void GetUniquePadBluetoothAddress(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetUniquePadBluetoothAddress not implemented");
 	protected virtual void DisconnectUniquePad(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DisconnectUniquePad");
@@ -906,9 +1082,9 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.NotifyInputDetector");
 	protected virtual void InitializeFirmwareUpdate() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.InitializeFirmwareUpdate");
-	protected virtual void GetFirmwareVersion(ulong _0) =>
+	protected virtual void GetFirmwareVersion(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetFirmwareVersion not implemented");
-	protected virtual void GetAvailableFirmwareVersion(ulong _0) =>
+	protected virtual void GetAvailableFirmwareVersion(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetAvailableFirmwareVersion not implemented");
 	protected virtual byte IsFirmwareUpdateAvailable(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.IsFirmwareUpdateAvailable not implemented");
@@ -918,13 +1094,13 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.StartFirmwareUpdate not implemented");
 	protected virtual void AbortFirmwareUpdate() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.AbortFirmwareUpdate");
-	protected virtual void GetFirmwareUpdateState(ulong _0) =>
+	protected virtual void GetFirmwareUpdateState(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetFirmwareUpdateState not implemented");
 	protected virtual void ActivateAudioControl() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateAudioControl");
 	protected virtual KObject AcquireAudioControlEventHandle() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireAudioControlEventHandle not implemented");
-	protected virtual void GetAudioControlStates() =>
+	protected virtual void GetAudioControlStates(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetAudioControlStates not implemented");
 	protected virtual void DeactivateAudioControl() =>
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DeactivateAudioControl");
@@ -940,196 +1116,291 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetHidbusSystemServiceObject");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x1F: // SendKeyboardLockKeyEvent
+			case 0x1F: { // SendKeyboardLockKeyEvent
 				break;
-			case 0x65: // AcquireHomeButtonEventHandle
+			}
+			case 0x65: { // AcquireHomeButtonEventHandle
 				break;
-			case 0x6F: // ActivateHomeButton
+			}
+			case 0x6F: { // ActivateHomeButton
 				break;
-			case 0x79: // AcquireSleepButtonEventHandle
+			}
+			case 0x79: { // AcquireSleepButtonEventHandle
 				break;
-			case 0x83: // ActivateSleepButton
+			}
+			case 0x83: { // ActivateSleepButton
 				break;
-			case 0x8D: // AcquireCaptureButtonEventHandle
+			}
+			case 0x8D: { // AcquireCaptureButtonEventHandle
 				break;
-			case 0x97: // ActivateCaptureButton
+			}
+			case 0x97: { // ActivateCaptureButton
 				break;
-			case 0xD2: // AcquireNfcDeviceUpdateEventHandle
+			}
+			case 0xD2: { // AcquireNfcDeviceUpdateEventHandle
 				break;
-			case 0xD3: // GetNpadsWithNfc
+			}
+			case 0xD3: { // GetNpadsWithNfc
 				break;
-			case 0xD4: // AcquireNfcActivateEventHandle
+			}
+			case 0xD4: { // AcquireNfcActivateEventHandle
 				break;
-			case 0xD5: // ActivateNfc
+			}
+			case 0xD5: { // ActivateNfc
 				break;
-			case 0xD6: // GetXcdHandleForNpadWithNfc
+			}
+			case 0xD6: { // GetXcdHandleForNpadWithNfc
 				break;
-			case 0xD7: // IsNfcActivated
+			}
+			case 0xD7: { // IsNfcActivated
 				break;
-			case 0xE6: // AcquireIrSensorEventHandle
+			}
+			case 0xE6: { // AcquireIrSensorEventHandle
 				break;
-			case 0xE7: // ActivateIrSensor
+			}
+			case 0xE7: { // ActivateIrSensor
 				break;
-			case 0x12D: // ActivateNpadSystem
+			}
+			case 0x12D: { // ActivateNpadSystem
 				break;
-			case 0x12F: // ApplyNpadSystemCommonPolicy
+			}
+			case 0x12F: { // ApplyNpadSystemCommonPolicy
 				break;
-			case 0x130: // EnableAssigningSingleOnSlSrPress
+			}
+			case 0x130: { // EnableAssigningSingleOnSlSrPress
 				break;
-			case 0x131: // DisableAssigningSingleOnSlSrPress
+			}
+			case 0x131: { // DisableAssigningSingleOnSlSrPress
 				break;
-			case 0x132: // GetLastActiveNpad
+			}
+			case 0x132: { // GetLastActiveNpad
 				break;
-			case 0x133: // GetNpadSystemExtStyle
+			}
+			case 0x133: { // GetNpadSystemExtStyle
 				break;
-			case 0x134: // ApplyNpadSystemCommonPolicyFull
+			}
+			case 0x134: { // ApplyNpadSystemCommonPolicyFull
 				break;
-			case 0x135: // GetNpadFullKeyGripColor
+			}
+			case 0x135: { // GetNpadFullKeyGripColor
 				break;
-			case 0x137: // SetNpadPlayerLedBlinkingDevice
+			}
+			case 0x137: { // SetNpadPlayerLedBlinkingDevice
 				break;
-			case 0x141: // GetUniquePadsFromNpad
+			}
+			case 0x141: { // GetUniquePadsFromNpad
 				break;
-			case 0x142: // GetIrSensorState
+			}
+			case 0x142: { // GetIrSensorState
 				break;
-			case 0x143: // GetXcdHandleForNpadWithIrSensor
+			}
+			case 0x143: { // GetXcdHandleForNpadWithIrSensor
 				break;
-			case 0x1F4: // SetAppletResourceUserId
+			}
+			case 0x1F4: { // SetAppletResourceUserId
 				break;
-			case 0x1F5: // RegisterAppletResourceUserId
+			}
+			case 0x1F5: { // RegisterAppletResourceUserId
 				break;
-			case 0x1F6: // UnregisterAppletResourceUserId
+			}
+			case 0x1F6: { // UnregisterAppletResourceUserId
 				break;
-			case 0x1F7: // EnableAppletToGetInput
+			}
+			case 0x1F7: { // EnableAppletToGetInput
 				break;
-			case 0x1F8: // SetAruidValidForVibration
+			}
+			case 0x1F8: { // SetAruidValidForVibration
 				break;
-			case 0x1F9: // EnableAppletToGetSixAxisSensor
+			}
+			case 0x1F9: { // EnableAppletToGetSixAxisSensor
 				break;
-			case 0x1FE: // SetVibrationMasterVolume
+			}
+			case 0x1FE: { // SetVibrationMasterVolume
 				break;
-			case 0x1FF: // GetVibrationMasterVolume
+			}
+			case 0x1FF: { // GetVibrationMasterVolume
 				break;
-			case 0x200: // BeginPermitVibrationSession
+			}
+			case 0x200: { // BeginPermitVibrationSession
 				break;
-			case 0x201: // EndPermitVibrationSession
+			}
+			case 0x201: { // EndPermitVibrationSession
 				break;
-			case 0x208: // EnableHandheldHids
+			}
+			case 0x208: { // EnableHandheldHids
 				break;
-			case 0x209: // DisableHandheldHids
+			}
+			case 0x209: { // DisableHandheldHids
 				break;
-			case 0x21C: // AcquirePlayReportControllerUsageUpdateEvent
+			}
+			case 0x21C: { // AcquirePlayReportControllerUsageUpdateEvent
 				break;
-			case 0x21D: // GetPlayReportControllerUsages
+			}
+			case 0x21D: { // GetPlayReportControllerUsages
 				break;
-			case 0x21E: // AcquirePlayReportRegisteredDeviceUpdateEvent
+			}
+			case 0x21E: { // AcquirePlayReportRegisteredDeviceUpdateEvent
 				break;
-			case 0x21F: // GetRegisteredDevicesOld
+			}
+			case 0x21F: { // GetRegisteredDevicesOld
 				break;
-			case 0x220: // AcquireConnectionTriggerTimeoutEvent
+			}
+			case 0x220: { // AcquireConnectionTriggerTimeoutEvent
 				break;
-			case 0x221: // SendConnectionTrigger
+			}
+			case 0x221: { // SendConnectionTrigger
 				break;
-			case 0x222: // AcquireDeviceRegisteredEventForControllerSupport
+			}
+			case 0x222: { // AcquireDeviceRegisteredEventForControllerSupport
 				break;
-			case 0x223: // GetAllowedBluetoothLinksCount
+			}
+			case 0x223: { // GetAllowedBluetoothLinksCount
 				break;
-			case 0x224: // GetRegisteredDevices
+			}
+			case 0x224: { // GetRegisteredDevices
 				break;
-			case 0x2BC: // ActivateUniquePad
+			}
+			case 0x2BC: { // ActivateUniquePad
 				break;
-			case 0x2BE: // AcquireUniquePadConnectionEventHandle
+			}
+			case 0x2BE: { // AcquireUniquePadConnectionEventHandle
 				break;
-			case 0x2BF: // GetUniquePadIds
+			}
+			case 0x2BF: { // GetUniquePadIds
 				break;
-			case 0x2EF: // AcquireJoyDetachOnBluetoothOffEventHandle
+			}
+			case 0x2EF: { // AcquireJoyDetachOnBluetoothOffEventHandle
 				break;
-			case 0x320: // ListSixAxisSensorHandles
+			}
+			case 0x320: { // ListSixAxisSensorHandles
 				break;
-			case 0x321: // IsSixAxisSensorUserCalibrationSupported
+			}
+			case 0x321: { // IsSixAxisSensorUserCalibrationSupported
 				break;
-			case 0x322: // ResetSixAxisSensorCalibrationValues
+			}
+			case 0x322: { // ResetSixAxisSensorCalibrationValues
 				break;
-			case 0x323: // StartSixAxisSensorUserCalibration
+			}
+			case 0x323: { // StartSixAxisSensorUserCalibration
 				break;
-			case 0x324: // CancelSixAxisSensorUserCalibration
+			}
+			case 0x324: { // CancelSixAxisSensorUserCalibration
 				break;
-			case 0x325: // GetUniquePadBluetoothAddress
+			}
+			case 0x325: { // GetUniquePadBluetoothAddress
 				break;
-			case 0x326: // DisconnectUniquePad
+			}
+			case 0x326: { // DisconnectUniquePad
 				break;
-			case 0x327: // GetUniquePadType
+			}
+			case 0x327: { // GetUniquePadType
 				break;
-			case 0x328: // GetUniquePadInterface
+			}
+			case 0x328: { // GetUniquePadInterface
 				break;
-			case 0x329: // GetUniquePadSerialNumber
+			}
+			case 0x329: { // GetUniquePadSerialNumber
 				break;
-			case 0x32A: // GetUniquePadControllerNumber
+			}
+			case 0x32A: { // GetUniquePadControllerNumber
 				break;
-			case 0x32B: // GetSixAxisSensorUserCalibrationStage
+			}
+			case 0x32B: { // GetSixAxisSensorUserCalibrationStage
 				break;
-			case 0x335: // StartAnalogStickManualCalibration
+			}
+			case 0x335: { // StartAnalogStickManualCalibration
 				break;
-			case 0x336: // RetryCurrentAnalogStickManualCalibrationStage
+			}
+			case 0x336: { // RetryCurrentAnalogStickManualCalibrationStage
 				break;
-			case 0x337: // CancelAnalogStickManualCalibration
+			}
+			case 0x337: { // CancelAnalogStickManualCalibration
 				break;
-			case 0x338: // ResetAnalogStickManualCalibration
+			}
+			case 0x338: { // ResetAnalogStickManualCalibration
 				break;
-			case 0x339: // GetAnalogStickState
+			}
+			case 0x339: { // GetAnalogStickState
 				break;
-			case 0x33A: // GetAnalogStickManualCalibrationStage
+			}
+			case 0x33A: { // GetAnalogStickManualCalibrationStage
 				break;
-			case 0x33B: // IsAnalogStickButtonPressed
+			}
+			case 0x33B: { // IsAnalogStickButtonPressed
 				break;
-			case 0x33C: // IsAnalogStickInReleasePosition
+			}
+			case 0x33C: { // IsAnalogStickInReleasePosition
 				break;
-			case 0x33D: // IsAnalogStickInCircumference
+			}
+			case 0x33D: { // IsAnalogStickInCircumference
 				break;
-			case 0x352: // IsUsbFullKeyControllerEnabled
+			}
+			case 0x352: { // IsUsbFullKeyControllerEnabled
 				break;
-			case 0x353: // EnableUsbFullKeyController
+			}
+			case 0x353: { // EnableUsbFullKeyController
 				break;
-			case 0x354: // IsUsbConnected
+			}
+			case 0x354: { // IsUsbConnected
 				break;
-			case 0x384: // ActivateInputDetector
+			}
+			case 0x384: { // ActivateInputDetector
 				break;
-			case 0x385: // NotifyInputDetector
+			}
+			case 0x385: { // NotifyInputDetector
 				break;
-			case 0x3E8: // InitializeFirmwareUpdate
+			}
+			case 0x3E8: { // InitializeFirmwareUpdate
 				break;
-			case 0x3E9: // GetFirmwareVersion
+			}
+			case 0x3E9: { // GetFirmwareVersion
 				break;
-			case 0x3EA: // GetAvailableFirmwareVersion
+			}
+			case 0x3EA: { // GetAvailableFirmwareVersion
 				break;
-			case 0x3EB: // IsFirmwareUpdateAvailable
+			}
+			case 0x3EB: { // IsFirmwareUpdateAvailable
 				break;
-			case 0x3EC: // CheckFirmwareUpdateRequired
+			}
+			case 0x3EC: { // CheckFirmwareUpdateRequired
 				break;
-			case 0x3ED: // StartFirmwareUpdate
+			}
+			case 0x3ED: { // StartFirmwareUpdate
 				break;
-			case 0x3EE: // AbortFirmwareUpdate
+			}
+			case 0x3EE: { // AbortFirmwareUpdate
 				break;
-			case 0x3EF: // GetFirmwareUpdateState
+			}
+			case 0x3EF: { // GetFirmwareUpdateState
 				break;
-			case 0x3F0: // ActivateAudioControl
+			}
+			case 0x3F0: { // ActivateAudioControl
 				break;
-			case 0x3F1: // AcquireAudioControlEventHandle
+			}
+			case 0x3F1: { // AcquireAudioControlEventHandle
 				break;
-			case 0x3F2: // GetAudioControlStates
+			}
+			case 0x3F2: { // GetAudioControlStates
 				break;
-			case 0x3F3: // DeactivateAudioControl
+			}
+			case 0x3F3: { // DeactivateAudioControl
 				break;
-			case 0x41A: // IsSixAxisSensorAccurateUserCalibrationSupported
+			}
+			case 0x41A: { // IsSixAxisSensorAccurateUserCalibrationSupported
 				break;
-			case 0x41B: // StartSixAxisSensorAccurateUserCalibration
+			}
+			case 0x41B: { // StartSixAxisSensorAccurateUserCalibration
 				break;
-			case 0x41C: // CancelSixAxisSensorAccurateUserCalibration
+			}
+			case 0x41C: { // CancelSixAxisSensorAccurateUserCalibration
 				break;
-			case 0x41D: // GetSixAxisSensorAccurateUserCalibrationState
+			}
+			case 0x41D: { // GetSixAxisSensorAccurateUserCalibrationState
 				break;
-			case 0x44C: // GetHidbusSystemServiceObject
+			}
+			case 0x44C: { // GetHidbusSystemServiceObject
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Hid.IHidSystemServer");
 		}
@@ -1138,12 +1409,13 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 
 public partial class IHidTemporaryServer : _IHidTemporaryServer_Base;
 public abstract class _IHidTemporaryServer_Base : IpcInterface {
-	protected virtual void GetConsoleSixAxisSensorCalibrationValues(uint _0, ulong _1, ulong _2) =>
+	protected virtual void GetConsoleSixAxisSensorCalibrationValues(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Hid.IHidTemporaryServer.GetConsoleSixAxisSensorCalibrationValues not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetConsoleSixAxisSensorCalibrationValues
+			case 0x0: { // GetConsoleSixAxisSensorCalibrationValues
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Hid.IHidTemporaryServer");
 		}

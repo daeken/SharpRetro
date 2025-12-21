@@ -4,7 +4,7 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Tma;
 public partial class IHtcManager : _IHtcManager_Base;
 public abstract class _IHtcManager_Base : IpcInterface {
-	protected virtual void GetEnvironmentVariable(Span<byte> _0) =>
+	protected virtual void GetEnvironmentVariable(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetEnvironmentVariable not implemented");
 	protected virtual uint GetEnvironmentVariableLength(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetEnvironmentVariableLength not implemented");
@@ -16,40 +16,51 @@ public abstract class _IHtcManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Tma.IHtcManager.BindHostConnectionEventForSystem not implemented");
 	protected virtual KObject BindHostDisconnectionEventForSystem() =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.BindHostDisconnectionEventForSystem not implemented");
-	protected virtual void GetBridgeIpAddress() =>
+	protected virtual void GetBridgeIpAddress(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetBridgeIpAddress not implemented");
-	protected virtual void GetBridgePort() =>
+	protected virtual void GetBridgePort(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetBridgePort not implemented");
 	protected virtual void SetUsbDetachedForDebug(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Tma.IHtcManager.SetUsbDetachedForDebug");
-	protected virtual void GetBridgeSubnetMask() =>
+	protected virtual void GetBridgeSubnetMask(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetBridgeSubnetMask not implemented");
-	protected virtual void GetBridgeMacAddress() =>
+	protected virtual void GetBridgeMacAddress(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetBridgeMacAddress not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // GetEnvironmentVariable
+			case 0x0: { // GetEnvironmentVariable
 				break;
-			case 0x1: // GetEnvironmentVariableLength
+			}
+			case 0x1: { // GetEnvironmentVariableLength
 				break;
-			case 0x2: // BindHostConnectionEvent
+			}
+			case 0x2: { // BindHostConnectionEvent
 				break;
-			case 0x3: // BindHostDisconnectionEvent
+			}
+			case 0x3: { // BindHostDisconnectionEvent
 				break;
-			case 0x4: // BindHostConnectionEventForSystem
+			}
+			case 0x4: { // BindHostConnectionEventForSystem
 				break;
-			case 0x5: // BindHostDisconnectionEventForSystem
+			}
+			case 0x5: { // BindHostDisconnectionEventForSystem
 				break;
-			case 0x6: // GetBridgeIpAddress
+			}
+			case 0x6: { // GetBridgeIpAddress
 				break;
-			case 0x7: // GetBridgePort
+			}
+			case 0x7: { // GetBridgePort
 				break;
-			case 0x8: // SetUsbDetachedForDebug
+			}
+			case 0x8: { // SetUsbDetachedForDebug
 				break;
-			case 0x9: // GetBridgeSubnetMask
+			}
+			case 0x9: { // GetBridgeSubnetMask
 				break;
-			case 0xA: // GetBridgeMacAddress
+			}
+			case 0xA: { // GetBridgeMacAddress
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Tma.IHtcManager");
 		}
@@ -58,33 +69,33 @@ public abstract class _IHtcManager_Base : IpcInterface {
 
 public partial class IHtcsManager : _IHtcsManager_Base;
 public abstract class _IHtcsManager_Base : IpcInterface {
-	protected virtual void Unknown0() =>
+	protected virtual void Unknown0(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown0 not implemented");
-	protected virtual void Unknown1(uint _0) =>
+	protected virtual void Unknown1(uint _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown1 not implemented");
-	protected virtual void Unknown2(Span<byte> _0, uint _1) =>
+	protected virtual void Unknown2(Span<byte> _0, uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown2 not implemented");
-	protected virtual void Unknown3(Span<byte> _0, uint _1) =>
+	protected virtual void Unknown3(Span<byte> _0, uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown3 not implemented");
-	protected virtual void Unknown4(uint _0, uint _1) =>
+	protected virtual void Unknown4(uint _0, uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown4 not implemented");
-	protected virtual void Unknown5(uint _0) =>
+	protected virtual void Unknown5(uint _0, Span<byte> _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown5 not implemented");
-	protected virtual void Unknown6(uint _0, uint _1) =>
+	protected virtual void Unknown6(uint _0, uint _1, out uint _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown6 not implemented");
-	protected virtual void Unknown7(uint _0, uint _1, Span<byte> _2) =>
+	protected virtual void Unknown7(uint _0, uint _1, Span<byte> _2, out uint _3, out ulong _4) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown7 not implemented");
-	protected virtual void Unknown8(uint _0, uint _1) =>
+	protected virtual void Unknown8(uint _0, uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown8 not implemented");
-	protected virtual void Unknown9(uint _0, uint _1, uint _2) =>
+	protected virtual void Unknown9(uint _0, uint _1, uint _2, out uint _3, out uint _4) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown9 not implemented");
-	protected virtual void GetPeerNameAny() =>
+	protected virtual void GetPeerNameAny(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.GetPeerNameAny not implemented");
-	protected virtual void GetDefaultHostName() =>
+	protected virtual void GetDefaultHostName(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.GetDefaultHostName not implemented");
-	protected virtual void CreateSocketOld() =>
+	protected virtual void CreateSocketOld(out uint _0, out IpcInterface _1) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.CreateSocketOld not implemented");
-	protected virtual void CreateSocket(byte _0) =>
+	protected virtual void CreateSocket(byte _0, out uint _1, out IpcInterface _2) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.CreateSocket not implemented");
 	protected virtual void RegisterProcessId(ulong _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Tma.IHtcsManager.RegisterProcessId");
@@ -92,38 +103,54 @@ public abstract class _IHtcsManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Tma.IHtcsManager.MonitorManager");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Unknown0
+			case 0x0: { // Unknown0
 				break;
-			case 0x1: // Unknown1
+			}
+			case 0x1: { // Unknown1
 				break;
-			case 0x2: // Unknown2
+			}
+			case 0x2: { // Unknown2
 				break;
-			case 0x3: // Unknown3
+			}
+			case 0x3: { // Unknown3
 				break;
-			case 0x4: // Unknown4
+			}
+			case 0x4: { // Unknown4
 				break;
-			case 0x5: // Unknown5
+			}
+			case 0x5: { // Unknown5
 				break;
-			case 0x6: // Unknown6
+			}
+			case 0x6: { // Unknown6
 				break;
-			case 0x7: // Unknown7
+			}
+			case 0x7: { // Unknown7
 				break;
-			case 0x8: // Unknown8
+			}
+			case 0x8: { // Unknown8
 				break;
-			case 0x9: // Unknown9
+			}
+			case 0x9: { // Unknown9
 				break;
-			case 0xA: // GetPeerNameAny
+			}
+			case 0xA: { // GetPeerNameAny
 				break;
-			case 0xB: // GetDefaultHostName
+			}
+			case 0xB: { // GetDefaultHostName
 				break;
-			case 0xC: // CreateSocketOld
+			}
+			case 0xC: { // CreateSocketOld
 				break;
-			case 0xD: // CreateSocket
+			}
+			case 0xD: { // CreateSocket
 				break;
-			case 0x64: // RegisterProcessId
+			}
+			case 0x64: { // RegisterProcessId
 				break;
-			case 0x65: // MonitorManager
+			}
+			case 0x65: { // MonitorManager
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Tma.IHtcsManager");
 		}
@@ -132,44 +159,53 @@ public abstract class _IHtcsManager_Base : IpcInterface {
 
 public partial class ISocket : _ISocket_Base;
 public abstract class _ISocket_Base : IpcInterface {
-	protected virtual void Close() =>
+	protected virtual void Close(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Close not implemented");
-	protected virtual void Connect(Span<byte> _0) =>
+	protected virtual void Connect(Span<byte> _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Connect not implemented");
-	protected virtual void Bind(Span<byte> _0) =>
+	protected virtual void Bind(Span<byte> _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Bind not implemented");
-	protected virtual void Listen(uint _0) =>
+	protected virtual void Listen(uint _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Listen not implemented");
-	protected virtual void Accept() =>
+	protected virtual void Accept(Span<byte> _0, out uint _1, out IpcInterface _2) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Accept not implemented");
-	protected virtual void Recv(uint _0) =>
+	protected virtual void Recv(uint _0, out uint _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Recv not implemented");
-	protected virtual void Send(uint _0, Span<byte> _1) =>
+	protected virtual void Send(uint _0, Span<byte> _1, out uint _2, out ulong _3) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Send not implemented");
-	protected virtual void Shutdown(uint _0) =>
+	protected virtual void Shutdown(uint _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Shutdown not implemented");
-	protected virtual void Fcntl(uint _0, uint _1) =>
+	protected virtual void Fcntl(uint _0, uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Tma.ISocket.Fcntl not implemented");
 	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: // Close
+			case 0x0: { // Close
 				break;
-			case 0x1: // Connect
+			}
+			case 0x1: { // Connect
 				break;
-			case 0x2: // Bind
+			}
+			case 0x2: { // Bind
 				break;
-			case 0x3: // Listen
+			}
+			case 0x3: { // Listen
 				break;
-			case 0x4: // Accept
+			}
+			case 0x4: { // Accept
 				break;
-			case 0x5: // Recv
+			}
+			case 0x5: { // Recv
 				break;
-			case 0x6: // Send
+			}
+			case 0x6: { // Send
 				break;
-			case 0x7: // Shutdown
+			}
+			case 0x7: { // Shutdown
 				break;
-			case 0x8: // Fcntl
+			}
+			case 0x8: { // Fcntl
 				break;
+			}
 			default:
 				throw new NotImplementedException($"Got unhandled command 0x{im.CommandId:X} in Nn.Tma.ISocket");
 		}
