@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Audioctrl.Detail;
-public partial class IAudioController : _IAudioController_Base;
+public partial class IAudioController : _IAudioController_Base {
+	public readonly string ServiceName;
+	public IAudioController(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAudioController_Base : IpcInterface {
 	protected virtual uint GetTargetVolume(uint _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetTargetVolume not implemented");
@@ -61,153 +64,153 @@ public abstract class _IAudioController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetTargetVolume
-				om.Initialize(0, 0, 4);
 				var _return = GetTargetVolume(im.GetData<uint>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // SetTargetVolume
-				om.Initialize(0, 0, 0);
 				SetTargetVolume(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetTargetVolumeMin
-				om.Initialize(0, 0, 4);
 				var _return = GetTargetVolumeMin();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // GetTargetVolumeMax
-				om.Initialize(0, 0, 4);
 				var _return = GetTargetVolumeMax();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // IsTargetMute
-				om.Initialize(0, 0, 1);
 				var _return = IsTargetMute(im.GetData<uint>(8));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // SetTargetMute
-				om.Initialize(0, 0, 0);
 				SetTargetMute(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // IsTargetConnected
-				om.Initialize(0, 0, 1);
 				var _return = IsTargetConnected(im.GetData<uint>(8));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // SetDefaultTarget
-				om.Initialize(0, 0, 0);
 				SetDefaultTarget(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetDefaultTarget
-				om.Initialize(0, 0, 4);
 				var _return = GetDefaultTarget();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x9: { // GetAudioOutputMode
-				om.Initialize(0, 0, 4);
 				var _return = GetAudioOutputMode(im.GetData<uint>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // SetAudioOutputMode
-				om.Initialize(0, 0, 0);
 				SetAudioOutputMode(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // SetForceMutePolicy
-				om.Initialize(0, 0, 0);
 				SetForceMutePolicy(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // GetForceMutePolicy
-				om.Initialize(0, 0, 4);
 				var _return = GetForceMutePolicy();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // GetOutputModeSetting
-				om.Initialize(0, 0, 4);
 				var _return = GetOutputModeSetting(im.GetData<uint>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xE: { // SetOutputModeSetting
-				om.Initialize(0, 0, 0);
 				SetOutputModeSetting(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // SetOutputTarget
-				om.Initialize(0, 0, 0);
 				SetOutputTarget(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // SetInputTargetForceEnabled
-				om.Initialize(0, 0, 0);
 				SetInputTargetForceEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // SetHeadphoneOutputLevelMode
-				om.Initialize(0, 0, 0);
 				SetHeadphoneOutputLevelMode(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // GetHeadphoneOutputLevelMode
-				om.Initialize(0, 0, 4);
 				var _return = GetHeadphoneOutputLevelMode();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x13: { // AcquireAudioVolumeUpdateEventForPlayReport
-				om.Initialize(0, 1, 0);
 				var _return = AcquireAudioVolumeUpdateEventForPlayReport();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x14: { // AcquireAudioOutputDeviceUpdateEventForPlayReport
-				om.Initialize(0, 1, 0);
 				var _return = AcquireAudioOutputDeviceUpdateEventForPlayReport();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x15: { // GetAudioOutputTargetForPlayReport
-				om.Initialize(0, 0, 4);
 				var _return = GetAudioOutputTargetForPlayReport();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x16: { // NotifyHeadphoneVolumeWarningDisplayedEvent
-				om.Initialize(0, 0, 0);
 				NotifyHeadphoneVolumeWarningDisplayedEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // SetSystemOutputMasterVolume
-				om.Initialize(0, 0, 0);
 				SetSystemOutputMasterVolume(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x18: { // GetSystemOutputMasterVolume
-				om.Initialize(0, 0, 4);
 				var _return = GetSystemOutputMasterVolume();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x19: { // GetAudioVolumeDataForPlayReport
-				om.Initialize(0, 0, 7);
 				GetAudioVolumeDataForPlayReport(out var _0);
+				om.Initialize(0, 0, 7);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1A: { // UpdateHeadphoneSettings
-				om.Initialize(0, 0, 0);
 				UpdateHeadphoneSettings(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

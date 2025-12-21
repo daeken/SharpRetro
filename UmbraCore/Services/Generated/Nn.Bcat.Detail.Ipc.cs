@@ -35,77 +35,77 @@ public abstract class _IBcatService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2774: { // RequestSyncDeliveryCache
-				om.Initialize(1, 0, 0);
 				var _return = RequestSyncDeliveryCache();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2775: { // RequestSyncDeliveryCacheWithDirectoryName
-				om.Initialize(0, 0, 0);
 				RequestSyncDeliveryCacheWithDirectoryName();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x27D8: { // CancelSyncDeliveryCacheRequest
-				om.Initialize(0, 0, 0);
 				CancelSyncDeliveryCacheRequest();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4E84: { // RequestSyncDeliveryCacheWithApplicationId
-				om.Initialize(1, 0, 0);
 				var _return = RequestSyncDeliveryCacheWithApplicationId(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4E85: { // RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName
-				om.Initialize(0, 0, 0);
 				RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7594: { // SetPassphrase
-				om.Initialize(0, 0, 0);
 				SetPassphrase(im.GetData<ulong>(8), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75F8: { // RegisterBackgroundDeliveryTask
-				om.Initialize(0, 0, 0);
 				RegisterBackgroundDeliveryTask(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75F9: { // UnregisterBackgroundDeliveryTask
-				om.Initialize(0, 0, 0);
 				UnregisterBackgroundDeliveryTask(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75FA: { // BlockDeliveryTask
-				om.Initialize(0, 0, 0);
 				BlockDeliveryTask(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75FB: { // UnblockDeliveryTask
-				om.Initialize(0, 0, 0);
 				UnblockDeliveryTask(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15FF4: { // EnumerateBackgroundDeliveryTask
-				om.Initialize(0, 0, 4);
 				EnumerateBackgroundDeliveryTask(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x16058: { // GetDeliveryList
-				om.Initialize(0, 0, 8);
 				GetDeliveryList(im.GetData<ulong>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x16059: { // ClearDeliveryCacheStorage
-				om.Initialize(0, 0, 0);
 				ClearDeliveryCacheStorage(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x160BC: { // GetPushNotificationLog
-				om.Initialize(0, 0, 4);
 				GetPushNotificationLog(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
@@ -126,19 +126,19 @@ public abstract class _IDeliveryCacheDirectoryService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Open
-				om.Initialize(0, 0, 0);
 				Open(im.GetBytes(8, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Read
-				om.Initialize(0, 0, 4);
 				Read(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2: { // GetCount
-				om.Initialize(0, 0, 4);
 				var _return = GetCount();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
@@ -161,25 +161,25 @@ public abstract class _IDeliveryCacheFileService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Open
-				om.Initialize(0, 0, 0);
 				Open(im.GetBytes(8, 0x20), im.GetBytes(40, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Read
-				om.Initialize(0, 0, 8);
 				Read(im.GetData<ulong>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2: { // GetSize
-				om.Initialize(0, 0, 8);
 				var _return = GetSize();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // GetDigest
-				om.Initialize(0, 0, 16);
 				GetDigest(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -198,14 +198,14 @@ public abstract class _IDeliveryCacheProgressService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // GetImpl
-				om.Initialize(0, 0, 0);
 				GetImpl(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -225,20 +225,20 @@ public abstract class _IDeliveryCacheStorageService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateFileService
-				om.Initialize(1, 0, 0);
 				var _return = CreateFileService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // CreateDirectoryService
-				om.Initialize(1, 0, 0);
 				var _return = CreateDirectoryService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // EnumerateDeliveryCacheDirectory
-				om.Initialize(0, 0, 4);
 				EnumerateDeliveryCacheDirectory(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
@@ -248,7 +248,10 @@ public abstract class _IDeliveryCacheStorageService_Base : IpcInterface {
 	}
 }
 
-public partial class IServiceCreator : _IServiceCreator_Base;
+public partial class IServiceCreator : _IServiceCreator_Base {
+	public readonly string ServiceName;
+	public IServiceCreator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IServiceCreator_Base : IpcInterface {
 	protected virtual Nn.Bcat.Detail.Ipc.IBcatService CreateBcatService(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IServiceCreator.CreateBcatService not implemented");
@@ -259,20 +262,20 @@ public abstract class _IServiceCreator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateBcatService
-				om.Initialize(1, 0, 0);
 				var _return = CreateBcatService(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // CreateDeliveryCacheStorageService
-				om.Initialize(1, 0, 0);
 				var _return = CreateDeliveryCacheStorageService(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // CreateDeliveryCacheStorageServiceWithApplicationId
-				om.Initialize(1, 0, 0);
 				var _return = CreateDeliveryCacheStorageServiceWithApplicationId(im.GetData<ulong>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

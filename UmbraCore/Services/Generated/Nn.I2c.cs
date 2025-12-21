@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.I2c;
-public partial class IManager : _IManager_Base;
+public partial class IManager : _IManager_Base {
+	public readonly string ServiceName;
+	public IManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual Nn.I2c.ISession OpenSessionForDev(ushort _0, uint _1, uint _2, uint _3) =>
 		throw new NotImplementedException("Nn.I2c.IManager.OpenSessionForDev not implemented");
@@ -15,26 +18,26 @@ public abstract class _IManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenSessionForDev
-				om.Initialize(1, 0, 0);
 				var _return = OpenSessionForDev(im.GetData<ushort>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // OpenSession
-				om.Initialize(1, 0, 0);
 				var _return = OpenSession(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // HasDevice
-				om.Initialize(0, 0, 1);
 				var _return = HasDevice(im.GetData<uint>(8));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // HasDeviceForDev
-				om.Initialize(0, 0, 1);
 				var _return = HasDeviceForDev(im.GetData<ushort>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
@@ -61,33 +64,33 @@ public abstract class _ISession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Send
-				om.Initialize(0, 0, 0);
 				Send(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Receive
-				om.Initialize(0, 0, 0);
 				Receive(im.GetData<uint>(8), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ExecuteCommandList
-				om.Initialize(0, 0, 0);
 				ExecuteCommandList(im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // SendAuto
-				om.Initialize(0, 0, 0);
 				SendAuto(im.GetData<uint>(8), im.GetSpan<byte>(0x21, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // ReceiveAuto
-				om.Initialize(0, 0, 0);
 				ReceiveAuto(im.GetData<uint>(8), im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // ExecuteCommandListAuto
-				om.Initialize(0, 0, 0);
 				ExecuteCommandListAuto(im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

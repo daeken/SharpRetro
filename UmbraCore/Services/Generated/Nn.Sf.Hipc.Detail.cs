@@ -17,32 +17,32 @@ public abstract class _IHipcManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(1, 0, 0);
 				var _return = Unknown1(im.GetBytes(8, 0x4));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(1, 0, 0);
 				var _return = Unknown2();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 2);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(1, 0, 0);
 				var _return = Unknown4(im.GetBytes(8, 0x4));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Pm.Detail;
-public partial class IBootModeInterface : _IBootModeInterface_Base;
+public partial class IBootModeInterface : _IBootModeInterface_Base {
+	public readonly string ServiceName;
+	public IBootModeInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBootModeInterface_Base : IpcInterface {
 	protected virtual void GetBootMode(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IBootModeInterface.GetBootMode not implemented");
@@ -11,14 +14,14 @@ public abstract class _IBootModeInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetBootMode
-				om.Initialize(0, 0, 4);
 				GetBootMode(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // SetMaintenanceBoot
-				om.Initialize(0, 0, 0);
 				SetMaintenanceBoot();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -27,7 +30,10 @@ public abstract class _IBootModeInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IDebugMonitorInterface : _IDebugMonitorInterface_Base;
+public partial class IDebugMonitorInterface : _IDebugMonitorInterface_Base {
+	public readonly string ServiceName;
+	public IDebugMonitorInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	protected virtual void GetDebugProcesses(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IDebugMonitorInterface.GetDebugProcesses not implemented");
@@ -46,43 +52,43 @@ public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetDebugProcesses
-				om.Initialize(0, 0, 4);
 				GetDebugProcesses(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // StartDebugProcess
-				om.Initialize(0, 0, 4);
 				StartDebugProcess(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // GetTitlePid
-				om.Initialize(0, 0, 0);
 				GetTitlePid(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // EnableDebugForTitleId
-				om.Initialize(0, 0, 8);
 				EnableDebugForTitleId(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // GetApplicationPid
-				om.Initialize(0, 1, 0);
 				var _return = GetApplicationPid(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // EnableDebugForApplication
-				om.Initialize(0, 0, 8);
 				EnableDebugForApplication(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // DisableDebug
-				om.Initialize(0, 1, 0);
 				var _return = DisableDebug();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -92,15 +98,18 @@ public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IInformationInterface : _IInformationInterface_Base;
+public partial class IInformationInterface : _IInformationInterface_Base {
+	public readonly string ServiceName;
+	public IInformationInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IInformationInterface_Base : IpcInterface {
 	protected virtual void GetTitleId(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IInformationInterface.GetTitleId not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetTitleId
-				om.Initialize(0, 0, 8);
 				GetTitleId(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -110,7 +119,10 @@ public abstract class _IInformationInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IShellInterface : _IShellInterface_Base;
+public partial class IShellInterface : _IShellInterface_Base {
+	public readonly string ServiceName;
+	public IShellInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IShellInterface_Base : IpcInterface {
 	protected virtual void LaunchProcess(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IShellInterface.LaunchProcess not implemented");
@@ -135,57 +147,57 @@ public abstract class _IShellInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // LaunchProcess
-				om.Initialize(0, 0, 8);
 				LaunchProcess(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // TerminateProcessByPid
-				om.Initialize(0, 0, 0);
 				TerminateProcessByPid(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // TerminateProcessByTitleId
-				om.Initialize(0, 0, 0);
 				TerminateProcessByTitleId(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetProcessEventWaiter
-				om.Initialize(0, 1, 0);
 				var _return = GetProcessEventWaiter();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x4: { // GetProcessEventType
-				om.Initialize(0, 0, 16);
 				GetProcessEventType(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // NotifyBootFinished
-				om.Initialize(0, 0, 0);
 				NotifyBootFinished(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // GetApplicationPid_0
-				om.Initialize(0, 0, 0);
 				GetApplicationPid_0(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // BoostSystemMemoryResourceLimit_0
-				om.Initialize(0, 0, 0);
 				BoostSystemMemoryResourceLimit_0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetApplicationPid_1
-				om.Initialize(0, 0, 8);
 				GetApplicationPid_1(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // BoostSystemMemoryResourceLimit_1
-				om.Initialize(0, 0, 0);
 				BoostSystemMemoryResourceLimit_1(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

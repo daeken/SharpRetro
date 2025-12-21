@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Sm.Detail;
-public partial class IManagerInterface : _IManagerInterface_Base;
+public partial class IManagerInterface : _IManagerInterface_Base {
+	public readonly string ServiceName;
+	public IManagerInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManagerInterface_Base : IpcInterface {
 	protected virtual void RegisterProcess(ulong _0, Span<byte> _1, Span<byte> _2) =>
 		Console.WriteLine("Stub hit for Nn.Sm.Detail.IManagerInterface.RegisterProcess");
@@ -11,13 +14,13 @@ public abstract class _IManagerInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterProcess
-				om.Initialize(0, 0, 0);
 				RegisterProcess(im.GetData<ulong>(8), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // UnregisterProcess
-				om.Initialize(0, 0, 0);
 				UnregisterProcess(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -26,7 +29,10 @@ public abstract class _IManagerInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IUserInterface : _IUserInterface_Base;
+public partial class IUserInterface : _IUserInterface_Base {
+	public readonly string ServiceName;
+	public IUserInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IUserInterface_Base : IpcInterface {
 	protected virtual void Initialize(ulong _0, ulong reserved) =>
 		Console.WriteLine("Stub hit for Nn.Sm.Detail.IUserInterface.Initialize");
@@ -39,25 +45,25 @@ public abstract class _IUserInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize(im.Pid, im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetService
-				om.Initialize(1, 0, 0);
 				var _return = GetService(im.GetBytes(8, 0x8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // RegisterService
-				om.Initialize(1, 0, 0);
 				var _return = RegisterService(im.GetBytes(8, 0x8), im.GetData<byte>(16), im.GetData<uint>(20));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // UnregisterService
-				om.Initialize(0, 0, 0);
 				UnregisterService(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

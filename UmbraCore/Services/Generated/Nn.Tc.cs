@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Tc;
-public partial class IManager : _IManager_Base;
+public partial class IManager : _IManager_Base {
+	public readonly string ServiceName;
+	public IManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual void SetOperatingMode(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Tc.IManager.SetOperatingMode");
@@ -25,50 +28,50 @@ public abstract class _IManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetOperatingMode
-				om.Initialize(0, 0, 0);
 				SetOperatingMode(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetThermalEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetThermalEvent(im.GetBytes(8, 0x4));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 1);
 				Unknown2(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 0);
 				Unknown6();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 0);
 				Unknown7();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 1);
 				Unknown8(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}

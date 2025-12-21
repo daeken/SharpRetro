@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Account;
-public partial class IAccountServiceForAdministrator : _IAccountServiceForAdministrator_Base;
+public partial class IAccountServiceForAdministrator : _IAccountServiceForAdministrator_Base {
+	public readonly string ServiceName;
+	public IAccountServiceForAdministrator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAccountServiceForAdministrator_Base : IpcInterface {
 	protected virtual uint GetUserCount() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.GetUserCount not implemented");
@@ -83,217 +86,217 @@ public abstract class _IAccountServiceForAdministrator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount
-				om.Initialize(0, 0, 4);
 				var _return = GetUserCount();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetUserExistence
-				om.Initialize(0, 0, 1);
 				var _return = GetUserExistence(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // ListAllUsers
-				om.Initialize(0, 0, 0);
 				ListAllUsers(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // ListOpenUsers
-				om.Initialize(0, 0, 0);
 				ListOpenUsers(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetLastOpenedUser
-				om.Initialize(0, 0, 16);
 				GetLastOpenedUser(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetProfile
-				om.Initialize(1, 0, 0);
 				var _return = GetProfile(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6: { // GetProfileDigest
-				om.Initialize(0, 0, 16);
 				GetProfileDigest(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x32: { // IsUserRegistrationRequestPermitted
-				om.Initialize(0, 0, 1);
 				var _return = IsUserRegistrationRequestPermitted(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x33: { // TrySelectUserWithoutInteraction
-				om.Initialize(0, 0, 16);
 				TrySelectUserWithoutInteraction(im.GetData<byte>(8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3C: { // ListOpenContextStoredUsers
-				om.Initialize(0, 0, 0);
 				ListOpenContextStoredUsers();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // GetUserRegistrationNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetUserRegistrationNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x65: { // GetUserStateChangeNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetUserStateChangeNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x66: { // GetBaasAccountManagerForSystemService
-				om.Initialize(1, 0, 0);
 				var _return = GetBaasAccountManagerForSystemService(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x67: { // GetBaasUserAvailabilityChangeNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetBaasUserAvailabilityChangeNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x68: { // GetProfileUpdateNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetProfileUpdateNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x69: { // CheckNetworkServiceAvailabilityAsync
-				om.Initialize(1, 0, 0);
 				var _return = CheckNetworkServiceAvailabilityAsync(im.GetData<ulong>(8), im.Pid, im.GetSpan<byte>(0x19, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6E: { // StoreSaveDataThumbnail
-				om.Initialize(0, 0, 0);
 				StoreSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6F: { // ClearSaveDataThumbnail
-				om.Initialize(0, 0, 0);
 				ClearSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x70: { // LoadSaveDataThumbnail
-				om.Initialize(0, 0, 4);
 				LoadSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetData<ulong>(24), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x71: { // GetSaveDataThumbnailExistence
-				om.Initialize(0, 0, 0);
 				GetSaveDataThumbnailExistence();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xBE: { // GetUserLastOpenedApplication
-				om.Initialize(0, 0, 16);
 				GetUserLastOpenedApplication(im.GetBytes(8, 0x10), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0xBF: { // ActivateOpenContextHolder
-				om.Initialize(0, 0, 0);
 				ActivateOpenContextHolder();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC8: { // BeginUserRegistration
-				om.Initialize(0, 0, 16);
 				BeginUserRegistration(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC9: { // CompleteUserRegistration
-				om.Initialize(0, 0, 0);
 				CompleteUserRegistration(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCA: { // CancelUserRegistration
-				om.Initialize(0, 0, 0);
 				CancelUserRegistration(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCB: { // DeleteUser
-				om.Initialize(0, 0, 0);
 				DeleteUser(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCC: { // SetUserPosition
-				om.Initialize(0, 0, 0);
 				SetUserPosition(im.GetData<uint>(8), im.GetBytes(16, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCD: { // GetProfileEditor
-				om.Initialize(1, 0, 0);
 				var _return = GetProfileEditor(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xCE: { // CompleteUserRegistrationForcibly
-				om.Initialize(0, 0, 0);
 				CompleteUserRegistrationForcibly(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD2: { // CreateFloatingRegistrationRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateFloatingRegistrationRequest(im.GetData<uint>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xE6: { // AuthenticateServiceAsync
-				om.Initialize(1, 0, 0);
 				var _return = AuthenticateServiceAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xFA: { // GetBaasAccountAdministrator
-				om.Initialize(1, 0, 0);
 				var _return = GetBaasAccountAdministrator(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x122: { // ProxyProcedureForGuestLoginWithNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = ProxyProcedureForGuestLoginWithNintendoAccount(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x123: { // ProxyProcedureForFloatingRegistrationWithNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = ProxyProcedureForFloatingRegistrationWithNintendoAccount(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x12B: { // SuspendBackgroundDaemon
-				om.Initialize(1, 0, 0);
 				var _return = SuspendBackgroundDaemon();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E5: { // DebugInvalidateTokenCacheForUser
-				om.Initialize(0, 0, 0);
 				DebugInvalidateTokenCacheForUser(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E6: { // DebugSetUserStateClose
-				om.Initialize(0, 0, 0);
 				DebugSetUserStateClose(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E7: { // DebugSetUserStateOpen
-				om.Initialize(0, 0, 0);
 				DebugSetUserStateOpen(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -302,7 +305,10 @@ public abstract class _IAccountServiceForAdministrator_Base : IpcInterface {
 	}
 }
 
-public partial class IAccountServiceForApplication : _IAccountServiceForApplication_Base;
+public partial class IAccountServiceForApplication : _IAccountServiceForApplication_Base {
+	public readonly string ServiceName;
+	public IAccountServiceForApplication(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 	protected virtual uint GetUserCount() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.GetUserCount not implemented");
@@ -343,104 +349,104 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount
-				om.Initialize(0, 0, 4);
 				var _return = GetUserCount();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetUserExistence
-				om.Initialize(0, 0, 1);
 				var _return = GetUserExistence(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // ListAllUsers
-				om.Initialize(0, 0, 0);
 				ListAllUsers(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // ListOpenUsers
-				om.Initialize(0, 0, 0);
 				ListOpenUsers(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetLastOpenedUser
-				om.Initialize(0, 0, 16);
 				GetLastOpenedUser(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetProfile
-				om.Initialize(1, 0, 0);
 				var _return = GetProfile(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6: { // GetProfileDigest
-				om.Initialize(0, 0, 16);
 				GetProfileDigest(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x32: { // IsUserRegistrationRequestPermitted
-				om.Initialize(0, 0, 1);
 				var _return = IsUserRegistrationRequestPermitted(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x33: { // TrySelectUserWithoutInteraction
-				om.Initialize(0, 0, 16);
 				TrySelectUserWithoutInteraction(im.GetData<byte>(8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3C: { // ListOpenContextStoredUsers
-				om.Initialize(0, 0, 0);
 				ListOpenContextStoredUsers();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // InitializeApplicationInfo
-				om.Initialize(0, 0, 0);
 				InitializeApplicationInfo(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // GetBaasAccountManagerForApplication
-				om.Initialize(1, 0, 0);
 				var _return = GetBaasAccountManagerForApplication(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x66: { // AuthenticateApplicationAsync
-				om.Initialize(1, 0, 0);
 				var _return = AuthenticateApplicationAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x67: { // CheckNetworkServiceAvailabilityAsync
-				om.Initialize(1, 0, 0);
 				var _return = CheckNetworkServiceAvailabilityAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6E: { // StoreSaveDataThumbnail
-				om.Initialize(0, 0, 0);
 				StoreSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6F: { // ClearSaveDataThumbnail
-				om.Initialize(0, 0, 0);
 				ClearSaveDataThumbnail(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x78: { // CreateGuestLoginRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateGuestLoginRequest(im.GetData<uint>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x82: { // LoadOpenContext
-				om.Initialize(0, 0, 0);
 				LoadOpenContext();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -449,7 +455,10 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 	}
 }
 
-public partial class IAccountServiceForSystemService : _IAccountServiceForSystemService_Base;
+public partial class IAccountServiceForSystemService : _IAccountServiceForSystemService_Base {
+	public readonly string ServiceName;
+	public IAccountServiceForSystemService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAccountServiceForSystemService_Base : IpcInterface {
 	protected virtual uint GetUserCount() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForSystemService.GetUserCount not implemented");
@@ -504,144 +513,144 @@ public abstract class _IAccountServiceForSystemService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount
-				om.Initialize(0, 0, 4);
 				var _return = GetUserCount();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetUserExistence
-				om.Initialize(0, 0, 1);
 				var _return = GetUserExistence(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // ListAllUsers
-				om.Initialize(0, 0, 0);
 				ListAllUsers(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // ListOpenUsers
-				om.Initialize(0, 0, 0);
 				ListOpenUsers(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetLastOpenedUser
-				om.Initialize(0, 0, 16);
 				GetLastOpenedUser(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetProfile
-				om.Initialize(1, 0, 0);
 				var _return = GetProfile(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6: { // GetProfileDigest
-				om.Initialize(0, 0, 16);
 				GetProfileDigest(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x32: { // IsUserRegistrationRequestPermitted
-				om.Initialize(0, 0, 1);
 				var _return = IsUserRegistrationRequestPermitted(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x33: { // TrySelectUserWithoutInteraction
-				om.Initialize(0, 0, 16);
 				TrySelectUserWithoutInteraction(im.GetData<byte>(8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3C: { // ListOpenContextStoredUsers
-				om.Initialize(0, 0, 0);
 				ListOpenContextStoredUsers();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // GetUserRegistrationNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetUserRegistrationNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x65: { // GetUserStateChangeNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetUserStateChangeNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x66: { // GetBaasAccountManagerForSystemService
-				om.Initialize(1, 0, 0);
 				var _return = GetBaasAccountManagerForSystemService(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x67: { // GetBaasUserAvailabilityChangeNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetBaasUserAvailabilityChangeNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x68: { // GetProfileUpdateNotifier
-				om.Initialize(1, 0, 0);
 				var _return = GetProfileUpdateNotifier();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x69: { // CheckNetworkServiceAvailabilityAsync
-				om.Initialize(1, 0, 0);
 				var _return = CheckNetworkServiceAvailabilityAsync(im.GetData<ulong>(8), im.Pid, im.GetSpan<byte>(0x19, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6E: { // StoreSaveDataThumbnail
-				om.Initialize(0, 0, 0);
 				StoreSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6F: { // ClearSaveDataThumbnail
-				om.Initialize(0, 0, 0);
 				ClearSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x70: { // LoadSaveDataThumbnail
-				om.Initialize(0, 0, 4);
 				LoadSaveDataThumbnail(im.GetBytes(8, 0x10), im.GetData<ulong>(24), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x71: { // GetSaveDataThumbnailExistence
-				om.Initialize(0, 0, 0);
 				GetSaveDataThumbnailExistence();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xBE: { // GetUserLastOpenedApplication
-				om.Initialize(0, 0, 16);
 				GetUserLastOpenedApplication(im.GetBytes(8, 0x10), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0xBF: { // ActivateOpenContextHolder
-				om.Initialize(0, 0, 0);
 				ActivateOpenContextHolder();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E5: { // DebugInvalidateTokenCacheForUser
-				om.Initialize(0, 0, 0);
 				DebugInvalidateTokenCacheForUser(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E6: { // DebugSetUserStateClose
-				om.Initialize(0, 0, 0);
 				DebugSetUserStateClose(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E7: { // DebugSetUserStateOpen
-				om.Initialize(0, 0, 0);
 				DebugSetUserStateOpen(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -650,7 +659,10 @@ public abstract class _IAccountServiceForSystemService_Base : IpcInterface {
 	}
 }
 
-public partial class IBaasAccessTokenAccessor : _IBaasAccessTokenAccessor_Base;
+public partial class IBaasAccessTokenAccessor : _IBaasAccessTokenAccessor_Base {
+	public readonly string ServiceName;
+	public IBaasAccessTokenAccessor(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBaasAccessTokenAccessor_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureCacheAsync(byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.IBaasAccessTokenAccessor.EnsureCacheAsync not implemented");
@@ -665,32 +677,32 @@ public abstract class _IBaasAccessTokenAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // EnsureCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = EnsureCacheAsync(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // LoadCache
-				om.Initialize(0, 0, 4);
 				LoadCache(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2: { // GetDeviceAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetDeviceAccountId(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x32: { // RegisterNotificationTokenAsync
-				om.Initialize(1, 0, 0);
 				var _return = RegisterNotificationTokenAsync(im.GetBytes(8, 0x28), im.GetBytes(48, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x33: { // UnregisterNotificationTokenAsync
-				om.Initialize(1, 0, 0);
 				var _return = UnregisterNotificationTokenAsync(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

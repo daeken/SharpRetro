@@ -2,15 +2,18 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Sasbus;
-public partial class IManager : _IManager_Base;
+public partial class IManager : _IManager_Base {
+	public readonly string ServiceName;
+	public IManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual Nn.Sasbus.ISession OpenSession(byte[] _0) =>
 		throw new NotImplementedException("Nn.Sasbus.IManager.OpenSession not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenSession
-				om.Initialize(1, 0, 0);
 				var _return = OpenSession(im.GetBytes(8, 0x4));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -33,23 +36,23 @@ public abstract class _ISession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0(im.GetBytes(8, 0x1), im.GetSpan<byte>(0x21, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x1), im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x18), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

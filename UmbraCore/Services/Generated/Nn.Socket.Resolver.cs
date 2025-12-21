@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Socket.Resolver;
-public partial class IResolver : _IResolver_Base;
+public partial class IResolver : _IResolver_Base {
+	public readonly string ServiceName;
+	public IResolver(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IResolver_Base : IpcInterface {
 	protected virtual void SetDnsAddressesPrivate(uint _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Socket.Resolver.IResolver.SetDnsAddressesPrivate");
@@ -27,65 +30,65 @@ public abstract class _IResolver_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetDnsAddressesPrivate
-				om.Initialize(0, 0, 0);
 				SetDnsAddressesPrivate(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetDnsAddressPrivate
-				om.Initialize(0, 0, 0);
 				GetDnsAddressPrivate(im.GetData<uint>(8), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetHostByName
-				om.Initialize(0, 0, 12);
 				GetHostByName(im.GetData<byte>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 12);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
 				break;
 			}
 			case 0x3: { // GetHostByAddr
-				om.Initialize(0, 0, 12);
 				GetHostByAddr(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<ulong>(24), im.Pid, im.GetSpan<byte>(0x5, 0), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 12);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
 				break;
 			}
 			case 0x4: { // GetHostStringError
-				om.Initialize(0, 0, 0);
 				GetHostStringError(im.GetData<uint>(8), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetGaiStringError
-				om.Initialize(0, 0, 0);
 				GetGaiStringError(im.GetData<uint>(8), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // GetAddrInfo
-				om.Initialize(0, 0, 12);
 				GetAddrInfo(im.GetData<bool>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.Pid, im.GetSpan<sbyte>(0x5, 0), im.GetSpan<sbyte>(0x5, 1), im.GetSpan<byte>(0x5, 2), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 12);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
 				break;
 			}
 			case 0x7: { // GetNameInfo
-				om.Initialize(0, 0, 8);
 				GetNameInfo(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0), out var _0, out var _1, im.GetSpan<byte>(0x6, 0), im.GetSpan<byte>(0x6, 1));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x8: { // RequestCancelHandle
-				om.Initialize(0, 0, 4);
 				var _return = RequestCancelHandle(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x9: { // CancelSocketCall
-				om.Initialize(0, 0, 0);
 				CancelSocketCall(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

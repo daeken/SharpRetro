@@ -17,30 +17,30 @@ public abstract class _IStateControlService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 4);
 				Unknown1(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 1, 0);
 				var _return = Unknown2();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -82,80 +82,80 @@ public abstract class _ITaskService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 1, 0);
 				var _return = Unknown3();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 1);
 				Unknown4(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 1);
 				Unknown6(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 0);
 				Unknown11(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // Unknown12
-				om.Initialize(0, 0, 4);
 				Unknown12(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // Unknown13
-				om.Initialize(0, 0, 0);
 				Unknown13();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // Unknown14
-				om.Initialize(0, 1, 0);
 				var _return = Unknown14();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xF: { // Unknown15
-				om.Initialize(0, 0, 0);
 				Unknown15(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // Unknown101
-				om.Initialize(0, 0, 4);
 				Unknown101(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x66: { // Unknown102
-				om.Initialize(0, 0, 1);
 				Unknown102(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x67: { // Unknown103
-				om.Initialize(0, 0, 1);
 				Unknown103(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}

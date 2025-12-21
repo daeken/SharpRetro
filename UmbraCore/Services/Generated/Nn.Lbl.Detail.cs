@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Lbl.Detail;
-public partial class ILblController : _ILblController_Base;
+public partial class ILblController : _ILblController_Base {
+	public readonly string ServiceName;
+	public ILblController(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ILblController_Base : IpcInterface {
 	protected virtual void Unknown0() =>
 		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown0");
@@ -65,159 +68,159 @@ public abstract class _ILblController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 4);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 4);
 				Unknown5(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // TurnOnBacklight
-				om.Initialize(0, 0, 0);
 				TurnOnBacklight(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // TurnOffBacklight
-				om.Initialize(0, 0, 0);
 				TurnOffBacklight(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetBacklightStatus
-				om.Initialize(0, 0, 4);
 				GetBacklightStatus(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 0);
 				Unknown9();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 0);
 				Unknown10();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 1);
 				Unknown11(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // Unknown12
-				om.Initialize(0, 0, 0);
 				Unknown12();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // Unknown13
-				om.Initialize(0, 0, 0);
 				Unknown13();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // Unknown14
-				om.Initialize(0, 0, 1);
 				Unknown14(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xF: { // Unknown15
-				om.Initialize(0, 0, 0);
 				Unknown15(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // ReadRawLightSensor
-				om.Initialize(0, 0, 4);
 				ReadRawLightSensor(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x11: { // Unknown17
-				om.Initialize(0, 0, 0);
 				Unknown17(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // Unknown18
-				om.Initialize(0, 0, 4);
 				Unknown18(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x13: { // Unknown19
-				om.Initialize(0, 0, 0);
 				Unknown19(im.GetBytes(8, 0xC));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // Unknown20
-				om.Initialize(0, 0, 12);
 				Unknown20(out var _0);
+				om.Initialize(0, 0, 12);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x15: { // Unknown21
-				om.Initialize(0, 0, 0);
 				Unknown21(im.GetBytes(8, 0xC));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // Unknown22
-				om.Initialize(0, 0, 12);
 				Unknown22(out var _0);
+				om.Initialize(0, 0, 12);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x17: { // Unknown23
-				om.Initialize(0, 0, 1);
 				Unknown23(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x18: { // Unknown24
-				om.Initialize(0, 0, 0);
 				Unknown24(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // Unknown25
-				om.Initialize(0, 0, 4);
 				Unknown25(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1A: { // EnableVrMode
-				om.Initialize(0, 0, 0);
 				EnableVrMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // DisableVrMode
-				om.Initialize(0, 0, 0);
 				DisableVrMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1C: { // GetVrMode
-				om.Initialize(0, 0, 1);
 				GetVrMode(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}

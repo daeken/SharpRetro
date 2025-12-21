@@ -2,15 +2,18 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Pinmux;
-public partial class IManager : _IManager_Base;
+public partial class IManager : _IManager_Base {
+	public readonly string ServiceName;
+	public IManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual Nn.Pinmux.ISession OpenSession(byte[] _0) =>
 		throw new NotImplementedException("Nn.Pinmux.IManager.OpenSession not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenSession
-				om.Initialize(1, 0, 0);
 				var _return = OpenSession(im.GetBytes(8, 0x4));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -31,19 +34,19 @@ public abstract class _ISession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetPinAssignment
-				om.Initialize(0, 0, 0);
 				SetPinAssignment(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetPinAssignment
-				om.Initialize(0, 0, 4);
 				GetPinAssignment(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // SetPinAssignmentForHardwareTest
-				om.Initialize(0, 0, 0);
 				SetPinAssignmentForHardwareTest(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

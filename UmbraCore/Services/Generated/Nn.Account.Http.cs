@@ -17,30 +17,30 @@ public abstract class _IOAuthProcedure_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // PrepareAsync
-				om.Initialize(1, 0, 0);
 				var _return = PrepareAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetRequest
-				om.Initialize(0, 0, 0);
 				GetRequest(im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0x1A, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ApplyResponse
-				om.Initialize(0, 0, 0);
 				ApplyResponse(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // ApplyResponseAsync
-				om.Initialize(1, 0, 0);
 				var _return = ApplyResponseAsync(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // Suspend
-				om.Initialize(0, 0, 16);
 				Suspend(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}

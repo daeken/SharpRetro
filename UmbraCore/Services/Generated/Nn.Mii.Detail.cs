@@ -55,137 +55,137 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // IsUpdated
-				om.Initialize(0, 0, 1);
 				var _return = IsUpdated(im.GetData<uint>(8));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // IsFullDatabase
-				om.Initialize(0, 0, 1);
 				var _return = IsFullDatabase();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetCount
-				om.Initialize(0, 0, 4);
 				var _return = GetCount(im.GetData<uint>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // Get
-				om.Initialize(0, 0, 4);
 				Get(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4: { // Get1
-				om.Initialize(0, 0, 4);
 				Get1(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x5: { // UpdateLatest
-				om.Initialize(0, 0, 88);
 				UpdateLatest(im.GetBytes(8, 0x58), im.GetData<uint>(96), out var _0);
+				om.Initialize(0, 0, 88);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // BuildRandom
-				om.Initialize(0, 0, 88);
 				BuildRandom(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), out var _0);
+				om.Initialize(0, 0, 88);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // BuildDefault
-				om.Initialize(0, 0, 88);
 				BuildDefault(im.GetData<uint>(8), out var _0);
+				om.Initialize(0, 0, 88);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // Get2
-				om.Initialize(0, 0, 4);
 				Get2(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x9: { // Get3
-				om.Initialize(0, 0, 4);
 				Get3(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xA: { // UpdateLatest1
-				om.Initialize(0, 0, 68);
 				UpdateLatest1(im.GetBytes(8, 0x44), im.GetData<uint>(76), out var _0);
+				om.Initialize(0, 0, 68);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // FindIndex
-				om.Initialize(0, 0, 4);
 				var _return = FindIndex(im.GetBytes(8, 0x10), im.GetData<byte>(24));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC: { // Move
-				om.Initialize(0, 0, 0);
 				Move(im.GetBytes(8, 0x10), im.GetData<uint>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // AddOrReplace
-				om.Initialize(0, 0, 0);
 				AddOrReplace(im.GetBytes(8, 0x44));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // Delete
-				om.Initialize(0, 0, 0);
 				Delete(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // DestroyFile
-				om.Initialize(0, 0, 0);
 				DestroyFile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // DeleteFile
-				om.Initialize(0, 0, 0);
 				DeleteFile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // Format
-				om.Initialize(0, 0, 0);
 				Format();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // Import
-				om.Initialize(0, 0, 0);
 				Import(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // Export
-				om.Initialize(0, 0, 0);
 				Export(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // IsBrokenDatabaseWithClearFlag
-				om.Initialize(0, 0, 1);
 				var _return = IsBrokenDatabaseWithClearFlag();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // GetIndex
-				om.Initialize(0, 0, 4);
 				var _return = GetIndex(im.GetBytes(8, 0x58));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x16: { // SetInterfaceVersion
-				om.Initialize(0, 0, 0);
 				SetInterfaceVersion();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // Convert
-				om.Initialize(0, 0, 0);
 				Convert();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -194,15 +194,18 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 	}
 }
 
-public partial class IStaticService : _IStaticService_Base;
+public partial class IStaticService : _IStaticService_Base {
+	public readonly string ServiceName;
+	public IStaticService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IStaticService_Base : IpcInterface {
 	protected virtual Nn.Mii.Detail.IDatabaseService GetDatabaseService(uint _0) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IStaticService.GetDatabaseService not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetDatabaseService
-				om.Initialize(1, 0, 0);
 				var _return = GetDatabaseService(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -212,7 +215,10 @@ public abstract class _IStaticService_Base : IpcInterface {
 	}
 }
 
-public partial class IImageDatabaseService : _IImageDatabaseService_Base;
+public partial class IImageDatabaseService : _IImageDatabaseService_Base {
+	public readonly string ServiceName;
+	public IImageDatabaseService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IImageDatabaseService_Base : IpcInterface {
 	protected virtual void Initialize() =>
 		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.Initialize");
@@ -245,73 +251,73 @@ public abstract class _IImageDatabaseService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Reload
-				om.Initialize(0, 0, 0);
 				Reload();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // GetCount
-				om.Initialize(0, 0, 0);
 				GetCount();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // IsEmpty
-				om.Initialize(0, 0, 0);
 				IsEmpty();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // IsFull
-				om.Initialize(0, 0, 0);
 				IsFull();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // GetAttribute
-				om.Initialize(0, 0, 0);
 				GetAttribute();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // LoadImage
-				om.Initialize(0, 0, 0);
 				LoadImage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // AddOrUpdateImage
-				om.Initialize(0, 0, 0);
 				AddOrUpdateImage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // DeleteImages
-				om.Initialize(0, 0, 0);
 				DeleteImages();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // DeleteFile
-				om.Initialize(0, 0, 0);
 				DeleteFile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // DestroyFile
-				om.Initialize(0, 0, 0);
 				DestroyFile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // ImportFile
-				om.Initialize(0, 0, 0);
 				ImportFile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x67: { // ExportFile
-				om.Initialize(0, 0, 0);
 				ExportFile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x68: { // ForceInitialize
-				om.Initialize(0, 0, 0);
 				ForceInitialize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

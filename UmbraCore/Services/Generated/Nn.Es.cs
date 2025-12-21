@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Es;
-public partial class IETicketService : _IETicketService_Base;
+public partial class IETicketService : _IETicketService_Base {
+	public readonly string ServiceName;
+	public IETicketService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IETicketService_Base : IpcInterface {
 	protected virtual void ImportTicket(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Es.IETicketService.ImportTicket");
@@ -139,349 +142,349 @@ public abstract class _IETicketService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // ImportTicket
-				om.Initialize(0, 0, 0);
 				ImportTicket(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ImportTicketCertificateSet
-				om.Initialize(0, 0, 0);
 				ImportTicketCertificateSet(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // DeleteTicket
-				om.Initialize(0, 0, 0);
 				DeleteTicket(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // DeletePersonalizedTicket
-				om.Initialize(0, 0, 0);
 				DeletePersonalizedTicket(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // DeleteAllCommonTicket
-				om.Initialize(0, 0, 0);
 				DeleteAllCommonTicket();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // DeleteAllPersonalizedTicket
-				om.Initialize(0, 0, 0);
 				DeleteAllPersonalizedTicket();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // DeleteAllPersonalizedTicketEx
-				om.Initialize(0, 0, 0);
 				DeleteAllPersonalizedTicketEx(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetTitleKey_0
-				om.Initialize(0, 0, 0);
 				GetTitleKey_0(im.GetBytes(8, 0x14), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // CountCommonTicket
-				om.Initialize(0, 0, 4);
 				CountCommonTicket(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // CountPersonalizedTicket
-				om.Initialize(0, 0, 4);
 				CountPersonalizedTicket(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // ListCommonTicket
-				om.Initialize(0, 0, 4);
 				ListCommonTicket(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // ListPersonalizedTicket
-				om.Initialize(0, 0, 4);
 				ListPersonalizedTicket(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // ListMissingPersonalizedTicket
-				om.Initialize(0, 0, 4);
 				ListMissingPersonalizedTicket(im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xE: { // GetCommonTicketSize
-				om.Initialize(0, 0, 8);
 				GetCommonTicketSize(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xF: { // GetPersonalizedTicketSize
-				om.Initialize(0, 0, 8);
 				GetPersonalizedTicketSize(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x10: { // GetCommonTicketData
-				om.Initialize(0, 0, 8);
 				GetCommonTicketData(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x11: { // GetPersonalizedTicketData
-				om.Initialize(0, 0, 8);
 				GetPersonalizedTicketData(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12: { // OwnTicket
-				om.Initialize(0, 0, 0);
 				OwnTicket(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // GetTicketInfo
-				om.Initialize(0, 0, 4);
 				GetTicketInfo(im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x14: { // ListLightTicketInfo
-				om.Initialize(0, 0, 4);
 				ListLightTicketInfo(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x15: { // SignData
-				om.Initialize(0, 0, 0);
 				SignData(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x16, 0), im.GetSpan<byte>(0x16, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // GetCommonTicketAndCertificateSize
-				om.Initialize(0, 0, 16);
 				GetCommonTicketAndCertificateSize(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x17: { // GetCommonTicketAndCertificateData
-				om.Initialize(0, 0, 16);
 				GetCommonTicketAndCertificateData(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0), im.GetSpan<byte>(0x6, 1));
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x18: { // ImportPrepurchaseRecord
-				om.Initialize(0, 0, 0);
 				ImportPrepurchaseRecord(im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // DeletePrepurchaseRecord
-				om.Initialize(0, 0, 0);
 				DeletePrepurchaseRecord(im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // DeleteAllPrepurchaseRecord
-				om.Initialize(0, 0, 0);
 				DeleteAllPrepurchaseRecord();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // CountPrepurchaseRecord
-				om.Initialize(0, 0, 4);
 				CountPrepurchaseRecord(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1C: { // ListPrepurchaseRecord
-				om.Initialize(0, 0, 4);
 				ListPrepurchaseRecord(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1D: { // ListPrepurchaseRecordInfo
-				om.Initialize(0, 0, 4);
 				ListPrepurchaseRecordInfo(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1E: { // Unknown30
-				om.Initialize(0, 0, 0);
 				Unknown30();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // Unknown31
-				om.Initialize(0, 0, 0);
 				Unknown31();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x20: { // Unknown32
-				om.Initialize(0, 0, 0);
 				Unknown32();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // Unknown33
-				om.Initialize(0, 0, 0);
 				Unknown33();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x22: { // Unknown34
-				om.Initialize(0, 0, 0);
 				Unknown34();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // Unknown35
-				om.Initialize(0, 0, 0);
 				Unknown35();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x24: { // Unknown36
-				om.Initialize(0, 0, 0);
 				Unknown36();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F5: { // Unknown501
-				om.Initialize(0, 0, 0);
 				Unknown501();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F6: { // Unknown502
-				om.Initialize(0, 0, 0);
 				Unknown502();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F7: { // GetTitleKey_1
-				om.Initialize(0, 0, 0);
 				GetTitleKey_1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F8: { // Unknown504
-				om.Initialize(0, 0, 0);
 				Unknown504();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1FC: { // Unknown508
-				om.Initialize(0, 0, 0);
 				Unknown508();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1FD: { // Unknown509
-				om.Initialize(0, 0, 0);
 				Unknown509();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1FE: { // Unknown510
-				om.Initialize(0, 0, 0);
 				Unknown510();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E9: { // Unknown1001
-				om.Initialize(0, 0, 0);
 				Unknown1001();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EA: { // Unknown1002
-				om.Initialize(0, 0, 0);
 				Unknown1002();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EB: { // Unknown1003
-				om.Initialize(0, 0, 0);
 				Unknown1003();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EC: { // Unknown1004
-				om.Initialize(0, 0, 0);
 				Unknown1004();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3ED: { // Unknown1005
-				om.Initialize(0, 0, 0);
 				Unknown1005();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EE: { // Unknown1006
-				om.Initialize(0, 0, 0);
 				Unknown1006();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EF: { // Unknown1007
-				om.Initialize(0, 0, 0);
 				Unknown1007();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F1: { // Unknown1009
-				om.Initialize(0, 0, 0);
 				Unknown1009();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F2: { // Unknown1010
-				om.Initialize(0, 0, 0);
 				Unknown1010();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F3: { // Unknown1011
-				om.Initialize(0, 0, 0);
 				Unknown1011();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F4: { // Unknown1012
-				om.Initialize(0, 0, 0);
 				Unknown1012();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F5: { // Unknown1013
-				om.Initialize(0, 0, 0);
 				Unknown1013();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F6: { // Unknown1014
-				om.Initialize(0, 0, 0);
 				Unknown1014();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F7: { // Unknown1015
-				om.Initialize(0, 0, 0);
 				Unknown1015();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F8: { // Unknown1016
-				om.Initialize(0, 0, 0);
 				Unknown1016();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5DD: { // Unknown1501
-				om.Initialize(0, 0, 0);
 				Unknown1501();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5DE: { // Unknown1502
-				om.Initialize(0, 0, 0);
 				Unknown1502();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5DF: { // Unknown1503
-				om.Initialize(0, 0, 0);
 				Unknown1503();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5E0: { // Unknown1504
-				om.Initialize(0, 0, 0);
 				Unknown1504();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5E1: { // Unknown1505
-				om.Initialize(0, 0, 0);
 				Unknown1505();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D0: { // Unknown2000
-				om.Initialize(0, 0, 0);
 				Unknown2000();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9C5: { // Unknown2501
-				om.Initialize(0, 0, 0);
 				Unknown2501();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9C6: { // Unknown2502
-				om.Initialize(0, 0, 0);
 				Unknown2502();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

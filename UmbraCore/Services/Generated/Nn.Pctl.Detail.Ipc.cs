@@ -193,524 +193,524 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E9: { // CheckFreeCommunicationPermission
-				om.Initialize(0, 0, 0);
 				CheckFreeCommunicationPermission();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EA: { // ConfirmLaunchApplicationPermission
-				om.Initialize(0, 0, 0);
 				ConfirmLaunchApplicationPermission(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetSpan<sbyte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EB: { // ConfirmResumeApplicationPermission
-				om.Initialize(0, 0, 0);
 				ConfirmResumeApplicationPermission(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetSpan<sbyte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EC: { // ConfirmSnsPostPermission
-				om.Initialize(0, 0, 0);
 				ConfirmSnsPostPermission();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3ED: { // ConfirmSystemSettingsPermission
-				om.Initialize(0, 0, 0);
 				ConfirmSystemSettingsPermission();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EE: { // IsRestrictionTemporaryUnlocked
-				om.Initialize(0, 0, 1);
 				var _return = IsRestrictionTemporaryUnlocked();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3EF: { // RevertRestrictionTemporaryUnlocked
-				om.Initialize(0, 0, 0);
 				RevertRestrictionTemporaryUnlocked();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F0: { // EnterRestrictedSystemSettings
-				om.Initialize(0, 0, 0);
 				EnterRestrictedSystemSettings();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F1: { // LeaveRestrictedSystemSettings
-				om.Initialize(0, 0, 0);
 				LeaveRestrictedSystemSettings();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F2: { // IsRestrictedSystemSettingsEntered
-				om.Initialize(0, 0, 1);
 				var _return = IsRestrictedSystemSettingsEntered();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3F3: { // RevertRestrictedSystemSettingsEntered
-				om.Initialize(0, 0, 0);
 				RevertRestrictedSystemSettingsEntered();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F4: { // GetRestrictedFeatures
-				om.Initialize(0, 0, 4);
 				var _return = GetRestrictedFeatures();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3F5: { // ConfirmStereoVisionPermission
-				om.Initialize(0, 0, 0);
 				ConfirmStereoVisionPermission();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F6: { // ConfirmPlayableApplicationVideoOld
-				om.Initialize(0, 0, 0);
 				ConfirmPlayableApplicationVideoOld();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F7: { // ConfirmPlayableApplicationVideo
-				om.Initialize(0, 0, 0);
 				ConfirmPlayableApplicationVideo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x407: { // IsRestrictionEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsRestrictionEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x408: { // GetSafetyLevel
-				om.Initialize(0, 0, 4);
 				var _return = GetSafetyLevel();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x409: { // SetSafetyLevel
-				om.Initialize(0, 0, 0);
 				SetSafetyLevel(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x40A: { // GetSafetyLevelSettings
-				om.Initialize(0, 0, 3);
 				GetSafetyLevelSettings(im.GetData<uint>(8), out var _0);
+				om.Initialize(0, 0, 3);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x40B: { // GetCurrentSettings
-				om.Initialize(0, 0, 3);
 				GetCurrentSettings(out var _0);
+				om.Initialize(0, 0, 3);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x40C: { // SetCustomSafetyLevelSettings
-				om.Initialize(0, 0, 0);
 				SetCustomSafetyLevelSettings(im.GetBytes(8, 0x3));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x40D: { // GetDefaultRatingOrganization
-				om.Initialize(0, 0, 4);
 				var _return = GetDefaultRatingOrganization();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x40E: { // SetDefaultRatingOrganization
-				om.Initialize(0, 0, 0);
 				SetDefaultRatingOrganization(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x40F: { // GetFreeCommunicationApplicationListCount
-				om.Initialize(0, 0, 4);
 				var _return = GetFreeCommunicationApplicationListCount();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x412: { // AddToFreeCommunicationApplicationList
-				om.Initialize(0, 0, 0);
 				AddToFreeCommunicationApplicationList(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x413: { // DeleteSettings
-				om.Initialize(0, 0, 0);
 				DeleteSettings();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x414: { // GetFreeCommunicationApplicationList
-				om.Initialize(0, 0, 4);
 				GetFreeCommunicationApplicationList(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x415: { // UpdateFreeCommunicationApplicationList
-				om.Initialize(0, 0, 0);
 				UpdateFreeCommunicationApplicationList(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x416: { // DisableFeaturesForReset
-				om.Initialize(0, 0, 0);
 				DisableFeaturesForReset();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x417: { // NotifyApplicationDownloadStarted
-				om.Initialize(0, 0, 0);
 				NotifyApplicationDownloadStarted(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x425: { // ConfirmStereoVisionRestrictionConfigurable
-				om.Initialize(0, 0, 0);
 				ConfirmStereoVisionRestrictionConfigurable();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x426: { // GetStereoVisionRestriction
-				om.Initialize(0, 0, 1);
 				var _return = GetStereoVisionRestriction();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x427: { // SetStereoVisionRestriction
-				om.Initialize(0, 0, 0);
 				SetStereoVisionRestriction(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x428: { // ResetConfirmedStereoVisionPermission
-				om.Initialize(0, 0, 0);
 				ResetConfirmedStereoVisionPermission();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x429: { // IsStereoVisionPermitted
-				om.Initialize(0, 0, 0);
 				IsStereoVisionPermitted();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B1: { // UnlockRestrictionTemporarily
-				om.Initialize(0, 0, 0);
 				UnlockRestrictionTemporarily(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B2: { // UnlockSystemSettingsRestriction
-				om.Initialize(0, 0, 0);
 				UnlockSystemSettingsRestriction(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B3: { // SetPinCode
-				om.Initialize(0, 0, 0);
 				SetPinCode(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B4: { // GenerateInquiryCode
-				om.Initialize(0, 0, 32);
 				GenerateInquiryCode(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4B5: { // CheckMasterKey
-				om.Initialize(0, 0, 1);
 				var _return = CheckMasterKey(im.GetBytes(8, 0x20), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4B6: { // GetPinCodeLength
-				om.Initialize(0, 0, 4);
 				var _return = GetPinCodeLength();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4B7: { // GetPinCodeChangedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPinCodeChangedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x4B8: { // GetPinCode
-				om.Initialize(0, 0, 4);
 				GetPinCode(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x57B: { // IsPairingActive
-				om.Initialize(0, 0, 1);
 				var _return = IsPairingActive();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x57E: { // GetSettingsLastUpdated
-				om.Initialize(0, 0, 8);
 				var _return = GetSettingsLastUpdated();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x583: { // GetPairingAccountInfo
-				om.Initialize(0, 0, 16);
 				GetPairingAccountInfo(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x58D: { // GetAccountNickname
-				om.Initialize(0, 0, 4);
 				GetAccountNickname(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x590: { // GetAccountState
-				om.Initialize(0, 0, 4);
 				var _return = GetAccountState(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x598: { // GetSynchronizationEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSynchronizationEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5AB: { // StartPlayTimer
-				om.Initialize(0, 0, 0);
 				StartPlayTimer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5AC: { // StopPlayTimer
-				om.Initialize(0, 0, 0);
 				StopPlayTimer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5AD: { // IsPlayTimerEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsPlayTimerEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5AE: { // GetPlayTimerRemainingTime
-				om.Initialize(0, 0, 8);
 				var _return = GetPlayTimerRemainingTime();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5AF: { // IsRestrictedByPlayTimer
-				om.Initialize(0, 0, 1);
 				var _return = IsRestrictedByPlayTimer();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5B0: { // GetPlayTimerSettings
-				om.Initialize(0, 0, 52);
 				GetPlayTimerSettings(out var _0);
+				om.Initialize(0, 0, 52);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5B1: { // GetPlayTimerEventToRequestSuspension
-				om.Initialize(0, 1, 0);
 				var _return = GetPlayTimerEventToRequestSuspension();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5B2: { // IsPlayTimerAlarmDisabled
-				om.Initialize(0, 0, 1);
 				var _return = IsPlayTimerAlarmDisabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5BF: { // NotifyWrongPinCodeInputManyTimes
-				om.Initialize(0, 0, 0);
 				NotifyWrongPinCodeInputManyTimes();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5C0: { // CancelNetworkRequest
-				om.Initialize(0, 0, 0);
 				CancelNetworkRequest();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5C1: { // GetUnlinkedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetUnlinkedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5C2: { // ClearUnlinkedEvent
-				om.Initialize(0, 0, 0);
 				ClearUnlinkedEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x641: { // DisableAllFeatures
-				om.Initialize(0, 0, 1);
 				var _return = DisableAllFeatures();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x642: { // PostEnableAllFeatures
-				om.Initialize(0, 0, 1);
 				var _return = PostEnableAllFeatures();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x643: { // IsAllFeaturesDisabled
-				om.Initialize(0, 0, 2);
 				IsAllFeaturesDisabled(out var _0, out var _1);
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _0);
 				om.SetData(9, _1);
 				break;
 			}
 			case 0x76D: { // DeleteFromFreeCommunicationApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				DeleteFromFreeCommunicationApplicationListForDebug(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x76E: { // ClearFreeCommunicationApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				ClearFreeCommunicationApplicationListForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x76F: { // GetExemptApplicationListCountForDebug
-				om.Initialize(0, 0, 0);
 				GetExemptApplicationListCountForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x770: { // GetExemptApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				GetExemptApplicationListForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x771: { // UpdateExemptApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				UpdateExemptApplicationListForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x772: { // AddToExemptApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				AddToExemptApplicationListForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x773: { // DeleteFromExemptApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				DeleteFromExemptApplicationListForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x774: { // ClearExemptApplicationListForDebug
-				om.Initialize(0, 0, 0);
 				ClearExemptApplicationListForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x795: { // DeletePairing
-				om.Initialize(0, 0, 0);
 				DeletePairing();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x79F: { // SetPlayTimerSettingsForDebug
-				om.Initialize(0, 0, 0);
 				SetPlayTimerSettingsForDebug(im.GetBytes(8, 0x34));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7A0: { // GetPlayTimerSpentTimeForTest
-				om.Initialize(0, 0, 8);
 				var _return = GetPlayTimerSpentTimeForTest();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x7A1: { // SetPlayTimerAlarmDisabledForDebug
-				om.Initialize(0, 0, 0);
 				SetPlayTimerAlarmDisabledForDebug(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D1: { // RequestPairingAsync
-				om.Initialize(0, 1, 8);
 				RequestPairingAsync(im.GetSpan<byte>(0x9, 0), out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x7D2: { // FinishRequestPairing
-				om.Initialize(0, 0, 16);
 				FinishRequestPairing(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D3: { // AuthorizePairingAsync
-				om.Initialize(0, 1, 8);
 				AuthorizePairingAsync(im.GetBytes(8, 0x10), out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x7D4: { // FinishAuthorizePairing
-				om.Initialize(0, 0, 16);
 				FinishAuthorizePairing(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D5: { // RetrievePairingInfoAsync
-				om.Initialize(0, 1, 8);
 				RetrievePairingInfoAsync(out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x7D6: { // FinishRetrievePairingInfo
-				om.Initialize(0, 0, 16);
 				FinishRetrievePairingInfo(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D7: { // UnlinkPairingAsync
-				om.Initialize(0, 1, 8);
 				UnlinkPairingAsync(im.GetData<byte>(8), out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x7D8: { // FinishUnlinkPairing
-				om.Initialize(0, 0, 0);
 				FinishUnlinkPairing(im.GetData<byte>(8), im.GetBytes(12, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D9: { // GetAccountMiiImageAsync
-				om.Initialize(0, 1, 12);
 				GetAccountMiiImageAsync(im.GetBytes(8, 0x10), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 1, 12);
 				om.SetBytes(8, _0);
 				om.SetData(16, _1);
 				om.Copy(0, CreateHandle(_2, copy: true));
 				break;
 			}
 			case 0x7DA: { // FinishGetAccountMiiImage
-				om.Initialize(0, 0, 4);
 				FinishGetAccountMiiImage(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7DB: { // GetAccountMiiImageContentTypeAsync
-				om.Initialize(0, 1, 12);
 				GetAccountMiiImageContentTypeAsync(im.GetBytes(8, 0x10), out var _0, out var _1, out var _2, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 1, 12);
 				om.SetBytes(8, _0);
 				om.SetData(16, _1);
 				om.Copy(0, CreateHandle(_2, copy: true));
 				break;
 			}
 			case 0x7DC: { // FinishGetAccountMiiImageContentType
-				om.Initialize(0, 0, 4);
 				FinishGetAccountMiiImageContentType(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7DD: { // SynchronizeParentalControlSettingsAsync
-				om.Initialize(0, 1, 8);
 				SynchronizeParentalControlSettingsAsync(out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x7DE: { // FinishSynchronizeParentalControlSettings
-				om.Initialize(0, 0, 0);
 				FinishSynchronizeParentalControlSettings(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7DF: { // FinishSynchronizeParentalControlSettingsWithLastUpdated
-				om.Initialize(0, 0, 8);
 				var _return = FinishSynchronizeParentalControlSettingsWithLastUpdated(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x7E0: { // RequestUpdateExemptionListAsync
-				om.Initialize(0, 0, 0);
 				RequestUpdateExemptionListAsync();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -719,7 +719,10 @@ public abstract class _IParentalControlService_Base : IpcInterface {
 	}
 }
 
-public partial class IParentalControlServiceFactory : _IParentalControlServiceFactory_Base;
+public partial class IParentalControlServiceFactory : _IParentalControlServiceFactory_Base {
+	public readonly string ServiceName;
+	public IParentalControlServiceFactory(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IParentalControlServiceFactory_Base : IpcInterface {
 	protected virtual Nn.Pctl.Detail.Ipc.IParentalControlService CreateService(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Pctl.Detail.Ipc.IParentalControlServiceFactory.CreateService not implemented");
@@ -728,14 +731,14 @@ public abstract class _IParentalControlServiceFactory_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateService
-				om.Initialize(1, 0, 0);
 				var _return = CreateService(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // CreateServiceWithoutInitialize
-				om.Initialize(1, 0, 0);
 				var _return = CreateServiceWithoutInitialize(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

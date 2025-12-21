@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Ahid.Hdr;
-public partial class ISession : _ISession_Base;
+public partial class ISession : _ISession_Base {
+	public readonly string ServiceName;
+	public ISession(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual void Unknown0(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ahid.Hdr.ISession.Unknown0 not implemented");
@@ -17,31 +20,31 @@ public abstract class _ISession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 4);
 				Unknown1(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 4);
 				Unknown3(im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

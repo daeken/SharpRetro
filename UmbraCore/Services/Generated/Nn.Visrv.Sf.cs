@@ -49,127 +49,127 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x64: { // GetRelayService
-				om.Initialize(1, 0, 0);
 				var _return = GetRelayService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x65: { // GetSystemDisplayService
-				om.Initialize(1, 0, 0);
 				var _return = GetSystemDisplayService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x66: { // GetManagerDisplayService
-				om.Initialize(1, 0, 0);
 				var _return = GetManagerDisplayService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x67: { // GetIndirectDisplayTransactionService
-				om.Initialize(1, 0, 0);
 				var _return = GetIndirectDisplayTransactionService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E8: { // ListDisplays
-				om.Initialize(0, 0, 8);
 				ListDisplays(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x3F2: { // OpenDisplay
-				om.Initialize(0, 0, 8);
 				var _return = OpenDisplay(im.GetBytes(8, 0x40));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3F3: { // OpenDefaultDisplay
-				om.Initialize(0, 0, 8);
 				var _return = OpenDefaultDisplay();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3FC: { // CloseDisplay
-				om.Initialize(0, 0, 0);
 				CloseDisplay(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x44D: { // SetDisplayEnabled
-				om.Initialize(0, 0, 0);
 				SetDisplayEnabled(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x44E: { // GetDisplayResolution
-				om.Initialize(0, 0, 16);
 				GetDisplayResolution(im.GetData<ulong>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x7E4: { // OpenLayer
-				om.Initialize(0, 0, 8);
 				OpenLayer(im.GetBytes(8, 0x40), im.GetData<ulong>(72), im.GetData<ulong>(80), im.Pid, out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7E5: { // CloseLayer
-				om.Initialize(0, 0, 0);
 				CloseLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7EE: { // CreateStrayLayer
-				om.Initialize(0, 0, 16);
 				CreateStrayLayer(im.GetData<uint>(8), im.GetData<ulong>(16), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x7EF: { // DestroyStrayLayer
-				om.Initialize(0, 0, 0);
 				DestroyStrayLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x835: { // SetLayerScalingMode
-				om.Initialize(0, 0, 0);
 				SetLayerScalingMode(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x836: { // ConvertScalingMode
-				om.Initialize(0, 0, 0);
 				ConvertScalingMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x992: { // GetIndirectLayerImageMap
-				om.Initialize(0, 0, 16);
 				GetIndirectLayerImageMap(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetData<ulong>(32), im.Pid, out var _0, out var _1, im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x993: { // GetIndirectLayerImageCropMap
-				om.Initialize(0, 0, 16);
 				GetIndirectLayerImageCropMap(im.GetData<float>(8), im.GetData<float>(12), im.GetData<float>(16), im.GetData<float>(20), im.GetData<ulong>(24), im.GetData<ulong>(32), im.GetData<ulong>(40), im.GetData<ulong>(48), im.Pid, out var _0, out var _1, im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x99C: { // GetIndirectLayerImageRequiredMemoryInfo
-				om.Initialize(0, 0, 16);
 				GetIndirectLayerImageRequiredMemoryInfo(im.GetData<ulong>(8), im.GetData<ulong>(16), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x1452: { // GetDisplayVsyncEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetDisplayVsyncEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1453: { // GetDisplayVsyncEventForDebug
-				om.Initialize(0, 1, 0);
 				var _return = GetDisplayVsyncEventForDebug(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -179,15 +179,18 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 	}
 }
 
-public partial class IApplicationRootService : _IApplicationRootService_Base;
+public partial class IApplicationRootService : _IApplicationRootService_Base {
+	public readonly string ServiceName;
+	public IApplicationRootService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IApplicationRootService_Base : IpcInterface {
 	protected virtual Nn.Visrv.Sf.IApplicationDisplayService GetDisplayService(uint _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationRootService.GetDisplayService not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetDisplayService
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayService(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -332,344 +335,344 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xC8: { // AllocateProcessHeapBlock
-				om.Initialize(0, 0, 8);
 				var _return = AllocateProcessHeapBlock(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC9: { // FreeProcessHeapBlock
-				om.Initialize(0, 0, 0);
 				FreeProcessHeapBlock(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x44E: { // GetDisplayResolution
-				om.Initialize(0, 0, 16);
 				GetDisplayResolution(im.GetData<ulong>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x7DA: { // CreateManagedLayer
-				om.Initialize(0, 0, 8);
 				var _return = CreateManagedLayer(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x7DB: { // DestroyManagedLayer
-				om.Initialize(0, 0, 0);
 				DestroyManagedLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x802: { // CreateIndirectLayer
-				om.Initialize(0, 0, 8);
 				var _return = CreateIndirectLayer();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x803: { // DestroyIndirectLayer
-				om.Initialize(0, 0, 0);
 				DestroyIndirectLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x804: { // CreateIndirectProducerEndPoint
-				om.Initialize(0, 0, 8);
 				var _return = CreateIndirectProducerEndPoint(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x805: { // DestroyIndirectProducerEndPoint
-				om.Initialize(0, 0, 0);
 				DestroyIndirectProducerEndPoint(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x806: { // CreateIndirectConsumerEndPoint
-				om.Initialize(0, 0, 8);
 				var _return = CreateIndirectConsumerEndPoint(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x807: { // DestroyIndirectConsumerEndPoint
-				om.Initialize(0, 0, 0);
 				DestroyIndirectConsumerEndPoint(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8FC: { // AcquireLayerTexturePresentingEvent
-				om.Initialize(0, 1, 0);
 				var _return = AcquireLayerTexturePresentingEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x8FD: { // ReleaseLayerTexturePresentingEvent
-				om.Initialize(0, 0, 0);
 				ReleaseLayerTexturePresentingEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8FE: { // GetDisplayHotplugEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetDisplayHotplugEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x962: { // GetDisplayHotplugState
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayHotplugState(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x9C5: { // GetCompositorErrorInfo
-				om.Initialize(0, 0, 4);
 				GetCompositorErrorInfo(im.GetData<ulong>(8), im.GetData<ulong>(16), out var _0, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xA29: { // GetDisplayErrorEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetDisplayErrorEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1069: { // SetDisplayAlpha
-				om.Initialize(0, 0, 0);
 				SetDisplayAlpha(im.GetData<float>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x106B: { // SetDisplayLayerStack
-				om.Initialize(0, 0, 0);
 				SetDisplayLayerStack(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x106D: { // SetDisplayPowerState
-				om.Initialize(0, 0, 0);
 				SetDisplayPowerState(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x106E: { // SetDefaultDisplay
-				om.Initialize(0, 0, 0);
 				SetDefaultDisplay(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1770: { // AddToLayerStack
-				om.Initialize(0, 0, 0);
 				AddToLayerStack(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1771: { // RemoveFromLayerStack
-				om.Initialize(0, 0, 0);
 				RemoveFromLayerStack(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1772: { // SetLayerVisibility
-				om.Initialize(0, 0, 0);
 				SetLayerVisibility(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1773: { // SetLayerConfig
-				om.Initialize(0, 0, 0);
 				SetLayerConfig();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1774: { // AttachLayerPresentationTracer
-				om.Initialize(0, 0, 0);
 				AttachLayerPresentationTracer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1775: { // DetachLayerPresentationTracer
-				om.Initialize(0, 0, 0);
 				DetachLayerPresentationTracer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1776: { // StartLayerPresentationRecording
-				om.Initialize(0, 0, 0);
 				StartLayerPresentationRecording();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1777: { // StopLayerPresentationRecording
-				om.Initialize(0, 0, 0);
 				StopLayerPresentationRecording();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1778: { // StartLayerPresentationFenceWait
-				om.Initialize(0, 0, 0);
 				StartLayerPresentationFenceWait();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1779: { // StopLayerPresentationFenceWait
-				om.Initialize(0, 0, 0);
 				StopLayerPresentationFenceWait();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x177A: { // GetLayerPresentationAllFencesExpiredEvent
-				om.Initialize(0, 0, 0);
 				GetLayerPresentationAllFencesExpiredEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B58: { // SetContentVisibility
-				om.Initialize(0, 0, 0);
 				SetContentVisibility(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F40: { // SetConductorLayer
-				om.Initialize(0, 0, 0);
 				SetConductorLayer(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1FA4: { // SetIndirectProducerFlipOffset
-				om.Initialize(0, 0, 0);
 				SetIndirectProducerFlipOffset(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2008: { // CreateSharedBufferStaticStorage
-				om.Initialize(0, 0, 8);
 				var _return = CreateSharedBufferStaticStorage(im.GetData<ulong>(8), im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2009: { // CreateSharedBufferTransferMemory
-				om.Initialize(0, 0, 8);
 				var _return = CreateSharedBufferTransferMemory(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x200A: { // DestroySharedBuffer
-				om.Initialize(0, 0, 0);
 				DestroySharedBuffer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x200B: { // BindSharedLowLevelLayerToManagedLayer
-				om.Initialize(0, 0, 0);
 				BindSharedLowLevelLayerToManagedLayer(im.GetBytes(8, 0x40), im.GetData<ulong>(72), im.GetData<ulong>(80), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x200C: { // BindSharedLowLevelLayerToIndirectLayer
-				om.Initialize(0, 0, 0);
 				BindSharedLowLevelLayerToIndirectLayer(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x200F: { // UnbindSharedLowLevelLayer
-				om.Initialize(0, 0, 0);
 				UnbindSharedLowLevelLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2010: { // ConnectSharedLowLevelLayerToSharedBuffer
-				om.Initialize(0, 0, 0);
 				ConnectSharedLowLevelLayerToSharedBuffer(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2011: { // DisconnectSharedLowLevelLayerFromSharedBuffer
-				om.Initialize(0, 0, 0);
 				DisconnectSharedLowLevelLayerFromSharedBuffer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2012: { // CreateSharedLayer
-				om.Initialize(0, 0, 8);
 				var _return = CreateSharedLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2013: { // DestroySharedLayer
-				om.Initialize(0, 0, 0);
 				DestroySharedLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2018: { // AttachSharedLayerToLowLevelLayer
-				om.Initialize(0, 0, 0);
 				AttachSharedLayerToLowLevelLayer(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2019: { // ForceDetachSharedLayerFromLowLevelLayer
-				om.Initialize(0, 0, 0);
 				ForceDetachSharedLayerFromLowLevelLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x201A: { // StartDetachSharedLayerFromLowLevelLayer
-				om.Initialize(0, 0, 0);
 				StartDetachSharedLayerFromLowLevelLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x201B: { // FinishDetachSharedLayerFromLowLevelLayer
-				om.Initialize(0, 0, 0);
 				FinishDetachSharedLayerFromLowLevelLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x201C: { // GetSharedLayerDetachReadyEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSharedLayerDetachReadyEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x201D: { // GetSharedLowLevelLayerSynchronizedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSharedLowLevelLayerSynchronizedEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x201E: { // CheckSharedLowLevelLayerSynchronized
-				om.Initialize(0, 0, 8);
 				var _return = CheckSharedLowLevelLayerSynchronized(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x201F: { // RegisterSharedBufferImporterAruid
-				om.Initialize(0, 0, 0);
 				RegisterSharedBufferImporterAruid(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2020: { // UnregisterSharedBufferImporterAruid
-				om.Initialize(0, 0, 0);
 				UnregisterSharedBufferImporterAruid(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2023: { // CreateSharedBufferProcessHeap
-				om.Initialize(0, 0, 8);
 				var _return = CreateSharedBufferProcessHeap(im.GetData<ulong>(8), im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2024: { // GetSharedLayerLayerStacks
-				om.Initialize(0, 0, 4);
 				var _return = GetSharedLayerLayerStacks(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2025: { // SetSharedLayerLayerStacks
-				om.Initialize(0, 0, 0);
 				SetSharedLayerLayerStacks(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2063: { // PresentDetachedSharedFrameBufferToLowLevelLayer
-				om.Initialize(0, 0, 0);
 				PresentDetachedSharedFrameBufferToLowLevelLayer(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2064: { // FillDetachedSharedFrameBufferColor
-				om.Initialize(0, 0, 0);
 				FillDetachedSharedFrameBufferColor(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20), im.GetData<uint>(24), im.GetData<ulong>(32), im.GetData<ulong>(40));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2065: { // GetDetachedSharedFrameBufferImage
-				om.Initialize(0, 0, 8);
 				GetDetachedSharedFrameBufferImage(im.GetData<ulong>(8), im.GetData<ulong>(16), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2066: { // SetDetachedSharedFrameBufferImage
-				om.Initialize(0, 0, 0);
 				SetDetachedSharedFrameBufferImage(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2067: { // CopyDetachedSharedFrameBufferImage
-				om.Initialize(0, 0, 0);
 				CopyDetachedSharedFrameBufferImage(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2068: { // SetDetachedSharedFrameBufferSubImage
-				om.Initialize(0, 0, 0);
 				SetDetachedSharedFrameBufferSubImage(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20), im.GetData<uint>(24), im.GetData<uint>(28), im.GetData<ulong>(32), im.GetData<ulong>(40), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2069: { // GetSharedFrameBufferContentParameter
-				om.Initialize(0, 0, 32);
 				GetSharedFrameBufferContentParameter(im.GetData<ulong>(8), im.GetData<ulong>(16), out var _0, out var _1, out var _2, out var _3, out var _4);
+				om.Initialize(0, 0, 32);
 				om.SetData(8, _0);
 				om.SetBytes(12, _1);
 				om.SetData(28, _2);
@@ -678,8 +681,8 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 				break;
 			}
 			case 0x206A: { // ExpandStartupLogoOnSharedFrameBuffer
-				om.Initialize(0, 0, 0);
 				ExpandStartupLogoOnSharedFrameBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -688,7 +691,10 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 	}
 }
 
-public partial class IManagerRootService : _IManagerRootService_Base;
+public partial class IManagerRootService : _IManagerRootService_Base {
+	public readonly string ServiceName;
+	public IManagerRootService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManagerRootService_Base : IpcInterface {
 	protected virtual Nn.Visrv.Sf.IApplicationDisplayService GetDisplayService(uint _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerRootService.GetDisplayService not implemented");
@@ -697,14 +703,14 @@ public abstract class _IManagerRootService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2: { // GetDisplayService
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayService(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetDisplayServiceWithProxyNameExchange
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayServiceWithProxyNameExchange(im.GetBytes(8, 0x8), im.GetData<uint>(16));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -805,242 +811,242 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x4B0: { // GetZOrderCountMin
-				om.Initialize(0, 0, 8);
 				var _return = GetZOrderCountMin(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4B2: { // GetZOrderCountMax
-				om.Initialize(0, 0, 8);
 				var _return = GetZOrderCountMax(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4B3: { // GetDisplayLogicalResolution
-				om.Initialize(0, 0, 8);
 				GetDisplayLogicalResolution(im.GetData<ulong>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x4B4: { // SetDisplayMagnification
-				om.Initialize(0, 0, 0);
 				SetDisplayMagnification(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x899: { // SetLayerPosition
-				om.Initialize(0, 0, 0);
 				SetLayerPosition(im.GetData<float>(8), im.GetData<float>(12), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x89B: { // SetLayerSize
-				om.Initialize(0, 0, 0);
 				SetLayerSize(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x89C: { // GetLayerZ
-				om.Initialize(0, 0, 8);
 				var _return = GetLayerZ(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x89D: { // SetLayerZ
-				om.Initialize(0, 0, 0);
 				SetLayerZ(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x89F: { // SetLayerVisibility
-				om.Initialize(0, 0, 0);
 				SetLayerVisibility(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8A1: { // SetLayerAlpha
-				om.Initialize(0, 0, 0);
 				SetLayerAlpha(im.GetData<float>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x908: { // CreateStrayLayer
-				om.Initialize(0, 0, 16);
 				CreateStrayLayer(im.GetData<uint>(8), im.GetData<ulong>(16), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x960: { // OpenIndirectLayer
-				om.Initialize(0, 0, 8);
 				OpenIndirectLayer(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x961: { // CloseIndirectLayer
-				om.Initialize(0, 0, 0);
 				CloseIndirectLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x962: { // FlipIndirectLayer
-				om.Initialize(0, 0, 0);
 				FlipIndirectLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xBB8: { // ListDisplayModes
-				om.Initialize(0, 0, 8);
 				ListDisplayModes(im.GetData<ulong>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xBB9: { // ListDisplayRgbRanges
-				om.Initialize(0, 0, 8);
 				ListDisplayRgbRanges(im.GetData<ulong>(8), out var _0, im.GetSpan<uint>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xBBA: { // ListDisplayContentTypes
-				om.Initialize(0, 0, 8);
 				ListDisplayContentTypes(im.GetData<ulong>(8), out var _0, im.GetSpan<uint>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xC80: { // GetDisplayMode
-				om.Initialize(0, 0, 0);
 				GetDisplayMode(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC81: { // SetDisplayMode
-				om.Initialize(0, 0, 0);
 				SetDisplayMode(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC82: { // GetDisplayUnderscan
-				om.Initialize(0, 0, 8);
 				var _return = GetDisplayUnderscan(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC83: { // SetDisplayUnderscan
-				om.Initialize(0, 0, 0);
 				SetDisplayUnderscan(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC84: { // GetDisplayContentType
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayContentType(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC85: { // SetDisplayContentType
-				om.Initialize(0, 0, 0);
 				SetDisplayContentType(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC86: { // GetDisplayRgbRange
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayRgbRange(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC87: { // SetDisplayRgbRange
-				om.Initialize(0, 0, 0);
 				SetDisplayRgbRange(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC88: { // GetDisplayCmuMode
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayCmuMode(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC89: { // SetDisplayCmuMode
-				om.Initialize(0, 0, 0);
 				SetDisplayCmuMode(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC8A: { // GetDisplayContrastRatio
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayContrastRatio(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC8B: { // SetDisplayContrastRatio
-				om.Initialize(0, 0, 0);
 				SetDisplayContrastRatio(im.GetData<float>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC8E: { // GetDisplayGamma
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayGamma(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC8F: { // SetDisplayGamma
-				om.Initialize(0, 0, 0);
 				SetDisplayGamma(im.GetData<float>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC90: { // GetDisplayCmuLuma
-				om.Initialize(0, 0, 4);
 				var _return = GetDisplayCmuLuma(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC91: { // SetDisplayCmuLuma
-				om.Initialize(0, 0, 0);
 				SetDisplayCmuLuma(im.GetData<float>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2021: { // GetSharedBufferMemoryHandleId
-				om.Initialize(0, 0, 16);
 				GetSharedBufferMemoryHandleId(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, out var _0, out var _1, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x203A: { // OpenSharedLayer
-				om.Initialize(0, 0, 0);
 				OpenSharedLayer(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x203B: { // CloseSharedLayer
-				om.Initialize(0, 0, 0);
 				CloseSharedLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x203C: { // ConnectSharedLayer
-				om.Initialize(0, 0, 0);
 				ConnectSharedLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x203D: { // DisconnectSharedLayer
-				om.Initialize(0, 0, 0);
 				DisconnectSharedLayer(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x203E: { // AcquireSharedFrameBuffer
-				om.Initialize(0, 0, 64);
 				AcquireSharedFrameBuffer(im.GetData<ulong>(8), out var _0, out var _1, out var _2);
+				om.Initialize(0, 0, 64);
 				om.SetBytes(8, _0);
 				om.SetBytes(44, _1);
 				om.SetData(64, _2);
 				break;
 			}
 			case 0x203F: { // PresentSharedFrameBuffer
-				om.Initialize(0, 0, 0);
 				PresentSharedFrameBuffer(im.GetBytes(8, 0x24), im.GetBytes(44, 0x10), im.GetData<uint>(60), im.GetData<uint>(64), im.GetData<ulong>(72), im.GetData<ulong>(80));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2040: { // GetSharedFrameBufferAcquirableEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSharedFrameBufferAcquirableEvent(im.GetData<ulong>(8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2041: { // FillSharedFrameBufferColor
-				om.Initialize(0, 0, 0);
 				FillSharedFrameBufferColor(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20), im.GetData<ulong>(24), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2042: { // CancelSharedFrameBuffer
-				om.Initialize(0, 0, 0);
 				CancelSharedFrameBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1049,7 +1055,10 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 	}
 }
 
-public partial class ISystemRootService : _ISystemRootService_Base;
+public partial class ISystemRootService : _ISystemRootService_Base {
+	public readonly string ServiceName;
+	public ISystemRootService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISystemRootService_Base : IpcInterface {
 	protected virtual Nn.Visrv.Sf.IApplicationDisplayService GetDisplayService(uint _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemRootService.GetDisplayService not implemented");
@@ -1058,14 +1067,14 @@ public abstract class _ISystemRootService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // GetDisplayService
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayService(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetDisplayServiceWithProxyNameExchange
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayServiceWithProxyNameExchange(im.GetBytes(8, 0x8), im.GetData<uint>(16));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Aocsrv.Detail;
-public partial class IAddOnContentManager : _IAddOnContentManager_Base;
+public partial class IAddOnContentManager : _IAddOnContentManager_Base {
+	public readonly string ServiceName;
+	public IAddOnContentManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAddOnContentManager_Base : IpcInterface {
 	protected virtual uint CountAddOnContentByApplicationId(ulong _0) =>
 		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.CountAddOnContentByApplicationId not implemented");
@@ -25,54 +28,54 @@ public abstract class _IAddOnContentManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CountAddOnContentByApplicationId
-				om.Initialize(0, 0, 4);
 				var _return = CountAddOnContentByApplicationId(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // ListAddOnContentByApplicationId
-				om.Initialize(0, 0, 4);
 				ListAddOnContentByApplicationId(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), out var _0, im.GetSpan<uint>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2: { // CountAddOnContent
-				om.Initialize(0, 0, 4);
 				var _return = CountAddOnContent(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // ListAddOnContent
-				om.Initialize(0, 0, 4);
 				ListAddOnContent(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.Pid, out var _0, im.GetSpan<uint>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4: { // GetAddOnContentBaseIdByApplicationId
-				om.Initialize(0, 0, 8);
 				var _return = GetAddOnContentBaseIdByApplicationId(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // GetAddOnContentBaseId
-				om.Initialize(0, 0, 8);
 				var _return = GetAddOnContentBaseId(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x6: { // PrepareAddOnContentByApplicationId
-				om.Initialize(0, 0, 0);
 				PrepareAddOnContentByApplicationId(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // PrepareAddOnContent
-				om.Initialize(0, 0, 0);
 				PrepareAddOnContent(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetAddOnContentListChangedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetAddOnContentListChangedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}

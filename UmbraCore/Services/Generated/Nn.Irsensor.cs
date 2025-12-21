@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Irsensor;
-public partial class IIrSensorServer : _IIrSensorServer_Base;
+public partial class IIrSensorServer : _IIrSensorServer_Base {
+	public readonly string ServiceName;
+	public IIrSensorServer(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IIrSensorServer_Base : IpcInterface {
 	protected virtual void ActivateIrsensor(ulong _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorServer.ActivateIrsensor");
@@ -43,96 +46,96 @@ public abstract class _IIrSensorServer_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x12E: { // ActivateIrsensor
-				om.Initialize(0, 0, 0);
 				ActivateIrsensor(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12F: { // DeactivateIrsensor
-				om.Initialize(0, 0, 0);
 				DeactivateIrsensor(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x130: { // GetIrsensorSharedMemoryHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetIrsensorSharedMemoryHandle(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x131: { // StopImageProcessor
-				om.Initialize(0, 0, 0);
 				StopImageProcessor(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x132: { // RunMomentProcessor
-				om.Initialize(0, 0, 0);
 				RunMomentProcessor(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetBytes(24, 0x20), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x133: { // RunClusteringProcessor
-				om.Initialize(0, 0, 0);
 				RunClusteringProcessor(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetBytes(24, 0x28), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x134: { // RunImageTransferProcessor
-				om.Initialize(0, 0, 0);
 				RunImageTransferProcessor(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetBytes(24, 0x18), im.GetData<ulong>(48), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x135: { // GetImageTransferProcessorState
-				om.Initialize(0, 0, 16);
 				GetImageTransferProcessorState(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid, out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x136: { // RunTeraPluginProcessor
-				om.Initialize(0, 0, 0);
 				RunTeraPluginProcessor(im.GetData<uint>(8), im.GetBytes(12, 0x8), im.GetData<ulong>(24), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x137: { // GetNpadIrCameraHandle
-				om.Initialize(0, 0, 4);
 				var _return = GetNpadIrCameraHandle(im.GetData<uint>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x138: { // RunPointingProcessor
-				om.Initialize(0, 0, 0);
 				RunPointingProcessor(im.GetData<uint>(8), im.GetBytes(12, 0xC), im.GetData<ulong>(24), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x139: { // SuspendImageProcessor
-				om.Initialize(0, 0, 0);
 				SuspendImageProcessor(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13A: { // CheckFirmwareVersion
-				om.Initialize(0, 0, 0);
 				CheckFirmwareVersion(im.GetData<uint>(8), im.GetBytes(12, 0x4), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13B: { // SetFunctionLevel
-				om.Initialize(0, 0, 0);
 				SetFunctionLevel(im.GetData<uint>(8), im.GetBytes(12, 0x4), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13C: { // RunImageTransferExProcessor
-				om.Initialize(0, 0, 0);
 				RunImageTransferExProcessor(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetBytes(24, 0x20), im.GetData<ulong>(56), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13D: { // RunIrLedProcessor
-				om.Initialize(0, 0, 0);
 				RunIrLedProcessor(im.GetData<uint>(8), im.GetBytes(12, 0x8), im.GetData<ulong>(24), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13E: { // StopImageProcessorAsync
-				om.Initialize(0, 0, 0);
 				StopImageProcessorAsync(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13F: { // ActivateIrsensorWithFunctionLevel
-				om.Initialize(0, 0, 0);
 				ActivateIrsensorWithFunctionLevel(im.GetBytes(8, 0x4), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -141,7 +144,10 @@ public abstract class _IIrSensorServer_Base : IpcInterface {
 	}
 }
 
-public partial class IIrSensorSystemServer : _IIrSensorSystemServer_Base;
+public partial class IIrSensorSystemServer : _IIrSensorSystemServer_Base {
+	public readonly string ServiceName;
+	public IIrSensorSystemServer(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IIrSensorSystemServer_Base : IpcInterface {
 	protected virtual void SetAppletResourceUserId(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Irsensor.IIrSensorSystemServer.SetAppletResourceUserId");
@@ -154,23 +160,23 @@ public abstract class _IIrSensorSystemServer_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1F4: { // SetAppletResourceUserId
-				om.Initialize(0, 0, 0);
 				SetAppletResourceUserId(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F5: { // RegisterAppletResourceUserId
-				om.Initialize(0, 0, 0);
 				RegisterAppletResourceUserId(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F6: { // UnregisterAppletResourceUserId
-				om.Initialize(0, 0, 0);
 				UnregisterAppletResourceUserId(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F7: { // EnableAppletToGetInput
-				om.Initialize(0, 0, 0);
 				EnableAppletToGetInput(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

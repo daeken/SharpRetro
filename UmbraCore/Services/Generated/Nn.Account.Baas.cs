@@ -73,194 +73,194 @@ public abstract class _IAdministrator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CheckAvailability
-				om.Initialize(0, 0, 0);
 				CheckAvailability();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // EnsureIdTokenCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = EnsureIdTokenCacheAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // LoadIdTokenCache
-				om.Initialize(0, 0, 4);
 				LoadIdTokenCache(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x64: { // SetSystemProgramIdentification
-				om.Initialize(0, 0, 0);
 				SetSystemProgramIdentification(im.GetData<ulong>(8), im.Pid, im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6E: { // GetServiceEntryRequirementCache
-				om.Initialize(0, 0, 4);
 				var _return = GetServiceEntryRequirementCache(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x6F: { // InvalidateServiceEntryRequirementCache
-				om.Initialize(0, 0, 0);
 				InvalidateServiceEntryRequirementCache(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x70: { // InvalidateTokenCache
-				om.Initialize(0, 0, 0);
 				InvalidateTokenCache(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x78: { // GetNintendoAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetNintendoAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x82: { // GetNintendoAccountUserResourceCache
-				om.Initialize(0, 0, 8);
 				GetNintendoAccountUserResourceCache(out var _0, im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x83: { // RefreshNintendoAccountUserResourceCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = RefreshNintendoAccountUserResourceCacheAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x84: { // RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed
-				om.Initialize(1, 0, 1);
 				RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(im.GetData<uint>(8), out var _0, out var _1);
+				om.Initialize(1, 0, 1);
 				om.SetData(8, _0);
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x8C: { // GetNetworkServiceLicenseCache
-				om.Initialize(0, 0, 0);
 				GetNetworkServiceLicenseCache();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8D: { // RefreshNetworkServiceLicenseCacheAsync
-				om.Initialize(0, 0, 0);
 				RefreshNetworkServiceLicenseCacheAsync();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8E: { // RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed
-				om.Initialize(0, 0, 0);
 				RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x96: { // CreateAuthorizationRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateAuthorizationRequest(im.GetData<uint>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC8: { // IsRegistered
-				om.Initialize(0, 0, 1);
 				var _return = IsRegistered();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC9: { // RegisterAsync
-				om.Initialize(1, 0, 0);
 				var _return = RegisterAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xCA: { // UnregisterAsync
-				om.Initialize(1, 0, 0);
 				var _return = UnregisterAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xCB: { // DeleteRegistrationInfoLocally
-				om.Initialize(0, 0, 0);
 				DeleteRegistrationInfoLocally();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xDC: { // SynchronizeProfileAsync
-				om.Initialize(1, 0, 0);
 				var _return = SynchronizeProfileAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xDD: { // UploadProfileAsync
-				om.Initialize(1, 0, 0);
 				var _return = UploadProfileAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xDE: { // SynchronizeProfileAsyncIfSecondsElapsed
-				om.Initialize(1, 0, 1);
 				SynchronizeProfileAsyncIfSecondsElapsed(im.GetData<uint>(8), out var _0, out var _1);
+				om.Initialize(1, 0, 1);
 				om.SetData(8, _0);
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0xFA: { // IsLinkedWithNintendoAccount
-				om.Initialize(0, 0, 1);
 				var _return = IsLinkedWithNintendoAccount();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xFB: { // CreateProcedureToLinkWithNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = CreateProcedureToLinkWithNintendoAccount();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xFC: { // ResumeProcedureToLinkWithNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = ResumeProcedureToLinkWithNintendoAccount(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xFF: { // CreateProcedureToUpdateLinkageStateOfNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = CreateProcedureToUpdateLinkageStateOfNintendoAccount();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x100: { // ResumeProcedureToUpdateLinkageStateOfNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = ResumeProcedureToUpdateLinkageStateOfNintendoAccount(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x104: { // CreateProcedureToLinkNnidWithNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = CreateProcedureToLinkNnidWithNintendoAccount();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x105: { // ResumeProcedureToLinkNnidWithNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = ResumeProcedureToLinkNnidWithNintendoAccount(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x118: { // ProxyProcedureToAcquireApplicationAuthorizationForNintendoAccount
-				om.Initialize(1, 0, 0);
 				var _return = ProxyProcedureToAcquireApplicationAuthorizationForNintendoAccount(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E5: { // DebugUnlinkNintendoAccountAsync
-				om.Initialize(1, 0, 0);
 				var _return = DebugUnlinkNintendoAccountAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E6: { // DebugSetAvailabilityErrorDetail
-				om.Initialize(0, 0, 0);
 				DebugSetAvailabilityErrorDetail(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -298,71 +298,71 @@ public abstract class _IFloatingRegistrationRequest_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSessionId
-				om.Initialize(0, 0, 16);
 				GetSessionId(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // GetAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // GetLinkedNintendoAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetLinkedNintendoAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xE: { // GetNickname
-				om.Initialize(0, 0, 0);
 				GetNickname(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // GetProfileImage
-				om.Initialize(0, 0, 4);
 				GetProfileImage(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x15: { // LoadIdTokenCache
-				om.Initialize(0, 0, 4);
 				LoadIdTokenCache(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x64: { // RegisterUser
-				om.Initialize(0, 0, 16);
 				RegisterUser(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x65: { // RegisterUserWithUid
-				om.Initialize(0, 0, 0);
 				RegisterUserWithUid(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // RegisterNetworkServiceAccountAsync
-				om.Initialize(1, 0, 0);
 				var _return = RegisterNetworkServiceAccountAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x67: { // RegisterNetworkServiceAccountWithUidAsync
-				om.Initialize(1, 0, 0);
 				var _return = RegisterNetworkServiceAccountWithUidAsync(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6E: { // SetSystemProgramIdentification
-				om.Initialize(0, 0, 0);
 				SetSystemProgramIdentification(im.GetData<ulong>(8), im.Pid, im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6F: { // EnsureIdTokenCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = EnsureIdTokenCacheAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -389,37 +389,37 @@ public abstract class _IGuestLoginRequest_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSessionId
-				om.Initialize(0, 0, 16);
 				GetSessionId(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // GetAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // GetLinkedNintendoAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetLinkedNintendoAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xE: { // GetNickname
-				om.Initialize(0, 0, 0);
 				GetNickname(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // GetProfileImage
-				om.Initialize(0, 0, 4);
 				GetProfileImage(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x15: { // LoadIdTokenCache
-				om.Initialize(0, 0, 4);
 				LoadIdTokenCache(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
@@ -448,43 +448,43 @@ public abstract class _IManagerForApplication_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CheckAvailability
-				om.Initialize(0, 0, 0);
 				CheckAvailability();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // EnsureIdTokenCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = EnsureIdTokenCacheAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // LoadIdTokenCache
-				om.Initialize(0, 0, 4);
 				LoadIdTokenCache(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x82: { // GetNintendoAccountUserResourceCacheForApplication
-				om.Initialize(0, 0, 8);
 				GetNintendoAccountUserResourceCacheForApplication(out var _0, im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x96: { // CreateAuthorizationRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateAuthorizationRequest(im.GetData<uint>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA0: { // StoreOpenContext
-				om.Initialize(0, 0, 0);
 				StoreOpenContext();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -530,92 +530,92 @@ public abstract class _IManagerForSystemService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CheckAvailability
-				om.Initialize(0, 0, 0);
 				CheckAvailability();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // EnsureIdTokenCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = EnsureIdTokenCacheAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // LoadIdTokenCache
-				om.Initialize(0, 0, 4);
 				LoadIdTokenCache(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x64: { // SetSystemProgramIdentification
-				om.Initialize(0, 0, 0);
 				SetSystemProgramIdentification(im.GetData<ulong>(8), im.Pid, im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6E: { // GetServiceEntryRequirementCache
-				om.Initialize(0, 0, 4);
 				var _return = GetServiceEntryRequirementCache(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x6F: { // InvalidateServiceEntryRequirementCache
-				om.Initialize(0, 0, 0);
 				InvalidateServiceEntryRequirementCache(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x70: { // InvalidateTokenCache
-				om.Initialize(0, 0, 0);
 				InvalidateTokenCache(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x78: { // GetNintendoAccountId
-				om.Initialize(0, 0, 8);
 				var _return = GetNintendoAccountId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x82: { // GetNintendoAccountUserResourceCache
-				om.Initialize(0, 0, 8);
 				GetNintendoAccountUserResourceCache(out var _0, im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x83: { // RefreshNintendoAccountUserResourceCacheAsync
-				om.Initialize(1, 0, 0);
 				var _return = RefreshNintendoAccountUserResourceCacheAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x84: { // RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed
-				om.Initialize(1, 0, 1);
 				RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(im.GetData<uint>(8), out var _0, out var _1);
+				om.Initialize(1, 0, 1);
 				om.SetData(8, _0);
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x8C: { // GetNetworkServiceLicenseCache
-				om.Initialize(0, 0, 0);
 				GetNetworkServiceLicenseCache();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8D: { // RefreshNetworkServiceLicenseCacheAsync
-				om.Initialize(0, 0, 0);
 				RefreshNetworkServiceLicenseCacheAsync();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8E: { // RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed
-				om.Initialize(0, 0, 0);
 				RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x96: { // CreateAuthorizationRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateAuthorizationRequest(im.GetData<uint>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

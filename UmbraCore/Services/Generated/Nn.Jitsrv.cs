@@ -15,23 +15,23 @@ public abstract class _IJitEnvironment_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Control
-				om.Initialize(0, 0, 0);
 				Control();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GenerateCode
-				om.Initialize(0, 0, 0);
 				GenerateCode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E8: { // LoadPlugin
-				om.Initialize(0, 0, 0);
 				LoadPlugin();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E9: { // GetCodeAddress
-				om.Initialize(0, 0, 0);
 				GetCodeAddress();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -40,15 +40,18 @@ public abstract class _IJitEnvironment_Base : IpcInterface {
 	}
 }
 
-public partial class IJitService : _IJitService_Base;
+public partial class IJitService : _IJitService_Base {
+	public readonly string ServiceName;
+	public IJitService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IJitService_Base : IpcInterface {
 	protected virtual void CreateJitEnvironment() =>
 		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitService.CreateJitEnvironment");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateJitEnvironment
-				om.Initialize(0, 0, 0);
 				CreateJitEnvironment();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

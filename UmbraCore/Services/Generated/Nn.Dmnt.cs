@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Dmnt;
-public partial class IInterface : _IInterface_Base;
+public partial class IInterface : _IInterface_Base {
+	public readonly string ServiceName;
+	public IInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IInterface_Base : IpcInterface {
 	protected virtual void BreakDebugProcess() =>
 		Console.WriteLine("Stub hit for Nn.Dmnt.IInterface.BreakDebugProcess");
@@ -109,258 +112,258 @@ public abstract class _IInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BreakDebugProcess
-				om.Initialize(0, 0, 0);
 				BreakDebugProcess();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // TerminateDebugProcess
-				om.Initialize(0, 0, 0);
 				TerminateDebugProcess();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // CloseHandle
-				om.Initialize(0, 0, 0);
 				CloseHandle();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // LoadImage
-				om.Initialize(0, 0, 0);
 				LoadImage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetProcessId
-				om.Initialize(0, 0, 0);
 				GetProcessId();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetProcessHandle
-				om.Initialize(0, 0, 0);
 				GetProcessHandle();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // WaitSynchronization
-				om.Initialize(0, 0, 0);
 				WaitSynchronization();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // GetDebugEvent
-				om.Initialize(0, 0, 0);
 				GetDebugEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetProcessModuleInfo
-				om.Initialize(0, 0, 0);
 				GetProcessModuleInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // GetProcessList
-				om.Initialize(0, 0, 0);
 				GetProcessList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // GetThreadList
-				om.Initialize(0, 0, 0);
 				GetThreadList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // GetDebugThreadContext
-				om.Initialize(0, 0, 0);
 				GetDebugThreadContext();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // ContinueDebugEvent
-				om.Initialize(0, 0, 0);
 				ContinueDebugEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // ReadDebugProcessMemory
-				om.Initialize(0, 0, 0);
 				ReadDebugProcessMemory();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // WriteDebugProcessMemory
-				om.Initialize(0, 0, 0);
 				WriteDebugProcessMemory();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // SetDebugThreadContext
-				om.Initialize(0, 0, 0);
 				SetDebugThreadContext();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // GetDebugThreadParam
-				om.Initialize(0, 0, 0);
 				GetDebugThreadParam();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // InitializeThreadInfo
-				om.Initialize(0, 0, 0);
 				InitializeThreadInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // SetHardwareBreakPoint
-				om.Initialize(0, 0, 0);
 				SetHardwareBreakPoint();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // QueryDebugProcessMemory
-				om.Initialize(0, 0, 0);
 				QueryDebugProcessMemory();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // GetProcessMemoryDetails
-				om.Initialize(0, 0, 0);
 				GetProcessMemoryDetails();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15: { // AttachByProgramId
-				om.Initialize(0, 0, 0);
 				AttachByProgramId();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // AttachOnLaunch
-				om.Initialize(0, 0, 0);
 				AttachOnLaunch();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // GetDebugMonitorProcessId
-				om.Initialize(0, 0, 0);
 				GetDebugMonitorProcessId();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // GetJitDebugProcessList
-				om.Initialize(0, 0, 0);
 				GetJitDebugProcessList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // CreateCoreDump
-				om.Initialize(0, 0, 0);
 				CreateCoreDump();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // GetAllDebugThreadInfo
-				om.Initialize(0, 0, 0);
 				GetAllDebugThreadInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1D: { // TargetIO_FileOpen
-				om.Initialize(0, 0, 0);
 				TargetIO_FileOpen();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // TargetIO_FileClose
-				om.Initialize(0, 0, 0);
 				TargetIO_FileClose();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // TargetIO_FileRead
-				om.Initialize(0, 0, 0);
 				TargetIO_FileRead();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x20: { // TargetIO_FileWrite
-				om.Initialize(0, 0, 0);
 				TargetIO_FileWrite();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // TargetIO_FileSetAttributes
-				om.Initialize(0, 0, 0);
 				TargetIO_FileSetAttributes();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x22: { // TargetIO_FileGetInformation
-				om.Initialize(0, 0, 0);
 				TargetIO_FileGetInformation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // TargetIO_FileSetTime
-				om.Initialize(0, 0, 0);
 				TargetIO_FileSetTime();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x24: { // TargetIO_FileSetSize
-				om.Initialize(0, 0, 0);
 				TargetIO_FileSetSize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25: { // TargetIO_FileDelete
-				om.Initialize(0, 0, 0);
 				TargetIO_FileDelete();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x26: { // TargetIO_FileMove
-				om.Initialize(0, 0, 0);
 				TargetIO_FileMove();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x27: { // TargetIO_DirectoryCreate
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryCreate();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // TargetIO_DirectoryDelete
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryDelete();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29: { // TargetIO_DirectoryRename
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryRename();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2A: { // TargetIO_DirectoryGetCount
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryGetCount();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2B: { // TargetIO_DirectoryOpen
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryOpen();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2C: { // TargetIO_DirectoryGetNext
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryGetNext();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2D: { // TargetIO_DirectoryClose
-				om.Initialize(0, 0, 0);
 				TargetIO_DirectoryClose();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2E: { // TargetIO_GetFreeSpace
-				om.Initialize(0, 0, 0);
 				TargetIO_GetFreeSpace();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2F: { // TargetIO_GetVolumeInformation
-				om.Initialize(0, 0, 0);
 				TargetIO_GetVolumeInformation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x30: { // InitiateCoreDump
-				om.Initialize(0, 0, 0);
 				InitiateCoreDump();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x31: { // ContinueCoreDump
-				om.Initialize(0, 0, 0);
 				ContinueCoreDump();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x32: { // AddTTYToCoreDump
-				om.Initialize(0, 0, 0);
 				AddTTYToCoreDump();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x33: { // AddImageToCoreDump
-				om.Initialize(0, 0, 0);
 				AddImageToCoreDump();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x34: { // CloseCoreDump
-				om.Initialize(0, 0, 0);
 				CloseCoreDump();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

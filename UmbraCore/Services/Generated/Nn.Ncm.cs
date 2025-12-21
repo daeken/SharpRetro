@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Ncm;
-public partial class IContentManager : _IContentManager_Base;
+public partial class IContentManager : _IContentManager_Base {
+	public readonly string ServiceName;
+	public IContentManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IContentManager_Base : IpcInterface {
 	protected virtual void CreateContentStorage(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CreateContentStorage");
@@ -33,70 +36,70 @@ public abstract class _IContentManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateContentStorage
-				om.Initialize(0, 0, 0);
 				CreateContentStorage(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // CreateContentMetaDatabase
-				om.Initialize(0, 0, 0);
 				CreateContentMetaDatabase(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // VerifyContentStorage
-				om.Initialize(0, 0, 0);
 				VerifyContentStorage(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // VerifyContentMetaDatabase
-				om.Initialize(0, 0, 0);
 				VerifyContentMetaDatabase(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // OpenContentStorage
-				om.Initialize(1, 0, 0);
 				var _return = OpenContentStorage(im.GetBytes(8, 0x1));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x5: { // OpenContentMetaDatabase
-				om.Initialize(1, 0, 0);
 				var _return = OpenContentMetaDatabase(im.GetBytes(8, 0x1));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6: { // CloseContentStorageForcibly
-				om.Initialize(0, 0, 0);
 				CloseContentStorageForcibly(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // CloseContentMetaDatabaseForcibly
-				om.Initialize(0, 0, 0);
 				CloseContentMetaDatabaseForcibly(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // CleanupContentMetaDatabase
-				om.Initialize(0, 0, 0);
 				CleanupContentMetaDatabase(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // OpenContentStorage2
-				om.Initialize(0, 0, 0);
 				OpenContentStorage2(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // CloseContentStorage
-				om.Initialize(0, 0, 0);
 				CloseContentStorage(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // OpenContentMetaDatabase2
-				om.Initialize(0, 0, 0);
 				OpenContentMetaDatabase2(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // CloseContentMetaDatabase
-				om.Initialize(0, 0, 0);
 				CloseContentMetaDatabase(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -152,123 +155,123 @@ public abstract class _IContentMetaDatabase_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Set
-				om.Initialize(0, 0, 0);
 				Set(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Get
-				om.Initialize(0, 0, 8);
 				Get(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Remove
-				om.Initialize(0, 0, 0);
 				Remove(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetContentIdByType
-				om.Initialize(0, 0, 16);
 				GetContentIdByType(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // ListContentInfo
-				om.Initialize(0, 0, 4);
 				ListContentInfo(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // List
-				om.Initialize(0, 0, 8);
 				List(im.GetBytes(8, 0x20), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // GetLatestContentMetaKey
-				om.Initialize(0, 0, 16);
 				GetLatestContentMetaKey(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // ListApplication
-				om.Initialize(0, 0, 8);
 				ListApplication(im.GetBytes(8, 0x1), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // Has
-				om.Initialize(0, 0, 1);
 				Has(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // HasAll
-				om.Initialize(0, 0, 1);
 				HasAll(im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // GetSize
-				om.Initialize(0, 0, 8);
 				GetSize(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // GetRequiredSystemVersion
-				om.Initialize(0, 0, 4);
 				GetRequiredSystemVersion(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // GetPatchId
-				om.Initialize(0, 0, 8);
 				GetPatchId(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // DisableForcibly
-				om.Initialize(0, 0, 0);
 				DisableForcibly();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // LookupOrphanContent
-				om.Initialize(0, 0, 0);
 				LookupOrphanContent(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // Commit
-				om.Initialize(0, 0, 0);
 				Commit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // HasContent
-				om.Initialize(0, 0, 1);
 				HasContent(im.GetBytes(8, 0x20), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x11: { // ListContentMetaInfo
-				om.Initialize(0, 0, 4);
 				ListContentMetaInfo(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12: { // GetAttributes
-				om.Initialize(0, 0, 1);
 				GetAttributes(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x13: { // GetRequiredApplicationVersion
-				om.Initialize(0, 0, 4);
 				GetRequiredApplicationVersion(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x14: { // Unknown20
-				om.Initialize(0, 0, 0);
 				Unknown20();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -336,150 +339,150 @@ public abstract class _IContentStorage_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GeneratePlaceHolderId
-				om.Initialize(0, 0, 16);
 				GeneratePlaceHolderId(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // CreatePlaceHolder
-				om.Initialize(0, 0, 0);
 				CreatePlaceHolder(im.GetBytes(8, 0x28));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // DeletePlaceHolder
-				om.Initialize(0, 0, 0);
 				DeletePlaceHolder(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // HasPlaceHolder
-				om.Initialize(0, 0, 1);
 				HasPlaceHolder(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // WritePlaceHolder
-				om.Initialize(0, 0, 0);
 				WritePlaceHolder(im.GetBytes(8, 0x18), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Register
-				om.Initialize(0, 0, 0);
 				Register(im.GetBytes(8, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Delete
-				om.Initialize(0, 0, 0);
 				Delete(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // Has
-				om.Initialize(0, 0, 1);
 				Has(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // GetPath
-				om.Initialize(0, 0, 0);
 				GetPath(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // GetPlaceHolderPath
-				om.Initialize(0, 0, 0);
 				GetPlaceHolderPath(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // CleanupAllPlaceHolder
-				om.Initialize(0, 0, 0);
 				CleanupAllPlaceHolder();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // ListPlaceHolder
-				om.Initialize(0, 0, 4);
 				ListPlaceHolder(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // GetContentCount
-				om.Initialize(0, 0, 4);
 				GetContentCount(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // ListContentId
-				om.Initialize(0, 0, 4);
 				ListContentId(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xE: { // GetSize
-				om.Initialize(0, 0, 8);
 				GetSize(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xF: { // DisableForcibly
-				om.Initialize(0, 0, 0);
 				DisableForcibly();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // RevertToPlaceHolder
-				om.Initialize(0, 0, 0);
 				RevertToPlaceHolder(im.GetBytes(8, 0x30));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // SetPlaceHolderSize
-				om.Initialize(0, 0, 0);
 				SetPlaceHolderSize(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // ReadContentIdFile
-				om.Initialize(0, 0, 0);
 				ReadContentIdFile(im.GetBytes(8, 0x18), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // GetRightsIdFromPlaceHolderId
-				om.Initialize(0, 0, 24);
 				GetRightsIdFromPlaceHolderId(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x14: { // GetRightsIdFromContentId
-				om.Initialize(0, 0, 24);
 				GetRightsIdFromContentId(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x15: { // WriteContentForDebug
-				om.Initialize(0, 0, 0);
 				WriteContentForDebug(im.GetBytes(8, 0x18), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // GetFreeSpaceSize
-				om.Initialize(0, 0, 8);
 				GetFreeSpaceSize(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x17: { // GetTotalSpaceSize
-				om.Initialize(0, 0, 8);
 				GetTotalSpaceSize(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x18: { // FlushStorage
-				om.Initialize(0, 0, 0);
 				FlushStorage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // Unknown25
-				om.Initialize(0, 0, 8);
 				Unknown25(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1A: { // Unknown26
-				om.Initialize(0, 0, 0);
 				Unknown26();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

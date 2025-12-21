@@ -33,69 +33,69 @@ public abstract class _ICtrlSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0(im.GetBytes(8, 0x1), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x2), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetBytes(8, 0x2), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x1), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetBytes(8, 0x2));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 0);
 				Unknown6(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 0);
 				Unknown7(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 0);
 				Unknown8(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 0);
 				Unknown9(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 1, 0);
 				var _return = Unknown10();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 0);
 				Unknown11();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // Unknown12
-				om.Initialize(0, 0, 4);
 				Unknown12(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -112,8 +112,8 @@ public abstract class _IReadSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -123,7 +123,10 @@ public abstract class _IReadSession_Base : IpcInterface {
 	}
 }
 
-public partial class IServerSession : _IServerSession_Base;
+public partial class IServerSession : _IServerSession_Base {
+	public readonly string ServiceName;
+	public IServerSession(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IServerSession_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Ahid.IServerSession.Unknown0");
@@ -136,24 +139,24 @@ public abstract class _IServerSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(1, 0, 0);
 				var _return = Unknown2(im.GetBytes(8, 0x4));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(1, 0, 0);
 				var _return = Unknown3(im.GetBytes(8, 0x4));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -170,8 +173,8 @@ public abstract class _IWriteSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}

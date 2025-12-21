@@ -15,25 +15,25 @@ public abstract class _CecManagerSubinterface100_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 1, 0);
 				var _return = Unknown0();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 4);
 				Unknown1(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 4);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -43,7 +43,10 @@ public abstract class _CecManagerSubinterface100_Base : IpcInterface {
 	}
 }
 
-public partial class ICecManager : _ICecManager_Base;
+public partial class ICecManager : _ICecManager_Base {
+	public readonly string ServiceName;
+	public ICecManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ICecManager_Base : IpcInterface {
 	protected virtual void Unknown0(out byte[] _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Cec.ICecManager.Unknown0 not implemented");
@@ -62,44 +65,44 @@ public abstract class _ICecManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 1, 8);
 				Unknown0(out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 4);
 				Unknown1(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 4);
 				Unknown3(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 24);
 				Unknown4(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 32);
 				Unknown5(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 8);
 				Unknown6(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}

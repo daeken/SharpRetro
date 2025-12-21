@@ -9,8 +9,8 @@ public abstract class _INewlyArrivedEventHolder_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 1, 0);
 				var _return = Unknown0();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -33,24 +33,24 @@ public abstract class _INewsDataService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x48));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 8);
 				Unknown2(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 8);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -77,36 +77,36 @@ public abstract class _INewsDatabaseService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x9, 1), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 4);
 				Unknown1(im.GetSpan<byte>(0x9, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 4);
 				Unknown2(im.GetBytes(8, 0x1), im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x9, 1), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x9, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x9, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x9, 1), im.GetSpan<byte>(0x9, 2));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -150,85 +150,85 @@ public abstract class _INewsService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2774: { // Unknown10100
-				om.Initialize(0, 0, 0);
 				Unknown10100(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4E84: { // Unknown20100
-				om.Initialize(0, 0, 0);
 				Unknown20100(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7594: { // Unknown30100
-				om.Initialize(0, 0, 4);
 				Unknown30100(im.GetSpan<byte>(0x9, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7595: { // Unknown30101
-				om.Initialize(0, 0, 4);
 				Unknown30101(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x75F8: { // Unknown30200
-				om.Initialize(0, 0, 1);
 				Unknown30200(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x765C: { // Unknown30300
-				om.Initialize(0, 0, 0);
 				Unknown30300(im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x76C0: { // Unknown30400
-				om.Initialize(0, 0, 8);
 				Unknown30400(im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x78B4: { // Unknown30900
-				om.Initialize(1, 0, 0);
 				var _return = Unknown30900();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x78B5: { // Unknown30901
-				om.Initialize(1, 0, 0);
 				var _return = Unknown30901();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x78B6: { // Unknown30902
-				om.Initialize(1, 0, 0);
 				var _return = Unknown30902();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x9CA4: { // Unknown40100
-				om.Initialize(0, 0, 0);
 				Unknown40100(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9CA5: { // Unknown40101
-				om.Initialize(0, 0, 0);
 				Unknown40101(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9D08: { // Unknown40200
-				om.Initialize(0, 0, 0);
 				Unknown40200();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9D09: { // Unknown40201
-				om.Initialize(0, 0, 0);
 				Unknown40201();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15FF4: { // Unknown90100
-				om.Initialize(0, 0, 8);
 				Unknown90100(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -245,8 +245,8 @@ public abstract class _IOverwriteEventHolder_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 1, 0);
 				var _return = Unknown0();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -256,7 +256,10 @@ public abstract class _IOverwriteEventHolder_Base : IpcInterface {
 	}
 }
 
-public partial class IServiceCreator : _IServiceCreator_Base;
+public partial class IServiceCreator : _IServiceCreator_Base {
+	public readonly string ServiceName;
+	public IServiceCreator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IServiceCreator_Base : IpcInterface {
 	protected virtual Nn.News.Detail.Ipc.INewsService Unknown0() =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.IServiceCreator.Unknown0 not implemented");
@@ -271,32 +274,32 @@ public abstract class _IServiceCreator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(1, 0, 0);
 				var _return = Unknown0();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(1, 0, 0);
 				var _return = Unknown1();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(1, 0, 0);
 				var _return = Unknown2();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(1, 0, 0);
 				var _return = Unknown3();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(1, 0, 0);
 				var _return = Unknown4();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

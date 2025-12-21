@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Timesrv.Detail.Service;
-public partial class IStaticService : _IStaticService_Base;
+public partial class IStaticService : _IStaticService_Base {
+	public readonly string ServiceName;
+	public IStaticService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IStaticService_Base : IpcInterface {
 	protected virtual Nn.Timesrv.Detail.Service.ISystemClock GetStandardUserSystemClock() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.GetStandardUserSystemClock not implemented");
@@ -39,93 +42,93 @@ public abstract class _IStaticService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetStandardUserSystemClock
-				om.Initialize(1, 0, 0);
 				var _return = GetStandardUserSystemClock();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetStandardNetworkSystemClock
-				om.Initialize(1, 0, 0);
 				var _return = GetStandardNetworkSystemClock();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // GetStandardSteadyClock
-				om.Initialize(1, 0, 0);
 				var _return = GetStandardSteadyClock();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetTimeZoneService
-				om.Initialize(1, 0, 0);
 				var _return = GetTimeZoneService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // GetStandardLocalSystemClock
-				om.Initialize(1, 0, 0);
 				var _return = GetStandardLocalSystemClock();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x5: { // GetEphemeralNetworkSystemClock
-				om.Initialize(1, 0, 0);
 				var _return = GetEphemeralNetworkSystemClock();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x32: { // SetStandardSteadyClockInternalOffset
-				om.Initialize(0, 0, 0);
 				SetStandardSteadyClockInternalOffset(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // IsStandardUserSystemClockAutomaticCorrectionEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsStandardUserSystemClockAutomaticCorrectionEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x65: { // SetStandardUserSystemClockAutomaticCorrectionEnabled
-				om.Initialize(0, 0, 0);
 				SetStandardUserSystemClockAutomaticCorrectionEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // GetStandardUserSystemClockInitialYear
-				om.Initialize(0, 0, 0);
 				GetStandardUserSystemClockInitialYear();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC8: { // IsStandardNetworkSystemClockAccuracySufficient
-				om.Initialize(0, 0, 1);
 				var _return = IsStandardNetworkSystemClockAccuracySufficient();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x12C: { // CalculateMonotonicSystemClockBaseTimePoint
-				om.Initialize(0, 0, 8);
 				var _return = CalculateMonotonicSystemClockBaseTimePoint(im.GetBytes(8, 0x20));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x190: { // GetClockSnapshot
-				om.Initialize(0, 0, 0);
 				GetClockSnapshot(im.GetData<byte>(8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x191: { // GetClockSnapshotFromSystemClockContext
-				om.Initialize(0, 0, 0);
 				GetClockSnapshotFromSystemClockContext(im.GetData<byte>(8), im.GetBytes(16, 0x20), im.GetBytes(48, 0x20), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F4: { // CalculateStandardUserSystemClockDifferenceByUser
-				om.Initialize(0, 0, 8);
 				var _return = CalculateStandardUserSystemClockDifferenceByUser(im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1F5: { // CalculateSpanBetween
-				om.Initialize(0, 0, 8);
 				var _return = CalculateSpanBetween(im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
@@ -156,49 +159,49 @@ public abstract class _ISteadyClock_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCurrentTimePoint
-				om.Initialize(0, 0, 24);
 				GetCurrentTimePoint(out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // GetTestOffset
-				om.Initialize(0, 0, 8);
 				var _return = GetTestOffset();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // SetTestOffset
-				om.Initialize(0, 0, 0);
 				SetTestOffset(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // GetRtcValue
-				om.Initialize(0, 0, 8);
 				var _return = GetRtcValue();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x65: { // IsRtcResetDetected
-				om.Initialize(0, 0, 1);
 				var _return = IsRtcResetDetected();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x66: { // GetSetupResultValue
-				om.Initialize(0, 0, 4);
 				var _return = GetSetupResultValue();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC8: { // GetInternalOffset
-				om.Initialize(0, 0, 8);
 				var _return = GetInternalOffset();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC9: { // SetInternalOffset
-				om.Initialize(0, 0, 0);
 				SetInternalOffset(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -220,25 +223,25 @@ public abstract class _ISystemClock_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCurrentTime
-				om.Initialize(0, 0, 8);
 				var _return = GetCurrentTime();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // SetCurrentTime
-				om.Initialize(0, 0, 0);
 				SetCurrentTime(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetSystemClockContext
-				om.Initialize(0, 0, 32);
 				GetSystemClockContext(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // SetSystemClockContext
-				om.Initialize(0, 0, 0);
 				SetSystemClockContext(im.GetBytes(8, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -272,62 +275,62 @@ public abstract class _ITimeZoneService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetDeviceLocationName
-				om.Initialize(0, 0, 36);
 				GetDeviceLocationName(out var _0);
+				om.Initialize(0, 0, 36);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // SetDeviceLocationName
-				om.Initialize(0, 0, 0);
 				SetDeviceLocationName(im.GetBytes(8, 0x24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetTotalLocationNameCount
-				om.Initialize(0, 0, 4);
 				var _return = GetTotalLocationNameCount();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // LoadLocationNameList
-				om.Initialize(0, 0, 4);
 				LoadLocationNameList(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4: { // LoadTimeZoneRule
-				om.Initialize(0, 0, 0);
 				LoadTimeZoneRule(im.GetBytes(8, 0x24), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetTimeZoneRuleVersion
-				om.Initialize(0, 0, 16);
 				GetTimeZoneRuleVersion(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // ToCalendarTime
-				om.Initialize(0, 0, 0);
 				ToCalendarTime(im.GetData<ulong>(8), im.GetSpan<byte>(0x15, 0), out var _0, out var _1);
+				om.Initialize(0, 0, 0);
 				*(Nn.Time.CalendarTime*) om.GetDataPointer(8) = _0;
 				*(Nn.Time.Sf.CalendarAdditionalInfo*) om.GetDataPointer(8) = _1;
 				break;
 			}
 			case 0x65: { // ToCalendarTimeWithMyRule
-				om.Initialize(0, 0, 0);
 				ToCalendarTimeWithMyRule(im.GetData<ulong>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 0);
 				*(Nn.Time.CalendarTime*) om.GetDataPointer(8) = _0;
 				*(Nn.Time.Sf.CalendarAdditionalInfo*) om.GetDataPointer(8) = _1;
 				break;
 			}
 			case 0xC9: { // ToPosixTime
-				om.Initialize(0, 0, 4);
 				ToPosixTime(*(Nn.Time.CalendarTime*) im.GetDataPointer(8), im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<ulong>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xCA: { // ToPosixTimeWithMyRule
-				om.Initialize(0, 0, 4);
 				ToPosixTimeWithMyRule(*(Nn.Time.CalendarTime*) im.GetDataPointer(8), out var _0, im.GetSpan<ulong>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}

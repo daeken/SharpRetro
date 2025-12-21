@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Spsm.Detail;
-public partial class IPowerStateInterface : _IPowerStateInterface_Base;
+public partial class IPowerStateInterface : _IPowerStateInterface_Base {
+	public readonly string ServiceName;
+	public IPowerStateInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IPowerStateInterface_Base : IpcInterface {
 	protected virtual void GetState(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.GetState not implemented");
@@ -31,69 +34,69 @@ public abstract class _IPowerStateInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetState
-				om.Initialize(0, 0, 4);
 				GetState(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // SleepSystemAndWaitAwake
-				om.Initialize(0, 1, 0);
 				var _return = SleepSystemAndWaitAwake();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 4);
 				Unknown2(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetNotificationMessageEventHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetNotificationMessageEventHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 4);
 				Unknown5(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 80);
 				Unknown6(out var _0);
+				om.Initialize(0, 0, 80);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 0);
 				Unknown7();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // AnalyzePerformanceLogForLastSleepWakeSequence
-				om.Initialize(0, 0, 0);
 				AnalyzePerformanceLogForLastSleepWakeSequence(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // ChangeHomeButtonLongPressingTime
-				om.Initialize(0, 0, 0);
 				ChangeHomeButtonLongPressingTime(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 0);
 				Unknown10();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 0);
 				Unknown11(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

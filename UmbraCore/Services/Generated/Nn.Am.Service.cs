@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Am.Service;
-public partial class IAllSystemAppletProxiesService : _IAllSystemAppletProxiesService_Base;
+public partial class IAllSystemAppletProxiesService : _IAllSystemAppletProxiesService_Base {
+	public readonly string ServiceName;
+	public IAllSystemAppletProxiesService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAllSystemAppletProxiesService_Base : IpcInterface {
 	protected virtual Nn.Am.Service.ISystemAppletProxy OpenSystemAppletProxy(ulong _0, ulong _1, KObject _2) =>
 		throw new NotImplementedException("Nn.Am.Service.IAllSystemAppletProxiesService.OpenSystemAppletProxy not implemented");
@@ -19,38 +22,38 @@ public abstract class _IAllSystemAppletProxiesService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x64: { // OpenSystemAppletProxy
-				om.Initialize(1, 0, 0);
 				var _return = OpenSystemAppletProxy(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC8: { // OpenLibraryAppletProxyOld
-				om.Initialize(1, 0, 0);
 				var _return = OpenLibraryAppletProxyOld(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC9: { // OpenLibraryAppletProxy
-				om.Initialize(1, 0, 0);
 				var _return = OpenLibraryAppletProxy(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x15, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x12C: { // OpenOverlayAppletProxy
-				om.Initialize(1, 0, 0);
 				var _return = OpenOverlayAppletProxy(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x15E: { // OpenSystemApplicationProxy
-				om.Initialize(1, 0, 0);
 				var _return = OpenSystemApplicationProxy(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x190: { // CreateSelfLibraryAppletCreatorForDevelop
-				om.Initialize(1, 0, 0);
 				var _return = CreateSelfLibraryAppletCreatorForDevelop(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -77,35 +80,35 @@ public abstract class _IAppletAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAppletStateChangedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetAppletStateChangedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // IsCompleted
-				om.Initialize(0, 0, 1);
 				var _return = IsCompleted();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // Start
-				om.Initialize(0, 0, 0);
 				Start();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // RequestExit
-				om.Initialize(0, 0, 0);
 				RequestExit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // Terminate
-				om.Initialize(0, 0, 0);
 				Terminate();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -147,78 +150,78 @@ public abstract class _IApplicationAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAppletStateChangedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetAppletStateChangedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // IsCompleted
-				om.Initialize(0, 0, 1);
 				var _return = IsCompleted();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // Start
-				om.Initialize(0, 0, 0);
 				Start();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // RequestExit
-				om.Initialize(0, 0, 0);
 				RequestExit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // Terminate
-				om.Initialize(0, 0, 0);
 				Terminate();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // RequestForApplicationToGetForeground
-				om.Initialize(0, 0, 0);
 				RequestForApplicationToGetForeground();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6E: { // TerminateAllLibraryApplets
-				om.Initialize(0, 0, 0);
 				TerminateAllLibraryApplets();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6F: { // AreAnyLibraryAppletsLeft
-				om.Initialize(0, 0, 1);
 				var _return = AreAnyLibraryAppletsLeft();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x70: { // GetCurrentLibraryApplet
-				om.Initialize(1, 0, 0);
 				var _return = GetCurrentLibraryApplet();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x78: { // GetApplicationId
-				om.Initialize(0, 0, 8);
 				var _return = GetApplicationId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x79: { // PushLaunchParameter
-				om.Initialize(0, 0, 0);
 				PushLaunchParameter(im.GetData<uint>(8), Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7A: { // GetApplicationControlProperty
-				om.Initialize(0, 0, 0);
 				GetApplicationControlProperty(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7B: { // GetApplicationLaunchProperty
-				om.Initialize(0, 0, 0);
 				GetApplicationLaunchProperty(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -240,26 +243,26 @@ public abstract class _IApplicationCreator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateApplication
-				om.Initialize(1, 0, 0);
 				var _return = CreateApplication(im.GetData<ulong>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // PopLaunchRequestedApplication
-				om.Initialize(1, 0, 0);
 				var _return = PopLaunchRequestedApplication();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // CreateSystemApplication
-				om.Initialize(1, 0, 0);
 				var _return = CreateSystemApplication(im.GetData<ulong>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x64: { // PopFloatingApplicationForDevelopment
-				om.Initialize(1, 0, 0);
 				var _return = PopFloatingApplicationForDevelopment();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -328,150 +331,150 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // PopLaunchParameter
-				om.Initialize(1, 0, 0);
 				var _return = PopLaunchParameter(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // CreateApplicationAndPushAndRequestToStart
-				om.Initialize(0, 0, 0);
 				CreateApplicationAndPushAndRequestToStart(im.GetData<ulong>(8), Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // CreateApplicationAndPushAndRequestToStartForQuest
-				om.Initialize(0, 0, 0);
 				CreateApplicationAndPushAndRequestToStartForQuest(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // CreateApplicationAndRequestToStart
-				om.Initialize(0, 0, 0);
 				CreateApplicationAndRequestToStart(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // CreateApplicationAndRequestToStartForQuest
-				om.Initialize(0, 0, 0);
 				CreateApplicationAndRequestToStartForQuest(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // EnsureSaveData
-				om.Initialize(0, 0, 8);
 				var _return = EnsureSaveData(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // GetDesiredLanguage
-				om.Initialize(0, 0, 8);
 				GetDesiredLanguage(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x16: { // SetTerminateResult
-				om.Initialize(0, 0, 0);
 				SetTerminateResult(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // GetDisplayVersion
-				om.Initialize(0, 0, 16);
 				GetDisplayVersion(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x18: { // GetLaunchStorageInfoForDebug
-				om.Initialize(0, 0, 2);
 				GetLaunchStorageInfoForDebug(out var _0, out var _1);
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _0);
 				om.SetData(9, _1);
 				break;
 			}
 			case 0x19: { // ExtendSaveData
-				om.Initialize(0, 0, 8);
 				var _return = ExtendSaveData(im.GetData<byte>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32), im.GetData<ulong>(40));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1A: { // GetSaveDataSize
-				om.Initialize(0, 0, 16);
 				GetSaveDataSize(im.GetData<byte>(8), im.GetBytes(16, 0x10), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x1E: { // BeginBlockingHomeButtonShortAndLongPressed
-				om.Initialize(0, 0, 0);
 				BeginBlockingHomeButtonShortAndLongPressed(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // EndBlockingHomeButtonShortAndLongPressed
-				om.Initialize(0, 0, 0);
 				EndBlockingHomeButtonShortAndLongPressed();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x20: { // BeginBlockingHomeButton
-				om.Initialize(0, 0, 0);
 				BeginBlockingHomeButton(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // EndBlockingHomeButton
-				om.Initialize(0, 0, 0);
 				EndBlockingHomeButton();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // NotifyRunning
-				om.Initialize(0, 0, 1);
 				var _return = NotifyRunning();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x32: { // GetPseudoDeviceId
-				om.Initialize(0, 0, 16);
 				GetPseudoDeviceId(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3C: { // SetMediaPlaybackStateForApplication
-				om.Initialize(0, 0, 0);
 				SetMediaPlaybackStateForApplication(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x41: { // IsGamePlayRecordingSupported
-				om.Initialize(0, 0, 1);
 				var _return = IsGamePlayRecordingSupported();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x42: { // InitializeGamePlayRecording
-				om.Initialize(0, 0, 0);
 				InitializeGamePlayRecording(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x43: { // SetGamePlayRecordingState
-				om.Initialize(0, 0, 0);
 				SetGamePlayRecordingState(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x44: { // RequestFlushGamePlayingMovieForDebug
-				om.Initialize(0, 0, 0);
 				RequestFlushGamePlayingMovieForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x46: { // RequestToShutdown
-				om.Initialize(0, 0, 0);
 				RequestToShutdown();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x47: { // RequestToReboot
-				om.Initialize(0, 0, 0);
 				RequestToReboot();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x50: { // ExitAndRequestToShowThanksMessage
-				om.Initialize(0, 0, 0);
 				ExitAndRequestToShowThanksMessage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5A: { // EnableApplicationCrashReport
-				om.Initialize(0, 0, 0);
 				EnableApplicationCrashReport(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -503,56 +506,56 @@ public abstract class _IApplicationProxy_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCommonStateGetter
-				om.Initialize(1, 0, 0);
 				var _return = GetCommonStateGetter();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetSelfController
-				om.Initialize(1, 0, 0);
 				var _return = GetSelfController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // GetWindowController
-				om.Initialize(1, 0, 0);
 				var _return = GetWindowController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetAudioController
-				om.Initialize(1, 0, 0);
 				var _return = GetAudioController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // GetDisplayController
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // GetProcessWindingController
-				om.Initialize(1, 0, 0);
 				var _return = GetProcessWindingController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xB: { // GetLibraryAppletCreator
-				om.Initialize(1, 0, 0);
 				var _return = GetLibraryAppletCreator();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x14: { // GetApplicationFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetApplicationFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E8: { // GetDebugFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetDebugFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -562,15 +565,18 @@ public abstract class _IApplicationProxy_Base : IpcInterface {
 	}
 }
 
-public partial class IApplicationProxyService : _IApplicationProxyService_Base;
+public partial class IApplicationProxyService : _IApplicationProxyService_Base {
+	public readonly string ServiceName;
+	public IApplicationProxyService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IApplicationProxyService_Base : IpcInterface {
 	protected virtual Nn.Am.Service.IApplicationProxy OpenApplicationProxy(ulong _0, ulong _1, KObject _2) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationProxyService.OpenApplicationProxy not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenApplicationProxy
-				om.Initialize(1, 0, 0);
 				var _return = OpenApplicationProxy(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -595,30 +601,30 @@ public abstract class _IAudioController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetExpectedMasterVolume
-				om.Initialize(0, 0, 0);
 				SetExpectedMasterVolume(im.GetData<float>(8), im.GetData<float>(12));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetMainAppletExpectedMasterVolume
-				om.Initialize(0, 0, 4);
 				var _return = GetMainAppletExpectedMasterVolume();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetLibraryAppletExpectedMasterVolume
-				om.Initialize(0, 0, 4);
 				var _return = GetLibraryAppletExpectedMasterVolume();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // ChangeMainAppletMasterVolume
-				om.Initialize(0, 0, 0);
 				ChangeMainAppletMasterVolume(im.GetData<float>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // SetTransparentVolumeRate
-				om.Initialize(0, 0, 0);
 				SetTransparentVolumeRate(im.GetData<float>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -684,104 +690,104 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetEventHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetEventHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // ReceiveMessage
-				om.Initialize(0, 0, 4);
 				var _return = ReceiveMessage();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetThisAppletKind
-				om.Initialize(0, 0, 8);
 				GetThisAppletKind(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // AllowToEnterSleep
-				om.Initialize(0, 0, 0);
 				AllowToEnterSleep();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // DisallowToEnterSleep
-				om.Initialize(0, 0, 0);
 				DisallowToEnterSleep();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetOperationMode
-				om.Initialize(0, 0, 1);
 				var _return = GetOperationMode();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x6: { // GetPerformanceMode
-				om.Initialize(0, 0, 4);
 				var _return = GetPerformanceMode();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // GetCradleStatus
-				om.Initialize(0, 0, 1);
 				var _return = GetCradleStatus();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x8: { // GetBootMode
-				om.Initialize(0, 0, 1);
 				var _return = GetBootMode();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x9: { // GetCurrentFocusState
-				om.Initialize(0, 0, 1);
 				var _return = GetCurrentFocusState();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // RequestToAcquireSleepLock
-				om.Initialize(0, 0, 0);
 				RequestToAcquireSleepLock();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // ReleaseSleepLock
-				om.Initialize(0, 0, 0);
 				ReleaseSleepLock();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // ReleaseSleepLockTransiently
-				om.Initialize(0, 0, 0);
 				ReleaseSleepLockTransiently();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // GetAcquiredSleepLockEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetAcquiredSleepLockEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x14: { // PushToGeneralChannel
-				om.Initialize(0, 0, 0);
 				PushToGeneralChannel(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // GetHomeButtonReaderLockAccessor
-				om.Initialize(1, 0, 0);
 				var _return = GetHomeButtonReaderLockAccessor();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F: { // GetReaderLockAccessorEx
-				om.Initialize(1, 0, 0);
 				var _return = GetReaderLockAccessorEx(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x28: { // GetCradleFwVersion
-				om.Initialize(0, 0, 16);
 				GetCradleFwVersion(out var _0, out var _1, out var _2, out var _3);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
@@ -789,49 +795,49 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 				break;
 			}
 			case 0x32: { // IsVrModeEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsVrModeEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x33: { // SetVrModeEnabled
-				om.Initialize(0, 0, 0);
 				SetVrModeEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x34: { // SetLcdBacklighOffEnabled
-				om.Initialize(0, 0, 0);
 				SetLcdBacklighOffEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x37: { // IsInControllerFirmwareUpdateSection
-				om.Initialize(0, 0, 1);
 				var _return = IsInControllerFirmwareUpdateSection();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3C: { // GetDefaultDisplayResolution
-				om.Initialize(0, 0, 8);
 				GetDefaultDisplayResolution(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3D: { // GetDefaultDisplayResolutionChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetDefaultDisplayResolutionChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3E: { // GetHdcpAuthenticationState
-				om.Initialize(0, 0, 4);
 				var _return = GetHdcpAuthenticationState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3F: { // GetHdcpAuthenticationStateChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetHdcpAuthenticationStateChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -854,24 +860,24 @@ public abstract class _IDebugFunctions_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // NotifyMessageToHomeMenuForDebug
-				om.Initialize(0, 0, 0);
 				NotifyMessageToHomeMenuForDebug(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // OpenMainApplication
-				om.Initialize(1, 0, 0);
 				var _return = OpenMainApplication();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // EmulateButtonEvent
-				om.Initialize(0, 0, 0);
 				EmulateButtonEvent(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // InvalidateTransitionLayer
-				om.Initialize(0, 0, 0);
 				InvalidateTransitionLayer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -937,151 +943,151 @@ public abstract class _IDisplayController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetLastForegroundCaptureImage
-				om.Initialize(0, 0, 0);
 				GetLastForegroundCaptureImage(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // UpdateLastForegroundCaptureImage
-				om.Initialize(0, 0, 0);
 				UpdateLastForegroundCaptureImage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetLastApplicationCaptureImage
-				om.Initialize(0, 0, 0);
 				GetLastApplicationCaptureImage(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetCallerAppletCaptureImage
-				om.Initialize(0, 0, 0);
 				GetCallerAppletCaptureImage(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // UpdateCallerAppletCaptureImage
-				om.Initialize(0, 0, 0);
 				UpdateCallerAppletCaptureImage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetLastForegroundCaptureImageEx
-				om.Initialize(0, 0, 1);
 				GetLastForegroundCaptureImageEx(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x6: { // GetLastApplicationCaptureImageEx
-				om.Initialize(0, 0, 1);
 				GetLastApplicationCaptureImageEx(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7: { // GetCallerAppletCaptureImageEx
-				om.Initialize(0, 0, 1);
 				GetCallerAppletCaptureImageEx(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x8: { // TakeScreenShotOfOwnLayer
-				om.Initialize(0, 0, 0);
 				TakeScreenShotOfOwnLayer(im.GetData<byte>(8), im.GetData<uint>(12));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // AcquireLastApplicationCaptureBuffer
-				om.Initialize(0, 1, 0);
 				var _return = AcquireLastApplicationCaptureBuffer();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xB: { // ReleaseLastApplicationCaptureBuffer
-				om.Initialize(0, 0, 0);
 				ReleaseLastApplicationCaptureBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // AcquireLastForegroundCaptureBuffer
-				om.Initialize(0, 1, 0);
 				var _return = AcquireLastForegroundCaptureBuffer();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xD: { // ReleaseLastForegroundCaptureBuffer
-				om.Initialize(0, 0, 0);
 				ReleaseLastForegroundCaptureBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // AcquireCallerAppletCaptureBuffer
-				om.Initialize(0, 1, 0);
 				var _return = AcquireCallerAppletCaptureBuffer();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xF: { // ReleaseCallerAppletCaptureBuffer
-				om.Initialize(0, 0, 0);
 				ReleaseCallerAppletCaptureBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // AcquireLastApplicationCaptureBufferEx
-				om.Initialize(0, 1, 1);
 				AcquireLastApplicationCaptureBufferEx(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetData(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x11: { // AcquireLastForegroundCaptureBufferEx
-				om.Initialize(0, 1, 1);
 				AcquireLastForegroundCaptureBufferEx(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetData(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x12: { // AcquireCallerAppletCaptureBufferEx
-				om.Initialize(0, 1, 1);
 				AcquireCallerAppletCaptureBufferEx(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetData(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x14: { // ClearCaptureBuffer
-				om.Initialize(0, 0, 0);
 				ClearCaptureBuffer(im.GetData<byte>(8), im.GetData<uint>(12), im.GetData<uint>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15: { // ClearAppletTransitionBuffer
-				om.Initialize(0, 0, 0);
 				ClearAppletTransitionBuffer(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // AcquireLastApplicationCaptureSharedBuffer
-				om.Initialize(0, 0, 8);
 				AcquireLastApplicationCaptureSharedBuffer(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x17: { // ReleaseLastApplicationCaptureSharedBuffer
-				om.Initialize(0, 0, 0);
 				ReleaseLastApplicationCaptureSharedBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x18: { // AcquireLastForegroundCaptureSharedBuffer
-				om.Initialize(0, 0, 8);
 				AcquireLastForegroundCaptureSharedBuffer(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x19: { // ReleaseLastForegroundCaptureSharedBuffer
-				om.Initialize(0, 0, 0);
 				ReleaseLastForegroundCaptureSharedBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // AcquireCallerAppletCaptureSharedBuffer
-				om.Initialize(0, 0, 8);
 				AcquireCallerAppletCaptureSharedBuffer(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x1B: { // ReleaseCallerAppletCaptureSharedBuffer
-				om.Initialize(0, 0, 0);
 				ReleaseCallerAppletCaptureSharedBuffer();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1117,59 +1123,59 @@ public abstract class _IGlobalStateController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestToEnterSleep
-				om.Initialize(0, 0, 0);
 				RequestToEnterSleep();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // EnterSleep
-				om.Initialize(0, 0, 0);
 				EnterSleep();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // StartSleepSequence
-				om.Initialize(0, 0, 0);
 				StartSleepSequence(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // StartShutdownSequence
-				om.Initialize(0, 0, 0);
 				StartShutdownSequence();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // StartRebootSequence
-				om.Initialize(0, 0, 0);
 				StartRebootSequence();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // LoadAndApplyIdlePolicySettings
-				om.Initialize(0, 0, 0);
 				LoadAndApplyIdlePolicySettings();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // NotifyCecSettingsChanged
-				om.Initialize(0, 0, 0);
 				NotifyCecSettingsChanged();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // SetDefaultHomeButtonLongPressTime
-				om.Initialize(0, 0, 0);
 				SetDefaultHomeButtonLongPressTime(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // UpdateDefaultDisplayResolution
-				om.Initialize(0, 0, 0);
 				UpdateDefaultDisplayResolution();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // ShouldSleepOnBoot
-				om.Initialize(0, 0, 1);
 				var _return = ShouldSleepOnBoot();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xF: { // GetHdcpAuthenticationFailedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetHdcpAuthenticationFailedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -1198,41 +1204,41 @@ public abstract class _IHomeMenuFunctions_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xA: { // RequestToGetForeground
-				om.Initialize(0, 0, 0);
 				RequestToGetForeground();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // LockForeground
-				om.Initialize(0, 0, 0);
 				LockForeground();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // UnlockForeground
-				om.Initialize(0, 0, 0);
 				UnlockForeground();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // PopFromGeneralChannel
-				om.Initialize(1, 0, 0);
 				var _return = PopFromGeneralChannel();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x15: { // GetPopFromGeneralChannelEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPopFromGeneralChannelEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1E: { // GetHomeButtonWriterLockAccessor
-				om.Initialize(1, 0, 0);
 				var _return = GetHomeButtonWriterLockAccessor();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F: { // GetWriterLockAccessorEx
-				om.Initialize(1, 0, 0);
 				var _return = GetWriterLockAccessorEx(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -1283,101 +1289,101 @@ public abstract class _ILibraryAppletAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAppletStateChangedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetAppletStateChangedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // IsCompleted
-				om.Initialize(0, 0, 1);
 				var _return = IsCompleted();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // Start
-				om.Initialize(0, 0, 0);
 				Start();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // RequestExit
-				om.Initialize(0, 0, 0);
 				RequestExit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // Terminate
-				om.Initialize(0, 0, 0);
 				Terminate();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x32: { // SetOutOfFocusApplicationSuspendingEnabled
-				om.Initialize(0, 0, 0);
 				SetOutOfFocusApplicationSuspendingEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // PushInData
-				om.Initialize(0, 0, 0);
 				PushInData(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // PopOutData
-				om.Initialize(1, 0, 0);
 				var _return = PopOutData();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x66: { // PushExtraStorage
-				om.Initialize(0, 0, 0);
 				PushExtraStorage(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x67: { // PushInteractiveInData
-				om.Initialize(0, 0, 0);
 				PushInteractiveInData(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x68: { // PopInteractiveOutData
-				om.Initialize(1, 0, 0);
 				var _return = PopInteractiveOutData();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x69: { // GetPopOutDataEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPopOutDataEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x6A: { // GetPopInteractiveOutDataEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPopInteractiveOutDataEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x6E: { // NeedsToExitProcess
-				om.Initialize(0, 0, 1);
 				var _return = NeedsToExitProcess();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x78: { // GetLibraryAppletInfo
-				om.Initialize(0, 0, 8);
 				GetLibraryAppletInfo(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x96: { // RequestForAppletToGetForeground
-				om.Initialize(0, 0, 0);
 				RequestForAppletToGetForeground();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA0: { // GetIndirectLayerConsumerHandle
-				om.Initialize(0, 0, 8);
 				var _return = GetIndirectLayerConsumerHandle(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
@@ -1404,37 +1410,37 @@ public abstract class _ILibraryAppletCreator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateLibraryApplet
-				om.Initialize(1, 0, 0);
 				var _return = CreateLibraryApplet(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // TerminateAllLibraryApplets
-				om.Initialize(0, 0, 0);
 				TerminateAllLibraryApplets();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // AreAnyLibraryAppletsLeft
-				om.Initialize(0, 0, 1);
 				var _return = AreAnyLibraryAppletsLeft();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // CreateStorage
-				om.Initialize(1, 0, 0);
 				var _return = CreateStorage(im.GetData<ulong>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xB: { // CreateTransferMemoryStorage
-				om.Initialize(1, 0, 0);
 				var _return = CreateTransferMemoryStorage(im.GetData<byte>(8), im.GetData<ulong>(16), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC: { // CreateHandleStorage
-				om.Initialize(1, 0, 0);
 				var _return = CreateHandleStorage(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -1467,56 +1473,56 @@ public abstract class _ILibraryAppletProxy_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCommonStateGetter
-				om.Initialize(1, 0, 0);
 				var _return = GetCommonStateGetter();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetSelfController
-				om.Initialize(1, 0, 0);
 				var _return = GetSelfController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // GetWindowController
-				om.Initialize(1, 0, 0);
 				var _return = GetWindowController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetAudioController
-				om.Initialize(1, 0, 0);
 				var _return = GetAudioController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // GetDisplayController
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // GetProcessWindingController
-				om.Initialize(1, 0, 0);
 				var _return = GetProcessWindingController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xB: { // GetLibraryAppletCreator
-				om.Initialize(1, 0, 0);
 				var _return = GetLibraryAppletCreator();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x14: { // OpenLibraryAppletSelfAccessor
-				om.Initialize(1, 0, 0);
 				var _return = OpenLibraryAppletSelfAccessor();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E8: { // GetDebugFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetDebugFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -1581,141 +1587,141 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // PopInData
-				om.Initialize(1, 0, 0);
 				var _return = PopInData();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // PushOutData
-				om.Initialize(0, 0, 0);
 				PushOutData(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // PopInteractiveInData
-				om.Initialize(1, 0, 0);
 				var _return = PopInteractiveInData();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // PushInteractiveOutData
-				om.Initialize(0, 0, 0);
 				PushInteractiveOutData(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetPopInDataEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPopInDataEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x6: { // GetPopInteractiveInDataEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPopInteractiveInDataEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xA: { // ExitProcessAndReturn
-				om.Initialize(0, 0, 0);
 				ExitProcessAndReturn();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // GetLibraryAppletInfo
-				om.Initialize(0, 0, 8);
 				GetLibraryAppletInfo(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // GetMainAppletIdentityInfo
-				om.Initialize(0, 0, 0);
 				GetMainAppletIdentityInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // CanUseApplicationCore
-				om.Initialize(0, 0, 1);
 				var _return = CanUseApplicationCore();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xE: { // GetCallerAppletIdentityInfo
-				om.Initialize(0, 0, 0);
 				GetCallerAppletIdentityInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // GetMainAppletApplicationControlProperty
-				om.Initialize(0, 0, 0);
 				GetMainAppletApplicationControlProperty(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // GetMainAppletStorageId
-				om.Initialize(0, 0, 1);
 				var _return = GetMainAppletStorageId();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x11: { // GetCallerAppletIdentityInfoStack
-				om.Initialize(0, 0, 4);
 				GetCallerAppletIdentityInfoStack(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x12: { // GetNextReturnDestinationAppletIdentityInfo
-				om.Initialize(0, 0, 0);
 				GetNextReturnDestinationAppletIdentityInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // GetDesirableKeyboardLayout
-				om.Initialize(0, 0, 4);
 				var _return = GetDesirableKeyboardLayout();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x14: { // PopExtraStorage
-				om.Initialize(1, 0, 0);
 				var _return = PopExtraStorage();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x19: { // GetPopExtraStorageEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPopExtraStorageEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1E: { // UnpopInData
-				om.Initialize(0, 0, 0);
 				UnpopInData(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // UnpopExtraStorage
-				om.Initialize(0, 0, 0);
 				UnpopExtraStorage(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // GetIndirectLayerProducerHandle
-				om.Initialize(0, 0, 8);
 				var _return = GetIndirectLayerProducerHandle();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x32: { // ReportVisibleError
-				om.Initialize(0, 0, 0);
 				ReportVisibleError(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x33: { // ReportVisibleErrorWithErrorContext
-				om.Initialize(0, 0, 0);
 				ReportVisibleErrorWithErrorContext(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3C: { // GetMainAppletApplicationDesiredLanguage
-				om.Initialize(0, 0, 8);
 				GetMainAppletApplicationDesiredLanguage(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // CreateGameMovieTrimmer
-				om.Initialize(1, 0, 0);
 				var _return = CreateGameMovieTrimmer(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -1736,20 +1742,20 @@ public abstract class _ILockAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // TryLock
-				om.Initialize(0, 1, 1);
 				TryLock(im.GetData<byte>(8), out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetData(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x2: { // Unlock
-				om.Initialize(0, 0, 0);
 				Unlock();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -1782,56 +1788,56 @@ public abstract class _IOverlayAppletProxy_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCommonStateGetter
-				om.Initialize(1, 0, 0);
 				var _return = GetCommonStateGetter();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetSelfController
-				om.Initialize(1, 0, 0);
 				var _return = GetSelfController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // GetWindowController
-				om.Initialize(1, 0, 0);
 				var _return = GetWindowController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetAudioController
-				om.Initialize(1, 0, 0);
 				var _return = GetAudioController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // GetDisplayController
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // GetProcessWindingController
-				om.Initialize(1, 0, 0);
 				var _return = GetProcessWindingController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xB: { // GetLibraryAppletCreator
-				om.Initialize(1, 0, 0);
 				var _return = GetLibraryAppletCreator();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x14: { // GetOverlayFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetOverlayFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E8: { // GetDebugFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetDebugFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -1860,39 +1866,39 @@ public abstract class _IOverlayFunctions_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BeginToWatchShortHomeButtonMessage
-				om.Initialize(0, 0, 0);
 				BeginToWatchShortHomeButtonMessage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // EndToWatchShortHomeButtonMessage
-				om.Initialize(0, 0, 0);
 				EndToWatchShortHomeButtonMessage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetApplicationIdForLogo
-				om.Initialize(0, 0, 8);
 				var _return = GetApplicationIdForLogo();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // SetGpuTimeSliceBoost
-				om.Initialize(0, 0, 0);
 				SetGpuTimeSliceBoost(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // SetAutoSleepTimeAndDimmingTimeEnabled
-				om.Initialize(0, 0, 0);
 				SetAutoSleepTimeAndDimmingTimeEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // TerminateApplicationAndSetReason
-				om.Initialize(0, 0, 0);
 				TerminateApplicationAndSetReason(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // SetScreenShotPermissionGlobally
-				om.Initialize(0, 0, 0);
 				SetScreenShotPermissionGlobally(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1922,46 +1928,46 @@ public abstract class _IProcessWindingController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetLaunchReason
-				om.Initialize(0, 0, 4);
 				GetLaunchReason(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // OpenCallingLibraryApplet
-				om.Initialize(1, 0, 0);
 				var _return = OpenCallingLibraryApplet();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x15: { // PushContext
-				om.Initialize(0, 0, 0);
 				PushContext(Kernel.Get<Nn.Am.Service.IStorage>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // PopContext
-				om.Initialize(1, 0, 0);
 				var _return = PopContext();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x17: { // CancelWindingReservation
-				om.Initialize(0, 0, 0);
 				CancelWindingReservation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // WindAndDoReserved
-				om.Initialize(0, 0, 0);
 				WindAndDoReserved();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // ReserveToStartAndWaitAndUnwindThis
-				om.Initialize(0, 0, 0);
 				ReserveToStartAndWaitAndUnwindThis(Kernel.Get<Nn.Am.Service.ILibraryAppletAccessor>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29: { // ReserveToStartAndWait
-				om.Initialize(0, 0, 0);
 				ReserveToStartAndWait(Kernel.Get<Nn.Am.Service.ILibraryAppletAccessor>(im.GetMove(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2039,170 +2045,170 @@ public abstract class _ISelfController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Exit
-				om.Initialize(0, 0, 0);
 				Exit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // LockExit
-				om.Initialize(0, 0, 0);
 				LockExit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // UnlockExit
-				om.Initialize(0, 0, 0);
 				UnlockExit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // EnterFatalSection
-				om.Initialize(0, 0, 0);
 				EnterFatalSection();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // LeaveFatalSection
-				om.Initialize(0, 0, 0);
 				LeaveFatalSection();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // GetLibraryAppletLaunchableEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetLibraryAppletLaunchableEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xA: { // SetScreenShotPermission
-				om.Initialize(0, 0, 0);
 				SetScreenShotPermission(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // SetOperationModeChangedNotification
-				om.Initialize(0, 0, 0);
 				SetOperationModeChangedNotification(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // SetPerformanceModeChangedNotification
-				om.Initialize(0, 0, 0);
 				SetPerformanceModeChangedNotification(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // SetFocusHandlingMode
-				om.Initialize(0, 0, 0);
 				SetFocusHandlingMode(im.GetData<byte>(8), im.GetData<byte>(9), im.GetData<byte>(10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // SetRestartMessageEnabled
-				om.Initialize(0, 0, 0);
 				SetRestartMessageEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // SetScreenShotAppletIdentityInfo
-				om.Initialize(0, 0, 0);
 				SetScreenShotAppletIdentityInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // SetOutOfFocusSuspendingEnabled
-				om.Initialize(0, 0, 0);
 				SetOutOfFocusSuspendingEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // SetControllerFirmwareUpdateSection
-				om.Initialize(0, 0, 0);
 				SetControllerFirmwareUpdateSection(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // SetRequiresCaptureButtonShortPressedMessage
-				om.Initialize(0, 0, 0);
 				SetRequiresCaptureButtonShortPressedMessage(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // SetScreenShotImageOrientation
-				om.Initialize(0, 0, 0);
 				SetScreenShotImageOrientation(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // SetDesirableKeyboardLayout
-				om.Initialize(0, 0, 0);
 				SetDesirableKeyboardLayout(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // CreateManagedDisplayLayer
-				om.Initialize(0, 0, 8);
 				var _return = CreateManagedDisplayLayer();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x29: { // IsSystemBufferSharingEnabled
-				om.Initialize(0, 0, 0);
 				IsSystemBufferSharingEnabled();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2A: { // GetSystemSharedLayerHandle
-				om.Initialize(0, 0, 16);
 				GetSystemSharedLayerHandle(out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x32: { // SetHandlesRequestToDisplay
-				om.Initialize(0, 0, 0);
 				SetHandlesRequestToDisplay(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x33: { // ApproveToDisplay
-				om.Initialize(0, 0, 0);
 				ApproveToDisplay();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3C: { // OverrideAutoSleepTimeAndDimmingTime
-				om.Initialize(0, 0, 0);
 				OverrideAutoSleepTimeAndDimmingTime(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<uint>(20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3D: { // SetMediaPlaybackState
-				om.Initialize(0, 0, 0);
 				SetMediaPlaybackState(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E: { // SetIdleTimeDetectionExtension
-				om.Initialize(0, 0, 0);
 				SetIdleTimeDetectionExtension(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F: { // GetIdleTimeDetectionExtension
-				om.Initialize(0, 0, 4);
 				var _return = GetIdleTimeDetectionExtension();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x40: { // SetInputDetectionSourceSet
-				om.Initialize(0, 0, 0);
 				SetInputDetectionSourceSet(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x41: { // ReportUserIsActive
-				om.Initialize(0, 0, 0);
 				ReportUserIsActive();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x42: { // GetCurrentIlluminance
-				om.Initialize(0, 0, 4);
 				var _return = GetCurrentIlluminance();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x43: { // IsIlluminanceAvailable
-				om.Initialize(0, 0, 1);
 				var _return = IsIlluminanceAvailable();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x46: { // ReportMultimediaError
-				om.Initialize(0, 0, 0);
 				ReportMultimediaError(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x50: { // SetWirelessPriorityMode
-				om.Initialize(0, 0, 0);
 				SetWirelessPriorityMode(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2220,14 +2226,14 @@ public abstract class _IStorage_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(1, 0, 0);
 				var _return = Unknown0();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(1, 0, 0);
 				var _return = Unknown1();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -2248,19 +2254,19 @@ public abstract class _IStorageAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSize
-				om.Initialize(0, 0, 8);
 				var _return = GetSize();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // Write
-				om.Initialize(0, 0, 0);
 				Write(im.GetData<ulong>(8), im.GetSpan<byte>(0x21, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Read
-				om.Initialize(0, 0, 0);
 				Read(im.GetData<ulong>(8), im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2296,68 +2302,68 @@ public abstract class _ISystemAppletProxy_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCommonStateGetter
-				om.Initialize(1, 0, 0);
 				var _return = GetCommonStateGetter();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetSelfController
-				om.Initialize(1, 0, 0);
 				var _return = GetSelfController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // GetWindowController
-				om.Initialize(1, 0, 0);
 				var _return = GetWindowController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetAudioController
-				om.Initialize(1, 0, 0);
 				var _return = GetAudioController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // GetDisplayController
-				om.Initialize(1, 0, 0);
 				var _return = GetDisplayController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // GetProcessWindingController
-				om.Initialize(1, 0, 0);
 				var _return = GetProcessWindingController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xB: { // GetLibraryAppletCreator
-				om.Initialize(1, 0, 0);
 				var _return = GetLibraryAppletCreator();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x14: { // GetHomeMenuFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetHomeMenuFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x15: { // GetGlobalStateController
-				om.Initialize(1, 0, 0);
 				var _return = GetGlobalStateController();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x16: { // GetApplicationCreator
-				om.Initialize(1, 0, 0);
 				var _return = GetApplicationCreator();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E8: { // GetDebugFunctions
-				om.Initialize(1, 0, 0);
 				var _return = GetDebugFunctions();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -2376,14 +2382,14 @@ public abstract class _ITransferStorageAccessor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSize
-				om.Initialize(0, 0, 8);
 				var _return = GetSize();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetHandle
-				om.Initialize(0, 1, 8);
 				GetHandle(out var _0, out var _1);
+				om.Initialize(0, 1, 8);
 				om.SetData(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
@@ -2419,30 +2425,30 @@ public abstract class _IWindowController_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateWindow
-				om.Initialize(1, 0, 0);
 				var _return = CreateWindow(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetAppletResourceUserId
-				om.Initialize(0, 0, 8);
 				var _return = GetAppletResourceUserId();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // AcquireForegroundRights
-				om.Initialize(0, 0, 0);
 				AcquireForegroundRights();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // ReleaseForegroundRights
-				om.Initialize(0, 0, 0);
 				ReleaseForegroundRights();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // RejectToChangeIntoBackground
-				om.Initialize(0, 0, 0);
 				RejectToChangeIntoBackground();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

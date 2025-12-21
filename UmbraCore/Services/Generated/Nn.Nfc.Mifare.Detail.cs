@@ -35,79 +35,79 @@ public abstract class _IUser_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // _Finalize
-				om.Initialize(0, 0, 0);
 				_Finalize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ListDevices
-				om.Initialize(0, 0, 4);
 				ListDevices(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // StartDetection
-				om.Initialize(0, 0, 0);
 				StartDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // StopDetection
-				om.Initialize(0, 0, 0);
 				StopDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Read
-				om.Initialize(0, 0, 0);
 				Read(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Write
-				om.Initialize(0, 0, 0);
 				Write(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // GetTagInfo
-				om.Initialize(0, 0, 0);
 				GetTagInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetActivateEventHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetActivateEventHandle(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x9: { // GetDeactivateEventHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetDeactivateEventHandle(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xA: { // GetState
-				om.Initialize(0, 0, 4);
 				var _return = GetState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xB: { // GetDeviceState
-				om.Initialize(0, 0, 4);
 				var _return = GetDeviceState(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC: { // GetNpadId
-				om.Initialize(0, 0, 4);
 				var _return = GetNpadId(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // GetAvailabilityChangeEventHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetAvailabilityChangeEventHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -117,15 +117,18 @@ public abstract class _IUser_Base : IpcInterface {
 	}
 }
 
-public partial class IUserManager : _IUserManager_Base;
+public partial class IUserManager : _IUserManager_Base {
+	public readonly string ServiceName;
+	public IUserManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IUserManager_Base : IpcInterface {
 	protected virtual Nn.Nfc.Detail.IUser CreateUserInterface() =>
 		throw new NotImplementedException("Nn.Nfc.Mifare.Detail.IUserManager.CreateUserInterface not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateUserInterface
-				om.Initialize(1, 0, 0);
 				var _return = CreateUserInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

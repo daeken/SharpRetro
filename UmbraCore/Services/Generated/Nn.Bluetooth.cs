@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Bluetooth;
-public partial class IBluetoothDriver : _IBluetoothDriver_Base;
+public partial class IBluetoothDriver : _IBluetoothDriver_Base {
+	public readonly string ServiceName;
+	public IBluetoothDriver(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBluetoothDriver_Base : IpcInterface {
 	protected virtual void Unknown0() =>
 		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.Unknown0");
@@ -97,235 +100,235 @@ public abstract class _IBluetoothDriver_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Init
-				om.Initialize(0, 1, 0);
 				var _return = Init();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // Enable
-				om.Initialize(0, 0, 0);
 				Enable();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Disable
-				om.Initialize(0, 0, 0);
 				Disable();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // CleanupAndShutdown
-				om.Initialize(0, 0, 0);
 				CleanupAndShutdown();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetAdapterProperties
-				om.Initialize(0, 0, 0);
 				GetAdapterProperties(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // GetAdapterProperty
-				om.Initialize(0, 0, 0);
 				GetAdapterProperty(im.GetBytes(8, 0x4), im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // SetAdapterProperty
-				om.Initialize(0, 0, 0);
 				SetAdapterProperty(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // StartDiscovery
-				om.Initialize(0, 0, 0);
 				StartDiscovery();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // CancelDiscovery
-				om.Initialize(0, 0, 0);
 				CancelDiscovery();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // CreateBond
-				om.Initialize(0, 0, 0);
 				CreateBond(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // RemoveBond
-				om.Initialize(0, 0, 0);
 				RemoveBond(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // CancelBond
-				om.Initialize(0, 0, 0);
 				CancelBond(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // PinReply
-				om.Initialize(0, 0, 0);
 				PinReply(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // SspReply
-				om.Initialize(0, 0, 0);
 				SspReply(im.GetBytes(8, 0xC));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // Unknown15
-				om.Initialize(0, 0, 4);
 				Unknown15(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x10: { // InitInterfaces
-				om.Initialize(0, 1, 0);
 				var _return = InitInterfaces(im.GetBytes(8, 0x2));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x11: { // HidHostInterface_Connect
-				om.Initialize(0, 0, 0);
 				HidHostInterface_Connect(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // HidHostInterface_Disconnect
-				om.Initialize(0, 0, 0);
 				HidHostInterface_Disconnect(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // HidHostInterface_SendData
-				om.Initialize(0, 0, 0);
 				HidHostInterface_SendData(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // HidHostInterface_SendData2
-				om.Initialize(0, 0, 0);
 				HidHostInterface_SendData2(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15: { // HidHostInterface_SetReport
-				om.Initialize(0, 0, 0);
 				HidHostInterface_SetReport(im.GetBytes(8, 0xC), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // HidHostInterface_GetReport
-				om.Initialize(0, 0, 0);
 				HidHostInterface_GetReport(im.GetBytes(8, 0xC));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // HidHostInterface_WakeController
-				om.Initialize(0, 0, 0);
 				HidHostInterface_WakeController(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x18: { // HidHostInterface_AddPairedDevice
-				om.Initialize(0, 0, 0);
 				HidHostInterface_AddPairedDevice(im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // HidHostInterface_GetPairedDevice
-				om.Initialize(0, 0, 0);
 				HidHostInterface_GetPairedDevice(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // HidHostInterface_CleanupAndShutdown
-				om.Initialize(0, 0, 0);
 				HidHostInterface_CleanupAndShutdown();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // Unknown27
-				om.Initialize(0, 0, 4);
 				Unknown27(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1C: { // ExtInterface_SetTSI
-				om.Initialize(0, 0, 0);
 				ExtInterface_SetTSI(im.GetBytes(8, 0x7));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1D: { // ExtInterface_SetBurstMode
-				om.Initialize(0, 0, 0);
 				ExtInterface_SetBurstMode(im.GetBytes(8, 0x7));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // ExtInterface_SetZeroRetran
-				om.Initialize(0, 0, 0);
 				ExtInterface_SetZeroRetran(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // ExtInterface_SetMcMode
-				om.Initialize(0, 0, 0);
 				ExtInterface_SetMcMode(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x20: { // ExtInterface_StartLlrMode
-				om.Initialize(0, 0, 0);
 				ExtInterface_StartLlrMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // ExtInterface_ExitLlrMode
-				om.Initialize(0, 0, 0);
 				ExtInterface_ExitLlrMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x22: { // ExtInterface_SetRadio
-				om.Initialize(0, 0, 0);
 				ExtInterface_SetRadio(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // ExtInterface_SetVisibility
-				om.Initialize(0, 0, 0);
 				ExtInterface_SetVisibility(im.GetBytes(8, 0x2));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x24: { // Unknown36
-				om.Initialize(0, 0, 0);
 				Unknown36(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25: { // Unknown37
-				om.Initialize(0, 1, 0);
 				var _return = Unknown37();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x26: { // HidHostInterface_GetLatestPlr
-				om.Initialize(0, 0, 4);
 				HidHostInterface_GetLatestPlr(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x27: { // ExtInterface_GetPendingConnections
-				om.Initialize(0, 0, 0);
 				ExtInterface_GetPendingConnections(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // HidHostInterface_GetChannelMap
-				om.Initialize(0, 0, 0);
 				HidHostInterface_GetChannelMap();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29: { // SetIsBluetoothBoostEnabled
-				om.Initialize(0, 0, 0);
 				SetIsBluetoothBoostEnabled(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2A: { // GetIsBluetoothBoostEnabled
-				om.Initialize(0, 0, 0);
 				GetIsBluetoothBoostEnabled(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2B: { // SetIsBluetoothAfhEnabled
-				om.Initialize(0, 0, 1);
 				SetIsBluetoothAfhEnabled(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2C: { // GetIsBluetoothAfhEnabled
-				om.Initialize(0, 0, 0);
 				GetIsBluetoothAfhEnabled(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

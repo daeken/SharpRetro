@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Eth.Sf;
-public partial class IEthInterface : _IEthInterface_Base;
+public partial class IEthInterface : _IEthInterface_Base {
+	public readonly string ServiceName;
+	public IEthInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IEthInterface_Base : IpcInterface {
 	protected virtual KObject Initialize(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterface.Initialize not implemented");
@@ -19,34 +22,34 @@ public abstract class _IEthInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 1, 0);
 				var _return = Initialize(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetMediaList
-				om.Initialize(0, 0, 0);
 				GetMediaList(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // SetMediaType
-				om.Initialize(0, 0, 0);
 				SetMediaType(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetMediaType
-				om.Initialize(0, 0, 12);
 				GetMediaType(out var _0);
+				om.Initialize(0, 0, 12);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -56,7 +59,10 @@ public abstract class _IEthInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IEthInterfaceGroup : _IEthInterfaceGroup_Base;
+public partial class IEthInterfaceGroup : _IEthInterfaceGroup_Base {
+	public readonly string ServiceName;
+	public IEthInterfaceGroup(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IEthInterfaceGroup_Base : IpcInterface {
 	protected virtual KObject GetReadableHandle() =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterfaceGroup.GetReadableHandle not implemented");
@@ -71,29 +77,29 @@ public abstract class _IEthInterfaceGroup_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetReadableHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetReadableHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetInterfaceList
-				om.Initialize(0, 0, 0);
 				GetInterfaceList(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetInterfaceCount
-				om.Initialize(0, 0, 4);
 				GetInterfaceCount(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}

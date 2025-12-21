@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Bpc;
-public partial class IBoardPowerControlManager : _IBoardPowerControlManager_Base;
+public partial class IBoardPowerControlManager : _IBoardPowerControlManager_Base {
+	public readonly string ServiceName;
+	public IBoardPowerControlManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBoardPowerControlManager_Base : IpcInterface {
 	protected virtual void ShutdownSystem() =>
 		Console.WriteLine("Stub hit for Nn.Bpc.IBoardPowerControlManager.ShutdownSystem");
@@ -29,65 +32,65 @@ public abstract class _IBoardPowerControlManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ShutdownSystem
-				om.Initialize(0, 0, 0);
 				ShutdownSystem();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // RebootSystem
-				om.Initialize(0, 0, 0);
 				RebootSystem();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetWakeupReason
-				om.Initialize(0, 0, 4);
 				GetWakeupReason(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // GetShutdownReason
-				om.Initialize(0, 0, 4);
 				GetShutdownReason(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // GetAcOk
-				om.Initialize(0, 0, 1);
 				GetAcOk(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetBoardPowerControlEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetBoardPowerControlEvent(im.GetBytes(8, 0x4));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x6: { // GetSleepButtonState
-				om.Initialize(0, 0, 4);
 				GetSleepButtonState(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // GetPowerEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetPowerEvent(im.GetBytes(8, 0x4));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 4);
 				Unknown8(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 0);
 				Unknown9(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 12);
 				Unknown10(out var _0);
+				om.Initialize(0, 0, 12);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -106,14 +109,14 @@ public abstract class _IPowerButtonManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 1, 0);
 				var _return = Unknown1(im.GetBytes(8, 0x4));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -123,7 +126,10 @@ public abstract class _IPowerButtonManager_Base : IpcInterface {
 	}
 }
 
-public partial class IRtcManager : _IRtcManager_Base;
+public partial class IRtcManager : _IRtcManager_Base {
+	public readonly string ServiceName;
+	public IRtcManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IRtcManager_Base : IpcInterface {
 	protected virtual void GetExternalRtcValue(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bpc.IRtcManager.GetExternalRtcValue not implemented");
@@ -136,25 +142,25 @@ public abstract class _IRtcManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetExternalRtcValue
-				om.Initialize(0, 0, 8);
 				GetExternalRtcValue(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // SetExternalRtcValue
-				om.Initialize(0, 0, 0);
 				SetExternalRtcValue(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ReadExternalRtcResetFlag
-				om.Initialize(0, 0, 1);
 				ReadExternalRtcResetFlag(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // ClearExternalRtcResetFlag
-				om.Initialize(0, 0, 0);
 				ClearExternalRtcResetFlag();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -174,19 +180,19 @@ public abstract class _IWakeupConfigManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 16);
 				Unknown2(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}

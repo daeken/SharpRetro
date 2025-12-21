@@ -15,26 +15,26 @@ public abstract class _IProfile_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Get
-				om.Initialize(0, 0, 56);
 				Get(out var _0, im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 56);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // GetBase
-				om.Initialize(0, 0, 56);
 				GetBase(out var _0);
+				om.Initialize(0, 0, 56);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // GetImageSize
-				om.Initialize(0, 0, 4);
 				var _return = GetImageSize();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xB: { // LoadImage
-				om.Initialize(0, 0, 4);
 				LoadImage(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
@@ -61,37 +61,37 @@ public abstract class _IProfileEditor_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Get
-				om.Initialize(0, 0, 56);
 				Get(out var _0, im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 56);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // GetBase
-				om.Initialize(0, 0, 56);
 				GetBase(out var _0);
+				om.Initialize(0, 0, 56);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // GetImageSize
-				om.Initialize(0, 0, 4);
 				var _return = GetImageSize();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xB: { // LoadImage
-				om.Initialize(0, 0, 4);
 				LoadImage(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x64: { // Store
-				om.Initialize(0, 0, 0);
 				Store(im.GetBytes(8, 0x38), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // StoreWithImage
-				om.Initialize(0, 0, 0);
 				StoreWithImage(im.GetBytes(8, 0x38), im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

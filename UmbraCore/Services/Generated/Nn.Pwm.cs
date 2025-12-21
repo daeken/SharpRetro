@@ -19,35 +19,35 @@ public abstract class _IChannelSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetPeriod
-				om.Initialize(0, 0, 0);
 				SetPeriod(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetPeriod
-				om.Initialize(0, 0, 8);
 				var _return = GetPeriod();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // SetDuty
-				om.Initialize(0, 0, 0);
 				SetDuty(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetDuty
-				om.Initialize(0, 0, 4);
 				var _return = GetDuty();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // SetEnabled
-				om.Initialize(0, 0, 0);
 				SetEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetEnabled
-				om.Initialize(0, 0, 1);
 				var _return = GetEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
@@ -57,7 +57,10 @@ public abstract class _IChannelSession_Base : IpcInterface {
 	}
 }
 
-public partial class IManager : _IManager_Base;
+public partial class IManager : _IManager_Base {
+	public readonly string ServiceName;
+	public IManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual Nn.Pwm.IChannelSession OpenSessionForDev(uint _0) =>
 		throw new NotImplementedException("Nn.Pwm.IManager.OpenSessionForDev not implemented");
@@ -66,14 +69,14 @@ public abstract class _IManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenSessionForDev
-				om.Initialize(1, 0, 0);
 				var _return = OpenSessionForDev(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // OpenSession
-				om.Initialize(1, 0, 0);
 				var _return = OpenSession(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

@@ -47,120 +47,120 @@ public abstract class _IClient_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetClientProfile
-				om.Initialize(0, 0, 0);
 				GetClientProfile(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // CreateLoginSession
-				om.Initialize(0, 0, 16);
 				CreateLoginSession(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // GetNetworkServiceAccountId
-				om.Initialize(0, 0, 8);
 				GetNetworkServiceAccountId(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // GetUserNickname
-				om.Initialize(0, 0, 33);
 				GetUserNickname(out var _0);
+				om.Initialize(0, 0, 33);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // GetUserProfileImage
-				om.Initialize(0, 0, 4);
 				GetUserProfileImage(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // PrepareAsync
-				om.Initialize(1, 0, 0);
 				var _return = PrepareAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x65: { // GetConnectionRequirement
-				om.Initialize(0, 0, 1);
 				GetConnectionRequirement(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC8: { // ScanServersAsync
-				om.Initialize(1, 0, 0);
 				var _return = ScanServersAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC9: { // ListServers
-				om.Initialize(0, 0, 4);
 				ListServers(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD2: { // ConnectByServerIdAsync
-				om.Initialize(1, 0, 0);
 				var _return = ConnectByServerIdAsync(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x12C: { // GetStorageShortfall
-				om.Initialize(0, 0, 8);
 				GetStorageShortfall(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12D: { // GetTotalTransferInfo
-				om.Initialize(0, 0, 16);
 				GetTotalTransferInfo(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12E: { // GetImmigrantUid
-				om.Initialize(0, 0, 16);
 				GetImmigrantUid(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x136: { // GetCurrentTransferInfo
-				om.Initialize(0, 0, 16);
 				GetCurrentTransferInfo(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x137: { // GetCurrentRelatedApplications
-				om.Initialize(0, 0, 4);
 				GetCurrentRelatedApplications(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x140: { // TransferNextAsync
-				om.Initialize(1, 0, 0);
 				var _return = TransferNextAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x15E: { // SuspendAsync
-				om.Initialize(1, 0, 0);
 				var _return = SuspendAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x190: { // CompleteAsync
-				om.Initialize(1, 0, 0);
 				var _return = CompleteAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F4: { // Abort
-				om.Initialize(0, 0, 0);
 				Abort();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E7: { // DebugSynchronizeStateInFinalizationAsync
-				om.Initialize(1, 0, 0);
 				var _return = DebugSynchronizeStateInFinalizationAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -197,66 +197,66 @@ public abstract class _IServer_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUid
-				om.Initialize(0, 0, 16);
 				GetUid(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // GetServerProfile
-				om.Initialize(0, 0, 0);
 				GetServerProfile(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // PrepareAsync
-				om.Initialize(1, 0, 0);
 				var _return = PrepareAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x65: { // GetConnectionRequirement
-				om.Initialize(0, 0, 1);
 				GetConnectionRequirement(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC8: { // WaitConnectionAsync
-				om.Initialize(1, 0, 0);
 				var _return = WaitConnectionAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC9: { // GetClientProfile
-				om.Initialize(0, 0, 0);
 				GetClientProfile(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCA: { // AcceptConnectionAsync
-				om.Initialize(1, 0, 0);
 				var _return = AcceptConnectionAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xCB: { // DeclineConnectionAsync
-				om.Initialize(1, 0, 0);
 				var _return = DeclineConnectionAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x12C: { // ProcessTransferAsync
-				om.Initialize(1, 0, 0);
 				var _return = ProcessTransferAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x190: { // CompleteAsync
-				om.Initialize(1, 0, 0);
 				var _return = CompleteAsync();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F4: { // Abort
-				om.Initialize(0, 0, 0);
 				Abort();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -265,7 +265,10 @@ public abstract class _IServer_Base : IpcInterface {
 	}
 }
 
-public partial class IService : _IService_Base;
+public partial class IService : _IService_Base {
+	public readonly string ServiceName;
+	public IService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IService_Base : IpcInterface {
 	protected virtual void TryGetLastMigrationInfo(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Migration.User.IService.TryGetLastMigrationInfo not implemented");
@@ -280,32 +283,32 @@ public abstract class _IService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xA: { // TryGetLastMigrationInfo
-				om.Initialize(0, 0, 12);
 				TryGetLastMigrationInfo(out var _0);
+				om.Initialize(0, 0, 12);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // CreateServer
-				om.Initialize(1, 0, 0);
 				var _return = CreateServer(im.GetBytes(8, 0x18), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x65: { // ResumeServer
-				om.Initialize(1, 0, 0);
 				var _return = ResumeServer(im.GetBytes(8, 0x4), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC8: { // CreateClient
-				om.Initialize(1, 0, 0);
 				var _return = CreateClient(im.GetBytes(8, 0x4), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC9: { // ResumeClient
-				om.Initialize(1, 0, 0);
 				var _return = ResumeClient(im.GetBytes(8, 0x4), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -328,23 +331,23 @@ public abstract class _IAsyncContext_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent
-				om.Initialize(0, 0, 0);
 				GetSystemEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // HasDone
-				om.Initialize(0, 0, 0);
 				HasDone();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

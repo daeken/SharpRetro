@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Nsd.Detail;
-public partial class IManager : _IManager_Base;
+public partial class IManager : _IManager_Base {
+	public readonly string ServiceName;
+	public IManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual void GetSettingName(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetSettingName not implemented");
@@ -41,93 +44,93 @@ public abstract class _IManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xA: { // GetSettingName
-				om.Initialize(0, 0, 0);
 				GetSettingName(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // GetEnvironmentIdentifier
-				om.Initialize(0, 0, 0);
 				GetEnvironmentIdentifier(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // GetDeviceId
-				om.Initialize(0, 0, 16);
 				GetDeviceId(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // DeleteSettings
-				om.Initialize(0, 0, 0);
 				DeleteSettings(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // ImportSettings
-				om.Initialize(0, 0, 0);
 				ImportSettings(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // Resolve
-				om.Initialize(0, 0, 0);
 				Resolve(im.GetSpan<byte>(0x15, 0), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15: { // ResolveEx
-				om.Initialize(0, 0, 4);
 				ResolveEx(im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x1E: { // GetNasServiceSetting
-				om.Initialize(0, 0, 0);
 				GetNasServiceSetting(im.GetSpan<byte>(0x15, 0), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // GetNasServiceSettingEx
-				om.Initialize(0, 0, 4);
 				GetNasServiceSettingEx(im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x28: { // GetNasRequestFqdn
-				om.Initialize(0, 0, 0);
 				GetNasRequestFqdn(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29: { // GetNasRequestFqdnEx
-				om.Initialize(0, 0, 4);
 				GetNasRequestFqdnEx(out var _0, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2A: { // GetNasApiFqdn
-				om.Initialize(0, 0, 0);
 				GetNasApiFqdn(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2B: { // GetNasApiFqdnEx
-				om.Initialize(0, 0, 4);
 				GetNasApiFqdnEx(out var _0, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x32: { // GetCurrentSetting
-				om.Initialize(0, 0, 0);
 				GetCurrentSetting(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3C: { // ReadSaveDataFromFsForTest
-				om.Initialize(0, 0, 0);
 				ReadSaveDataFromFsForTest(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3D: { // WriteSaveDataToFsForTest
-				om.Initialize(0, 0, 0);
 				WriteSaveDataToFsForTest(im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E: { // DeleteSaveDataOfFsForTest
-				om.Initialize(0, 0, 0);
 				DeleteSaveDataOfFsForTest();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

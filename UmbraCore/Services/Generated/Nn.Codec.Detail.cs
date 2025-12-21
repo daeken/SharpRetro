@@ -9,8 +9,8 @@ public abstract class _JpegDecoder_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xBB9: { // Unknown3001
-				om.Initialize(0, 0, 0);
 				Unknown3001(im.GetBytes(8, 0x28), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -36,40 +36,40 @@ public abstract class _IHardwareOpusDecoder_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // DecodeInterleaved
-				om.Initialize(0, 0, 8);
 				DecodeInterleaved(im.GetSpan<byte>(0x5, 0), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x1: { // SetContext
-				om.Initialize(0, 0, 0);
 				SetContext(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 8);
 				Unknown2(im.GetSpan<byte>(0x5, 0), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 16);
 				Unknown4(im.GetSpan<byte>(0x5, 0), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 16);
 				Unknown5(im.GetSpan<byte>(0x5, 0), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
@@ -81,7 +81,10 @@ public abstract class _IHardwareOpusDecoder_Base : IpcInterface {
 	}
 }
 
-public partial class IHardwareOpusDecoderManager : _IHardwareOpusDecoderManager_Base;
+public partial class IHardwareOpusDecoderManager : _IHardwareOpusDecoderManager_Base {
+	public readonly string ServiceName;
+	public IHardwareOpusDecoderManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IHardwareOpusDecoderManager_Base : IpcInterface {
 	protected virtual Nn.Codec.Detail.IHardwareOpusDecoder Initialize(byte[] _0, uint _1, KObject _2) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoderManager.Initialize not implemented");
@@ -94,26 +97,26 @@ public abstract class _IHardwareOpusDecoderManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(1, 0, 0);
 				var _return = Initialize(im.GetBytes(8, 0x8), im.GetData<uint>(16), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetWorkBufferSize
-				om.Initialize(0, 0, 4);
 				var _return = GetWorkBufferSize(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // InitializeMultiStream
-				om.Initialize(1, 0, 0);
 				var _return = InitializeMultiStream(im.GetData<uint>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetWorkBufferSizeMultiStream
-				om.Initialize(0, 0, 4);
 				var _return = GetWorkBufferSizeMultiStream(im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}

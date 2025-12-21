@@ -9,8 +9,8 @@ public abstract class _IAccountProxyInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateUserAccount
-				om.Initialize(0, 0, 0);
 				CreateUserAccount(im.GetBytes(8, 0x21), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -19,7 +19,10 @@ public abstract class _IAccountProxyInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IApplicationManagerInterface : _IApplicationManagerInterface_Base;
+public partial class IApplicationManagerInterface : _IApplicationManagerInterface_Base {
+	public readonly string ServiceName;
+	public IApplicationManagerInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void ListApplicationRecord(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationRecord not implemented");
@@ -440,1151 +443,1151 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ListApplicationRecord
-				om.Initialize(0, 0, 4);
 				ListApplicationRecord(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // GenerateApplicationRecordCount
-				om.Initialize(0, 0, 8);
 				GenerateApplicationRecordCount(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // GetApplicationRecordUpdateSystemEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetApplicationRecordUpdateSystemEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3: { // GetApplicationViewDeprecated
-				om.Initialize(0, 0, 0);
 				GetApplicationViewDeprecated(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // DeleteApplicationEntity
-				om.Initialize(0, 0, 0);
 				DeleteApplicationEntity(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // DeleteApplicationCompletely
-				om.Initialize(0, 0, 0);
 				DeleteApplicationCompletely(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // IsAnyApplicationEntityRedundant
-				om.Initialize(0, 0, 1);
 				IsAnyApplicationEntityRedundant(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // DeleteRedundantApplicationEntity
-				om.Initialize(0, 0, 0);
 				DeleteRedundantApplicationEntity();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // IsApplicationEntityMovable
-				om.Initialize(0, 0, 1);
 				IsApplicationEntityMovable(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // MoveApplicationEntity
-				om.Initialize(0, 0, 0);
 				MoveApplicationEntity(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // CalculateApplicationOccupiedSize
-				om.Initialize(0, 0, 128);
 				CalculateApplicationOccupiedSize(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 128);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x10: { // PushApplicationRecord
-				om.Initialize(0, 0, 0);
 				PushApplicationRecord(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // ListApplicationRecordContentMeta
-				om.Initialize(0, 0, 4);
 				ListApplicationRecordContentMeta(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x13: { // LaunchApplication
-				om.Initialize(0, 0, 8);
 				LaunchApplication(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x15: { // GetApplicationContentPath
-				om.Initialize(0, 0, 0);
 				GetApplicationContentPath(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // TerminateApplication
-				om.Initialize(0, 0, 0);
 				TerminateApplication(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // ResolveApplicationContentPath
-				om.Initialize(0, 0, 0);
 				ResolveApplicationContentPath(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // BeginInstallApplication
-				om.Initialize(0, 0, 0);
 				BeginInstallApplication(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // DeleteApplicationRecord
-				om.Initialize(0, 0, 0);
 				DeleteApplicationRecord(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // RequestApplicationUpdateInfo
-				om.Initialize(1, 1, 0);
 				RequestApplicationUpdateInfo(im.GetBytes(8, 0x8), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x20: { // CancelApplicationDownload
-				om.Initialize(0, 0, 0);
 				CancelApplicationDownload(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // ResumeApplicationDownload
-				om.Initialize(0, 0, 0);
 				ResumeApplicationDownload(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // UpdateVersionList
-				om.Initialize(0, 0, 0);
 				UpdateVersionList(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x24: { // PushLaunchVersion
-				om.Initialize(0, 0, 0);
 				PushLaunchVersion(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25: { // ListRequiredVersion
-				om.Initialize(0, 0, 4);
 				ListRequiredVersion(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x26: { // CheckApplicationLaunchVersion
-				om.Initialize(0, 0, 0);
 				CheckApplicationLaunchVersion(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x27: { // CheckApplicationLaunchRights
-				om.Initialize(0, 0, 0);
 				CheckApplicationLaunchRights(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // GetApplicationLogoData
-				om.Initialize(0, 0, 8);
 				GetApplicationLogoData(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x29: { // CalculateApplicationDownloadRequiredSize
-				om.Initialize(0, 0, 16);
 				CalculateApplicationDownloadRequiredSize(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2A: { // CleanupSdCard
-				om.Initialize(0, 0, 0);
 				CleanupSdCard();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2B: { // CheckSdCardMountStatus
-				om.Initialize(0, 0, 0);
 				CheckSdCardMountStatus();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2C: { // GetSdCardMountStatusChangedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSdCardMountStatusChangedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2D: { // GetGameCardAttachmentEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetGameCardAttachmentEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2E: { // GetGameCardAttachmentInfo
-				om.Initialize(0, 0, 16);
 				GetGameCardAttachmentInfo(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2F: { // GetTotalSpaceSize
-				om.Initialize(0, 0, 8);
 				GetTotalSpaceSize(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x30: { // GetFreeSpaceSize
-				om.Initialize(0, 0, 8);
 				GetFreeSpaceSize(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x31: { // GetSdCardRemovedEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSdCardRemovedEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x34: { // GetGameCardUpdateDetectionEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetGameCardUpdateDetectionEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x35: { // DisableApplicationAutoDelete
-				om.Initialize(0, 0, 0);
 				DisableApplicationAutoDelete(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x36: { // EnableApplicationAutoDelete
-				om.Initialize(0, 0, 0);
 				EnableApplicationAutoDelete(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x37: { // GetApplicationDesiredLanguage
-				om.Initialize(0, 0, 1);
 				GetApplicationDesiredLanguage(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x38: { // SetApplicationTerminateResult
-				om.Initialize(0, 0, 0);
 				SetApplicationTerminateResult(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x39: { // ClearApplicationTerminateResult
-				om.Initialize(0, 0, 0);
 				ClearApplicationTerminateResult(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3A: { // GetLastSdCardMountUnexpectedResult
-				om.Initialize(0, 0, 0);
 				GetLastSdCardMountUnexpectedResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3B: { // ConvertApplicationLanguageToLanguageCode
-				om.Initialize(0, 0, 8);
 				ConvertApplicationLanguageToLanguageCode(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3C: { // ConvertLanguageCodeToApplicationLanguage
-				om.Initialize(0, 0, 1);
 				ConvertLanguageCodeToApplicationLanguage(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3D: { // GetBackgroundDownloadStressTaskInfo
-				om.Initialize(0, 0, 16);
 				GetBackgroundDownloadStressTaskInfo(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3E: { // GetGameCardStopper
-				om.Initialize(1, 0, 0);
 				var _return = GetGameCardStopper();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3F: { // IsSystemProgramInstalled
-				om.Initialize(0, 0, 1);
 				IsSystemProgramInstalled(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x40: { // StartApplyDeltaTask
-				om.Initialize(0, 0, 0);
 				StartApplyDeltaTask(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x41: { // GetRequestServerStopper
-				om.Initialize(1, 0, 0);
 				var _return = GetRequestServerStopper();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x42: { // GetBackgroundApplyDeltaStressTaskInfo
-				om.Initialize(0, 0, 16);
 				GetBackgroundApplyDeltaStressTaskInfo(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x43: { // CancelApplicationApplyDelta
-				om.Initialize(0, 0, 0);
 				CancelApplicationApplyDelta(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x44: { // ResumeApplicationApplyDelta
-				om.Initialize(0, 0, 0);
 				ResumeApplicationApplyDelta(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x45: { // CalculateApplicationApplyDeltaRequiredSize
-				om.Initialize(0, 0, 16);
 				CalculateApplicationApplyDeltaRequiredSize(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x46: { // ResumeAll
-				om.Initialize(0, 0, 0);
 				ResumeAll();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x47: { // GetStorageSize
-				om.Initialize(0, 0, 16);
 				GetStorageSize(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x50: { // RequestDownloadApplication
-				om.Initialize(1, 1, 0);
 				RequestDownloadApplication(im.GetBytes(8, 0x10), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x51: { // RequestDownloadAddOnContent
-				om.Initialize(1, 1, 0);
 				RequestDownloadAddOnContent(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x52: { // DownloadApplication
-				om.Initialize(0, 0, 0);
 				DownloadApplication(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x53: { // CheckApplicationResumeRights
-				om.Initialize(0, 0, 0);
 				CheckApplicationResumeRights(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x54: { // GetDynamicCommitEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetDynamicCommitEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x55: { // RequestUpdateApplication2
-				om.Initialize(1, 1, 0);
 				RequestUpdateApplication2(im.GetBytes(8, 0x8), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x56: { // EnableApplicationCrashReport
-				om.Initialize(0, 0, 0);
 				EnableApplicationCrashReport(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x57: { // IsApplicationCrashReportEnabled
-				om.Initialize(0, 0, 1);
 				IsApplicationCrashReportEnabled(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5A: { // BoostSystemMemoryResourceLimit
-				om.Initialize(0, 0, 0);
 				BoostSystemMemoryResourceLimit(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5B: { // Unknown91
-				om.Initialize(0, 0, 0);
 				Unknown91();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5C: { // Unknown92
-				om.Initialize(0, 0, 0);
 				Unknown92();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5D: { // Unknown93
-				om.Initialize(0, 0, 0);
 				Unknown93();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5E: { // LaunchApplication2
-				om.Initialize(0, 0, 0);
 				LaunchApplication2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5F: { // Unknown95
-				om.Initialize(0, 0, 0);
 				Unknown95();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x60: { // Unknown96
-				om.Initialize(0, 0, 0);
 				Unknown96();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x61: { // Unknown97
-				om.Initialize(0, 0, 0);
 				Unknown97();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x62: { // Unknown98
-				om.Initialize(0, 0, 0);
 				Unknown98();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // ResetToFactorySettings
-				om.Initialize(0, 0, 0);
 				ResetToFactorySettings();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // ResetToFactorySettingsWithoutUserSaveData
-				om.Initialize(0, 0, 0);
 				ResetToFactorySettingsWithoutUserSaveData();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // ResetToFactorySettingsForRefurbishment
-				om.Initialize(0, 0, 0);
 				ResetToFactorySettingsForRefurbishment();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC8: { // CalculateUserSaveDataStatistics
-				om.Initialize(0, 0, 16);
 				CalculateUserSaveDataStatistics(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC9: { // DeleteUserSaveDataAll
-				om.Initialize(1, 0, 0);
 				var _return = DeleteUserSaveDataAll(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xD2: { // DeleteUserSystemSaveData
-				om.Initialize(0, 0, 0);
 				DeleteUserSystemSaveData(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD3: { // Unknown211
-				om.Initialize(0, 0, 0);
 				Unknown211();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xDC: { // UnregisterNetworkServiceAccount
-				om.Initialize(0, 0, 0);
 				UnregisterNetworkServiceAccount(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xDD: { // Unknown221
-				om.Initialize(0, 0, 0);
 				Unknown221();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12C: { // GetApplicationShellEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetApplicationShellEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x12D: { // PopApplicationShellEventInfo
-				om.Initialize(0, 0, 4);
 				PopApplicationShellEventInfo(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12E: { // LaunchLibraryApplet
-				om.Initialize(0, 0, 8);
 				LaunchLibraryApplet(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12F: { // TerminateLibraryApplet
-				om.Initialize(0, 0, 0);
 				TerminateLibraryApplet(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x130: { // LaunchSystemApplet
-				om.Initialize(0, 0, 8);
 				LaunchSystemApplet(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x131: { // TerminateSystemApplet
-				om.Initialize(0, 0, 0);
 				TerminateSystemApplet(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x132: { // LaunchOverlayApplet
-				om.Initialize(0, 0, 8);
 				LaunchOverlayApplet(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x133: { // TerminateOverlayApplet
-				om.Initialize(0, 0, 0);
 				TerminateOverlayApplet(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x190: { // GetApplicationControlData
-				om.Initialize(0, 0, 4);
 				GetApplicationControlData(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x191: { // InvalidateAllApplicationControlCache
-				om.Initialize(0, 0, 0);
 				InvalidateAllApplicationControlCache();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x192: { // RequestDownloadApplicationControlData
-				om.Initialize(1, 1, 0);
 				RequestDownloadApplicationControlData(im.GetBytes(8, 0x8), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x193: { // GetMaxApplicationControlCacheCount
-				om.Initialize(0, 0, 4);
 				GetMaxApplicationControlCacheCount(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x194: { // InvalidateApplicationControlCache
-				om.Initialize(0, 0, 0);
 				InvalidateApplicationControlCache(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x195: { // ListApplicationControlCacheEntryInfo
-				om.Initialize(0, 0, 4);
 				ListApplicationControlCacheEntryInfo(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x196: { // Unknown406
-				om.Initialize(0, 0, 0);
 				Unknown406();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F6: { // RequestCheckGameCardRegistration
-				om.Initialize(1, 1, 0);
 				RequestCheckGameCardRegistration(im.GetBytes(8, 0x8), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x1F7: { // RequestGameCardRegistrationGoldPoint
-				om.Initialize(1, 1, 0);
 				RequestGameCardRegistrationGoldPoint(im.GetBytes(8, 0x18), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x1F8: { // RequestRegisterGameCard
-				om.Initialize(1, 1, 0);
 				RequestRegisterGameCard(im.GetBytes(8, 0x20), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x1F9: { // GetGameCardMountFailureEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetGameCardMountFailureEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1FA: { // IsGameCardInserted
-				om.Initialize(0, 0, 1);
 				IsGameCardInserted(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1FB: { // EnsureGameCardAccess
-				om.Initialize(0, 0, 0);
 				EnsureGameCardAccess();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1FC: { // GetLastGameCardMountFailureResult
-				om.Initialize(0, 0, 0);
 				GetLastGameCardMountFailureResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1FD: { // ListApplicationIdOnGameCard
-				om.Initialize(0, 0, 0);
 				ListApplicationIdOnGameCard();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x258: { // CountApplicationContentMeta
-				om.Initialize(0, 0, 4);
 				CountApplicationContentMeta(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x259: { // ListApplicationContentMetaStatus
-				om.Initialize(0, 0, 4);
 				ListApplicationContentMetaStatus(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25A: { // ListAvailableAddOnContent
-				om.Initialize(0, 0, 4);
 				ListAvailableAddOnContent(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25B: { // GetOwnedApplicationContentMetaStatus
-				om.Initialize(0, 0, 16);
 				GetOwnedApplicationContentMetaStatus(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25C: { // RegisterContentsExternalKey
-				om.Initialize(0, 0, 0);
 				RegisterContentsExternalKey(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25D: { // ListApplicationContentMetaStatusWithRightsCheck
-				om.Initialize(0, 0, 4);
 				ListApplicationContentMetaStatusWithRightsCheck(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25E: { // GetContentMetaStorage
-				om.Initialize(0, 0, 1);
 				GetContentMetaStorage(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25F: { // Unknown607
-				om.Initialize(0, 0, 0);
 				Unknown607();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2BC: { // PushDownloadTaskList
-				om.Initialize(0, 0, 0);
 				PushDownloadTaskList(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2BD: { // ClearTaskStatusList
-				om.Initialize(0, 0, 0);
 				ClearTaskStatusList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2BE: { // RequestDownloadTaskList
-				om.Initialize(0, 0, 0);
 				RequestDownloadTaskList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2BF: { // RequestEnsureDownloadTask
-				om.Initialize(1, 1, 0);
 				RequestEnsureDownloadTask(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x2C0: { // ListDownloadTaskStatus
-				om.Initialize(0, 0, 4);
 				ListDownloadTaskStatus(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2C1: { // RequestDownloadTaskListData
-				om.Initialize(1, 1, 0);
 				RequestDownloadTaskListData(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x320: { // RequestVersionList
-				om.Initialize(0, 0, 0);
 				RequestVersionList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x321: { // ListVersionList
-				om.Initialize(0, 0, 4);
 				ListVersionList(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x322: { // RequestVersionListData
-				om.Initialize(1, 1, 0);
 				RequestVersionListData(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x384: { // GetApplicationRecord
-				om.Initialize(0, 0, 24);
 				GetApplicationRecord(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x385: { // GetApplicationRecordProperty
-				om.Initialize(0, 0, 0);
 				GetApplicationRecordProperty(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x386: { // EnableApplicationAutoUpdate
-				om.Initialize(0, 0, 0);
 				EnableApplicationAutoUpdate(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x387: { // DisableApplicationAutoUpdate
-				om.Initialize(0, 0, 0);
 				DisableApplicationAutoUpdate(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x388: { // TouchApplication
-				om.Initialize(0, 0, 0);
 				TouchApplication(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x389: { // RequestApplicationUpdate
-				om.Initialize(0, 0, 0);
 				RequestApplicationUpdate(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x38A: { // IsApplicationUpdateRequested
-				om.Initialize(0, 0, 8);
 				IsApplicationUpdateRequested(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x38B: { // WithdrawApplicationUpdateRequest
-				om.Initialize(0, 0, 0);
 				WithdrawApplicationUpdateRequest(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x38C: { // ListApplicationRecordInstalledContentMeta
-				om.Initialize(0, 0, 4);
 				ListApplicationRecordInstalledContentMeta(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x38D: { // WithdrawCleanupAddOnContentsWithNoRightsRecommendation
-				om.Initialize(0, 0, 0);
 				WithdrawCleanupAddOnContentsWithNoRightsRecommendation(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x38E: { // Unknown910
-				om.Initialize(0, 0, 0);
 				Unknown910();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x38F: { // Unknown911
-				om.Initialize(0, 0, 0);
 				Unknown911();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x390: { // Unknown912
-				om.Initialize(0, 0, 0);
 				Unknown912();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E8: { // RequestVerifyApplicationDeprecated
-				om.Initialize(1, 1, 0);
 				RequestVerifyApplicationDeprecated(im.GetBytes(8, 0x10), Kernel.Get<KObject>(im.GetCopy(0)), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x3E9: { // CorruptApplicationForDebug
-				om.Initialize(0, 0, 0);
 				CorruptApplicationForDebug(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EA: { // RequestVerifyAddOnContentsRights
-				om.Initialize(1, 1, 0);
 				RequestVerifyAddOnContentsRights(im.GetBytes(8, 0x8), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x3EB: { // RequestVerifyApplication
-				om.Initialize(0, 0, 0);
 				RequestVerifyApplication();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EC: { // CorruptContentForDebug
-				om.Initialize(0, 0, 0);
 				CorruptContentForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B0: { // NeedsUpdateVulnerability
-				om.Initialize(0, 0, 1);
 				NeedsUpdateVulnerability(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x514: { // IsAnyApplicationEntityInstalled
-				om.Initialize(0, 0, 1);
 				IsAnyApplicationEntityInstalled(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x515: { // DeleteApplicationContentEntities
-				om.Initialize(0, 0, 0);
 				DeleteApplicationContentEntities(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x516: { // CleanupUnrecordedApplicationEntity
-				om.Initialize(0, 0, 0);
 				CleanupUnrecordedApplicationEntity(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x517: { // CleanupAddOnContentsWithNoRights
-				om.Initialize(0, 0, 0);
 				CleanupAddOnContentsWithNoRights(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x518: { // DeleteApplicationContentEntity
-				om.Initialize(0, 0, 0);
 				DeleteApplicationContentEntity(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x51C: { // Unknown1308
-				om.Initialize(0, 0, 0);
 				Unknown1308();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x51D: { // Unknown1309
-				om.Initialize(0, 0, 0);
 				Unknown1309();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x578: { // PrepareShutdown
-				om.Initialize(0, 0, 0);
 				PrepareShutdown();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5DC: { // FormatSdCard
-				om.Initialize(0, 0, 0);
 				FormatSdCard();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5DD: { // NeedsSystemUpdateToFormatSdCard
-				om.Initialize(0, 0, 1);
 				NeedsSystemUpdateToFormatSdCard(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5DE: { // GetLastSdCardFormatUnexpectedResult
-				om.Initialize(0, 0, 0);
 				GetLastSdCardFormatUnexpectedResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5E0: { // InsertSdCard
-				om.Initialize(0, 0, 0);
 				InsertSdCard();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5E1: { // RemoveSdCard
-				om.Initialize(0, 0, 0);
 				RemoveSdCard();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x640: { // GetSystemSeedForPseudoDeviceId
-				om.Initialize(0, 0, 32);
 				GetSystemSeedForPseudoDeviceId(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x641: { // ResetSystemSeedForPseudoDeviceId
-				om.Initialize(0, 0, 0);
 				ResetSystemSeedForPseudoDeviceId();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6A4: { // ListApplicationDownloadingContentMeta
-				om.Initialize(0, 0, 4);
 				ListApplicationDownloadingContentMeta(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6A5: { // GetApplicationView
-				om.Initialize(0, 0, 0);
 				GetApplicationView(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6A6: { // GetApplicationDownloadTaskStatus
-				om.Initialize(0, 0, 1);
 				GetApplicationDownloadTaskStatus(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6A7: { // GetApplicationViewDownloadErrorContext
-				om.Initialize(0, 0, 0);
 				GetApplicationViewDownloadErrorContext(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x708: { // IsNotificationSetupCompleted
-				om.Initialize(0, 0, 1);
 				IsNotificationSetupCompleted(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x709: { // GetLastNotificationInfoCount
-				om.Initialize(0, 0, 8);
 				GetLastNotificationInfoCount(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x70A: { // ListLastNotificationInfo
-				om.Initialize(0, 0, 4);
 				ListLastNotificationInfo(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x70B: { // ListNotificationTask
-				om.Initialize(0, 0, 4);
 				ListNotificationTask(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x76C: { // IsActiveAccount
-				om.Initialize(0, 0, 1);
 				IsActiveAccount(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x76D: { // RequestDownloadApplicationPrepurchasedRights
-				om.Initialize(1, 1, 0);
 				RequestDownloadApplicationPrepurchasedRights(im.GetBytes(8, 0x8), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x76E: { // GetApplicationTicketInfo
-				om.Initialize(0, 0, 0);
 				GetApplicationTicketInfo();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D0: { // GetSystemDeliveryInfo
-				om.Initialize(0, 0, 0);
 				GetSystemDeliveryInfo(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D1: { // SelectLatestSystemDeliveryInfo
-				om.Initialize(0, 0, 4);
 				SelectLatestSystemDeliveryInfo(im.GetSpan<byte>(0x15, 0), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D2: { // VerifyDeliveryProtocolVersion
-				om.Initialize(0, 0, 0);
 				VerifyDeliveryProtocolVersion(im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D3: { // GetApplicationDeliveryInfo
-				om.Initialize(0, 0, 4);
 				GetApplicationDeliveryInfo(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D4: { // HasAllContentsToDeliver
-				om.Initialize(0, 0, 1);
 				HasAllContentsToDeliver(im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D5: { // CompareApplicationDeliveryInfo
-				om.Initialize(0, 0, 4);
 				CompareApplicationDeliveryInfo(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D6: { // CanDeliverApplication
-				om.Initialize(0, 0, 1);
 				CanDeliverApplication(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D7: { // ListContentMetaKeyToDeliverApplication
-				om.Initialize(0, 0, 4);
 				ListContentMetaKeyToDeliverApplication(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D8: { // NeedsSystemUpdateToDeliverApplication
-				om.Initialize(0, 0, 1);
 				NeedsSystemUpdateToDeliverApplication(im.GetSpan<byte>(0x15, 0), im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D9: { // EstimateRequiredSize
-				om.Initialize(0, 0, 8);
 				EstimateRequiredSize(im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7DA: { // RequestReceiveApplication
-				om.Initialize(1, 1, 0);
 				RequestReceiveApplication(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x7DB: { // CommitReceiveApplication
-				om.Initialize(0, 0, 0);
 				CommitReceiveApplication(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7DC: { // GetReceiveApplicationProgress
-				om.Initialize(0, 0, 16);
 				GetReceiveApplicationProgress(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7DD: { // RequestSendApplication
-				om.Initialize(1, 1, 0);
 				RequestSendApplication(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x7DE: { // GetSendApplicationProgress
-				om.Initialize(0, 0, 16);
 				GetSendApplicationProgress(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7DF: { // CompareSystemDeliveryInfo
-				om.Initialize(0, 0, 4);
 				CompareSystemDeliveryInfo(im.GetSpan<byte>(0x15, 0), im.GetSpan<byte>(0x15, 1), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7E0: { // ListNotCommittedContentMeta
-				om.Initialize(0, 0, 4);
 				ListNotCommittedContentMeta(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7E1: { // CreateDownloadTask
-				om.Initialize(0, 0, 0);
 				CreateDownloadTask(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7E2: { // Unknown2018
-				om.Initialize(0, 0, 0);
 				Unknown2018();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x802: { // Unknown2050
-				om.Initialize(0, 0, 0);
 				Unknown2050();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x834: { // Unknown2100
-				om.Initialize(0, 0, 0);
 				Unknown2100();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x835: { // Unknown2101
-				om.Initialize(0, 0, 0);
 				Unknown2101();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x866: { // Unknown2150
-				om.Initialize(0, 0, 0);
 				Unknown2150();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x867: { // Unknown2151
-				om.Initialize(0, 0, 0);
 				Unknown2151();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x868: { // Unknown2152
-				om.Initialize(0, 0, 0);
 				Unknown2152();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x869: { // Unknown2153
-				om.Initialize(0, 0, 0);
 				Unknown2153();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x86A: { // Unknown2154
-				om.Initialize(0, 0, 0);
 				Unknown2154();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x870: { // Unknown2160
-				om.Initialize(0, 0, 0);
 				Unknown2160();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x871: { // Unknown2161
-				om.Initialize(0, 0, 0);
 				Unknown2161();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x87A: { // Unknown2170
-				om.Initialize(0, 0, 0);
 				Unknown2170();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x87B: { // Unknown2171
-				om.Initialize(0, 0, 0);
 				Unknown2171();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x884: { // Unknown2180
-				om.Initialize(0, 0, 0);
 				Unknown2180();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x885: { // Unknown2181
-				om.Initialize(0, 0, 0);
 				Unknown2181();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x886: { // Unknown2182
-				om.Initialize(0, 0, 0);
 				Unknown2182();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x88E: { // Unknown2190
-				om.Initialize(0, 0, 0);
 				Unknown2190();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x897: { // Unknown2199
-				om.Initialize(0, 0, 0);
 				Unknown2199();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x898: { // Unknown2200
-				om.Initialize(0, 0, 0);
 				Unknown2200();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x899: { // Unknown2201
-				om.Initialize(0, 0, 0);
 				Unknown2201();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8CA: { // Unknown2250
-				om.Initialize(0, 0, 0);
 				Unknown2250();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8FC: { // Unknown2300
-				om.Initialize(0, 0, 0);
 				Unknown2300();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1616,53 +1619,53 @@ public abstract class _IApplicationVersionInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // Unknown35
-				om.Initialize(0, 0, 0);
 				Unknown35(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x24: { // Unknown36
-				om.Initialize(0, 0, 0);
 				Unknown36(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25: { // Unknown37
-				om.Initialize(0, 0, 4);
 				Unknown37(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x320: { // Unknown800
-				om.Initialize(0, 0, 0);
 				Unknown800();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x321: { // Unknown801
-				om.Initialize(0, 0, 4);
 				Unknown801(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x322: { // Unknown802
-				om.Initialize(1, 1, 0);
 				Unknown802(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x3E8: { // Unknown1000
-				om.Initialize(0, 0, 0);
 				Unknown1000();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1682,18 +1685,18 @@ public abstract class _IAsyncResult_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1715,24 +1718,24 @@ public abstract class _IAsyncValue_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 8);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1762,49 +1765,49 @@ public abstract class _IContentManagementInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xB: { // CalculateApplicationOccupiedSize
-				om.Initialize(0, 0, 128);
 				CalculateApplicationOccupiedSize(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 128);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2B: { // CheckSdCardMountStatus
-				om.Initialize(0, 0, 0);
 				CheckSdCardMountStatus();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2F: { // GetTotalSpaceSize
-				om.Initialize(0, 0, 8);
 				GetTotalSpaceSize(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x30: { // GetFreeSpaceSize
-				om.Initialize(0, 0, 8);
 				GetFreeSpaceSize(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x258: { // CountApplicationContentMeta
-				om.Initialize(0, 0, 4);
 				CountApplicationContentMeta(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x259: { // ListApplicationContentMetaStatus
-				om.Initialize(0, 0, 4);
 				ListApplicationContentMetaStatus(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25D: { // ListApplicationContentMetaStatusWithRightsCheck
-				om.Initialize(0, 0, 4);
 				ListApplicationContentMetaStatusWithRightsCheck(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25F: { // IsAnyApplicationRunning
-				om.Initialize(0, 0, 1);
 				IsAnyApplicationRunning(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -1814,7 +1817,10 @@ public abstract class _IContentManagementInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IDevelopInterface : _IDevelopInterface_Base;
+public partial class IDevelopInterface : _IDevelopInterface_Base {
+	public readonly string ServiceName;
+	public IDevelopInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IDevelopInterface_Base : IpcInterface {
 	protected virtual void LaunchProgram(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDevelopInterface.LaunchProgram not implemented");
@@ -1837,53 +1843,53 @@ public abstract class _IDevelopInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // LaunchProgram
-				om.Initialize(0, 0, 8);
 				LaunchProgram(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // TerminateProcess
-				om.Initialize(0, 0, 0);
 				TerminateProcess(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // TerminateProgram
-				om.Initialize(0, 0, 0);
 				TerminateProgram(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // GetShellEventHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetShellEventHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // GetShellEventInfo
-				om.Initialize(0, 0, 16);
 				GetShellEventInfo(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // TerminateApplication
-				om.Initialize(0, 0, 0);
 				TerminateApplication();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // PrepareLaunchProgramFromHost
-				om.Initialize(0, 0, 16);
 				PrepareLaunchProgramFromHost(im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // LaunchApplication
-				om.Initialize(0, 0, 8);
 				LaunchApplication(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // LaunchApplicationWithStorageId
-				om.Initialize(0, 0, 8);
 				LaunchApplicationWithStorageId(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -1902,13 +1908,13 @@ public abstract class _IDocumentInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x15: { // GetApplicationContentPath
-				om.Initialize(0, 0, 0);
 				GetApplicationContentPath(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // ResolveApplicationContentPath
-				om.Initialize(0, 0, 0);
 				ResolveApplicationContentPath(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -1940,53 +1946,53 @@ public abstract class _IDownloadTaskInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2BD: { // ClearTaskStatusList
-				om.Initialize(0, 0, 0);
 				ClearTaskStatusList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2BE: { // RequestDownloadTaskList
-				om.Initialize(0, 0, 0);
 				RequestDownloadTaskList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2BF: { // RequestEnsureDownloadTask
-				om.Initialize(1, 1, 0);
 				RequestEnsureDownloadTask(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x2C0: { // ListDownloadTaskStatus
-				om.Initialize(0, 0, 4);
 				ListDownloadTaskStatus(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2C1: { // RequestDownloadTaskListData
-				om.Initialize(1, 1, 0);
 				RequestDownloadTaskListData(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x2C2: { // TryCommitCurrentApplicationDownloadTask
-				om.Initialize(0, 0, 0);
 				TryCommitCurrentApplicationDownloadTask();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2C3: { // EnableAutoCommit
-				om.Initialize(0, 0, 0);
 				EnableAutoCommit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2C4: { // DisableAutoCommit
-				om.Initialize(0, 0, 0);
 				DisableAutoCommit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2C5: { // TriggerDynamicCommitEvent
-				om.Initialize(0, 0, 0);
 				TriggerDynamicCommitEvent();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2002,8 +2008,8 @@ public abstract class _IECommerceInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(1, 1, 0);
 				Unknown0(im.GetBytes(8, 0x10), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
@@ -2025,18 +2031,18 @@ public abstract class _IFactoryResetInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x64: { // ResetToFactorySettings
-				om.Initialize(0, 0, 0);
 				ResetToFactorySettings();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // ResetToFactorySettingsWithoutUserSaveData
-				om.Initialize(0, 0, 0);
 				ResetToFactorySettingsWithoutUserSaveData();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // ResetToFactorySettingsForRefurbishment
-				om.Initialize(0, 0, 0);
 				ResetToFactorySettingsForRefurbishment();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2070,28 +2076,28 @@ public abstract class _IProgressAsyncResult_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2113,25 +2119,25 @@ public abstract class _IProgressMonitorForDeleteUserSaveDataAll_Base : IpcInterf
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 1, 0);
 				var _return = Unknown0();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 1);
 				Unknown1(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 40);
 				Unknown10(out var _0);
+				om.Initialize(0, 0, 40);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -2151,7 +2157,10 @@ public abstract class _IRequestServerStopper_Base : IpcInterface {
 	}
 }
 
-public partial class IServiceGetterInterface : _IServiceGetterInterface_Base;
+public partial class IServiceGetterInterface : _IServiceGetterInterface_Base {
+	public readonly string ServiceName;
+	public IServiceGetterInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IServiceGetterInterface_Base : IpcInterface {
 	protected virtual Nn.Ns.Detail.IECommerceInterface GetECommerceInterface() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IServiceGetterInterface.GetECommerceInterface not implemented");
@@ -2172,50 +2181,50 @@ public abstract class _IServiceGetterInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1F38: { // GetECommerceInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetECommerceInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F39: { // GetApplicationVersionInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetApplicationVersionInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F3A: { // GetFactoryResetInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetFactoryResetInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F3B: { // GetAccountProxyInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetAccountProxyInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F3C: { // GetApplicationManagerInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetApplicationManagerInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F3D: { // GetDownloadTaskInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetDownloadTaskInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F3E: { // GetContentManagementInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetContentManagementInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F3F: { // GetDocumentInterface
-				om.Initialize(1, 0, 0);
 				var _return = GetDocumentInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -2274,133 +2283,133 @@ public abstract class _ISystemUpdateControl_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 1);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(1, 1, 0);
 				Unknown1(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(1, 1, 0);
 				Unknown2(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 16);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(1, 1, 0);
 				Unknown5(out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 16);
 				Unknown6(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 1);
 				Unknown7(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 0);
 				Unknown8();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 8);
 				Unknown9(im.GetSpan<byte>(0x15, 0), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 8);
 				Unknown10(im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 0);
 				Unknown11(im.GetBytes(8, 0x8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // Unknown12
-				om.Initialize(0, 0, 8);
 				Unknown12(im.GetSpan<byte>(0x15, 0), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // Unknown13
-				om.Initialize(0, 0, 8);
 				Unknown13(im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xE: { // Unknown14
-				om.Initialize(0, 0, 0);
 				Unknown14(im.GetBytes(8, 0x8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // Unknown15
-				om.Initialize(0, 0, 1);
 				Unknown15(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x10: { // Unknown16
-				om.Initialize(1, 1, 0);
 				Unknown16(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x15, 0), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x11: { // Unknown17
-				om.Initialize(0, 0, 16);
 				Unknown17(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12: { // Unknown18
-				om.Initialize(0, 0, 0);
 				Unknown18();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // Unknown19
-				om.Initialize(0, 0, 8);
 				Unknown19(im.GetSpan<byte>(0x15, 0), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x14: { // Unknown20
-				om.Initialize(0, 0, 8);
 				Unknown20(im.GetSpan<byte>(0x15, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x15: { // Unknown21
-				om.Initialize(0, 0, 0);
 				Unknown21();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -2409,7 +2418,10 @@ public abstract class _ISystemUpdateControl_Base : IpcInterface {
 	}
 }
 
-public partial class ISystemUpdateInterface : _ISystemUpdateInterface_Base;
+public partial class ISystemUpdateInterface : _ISystemUpdateInterface_Base {
+	public readonly string ServiceName;
+	public ISystemUpdateInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISystemUpdateInterface_Base : IpcInterface {
 	protected virtual void GetBackgroundNetworkUpdateState(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateInterface.GetBackgroundNetworkUpdateState not implemented");
@@ -2440,73 +2452,73 @@ public abstract class _ISystemUpdateInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetBackgroundNetworkUpdateState
-				om.Initialize(0, 0, 1);
 				GetBackgroundNetworkUpdateState(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // OpenSystemUpdateControl
-				om.Initialize(1, 0, 0);
 				var _return = OpenSystemUpdateControl();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // NotifyExFatDriverRequired
-				om.Initialize(0, 0, 0);
 				NotifyExFatDriverRequired();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // ClearExFatDriverStatusForDebug
-				om.Initialize(0, 0, 0);
 				ClearExFatDriverStatusForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // RequestBackgroundNetworkUpdate
-				om.Initialize(0, 0, 0);
 				RequestBackgroundNetworkUpdate();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // NotifyBackgroundNetworkUpdate
-				om.Initialize(0, 0, 0);
 				NotifyBackgroundNetworkUpdate(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // NotifyExFatDriverDownloadedForDebug
-				om.Initialize(0, 0, 0);
 				NotifyExFatDriverDownloadedForDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // GetSystemUpdateNotificationEventForContentDelivery
-				om.Initialize(0, 1, 0);
 				var _return = GetSystemUpdateNotificationEventForContentDelivery();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xA: { // NotifySystemUpdateForContentDelivery
-				om.Initialize(0, 0, 0);
 				NotifySystemUpdateForContentDelivery();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // PrepareShutdown
-				om.Initialize(0, 0, 0);
 				PrepareShutdown();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // DestroySystemUpdateTask
-				om.Initialize(0, 0, 0);
 				DestroySystemUpdateTask();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // RequestSendSystemUpdate
-				om.Initialize(1, 1, 0);
 				RequestSendSystemUpdate(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x15, 0), out var _0, out var _1);
+				om.Initialize(1, 1, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x12: { // GetSendSystemUpdateProgress
-				om.Initialize(0, 0, 16);
 				GetSendSystemUpdateProgress(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -2516,7 +2528,10 @@ public abstract class _ISystemUpdateInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IVulnerabilityManagerInterface : _IVulnerabilityManagerInterface_Base;
+public partial class IVulnerabilityManagerInterface : _IVulnerabilityManagerInterface_Base {
+	public readonly string ServiceName;
+	public IVulnerabilityManagerInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IVulnerabilityManagerInterface_Base : IpcInterface {
 	protected virtual void NeedsUpdateVulnerability(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IVulnerabilityManagerInterface.NeedsUpdateVulnerability not implemented");
@@ -2527,19 +2542,19 @@ public abstract class _IVulnerabilityManagerInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x4B0: { // NeedsUpdateVulnerability
-				om.Initialize(0, 0, 1);
 				NeedsUpdateVulnerability(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4B1: { // UpdateSafeSystemVersionForDebug
-				om.Initialize(0, 0, 0);
 				UpdateSafeSystemVersionForDebug(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B2: { // GetSafeSystemVersion
-				om.Initialize(0, 0, 16);
 				GetSafeSystemVersion(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}

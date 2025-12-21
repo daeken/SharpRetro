@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Psc.Sf;
-public partial class IPmControl : _IPmControl_Base;
+public partial class IPmControl : _IPmControl_Base {
+	public readonly string ServiceName;
+	public IPmControl(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IPmControl_Base : IpcInterface {
 	protected virtual KObject Unknown0() =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown0 not implemented");
@@ -21,40 +24,40 @@ public abstract class _IPmControl_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 1, 0);
 				var _return = Unknown0();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0xC));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 4);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 40);
 				Unknown6(out var _0, im.GetSpan<byte>(0x6, 0), im.GetSpan<byte>(0x6, 1));
+				om.Initialize(0, 0, 40);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -77,25 +80,25 @@ public abstract class _IPmModule_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 1, 0);
 				var _return = Initialize(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // GetRequest
-				om.Initialize(0, 0, 8);
 				GetRequest(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Acknowledge
-				om.Initialize(0, 0, 0);
 				Acknowledge();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -104,15 +107,18 @@ public abstract class _IPmModule_Base : IpcInterface {
 	}
 }
 
-public partial class IPmService : _IPmService_Base;
+public partial class IPmService : _IPmService_Base {
+	public readonly string ServiceName;
+	public IPmService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IPmService_Base : IpcInterface {
 	protected virtual Nn.Psc.Sf.IPmModule GetPmModule() =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmService.GetPmModule not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetPmModule
-				om.Initialize(1, 0, 0);
 				var _return = GetPmModule();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

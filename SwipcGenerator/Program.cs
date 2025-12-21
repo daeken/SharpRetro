@@ -40,6 +40,24 @@ var namespaces = namespaceNames.Select(name => (
 
 foreach(var (name, (tds, ids)) in namespaces)
     BuildNamespace(name, tds, ids);
+
+var cb = new CodeBuilder();
+cb += "namespace UmbraCore.Core;";
+cb += "public partial class IpcManager {";
+cb++;
+cb += "void CreateServices() {";
+cb++;
+foreach(var (name, (_, ids)) in namespaces)
+    foreach(var (iname, iface) in ids) {
+        if(iface.ServiceNames.Count == 0) continue;
+        foreach(var sname in iface.ServiceNames)
+            cb += $"Services[\"{sname}\"] = new UmbraCore.Services.{RenameNamespace(name)}.{Rename(iname)}(\"{sname}\");";
+    }
+cb--;
+cb += "}";
+cb--;
+cb += "}";
+File.WriteAllText("../UmbraCore/Services/Generated/_Instantiator.cs", cb.Code);
 return;
 
 static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, Dictionary<string, Interface> interfaces) {
@@ -77,7 +95,14 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
     }
 
     foreach(var (name, iface) in interfaces) {
-        cb += $"public partial class {Rename(name)} : _{Rename(name)}_Base;";
+        cb += $"public partial class {Rename(name)} : _{Rename(name)}_Base{(iface.ServiceNames.Count == 0 ? ";" : " {")}";
+        if(iface.ServiceNames.Count != 0) {
+            cb++;
+            cb += $"public readonly string ServiceName;";
+            cb += $"public {Rename(name)}(string serviceName) => ServiceName = serviceName;";
+            cb--;
+            cb += "}";
+        }
         cb += $"public abstract class _{Rename(name)}_Base : IpcInterface {{";
         cb++;
         foreach(var func in iface.Functions) {
@@ -239,8 +264,8 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
                 GenOutputArg(func.Outputs[0].Type, isRet: true);
             else
                 args.AddRange(func.Outputs.Select(x => GenOutputArg(x.Type)).Where(x => x != null));
-            cb += $"om.Initialize({moveOutOffset}, {copyOutOffset}, {outputOffset - 8});";
             cb += $"{(hasRet ? "var _return = " : "")}{Rename(func.Name)}({string.Join(", ", args)});";
+            cb += $"om.Initialize({moveOutOffset}, {copyOutOffset}, {outputOffset - 8});";
             if(after.Code.Length != 0)
                 cb += after.Code.Trim();
             cb += "break;";

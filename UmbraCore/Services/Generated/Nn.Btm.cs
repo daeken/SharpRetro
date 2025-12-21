@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Btm;
-public partial class IBtm : _IBtm_Base;
+public partial class IBtm : _IBtm_Base {
+	public readonly string ServiceName;
+	public IBtm(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBtm_Base : IpcInterface {
 	protected virtual void Unknown0(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtm.Unknown0 not implemented");
@@ -51,124 +54,124 @@ public abstract class _IBtm_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 42);
 				Unknown1(out var _0);
+				om.Initialize(0, 0, 42);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // RegisterSystemEventForConnectedDeviceConditionImpl
-				om.Initialize(0, 1, 1);
 				RegisterSystemEventForConnectedDeviceConditionImpl(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x7));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 0);
 				Unknown6(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 0);
 				Unknown7(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // RegisterSystemEventForRegisteredDeviceInfoImpl
-				om.Initialize(0, 1, 1);
 				RegisterSystemEventForRegisteredDeviceInfoImpl(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 0);
 				Unknown9(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 0);
 				Unknown10(im.GetBytes(8, 0x60));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 0);
 				Unknown11(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // Unknown12
-				om.Initialize(0, 0, 0);
 				Unknown12(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // Unknown13
-				om.Initialize(0, 0, 0);
 				Unknown13(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // EnableRadioImpl
-				om.Initialize(0, 0, 0);
 				EnableRadioImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // DisableRadioImpl
-				om.Initialize(0, 0, 0);
 				DisableRadioImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // Unknown16
-				om.Initialize(0, 0, 0);
 				Unknown16(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // Unknown17
-				om.Initialize(0, 0, 0);
 				Unknown17(im.GetBytes(8, 0x6), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // Unknown18
-				om.Initialize(0, 1, 1);
 				Unknown18(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x13: { // Unknown19
-				om.Initialize(0, 1, 1);
 				Unknown19(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x14: { // Unknown20
-				om.Initialize(0, 0, 1);
 				Unknown20(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x15: { // Unknown21
-				om.Initialize(0, 0, 0);
 				Unknown21(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -177,7 +180,10 @@ public abstract class _IBtm_Base : IpcInterface {
 	}
 }
 
-public partial class IBtmDebug : _IBtmDebug_Base;
+public partial class IBtmDebug : _IBtmDebug_Base {
+	public readonly string ServiceName;
+	public IBtmDebug(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBtmDebug_Base : IpcInterface {
 	protected virtual void RegisterSystemEventForDiscoveryImpl(out byte[] _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Btm.IBtmDebug.RegisterSystemEventForDiscoveryImpl not implemented");
@@ -200,50 +206,50 @@ public abstract class _IBtmDebug_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterSystemEventForDiscoveryImpl
-				om.Initialize(0, 1, 1);
 				RegisterSystemEventForDiscoveryImpl(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 0);
 				Unknown6(im.GetBytes(8, 0xC));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 0);
 				Unknown7(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 0);
 				Unknown8(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -252,15 +258,18 @@ public abstract class _IBtmDebug_Base : IpcInterface {
 	}
 }
 
-public partial class IBtmSystem : _IBtmSystem_Base;
+public partial class IBtmSystem : _IBtmSystem_Base {
+	public readonly string ServiceName;
+	public IBtmSystem(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IBtmSystem_Base : IpcInterface {
 	protected virtual Nn.Btm.IBtmSystemCore GetCoreImpl() =>
 		throw new NotImplementedException("Nn.Btm.IBtmSystem.GetCoreImpl not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCoreImpl
-				om.Initialize(1, 0, 0);
 				var _return = GetCoreImpl();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -295,59 +304,59 @@ public abstract class _IBtmSystemCore_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // StartGamepadPairingImpl
-				om.Initialize(0, 0, 0);
 				StartGamepadPairingImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // CancelGamepadPairingImpl
-				om.Initialize(0, 0, 0);
 				CancelGamepadPairingImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ClearGamepadPairingDatabaseImpl
-				om.Initialize(0, 0, 0);
 				ClearGamepadPairingDatabaseImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetPairedGamepadCountImpl
-				om.Initialize(0, 0, 1);
 				GetPairedGamepadCountImpl(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // EnableRadioImpl
-				om.Initialize(0, 0, 0);
 				EnableRadioImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // DisableRadioImpl
-				om.Initialize(0, 0, 0);
 				DisableRadioImpl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // GetRadioOnOffImpl
-				om.Initialize(0, 0, 1);
 				GetRadioOnOffImpl(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // AcquireRadioEventImpl
-				om.Initialize(0, 1, 1);
 				AcquireRadioEventImpl(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x8: { // AcquireGamepadPairingEventImpl
-				om.Initialize(0, 1, 1);
 				AcquireGamepadPairingEventImpl(out var _0, out var _1);
+				om.Initialize(0, 1, 1);
 				om.SetBytes(8, _0);
 				om.Copy(0, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x9: { // IsGamepadPairingStartedImpl
-				om.Initialize(0, 0, 1);
 				IsGamepadPairingStartedImpl(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}

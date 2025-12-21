@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Prepo.Detail.Ipc;
-public partial class IPrepoService : _IPrepoService_Base;
+public partial class IPrepoService : _IPrepoService_Base {
+	public readonly string ServiceName;
+	public IPrepoService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IPrepoService_Base : IpcInterface {
 	protected virtual void SaveReport(ulong _0, ulong _1, Span<byte> _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveReport");
@@ -35,77 +38,77 @@ public abstract class _IPrepoService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2774: { // SaveReport
-				om.Initialize(0, 0, 0);
 				SaveReport(im.GetData<ulong>(8), im.Pid, im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2775: { // SaveReportWithUser
-				om.Initialize(0, 0, 0);
 				SaveReportWithUser(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.Pid, im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x27D8: { // RequestImmediateTransmission
-				om.Initialize(0, 0, 0);
 				RequestImmediateTransmission();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x283C: { // GetTransmissionStatus
-				om.Initialize(0, 0, 4);
 				var _return = GetTransmissionStatus();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4E84: { // SaveSystemReport
-				om.Initialize(0, 0, 0);
 				SaveSystemReport(im.GetData<ulong>(8), im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4E85: { // SaveSystemReportWithUser
-				om.Initialize(0, 0, 0);
 				SaveSystemReportWithUser(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetSpan<byte>(0x9, 0), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4EE8: { // SetOperationMode
-				om.Initialize(0, 0, 0);
 				SetOperationMode(im.GetData<ulong>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7594: { // ClearStorage
-				om.Initialize(0, 0, 0);
 				ClearStorage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9CA4: { // IsUserAgreementCheckEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsUserAgreementCheckEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x9CA5: { // SetUserAgreementCheckEnabled
-				om.Initialize(0, 0, 0);
 				SetUserAgreementCheckEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15FF4: { // GetStorageUsage
-				om.Initialize(0, 0, 16);
 				GetStorageUsage(out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x16058: { // GetStatistics
-				om.Initialize(0, 0, 0);
 				GetStatistics();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16059: { // GetThroughputHistory
-				om.Initialize(0, 0, 0);
 				GetThroughputHistory();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x160BC: { // GetLastUploadError
-				om.Initialize(0, 0, 0);
 				GetLastUploadError();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

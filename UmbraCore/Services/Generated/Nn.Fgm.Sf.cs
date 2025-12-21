@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Fgm.Sf;
-public partial class IDebugger : _IDebugger_Base;
+public partial class IDebugger : _IDebugger_Base {
+	public readonly string ServiceName;
+	public IDebugger(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IDebugger_Base : IpcInterface {
 	protected virtual KObject Initialize(ulong _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Fgm.Sf.IDebugger.Initialize not implemented");
@@ -13,22 +16,22 @@ public abstract class _IDebugger_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 1, 0);
 				var _return = Initialize(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Read
-				om.Initialize(0, 0, 12);
 				Read(out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 12);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
 				break;
 			}
 			case 0x2: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -50,25 +53,25 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 1, 0);
 				var _return = Initialize(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Set
-				om.Initialize(0, 0, 0);
 				Set(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Get
-				om.Initialize(0, 0, 4);
 				var _return = Get();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -77,15 +80,18 @@ public abstract class _IRequest_Base : IpcInterface {
 	}
 }
 
-public partial class ISession : _ISession_Base;
+public partial class ISession : _ISession_Base {
+	public readonly string ServiceName;
+	public ISession(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual Nn.Fgm.Sf.IRequest Initialize() =>
 		throw new NotImplementedException("Nn.Fgm.Sf.ISession.Initialize not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(1, 0, 0);
 				var _return = Initialize();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

@@ -23,49 +23,49 @@ public abstract class _IMonitorService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetStateForMonitor
-				om.Initialize(0, 0, 4);
 				var _return = GetStateForMonitor();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetNetworkInfoForMonitor
-				om.Initialize(0, 0, 0);
 				GetNetworkInfoForMonitor(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetIpv4AddressForMonitor
-				om.Initialize(0, 0, 8);
 				GetIpv4AddressForMonitor(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // GetDisconnectReasonForMonitor
-				om.Initialize(0, 0, 2);
 				var _return = GetDisconnectReasonForMonitor();
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // GetSecurityParameterForMonitor
-				om.Initialize(0, 0, 32);
 				GetSecurityParameterForMonitor(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetNetworkConfigForMonitor
-				om.Initialize(0, 0, 32);
 				GetNetworkConfigForMonitor(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // InitializeMonitor
-				om.Initialize(0, 0, 0);
 				InitializeMonitor();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // FinalizeMonitor
-				om.Initialize(0, 0, 0);
 				FinalizeMonitor();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -74,15 +74,18 @@ public abstract class _IMonitorService_Base : IpcInterface {
 	}
 }
 
-public partial class IMonitorServiceCreator : _IMonitorServiceCreator_Base;
+public partial class IMonitorServiceCreator : _IMonitorServiceCreator_Base {
+	public readonly string ServiceName;
+	public IMonitorServiceCreator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IMonitorServiceCreator_Base : IpcInterface {
 	protected virtual Nn.Ldn.Detail.IMonitorService CreateMonitorService() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorServiceCreator.CreateMonitorService not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateMonitorService
-				om.Initialize(1, 0, 0);
 				var _return = CreateMonitorService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -151,147 +154,147 @@ public abstract class _ISystemLocalCommunicationService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetState
-				om.Initialize(0, 0, 4);
 				var _return = GetState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetNetworkInfo
-				om.Initialize(0, 0, 0);
 				GetNetworkInfo(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetIpv4Address
-				om.Initialize(0, 0, 8);
 				GetIpv4Address(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // GetDisconnectReason
-				om.Initialize(0, 0, 2);
 				var _return = GetDisconnectReason();
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // GetSecurityParameter
-				om.Initialize(0, 0, 32);
 				GetSecurityParameter(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetNetworkConfig
-				om.Initialize(0, 0, 32);
 				GetNetworkConfig(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // AttachStateChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachStateChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x65: { // GetNetworkInfoLatestUpdate
-				om.Initialize(0, 0, 0);
 				GetNetworkInfoLatestUpdate(im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // Scan
-				om.Initialize(0, 0, 2);
 				Scan(im.GetData<ushort>(8), im.GetBytes(16, 0x60), out var _0, im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x67: { // ScanPrivate
-				om.Initialize(0, 0, 2);
 				ScanPrivate(im.GetData<ushort>(8), im.GetBytes(16, 0x60), out var _0, im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xC8: { // OpenAccessPoint
-				om.Initialize(0, 0, 0);
 				OpenAccessPoint();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC9: { // CloseAccessPoint
-				om.Initialize(0, 0, 0);
 				CloseAccessPoint();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCA: { // CreateNetwork
-				om.Initialize(0, 0, 0);
 				CreateNetwork(im.GetBytes(8, 0x44), im.GetBytes(76, 0x30), im.GetBytes(128, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCB: { // CreateNetworkPrivate
-				om.Initialize(0, 0, 0);
 				CreateNetworkPrivate(im.GetBytes(8, 0x44), im.GetBytes(76, 0x20), im.GetBytes(108, 0x30), im.GetBytes(160, 0x20), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCC: { // DestroyNetwork
-				om.Initialize(0, 0, 0);
 				DestroyNetwork();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCD: { // Reject
-				om.Initialize(0, 0, 0);
 				Reject(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCE: { // SetAdvertiseData
-				om.Initialize(0, 0, 0);
 				SetAdvertiseData(im.GetSpan<byte>(0x21, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCF: { // SetStationAcceptPolicy
-				om.Initialize(0, 0, 0);
 				SetStationAcceptPolicy(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD0: { // AddAcceptFilterEntry
-				om.Initialize(0, 0, 0);
 				AddAcceptFilterEntry(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD1: { // ClearAcceptFilter
-				om.Initialize(0, 0, 0);
 				ClearAcceptFilter();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12C: { // OpenStation
-				om.Initialize(0, 0, 0);
 				OpenStation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12D: { // CloseStation
-				om.Initialize(0, 0, 0);
 				CloseStation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12E: { // Connect
-				om.Initialize(0, 0, 0);
 				Connect(im.GetBytes(8, 0x44), im.GetBytes(76, 0x30), im.GetData<uint>(124), im.GetData<uint>(128), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12F: { // ConnectPrivate
-				om.Initialize(0, 0, 0);
 				ConnectPrivate(im.GetBytes(8, 0x44), im.GetBytes(76, 0x20), im.GetBytes(108, 0x30), im.GetData<uint>(156), im.GetData<uint>(160), im.GetBytes(168, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x130: { // Disconnect
-				om.Initialize(0, 0, 0);
 				Disconnect();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x190: { // InitializeSystem
-				om.Initialize(0, 0, 0);
 				InitializeSystem(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x191: { // FinalizeSystem
-				om.Initialize(0, 0, 0);
 				FinalizeSystem();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -300,15 +303,18 @@ public abstract class _ISystemLocalCommunicationService_Base : IpcInterface {
 	}
 }
 
-public partial class ISystemServiceCreator : _ISystemServiceCreator_Base;
+public partial class ISystemServiceCreator : _ISystemServiceCreator_Base {
+	public readonly string ServiceName;
+	public ISystemServiceCreator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISystemServiceCreator_Base : IpcInterface {
 	protected virtual Nn.Ldn.Detail.ISystemLocalCommunicationService CreateSystemLocalCommunicationService() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemServiceCreator.CreateSystemLocalCommunicationService not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateSystemLocalCommunicationService
-				om.Initialize(1, 0, 0);
 				var _return = CreateSystemLocalCommunicationService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -377,147 +383,147 @@ public abstract class _IUserLocalCommunicationService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetState
-				om.Initialize(0, 0, 4);
 				var _return = GetState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetNetworkInfo
-				om.Initialize(0, 0, 0);
 				GetNetworkInfo(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetIpv4Address
-				om.Initialize(0, 0, 8);
 				GetIpv4Address(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // GetDisconnectReason
-				om.Initialize(0, 0, 2);
 				var _return = GetDisconnectReason();
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // GetSecurityParameter
-				om.Initialize(0, 0, 32);
 				GetSecurityParameter(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetNetworkConfig
-				om.Initialize(0, 0, 32);
 				GetNetworkConfig(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x64: { // AttachStateChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachStateChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x65: { // GetNetworkInfoLatestUpdate
-				om.Initialize(0, 0, 0);
 				GetNetworkInfoLatestUpdate(im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // Scan
-				om.Initialize(0, 0, 2);
 				Scan(im.GetData<ushort>(8), im.GetBytes(16, 0x60), out var _0, im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x67: { // ScanPrivate
-				om.Initialize(0, 0, 2);
 				ScanPrivate(im.GetData<ushort>(8), im.GetBytes(16, 0x60), out var _0, im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 2);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xC8: { // OpenAccessPoint
-				om.Initialize(0, 0, 0);
 				OpenAccessPoint();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC9: { // CloseAccessPoint
-				om.Initialize(0, 0, 0);
 				CloseAccessPoint();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCA: { // CreateNetwork
-				om.Initialize(0, 0, 0);
 				CreateNetwork(im.GetBytes(8, 0x44), im.GetBytes(76, 0x30), im.GetBytes(128, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCB: { // CreateNetworkPrivate
-				om.Initialize(0, 0, 0);
 				CreateNetworkPrivate(im.GetBytes(8, 0x44), im.GetBytes(76, 0x20), im.GetBytes(108, 0x30), im.GetBytes(160, 0x20), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCC: { // DestroyNetwork
-				om.Initialize(0, 0, 0);
 				DestroyNetwork();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCD: { // Reject
-				om.Initialize(0, 0, 0);
 				Reject(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCE: { // SetAdvertiseData
-				om.Initialize(0, 0, 0);
 				SetAdvertiseData(im.GetSpan<byte>(0x21, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCF: { // SetStationAcceptPolicy
-				om.Initialize(0, 0, 0);
 				SetStationAcceptPolicy(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD0: { // AddAcceptFilterEntry
-				om.Initialize(0, 0, 0);
 				AddAcceptFilterEntry(im.GetBytes(8, 0x6));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD1: { // ClearAcceptFilter
-				om.Initialize(0, 0, 0);
 				ClearAcceptFilter();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12C: { // OpenStation
-				om.Initialize(0, 0, 0);
 				OpenStation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12D: { // CloseStation
-				om.Initialize(0, 0, 0);
 				CloseStation();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12E: { // Connect
-				om.Initialize(0, 0, 0);
 				Connect(im.GetBytes(8, 0x44), im.GetBytes(76, 0x30), im.GetData<uint>(124), im.GetData<uint>(128), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12F: { // ConnectPrivate
-				om.Initialize(0, 0, 0);
 				ConnectPrivate(im.GetBytes(8, 0x44), im.GetBytes(76, 0x20), im.GetBytes(108, 0x30), im.GetData<uint>(156), im.GetData<uint>(160), im.GetBytes(168, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x130: { // Disconnect
-				om.Initialize(0, 0, 0);
 				Disconnect();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x190: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x191: { // _Finalize
-				om.Initialize(0, 0, 0);
 				_Finalize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -526,15 +532,18 @@ public abstract class _IUserLocalCommunicationService_Base : IpcInterface {
 	}
 }
 
-public partial class IUserServiceCreator : _IUserServiceCreator_Base;
+public partial class IUserServiceCreator : _IUserServiceCreator_Base {
+	public readonly string ServiceName;
+	public IUserServiceCreator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IUserServiceCreator_Base : IpcInterface {
 	protected virtual Nn.Ldn.Detail.IUserLocalCommunicationService CreateUserLocalCommunicationService() =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserServiceCreator.CreateUserLocalCommunicationService not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateUserLocalCommunicationService
-				om.Initialize(1, 0, 0);
 				var _return = CreateUserLocalCommunicationService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

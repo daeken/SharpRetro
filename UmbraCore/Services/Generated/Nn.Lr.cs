@@ -13,18 +13,18 @@ public abstract class _IAddOnContentLocationResolver_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ResolveAddOnContentPath
-				om.Initialize(0, 0, 0);
 				ResolveAddOnContentPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // RegisterAddOnContentStorage
-				om.Initialize(0, 0, 0);
 				RegisterAddOnContentStorage(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // UnregisterAllAddOnContentPath
-				om.Initialize(0, 0, 0);
 				UnregisterAllAddOnContentPath();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -70,83 +70,83 @@ public abstract class _ILocationResolver_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ResolveProgramPath
-				om.Initialize(0, 0, 0);
 				ResolveProgramPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // RedirectProgramPath
-				om.Initialize(0, 0, 0);
 				RedirectProgramPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ResolveApplicationControlPath
-				om.Initialize(0, 0, 0);
 				ResolveApplicationControlPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // ResolveApplicationHtmlDocumentPath
-				om.Initialize(0, 0, 0);
 				ResolveApplicationHtmlDocumentPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // ResolveDataPath
-				om.Initialize(0, 0, 0);
 				ResolveDataPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // RedirectApplicationControlPath
-				om.Initialize(0, 0, 0);
 				RedirectApplicationControlPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // RedirectApplicationHtmlDocumentPath
-				om.Initialize(0, 0, 0);
 				RedirectApplicationHtmlDocumentPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // ResolveApplicationLegalInformationPath
-				om.Initialize(0, 0, 0);
 				ResolveApplicationLegalInformationPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // RedirectApplicationLegalInformationPath
-				om.Initialize(0, 0, 0);
 				RedirectApplicationLegalInformationPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // Refresh
-				om.Initialize(0, 0, 0);
 				Refresh();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // SetProgramNcaPath2
-				om.Initialize(0, 0, 0);
 				SetProgramNcaPath2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // ClearLocationResolver2
-				om.Initialize(0, 0, 0);
 				ClearLocationResolver2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // DeleteProgramNcaPath
-				om.Initialize(0, 0, 0);
 				DeleteProgramNcaPath();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // DeleteControlNcaPath
-				om.Initialize(0, 0, 0);
 				DeleteControlNcaPath();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // DeleteDocHtmlNcaPath
-				om.Initialize(0, 0, 0);
 				DeleteDocHtmlNcaPath();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // DeleteInfoHtmlNcaPath
-				om.Initialize(0, 0, 0);
 				DeleteInfoHtmlNcaPath();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -155,7 +155,10 @@ public abstract class _ILocationResolver_Base : IpcInterface {
 	}
 }
 
-public partial class ILocationResolverManager : _ILocationResolverManager_Base;
+public partial class ILocationResolverManager : _ILocationResolverManager_Base {
+	public readonly string ServiceName;
+	public ILocationResolverManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ILocationResolverManager_Base : IpcInterface {
 	protected virtual Nn.Lr.ILocationResolver OpenLocationResolver(byte[] _0) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolverManager.OpenLocationResolver not implemented");
@@ -168,25 +171,25 @@ public abstract class _ILocationResolverManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenLocationResolver
-				om.Initialize(1, 0, 0);
 				var _return = OpenLocationResolver(im.GetBytes(8, 0x1));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // OpenRegisteredLocationResolver
-				om.Initialize(1, 0, 0);
 				var _return = OpenRegisteredLocationResolver();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // RefreshLocationResolver
-				om.Initialize(0, 0, 0);
 				RefreshLocationResolver(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // OpenAddOnContentLocationResolver
-				om.Initialize(1, 0, 0);
 				var _return = OpenAddOnContentLocationResolver();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -217,43 +220,43 @@ public abstract class _IRegisteredLocationResolver_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ResolveProgramPath
-				om.Initialize(0, 0, 0);
 				ResolveProgramPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // RegisterProgramPath
-				om.Initialize(0, 0, 0);
 				RegisterProgramPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // UnregisterProgramPath
-				om.Initialize(0, 0, 0);
 				UnregisterProgramPath(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // RedirectProgramPath
-				om.Initialize(0, 0, 0);
 				RedirectProgramPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // ResolveHtmlDocumentPath
-				om.Initialize(0, 0, 0);
 				ResolveHtmlDocumentPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // RegisterHtmlDocumentPath
-				om.Initialize(0, 0, 0);
 				RegisterHtmlDocumentPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // UnregisterHtmlDocumentPath
-				om.Initialize(0, 0, 0);
 				UnregisterHtmlDocumentPath(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // RedirectHtmlDocumentPath
-				om.Initialize(0, 0, 0);
 				RedirectHtmlDocumentPath(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

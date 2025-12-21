@@ -163,388 +163,388 @@ public abstract class _IFriendService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCompletionEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetCompletionEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2774: { // GetFriendListIds
-				om.Initialize(0, 0, 4);
 				GetFriendListIds(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetBytes(32, 0x10), im.GetData<ulong>(48), im.Pid, out var _0, im.GetSpan<ulong>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2775: { // GetFriendList
-				om.Initialize(0, 0, 4);
 				GetFriendList(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetBytes(32, 0x10), im.GetData<ulong>(48), im.Pid, out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2776: { // UpdateFriendInfo
-				om.Initialize(0, 0, 0);
 				UpdateFriendInfo(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.Pid, im.GetSpan<ulong>(0x9, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x277E: { // GetFriendProfileImage
-				om.Initialize(0, 0, 4);
 				GetFriendProfileImage(im.GetBytes(8, 0x10), im.GetData<ulong>(24), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x27D8: { // SendFriendRequestForApplication
-				om.Initialize(0, 0, 0);
 				SendFriendRequestForApplication(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetData<ulong>(32), im.Pid, im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x27E3: { // AddFacedFriendRequestForApplication
-				om.Initialize(0, 0, 0);
 				AddFacedFriendRequestForApplication(im.GetBytes(8, 0x40), im.GetBytes(72, 0x21), im.GetBytes(112, 0x10), im.GetData<ulong>(128), im.Pid, im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28A0: { // GetBlockedUserListIds
-				om.Initialize(0, 0, 4);
 				GetBlockedUserListIds(im.GetData<uint>(8), im.GetBytes(16, 0x10), out var _0, im.GetSpan<ulong>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x2904: { // GetProfileList
-				om.Initialize(0, 0, 0);
 				GetProfileList(im.GetBytes(8, 0x10), im.GetSpan<ulong>(0x9, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2968: { // DeclareOpenOnlinePlaySession
-				om.Initialize(0, 0, 0);
 				DeclareOpenOnlinePlaySession(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2969: { // DeclareCloseOnlinePlaySession
-				om.Initialize(0, 0, 0);
 				DeclareCloseOnlinePlaySession(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2972: { // UpdateUserPresence
-				om.Initialize(0, 0, 0);
 				UpdateUserPresence(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.Pid, im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29CC: { // GetPlayHistoryRegistrationKey
-				om.Initialize(0, 0, 0);
 				GetPlayHistoryRegistrationKey(im.GetData<byte>(8), im.GetBytes(16, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29CD: { // GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId
-				om.Initialize(0, 0, 0);
 				GetPlayHistoryRegistrationKeyWithNetworkServiceAccountId(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29CE: { // AddPlayHistory
-				om.Initialize(0, 0, 0);
 				AddPlayHistory(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.Pid, im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1), im.GetSpan<byte>(0x19, 2));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2AF8: { // GetProfileImageUrl
-				om.Initialize(0, 0, 160);
 				GetProfileImageUrl(im.GetBytes(8, 0xA0), im.GetData<uint>(168), out var _0);
+				om.Initialize(0, 0, 160);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4E84: { // GetFriendCount
-				om.Initialize(0, 0, 4);
 				var _return = GetFriendCount(im.GetBytes(8, 0x10), im.GetBytes(24, 0x10), im.GetData<ulong>(40), im.Pid);
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4E85: { // GetNewlyFriendCount
-				om.Initialize(0, 0, 4);
 				var _return = GetNewlyFriendCount(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x4E86: { // GetFriendDetailedInfo
-				om.Initialize(0, 0, 0);
 				GetFriendDetailedInfo(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4E87: { // SyncFriendList
-				om.Initialize(0, 0, 0);
 				SyncFriendList(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4E88: { // RequestSyncFriendList
-				om.Initialize(0, 0, 0);
 				RequestSyncFriendList(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4E8E: { // LoadFriendSetting
-				om.Initialize(0, 0, 0);
 				LoadFriendSetting(im.GetBytes(8, 0x10), im.GetData<ulong>(24), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4EE8: { // GetReceivedFriendRequestCount
-				om.Initialize(0, 0, 8);
 				GetReceivedFriendRequestCount(im.GetBytes(8, 0x10), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x4EE9: { // GetFriendRequestList
-				om.Initialize(0, 0, 4);
 				GetFriendRequestList(im.GetData<uint>(8), im.GetData<uint>(12), im.GetBytes(16, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4F4C: { // GetFriendCandidateList
-				om.Initialize(0, 0, 4);
 				GetFriendCandidateList(im.GetData<uint>(8), im.GetBytes(16, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4F4D: { // GetNintendoNetworkIdInfo
-				om.Initialize(0, 0, 4);
 				GetNintendoNetworkIdInfo(im.GetData<uint>(8), im.GetBytes(16, 0x10), out var _0, im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4F4E: { // GetSnsAccountLinkage
-				om.Initialize(0, 0, 0);
 				GetSnsAccountLinkage();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4F4F: { // GetSnsAccountProfile
-				om.Initialize(0, 0, 0);
 				GetSnsAccountProfile();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4F50: { // GetSnsAccountFriendList
-				om.Initialize(0, 0, 0);
 				GetSnsAccountFriendList();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4FB0: { // GetBlockedUserList
-				om.Initialize(0, 0, 4);
 				GetBlockedUserList(im.GetData<uint>(8), im.GetBytes(16, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x4FB1: { // SyncBlockedUserList
-				om.Initialize(0, 0, 0);
 				SyncBlockedUserList(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5014: { // GetProfileExtraList
-				om.Initialize(0, 0, 0);
 				GetProfileExtraList(im.GetBytes(8, 0x10), im.GetSpan<ulong>(0x9, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5015: { // GetRelationship
-				om.Initialize(0, 0, 8);
 				GetRelationship(im.GetBytes(8, 0x10), im.GetData<ulong>(24), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5078: { // GetUserPresenceView
-				om.Initialize(0, 0, 0);
 				GetUserPresenceView(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x50DC: { // GetPlayHistoryList
-				om.Initialize(0, 0, 4);
 				GetPlayHistoryList(im.GetData<uint>(8), im.GetBytes(16, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x50DD: { // GetPlayHistoryStatistics
-				om.Initialize(0, 0, 16);
 				GetPlayHistoryStatistics(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5140: { // LoadUserSetting
-				om.Initialize(0, 0, 0);
 				LoadUserSetting(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5141: { // SyncUserSetting
-				om.Initialize(0, 0, 0);
 				SyncUserSetting(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x51A4: { // RequestListSummaryOverlayNotification
-				om.Initialize(0, 0, 0);
 				RequestListSummaryOverlayNotification();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5208: { // GetExternalApplicationCatalog
-				om.Initialize(0, 0, 0);
 				GetExternalApplicationCatalog(im.GetBytes(8, 0x8), im.GetBytes(16, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7594: { // DropFriendNewlyFlags
-				om.Initialize(0, 0, 0);
 				DropFriendNewlyFlags(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7595: { // DeleteFriend
-				om.Initialize(0, 0, 0);
 				DeleteFriend(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x759E: { // DropFriendNewlyFlag
-				om.Initialize(0, 0, 0);
 				DropFriendNewlyFlag(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75A8: { // ChangeFriendFavoriteFlag
-				om.Initialize(0, 0, 0);
 				ChangeFriendFavoriteFlag(im.GetData<byte>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75A9: { // ChangeFriendOnlineNotificationFlag
-				om.Initialize(0, 0, 0);
 				ChangeFriendOnlineNotificationFlag(im.GetData<byte>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75F8: { // SendFriendRequest
-				om.Initialize(0, 0, 0);
 				SendFriendRequest(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75F9: { // SendFriendRequestWithApplicationInfo
-				om.Initialize(0, 0, 0);
 				SendFriendRequestWithApplicationInfo(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32), im.GetBytes(40, 0x10), im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75FA: { // CancelFriendRequest
-				om.Initialize(0, 0, 0);
 				CancelFriendRequest(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75FB: { // AcceptFriendRequest
-				om.Initialize(0, 0, 0);
 				AcceptFriendRequest(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75FC: { // RejectFriendRequest
-				om.Initialize(0, 0, 0);
 				RejectFriendRequest(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x75FD: { // ReadFriendRequest
-				om.Initialize(0, 0, 0);
 				ReadFriendRequest(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7602: { // GetFacedFriendRequestRegistrationKey
-				om.Initialize(0, 0, 64);
 				GetFacedFriendRequestRegistrationKey(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 64);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7603: { // AddFacedFriendRequest
-				om.Initialize(0, 0, 0);
 				AddFacedFriendRequest(im.GetBytes(8, 0x40), im.GetBytes(72, 0x21), im.GetBytes(112, 0x10), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7604: { // CancelFacedFriendRequest
-				om.Initialize(0, 0, 0);
 				CancelFacedFriendRequest(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7605: { // GetFacedFriendRequestProfileImage
-				om.Initialize(0, 0, 4);
 				GetFacedFriendRequestProfileImage(im.GetBytes(8, 0x10), im.GetData<ulong>(24), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7606: { // GetFacedFriendRequestProfileImageFromPath
-				om.Initialize(0, 0, 4);
 				GetFacedFriendRequestProfileImageFromPath(im.GetSpan<byte>(0x9, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7607: { // SendFriendRequestWithExternalApplicationCatalogId
-				om.Initialize(0, 0, 0);
 				SendFriendRequestWithExternalApplicationCatalogId(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32), im.GetBytes(40, 0x10), im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7608: { // ResendFacedFriendRequest
-				om.Initialize(0, 0, 0);
 				ResendFacedFriendRequest(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7609: { // SendFriendRequestWithNintendoNetworkIdInfo
-				om.Initialize(0, 0, 0);
 				SendFriendRequestWithNintendoNetworkIdInfo(im.GetBytes(8, 0x20), im.GetBytes(40, 0x10), im.GetBytes(56, 0x20), im.GetBytes(88, 0x10), im.GetData<uint>(104), im.GetBytes(112, 0x10), im.GetData<ulong>(128));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x765C: { // GetSnsAccountLinkPageUrl
-				om.Initialize(0, 0, 0);
 				GetSnsAccountLinkPageUrl();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x765D: { // UnlinkSnsAccount
-				om.Initialize(0, 0, 0);
 				UnlinkSnsAccount();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x76C0: { // BlockUser
-				om.Initialize(0, 0, 0);
 				BlockUser(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x76C1: { // BlockUserWithApplicationInfo
-				om.Initialize(0, 0, 0);
 				BlockUserWithApplicationInfo(im.GetData<uint>(8), im.GetBytes(16, 0x10), im.GetData<ulong>(32), im.GetBytes(40, 0x10), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x76C2: { // UnblockUser
-				om.Initialize(0, 0, 0);
 				UnblockUser(im.GetBytes(8, 0x10), im.GetData<ulong>(24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7724: { // GetProfileExtraFromFriendCode
-				om.Initialize(0, 0, 0);
 				GetProfileExtraFromFriendCode(im.GetBytes(8, 0x20), im.GetBytes(40, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x77EC: { // DeletePlayHistory
-				om.Initialize(0, 0, 0);
 				DeletePlayHistory(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x785A: { // ChangePresencePermission
-				om.Initialize(0, 0, 0);
 				ChangePresencePermission(im.GetData<uint>(8), im.GetBytes(16, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x785B: { // ChangeFriendRequestReception
-				om.Initialize(0, 0, 0);
 				ChangeFriendRequestReception(im.GetData<byte>(8), im.GetBytes(16, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x785C: { // ChangePlayLogPermission
-				om.Initialize(0, 0, 0);
 				ChangePlayLogPermission(im.GetData<uint>(8), im.GetBytes(16, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7864: { // IssueFriendCode
-				om.Initialize(0, 0, 0);
 				IssueFriendCode(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x786E: { // ClearPlayLog
-				om.Initialize(0, 0, 0);
 				ClearPlayLog(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC2EC: { // DeleteNetworkServiceAccountCache
-				om.Initialize(0, 0, 0);
 				DeleteNetworkServiceAccountCache(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -560,8 +560,8 @@ public abstract class _IFriendServiceCreator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Create
-				om.Initialize(1, 0, 0);
 				var _return = Create();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -582,19 +582,19 @@ public abstract class _INotificationService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Clear
-				om.Initialize(0, 0, 0);
 				Clear();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Pop
-				om.Initialize(0, 0, 16);
 				Pop(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -604,7 +604,10 @@ public abstract class _INotificationService_Base : IpcInterface {
 	}
 }
 
-public partial class IServiceCreator : _IServiceCreator_Base;
+public partial class IServiceCreator : _IServiceCreator_Base {
+	public readonly string ServiceName;
+	public IServiceCreator(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IServiceCreator_Base : IpcInterface {
 	protected virtual Nn.Friends.Detail.Ipc.IFriendService CreateFriendService() =>
 		throw new NotImplementedException("Nn.Friends.Detail.Ipc.IServiceCreator.CreateFriendService not implemented");
@@ -615,20 +618,20 @@ public abstract class _IServiceCreator_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateFriendService
-				om.Initialize(1, 0, 0);
 				var _return = CreateFriendService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // CreateNotificationService
-				om.Initialize(1, 0, 0);
 				var _return = CreateNotificationService(im.GetBytes(8, 0x10));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x2: { // CreateDaemonSuspendSessionService
-				om.Initialize(1, 0, 0);
 				var _return = CreateDaemonSuspendSessionService();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Ldr.Detail;
-public partial class IDebugMonitorInterface : _IDebugMonitorInterface_Base;
+public partial class IDebugMonitorInterface : _IDebugMonitorInterface_Base {
+	public readonly string ServiceName;
+	public IDebugMonitorInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	protected virtual void AddProcessToDebugLaunchQueue(byte[] _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IDebugMonitorInterface.AddProcessToDebugLaunchQueue");
@@ -13,18 +16,18 @@ public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // AddProcessToDebugLaunchQueue
-				om.Initialize(0, 0, 0);
 				AddProcessToDebugLaunchQueue(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // ClearDebugLaunchQueue
-				om.Initialize(0, 0, 0);
 				ClearDebugLaunchQueue();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetNsoInfos
-				om.Initialize(0, 0, 4);
 				GetNsoInfos(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -34,7 +37,10 @@ public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IProcessManagerInterface : _IProcessManagerInterface_Base;
+public partial class IProcessManagerInterface : _IProcessManagerInterface_Base {
+	public readonly string ServiceName;
+	public IProcessManagerInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IProcessManagerInterface_Base : IpcInterface {
 	protected virtual IpcInterface CreateProcess(byte[] _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Ldr.Detail.IProcessManagerInterface.CreateProcess not implemented");
@@ -47,25 +53,25 @@ public abstract class _IProcessManagerInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateProcess
-				om.Initialize(1, 0, 0);
 				var _return = CreateProcess(im.GetBytes(8, 0x10), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetProgramInfo
-				om.Initialize(0, 0, 0);
 				GetProgramInfo(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // RegisterTitle
-				om.Initialize(0, 0, 8);
 				RegisterTitle(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // UnregisterTitle
-				om.Initialize(0, 0, 0);
 				UnregisterTitle(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -74,7 +80,10 @@ public abstract class _IProcessManagerInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IRoInterface : _IRoInterface_Base;
+public partial class IRoInterface : _IRoInterface_Base {
+	public readonly string ServiceName;
+	public IRoInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IRoInterface_Base : IpcInterface {
 	protected virtual ulong LoadNro(ulong _0, ulong _1, ulong _2, ulong _3, ulong _4, ulong _5) =>
 		throw new NotImplementedException("Nn.Ldr.Detail.IRoInterface.LoadNro not implemented");
@@ -89,29 +98,29 @@ public abstract class _IRoInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // LoadNro
-				om.Initialize(0, 0, 8);
 				var _return = LoadNro(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetData<ulong>(32), im.GetData<ulong>(40), im.Pid);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // UnloadNro
-				om.Initialize(0, 0, 0);
 				UnloadNro(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // LoadNrr
-				om.Initialize(0, 0, 0);
 				LoadNrr(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // UnloadNrr
-				om.Initialize(0, 0, 0);
 				UnloadNrr(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize(im.GetData<ulong>(8), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -120,7 +129,10 @@ public abstract class _IRoInterface_Base : IpcInterface {
 	}
 }
 
-public partial class IShellInterface : _IShellInterface_Base;
+public partial class IShellInterface : _IShellInterface_Base {
+	public readonly string ServiceName;
+	public IShellInterface(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IShellInterface_Base : IpcInterface {
 	protected virtual void AddProcessToLaunchQueue(Span<byte> _0, uint size, ulong appID) =>
 		Console.WriteLine("Stub hit for Nn.Ldr.Detail.IShellInterface.AddProcessToLaunchQueue");
@@ -129,13 +141,13 @@ public abstract class _IShellInterface_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // AddProcessToLaunchQueue
-				om.Initialize(0, 0, 0);
 				AddProcessToLaunchQueue(im.GetSpan<byte>(0x9, 0), im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // ClearLaunchQueue
-				om.Initialize(0, 0, 0);
 				ClearLaunchQueue();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

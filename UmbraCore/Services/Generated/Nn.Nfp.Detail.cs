@@ -115,291 +115,291 @@ public abstract class _IDebug_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // InitializeDebug
-				om.Initialize(0, 0, 0);
 				InitializeDebug(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // FinalizeDebug
-				om.Initialize(0, 0, 0);
 				FinalizeDebug();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ListDevices
-				om.Initialize(0, 0, 4);
 				ListDevices(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // StartDetection
-				om.Initialize(0, 0, 0);
 				StartDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // StopDetection
-				om.Initialize(0, 0, 0);
 				StopDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Mount
-				om.Initialize(0, 0, 0);
 				Mount(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetData<uint>(20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unmount
-				om.Initialize(0, 0, 0);
 				Unmount(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // OpenApplicationArea
-				om.Initialize(0, 0, 0);
 				OpenApplicationArea(im.GetBytes(8, 0x8), im.GetData<uint>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetApplicationArea
-				om.Initialize(0, 0, 4);
 				GetApplicationArea(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x9: { // SetApplicationArea
-				om.Initialize(0, 0, 0);
 				SetApplicationArea(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Flush
-				om.Initialize(0, 0, 0);
 				Flush(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Restore
-				om.Initialize(0, 0, 0);
 				Restore(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // CreateApplicationArea
-				om.Initialize(0, 0, 0);
 				CreateApplicationArea(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // GetTagInfo
-				om.Initialize(0, 0, 0);
 				GetTagInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // GetRegisterInfo
-				om.Initialize(0, 0, 0);
 				GetRegisterInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // GetCommonInfo
-				om.Initialize(0, 0, 0);
 				GetCommonInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // GetModelInfo
-				om.Initialize(0, 0, 0);
 				GetModelInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // AttachActivateEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachActivateEvent(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x12: { // AttachDeactivateEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachDeactivateEvent(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x13: { // GetState
-				om.Initialize(0, 0, 4);
 				var _return = GetState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x14: { // GetDeviceState
-				om.Initialize(0, 0, 4);
 				var _return = GetDeviceState(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // GetNpadId
-				om.Initialize(0, 0, 4);
 				var _return = GetNpadId(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x16: { // GetApplicationArea2
-				om.Initialize(0, 0, 4);
 				var _return = GetApplicationArea2(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x17: { // AttachAvailabilityChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachAvailabilityChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x18: { // RecreateApplicationArea
-				om.Initialize(0, 0, 0);
 				RecreateApplicationArea(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x64: { // Format
-				om.Initialize(0, 0, 0);
 				Format(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // GetAdminInfo
-				om.Initialize(0, 0, 0);
 				GetAdminInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // GetRegisterInfo2
-				om.Initialize(0, 0, 0);
 				GetRegisterInfo2(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x67: { // SetRegisterInfo
-				om.Initialize(0, 0, 0);
 				SetRegisterInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x68: { // DeleteRegisterInfo
-				om.Initialize(0, 0, 0);
 				DeleteRegisterInfo(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x69: { // DeleteApplicationArea
-				om.Initialize(0, 0, 0);
 				DeleteApplicationArea(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6A: { // ExistsApplicationArea
-				om.Initialize(0, 0, 1);
 				var _return = ExistsApplicationArea(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0xC8: { // GetAll
-				om.Initialize(0, 0, 0);
 				GetAll(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC9: { // SetAll
-				om.Initialize(0, 0, 0);
 				SetAll(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCA: { // FlushDebug
-				om.Initialize(0, 0, 0);
 				FlushDebug(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCB: { // BreakTag
-				om.Initialize(0, 0, 0);
 				BreakTag(im.GetBytes(8, 0x8), im.GetData<uint>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCC: { // ReadBackupData
-				om.Initialize(0, 0, 4);
 				ReadBackupData(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xCD: { // WriteBackupData
-				om.Initialize(0, 0, 0);
 				WriteBackupData(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xCE: { // WriteNtf
-				om.Initialize(0, 0, 0);
 				WriteNtf(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12C: { // Unknown300
-				om.Initialize(0, 0, 0);
 				Unknown300(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12D: { // Unknown301
-				om.Initialize(0, 0, 0);
 				Unknown301();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12E: { // Unknown302
-				om.Initialize(0, 0, 4);
 				Unknown302(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x12F: { // Unknown303
-				om.Initialize(0, 0, 0);
 				Unknown303(im.GetBytes(8, 0x8), im.GetData<uint>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x130: { // Unknown304
-				om.Initialize(0, 0, 0);
 				Unknown304(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x131: { // Unknown305
-				om.Initialize(0, 0, 4);
 				Unknown305(im.GetBytes(8, 0x8), im.GetData<ulong>(16), im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x132: { // Unknown306
-				om.Initialize(0, 0, 0);
 				Unknown306(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x133: { // Unknown307
-				om.Initialize(0, 1, 0);
 				var _return = Unknown307(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x134: { // Unknown308
-				om.Initialize(0, 1, 0);
 				var _return = Unknown308(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x135: { // Unknown309
-				om.Initialize(0, 0, 4);
 				var _return = Unknown309();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x136: { // Unknown310
-				om.Initialize(0, 0, 4);
 				var _return = Unknown310(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x137: { // Unknown311
-				om.Initialize(0, 0, 4);
 				var _return = Unknown311(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x138: { // Unknown312
-				om.Initialize(0, 0, 0);
 				Unknown312(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x139: { // Unknown313
-				om.Initialize(0, 0, 0);
 				Unknown313(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13A: { // Unknown314
-				om.Initialize(0, 1, 0);
 				var _return = Unknown314();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -409,15 +409,18 @@ public abstract class _IDebug_Base : IpcInterface {
 	}
 }
 
-public partial class IDebugManager : _IDebugManager_Base;
+public partial class IDebugManager : _IDebugManager_Base {
+	public readonly string ServiceName;
+	public IDebugManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IDebugManager_Base : IpcInterface {
 	protected virtual Nn.Nfp.Detail.IDebug CreateDebugInterface() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebugManager.CreateDebugInterface not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateDebugInterface
-				om.Initialize(1, 0, 0);
 				var _return = CreateDebugInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -484,140 +487,140 @@ public abstract class _ISystem_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // InitializeSystem
-				om.Initialize(0, 0, 0);
 				InitializeSystem(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // FinalizeSystem
-				om.Initialize(0, 0, 0);
 				FinalizeSystem();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ListDevices
-				om.Initialize(0, 0, 4);
 				ListDevices(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // StartDetection
-				om.Initialize(0, 0, 0);
 				StartDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // StopDetection
-				om.Initialize(0, 0, 0);
 				StopDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Mount
-				om.Initialize(0, 0, 0);
 				Mount(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetData<uint>(20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unmount
-				om.Initialize(0, 0, 0);
 				Unmount(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Flush
-				om.Initialize(0, 0, 0);
 				Flush(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Restore
-				om.Initialize(0, 0, 0);
 				Restore(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // GetTagInfo
-				om.Initialize(0, 0, 0);
 				GetTagInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // GetRegisterInfo
-				om.Initialize(0, 0, 0);
 				GetRegisterInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // GetCommonInfo
-				om.Initialize(0, 0, 0);
 				GetCommonInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // GetModelInfo
-				om.Initialize(0, 0, 0);
 				GetModelInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // AttachActivateEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachActivateEvent(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x12: { // AttachDeactivateEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachDeactivateEvent(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x13: { // GetState
-				om.Initialize(0, 0, 4);
 				var _return = GetState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x14: { // GetDeviceState
-				om.Initialize(0, 0, 4);
 				var _return = GetDeviceState(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // GetNpadId
-				om.Initialize(0, 0, 4);
 				var _return = GetNpadId(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x17: { // AttachAvailabilityChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachAvailabilityChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x64: { // Format
-				om.Initialize(0, 0, 0);
 				Format(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // GetAdminInfo
-				om.Initialize(0, 0, 0);
 				GetAdminInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x66: { // GetRegisterInfo2
-				om.Initialize(0, 0, 0);
 				GetRegisterInfo2(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x67: { // SetRegisterInfo
-				om.Initialize(0, 0, 0);
 				SetRegisterInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x68: { // DeleteRegisterInfo
-				om.Initialize(0, 0, 0);
 				DeleteRegisterInfo(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x69: { // DeleteApplicationArea
-				om.Initialize(0, 0, 0);
 				DeleteApplicationArea(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6A: { // ExistsApplicationArea
-				om.Initialize(0, 0, 1);
 				var _return = ExistsApplicationArea(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
@@ -627,15 +630,18 @@ public abstract class _ISystem_Base : IpcInterface {
 	}
 }
 
-public partial class ISystemManager : _ISystemManager_Base;
+public partial class ISystemManager : _ISystemManager_Base {
+	public readonly string ServiceName;
+	public ISystemManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISystemManager_Base : IpcInterface {
 	protected virtual Nn.Nfp.Detail.ISystem CreateSystemInterface() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystemManager.CreateSystemInterface not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateSystemInterface
-				om.Initialize(1, 0, 0);
 				var _return = CreateSystemInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -700,137 +706,137 @@ public abstract class _IUser_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // _Finalize
-				om.Initialize(0, 0, 0);
 				_Finalize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ListDevices
-				om.Initialize(0, 0, 4);
 				ListDevices(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // StartDetection
-				om.Initialize(0, 0, 0);
 				StartDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // StopDetection
-				om.Initialize(0, 0, 0);
 				StopDetection(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Mount
-				om.Initialize(0, 0, 0);
 				Mount(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetData<uint>(20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unmount
-				om.Initialize(0, 0, 0);
 				Unmount(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // OpenApplicationArea
-				om.Initialize(0, 0, 0);
 				OpenApplicationArea(im.GetBytes(8, 0x8), im.GetData<uint>(16));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetApplicationArea
-				om.Initialize(0, 0, 4);
 				GetApplicationArea(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x9: { // SetApplicationArea
-				om.Initialize(0, 0, 0);
 				SetApplicationArea(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Flush
-				om.Initialize(0, 0, 0);
 				Flush(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Restore
-				om.Initialize(0, 0, 0);
 				Restore(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // CreateApplicationArea
-				om.Initialize(0, 0, 0);
 				CreateApplicationArea(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // GetTagInfo
-				om.Initialize(0, 0, 0);
 				GetTagInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // GetRegisterInfo
-				om.Initialize(0, 0, 0);
 				GetRegisterInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // GetCommonInfo
-				om.Initialize(0, 0, 0);
 				GetCommonInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // GetModelInfo
-				om.Initialize(0, 0, 0);
 				GetModelInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // AttachActivateEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachActivateEvent(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x12: { // AttachDeactivateEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachDeactivateEvent(im.GetBytes(8, 0x8));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x13: { // GetState
-				om.Initialize(0, 0, 4);
 				var _return = GetState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x14: { // GetDeviceState
-				om.Initialize(0, 0, 4);
 				var _return = GetDeviceState(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // GetNpadId
-				om.Initialize(0, 0, 4);
 				var _return = GetNpadId(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x16: { // GetApplicationArea2
-				om.Initialize(0, 0, 4);
 				var _return = GetApplicationArea2(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x17: { // AttachAvailabilityChangeEvent
-				om.Initialize(0, 1, 0);
 				var _return = AttachAvailabilityChangeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x18: { // RecreateApplicationArea
-				om.Initialize(0, 0, 0);
 				RecreateApplicationArea(im.GetBytes(8, 0x8), im.GetData<uint>(16), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -839,15 +845,18 @@ public abstract class _IUser_Base : IpcInterface {
 	}
 }
 
-public partial class IUserManager : _IUserManager_Base;
+public partial class IUserManager : _IUserManager_Base {
+	public readonly string ServiceName;
+	public IUserManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IUserManager_Base : IpcInterface {
 	protected virtual Nn.Nfp.Detail.IUser CreateUserInterface() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUserManager.CreateUserInterface not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateUserInterface
-				om.Initialize(1, 0, 0);
 				var _return = CreateUserInterface();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

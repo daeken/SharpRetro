@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Hidbus;
-public partial class IHidbusServer : _IHidbusServer_Base;
+public partial class IHidbusServer : _IHidbusServer_Base {
+	public readonly string ServiceName;
+	public IHidbusServer(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IHidbusServer_Base : IpcInterface {
 	protected virtual void GetBusHandle() =>
 		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.GetBusHandle");
@@ -33,68 +36,68 @@ public abstract class _IHidbusServer_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // GetBusHandle
-				om.Initialize(0, 0, 0);
 				GetBusHandle();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // IsExternalDeviceConnected
-				om.Initialize(0, 0, 0);
 				IsExternalDeviceConnected();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Initialize
-				om.Initialize(0, 0, 0);
 				Initialize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // _Finalize
-				om.Initialize(0, 0, 0);
 				_Finalize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // EnableExternalDevice
-				om.Initialize(0, 0, 0);
 				EnableExternalDevice();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // GetExternalDeviceId
-				om.Initialize(0, 0, 0);
 				GetExternalDeviceId();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // SendCommandAsync
-				om.Initialize(0, 0, 0);
 				SendCommandAsync();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // GetSendCommandAsynceResult
-				om.Initialize(0, 0, 0);
 				GetSendCommandAsynceResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // SetEventForSendCommandAsycResult
-				om.Initialize(0, 0, 0);
 				SetEventForSendCommandAsycResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // GetSharedMemoryHandle
-				om.Initialize(0, 0, 0);
 				GetSharedMemoryHandle();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // EnableJoyPollingReceiveMode
-				om.Initialize(0, 0, 0);
 				EnableJoyPollingReceiveMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // DisableJoyPollingReceiveMode
-				om.Initialize(0, 0, 0);
 				DisableJoyPollingReceiveMode();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // GetPollingData
-				om.Initialize(0, 0, 0);
 				GetPollingData();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

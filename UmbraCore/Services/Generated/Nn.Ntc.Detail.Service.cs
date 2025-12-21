@@ -19,35 +19,35 @@ public abstract class _IEnsureNetworkClockAvailabilityService_Base : IpcInterfac
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // StartTask
-				om.Initialize(0, 0, 0);
 				StartTask();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetFinishNotificationEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetFinishNotificationEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // IsProcessing
-				om.Initialize(0, 0, 1);
 				var _return = IsProcessing();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // GetServerTime
-				om.Initialize(0, 0, 8);
 				var _return = GetServerTime();
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
 				break;
 			}
@@ -57,7 +57,10 @@ public abstract class _IEnsureNetworkClockAvailabilityService_Base : IpcInterfac
 	}
 }
 
-public partial class IStaticService : _IStaticService_Base;
+public partial class IStaticService : _IStaticService_Base {
+	public readonly string ServiceName;
+	public IStaticService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IStaticService_Base : IpcInterface {
 	protected virtual Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService OpenEnsureNetworkClockAvailabilityService(uint _0, uint _1) =>
 		throw new NotImplementedException("Nn.Ntc.Detail.Service.IStaticService.OpenEnsureNetworkClockAvailabilityService not implemented");
@@ -68,19 +71,19 @@ public abstract class _IStaticService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenEnsureNetworkClockAvailabilityService
-				om.Initialize(1, 0, 0);
 				var _return = OpenEnsureNetworkClockAvailabilityService(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x64: { // SuspendAutonomicTimeCorrection
-				om.Initialize(0, 0, 0);
 				SuspendAutonomicTimeCorrection();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // ResumeAutonomicTimeCorrection
-				om.Initialize(0, 0, 0);
 				ResumeAutonomicTimeCorrection();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

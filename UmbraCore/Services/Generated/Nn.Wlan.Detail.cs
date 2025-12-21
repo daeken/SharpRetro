@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Wlan.Detail;
-public partial class IInfraManager : _IInfraManager_Base;
+public partial class IInfraManager : _IInfraManager_Base {
+	public readonly string ServiceName;
+	public IInfraManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IInfraManager_Base : IpcInterface {
 	protected virtual void Unknown0() =>
 		Console.WriteLine("Stub hit for Nn.Wlan.Detail.IInfraManager.Unknown0");
@@ -63,151 +66,151 @@ public abstract class _IInfraManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetMacAddress
-				om.Initialize(0, 0, 6);
 				GetMacAddress(out var _0);
+				om.Initialize(0, 0, 6);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // StartScan
-				om.Initialize(0, 0, 0);
 				StartScan(im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // StopScan
-				om.Initialize(0, 0, 0);
 				StopScan();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Connect
-				om.Initialize(0, 0, 0);
 				Connect(im.GetBytes(8, 0x80));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // CancelConnect
-				om.Initialize(0, 0, 0);
 				CancelConnect();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // Disconnect
-				om.Initialize(0, 0, 0);
 				Disconnect();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 1, 0);
 				var _return = Unknown8(im.GetBytes(8, 0x4));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 60);
 				Unknown9(out var _0);
+				om.Initialize(0, 0, 60);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // GetState
-				om.Initialize(0, 0, 4);
 				GetState(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // GetScanResult
-				om.Initialize(0, 0, 0);
 				GetScanResult(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // GetRssi
-				om.Initialize(0, 0, 4);
 				GetRssi(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // ChangeRxAntenna
-				om.Initialize(0, 0, 0);
 				ChangeRxAntenna(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // Unknown14
-				om.Initialize(0, 0, 0);
 				Unknown14(im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // Unknown15
-				om.Initialize(0, 0, 0);
 				Unknown15();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // RequestWakeUp
-				om.Initialize(0, 0, 0);
 				RequestWakeUp();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // RequestIfUpDown
-				om.Initialize(0, 0, 0);
 				RequestIfUpDown(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x9, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // Unknown18
-				om.Initialize(0, 0, 4);
 				Unknown18(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x13: { // Unknown19
-				om.Initialize(0, 0, 0);
 				Unknown19(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // Unknown20
-				om.Initialize(0, 0, 0);
 				Unknown20();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x15: { // Unknown21
-				om.Initialize(0, 0, 4);
 				Unknown21(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x16: { // Unknown22
-				om.Initialize(0, 0, 0);
 				Unknown22(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x17: { // Unknown23
-				om.Initialize(0, 0, 0);
 				Unknown23(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x18: { // Unknown24
-				om.Initialize(0, 0, 92);
 				Unknown24(out var _0);
+				om.Initialize(0, 0, 92);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x19: { // Unknown25
-				om.Initialize(0, 0, 0);
 				Unknown25(im.GetBytes(8, 0x2));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // Unknown26
-				om.Initialize(0, 0, 0);
 				Unknown26();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // Unknown27
-				om.Initialize(0, 0, 0);
 				Unknown27();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -216,15 +219,18 @@ public abstract class _IInfraManager_Base : IpcInterface {
 	}
 }
 
-public partial class ILocalGetActionFrame : _ILocalGetActionFrame_Base;
+public partial class ILocalGetActionFrame : _ILocalGetActionFrame_Base {
+	public readonly string ServiceName;
+	public ILocalGetActionFrame(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ILocalGetActionFrame_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Wlan.Detail.ILocalGetActionFrame.Unknown0 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 12);
 				Unknown0(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 12);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -234,15 +240,18 @@ public abstract class _ILocalGetActionFrame_Base : IpcInterface {
 	}
 }
 
-public partial class ILocalGetFrame : _ILocalGetFrame_Base;
+public partial class ILocalGetFrame : _ILocalGetFrame_Base {
+	public readonly string ServiceName;
+	public ILocalGetFrame(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ILocalGetFrame_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Wlan.Detail.ILocalGetFrame.Unknown0 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -252,7 +261,10 @@ public abstract class _ILocalGetFrame_Base : IpcInterface {
 	}
 }
 
-public partial class ILocalManager : _ILocalManager_Base;
+public partial class ILocalManager : _ILocalManager_Base {
+	public readonly string ServiceName;
+	public ILocalManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ILocalManager_Base : IpcInterface {
 	protected virtual void Unknown0() =>
 		Console.WriteLine("Stub hit for Nn.Wlan.Detail.ILocalManager.Unknown0");
@@ -355,260 +367,260 @@ public abstract class _ILocalManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // GetMacAddress
-				om.Initialize(0, 0, 6);
 				GetMacAddress(out var _0);
+				om.Initialize(0, 0, 6);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // CreateBss
-				om.Initialize(0, 0, 0);
 				CreateBss(im.GetBytes(8, 0x84));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // DestroyBss
-				om.Initialize(0, 0, 0);
 				DestroyBss();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // StartScan
-				om.Initialize(0, 0, 0);
 				StartScan(im.GetSpan<byte>(0x15, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // StopScan
-				om.Initialize(0, 0, 0);
 				StopScan();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Connect
-				om.Initialize(0, 0, 0);
 				Connect(im.GetBytes(8, 0x84));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // CancelConnect
-				om.Initialize(0, 0, 0);
 				CancelConnect();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // Join
-				om.Initialize(0, 0, 0);
 				Join(im.GetBytes(8, 0x84));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // CancelJoin
-				om.Initialize(0, 0, 0);
 				CancelJoin();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // Disconnect
-				om.Initialize(0, 0, 0);
 				Disconnect(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // SetBeaconLostCount
-				om.Initialize(0, 0, 0);
 				SetBeaconLostCount(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // Unknown17
-				om.Initialize(0, 1, 0);
 				var _return = Unknown17(im.GetBytes(8, 0x4));
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x12: { // Unknown18
-				om.Initialize(0, 0, 60);
 				Unknown18(out var _0);
+				om.Initialize(0, 0, 60);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x13: { // Unknown19
-				om.Initialize(0, 0, 0);
 				Unknown19(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // GetBssIndicationEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetBssIndicationEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x15: { // GetBssIndicationInfo
-				om.Initialize(0, 0, 0);
 				GetBssIndicationInfo(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x16: { // GetState
-				om.Initialize(0, 0, 4);
 				GetState(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x17: { // GetAllowedChannels
-				om.Initialize(0, 0, 80);
 				GetAllowedChannels(out var _0);
+				om.Initialize(0, 0, 80);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x18: { // AddIe
-				om.Initialize(0, 0, 4);
 				AddIe(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x19: { // DeleteIe
-				om.Initialize(0, 0, 0);
 				DeleteIe(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1A: { // Unknown26
-				om.Initialize(0, 0, 0);
 				Unknown26(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // Unknown27
-				om.Initialize(0, 0, 0);
 				Unknown27(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1C: { // CreateRxEntry
-				om.Initialize(0, 0, 4);
 				CreateRxEntry(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1D: { // DeleteRxEntry
-				om.Initialize(0, 0, 0);
 				DeleteRxEntry(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // Unknown30
-				om.Initialize(0, 0, 0);
 				Unknown30(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // Unknown31
-				om.Initialize(0, 0, 4);
 				Unknown31(im.GetBytes(8, 0x2), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x20: { // AddMatchingDataToRxEntry
-				om.Initialize(0, 0, 0);
 				AddMatchingDataToRxEntry(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // RemoveMatchingDataFromRxEntry
-				om.Initialize(0, 0, 0);
 				RemoveMatchingDataFromRxEntry(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x22: { // GetScanResult
-				om.Initialize(0, 0, 0);
 				GetScanResult(im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // Unknown35
-				om.Initialize(0, 0, 0);
 				Unknown35(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x24: { // SetActionFrameWithBeacon
-				om.Initialize(0, 0, 0);
 				SetActionFrameWithBeacon(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25: { // CancelActionFrameWithBeacon
-				om.Initialize(0, 0, 0);
 				CancelActionFrameWithBeacon();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x26: { // CreateRxEntryForActionFrame
-				om.Initialize(0, 0, 4);
 				CreateRxEntryForActionFrame(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x27: { // DeleteRxEntryForActionFrame
-				om.Initialize(0, 0, 0);
 				DeleteRxEntryForActionFrame(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x28: { // Unknown40
-				om.Initialize(0, 0, 0);
 				Unknown40(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x29: { // Unknown41
-				om.Initialize(0, 0, 4);
 				Unknown41(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2A: { // CancelGetActionFrame
-				om.Initialize(0, 0, 0);
 				CancelGetActionFrame(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2B: { // GetRssi
-				om.Initialize(0, 0, 4);
 				GetRssi(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2C: { // Unknown44
-				om.Initialize(0, 0, 0);
 				Unknown44(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2D: { // Unknown45
-				om.Initialize(0, 0, 0);
 				Unknown45();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2E: { // Unknown46
-				om.Initialize(0, 0, 0);
 				Unknown46();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2F: { // Unknown47
-				om.Initialize(0, 0, 0);
 				Unknown47();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x30: { // Unknown48
-				om.Initialize(0, 0, 0);
 				Unknown48();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -617,15 +629,18 @@ public abstract class _ILocalManager_Base : IpcInterface {
 	}
 }
 
-public partial class ISocketGetFrame : _ISocketGetFrame_Base;
+public partial class ISocketGetFrame : _ISocketGetFrame_Base {
+	public readonly string ServiceName;
+	public ISocketGetFrame(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISocketGetFrame_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Wlan.Detail.ISocketGetFrame.Unknown0 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 4);
 				Unknown0(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -635,7 +650,10 @@ public abstract class _ISocketGetFrame_Base : IpcInterface {
 	}
 }
 
-public partial class ISocketManager : _ISocketManager_Base;
+public partial class ISocketManager : _ISocketManager_Base {
+	public readonly string ServiceName;
+	public ISocketManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISocketManager_Base : IpcInterface {
 	protected virtual void Unknown0(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Wlan.Detail.ISocketManager.Unknown0");
@@ -664,67 +682,67 @@ public abstract class _ISocketManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 0);
 				Unknown0(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 4);
 				Unknown2(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x9, 0), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 4);
 				Unknown5(im.GetBytes(8, 0x2), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // GetMacAddress
-				om.Initialize(0, 0, 6);
 				GetMacAddress(out var _0);
+				om.Initialize(0, 0, 6);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // SwitchTsfTimerFunction
-				om.Initialize(0, 0, 0);
 				SwitchTsfTimerFunction(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 8);
 				Unknown8(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 0);
 				Unknown9(im.GetBytes(8, 0x4), Kernel.Get<KObject>(im.GetCopy(0)), Kernel.Get<KObject>(im.GetCopy(1)), Kernel.Get<KObject>(im.GetCopy(2)), Kernel.Get<KObject>(im.GetCopy(3)), Kernel.Get<KObject>(im.GetCopy(4)));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 0);
 				Unknown10();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 0);
 				Unknown11();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

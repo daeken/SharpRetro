@@ -15,25 +15,25 @@ public abstract class _IAsyncContext_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSystemEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // HasDone
-				om.Initialize(0, 0, 1);
 				var _return = HasDone();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -49,8 +49,8 @@ public abstract class _INotifier_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetSystemEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -67,8 +67,8 @@ public abstract class _ISessionObject_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x3E7: { // Dummy
-				om.Initialize(0, 0, 0);
 				Dummy();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

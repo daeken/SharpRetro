@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Eupld.Sf;
-public partial class IControl : _IControl_Base;
+public partial class IControl : _IControl_Base {
+	public readonly string ServiceName;
+	public IControl(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IControl_Base : IpcInterface {
 	protected virtual void SetUrl(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IControl.SetUrl");
@@ -15,23 +18,23 @@ public abstract class _IControl_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetUrl
-				om.Initialize(0, 0, 0);
 				SetUrl(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // ImportCrt
-				om.Initialize(0, 0, 0);
 				ImportCrt(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // ImportPki
-				om.Initialize(0, 0, 0);
 				ImportPki(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // SetAutoUpload
-				om.Initialize(0, 0, 0);
 				SetAutoUpload(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -40,7 +43,10 @@ public abstract class _IControl_Base : IpcInterface {
 	}
 }
 
-public partial class IRequest : _IRequest_Base;
+public partial class IRequest : _IRequest_Base {
+	public readonly string ServiceName;
+	public IRequest(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IRequest_Base : IpcInterface {
 	protected virtual KObject Initialize() =>
 		throw new NotImplementedException("Nn.Eupld.Sf.IRequest.Initialize not implemented");
@@ -57,34 +63,34 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
-				om.Initialize(0, 1, 0);
 				var _return = Initialize();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // UploadAll
-				om.Initialize(0, 0, 0);
 				UploadAll();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // UploadSelected
-				om.Initialize(0, 0, 0);
 				UploadSelected(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetUploadStatus
-				om.Initialize(0, 0, 0);
 				GetUploadStatus(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // CancelUpload
-				om.Initialize(0, 0, 0);
 				CancelUpload();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

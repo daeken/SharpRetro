@@ -28,6 +28,13 @@ public static class Kernel {
         }
     }
 
+    public static void Close(KObject obj) {
+        obj.Close();
+        lock(Handles) {
+            Handles.Remove(obj.Handle);
+        }
+    }
+
     public static T Get<T>(ulong handle) where T : KObject => Get<T>((uint) handle);
     public static T Get<T>(uint handle) where T : KObject => Handles.TryGetValue(handle, out var obj) ? obj as T : null;
 

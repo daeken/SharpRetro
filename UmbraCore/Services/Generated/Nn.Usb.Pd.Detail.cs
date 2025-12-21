@@ -2,15 +2,18 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Usb.Pd.Detail;
-public partial class IPdCradleManager : _IPdCradleManager_Base;
+public partial class IPdCradleManager : _IPdCradleManager_Base {
+	public readonly string ServiceName;
+	public IPdCradleManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IPdCradleManager_Base : IpcInterface {
 	protected virtual Nn.Usb.Pd.Detail.IPdCradleSession GetPdCradleSession() =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdCradleManager.GetPdCradleSession not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetPdCradleSession
-				om.Initialize(1, 0, 0);
 				var _return = GetPdCradleSession();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -43,54 +46,54 @@ public abstract class _IPdCradleSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // VdmUserWrite
-				om.Initialize(0, 0, 0);
 				VdmUserWrite(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // VdmUserRead
-				om.Initialize(0, 0, 4);
 				VdmUserRead(im.GetBytes(8, 0x4), out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Vdm20Init
-				om.Initialize(0, 0, 0);
 				Vdm20Init();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetFwType
-				om.Initialize(0, 0, 2);
 				GetFwType(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // GetFwRevision
-				om.Initialize(0, 0, 2);
 				GetFwRevision(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // GetManufacturerId
-				om.Initialize(0, 0, 2);
 				GetManufacturerId(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // GetDeviceId
-				om.Initialize(0, 0, 2);
 				GetDeviceId(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 1);
 				Unknown7(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 1);
 				Unknown8(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -100,15 +103,18 @@ public abstract class _IPdCradleSession_Base : IpcInterface {
 	}
 }
 
-public partial class IPdManager : _IPdManager_Base;
+public partial class IPdManager : _IPdManager_Base {
+	public readonly string ServiceName;
+	public IPdManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IPdManager_Base : IpcInterface {
 	protected virtual Nn.Usb.Pd.Detail.IPdSession GetPdSession() =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdManager.GetPdSession not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetPdSession
-				om.Initialize(1, 0, 0);
 				var _return = GetPdSession();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -125,8 +131,8 @@ public abstract class _IPdManufactureManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(1, 0, 0);
 				var _return = Unknown0();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
@@ -149,26 +155,26 @@ public abstract class _IPdManufactureSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 2);
 				Unknown0(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 2);
 				Unknown1(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 2);
 				Unknown2(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 2);
 				Unknown3(out var _0);
+				om.Initialize(0, 0, 2);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -197,41 +203,41 @@ public abstract class _IPdSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BindNoticeEvent
-				om.Initialize(0, 1, 0);
 				var _return = BindNoticeEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetStatus
-				om.Initialize(0, 0, 20);
 				GetStatus(out var _0);
+				om.Initialize(0, 0, 20);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // GetNotice
-				om.Initialize(0, 0, 4);
 				GetNotice(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // ReplyPowerRequest
-				om.Initialize(0, 0, 0);
 				ReplyPowerRequest(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Tma;
-public partial class IHtcManager : _IHtcManager_Base;
+public partial class IHtcManager : _IHtcManager_Base {
+	public readonly string ServiceName;
+	public IHtcManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IHtcManager_Base : IpcInterface {
 	protected virtual void GetEnvironmentVariable(Span<byte> _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetEnvironmentVariable not implemented");
@@ -29,64 +32,64 @@ public abstract class _IHtcManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetEnvironmentVariable
-				om.Initialize(0, 0, 4);
 				GetEnvironmentVariable(im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x1: { // GetEnvironmentVariableLength
-				om.Initialize(0, 0, 4);
 				var _return = GetEnvironmentVariableLength(im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // BindHostConnectionEvent
-				om.Initialize(0, 1, 0);
 				var _return = BindHostConnectionEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3: { // BindHostDisconnectionEvent
-				om.Initialize(0, 1, 0);
 				var _return = BindHostDisconnectionEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x4: { // BindHostConnectionEventForSystem
-				om.Initialize(0, 1, 0);
 				var _return = BindHostConnectionEventForSystem();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // BindHostDisconnectionEventForSystem
-				om.Initialize(0, 1, 0);
 				var _return = BindHostDisconnectionEventForSystem();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x6: { // GetBridgeIpAddress
-				om.Initialize(0, 0, 0);
 				GetBridgeIpAddress(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7: { // GetBridgePort
-				om.Initialize(0, 0, 0);
 				GetBridgePort(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // SetUsbDetachedForDebug
-				om.Initialize(0, 0, 0);
 				SetUsbDetachedForDebug(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // GetBridgeSubnetMask
-				om.Initialize(0, 0, 0);
 				GetBridgeSubnetMask(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // GetBridgeMacAddress
-				om.Initialize(0, 0, 0);
 				GetBridgeMacAddress(im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -95,7 +98,10 @@ public abstract class _IHtcManager_Base : IpcInterface {
 	}
 }
 
-public partial class IHtcsManager : _IHtcsManager_Base;
+public partial class IHtcsManager : _IHtcsManager_Base {
+	public readonly string ServiceName;
+	public IHtcsManager(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IHtcsManager_Base : IpcInterface {
 	protected virtual void Unknown0(out uint _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.Unknown0 not implemented");
@@ -132,110 +138,110 @@ public abstract class _IHtcsManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 8);
 				Unknown0(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 8);
 				Unknown1(im.GetData<uint>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 8);
 				Unknown2(im.GetBytes(8, 0x42), im.GetData<uint>(76), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 8);
 				Unknown3(im.GetBytes(8, 0x42), im.GetData<uint>(76), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 8);
 				Unknown4(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 76);
 				Unknown5(im.GetData<uint>(8), out var _0, out var _1, out var _2);
+				om.Initialize(0, 0, 76);
 				om.SetBytes(8, _0);
 				om.SetData(76, _1);
 				om.SetData(80, _2);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 16);
 				Unknown6(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 16);
 				Unknown7(im.GetData<uint>(8), im.GetData<uint>(12), im.GetSpan<byte>(0x5, 0), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 8);
 				Unknown8(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 8);
 				Unknown9(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0xA: { // GetPeerNameAny
-				om.Initialize(0, 0, 32);
 				GetPeerNameAny(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // GetDefaultHostName
-				om.Initialize(0, 0, 32);
 				GetDefaultHostName(out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // CreateSocketOld
-				om.Initialize(1, 0, 4);
 				CreateSocketOld(out var _0, out var _1);
+				om.Initialize(1, 0, 4);
 				om.SetData(8, _0);
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0xD: { // CreateSocket
-				om.Initialize(1, 0, 4);
 				CreateSocket(im.GetData<byte>(8), out var _0, out var _1);
+				om.Initialize(1, 0, 4);
 				om.SetData(8, _0);
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0x64: { // RegisterProcessId
-				om.Initialize(0, 0, 0);
 				RegisterProcessId(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x65: { // MonitorManager
-				om.Initialize(0, 0, 0);
 				MonitorManager(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -267,65 +273,65 @@ public abstract class _ISocket_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // _Close
-				om.Initialize(0, 0, 8);
 				_Close(out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x1: { // Connect
-				om.Initialize(0, 0, 8);
 				Connect(im.GetBytes(8, 0x42), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x2: { // Bind
-				om.Initialize(0, 0, 8);
 				Bind(im.GetBytes(8, 0x42), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // Listen
-				om.Initialize(0, 0, 8);
 				Listen(im.GetData<uint>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x4: { // Accept
-				om.Initialize(1, 0, 72);
 				Accept(out var _0, out var _1, out var _2);
+				om.Initialize(1, 0, 72);
 				om.SetBytes(8, _0);
 				om.SetData(76, _1);
 				om.Move(0, CreateHandle(_2));
 				break;
 			}
 			case 0x5: { // Recv
-				om.Initialize(0, 0, 16);
 				Recv(im.GetData<uint>(8), out var _0, out var _1, im.GetSpan<byte>(0x22, 0));
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x6: { // Send
-				om.Initialize(0, 0, 16);
 				Send(im.GetData<uint>(8), im.GetSpan<byte>(0x21, 0), out var _0, out var _1);
+				om.Initialize(0, 0, 16);
 				om.SetData(8, _0);
 				om.SetData(16, _1);
 				break;
 			}
 			case 0x7: { // Shutdown
-				om.Initialize(0, 0, 8);
 				Shutdown(im.GetData<uint>(8), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;
 			}
 			case 0x8: { // Fcntl
-				om.Initialize(0, 0, 8);
 				Fcntl(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1);
+				om.Initialize(0, 0, 8);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				break;

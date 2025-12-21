@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Capsrv.Sf;
-public partial class IAlbumAccessorService : _IAlbumAccessorService_Base;
+public partial class IAlbumAccessorService : _IAlbumAccessorService_Base {
+	public readonly string ServiceName;
+	public IAlbumAccessorService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAlbumAccessorService_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorService.Unknown0 not implemented");
@@ -59,152 +62,152 @@ public abstract class _IAlbumAccessorService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
-				om.Initialize(0, 0, 8);
 				Unknown0(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 8);
 				Unknown1(im.GetBytes(8, 0x1), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 8);
 				Unknown2(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4(im.GetBytes(8, 0x20));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 1);
 				Unknown5(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 48);
 				Unknown6(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 48);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // Unknown7
-				om.Initialize(0, 0, 8);
 				Unknown7(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // Unknown8
-				om.Initialize(0, 0, 8);
 				Unknown8(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // Unknown9
-				om.Initialize(0, 0, 16);
 				Unknown9(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // Unknown10
-				om.Initialize(0, 0, 16);
 				Unknown10(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // Unknown11
-				om.Initialize(0, 0, 32);
 				Unknown11(im.GetBytes(8, 0x28), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // Unknown12
-				om.Initialize(0, 0, 16);
 				Unknown12(im.GetBytes(8, 0x38), out var _0, im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // Unknown13
-				om.Initialize(0, 0, 16);
 				Unknown13(im.GetBytes(8, 0x38), out var _0, im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xE: { // Unknown14
-				om.Initialize(0, 0, 80);
 				Unknown14(im.GetBytes(8, 0x38), out var _0, im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 80);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x12D: { // Unknown301
-				om.Initialize(0, 0, 32);
 				Unknown301(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x191: { // Unknown401
-				om.Initialize(0, 0, 1);
 				Unknown401(out var _0);
+				om.Initialize(0, 0, 1);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1F5: { // Unknown501
-				om.Initialize(0, 0, 8);
 				Unknown501(im.GetBytes(8, 0x2), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3E9: { // Unknown1001
-				om.Initialize(0, 0, 80);
 				Unknown1001(im.GetBytes(8, 0x38), out var _0, im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 80);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3EA: { // Unknown1002
-				om.Initialize(0, 0, 0);
 				Unknown1002(im.GetBytes(8, 0x38), im.GetSpan<byte>(0x16, 0), im.GetSpan<byte>(0x46, 0), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F41: { // Unknown8001
-				om.Initialize(0, 0, 0);
 				Unknown8001(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F42: { // Unknown8002
-				om.Initialize(0, 0, 0);
 				Unknown8002(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F4B: { // Unknown8011
-				om.Initialize(0, 0, 0);
 				Unknown8011(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F4C: { // Unknown8012
-				om.Initialize(0, 0, 16);
 				Unknown8012(im.GetBytes(8, 0x1), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1F55: { // Unknown8021
-				om.Initialize(0, 0, 32);
 				Unknown8021(im.GetBytes(8, 0x28), im.Pid, out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x271B: { // Unknown10011
-				om.Initialize(0, 0, 0);
 				Unknown10011(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -234,48 +237,48 @@ public abstract class _IAlbumAccessorSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // Unknown2001
-				om.Initialize(0, 0, 8);
 				Unknown2001(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D2: { // Unknown2002
-				om.Initialize(0, 0, 0);
 				Unknown2002(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D3: { // Unknown2003
-				om.Initialize(0, 0, 8);
 				Unknown2003(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D4: { // Unknown2004
-				om.Initialize(0, 0, 8);
 				Unknown2004(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D5: { // Unknown2005
-				om.Initialize(0, 0, 0);
 				Unknown2005(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D6: { // Unknown2006
-				om.Initialize(0, 0, 8);
 				Unknown2006(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D7: { // Unknown2007
-				om.Initialize(0, 0, 8);
 				Unknown2007(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D8: { // Unknown2008
-				om.Initialize(0, 0, 64);
 				Unknown2008(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 64);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -285,7 +288,10 @@ public abstract class _IAlbumAccessorSession_Base : IpcInterface {
 	}
 }
 
-public partial class IAlbumControlService : _IAlbumControlService_Base;
+public partial class IAlbumControlService : _IAlbumControlService_Base {
+	public readonly string ServiceName;
+	public IAlbumControlService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAlbumControlService_Base : IpcInterface {
 	protected virtual void Unknown2001(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2001");
@@ -310,56 +316,56 @@ public abstract class _IAlbumControlService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // Unknown2001
-				om.Initialize(0, 0, 0);
 				Unknown2001(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D2: { // Unknown2002
-				om.Initialize(0, 0, 0);
 				Unknown2002(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7DB: { // Unknown2011
-				om.Initialize(0, 0, 0);
 				Unknown2011(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7DC: { // Unknown2012
-				om.Initialize(0, 0, 0);
 				Unknown2012(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7DD: { // Unknown2013
-				om.Initialize(0, 0, 8);
 				Unknown2013(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7DE: { // Unknown2014
-				om.Initialize(0, 0, 0);
 				Unknown2014(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x835: { // Unknown2101
-				om.Initialize(0, 0, 24);
 				Unknown2101(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x836: { // Unknown2102
-				om.Initialize(0, 0, 32);
 				Unknown2102(im.GetBytes(8, 0x28), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x899: { // Unknown2201
-				om.Initialize(0, 0, 0);
 				Unknown2201(im.GetBytes(8, 0x18), im.GetSpan<byte>(0x45, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8FD: { // Unknown2301
-				om.Initialize(0, 0, 0);
 				Unknown2301(im.GetBytes(8, 0x18), im.GetSpan<byte>(0x45, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -419,127 +425,127 @@ public abstract class _IAlbumControlSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // Unknown2001
-				om.Initialize(0, 0, 8);
 				Unknown2001(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D2: { // Unknown2002
-				om.Initialize(0, 0, 0);
 				Unknown2002(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D3: { // Unknown2003
-				om.Initialize(0, 0, 8);
 				Unknown2003(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D4: { // Unknown2004
-				om.Initialize(0, 0, 8);
 				Unknown2004(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D5: { // Unknown2005
-				om.Initialize(0, 0, 0);
 				Unknown2005(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D6: { // Unknown2006
-				om.Initialize(0, 0, 8);
 				Unknown2006(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D7: { // Unknown2007
-				om.Initialize(0, 0, 8);
 				Unknown2007(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7D8: { // Unknown2008
-				om.Initialize(0, 0, 64);
 				Unknown2008(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 64);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x961: { // Unknown2401
-				om.Initialize(0, 0, 8);
 				Unknown2401(im.GetBytes(8, 0x18), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x962: { // Unknown2402
-				om.Initialize(0, 0, 0);
 				Unknown2402(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x963: { // Unknown2403
-				om.Initialize(0, 0, 0);
 				Unknown2403(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x964: { // Unknown2404
-				om.Initialize(0, 0, 0);
 				Unknown2404(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x965: { // Unknown2405
-				om.Initialize(0, 0, 0);
 				Unknown2405(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x96B: { // Unknown2411
-				om.Initialize(0, 0, 0);
 				Unknown2411(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x96C: { // Unknown2412
-				om.Initialize(0, 0, 0);
 				Unknown2412(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x96D: { // Unknown2413
-				om.Initialize(0, 0, 0);
 				Unknown2413(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x96E: { // Unknown2414
-				om.Initialize(0, 0, 0);
 				Unknown2414(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x975: { // Unknown2421
-				om.Initialize(0, 0, 8);
 				Unknown2421(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x976: { // Unknown2422
-				om.Initialize(0, 0, 0);
 				Unknown2422(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x978: { // Unknown2424
-				om.Initialize(0, 0, 0);
 				Unknown2424(im.GetBytes(8, 0x20), im.GetSpan<byte>(0x5, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x97F: { // Unknown2431
-				om.Initialize(0, 0, 0);
 				Unknown2431(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x981: { // Unknown2433
-				om.Initialize(0, 0, 8);
 				Unknown2433(im.GetBytes(8, 0x8), out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x982: { // Unknown2434
-				om.Initialize(0, 0, 0);
 				Unknown2434(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -567,38 +573,38 @@ public abstract class _ICaptureControllerService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x20), im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x28), im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E9: { // Unknown1001
-				om.Initialize(0, 0, 0);
 				Unknown1001(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EA: { // Unknown1002
-				om.Initialize(0, 0, 0);
 				Unknown1002(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F3: { // Unknown1011
-				om.Initialize(0, 0, 0);
 				Unknown1011(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D1: { // Unknown2001
-				om.Initialize(0, 0, 0);
 				Unknown2001(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D2: { // Unknown2002
-				om.Initialize(0, 0, 0);
 				Unknown2002(im.GetBytes(8, 0x1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -607,7 +613,10 @@ public abstract class _ICaptureControllerService_Base : IpcInterface {
 	}
 }
 
-public partial class IScreenShotApplicationService : _IScreenShotApplicationService_Base;
+public partial class IScreenShotApplicationService : _IScreenShotApplicationService_Base {
+	public readonly string ServiceName;
+	public IScreenShotApplicationService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IScreenShotApplicationService_Base : IpcInterface {
 	protected virtual void SaveScreenShot(uint _0, uint _1, ulong _2, ulong _3, Span<byte> _4, out byte[] _5) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IScreenShotApplicationService.SaveScreenShot not implemented");
@@ -616,14 +625,14 @@ public abstract class _IScreenShotApplicationService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xC9: { // SaveScreenShot
-				om.Initialize(0, 0, 32);
 				SaveScreenShot(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x45, 0), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xCB: { // SaveScreenShotEx0
-				om.Initialize(0, 0, 32);
 				SaveScreenShotEx0(im.GetBytes(8, 0x40), im.GetData<uint>(72), im.GetData<ulong>(80), im.Pid, im.GetSpan<byte>(0x45, 0), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -633,7 +642,10 @@ public abstract class _IScreenShotApplicationService_Base : IpcInterface {
 	}
 }
 
-public partial class IScreenShotControlService : _IScreenShotControlService_Base;
+public partial class IScreenShotControlService : _IScreenShotControlService_Base {
+	public readonly string ServiceName;
+	public IScreenShotControlService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IScreenShotControlService_Base : IpcInterface {
 	protected virtual void Unknown1(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IScreenShotControlService.Unknown1 not implemented");
@@ -658,54 +670,54 @@ public abstract class _IScreenShotControlService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
-				om.Initialize(0, 0, 0);
 				Unknown1(im.GetBytes(8, 0x28), im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x30), im.GetSpan<byte>(0x46, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3E9: { // Unknown1001
-				om.Initialize(0, 0, 0);
 				Unknown1001(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EA: { // Unknown1002
-				om.Initialize(0, 0, 0);
 				Unknown1002(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3EB: { // Unknown1003
-				om.Initialize(0, 0, 0);
 				Unknown1003(im.GetBytes(8, 0x58));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F3: { // Unknown1011
-				om.Initialize(0, 0, 0);
 				Unknown1011(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3F4: { // Unknown1012
-				om.Initialize(0, 0, 0);
 				Unknown1012(im.GetBytes(8, 0x8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B1: { // Unknown1201
-				om.Initialize(0, 0, 24);
 				Unknown1201(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 24);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4B2: { // Unknown1202
-				om.Initialize(0, 0, 0);
 				Unknown1202();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4B3: { // Unknown1203
-				om.Initialize(0, 0, 8);
 				Unknown1203(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -715,7 +727,10 @@ public abstract class _IScreenShotControlService_Base : IpcInterface {
 	}
 }
 
-public partial class IScreenShotService : _IScreenShotService_Base;
+public partial class IScreenShotService : _IScreenShotService_Base {
+	public readonly string ServiceName;
+	public IScreenShotService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IScreenShotService_Base : IpcInterface {
 	protected virtual void Unknown201(byte[] _0, ulong _1, Span<byte> _2, out byte[] _3) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IScreenShotService.Unknown201 not implemented");
@@ -728,26 +743,26 @@ public abstract class _IScreenShotService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xC9: { // Unknown201
-				om.Initialize(0, 0, 32);
 				Unknown201(im.GetBytes(8, 0x10), im.Pid, im.GetSpan<byte>(0x45, 0), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xCA: { // Unknown202
-				om.Initialize(0, 0, 32);
 				Unknown202(im.GetBytes(8, 0x38), im.GetSpan<byte>(0x45, 0), im.GetSpan<byte>(0x45, 1), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xCB: { // Unknown203
-				om.Initialize(0, 0, 32);
 				Unknown203(im.GetBytes(8, 0x50), im.Pid, im.GetSpan<byte>(0x45, 0), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xCC: { // Unknown204
-				om.Initialize(0, 0, 32);
 				Unknown204(im.GetBytes(8, 0x78), im.GetSpan<byte>(0x45, 0), im.GetSpan<byte>(0x45, 1), out var _0);
+				om.Initialize(0, 0, 32);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -772,28 +787,28 @@ public abstract class _IAlbumAccessorApplicationSession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // OpenAlbumMovieReadStream
-				om.Initialize(0, 0, 0);
 				OpenAlbumMovieReadStream();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D2: { // CloseAlbumMovieReadStream
-				om.Initialize(0, 0, 0);
 				CloseAlbumMovieReadStream();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D3: { // GetAlbumMovieReadStreamMovieDataSize
-				om.Initialize(0, 0, 0);
 				GetAlbumMovieReadStreamMovieDataSize();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D4: { // ReadMovieDataFromAlbumMovieReadStream
-				om.Initialize(0, 0, 0);
 				ReadMovieDataFromAlbumMovieReadStream();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x7D5: { // GetAlbumMovieReadStreamBrokenReason
-				om.Initialize(0, 0, 0);
 				GetAlbumMovieReadStreamBrokenReason();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -802,7 +817,10 @@ public abstract class _IAlbumAccessorApplicationSession_Base : IpcInterface {
 	}
 }
 
-public partial class IAlbumApplicationService : _IAlbumApplicationService_Base;
+public partial class IAlbumApplicationService : _IAlbumApplicationService_Base {
+	public readonly string ServiceName;
+	public IAlbumApplicationService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IAlbumApplicationService_Base : IpcInterface {
 	protected virtual void GetAlbumFileListByAruid() =>
 		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.GetAlbumFileListByAruid");
@@ -819,33 +837,33 @@ public abstract class _IAlbumApplicationService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x66: { // GetAlbumFileListByAruid
-				om.Initialize(0, 0, 0);
 				GetAlbumFileListByAruid();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x67: { // DeleteAlbumFileByAruid
-				om.Initialize(0, 0, 0);
 				DeleteAlbumFileByAruid();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x68: { // GetAlbumFileSizeByAruid
-				om.Initialize(0, 0, 0);
 				GetAlbumFileSizeByAruid();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6E: { // LoadAlbumScreenShotImageByAruid
-				om.Initialize(0, 0, 0);
 				LoadAlbumScreenShotImageByAruid();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x78: { // LoadAlbumScreenShotThumbnailImageByAruid
-				om.Initialize(0, 0, 0);
 				LoadAlbumScreenShotThumbnailImageByAruid();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xEA62: { // OpenAccessorSessionForApplication
-				om.Initialize(0, 0, 0);
 				OpenAccessorSessionForApplication();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:

@@ -79,202 +79,202 @@ public abstract class _IGeneralService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // GetClientId
-				om.Initialize(0, 0, 0);
 				GetClientId(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // CreateScanRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateScanRequest();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // CreateRequest
-				om.Initialize(1, 0, 0);
 				var _return = CreateRequest(im.GetData<uint>(8));
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x5: { // GetCurrentNetworkProfile
-				om.Initialize(0, 0, 0);
 				GetCurrentNetworkProfile(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // EnumerateNetworkInterfaces
-				om.Initialize(0, 0, 4);
 				EnumerateNetworkInterfaces(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x7: { // EnumerateNetworkProfiles
-				om.Initialize(0, 0, 4);
 				EnumerateNetworkProfiles(im.GetData<byte>(8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x8: { // GetNetworkProfile
-				om.Initialize(0, 0, 0);
 				GetNetworkProfile(im.GetBytes(8, 0x10), im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // SetNetworkProfile
-				om.Initialize(0, 0, 16);
 				SetNetworkProfile(im.GetSpan<byte>(0x19, 0), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // RemoveNetworkProfile
-				om.Initialize(0, 0, 0);
 				RemoveNetworkProfile(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // GetScanDataOld
-				om.Initialize(0, 0, 4);
 				GetScanDataOld(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0xC: { // GetCurrentIpAddress
-				om.Initialize(0, 0, 4);
 				GetCurrentIpAddress(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD: { // GetCurrentAccessPointOld
-				om.Initialize(0, 0, 0);
 				GetCurrentAccessPointOld(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // CreateTemporaryNetworkProfile
-				om.Initialize(1, 0, 16);
 				CreateTemporaryNetworkProfile(im.GetSpan<byte>(0x19, 0), out var _0, out var _1);
+				om.Initialize(1, 0, 16);
 				om.SetBytes(8, _0);
 				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			case 0xF: { // GetCurrentIpConfigInfo
-				om.Initialize(0, 0, 22);
 				GetCurrentIpConfigInfo(out var _0, out var _1);
+				om.Initialize(0, 0, 22);
 				om.SetBytes(8, _0);
 				om.SetBytes(21, _1);
 				break;
 			}
 			case 0x10: { // SetWirelessCommunicationEnabled
-				om.Initialize(0, 0, 0);
 				SetWirelessCommunicationEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // IsWirelessCommunicationEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsWirelessCommunicationEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x12: { // GetInternetConnectionStatus
-				om.Initialize(0, 0, 3);
 				GetInternetConnectionStatus(out var _0);
+				om.Initialize(0, 0, 3);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x13: { // SetEthernetCommunicationEnabled
-				om.Initialize(0, 0, 0);
 				SetEthernetCommunicationEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x14: { // IsEthernetCommunicationEnabled
-				om.Initialize(0, 0, 1);
 				var _return = IsEthernetCommunicationEnabled();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // IsAnyInternetRequestAccepted
-				om.Initialize(0, 0, 1);
 				var _return = IsAnyInternetRequestAccepted(im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x16: { // IsAnyForegroundRequestAccepted
-				om.Initialize(0, 0, 1);
 				var _return = IsAnyForegroundRequestAccepted();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x17: { // PutToSleep
-				om.Initialize(0, 0, 0);
 				PutToSleep();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x18: { // WakeUp
-				om.Initialize(0, 0, 0);
 				WakeUp();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // GetSsidListVersion
-				om.Initialize(0, 0, 16);
 				GetSsidListVersion(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1A: { // SetExclusiveClient
-				om.Initialize(0, 0, 0);
 				SetExclusiveClient(im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1B: { // GetDefaultIpSetting
-				om.Initialize(0, 0, 0);
 				GetDefaultIpSetting(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1C: { // SetDefaultIpSetting
-				om.Initialize(0, 0, 0);
 				SetDefaultIpSetting(im.GetSpan<byte>(0x19, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1D: { // SetWirelessCommunicationEnabledForTest
-				om.Initialize(0, 0, 0);
 				SetWirelessCommunicationEnabledForTest(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1E: { // SetEthernetCommunicationEnabledForTest
-				om.Initialize(0, 0, 0);
 				SetEthernetCommunicationEnabledForTest(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1F: { // GetTelemetorySystemEventReadableHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetTelemetorySystemEventReadableHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x20: { // GetTelemetryInfo
-				om.Initialize(0, 0, 0);
 				GetTelemetryInfo(im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x21: { // ConfirmSystemAvailability
-				om.Initialize(0, 0, 0);
 				ConfirmSystemAvailability();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x22: { // SetBackgroundRequestEnabled
-				om.Initialize(0, 0, 0);
 				SetBackgroundRequestEnabled(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x23: { // GetScanData
-				om.Initialize(0, 0, 4);
 				GetScanData(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x24: { // GetCurrentAccessPoint
-				om.Initialize(0, 0, 0);
 				GetCurrentAccessPoint(im.GetSpan<byte>(0x1A, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x25: { // Shutdown
-				om.Initialize(0, 0, 0);
 				Shutdown();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -294,20 +294,20 @@ public abstract class _INetworkProfile_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Update
-				om.Initialize(0, 0, 16);
 				Update(im.GetSpan<byte>(0x19, 0), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // PersistOld
-				om.Initialize(0, 0, 16);
 				PersistOld(im.GetBytes(8, 0x10), out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Persist
-				om.Initialize(0, 0, 16);
 				Persist(out var _0);
+				om.Initialize(0, 0, 16);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -372,137 +372,137 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetRequestState
-				om.Initialize(0, 0, 4);
 				var _return = GetRequestState();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // GetSystemEventReadableHandles
-				om.Initialize(0, 2, 0);
 				GetSystemEventReadableHandles(out var _0, out var _1);
+				om.Initialize(0, 2, 0);
 				om.Copy(0, CreateHandle(_0, copy: true));
 				om.Copy(1, CreateHandle(_1, copy: true));
 				break;
 			}
 			case 0x3: { // Cancel
-				om.Initialize(0, 0, 0);
 				Cancel();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Submit
-				om.Initialize(0, 0, 0);
 				Submit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // SetRequirement
-				om.Initialize(0, 0, 0);
 				SetRequirement(im.GetBytes(8, 0x24));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // SetRequirementPreset
-				om.Initialize(0, 0, 0);
 				SetRequirementPreset(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x8: { // SetPriority
-				om.Initialize(0, 0, 0);
 				SetPriority(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x9: { // SetNetworkProfileId
-				om.Initialize(0, 0, 0);
 				SetNetworkProfileId(im.GetBytes(8, 0x10));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xA: { // SetRejectable
-				om.Initialize(0, 0, 0);
 				SetRejectable(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xB: { // SetConnectionConfirmationOption
-				om.Initialize(0, 0, 0);
 				SetConnectionConfirmationOption(im.GetData<sbyte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xC: { // SetPersistent
-				om.Initialize(0, 0, 0);
 				SetPersistent(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xD: { // SetInstant
-				om.Initialize(0, 0, 0);
 				SetInstant(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xE: { // SetSustainable
-				om.Initialize(0, 0, 0);
 				SetSustainable(im.GetData<byte>(8), im.GetData<byte>(9));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0xF: { // SetRawPriority
-				om.Initialize(0, 0, 0);
 				SetRawPriority(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x10: { // SetGreedy
-				om.Initialize(0, 0, 0);
 				SetGreedy(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x11: { // SetSharable
-				om.Initialize(0, 0, 0);
 				SetSharable(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x12: { // SetRequirementByRevision
-				om.Initialize(0, 0, 0);
 				SetRequirementByRevision(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x13: { // GetRequirement
-				om.Initialize(0, 0, 36);
 				GetRequirement(out var _0);
+				om.Initialize(0, 0, 36);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x14: { // GetRevision
-				om.Initialize(0, 0, 4);
 				var _return = GetRevision();
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x15: { // GetAppletInfo
-				om.Initialize(0, 0, 12);
 				GetAppletInfo(im.GetData<uint>(8), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 12);
 				om.SetData(8, _0);
 				om.SetData(12, _1);
 				om.SetData(16, _2);
 				break;
 			}
 			case 0x16: { // GetAdditionalInfo
-				om.Initialize(0, 0, 4);
 				GetAdditionalInfo(out var _0, im.GetSpan<byte>(0x16, 0));
+				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
 			case 0x17: { // SetKeptInSleep
-				om.Initialize(0, 0, 0);
 				SetKeptInSleep(im.GetData<byte>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x18: { // RegisterSocketDescriptor
-				om.Initialize(0, 0, 0);
 				RegisterSocketDescriptor(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x19: { // UnregisterSocketDescriptor
-				om.Initialize(0, 0, 0);
 				UnregisterSocketDescriptor(im.GetData<uint>(8));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -524,24 +524,24 @@ public abstract class _IScanRequest_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Submit
-				om.Initialize(0, 0, 0);
 				Submit();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // IsProcessing
-				om.Initialize(0, 0, 1);
 				var _return = IsProcessing();
+				om.Initialize(0, 0, 1);
 				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetResult
-				om.Initialize(0, 0, 0);
 				GetResult();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetSystemEventReadableHandle
-				om.Initialize(0, 1, 0);
 				var _return = GetSystemEventReadableHandle();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
@@ -551,7 +551,10 @@ public abstract class _IScanRequest_Base : IpcInterface {
 	}
 }
 
-public partial class IStaticService : _IStaticService_Base;
+public partial class IStaticService : _IStaticService_Base {
+	public readonly string ServiceName;
+	public IStaticService(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IStaticService_Base : IpcInterface {
 	protected virtual Nn.Nifm.Detail.IGeneralService CreateGeneralServiceOld() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IStaticService.CreateGeneralServiceOld not implemented");
@@ -560,14 +563,14 @@ public abstract class _IStaticService_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x4: { // CreateGeneralServiceOld
-				om.Initialize(1, 0, 0);
 				var _return = CreateGeneralServiceOld();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x5: { // CreateGeneralService
-				om.Initialize(1, 0, 0);
 				var _return = CreateGeneralService(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}

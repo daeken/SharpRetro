@@ -296,12 +296,26 @@ public abstract class IpcInterface : KObject {
 	}
 }
 
-public class IpcManager {
+public partial class IpcManager {
+	public readonly Dictionary<string, IpcInterface> Services = [];
+	
     public void Setup(GameWrapper game) {
+	    CreateServices();
         game.Callbacks.ConnectToNamedPort = (name, ref handle) => {
-            Console.WriteLine($"Attempting to connect to '{Marshal.PtrToStringAnsi((IntPtr) name)}'");
-            handle = 0xdaedae00;
+	        var sname = Marshal.PtrToStringAnsi((IntPtr) name)!;
+            Console.WriteLine($"Attempting to connect to '{sname}'");
+            handle = Services[sname].Handle;
             return 0;
+        };
+        game.Callbacks.SendSyncRequest = handle => {
+	        var service = Kernel.Get<IpcInterface>(handle);
+	        Console.WriteLine($"SendSyncRequest({handle:X}, {service?.ToString() ?? "null"}, domain: {service?.IsDomainObject})");
+	        if(service == null)
+		        throw new Exception();
+	        var ret = service.SyncMessage((ulong) Kernel.ThreadManager.CurrentThread.TlsBase, 0x100, out var closeHandle);
+	        if(closeHandle) Kernel.Close(service);
+	        return ret;
+
         };
     }
 }

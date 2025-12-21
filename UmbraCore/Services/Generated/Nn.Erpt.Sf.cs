@@ -2,7 +2,10 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Erpt.Sf;
-public partial class IContext : _IContext_Base;
+public partial class IContext : _IContext_Base {
+	public readonly string ServiceName;
+	public IContext(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _IContext_Base : IpcInterface {
 	protected virtual void SubmitContext(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.SubmitContext");
@@ -21,38 +24,38 @@ public abstract class _IContext_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SubmitContext
-				om.Initialize(0, 0, 0);
 				SubmitContext(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // CreateReport
-				om.Initialize(0, 0, 0);
 				CreateReport(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1), im.GetSpan<byte>(0x5, 2));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2(im.GetBytes(8, 0x18));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // Unknown5
-				om.Initialize(0, 0, 0);
 				Unknown5();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x6: { // Unknown6
-				om.Initialize(0, 0, 0);
 				Unknown6();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -76,29 +79,29 @@ public abstract class _IManager_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetReportList
-				om.Initialize(0, 0, 0);
 				GetReportList(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // GetEvent
-				om.Initialize(0, 1, 0);
 				var _return = GetEvent();
+				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // Unknown2
-				om.Initialize(0, 0, 0);
 				Unknown2();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // Unknown3
-				om.Initialize(0, 0, 0);
 				Unknown3();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x4: { // Unknown4
-				om.Initialize(0, 0, 0);
 				Unknown4();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			default:
@@ -124,35 +127,35 @@ public abstract class _IReport_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Open
-				om.Initialize(0, 0, 0);
 				Open(im.GetBytes(8, 0x14));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x1: { // Read
-				om.Initialize(0, 0, 4);
 				Read(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // SetFlags
-				om.Initialize(0, 0, 0);
 				SetFlags(im.GetBytes(8, 0x4));
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x3: { // GetFlags
-				om.Initialize(0, 0, 4);
 				GetFlags(out var _0);
+				om.Initialize(0, 0, 4);
 				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // _Close
-				om.Initialize(0, 0, 0);
 				_Close();
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x5: { // GetSize
-				om.Initialize(0, 0, 8);
 				GetSize(out var _0);
+				om.Initialize(0, 0, 8);
 				om.SetBytes(8, _0);
 				break;
 			}
@@ -162,7 +165,10 @@ public abstract class _IReport_Base : IpcInterface {
 	}
 }
 
-public partial class ISession : _ISession_Base;
+public partial class ISession : _ISession_Base {
+	public readonly string ServiceName;
+	public ISession(string serviceName) => ServiceName = serviceName;
+}
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual Nn.Erpt.Sf.IReport OpenReport() =>
 		throw new NotImplementedException("Nn.Erpt.Sf.ISession.OpenReport not implemented");
@@ -171,14 +177,14 @@ public abstract class _ISession_Base : IpcInterface {
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenReport
-				om.Initialize(1, 0, 0);
 				var _return = OpenReport();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // OpenManager
-				om.Initialize(1, 0, 0);
 				var _return = OpenManager();
+				om.Initialize(1, 0, 0);
 				om.Move(0, CreateHandle(_return));
 				break;
 			}
