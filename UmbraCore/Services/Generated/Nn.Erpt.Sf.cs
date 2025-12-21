@@ -6,9 +6,9 @@ public partial class IContext : _IContext_Base;
 public abstract class _IContext_Base : IpcInterface {
 	protected virtual void SubmitContext(Span<byte> _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.SubmitContext");
-	protected virtual void CreateReport(Span<byte> _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
+	protected virtual void CreateReport(byte[] _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.CreateReport");
-	protected virtual void Unknown2(Span<byte> _0) =>
+	protected virtual void Unknown2(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown2");
 	protected virtual void Unknown3() =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown3");
@@ -18,27 +18,41 @@ public abstract class _IContext_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown5");
 	protected virtual void Unknown6() =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown6");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SubmitContext
+				om.Initialize(0, 0, 0);
+				SubmitContext(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
 				break;
 			}
 			case 0x1: { // CreateReport
+				om.Initialize(0, 0, 0);
+				CreateReport(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1), im.GetSpan<byte>(0x5, 2));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 0);
+				Unknown2(im.GetBytes(8, 0x18));
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 0);
+				Unknown3();
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 0, 0);
+				Unknown4();
 				break;
 			}
 			case 0x5: { // Unknown5
+				om.Initialize(0, 0, 0);
+				Unknown5();
 				break;
 			}
 			case 0x6: { // Unknown6
+				om.Initialize(0, 0, 0);
+				Unknown6();
 				break;
 			}
 			default:
@@ -49,7 +63,7 @@ public abstract class _IContext_Base : IpcInterface {
 
 public partial class IManager : _IManager_Base;
 public abstract class _IManager_Base : IpcInterface {
-	protected virtual void GetReportList(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetReportList(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IManager.GetReportList not implemented");
 	protected virtual KObject GetEvent() =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IManager.GetEvent not implemented");
@@ -59,21 +73,32 @@ public abstract class _IManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IManager.Unknown3");
 	protected virtual void Unknown4() =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IManager.Unknown4");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetReportList
+				om.Initialize(0, 0, 0);
+				GetReportList(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x1: { // GetEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 0);
+				Unknown2();
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 0);
+				Unknown3();
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 0, 0);
+				Unknown4();
 				break;
 			}
 			default:
@@ -84,36 +109,51 @@ public abstract class _IManager_Base : IpcInterface {
 
 public partial class IReport : _IReport_Base;
 public abstract class _IReport_Base : IpcInterface {
-	protected virtual void Open(Span<byte> _0) =>
+	protected virtual void Open(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.Open");
-	protected virtual void Read(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Read(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.Read not implemented");
-	protected virtual void SetFlags(Span<byte> _0) =>
+	protected virtual void SetFlags(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.SetFlags");
-	protected virtual void GetFlags(Span<byte> _0) =>
+	protected virtual void GetFlags(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.GetFlags not implemented");
-	protected virtual void Close() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.Close");
-	protected virtual void GetSize(Span<byte> _0) =>
+	protected virtual void _Close() =>
+		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport._Close");
+	protected virtual void GetSize(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.GetSize not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Open
+				om.Initialize(0, 0, 0);
+				Open(im.GetBytes(8, 0x14));
 				break;
 			}
 			case 0x1: { // Read
+				om.Initialize(0, 0, 4);
+				Read(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // SetFlags
+				om.Initialize(0, 0, 0);
+				SetFlags(im.GetBytes(8, 0x4));
 				break;
 			}
 			case 0x3: { // GetFlags
+				om.Initialize(0, 0, 4);
+				GetFlags(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
-			case 0x4: { // Close
+			case 0x4: { // _Close
+				om.Initialize(0, 0, 0);
+				_Close();
 				break;
 			}
 			case 0x5: { // GetSize
+				om.Initialize(0, 0, 8);
+				GetSize(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:
@@ -128,12 +168,18 @@ public abstract class _ISession_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Erpt.Sf.ISession.OpenReport not implemented");
 	protected virtual Nn.Erpt.Sf.IManager OpenManager() =>
 		throw new NotImplementedException("Nn.Erpt.Sf.ISession.OpenManager not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenReport
+				om.Initialize(1, 0, 0);
+				var _return = OpenReport();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // OpenManager
+				om.Initialize(1, 0, 0);
+				var _return = OpenManager();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			default:

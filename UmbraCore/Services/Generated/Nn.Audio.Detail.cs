@@ -47,18 +47,26 @@ public abstract class _IAudioDebugManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown2");
 	protected virtual void Unknown3() =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown3");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 0);
+				Unknown0(im.GetData<uint>(8), im.GetData<ulong>(16), Kernel.Get<KObject>(im.GetCopy(0)));
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 0);
+				Unknown1();
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 0);
+				Unknown2();
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 0);
+				Unknown3();
 				break;
 			}
 			default:
@@ -93,42 +101,74 @@ public abstract class _IAudioDevice_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown11 not implemented");
 	protected virtual KObject Unknown12() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown12 not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 4);
+				Unknown0(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 0);
+				Unknown1(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 4);
+				var _return = Unknown2(im.GetSpan<byte>(0x5, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 0);
+				Unknown3(im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 1, 0);
+				var _return = Unknown4();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // Unknown5
+				om.Initialize(0, 0, 4);
+				var _return = Unknown5();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x6: { // Unknown6
+				om.Initialize(0, 0, 4);
+				Unknown6(out var _0, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x7: { // Unknown7
+				om.Initialize(0, 0, 0);
+				Unknown7(im.GetData<uint>(8), im.GetSpan<byte>(0x21, 0));
 				break;
 			}
 			case 0x8: { // Unknown8
+				om.Initialize(0, 0, 4);
+				var _return = Unknown8(im.GetSpan<byte>(0x21, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // Unknown10
+				om.Initialize(0, 0, 0);
+				Unknown10(im.GetSpan<byte>(0x22, 0));
 				break;
 			}
 			case 0xB: { // Unknown11
+				om.Initialize(0, 1, 0);
+				var _return = Unknown11();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xC: { // Unknown12
+				om.Initialize(0, 1, 0);
+				var _return = Unknown12();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			default:
@@ -167,48 +207,83 @@ public abstract class _IAudioIn_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.SetAudioInDeviceGain");
 	protected virtual uint GetAudioInDeviceGain() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.GetAudioInDeviceGain not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAudioInState
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioInState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // StartAudioIn
+				om.Initialize(0, 0, 0);
+				StartAudioIn();
 				break;
 			}
 			case 0x2: { // StopAudioIn
+				om.Initialize(0, 0, 0);
+				StopAudioIn();
 				break;
 			}
 			case 0x3: { // AppendAudioInBuffer
+				om.Initialize(0, 0, 0);
+				AppendAudioInBuffer(im.GetData<ulong>(8), im.GetSpan<Nn.Audio.AudioInBuffer>(0x5, 0));
 				break;
 			}
 			case 0x4: { // RegisterBufferEvent
+				om.Initialize(0, 1, 0);
+				var _return = RegisterBufferEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // GetReleasedAudioInBuffer
+				om.Initialize(0, 0, 4);
+				GetReleasedAudioInBuffer(out var _0, im.GetSpan<Nn.Audio.AudioInBuffer>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x6: { // ContainsAudioInBuffer
+				om.Initialize(0, 0, 1);
+				var _return = ContainsAudioInBuffer(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // AppendAudioInBufferWithUserEvent
+				om.Initialize(0, 0, 0);
+				AppendAudioInBufferWithUserEvent(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<Nn.Audio.AudioInBuffer>(0x5, 0));
 				break;
 			}
 			case 0x8: { // AppendAudioInBufferAuto
+				om.Initialize(0, 0, 0);
+				AppendAudioInBufferAuto(im.GetData<ulong>(8), im.GetSpan<Nn.Audio.AudioInBuffer>(0x21, 0));
 				break;
 			}
 			case 0x9: { // GetReleasedAudioInBufferAuto
+				om.Initialize(0, 0, 4);
+				GetReleasedAudioInBufferAuto(out var _0, im.GetSpan<Nn.Audio.AudioInBuffer>(0x22, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0xA: { // AppendAudioInBufferWithUserEventAuto
+				om.Initialize(0, 0, 0);
+				AppendAudioInBufferWithUserEventAuto(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<Nn.Audio.AudioInBuffer>(0x21, 0));
 				break;
 			}
 			case 0xB: { // GetAudioInBufferCount
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioInBufferCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xC: { // SetAudioInDeviceGain
+				om.Initialize(0, 0, 0);
+				SetAudioInDeviceGain(im.GetData<uint>(8));
 				break;
 			}
 			case 0xD: { // GetAudioInDeviceGain
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioInDeviceGain();
+				om.SetData(8, _return);
 				break;
 			}
 			default:
@@ -229,21 +304,44 @@ public abstract class _IAudioInManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioInManager.OpenAudioInAuto not implemented");
 	protected virtual void ListAudioInsAuto(out uint count, Span<byte> names) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioInManager.ListAudioInsAuto not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ListAudioIns
+				om.Initialize(0, 0, 4);
+				ListAudioIns(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x1: { // OpenAudioIn
+				om.Initialize(1, 0, 16);
+				OpenAudioIn(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x5, 0), out var _0, out var _1, out var _2, out var _3, out var _4, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
+				om.SetData(20, _3);
+				om.Move(0, CreateHandle(_4));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 4);
+				Unknown2(out var _0, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // OpenAudioInAuto
+				om.Initialize(1, 0, 16);
+				OpenAudioInAuto(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x21, 0), out var _0, out var _1, out var _2, out var _3, out var _4, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
+				om.SetData(20, _3);
+				om.Move(0, CreateHandle(_4));
 				break;
 			}
 			case 0x4: { // ListAudioInsAuto
+				om.Initialize(0, 0, 4);
+				ListAudioInsAuto(out var _0, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			default:
@@ -262,18 +360,27 @@ public abstract class _IAudioInManagerForApplet_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioInManagerForApplet.GetAudioInsProcessMasterVolume not implemented");
 	protected virtual void SetAudioInsProcessMasterVolume(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.SetAudioInsProcessMasterVolume");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioIns
+				om.Initialize(0, 0, 0);
+				RequestSuspendAudioIns(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x1: { // RequestResumeAudioIns
+				om.Initialize(0, 0, 0);
+				RequestResumeAudioIns(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x2: { // GetAudioInsProcessMasterVolume
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioInsProcessMasterVolume(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // SetAudioInsProcessMasterVolume
+				om.Initialize(0, 0, 0);
+				SetAudioInsProcessMasterVolume(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
 				break;
 			}
 			default:
@@ -288,12 +395,16 @@ public abstract class _IAudioInManagerForDebugger_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForDebugger.RequestSuspendAudioInsForDebug");
 	protected virtual void RequestResumeAudioInsForDebug(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForDebugger.RequestResumeAudioInsForDebug");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioInsForDebug
+				om.Initialize(0, 0, 0);
+				RequestSuspendAudioInsForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x1: { // RequestResumeAudioInsForDebug
+				om.Initialize(0, 0, 0);
+				RequestResumeAudioInsForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			default:
@@ -328,42 +439,74 @@ public abstract class _IAudioOut_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOut.GetAudioOutPlayedSampleCount not implemented");
 	protected virtual byte FlushAudioOutBuffers() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOut.FlushAudioOutBuffers not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAudioOutState
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioOutState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // StartAudioOut
+				om.Initialize(0, 0, 0);
+				StartAudioOut();
 				break;
 			}
 			case 0x2: { // StopAudioOut
+				om.Initialize(0, 0, 0);
+				StopAudioOut();
 				break;
 			}
 			case 0x3: { // AppendAudioOutBuffer
+				om.Initialize(0, 0, 0);
+				AppendAudioOutBuffer(im.GetData<ulong>(8), im.GetSpan<Nn.Audio.AudioOutBuffer>(0x5, 0));
 				break;
 			}
 			case 0x4: { // RegisterBufferEvent
+				om.Initialize(0, 1, 0);
+				var _return = RegisterBufferEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // GetReleasedAudioOutBuffer
+				om.Initialize(0, 0, 4);
+				GetReleasedAudioOutBuffer(out var _0, im.GetSpan<Nn.Audio.AudioOutBuffer>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x6: { // ContainsAudioOutBuffer
+				om.Initialize(0, 0, 1);
+				var _return = ContainsAudioOutBuffer(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // AppendAudioOutBufferAuto
+				om.Initialize(0, 0, 0);
+				AppendAudioOutBufferAuto(im.GetData<ulong>(8), im.GetSpan<Nn.Audio.AudioOutBuffer>(0x21, 0));
 				break;
 			}
 			case 0x8: { // GetReleasedAudioOutBufferAuto
+				om.Initialize(0, 0, 4);
+				GetReleasedAudioOutBufferAuto(out var _0, im.GetSpan<Nn.Audio.AudioOutBuffer>(0x22, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x9: { // GetAudioOutBufferCount
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioOutBufferCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // GetAudioOutPlayedSampleCount
+				om.Initialize(0, 0, 8);
+				var _return = GetAudioOutPlayedSampleCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xB: { // FlushAudioOutBuffers
+				om.Initialize(0, 0, 1);
+				var _return = FlushAudioOutBuffers();
+				om.SetData(8, _return);
 				break;
 			}
 			default:
@@ -382,18 +525,38 @@ public abstract class _IAudioOutManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManager.ListAudioOutsAuto not implemented");
 	protected virtual void OpenAudioOutAuto(uint sample_rate, ushort unused, ushort channel_count, ulong _3, ulong _4, KObject _5, Span<byte> _6, out uint sample_rate_out, out uint channel_count_out, out uint pcm_format, out uint _10, out Nn.Audio.Detail.IAudioOut _11, Span<byte> name_out) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManager.OpenAudioOutAuto not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ListAudioOuts
+				om.Initialize(0, 0, 4);
+				ListAudioOuts(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x1: { // OpenAudioOut
+				om.Initialize(1, 0, 16);
+				OpenAudioOut(im.GetData<uint>(8), im.GetData<ushort>(12), im.GetData<ushort>(14), im.GetData<ulong>(16), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x5, 0), out var _0, out var _1, out var _2, out var _3, out var _4, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
+				om.SetData(20, _3);
+				om.Move(0, CreateHandle(_4));
 				break;
 			}
 			case 0x2: { // ListAudioOutsAuto
+				om.Initialize(0, 0, 4);
+				ListAudioOutsAuto(out var _0, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // OpenAudioOutAuto
+				om.Initialize(1, 0, 16);
+				OpenAudioOutAuto(im.GetData<uint>(8), im.GetData<ushort>(12), im.GetData<ushort>(14), im.GetData<ulong>(16), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)), im.GetSpan<byte>(0x21, 0), out var _0, out var _1, out var _2, out var _3, out var _4, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
+				om.SetData(20, _3);
+				om.Move(0, CreateHandle(_4));
 				break;
 			}
 			default:
@@ -416,24 +579,38 @@ public abstract class _IAudioOutManagerForApplet_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManagerForApplet.GetAudioOutsProcessRecordVolume not implemented");
 	protected virtual void SetAudioOutsProcessRecordVolume(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.SetAudioOutsProcessRecordVolume");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioOuts
+				om.Initialize(0, 0, 0);
+				RequestSuspendAudioOuts(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x1: { // RequestResumeAudioOuts
+				om.Initialize(0, 0, 0);
+				RequestResumeAudioOuts(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x2: { // GetAudioOutsProcessMasterVolume
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioOutsProcessMasterVolume(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // SetAudioOutsProcessMasterVolume
+				om.Initialize(0, 0, 0);
+				SetAudioOutsProcessMasterVolume(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
 				break;
 			}
 			case 0x4: { // GetAudioOutsProcessRecordVolume
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioOutsProcessRecordVolume(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // SetAudioOutsProcessRecordVolume
+				om.Initialize(0, 0, 0);
+				SetAudioOutsProcessRecordVolume(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
 				break;
 			}
 			default:
@@ -448,12 +625,16 @@ public abstract class _IAudioOutManagerForDebugger_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForDebugger.RequestSuspendAudioOutsForDebug");
 	protected virtual void RequestResumeAudioOutsForDebug(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForDebugger.RequestResumeAudioOutsForDebug");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioOutsForDebug
+				om.Initialize(0, 0, 0);
+				RequestSuspendAudioOutsForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x1: { // RequestResumeAudioOutsForDebug
+				om.Initialize(0, 0, 0);
+				RequestResumeAudioOutsForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			default:
@@ -488,42 +669,72 @@ public abstract class _IAudioRenderer_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.RequestUpdateAudioRendererAuto not implemented");
 	protected virtual void ExecuteAudioRendererRendering() =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRenderer.ExecuteAudioRendererRendering");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSampleRate
+				om.Initialize(0, 0, 4);
+				var _return = GetSampleRate();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetSampleCount
+				om.Initialize(0, 0, 4);
+				var _return = GetSampleCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetMixBufferCount
+				om.Initialize(0, 0, 4);
+				var _return = GetMixBufferCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // GetState
+				om.Initialize(0, 0, 4);
+				var _return = GetState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // RequestUpdateAudioRenderer
+				om.Initialize(0, 0, 0);
+				RequestUpdateAudioRenderer(im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x5, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x6, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x6, 1));
 				break;
 			}
 			case 0x5: { // Start
+				om.Initialize(0, 0, 0);
+				Start();
 				break;
 			}
 			case 0x6: { // Stop
+				om.Initialize(0, 0, 0);
+				Stop();
 				break;
 			}
 			case 0x7: { // QuerySystemEvent
+				om.Initialize(0, 1, 0);
+				var _return = QuerySystemEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x8: { // SetAudioRendererRenderingTimeLimit
+				om.Initialize(0, 0, 0);
+				SetAudioRendererRenderingTimeLimit(im.GetData<uint>(8));
 				break;
 			}
 			case 0x9: { // GetAudioRendererRenderingTimeLimit
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioRendererRenderingTimeLimit();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // RequestUpdateAudioRendererAuto
+				om.Initialize(0, 0, 0);
+				RequestUpdateAudioRendererAuto(im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x21, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x22, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x22, 1));
 				break;
 			}
 			case 0xB: { // ExecuteAudioRendererRendering
+				om.Initialize(0, 0, 0);
+				ExecuteAudioRendererRendering();
 				break;
 			}
 			default:
@@ -544,21 +755,36 @@ public abstract class _IAudioRendererManager_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.OpenAudioRendererAuto not implemented");
 	protected virtual Nn.Audio.Detail.IAudioDevice GetAudioDeviceServiceWithRevisionInfo(ulong _0, uint _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.GetAudioDeviceServiceWithRevisionInfo not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenAudioRenderer
+				om.Initialize(1, 0, 0);
+				var _return = OpenAudioRenderer(*(Nn.Audio.Detail.AudioRendererParameterInternal*) im.GetDataPointer(8), im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)), Kernel.Get<KObject>(im.GetCopy(1)));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetWorkBufferSize
+				om.Initialize(0, 0, 8);
+				var _return = GetWorkBufferSize(*(Nn.Audio.Detail.AudioRendererParameterInternal*) im.GetDataPointer(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetAudioDeviceService
+				om.Initialize(1, 0, 0);
+				var _return = GetAudioDeviceService(im.GetData<ulong>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // OpenAudioRendererAuto
+				om.Initialize(1, 0, 0);
+				var _return = OpenAudioRendererAuto(*(Nn.Audio.Detail.AudioRendererParameterInternal*) im.GetDataPointer(8), im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.Pid, Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x4: { // GetAudioDeviceServiceWithRevisionInfo
+				om.Initialize(1, 0, 0);
+				var _return = GetAudioDeviceServiceWithRevisionInfo(im.GetData<ulong>(8), im.GetData<uint>(16));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			default:
@@ -585,30 +811,48 @@ public abstract class _IAudioRendererManagerForApplet_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManagerForApplet.GetAudioRenderersProcessRecordVolume not implemented");
 	protected virtual void SetAudioRenderersProcessRecordVolume(uint _0, ulong _1, ulong _2) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.SetAudioRenderersProcessRecordVolume");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioRenderers
+				om.Initialize(0, 0, 0);
+				RequestSuspendAudioRenderers(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x1: { // RequestResumeAudioRenderers
+				om.Initialize(0, 0, 0);
+				RequestResumeAudioRenderers(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x2: { // GetAudioRenderersProcessMasterVolume
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioRenderersProcessMasterVolume(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // SetAudioRenderersProcessMasterVolume
+				om.Initialize(0, 0, 0);
+				SetAudioRenderersProcessMasterVolume(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
 				break;
 			}
 			case 0x4: { // RegisterAppletResourceUserId
+				om.Initialize(0, 0, 0);
+				RegisterAppletResourceUserId(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x5: { // UnregisterAppletResourceUserId
+				om.Initialize(0, 0, 0);
+				UnregisterAppletResourceUserId(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x6: { // GetAudioRenderersProcessRecordVolume
+				om.Initialize(0, 0, 4);
+				var _return = GetAudioRenderersProcessRecordVolume(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // SetAudioRenderersProcessRecordVolume
+				om.Initialize(0, 0, 0);
+				SetAudioRenderersProcessRecordVolume(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24));
 				break;
 			}
 			default:
@@ -623,12 +867,16 @@ public abstract class _IAudioRendererManagerForDebugger_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForDebugger.RequestSuspendForDebug");
 	protected virtual void RequestResumeForDebug(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForDebugger.RequestResumeForDebug");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendForDebug
+				om.Initialize(0, 0, 0);
+				RequestSuspendForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x1: { // RequestResumeForDebug
+				om.Initialize(0, 0, 0);
+				RequestResumeForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			default:
@@ -665,45 +913,77 @@ public abstract class _ICodecController_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.ClearCodecHeadphoneMicJackInterrupt");
 	protected virtual byte IsCodecDeviceRequested() =>
 		throw new NotImplementedException("Nn.Audio.Detail.ICodecController.IsCodecDeviceRequested not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // InitializeCodecController
+				om.Initialize(0, 0, 0);
+				InitializeCodecController();
 				break;
 			}
 			case 0x1: { // FinalizeCodecController
+				om.Initialize(0, 0, 0);
+				FinalizeCodecController();
 				break;
 			}
 			case 0x2: { // SleepCodecController
+				om.Initialize(0, 0, 0);
+				SleepCodecController();
 				break;
 			}
 			case 0x3: { // WakeCodecController
+				om.Initialize(0, 0, 0);
+				WakeCodecController();
 				break;
 			}
 			case 0x4: { // SetCodecVolume
+				om.Initialize(0, 0, 0);
+				SetCodecVolume(im.GetData<uint>(8));
 				break;
 			}
 			case 0x5: { // GetCodecVolumeMax
+				om.Initialize(0, 0, 4);
+				var _return = GetCodecVolumeMax();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x6: { // GetCodecVolumeMin
+				om.Initialize(0, 0, 4);
+				var _return = GetCodecVolumeMin();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // SetCodecActiveTarget
+				om.Initialize(0, 0, 0);
+				SetCodecActiveTarget(im.GetData<uint>(8));
 				break;
 			}
 			case 0x8: { // GetCodecActiveTarget
+				om.Initialize(0, 0, 4);
+				var _return = GetCodecActiveTarget();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x9: { // BindCodecHeadphoneMicJackInterrupt
+				om.Initialize(0, 1, 0);
+				var _return = BindCodecHeadphoneMicJackInterrupt();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xA: { // IsCodecHeadphoneMicJackInserted
+				om.Initialize(0, 0, 1);
+				var _return = IsCodecHeadphoneMicJackInserted();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xB: { // ClearCodecHeadphoneMicJackInterrupt
+				om.Initialize(0, 0, 0);
+				ClearCodecHeadphoneMicJackInterrupt();
 				break;
 			}
 			case 0xC: { // IsCodecDeviceRequested
+				om.Initialize(0, 0, 1);
+				var _return = IsCodecDeviceRequested();
+				om.SetData(8, _return);
 				break;
 			}
 			default:
@@ -734,36 +1014,64 @@ public abstract class _IFinalOutputRecorder_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.AppendFinalOutputRecorderBufferAuto");
 	protected virtual void GetReleasedFinalOutputRecorderBufferAuto(out uint _0, out ulong _1, Span<Nn.Audio.AudioInBuffer> _2) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IFinalOutputRecorder.GetReleasedFinalOutputRecorderBufferAuto not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetFinalOutputRecorderState
+				om.Initialize(0, 0, 4);
+				var _return = GetFinalOutputRecorderState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // StartFinalOutputRecorder
+				om.Initialize(0, 0, 0);
+				StartFinalOutputRecorder();
 				break;
 			}
 			case 0x2: { // StopFinalOutputRecorder
+				om.Initialize(0, 0, 0);
+				StopFinalOutputRecorder();
 				break;
 			}
 			case 0x3: { // AppendFinalOutputRecorderBuffer
+				om.Initialize(0, 0, 0);
+				AppendFinalOutputRecorderBuffer(im.GetData<ulong>(8), im.GetSpan<Nn.Audio.AudioInBuffer>(0x5, 0));
 				break;
 			}
 			case 0x4: { // RegisterBufferEvent
+				om.Initialize(0, 1, 0);
+				var _return = RegisterBufferEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x5: { // GetReleasedFinalOutputRecorderBuffer
+				om.Initialize(0, 0, 16);
+				GetReleasedFinalOutputRecorderBuffer(out var _0, out var _1, im.GetSpan<Nn.Audio.AudioInBuffer>(0x6, 0));
+				om.SetData(8, _0);
+				om.SetData(16, _1);
 				break;
 			}
 			case 0x6: { // ContainsFinalOutputRecorderBuffer
+				om.Initialize(0, 0, 1);
+				var _return = ContainsFinalOutputRecorderBuffer(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // Unknown7
+				om.Initialize(0, 0, 8);
+				var _return = Unknown7(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x8: { // AppendFinalOutputRecorderBufferAuto
+				om.Initialize(0, 0, 0);
+				AppendFinalOutputRecorderBufferAuto(im.GetData<ulong>(8), im.GetSpan<Nn.Audio.AudioInBuffer>(0x21, 0));
 				break;
 			}
 			case 0x9: { // GetReleasedFinalOutputRecorderBufferAuto
+				om.Initialize(0, 0, 16);
+				GetReleasedFinalOutputRecorderBufferAuto(out var _0, out var _1, im.GetSpan<Nn.Audio.AudioInBuffer>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(16, _1);
 				break;
 			}
 			default:
@@ -774,11 +1082,15 @@ public abstract class _IFinalOutputRecorder_Base : IpcInterface {
 
 public partial class IFinalOutputRecorderManager : _IFinalOutputRecorderManager_Base;
 public abstract class _IFinalOutputRecorderManager_Base : IpcInterface {
-	protected virtual void OpenFinalOutputRecorder(Span<byte> _0, ulong _1, KObject _2, Span<byte> _3, out Nn.Audio.Detail.IFinalOutputRecorder _4) =>
+	protected virtual void OpenFinalOutputRecorder(byte[] _0, ulong _1, KObject _2, out byte[] _3, out Nn.Audio.Detail.IFinalOutputRecorder _4) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IFinalOutputRecorderManager.OpenFinalOutputRecorder not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenFinalOutputRecorder
+				om.Initialize(1, 0, 16);
+				OpenFinalOutputRecorder(im.GetBytes(8, 0x8), im.GetData<ulong>(16), Kernel.Get<KObject>(im.GetCopy(0)), out var _0, out var _1);
+				om.SetBytes(8, _0);
+				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			default:
@@ -793,12 +1105,16 @@ public abstract class _IFinalOutputRecorderManagerForApplet_Base : IpcInterface 
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForApplet.RequestSuspendFinalOutputRecorders");
 	protected virtual void RequestResumeFinalOutputRecorders(ulong _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForApplet.RequestResumeFinalOutputRecorders");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendFinalOutputRecorders
+				om.Initialize(0, 0, 0);
+				RequestSuspendFinalOutputRecorders(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x1: { // RequestResumeFinalOutputRecorders
+				om.Initialize(0, 0, 0);
+				RequestResumeFinalOutputRecorders(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			default:
@@ -813,12 +1129,16 @@ public abstract class _IFinalOutputRecorderManagerForDebugger_Base : IpcInterfac
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForDebugger.RequestSuspendForDebug");
 	protected virtual void RequestResumeForDebug(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForDebugger.RequestResumeForDebug");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendForDebug
+				om.Initialize(0, 0, 0);
+				RequestSuspendForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x1: { // RequestResumeForDebug
+				om.Initialize(0, 0, 0);
+				RequestResumeForDebug(im.GetData<ulong>(8));
 				break;
 			}
 			default:

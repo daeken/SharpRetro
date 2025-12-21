@@ -10,15 +10,25 @@ public abstract class _IDebugger_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fgm.Sf.IDebugger.Read not implemented");
 	protected virtual void Cancel() =>
 		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IDebugger.Cancel");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
+				om.Initialize(0, 1, 0);
+				var _return = Initialize(im.GetData<ulong>(8), Kernel.Get<KObject>(im.GetCopy(0)));
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Read
+				om.Initialize(0, 0, 12);
+				Read(out var _0, out var _1, out var _2, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0x2: { // Cancel
+				om.Initialize(0, 0, 0);
+				Cancel();
 				break;
 			}
 			default:
@@ -37,18 +47,28 @@ public abstract class _IRequest_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fgm.Sf.IRequest.Get not implemented");
 	protected virtual void Cancel() =>
 		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IRequest.Cancel");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
+				om.Initialize(0, 1, 0);
+				var _return = Initialize(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Set
+				om.Initialize(0, 0, 0);
+				Set(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x2: { // Get
+				om.Initialize(0, 0, 4);
+				var _return = Get();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // Cancel
+				om.Initialize(0, 0, 0);
+				Cancel();
 				break;
 			}
 			default:
@@ -61,9 +81,12 @@ public partial class ISession : _ISession_Base;
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual Nn.Fgm.Sf.IRequest Initialize() =>
 		throw new NotImplementedException("Nn.Fgm.Sf.ISession.Initialize not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
+				om.Initialize(1, 0, 0);
+				var _return = Initialize();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			default:

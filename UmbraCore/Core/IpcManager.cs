@@ -69,9 +69,9 @@ public unsafe class IncomingMessage {
 	public static Func<IncomingMessage, object> BytesGetter(uint offset, uint size) => im =>
 		new Span<byte>(im.Buffer + im.SfciOffset + 8 + offset, (int) size).ToArray();
 
-	public Buffer<T> GetBuffer<T>(uint type, int num) where T : struct {
+	public Span<T> GetSpan<T>(uint type, int num, uint backupType = uint.MaxValue) where T : struct {
 		if((type & 0x20) != 0)
-			return GetBuffer<T>((type & ~0x20U) | 4U, num) ?? GetBuffer<T>((type & ~0x20U) | 8U, num);
+			return GetSpan<T>((type & ~0x20U) | 4U, num, (type & ~0x20U) | 8U);
 
 		var ax = (type & 3) == 1 ? 1 : 0;
 		var flags_ = type & 0xC0U;
@@ -110,7 +110,7 @@ public unsafe class IncomingMessage {
 				return new Buffer<T>(b | ((((a >> 12) & 0xFU) | ((a >> 2) & 0x70U)) << 32), a >> 16);
 			}
 		}
-		return null;
+		return backupType != uint.MaxValue ? GetSpan<T>(backupType, num) : null;
 	}
 	
 	public uint GetMove(uint offset) {

@@ -6,39 +6,56 @@ public partial class IPmControl : _IPmControl_Base;
 public abstract class _IPmControl_Base : IpcInterface {
 	protected virtual KObject Unknown0() =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown0 not implemented");
-	protected virtual void Unknown1(Span<byte> _0) =>
+	protected virtual void Unknown1(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown1");
 	protected virtual void Unknown2() =>
 		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown2");
-	protected virtual void Unknown3(Span<byte> _0) =>
+	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown3 not implemented");
 	protected virtual void Unknown4() =>
 		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown4");
 	protected virtual void Unknown5() =>
 		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown5");
-	protected virtual void Unknown6(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown6(out byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown6 not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 1, 0);
+				var _return = Unknown0();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 0);
+				Unknown1(im.GetBytes(8, 0xC));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 0);
+				Unknown2();
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 4);
+				Unknown3(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 0, 0);
+				Unknown4();
 				break;
 			}
 			case 0x5: { // Unknown5
+				om.Initialize(0, 0, 0);
+				Unknown5();
 				break;
 			}
 			case 0x6: { // Unknown6
+				om.Initialize(0, 0, 40);
+				Unknown6(out var _0, im.GetSpan<byte>(0x6, 0), im.GetSpan<byte>(0x6, 1));
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:
@@ -49,26 +66,36 @@ public abstract class _IPmControl_Base : IpcInterface {
 
 public partial class IPmModule : _IPmModule_Base;
 public abstract class _IPmModule_Base : IpcInterface {
-	protected virtual KObject Initialize(Span<byte> _0, Span<byte> _1) =>
+	protected virtual KObject Initialize(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmModule.Initialize not implemented");
-	protected virtual void GetRequest(Span<byte> _0) =>
+	protected virtual void GetRequest(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmModule.GetRequest not implemented");
 	protected virtual void Acknowledge() =>
 		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmModule.Acknowledge");
 	protected virtual void Unknown3() =>
 		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmModule.Unknown3");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
+				om.Initialize(0, 1, 0);
+				var _return = Initialize(im.GetBytes(8, 0x4), im.GetSpan<byte>(0x5, 0));
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // GetRequest
+				om.Initialize(0, 0, 8);
+				GetRequest(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Acknowledge
+				om.Initialize(0, 0, 0);
+				Acknowledge();
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 0);
+				Unknown3();
 				break;
 			}
 			default:
@@ -81,9 +108,12 @@ public partial class IPmService : _IPmService_Base;
 public abstract class _IPmService_Base : IpcInterface {
 	protected virtual Nn.Psc.Sf.IPmModule GetPmModule() =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmService.GetPmModule not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetPmModule
+				om.Initialize(1, 0, 0);
+				var _return = GetPmModule();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			default:

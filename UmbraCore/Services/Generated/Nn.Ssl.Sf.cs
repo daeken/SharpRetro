@@ -56,84 +56,154 @@ public abstract class _ISslConnection_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetVerifyCertErrors not implemented");
 	protected virtual void GetCipherInfo(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetCipherInfo not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetSocketDescriptor
+				om.Initialize(0, 0, 4);
+				var _return = SetSocketDescriptor(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // SetHostName
+				om.Initialize(0, 0, 0);
+				SetHostName(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x2: { // SetVerifyOption
+				om.Initialize(0, 0, 0);
+				SetVerifyOption(im.GetData<uint>(8));
 				break;
 			}
 			case 0x3: { // SetIoMode
+				om.Initialize(0, 0, 0);
+				SetIoMode(im.GetData<uint>(8));
 				break;
 			}
 			case 0x4: { // GetSocketDescriptor
+				om.Initialize(0, 0, 4);
+				var _return = GetSocketDescriptor();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // GetHostName
+				om.Initialize(0, 0, 4);
+				GetHostName(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x6: { // GetVerifyOption
+				om.Initialize(0, 0, 4);
+				var _return = GetVerifyOption();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // GetIoMode
+				om.Initialize(0, 0, 4);
+				var _return = GetIoMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x8: { // DoHandshake
+				om.Initialize(0, 0, 0);
+				DoHandshake();
 				break;
 			}
 			case 0x9: { // DoHandshakeGetServerCert
+				om.Initialize(0, 0, 8);
+				DoHandshakeGetServerCert(out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0xA: { // Read
+				om.Initialize(0, 0, 4);
+				Read(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0xB: { // Write
+				om.Initialize(0, 0, 4);
+				var _return = Write(im.GetSpan<byte>(0x5, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xC: { // Pending
+				om.Initialize(0, 0, 4);
+				var _return = Pending();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // Peek
+				om.Initialize(0, 0, 4);
+				Peek(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0xE: { // Poll
+				om.Initialize(0, 0, 4);
+				var _return = Poll(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xF: { // GetVerifyCertError
+				om.Initialize(0, 0, 0);
+				GetVerifyCertError();
 				break;
 			}
 			case 0x10: { // GetNeededServerCertBufferSize
+				om.Initialize(0, 0, 4);
+				var _return = GetNeededServerCertBufferSize();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x11: { // SetSessionCacheMode
+				om.Initialize(0, 0, 0);
+				SetSessionCacheMode(im.GetData<uint>(8));
 				break;
 			}
 			case 0x12: { // GetSessionCacheMode
+				om.Initialize(0, 0, 4);
+				var _return = GetSessionCacheMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x13: { // FlushSessionCache
+				om.Initialize(0, 0, 0);
+				FlushSessionCache();
 				break;
 			}
 			case 0x14: { // SetRenegotiationMode
+				om.Initialize(0, 0, 0);
+				SetRenegotiationMode(im.GetData<uint>(8));
 				break;
 			}
 			case 0x15: { // GetRenegotiationMode
+				om.Initialize(0, 0, 4);
+				var _return = GetRenegotiationMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x16: { // SetOption
+				om.Initialize(0, 0, 0);
+				SetOption(im.GetData<byte>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x17: { // GetOption
+				om.Initialize(0, 0, 1);
+				var _return = GetOption(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x18: { // GetVerifyCertErrors
+				om.Initialize(0, 0, 8);
+				GetVerifyCertErrors(out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x19: { // GetCipherInfo
+				om.Initialize(0, 0, 0);
+				GetCipherInfo(im.GetData<uint>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			default:
@@ -168,42 +238,73 @@ public abstract class _ISslContext_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslContext.ImportCrl not implemented");
 	protected virtual void RemoveCrl(ulong _0) =>
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.RemoveCrl");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetOption
+				om.Initialize(0, 0, 0);
+				SetOption(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x1: { // GetOption
+				om.Initialize(0, 0, 4);
+				var _return = GetOption(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // CreateConnection
+				om.Initialize(1, 0, 0);
+				var _return = CreateConnection();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetConnectionCount
+				om.Initialize(0, 0, 4);
+				var _return = GetConnectionCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // ImportServerPki
+				om.Initialize(0, 0, 8);
+				var _return = ImportServerPki(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // ImportClientPki
+				om.Initialize(0, 0, 8);
+				var _return = ImportClientPki(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x6: { // RemoveServerPki
+				om.Initialize(0, 0, 0);
+				RemoveServerPki(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x7: { // RemoveClientPki
+				om.Initialize(0, 0, 0);
+				RemoveClientPki(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x8: { // RegisterInternalPki
+				om.Initialize(0, 0, 8);
+				var _return = RegisterInternalPki(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x9: { // AddPolicyOid
+				om.Initialize(0, 0, 0);
+				AddPolicyOid(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0xA: { // ImportCrl
+				om.Initialize(0, 0, 8);
+				var _return = ImportCrl(im.GetSpan<byte>(0x5, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xB: { // RemoveCrl
+				om.Initialize(0, 0, 0);
+				RemoveCrl(im.GetData<ulong>(8));
 				break;
 			}
 			default:
@@ -228,27 +329,45 @@ public abstract class _ISslService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslService.SetInterfaceVersion");
 	protected virtual void FlushSessionCache() =>
 		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslService.FlushSessionCache");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateContext
+				om.Initialize(1, 0, 0);
+				var _return = CreateContext(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetContextCount
+				om.Initialize(0, 0, 4);
+				var _return = GetContextCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetCertificates
+				om.Initialize(0, 0, 4);
+				GetCertificates(im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x3: { // GetCertificateBufSize
+				om.Initialize(0, 0, 4);
+				var _return = GetCertificateBufSize(im.GetSpan<byte>(0x5, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // DebugIoctl
+				om.Initialize(0, 0, 0);
+				DebugIoctl(im.GetData<ulong>(8), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x5: { // SetInterfaceVersion
+				om.Initialize(0, 0, 0);
+				SetInterfaceVersion(im.GetData<uint>(8));
 				break;
 			}
 			case 0x6: { // FlushSessionCache
+				om.Initialize(0, 0, 0);
+				FlushSessionCache();
 				break;
 			}
 			default:

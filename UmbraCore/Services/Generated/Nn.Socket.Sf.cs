@@ -56,8 +56,8 @@ public abstract class _IClient_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.Write not implemented");
 	protected virtual void Read(uint socket, out int ret, out uint bsd_errno, Span<sbyte> message) =>
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.Read not implemented");
-	protected virtual void Close(uint socket, out int ret, out uint bsd_errno) =>
-		throw new NotImplementedException("Nn.Socket.Sf.IClient.Close not implemented");
+	protected virtual void _Close(uint socket, out int ret, out uint bsd_errno) =>
+		throw new NotImplementedException("Nn.Socket.Sf.IClient._Close not implemented");
 	protected virtual void DuplicateSocket(uint _0, ulong _1, out int ret, out uint bsd_errno) =>
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.DuplicateSocket not implemented");
 	protected virtual void GetResourceStatistics(uint _0, uint _1, ulong _2, ulong _3, out int ret, out uint bsd_errno, Span<byte> _6) =>
@@ -66,99 +66,226 @@ public abstract class _IClient_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.RecvMMsg not implemented");
 	protected virtual void SendMMsg(uint _0, uint _1, uint _2, Span<byte> _3, Span<byte> _4, out int ret, out uint bsd_errno) =>
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.SendMMsg not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterClient
+				om.Initialize(0, 0, 4);
+				var _return = RegisterClient(*(Nn.Socket.BsdBufferConfig*) im.GetDataPointer(8), im.GetData<ulong>(8), im.GetData<ulong>(16), Kernel.Get<KObject>(im.GetCopy(0)), im.Pid);
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // StartMonitoring
+				om.Initialize(0, 0, 0);
+				StartMonitoring(im.GetData<ulong>(8), im.Pid);
 				break;
 			}
 			case 0x2: { // Socket
+				om.Initialize(0, 0, 8);
+				Socket(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x3: { // SocketExempt
+				om.Initialize(0, 0, 8);
+				SocketExempt(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x4: { // Open
+				om.Initialize(0, 0, 8);
+				Open(im.GetData<uint>(8), im.GetSpan<byte>(0x21, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x5: { // Select
+				om.Initialize(0, 0, 8);
+				Select(im.GetData<uint>(8), *(Nn.Socket.Timeout*) im.GetDataPointer(16), im.GetSpan<byte>(0x21, 0), im.GetSpan<byte>(0x21, 1), im.GetSpan<byte>(0x21, 2), out var _0, out var _1, im.GetSpan<byte>(0x22, 0), im.GetSpan<byte>(0x22, 1), im.GetSpan<byte>(0x22, 2));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x6: { // Poll
+				om.Initialize(0, 0, 8);
+				Poll(im.GetData<uint>(8), im.GetData<uint>(12), im.GetSpan<byte>(0x21, 0), out var _0, out var _1, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x7: { // Sysctl
+				om.Initialize(0, 0, 12);
+				Sysctl(im.GetSpan<byte>(0x21, 0), im.GetSpan<byte>(0x21, 1), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0x8: { // Recv
+				om.Initialize(0, 0, 8);
+				Recv(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x9: { // RecvFrom
+				om.Initialize(0, 0, 12);
+				RecvFrom(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x22, 0), im.GetSpan<Nn.Socket.Sockaddr>(0x22, 1));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0xA: { // Send
+				om.Initialize(0, 0, 8);
+				Send(im.GetData<uint>(8), im.GetData<uint>(12), im.GetSpan<byte>(0x21, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0xB: { // SendTo
+				om.Initialize(0, 0, 8);
+				SendTo(im.GetData<uint>(8), im.GetData<uint>(12), im.GetSpan<byte>(0x21, 0), im.GetSpan<Nn.Socket.Sockaddr>(0x21, 1), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0xC: { // Accept
+				om.Initialize(0, 0, 12);
+				Accept(im.GetData<uint>(8), out var _0, out var _1, out var _2, im.GetSpan<Nn.Socket.Sockaddr>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0xD: { // Bind
+				om.Initialize(0, 0, 8);
+				Bind(im.GetData<uint>(8), im.GetSpan<Nn.Socket.Sockaddr>(0x21, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0xE: { // Connect
+				om.Initialize(0, 0, 8);
+				Connect(im.GetData<uint>(8), im.GetSpan<Nn.Socket.Sockaddr>(0x21, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0xF: { // GetPeerName
+				om.Initialize(0, 0, 12);
+				GetPeerName(im.GetData<uint>(8), out var _0, out var _1, out var _2, im.GetSpan<Nn.Socket.Sockaddr>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0x10: { // GetSockName
+				om.Initialize(0, 0, 12);
+				GetSockName(im.GetData<uint>(8), out var _0, out var _1, out var _2, im.GetSpan<Nn.Socket.Sockaddr>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0x11: { // GetSockOpt
+				om.Initialize(0, 0, 12);
+				GetSockOpt(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), out var _0, out var _1, out var _2, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0x12: { // Listen
+				om.Initialize(0, 0, 8);
+				Listen(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x13: { // Ioctl
+				om.Initialize(0, 0, 8);
+				Ioctl(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetSpan<byte>(0x21, 0), im.GetSpan<byte>(0x21, 1), im.GetSpan<byte>(0x21, 2), im.GetSpan<byte>(0x21, 3), out var _0, out var _1, im.GetSpan<byte>(0x22, 0), im.GetSpan<byte>(0x22, 1), im.GetSpan<byte>(0x22, 2), im.GetSpan<byte>(0x22, 3));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x14: { // Fcntl
+				om.Initialize(0, 0, 8);
+				Fcntl(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x15: { // SetSockOpt
+				om.Initialize(0, 0, 8);
+				SetSockOpt(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetSpan<byte>(0x21, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x16: { // Shutdown
+				om.Initialize(0, 0, 8);
+				Shutdown(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x17: { // ShutdownAllSockets
+				om.Initialize(0, 0, 8);
+				ShutdownAllSockets(im.GetData<uint>(8), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x18: { // Write
+				om.Initialize(0, 0, 8);
+				Write(im.GetData<uint>(8), im.GetSpan<byte>(0x21, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x19: { // Read
+				om.Initialize(0, 0, 8);
+				Read(im.GetData<uint>(8), out var _0, out var _1, im.GetSpan<sbyte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
-			case 0x1A: { // Close
+			case 0x1A: { // _Close
+				om.Initialize(0, 0, 8);
+				_Close(im.GetData<uint>(8), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x1B: { // DuplicateSocket
+				om.Initialize(0, 0, 8);
+				DuplicateSocket(im.GetData<uint>(8), im.GetData<ulong>(16), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x1C: { // GetResourceStatistics
+				om.Initialize(0, 0, 8);
+				GetResourceStatistics(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<ulong>(16), im.Pid, out var _0, out var _1, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x1D: { // RecvMMsg
+				om.Initialize(0, 0, 8);
+				RecvMMsg(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetData<UInt128>(32), out var _0, out var _1, im.GetSpan<byte>(0x22, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x1E: { // SendMMsg
+				om.Initialize(0, 0, 8);
+				SendMMsg(im.GetData<uint>(8), im.GetData<uint>(12), im.GetData<uint>(16), im.GetSpan<byte>(0x21, 0), im.GetSpan<byte>(0x21, 1), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			default:

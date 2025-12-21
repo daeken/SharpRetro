@@ -4,41 +4,55 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Pdm.Detail;
 public partial class INotifyService : _INotifyService_Base;
 public abstract class _INotifyService_Base : IpcInterface {
-	protected virtual void Unknown0(Span<byte> _0) =>
+	protected virtual void Unknown0(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown0");
-	protected virtual void Unknown2(Span<byte> _0) =>
+	protected virtual void Unknown2(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown2");
-	protected virtual void Unknown3(Span<byte> _0) =>
+	protected virtual void Unknown3(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown3");
 	protected virtual void Unknown4() =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown4");
 	protected virtual void Unknown5(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown5");
-	protected virtual void Unknown6(Span<byte> _0) =>
+	protected virtual void Unknown6(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown6");
-	protected virtual void Unknown7(Span<byte> _0) =>
+	protected virtual void Unknown7(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown7");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 0);
+				Unknown0(im.GetBytes(8, 0x10));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 0);
+				Unknown2(im.GetBytes(8, 0x1));
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 0);
+				Unknown3(im.GetBytes(8, 0x1));
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 0, 0);
+				Unknown4();
 				break;
 			}
 			case 0x5: { // Unknown5
+				om.Initialize(0, 0, 0);
+				Unknown5(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x6: { // Unknown6
+				om.Initialize(0, 0, 0);
+				Unknown6(im.GetBytes(8, 0x10));
 				break;
 			}
 			case 0x7: { // Unknown7
+				om.Initialize(0, 0, 0);
+				Unknown7(im.GetBytes(8, 0x10));
 				break;
 			}
 			default:
@@ -49,71 +63,110 @@ public abstract class _INotifyService_Base : IpcInterface {
 
 public partial class IQueryService : _IQueryService_Base;
 public abstract class _IQueryService_Base : IpcInterface {
-	protected virtual void Unknown0(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown0(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown0 not implemented");
-	protected virtual void Unknown1(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown1(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown1 not implemented");
-	protected virtual void Unknown2(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown2(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown2 not implemented");
-	protected virtual void Unknown3(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown3(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown3 not implemented");
-	protected virtual void Unknown4(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown4(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown4 not implemented");
-	protected virtual void Unknown5(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown5(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown5 not implemented");
-	protected virtual void Unknown6(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown6(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown6 not implemented");
-	protected virtual void Unknown7(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown7(Span<byte> _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown7 not implemented");
-	protected virtual void Unknown8(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown8(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown8 not implemented");
-	protected virtual void Unknown9(Span<byte> _0) =>
+	protected virtual void Unknown9(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown9 not implemented");
-	protected virtual void Unknown10(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown10(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown10 not implemented");
-	protected virtual void Unknown11(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void Unknown11(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown11 not implemented");
-	protected virtual void Unknown12(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown12(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pdm.Detail.IQueryService.Unknown12 not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 4);
+				Unknown0(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 4);
+				Unknown1(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 0, 4);
+				Unknown2(im.GetBytes(8, 0x10), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 4);
+				Unknown3(im.GetBytes(8, 0x8), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 0, 40);
+				Unknown4(im.GetBytes(8, 0x8), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x5: { // Unknown5
+				om.Initialize(0, 0, 40);
+				Unknown5(im.GetBytes(8, 0x18), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x6: { // Unknown6
+				om.Initialize(0, 0, 40);
+				Unknown6(im.GetBytes(8, 0x10), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x7: { // Unknown7
+				om.Initialize(0, 0, 4);
+				Unknown7(im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x8: { // Unknown8
+				om.Initialize(0, 0, 4);
+				Unknown8(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x9: { // Unknown9
+				om.Initialize(0, 0, 12);
+				Unknown9(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xA: { // Unknown10
+				om.Initialize(0, 0, 4);
+				Unknown10(im.GetBytes(8, 0x4), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xB: { // Unknown11
+				om.Initialize(0, 0, 4);
+				Unknown11(im.GetBytes(8, 0x18), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xC: { // Unknown12
+				om.Initialize(0, 0, 12);
+				Unknown12(im.GetBytes(8, 0x10), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:

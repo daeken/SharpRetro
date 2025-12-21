@@ -12,23 +12,36 @@ public abstract class _IOAuthProcedure_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Account.Http.IOAuthProcedure.ApplyResponse");
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Http.IOAuthProcedure.ApplyResponseAsync not implemented");
-	protected virtual void Suspend(Span<byte> _0) =>
+	protected virtual void Suspend(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.Http.IOAuthProcedure.Suspend not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // PrepareAsync
+				om.Initialize(1, 0, 0);
+				var _return = PrepareAsync();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetRequest
+				om.Initialize(0, 0, 0);
+				GetRequest(im.GetSpan<byte>(0x1A, 0), im.GetSpan<byte>(0x1A, 1));
 				break;
 			}
 			case 0x2: { // ApplyResponse
+				om.Initialize(0, 0, 0);
+				ApplyResponse(im.GetSpan<byte>(0x9, 0));
 				break;
 			}
 			case 0x3: { // ApplyResponseAsync
+				om.Initialize(1, 0, 0);
+				var _return = ApplyResponseAsync(im.GetSpan<byte>(0x9, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // Suspend
+				om.Initialize(0, 0, 16);
+				Suspend(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:

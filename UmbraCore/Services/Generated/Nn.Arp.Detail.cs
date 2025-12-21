@@ -4,26 +4,36 @@ using UmbraCore.Core;
 namespace UmbraCore.Services.Nn.Arp.Detail;
 public partial class IReader : _IReader_Base;
 public abstract class _IReader_Base : IpcInterface {
-	protected virtual void GetApplicationLaunchProperty(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetApplicationLaunchProperty(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationLaunchProperty not implemented");
-	protected virtual void GetApplicationLaunchPropertyWithApplicationId(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetApplicationLaunchPropertyWithApplicationId(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationLaunchPropertyWithApplicationId not implemented");
-	protected virtual void GetApplicationControlProperty(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetApplicationControlProperty(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationControlProperty not implemented");
-	protected virtual void GetApplicationControlPropertyWithApplicationId(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetApplicationControlPropertyWithApplicationId(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Arp.Detail.IReader.GetApplicationControlPropertyWithApplicationId not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetApplicationLaunchProperty
+				om.Initialize(0, 0, 16);
+				GetApplicationLaunchProperty(im.GetBytes(8, 0x8), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x1: { // GetApplicationLaunchPropertyWithApplicationId
+				om.Initialize(0, 0, 16);
+				GetApplicationLaunchPropertyWithApplicationId(im.GetBytes(8, 0x8), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x2: { // GetApplicationControlProperty
+				om.Initialize(0, 0, 0);
+				GetApplicationControlProperty(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x16, 0));
 				break;
 			}
 			case 0x3: { // GetApplicationControlPropertyWithApplicationId
+				om.Initialize(0, 0, 0);
+				GetApplicationControlPropertyWithApplicationId(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x16, 0));
 				break;
 			}
 			default:
@@ -34,21 +44,27 @@ public abstract class _IReader_Base : IpcInterface {
 
 public partial class IRegistrar : _IRegistrar_Base;
 public abstract class _IRegistrar_Base : IpcInterface {
-	protected virtual void Issue(Span<byte> _0) =>
+	protected virtual void Issue(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.Issue");
-	protected virtual void SetApplicationLaunchProperty(Span<byte> _0) =>
+	protected virtual void SetApplicationLaunchProperty(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationLaunchProperty");
 	protected virtual void SetApplicationControlProperty(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationControlProperty");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Issue
+				om.Initialize(0, 0, 0);
+				Issue(im.GetBytes(8, 0x8));
 				break;
 			}
 			case 0x1: { // SetApplicationLaunchProperty
+				om.Initialize(0, 0, 0);
+				SetApplicationLaunchProperty(im.GetBytes(8, 0x10));
 				break;
 			}
 			case 0x2: { // SetApplicationControlProperty
+				om.Initialize(0, 0, 0);
+				SetApplicationControlProperty(im.GetSpan<byte>(0x15, 0));
 				break;
 			}
 			default:
@@ -61,14 +77,19 @@ public partial class IWriter : _IWriter_Base;
 public abstract class _IWriter_Base : IpcInterface {
 	protected virtual Nn.Arp.Detail.IRegistrar AcquireRegistrar() =>
 		throw new NotImplementedException("Nn.Arp.Detail.IWriter.AcquireRegistrar not implemented");
-	protected virtual void DeleteProperties(Span<byte> _0) =>
+	protected virtual void DeleteProperties(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Arp.Detail.IWriter.DeleteProperties");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // AcquireRegistrar
+				om.Initialize(1, 0, 0);
+				var _return = AcquireRegistrar();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // DeleteProperties
+				om.Initialize(0, 0, 0);
+				DeleteProperties(im.GetBytes(8, 0x8));
 				break;
 			}
 			default:

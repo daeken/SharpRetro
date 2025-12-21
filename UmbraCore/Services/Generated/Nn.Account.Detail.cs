@@ -12,18 +12,28 @@ public abstract class _IAsyncContext_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.Detail.IAsyncContext.HasDone not implemented");
 	protected virtual void GetResult() =>
 		Console.WriteLine("Stub hit for Nn.Account.Detail.IAsyncContext.GetResult");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetSystemEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Cancel
+				om.Initialize(0, 0, 0);
+				Cancel();
 				break;
 			}
 			case 0x2: { // HasDone
+				om.Initialize(0, 0, 1);
+				var _return = HasDone();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // GetResult
+				om.Initialize(0, 0, 0);
+				GetResult();
 				break;
 			}
 			default:
@@ -36,9 +46,12 @@ public partial class INotifier : _INotifier_Base;
 public abstract class _INotifier_Base : IpcInterface {
 	protected virtual KObject GetSystemEvent() =>
 		throw new NotImplementedException("Nn.Account.Detail.INotifier.GetSystemEvent not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetSystemEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			default:
@@ -51,9 +64,11 @@ public partial class ISessionObject : _ISessionObject_Base;
 public abstract class _ISessionObject_Base : IpcInterface {
 	protected virtual void Dummy() =>
 		Console.WriteLine("Stub hit for Nn.Account.Detail.ISessionObject.Dummy");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x3E7: { // Dummy
+				om.Initialize(0, 0, 0);
+				Dummy();
 				break;
 			}
 			default:

@@ -38,8 +38,8 @@ public abstract class _IPcvService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.Initialize");
 	protected virtual byte IsInitialized() =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.IsInitialized not implemented");
-	protected virtual void Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.Finalize");
+	protected virtual void _Finalize() =>
+		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService._Finalize");
 	protected virtual void PowerOn(uint _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.PowerOn");
 	protected virtual void PowerOff(uint _0) =>
@@ -58,87 +58,157 @@ public abstract class _IPcvService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetPowerDomainStateTable not implemented");
 	protected virtual void GetFuseInfo(uint _0, out uint _1, Span<uint> _2) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetFuseInfo not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetPowerEnabled
+				om.Initialize(0, 0, 0);
+				SetPowerEnabled(im.GetData<byte>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x1: { // SetClockEnabled
+				om.Initialize(0, 0, 0);
+				SetClockEnabled(im.GetData<byte>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x2: { // SetClockRate
+				om.Initialize(0, 0, 0);
+				SetClockRate(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x3: { // GetClockRate
+				om.Initialize(0, 0, 4);
+				var _return = GetClockRate(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // GetState
+				om.Initialize(0, 0, 0);
+				GetState(im.GetData<uint>(8));
 				break;
 			}
 			case 0x5: { // GetPossibleClockRates
+				om.Initialize(0, 0, 8);
+				GetPossibleClockRates(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, out var _1, im.GetSpan<uint>(0xA, 0));
+				om.SetData(8, _0);
+				om.SetData(12, _1);
 				break;
 			}
 			case 0x6: { // SetMinVClockRate
+				om.Initialize(0, 0, 0);
+				SetMinVClockRate(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x7: { // SetReset
+				om.Initialize(0, 0, 0);
+				SetReset(im.GetData<byte>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x8: { // SetVoltageEnabled
+				om.Initialize(0, 0, 0);
+				SetVoltageEnabled(im.GetData<byte>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x9: { // GetVoltageEnabled
+				om.Initialize(0, 0, 1);
+				var _return = GetVoltageEnabled(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xA: { // GetVoltageRange
+				om.Initialize(0, 0, 12);
+				GetVoltageRange(im.GetData<uint>(8), out var _0, out var _1, out var _2);
+				om.SetData(8, _0);
+				om.SetData(12, _1);
+				om.SetData(16, _2);
 				break;
 			}
 			case 0xB: { // SetVoltageValue
+				om.Initialize(0, 0, 0);
+				SetVoltageValue(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0xC: { // GetVoltageValue
+				om.Initialize(0, 0, 4);
+				var _return = GetVoltageValue(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // GetTemperatureThresholds
+				om.Initialize(0, 0, 4);
+				GetTemperatureThresholds(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0xE: { // SetTemperature
+				om.Initialize(0, 0, 0);
+				SetTemperature(im.GetData<uint>(8));
 				break;
 			}
 			case 0xF: { // Initialize
+				om.Initialize(0, 0, 0);
+				Initialize();
 				break;
 			}
 			case 0x10: { // IsInitialized
+				om.Initialize(0, 0, 1);
+				var _return = IsInitialized();
+				om.SetData(8, _return);
 				break;
 			}
-			case 0x11: { // Finalize
+			case 0x11: { // _Finalize
+				om.Initialize(0, 0, 0);
+				_Finalize();
 				break;
 			}
 			case 0x12: { // PowerOn
+				om.Initialize(0, 0, 0);
+				PowerOn(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x13: { // PowerOff
+				om.Initialize(0, 0, 0);
+				PowerOff(im.GetData<uint>(8));
 				break;
 			}
 			case 0x14: { // ChangeVoltage
+				om.Initialize(0, 0, 0);
+				ChangeVoltage(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			case 0x15: { // GetPowerClockInfoEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetPowerClockInfoEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x16: { // GetOscillatorClock
+				om.Initialize(0, 0, 4);
+				var _return = GetOscillatorClock();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x17: { // GetDvfsTable
+				om.Initialize(0, 0, 4);
+				GetDvfsTable(im.GetData<uint>(8), im.GetData<uint>(12), out var _0, im.GetSpan<uint>(0xA, 0), im.GetSpan<uint>(0xA, 1));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x18: { // GetModuleStateTable
+				om.Initialize(0, 0, 4);
+				GetModuleStateTable(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x19: { // GetPowerDomainStateTable
+				om.Initialize(0, 0, 4);
+				GetPowerDomainStateTable(im.GetData<uint>(8), out var _0, im.GetSpan<byte>(0xA, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x1A: { // GetFuseInfo
+				om.Initialize(0, 0, 4);
+				GetFuseInfo(im.GetData<uint>(8), out var _0, im.GetSpan<uint>(0xA, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			default:

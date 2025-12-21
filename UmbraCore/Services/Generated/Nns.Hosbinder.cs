@@ -12,18 +12,26 @@ public abstract class _IHOSBinderDriver_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nns.Hosbinder.IHOSBinderDriver.GetNativeHandle");
 	protected virtual void TransactParcelAuto() =>
 		Console.WriteLine("Stub hit for Nns.Hosbinder.IHOSBinderDriver.TransactParcelAuto");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // TransactParcel
+				om.Initialize(0, 0, 0);
+				TransactParcel();
 				break;
 			}
 			case 0x1: { // AdjustRefcount
+				om.Initialize(0, 0, 0);
+				AdjustRefcount();
 				break;
 			}
 			case 0x2: { // GetNativeHandle
+				om.Initialize(0, 0, 0);
+				GetNativeHandle();
 				break;
 			}
 			case 0x3: { // TransactParcelAuto
+				om.Initialize(0, 0, 0);
+				TransactParcelAuto();
 				break;
 			}
 			default:

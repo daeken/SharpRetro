@@ -6,8 +6,8 @@ public partial class ISystem : _ISystem_Base;
 public abstract class _ISystem_Base : IpcInterface {
 	protected virtual void Initialize(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.Initialize");
-	protected virtual void Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.Finalize");
+	protected virtual void _Finalize() =>
+		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem._Finalize");
 	protected virtual uint GetStateOld() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetStateOld not implemented");
 	protected virtual byte IsNfcEnabledOld() =>
@@ -24,106 +24,165 @@ public abstract class _ISystem_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.IsNfcEnabled not implemented");
 	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.ListDevices not implemented");
-	protected virtual uint GetDeviceState(Span<byte> _0) =>
+	protected virtual uint GetDeviceState(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetDeviceState not implemented");
-	protected virtual uint GetNpadId(Span<byte> _0) =>
+	protected virtual uint GetNpadId(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetNpadId not implemented");
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.AttachAvailabilityChangeEvent not implemented");
-	protected virtual void StartDetection(Span<byte> _0, uint _1) =>
+	protected virtual void StartDetection(byte[] _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.StartDetection");
-	protected virtual void StopDetection(Span<byte> _0) =>
+	protected virtual void StopDetection(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.StopDetection");
-	protected virtual void GetTagInfo(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetTagInfo not implemented");
-	protected virtual KObject AttachActivateEvent(Span<byte> _0) =>
+	protected virtual KObject AttachActivateEvent(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.AttachActivateEvent not implemented");
-	protected virtual KObject AttachDeactivateEvent(Span<byte> _0) =>
+	protected virtual KObject AttachDeactivateEvent(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.AttachDeactivateEvent not implemented");
 	protected virtual void SetNfcEnabled(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.SetNfcEnabled");
-	protected virtual void ReadMifare(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void ReadMifare(byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.ReadMifare not implemented");
-	protected virtual void WriteMifare(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void WriteMifare(byte[] _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.WriteMifare");
-	protected virtual void SendCommandByPassThrough(Span<byte> _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
+	protected virtual void SendCommandByPassThrough(byte[] _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.SendCommandByPassThrough not implemented");
-	protected virtual void KeepPassThroughSession(Span<byte> _0) =>
+	protected virtual void KeepPassThroughSession(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.KeepPassThroughSession");
-	protected virtual void ReleasePassThroughSession(Span<byte> _0) =>
+	protected virtual void ReleasePassThroughSession(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.ReleasePassThroughSession");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
+				om.Initialize(0, 0, 0);
+				Initialize(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
 				break;
 			}
-			case 0x1: { // Finalize
+			case 0x1: { // _Finalize
+				om.Initialize(0, 0, 0);
+				_Finalize();
 				break;
 			}
 			case 0x2: { // GetStateOld
+				om.Initialize(0, 0, 4);
+				var _return = GetStateOld();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // IsNfcEnabledOld
+				om.Initialize(0, 0, 1);
+				var _return = IsNfcEnabledOld();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x64: { // SetNfcEnabledOld
+				om.Initialize(0, 0, 0);
+				SetNfcEnabledOld(im.GetData<byte>(8));
 				break;
 			}
 			case 0x190: { // InitializeSystem
+				om.Initialize(0, 0, 0);
+				InitializeSystem(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x191: { // FinalizeSystem
+				om.Initialize(0, 0, 0);
+				FinalizeSystem();
 				break;
 			}
 			case 0x192: { // GetState
+				om.Initialize(0, 0, 4);
+				var _return = GetState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x193: { // IsNfcEnabled
+				om.Initialize(0, 0, 1);
+				var _return = IsNfcEnabled();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x194: { // ListDevices
+				om.Initialize(0, 0, 4);
+				ListDevices(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x195: { // GetDeviceState
+				om.Initialize(0, 0, 4);
+				var _return = GetDeviceState(im.GetBytes(8, 0x8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x196: { // GetNpadId
+				om.Initialize(0, 0, 4);
+				var _return = GetNpadId(im.GetBytes(8, 0x8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x197: { // AttachAvailabilityChangeEvent
+				om.Initialize(0, 1, 0);
+				var _return = AttachAvailabilityChangeEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x198: { // StartDetection
+				om.Initialize(0, 0, 0);
+				StartDetection(im.GetBytes(8, 0x8), im.GetData<uint>(16));
 				break;
 			}
 			case 0x199: { // StopDetection
+				om.Initialize(0, 0, 0);
+				StopDetection(im.GetBytes(8, 0x8));
 				break;
 			}
 			case 0x19A: { // GetTagInfo
+				om.Initialize(0, 0, 0);
+				GetTagInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
 				break;
 			}
 			case 0x19B: { // AttachActivateEvent
+				om.Initialize(0, 1, 0);
+				var _return = AttachActivateEvent(im.GetBytes(8, 0x8));
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x19C: { // AttachDeactivateEvent
+				om.Initialize(0, 1, 0);
+				var _return = AttachDeactivateEvent(im.GetBytes(8, 0x8));
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1F4: { // SetNfcEnabled
+				om.Initialize(0, 0, 0);
+				SetNfcEnabled(im.GetData<byte>(8));
 				break;
 			}
 			case 0x3E8: { // ReadMifare
+				om.Initialize(0, 0, 0);
+				ReadMifare(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x3E9: { // WriteMifare
+				om.Initialize(0, 0, 0);
+				WriteMifare(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x514: { // SendCommandByPassThrough
+				om.Initialize(0, 0, 4);
+				SendCommandByPassThrough(im.GetBytes(8, 0x8), im.GetData<ulong>(16), im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x515: { // KeepPassThroughSession
+				om.Initialize(0, 0, 0);
+				KeepPassThroughSession(im.GetBytes(8, 0x8));
 				break;
 			}
 			case 0x516: { // ReleasePassThroughSession
+				om.Initialize(0, 0, 0);
+				ReleasePassThroughSession(im.GetBytes(8, 0x8));
 				break;
 			}
 			default:
@@ -136,9 +195,12 @@ public partial class ISystemManager : _ISystemManager_Base;
 public abstract class _ISystemManager_Base : IpcInterface {
 	protected virtual Nn.Nfc.Detail.ISystem CreateSystemInterface() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystemManager.CreateSystemInterface not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateSystemInterface
+				om.Initialize(1, 0, 0);
+				var _return = CreateSystemInterface();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			default:
@@ -159,106 +221,161 @@ public abstract class _IUser_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.IsNfcEnabledOld not implemented");
 	protected virtual void Initialize(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.Initialize");
-	protected virtual void Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.Finalize");
+	protected virtual void _Finalize() =>
+		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser._Finalize");
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetState not implemented");
 	protected virtual byte IsNfcEnabled() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.IsNfcEnabled not implemented");
 	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.ListDevices not implemented");
-	protected virtual uint GetDeviceState(Span<byte> _0) =>
+	protected virtual uint GetDeviceState(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetDeviceState not implemented");
-	protected virtual uint GetNpadId(Span<byte> _0) =>
+	protected virtual uint GetNpadId(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetNpadId not implemented");
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.AttachAvailabilityChangeEvent not implemented");
-	protected virtual void StartDetection(Span<byte> _0, uint _1) =>
+	protected virtual void StartDetection(byte[] _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.StartDetection");
-	protected virtual void StopDetection(Span<byte> _0) =>
+	protected virtual void StopDetection(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.StopDetection");
-	protected virtual void GetTagInfo(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetTagInfo not implemented");
-	protected virtual KObject AttachActivateEvent(Span<byte> _0) =>
+	protected virtual KObject AttachActivateEvent(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.AttachActivateEvent not implemented");
-	protected virtual KObject AttachDeactivateEvent(Span<byte> _0) =>
+	protected virtual KObject AttachDeactivateEvent(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.AttachDeactivateEvent not implemented");
-	protected virtual void ReadMifare(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
+	protected virtual void ReadMifare(byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.ReadMifare not implemented");
-	protected virtual void WriteMifare(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void WriteMifare(byte[] _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.WriteMifare");
-	protected virtual void SendCommandByPassThrough(Span<byte> _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
+	protected virtual void SendCommandByPassThrough(byte[] _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.SendCommandByPassThrough not implemented");
-	protected virtual void KeepPassThroughSession(Span<byte> _0) =>
+	protected virtual void KeepPassThroughSession(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.KeepPassThroughSession");
-	protected virtual void ReleasePassThroughSession(Span<byte> _0) =>
+	protected virtual void ReleasePassThroughSession(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.ReleasePassThroughSession");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // InitializeOld
+				om.Initialize(0, 0, 0);
+				InitializeOld(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x1: { // FinalizeOld
+				om.Initialize(0, 0, 0);
+				FinalizeOld();
 				break;
 			}
 			case 0x2: { // GetStateOld
+				om.Initialize(0, 0, 4);
+				var _return = GetStateOld();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3: { // IsNfcEnabledOld
+				om.Initialize(0, 0, 1);
+				var _return = IsNfcEnabledOld();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x190: { // Initialize
+				om.Initialize(0, 0, 0);
+				Initialize(im.GetData<ulong>(8), im.GetData<ulong>(16), im.Pid, im.GetSpan<byte>(0x5, 0));
 				break;
 			}
-			case 0x191: { // Finalize
+			case 0x191: { // _Finalize
+				om.Initialize(0, 0, 0);
+				_Finalize();
 				break;
 			}
 			case 0x192: { // GetState
+				om.Initialize(0, 0, 4);
+				var _return = GetState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x193: { // IsNfcEnabled
+				om.Initialize(0, 0, 1);
+				var _return = IsNfcEnabled();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x194: { // ListDevices
+				om.Initialize(0, 0, 4);
+				ListDevices(out var _0, im.GetSpan<byte>(0xA, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x195: { // GetDeviceState
+				om.Initialize(0, 0, 4);
+				var _return = GetDeviceState(im.GetBytes(8, 0x8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x196: { // GetNpadId
+				om.Initialize(0, 0, 4);
+				var _return = GetNpadId(im.GetBytes(8, 0x8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x197: { // AttachAvailabilityChangeEvent
+				om.Initialize(0, 1, 0);
+				var _return = AttachAvailabilityChangeEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x198: { // StartDetection
+				om.Initialize(0, 0, 0);
+				StartDetection(im.GetBytes(8, 0x8), im.GetData<uint>(16));
 				break;
 			}
 			case 0x199: { // StopDetection
+				om.Initialize(0, 0, 0);
+				StopDetection(im.GetBytes(8, 0x8));
 				break;
 			}
 			case 0x19A: { // GetTagInfo
+				om.Initialize(0, 0, 0);
+				GetTagInfo(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x1A, 0));
 				break;
 			}
 			case 0x19B: { // AttachActivateEvent
+				om.Initialize(0, 1, 0);
+				var _return = AttachActivateEvent(im.GetBytes(8, 0x8));
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x19C: { // AttachDeactivateEvent
+				om.Initialize(0, 1, 0);
+				var _return = AttachDeactivateEvent(im.GetBytes(8, 0x8));
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3E8: { // ReadMifare
+				om.Initialize(0, 0, 0);
+				ReadMifare(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x3E9: { // WriteMifare
+				om.Initialize(0, 0, 0);
+				WriteMifare(im.GetBytes(8, 0x8), im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x514: { // SendCommandByPassThrough
+				om.Initialize(0, 0, 4);
+				SendCommandByPassThrough(im.GetBytes(8, 0x8), im.GetData<ulong>(16), im.GetSpan<byte>(0x5, 0), out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x515: { // KeepPassThroughSession
+				om.Initialize(0, 0, 0);
+				KeepPassThroughSession(im.GetBytes(8, 0x8));
 				break;
 			}
 			case 0x516: { // ReleasePassThroughSession
+				om.Initialize(0, 0, 0);
+				ReleasePassThroughSession(im.GetBytes(8, 0x8));
 				break;
 			}
 			default:
@@ -271,9 +388,12 @@ public partial class IUserManager : _IUserManager_Base;
 public abstract class _IUserManager_Base : IpcInterface {
 	protected virtual Nn.Nfc.Mifare.Detail.IUser CreateUserInterface() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUserManager.CreateUserInterface not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateUserInterface
+				om.Initialize(1, 0, 0);
+				var _return = CreateUserInterface();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			default:

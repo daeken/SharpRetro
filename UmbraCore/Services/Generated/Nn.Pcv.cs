@@ -6,9 +6,11 @@ public partial class IArbitrationManager : _IArbitrationManager_Base;
 public abstract class _IArbitrationManager_Base : IpcInterface {
 	protected virtual void ReleaseControl(uint _0) =>
 		Console.WriteLine("Stub hit for Nn.Pcv.IArbitrationManager.ReleaseControl");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ReleaseControl
+				om.Initialize(0, 0, 0);
+				ReleaseControl(im.GetData<uint>(8));
 				break;
 			}
 			default:
@@ -21,9 +23,11 @@ public partial class IImmediateManager : _IImmediateManager_Base;
 public abstract class _IImmediateManager_Base : IpcInterface {
 	protected virtual void SetClockRate(uint _0, uint _1) =>
 		Console.WriteLine("Stub hit for Nn.Pcv.IImmediateManager.SetClockRate");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetClockRate
+				om.Initialize(0, 0, 0);
+				SetClockRate(im.GetData<uint>(8), im.GetData<uint>(12));
 				break;
 			}
 			default:

@@ -10,30 +10,46 @@ public abstract class _IPmService_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Usb.Pm.IPmService.Unknown1 not implemented");
 	protected virtual KObject Unknown2() =>
 		throw new NotImplementedException("Nn.Usb.Pm.IPmService.Unknown2 not implemented");
-	protected virtual void Unknown3(Span<byte> _0) =>
+	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Pm.IPmService.Unknown3 not implemented");
-	protected virtual void Unknown4(Span<byte> _0) =>
+	protected virtual void Unknown4(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Usb.Pm.IPmService.Unknown4");
-	protected virtual void Unknown5(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void Unknown5(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Usb.Pm.IPmService.Unknown5 not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 1, 0);
+				var _return = Unknown0();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 0);
+				Unknown1(im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x2: { // Unknown2
+				om.Initialize(0, 1, 0);
+				var _return = Unknown2();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3: { // Unknown3
+				om.Initialize(0, 0, 4);
+				Unknown3(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x4: { // Unknown4
+				om.Initialize(0, 0, 0);
+				Unknown4(im.GetBytes(8, 0x8));
 				break;
 			}
 			case 0x5: { // Unknown5
+				om.Initialize(0, 0, 4);
+				Unknown5(im.GetBytes(8, 0x4), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:

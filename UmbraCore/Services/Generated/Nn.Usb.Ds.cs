@@ -10,30 +10,54 @@ public abstract class _IDsEndpoint_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.Cancel");
 	protected virtual KObject GetCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.GetCompletionEvent not implemented");
-	protected virtual void GetReportData(Span<Nn.Usb.Usb_report_entry> entries, out uint report_count) =>
+	protected virtual void GetReportData(out Nn.Usb.Usb_report_entry[] entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.GetReportData not implemented");
 	protected virtual void Stall() =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.Stall");
 	protected virtual void SetZlt(bool _0) =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.SetZlt");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // PostBufferAsync
+				om.Initialize(0, 0, 4);
+				var _return = PostBufferAsync(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // Cancel
+				om.Initialize(0, 0, 0);
+				Cancel();
 				break;
 			}
 			case 0x2: { // GetCompletionEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetCompletionEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x3: { // GetReportData
+				om.Initialize(0, 0, 4);
+				GetReportData(out var _0, out var _2);
+				var ptr_1 = (Nn.Usb.Usb_report_entry*) om.GetDataPointer(8);
+				ptr_1[0] = _0[0];
+				ptr_1[1] = _0[1];
+				ptr_1[2] = _0[2];
+				ptr_1[3] = _0[3];
+				ptr_1[4] = _0[4];
+				ptr_1[5] = _0[5];
+				ptr_1[6] = _0[6];
+				ptr_1[7] = _0[7];
+				om.SetData(8, _2);
 				break;
 			}
 			case 0x4: { // Stall
+				om.Initialize(0, 0, 0);
+				Stall();
 				break;
 			}
 			case 0x5: { // SetZlt
+				om.Initialize(0, 0, 0);
+				SetZlt(im.GetData<bool>(8));
 				break;
 			}
 			default:
@@ -60,55 +84,107 @@ public abstract class _IDsInterface_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.CtrlOutPostBufferAsync not implemented");
 	protected virtual KObject GetCtrlInCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlInCompletionEvent not implemented");
-	protected virtual void GetCtrlInReportData(Span<Nn.Usb.Usb_report_entry> entries, out uint report_count) =>
+	protected virtual void GetCtrlInReportData(out Nn.Usb.Usb_report_entry[] entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlInReportData not implemented");
 	protected virtual KObject GetCtrlOutCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlOutCompletionEvent not implemented");
-	protected virtual void GetCtrlOutReportData(Span<Nn.Usb.Usb_report_entry> entries, out uint report_count) =>
+	protected virtual void GetCtrlOutReportData(out Nn.Usb.Usb_report_entry[] entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlOutReportData not implemented");
 	protected virtual void StallCtrl() =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.StallCtrl");
 	protected virtual void AppendConfigurationData(byte interface_number, Nn.Usb.Usb_device_speed speed_mode, Span<byte> descriptor) =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.AppendConfigurationData");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterEndpoint
+				om.Initialize(1, 0, 0);
+				var _return = RegisterEndpoint(im.GetData<byte>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // GetSetupEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetSetupEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x2: { // GetSetupPacket
+				om.Initialize(0, 0, 0);
+				GetSetupPacket(im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x3: { // EnableInterface
+				om.Initialize(0, 0, 0);
+				EnableInterface();
 				break;
 			}
 			case 0x4: { // DisableInterface
+				om.Initialize(0, 0, 0);
+				DisableInterface();
 				break;
 			}
 			case 0x5: { // CtrlInPostBufferAsync
+				om.Initialize(0, 0, 4);
+				var _return = CtrlInPostBufferAsync(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x6: { // CtrlOutPostBufferAsync
+				om.Initialize(0, 0, 4);
+				var _return = CtrlOutPostBufferAsync(im.GetData<uint>(8), im.GetData<ulong>(16));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // GetCtrlInCompletionEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetCtrlInCompletionEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x8: { // GetCtrlInReportData
+				om.Initialize(0, 0, 4);
+				GetCtrlInReportData(out var _0, out var _2);
+				var ptr_1 = (Nn.Usb.Usb_report_entry*) om.GetDataPointer(8);
+				ptr_1[0] = _0[0];
+				ptr_1[1] = _0[1];
+				ptr_1[2] = _0[2];
+				ptr_1[3] = _0[3];
+				ptr_1[4] = _0[4];
+				ptr_1[5] = _0[5];
+				ptr_1[6] = _0[6];
+				ptr_1[7] = _0[7];
+				om.SetData(8, _2);
 				break;
 			}
 			case 0x9: { // GetCtrlOutCompletionEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetCtrlOutCompletionEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0xA: { // GetCtrlOutReportData
+				om.Initialize(0, 0, 4);
+				GetCtrlOutReportData(out var _0, out var _2);
+				var ptr_1 = (Nn.Usb.Usb_report_entry*) om.GetDataPointer(8);
+				ptr_1[0] = _0[0];
+				ptr_1[1] = _0[1];
+				ptr_1[2] = _0[2];
+				ptr_1[3] = _0[3];
+				ptr_1[4] = _0[4];
+				ptr_1[5] = _0[5];
+				ptr_1[6] = _0[6];
+				ptr_1[7] = _0[7];
+				om.SetData(8, _2);
 				break;
 			}
 			case 0xB: { // StallCtrl
+				om.Initialize(0, 0, 0);
+				StallCtrl();
 				break;
 			}
 			case 0xC: { // AppendConfigurationData
+				om.Initialize(0, 0, 0);
+				AppendConfigurationData(im.GetData<byte>(8), im.GetData<Nn.Usb.Usb_device_speed>(12), im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			default:
@@ -143,42 +219,70 @@ public abstract class _IDsService_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.Enable");
 	protected virtual void Disable() =>
 		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.Disable");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BindDevice
+				om.Initialize(0, 0, 0);
+				BindDevice(im.GetData<uint>(8));
 				break;
 			}
 			case 0x1: { // BindClientProcess
+				om.Initialize(0, 0, 0);
+				BindClientProcess(Kernel.Get<KObject>(im.GetCopy(0)));
 				break;
 			}
 			case 0x2: { // RegisterInterface
+				om.Initialize(1, 0, 0);
+				var _return = RegisterInterface(im.GetData<byte>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3: { // GetStateChangeEvent
+				om.Initialize(0, 1, 0);
+				var _return = GetStateChangeEvent();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			case 0x4: { // GetState
+				om.Initialize(0, 0, 4);
+				var _return = GetState();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // ClearDeviceData
+				om.Initialize(0, 0, 0);
+				ClearDeviceData();
 				break;
 			}
 			case 0x6: { // AddUsbStringDescriptor
+				om.Initialize(0, 0, 1);
+				var _return = AddUsbStringDescriptor(im.GetSpan<byte>(0x5, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x7: { // DeleteUsbStringDescriptor
+				om.Initialize(0, 0, 0);
+				DeleteUsbStringDescriptor(im.GetData<byte>(8));
 				break;
 			}
 			case 0x8: { // SetUsbDeviceDescriptor
+				om.Initialize(0, 0, 0);
+				SetUsbDeviceDescriptor(im.GetData<Nn.Usb.Usb_device_speed>(8), im.GetSpan<Nn.Usb.Usb_device_descriptor>(0x5, 0));
 				break;
 			}
 			case 0x9: { // SetBinaryObjectStore
+				om.Initialize(0, 0, 0);
+				SetBinaryObjectStore(im.GetSpan<Nn.Usb.Usb_bos_descriptor>(0x5, 0));
 				break;
 			}
 			case 0xA: { // Enable
+				om.Initialize(0, 0, 0);
+				Enable();
 				break;
 			}
 			case 0xB: { // Disable
+				om.Initialize(0, 0, 0);
+				Disable();
 				break;
 			}
 			default:

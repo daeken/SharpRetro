@@ -44,7 +44,7 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetSdCardUserAreaSize not implemented");
 	protected virtual ulong GetSdCardProtectedAreaSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetSdCardProtectedAreaSize not implemented");
-	protected virtual void GetAndClearSdCardErrorInfo(ulong _0, Span<byte> _1, out ulong _2, Span<byte> _3) =>
+	protected virtual void GetAndClearSdCardErrorInfo(ulong _0, out byte[] _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetAndClearSdCardErrorInfo not implemented");
 	protected virtual void GetMmcCid(ulong _0, Span<byte> cid) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcCid not implemented");
@@ -56,7 +56,7 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcPartitionSize not implemented");
 	protected virtual uint GetMmcPatrolCount() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcPatrolCount not implemented");
-	protected virtual void GetAndClearMmcErrorInfo(ulong _0, Span<byte> _1, out ulong _2, Span<byte> _3) =>
+	protected virtual void GetAndClearMmcErrorInfo(ulong _0, out byte[] _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetAndClearMmcErrorInfo not implemented");
 	protected virtual void GetMmcExtendedCsd(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetMmcExtendedCsd not implemented");
@@ -96,9 +96,9 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.ReadParamDirectly not implemented");
 	protected virtual void ForceEraseGameCard() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.ForceEraseGameCard");
-	protected virtual void GetGameCardErrorInfo2(Span<byte> error_info) =>
+	protected virtual void GetGameCardErrorInfo2(out byte[] error_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardErrorInfo2 not implemented");
-	protected virtual void GetGameCardErrorReportInfo(Span<byte> error_report_info) =>
+	protected virtual void GetGameCardErrorReportInfo(out byte[] error_report_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardErrorReportInfo not implemented");
 	protected virtual void GetGameCardDeviceId(ulong _0, Span<byte> device_id) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDeviceOperator.GetGameCardDeviceId not implemented");
@@ -110,120 +110,215 @@ public abstract class _IDeviceOperator_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.SuspendSdmmcControl");
 	protected virtual void ResumeSdmmcControl() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IDeviceOperator.ResumeSdmmcControl");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // IsSdCardInserted
+				om.Initialize(0, 0, 1);
+				var _return = IsSdCardInserted();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1: { // GetSdCardSpeedMode
+				om.Initialize(0, 0, 8);
+				var _return = GetSdCardSpeedMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // GetSdCardCid
+				om.Initialize(0, 0, 0);
+				GetSdCardCid(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x3: { // GetSdCardUserAreaSize
+				om.Initialize(0, 0, 8);
+				var _return = GetSdCardUserAreaSize();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x4: { // GetSdCardProtectedAreaSize
+				om.Initialize(0, 0, 8);
+				var _return = GetSdCardProtectedAreaSize();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // GetAndClearSdCardErrorInfo
+				om.Initialize(0, 0, 24);
+				GetAndClearSdCardErrorInfo(im.GetData<ulong>(8), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
+				om.SetData(24, _1);
 				break;
 			}
 			case 0x64: { // GetMmcCid
+				om.Initialize(0, 0, 0);
+				GetMmcCid(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x65: { // GetMmcSpeedMode
+				om.Initialize(0, 0, 8);
+				var _return = GetMmcSpeedMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x6E: { // EraseMmc
+				om.Initialize(0, 0, 0);
+				EraseMmc(im.GetData<uint>(8));
 				break;
 			}
 			case 0x6F: { // GetMmcPartitionSize
+				om.Initialize(0, 0, 8);
+				var _return = GetMmcPartitionSize(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x70: { // GetMmcPatrolCount
+				om.Initialize(0, 0, 4);
+				var _return = GetMmcPatrolCount();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x71: { // GetAndClearMmcErrorInfo
+				om.Initialize(0, 0, 24);
+				GetAndClearMmcErrorInfo(im.GetData<ulong>(8), out var _0, out var _1, im.GetSpan<byte>(0x6, 0));
+				om.SetBytes(8, _0);
+				om.SetData(24, _1);
 				break;
 			}
 			case 0x72: { // GetMmcExtendedCsd
+				om.Initialize(0, 0, 0);
+				GetMmcExtendedCsd(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x73: { // SuspendMmcPatrol
+				om.Initialize(0, 0, 0);
+				SuspendMmcPatrol();
 				break;
 			}
 			case 0x74: { // ResumeMmcPatrol
+				om.Initialize(0, 0, 0);
+				ResumeMmcPatrol();
 				break;
 			}
 			case 0xC8: { // IsGameCardInserted
+				om.Initialize(0, 0, 1);
+				var _return = IsGameCardInserted();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xC9: { // EraseGameCard
+				om.Initialize(0, 0, 0);
+				EraseGameCard(im.GetData<uint>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0xCA: { // GetGameCardHandle
+				om.Initialize(0, 0, 4);
+				var _return = GetGameCardHandle();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xCB: { // GetGameCardUpdatePartitionInfo
+				om.Initialize(0, 0, 16);
+				GetGameCardUpdatePartitionInfo(im.GetData<uint>(8), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetData(16, _1);
 				break;
 			}
 			case 0xCC: { // FinalizeGameCardDriver
+				om.Initialize(0, 0, 0);
+				FinalizeGameCardDriver();
 				break;
 			}
 			case 0xCD: { // GetGameCardAttribute
+				om.Initialize(0, 0, 1);
+				var _return = GetGameCardAttribute(im.GetData<uint>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xCE: { // GetGameCardDeviceCertificate
+				om.Initialize(0, 0, 0);
+				GetGameCardDeviceCertificate(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xCF: { // GetGameCardAsicInfo
+				om.Initialize(0, 0, 0);
+				GetGameCardAsicInfo(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xD0: { // GetGameCardIdSet
+				om.Initialize(0, 0, 0);
+				GetGameCardIdSet(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xD1: { // WriteToGameCard
+				om.Initialize(0, 0, 0);
+				WriteToGameCard(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xD2: { // SetVerifyWriteEnalbleFlag
+				om.Initialize(0, 0, 0);
+				SetVerifyWriteEnalbleFlag(im.GetData<byte>(8));
 				break;
 			}
 			case 0xD3: { // GetGameCardImageHash
+				om.Initialize(0, 0, 0);
+				GetGameCardImageHash(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xD4: { // GetGameCardErrorInfo
+				om.Initialize(0, 0, 0);
+				GetGameCardErrorInfo(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xD5: { // EraseAndWriteParamDirectly
+				om.Initialize(0, 0, 0);
+				EraseAndWriteParamDirectly(im.GetData<ulong>(8), im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0xD6: { // ReadParamDirectly
+				om.Initialize(0, 0, 0);
+				ReadParamDirectly(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0xD7: { // ForceEraseGameCard
+				om.Initialize(0, 0, 0);
+				ForceEraseGameCard();
 				break;
 			}
 			case 0xD8: { // GetGameCardErrorInfo2
+				om.Initialize(0, 0, 16);
+				GetGameCardErrorInfo2(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xD9: { // GetGameCardErrorReportInfo
+				om.Initialize(0, 0, 64);
+				GetGameCardErrorReportInfo(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xDA: { // GetGameCardDeviceId
+				om.Initialize(0, 0, 0);
+				GetGameCardDeviceId(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x12C: { // SetSpeedEmulationMode
+				om.Initialize(0, 0, 0);
+				SetSpeedEmulationMode(im.GetData<uint>(8));
 				break;
 			}
 			case 0x12D: { // GetSpeedEmulationMode
+				om.Initialize(0, 0, 4);
+				var _return = GetSpeedEmulationMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x190: { // SuspendSdmmcControl
+				om.Initialize(0, 0, 0);
+				SuspendSdmmcControl();
 				break;
 			}
 			case 0x191: { // ResumeSdmmcControl
+				om.Initialize(0, 0, 0);
+				ResumeSdmmcControl();
 				break;
 			}
 			default:
@@ -238,12 +333,18 @@ public abstract class _IDirectory_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDirectory.Read not implemented");
 	protected virtual ulong GetEntryCount() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IDirectory.GetEntryCount not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Read
+				om.Initialize(0, 0, 8);
+				Read(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x1: { // GetEntryCount
+				om.Initialize(0, 0, 8);
+				var _return = GetEntryCount();
+				om.SetData(8, _return);
 				break;
 			}
 			default:
@@ -256,9 +357,12 @@ public partial class IEventNotifier : _IEventNotifier_Base;
 public abstract class _IEventNotifier_Base : IpcInterface {
 	protected virtual KObject GetEventHandle() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IEventNotifier.GetEventHandle not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetEventHandle
+				om.Initialize(0, 1, 0);
+				var _return = GetEventHandle();
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			default:
@@ -279,26 +383,41 @@ public abstract class _IFile_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFile.SetSize");
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFile.GetSize not implemented");
-	protected virtual void OperateRange(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
+	protected virtual void OperateRange(uint _0, ulong _1, ulong _2, out byte[] _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFile.OperateRange not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Read
+				om.Initialize(0, 0, 8);
+				Read(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), out var _0, im.GetSpan<byte>(0x46, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x1: { // Write
+				om.Initialize(0, 0, 0);
+				Write(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetSpan<byte>(0x45, 0));
 				break;
 			}
 			case 0x2: { // Flush
+				om.Initialize(0, 0, 0);
+				Flush();
 				break;
 			}
 			case 0x3: { // SetSize
+				om.Initialize(0, 0, 0);
+				SetSize(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x4: { // GetSize
+				om.Initialize(0, 0, 8);
+				var _return = GetSize();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // OperateRange
+				om.Initialize(0, 0, 64);
+				OperateRange(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:
@@ -337,58 +456,96 @@ public abstract class _IFileSystem_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystem.GetTotalSpaceSize not implemented");
 	protected virtual void CleanDirectoryRecursively(Span<byte> path) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystem.CleanDirectoryRecursively");
-	protected virtual void GetFileTimeStampRaw(Span<byte> path, Span<byte> timestamp) =>
+	protected virtual void GetFileTimeStampRaw(Span<byte> path, out byte[] timestamp) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystem.GetFileTimeStampRaw not implemented");
 	protected virtual void QueryEntry(uint _0, Span<byte> path, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystem.QueryEntry not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateFile
+				om.Initialize(0, 0, 0);
+				CreateFile(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x1: { // DeleteFile
+				om.Initialize(0, 0, 0);
+				DeleteFile(im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x2: { // CreateDirectory
+				om.Initialize(0, 0, 0);
+				CreateDirectory(im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x3: { // DeleteDirectory
+				om.Initialize(0, 0, 0);
+				DeleteDirectory(im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x4: { // DeleteDirectoryRecursively
+				om.Initialize(0, 0, 0);
+				DeleteDirectoryRecursively(im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x5: { // RenameFile
+				om.Initialize(0, 0, 0);
+				RenameFile(im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
 				break;
 			}
 			case 0x6: { // RenameDirectory
+				om.Initialize(0, 0, 0);
+				RenameDirectory(im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x19, 1));
 				break;
 			}
 			case 0x7: { // GetEntryType
+				om.Initialize(0, 0, 1);
+				var _return = GetEntryType(im.GetSpan<byte>(0x19, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x8: { // OpenFile
+				om.Initialize(1, 0, 0);
+				var _return = OpenFile(im.GetData<uint>(8), im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x9: { // OpenDirectory
+				om.Initialize(1, 0, 0);
+				var _return = OpenDirectory(im.GetData<uint>(8), im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xA: { // Commit
+				om.Initialize(0, 0, 0);
+				Commit();
 				break;
 			}
 			case 0xB: { // GetFreeSpaceSize
+				om.Initialize(0, 0, 8);
+				var _return = GetFreeSpaceSize(im.GetSpan<byte>(0x19, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xC: { // GetTotalSpaceSize
+				om.Initialize(0, 0, 8);
+				var _return = GetTotalSpaceSize(im.GetSpan<byte>(0x19, 0));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0xD: { // CleanDirectoryRecursively
+				om.Initialize(0, 0, 0);
+				CleanDirectoryRecursively(im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0xE: { // GetFileTimeStampRaw
+				om.Initialize(0, 0, 32);
+				GetFileTimeStampRaw(im.GetSpan<byte>(0x19, 0), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0xF: { // QueryEntry
+				om.Initialize(0, 0, 0);
+				QueryEntry(im.GetData<uint>(8), im.GetSpan<byte>(0x19, 0), im.GetSpan<byte>(0x45, 0), im.GetSpan<byte>(0x46, 0));
 				break;
 			}
 			default:
@@ -425,9 +582,9 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.FormatSdCardFileSystem");
 	protected virtual void DeleteSaveDataFileSystem(ulong tid) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.DeleteSaveDataFileSystem");
-	protected virtual void CreateSaveDataFileSystem(Span<byte> save_struct, Span<byte> ave_create_struct, Span<byte> _2) =>
+	protected virtual void CreateSaveDataFileSystem(byte[] save_struct, byte[] ave_create_struct, byte[] _2) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CreateSaveDataFileSystem");
-	protected virtual void CreateSaveDataFileSystemBySystemSaveDataId(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void CreateSaveDataFileSystemBySystemSaveDataId(byte[] _0, byte[] _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CreateSaveDataFileSystemBySystemSaveDataId");
 	protected virtual void RegisterSaveDataFileSystemAtomicDeletion(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.RegisterSaveDataFileSystemAtomicDeletion");
@@ -437,7 +594,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.FormatSdCardDryRun");
 	protected virtual byte IsExFatSupported() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.IsExFatSupported not implemented");
-	protected virtual void DeleteSaveDataFileSystemBySaveDataAttribute(byte _0, Span<byte> _1) =>
+	protected virtual void DeleteSaveDataFileSystemBySaveDataAttribute(byte _0, byte[] _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.DeleteSaveDataFileSystemBySaveDataAttribute");
 	protected virtual Nn.Fssrv.Sf.IStorage OpenGameCardStorage(uint _0, uint _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenGameCardStorage not implemented");
@@ -449,11 +606,11 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.DeleteCacheStorage");
 	protected virtual void GetCacheStorageSize() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.GetCacheStorageSize");
-	protected virtual Nn.Fssrv.Sf.IFileSystem OpenSaveDataFileSystem(byte save_data_space_id, Span<byte> save_struct) =>
+	protected virtual Nn.Fssrv.Sf.IFileSystem OpenSaveDataFileSystem(byte save_data_space_id, byte[] save_struct) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenSaveDataFileSystem not implemented");
-	protected virtual Nn.Fssrv.Sf.IFileSystem OpenSaveDataFileSystemBySystemSaveDataId(byte save_data_space_id, Span<byte> save_struct) =>
+	protected virtual Nn.Fssrv.Sf.IFileSystem OpenSaveDataFileSystemBySystemSaveDataId(byte save_data_space_id, byte[] save_struct) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenSaveDataFileSystemBySystemSaveDataId not implemented");
-	protected virtual Nn.Fssrv.Sf.IFileSystem OpenReadOnlySaveDataFileSystem(byte save_data_space_id, Span<byte> save_struct) =>
+	protected virtual Nn.Fssrv.Sf.IFileSystem OpenReadOnlySaveDataFileSystem(byte save_data_space_id, byte[] save_struct) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenReadOnlySaveDataFileSystem not implemented");
 	protected virtual void ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(byte _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.ReadSaveDataFileSystemExtraDataBySaveDataSpaceId not implemented");
@@ -473,7 +630,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.UpdateSaveDataMacForDebug");
 	protected virtual void WriteSaveDataFileSystemExtraData2() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.WriteSaveDataFileSystemExtraData2");
-	protected virtual Nn.Fssrv.Sf.IFile OpenSaveDataMetaFile(byte _0, uint _1, Span<byte> _2) =>
+	protected virtual Nn.Fssrv.Sf.IFile OpenSaveDataMetaFile(byte _0, uint _1, byte[] _2) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenSaveDataMetaFile not implemented");
 	protected virtual Nn.Fssrv.Sf.ISaveDataTransferManager OpenSaveDataTransferManager() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenSaveDataTransferManager not implemented");
@@ -513,15 +670,15 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CreatePaddingFile");
 	protected virtual void DeleteAllPaddingFiles() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.DeleteAllPaddingFiles");
-	protected virtual void GetRightsId(byte _0, ulong _1, Span<byte> rights) =>
+	protected virtual void GetRightsId(byte _0, ulong _1, out byte[] rights) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetRightsId not implemented");
-	protected virtual void RegisterExternalKey(Span<byte> _0, Span<byte> _1) =>
+	protected virtual void RegisterExternalKey(byte[] _0, byte[] _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.RegisterExternalKey");
 	protected virtual void UnregisterAllExternalKey() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.UnregisterAllExternalKey");
-	protected virtual void GetRightsIdByPath(Span<byte> _0, Span<byte> rights) =>
+	protected virtual void GetRightsIdByPath(Span<byte> _0, out byte[] rights) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetRightsIdByPath not implemented");
-	protected virtual void GetRightsIdAndKeyGenerationByPath(Span<byte> _0, out byte _1, Span<byte> rights) =>
+	protected virtual void GetRightsIdAndKeyGenerationByPath(Span<byte> _0, out byte _1, out byte[] rights) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetRightsIdAndKeyGenerationByPath not implemented");
 	protected virtual void SetCurrentPosixTimeWithTimeDifference(uint _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetCurrentPosixTimeWithTimeDifference");
@@ -533,7 +690,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.CorruptSaveDataFileSystemBySaveDataSpaceId");
 	protected virtual void QuerySaveDataInternalStorageTotalSize() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.QuerySaveDataInternalStorageTotalSize");
-	protected virtual void SetSdCardEncryptionSeed(Span<byte> _0) =>
+	protected virtual void SetSdCardEncryptionSeed(byte[] _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetSdCardEncryptionSeed");
 	protected virtual void SetSdCardAccessibility(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetSdCardAccessibility");
@@ -551,7 +708,7 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.ResolveAccessFailure");
 	protected virtual void AbandonAccessFailure() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.AbandonAccessFailure");
-	protected virtual void GetAndClearFileSystemProxyErrorInfo(Span<byte> error_info) =>
+	protected virtual void GetAndClearFileSystemProxyErrorInfo(out byte[] error_info) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetAndClearFileSystemProxyErrorInfo not implemented");
 	protected virtual void SetBisRootForHost(uint _0, Span<byte> _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.SetBisRootForHost");
@@ -571,279 +728,497 @@ public abstract class _IFileSystemProxy_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.RegisterUpdatePartition");
 	protected virtual Nn.Fssrv.Sf.IFileSystem OpenRegisteredUpdatePartition() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.OpenRegisteredUpdatePartition not implemented");
-	protected virtual void GetAndClearMemoryReportInfo(Span<byte> _0) =>
+	protected virtual void GetAndClearMemoryReportInfo(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxy.GetAndClearMemoryReportInfo not implemented");
 	protected virtual void Unknown1010() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.Unknown1010");
 	protected virtual void OverrideSaveDataTransferTokenSignVerificationKey(Span<byte> _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxy.OverrideSaveDataTransferTokenSignVerificationKey");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenFileSystem(im.GetData<Nn.Fssrv.Sf.FileSystemType>(8), im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // SetCurrentProcess
+				om.Initialize(0, 0, 0);
+				SetCurrentProcess(im.GetData<ulong>(8), im.Pid);
 				break;
 			}
 			case 0x2: { // OpenDataFileSystemByCurrentProcess
+				om.Initialize(1, 0, 0);
+				var _return = OpenDataFileSystemByCurrentProcess();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x7: { // OpenFileSystemWithPatch
+				om.Initialize(1, 0, 0);
+				var _return = OpenFileSystemWithPatch(im.GetData<Nn.Fssrv.Sf.FileSystemType>(8), im.GetData<ulong>(16));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x8: { // OpenFileSystemWithId
+				om.Initialize(1, 0, 0);
+				var _return = OpenFileSystemWithId(im.GetData<Nn.Fssrv.Sf.FileSystemType>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x9: { // OpenDataFileSystemByApplicationId
+				om.Initialize(1, 0, 0);
+				var _return = OpenDataFileSystemByApplicationId(im.GetData<ulong>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xB: { // OpenBisFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenBisFileSystem(im.GetData<Nn.Fssrv.Sf.Partition>(8), im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC: { // OpenBisStorage
+				om.Initialize(1, 0, 0);
+				var _return = OpenBisStorage(im.GetData<Nn.Fssrv.Sf.Partition>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xD: { // InvalidateBisCache
+				om.Initialize(0, 0, 0);
+				InvalidateBisCache();
 				break;
 			}
 			case 0x11: { // OpenHostFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenHostFileSystem(im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x12: { // OpenSdCardFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenSdCardFileSystem();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x13: { // FormatSdCardFileSystem
+				om.Initialize(0, 0, 0);
+				FormatSdCardFileSystem();
 				break;
 			}
 			case 0x15: { // DeleteSaveDataFileSystem
+				om.Initialize(0, 0, 0);
+				DeleteSaveDataFileSystem(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x16: { // CreateSaveDataFileSystem
+				om.Initialize(0, 0, 0);
+				CreateSaveDataFileSystem(im.GetBytes(8, 0x40), im.GetBytes(72, 0x40), im.GetBytes(136, 0x10));
 				break;
 			}
 			case 0x17: { // CreateSaveDataFileSystemBySystemSaveDataId
+				om.Initialize(0, 0, 0);
+				CreateSaveDataFileSystemBySystemSaveDataId(im.GetBytes(8, 0x40), im.GetBytes(72, 0x40));
 				break;
 			}
 			case 0x18: { // RegisterSaveDataFileSystemAtomicDeletion
+				om.Initialize(0, 0, 0);
+				RegisterSaveDataFileSystemAtomicDeletion(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x19: { // DeleteSaveDataFileSystemBySaveDataSpaceId
+				om.Initialize(0, 0, 0);
+				DeleteSaveDataFileSystemBySaveDataSpaceId(im.GetData<byte>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x1A: { // FormatSdCardDryRun
+				om.Initialize(0, 0, 0);
+				FormatSdCardDryRun();
 				break;
 			}
 			case 0x1B: { // IsExFatSupported
+				om.Initialize(0, 0, 1);
+				var _return = IsExFatSupported();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x1C: { // DeleteSaveDataFileSystemBySaveDataAttribute
+				om.Initialize(0, 0, 0);
+				DeleteSaveDataFileSystemBySaveDataAttribute(im.GetData<byte>(8), im.GetBytes(16, 0x40));
 				break;
 			}
 			case 0x1E: { // OpenGameCardStorage
+				om.Initialize(1, 0, 0);
+				var _return = OpenGameCardStorage(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F: { // OpenGameCardFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenGameCardFileSystem(im.GetData<uint>(8), im.GetData<uint>(12));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x20: { // ExtendSaveDataFileSystem
+				om.Initialize(0, 0, 0);
+				ExtendSaveDataFileSystem(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetData<ulong>(32));
 				break;
 			}
 			case 0x21: { // DeleteCacheStorage
+				om.Initialize(0, 0, 0);
+				DeleteCacheStorage();
 				break;
 			}
 			case 0x22: { // GetCacheStorageSize
+				om.Initialize(0, 0, 0);
+				GetCacheStorageSize();
 				break;
 			}
 			case 0x33: { // OpenSaveDataFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenSaveDataFileSystem(im.GetData<byte>(8), im.GetBytes(16, 0x40));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x34: { // OpenSaveDataFileSystemBySystemSaveDataId
+				om.Initialize(1, 0, 0);
+				var _return = OpenSaveDataFileSystemBySystemSaveDataId(im.GetData<byte>(8), im.GetBytes(16, 0x40));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x35: { // OpenReadOnlySaveDataFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenReadOnlySaveDataFileSystem(im.GetData<byte>(8), im.GetBytes(16, 0x40));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x39: { // ReadSaveDataFileSystemExtraDataBySaveDataSpaceId
+				om.Initialize(0, 0, 0);
+				ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x3A: { // ReadSaveDataFileSystemExtraData
+				om.Initialize(0, 0, 0);
+				ReadSaveDataFileSystemExtraData(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x3B: { // WriteSaveDataFileSystemExtraData
+				om.Initialize(0, 0, 0);
+				WriteSaveDataFileSystemExtraData(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x3C: { // OpenSaveDataInfoReader
+				om.Initialize(1, 0, 0);
+				var _return = OpenSaveDataInfoReader();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3D: { // OpenSaveDataInfoReaderBySaveDataSpaceId
+				om.Initialize(1, 0, 0);
+				var _return = OpenSaveDataInfoReaderBySaveDataSpaceId(im.GetData<byte>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3E: { // OpenCacheStorageList
+				om.Initialize(0, 0, 0);
+				OpenCacheStorageList();
 				break;
 			}
 			case 0x40: { // OpenSaveDataInternalStorageFileSystem
+				om.Initialize(0, 0, 0);
+				OpenSaveDataInternalStorageFileSystem();
 				break;
 			}
 			case 0x41: { // UpdateSaveDataMacForDebug
+				om.Initialize(0, 0, 0);
+				UpdateSaveDataMacForDebug();
 				break;
 			}
 			case 0x42: { // WriteSaveDataFileSystemExtraData2
+				om.Initialize(0, 0, 0);
+				WriteSaveDataFileSystemExtraData2();
 				break;
 			}
 			case 0x50: { // OpenSaveDataMetaFile
+				om.Initialize(1, 0, 0);
+				var _return = OpenSaveDataMetaFile(im.GetData<byte>(8), im.GetData<uint>(12), im.GetBytes(16, 0x40));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x51: { // OpenSaveDataTransferManager
+				om.Initialize(1, 0, 0);
+				var _return = OpenSaveDataTransferManager();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x52: { // OpenSaveDataTransferManagerVersion2
+				om.Initialize(0, 0, 0);
+				OpenSaveDataTransferManagerVersion2();
 				break;
 			}
 			case 0x64: { // OpenImageDirectoryFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenImageDirectoryFileSystem(im.GetData<uint>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x6E: { // OpenContentStorageFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenContentStorageFileSystem(im.GetData<uint>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC8: { // OpenDataStorageByCurrentProcess
+				om.Initialize(1, 0, 0);
+				var _return = OpenDataStorageByCurrentProcess();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xC9: { // OpenDataStorageByProgramId
+				om.Initialize(1, 0, 0);
+				var _return = OpenDataStorageByProgramId(im.GetData<ulong>(8));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xCA: { // OpenDataStorageByDataId
+				om.Initialize(1, 0, 0);
+				var _return = OpenDataStorageByDataId(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0xCB: { // OpenPatchDataStorageByCurrentProcess
+				om.Initialize(1, 0, 0);
+				var _return = OpenPatchDataStorageByCurrentProcess();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x190: { // OpenDeviceOperator
+				om.Initialize(1, 0, 0);
+				var _return = OpenDeviceOperator();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F4: { // OpenSdCardDetectionEventNotifier
+				om.Initialize(1, 0, 0);
+				var _return = OpenSdCardDetectionEventNotifier();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1F5: { // OpenGameCardDetectionEventNotifier
+				om.Initialize(1, 0, 0);
+				var _return = OpenGameCardDetectionEventNotifier();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1FE: { // OpenSystemDataUpdateEventNotifier
+				om.Initialize(0, 0, 0);
+				OpenSystemDataUpdateEventNotifier();
 				break;
 			}
 			case 0x1FF: { // NotifySystemDataUpdateEvent
+				om.Initialize(0, 0, 0);
+				NotifySystemDataUpdateEvent();
 				break;
 			}
 			case 0x258: { // SetCurrentPosixTime
+				om.Initialize(0, 0, 0);
+				SetCurrentPosixTime(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x259: { // QuerySaveDataTotalSize
+				om.Initialize(0, 0, 8);
+				var _return = QuerySaveDataTotalSize(im.GetData<ulong>(8), im.GetData<ulong>(16));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x25A: { // VerifySaveDataFileSystem
+				om.Initialize(0, 0, 0);
+				VerifySaveDataFileSystem(im.GetData<ulong>(8), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x25B: { // CorruptSaveDataFileSystem
+				om.Initialize(0, 0, 0);
+				CorruptSaveDataFileSystem(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x25C: { // CreatePaddingFile
+				om.Initialize(0, 0, 0);
+				CreatePaddingFile(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x25D: { // DeleteAllPaddingFiles
+				om.Initialize(0, 0, 0);
+				DeleteAllPaddingFiles();
 				break;
 			}
 			case 0x25E: { // GetRightsId
+				om.Initialize(0, 0, 16);
+				GetRightsId(im.GetData<byte>(8), im.GetData<ulong>(16), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x25F: { // RegisterExternalKey
+				om.Initialize(0, 0, 0);
+				RegisterExternalKey(im.GetBytes(8, 0x10), im.GetBytes(24, 0x10));
 				break;
 			}
 			case 0x260: { // UnregisterAllExternalKey
+				om.Initialize(0, 0, 0);
+				UnregisterAllExternalKey();
 				break;
 			}
 			case 0x261: { // GetRightsIdByPath
+				om.Initialize(0, 0, 16);
+				GetRightsIdByPath(im.GetSpan<byte>(0x19, 0), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x262: { // GetRightsIdAndKeyGenerationByPath
+				om.Initialize(0, 0, 24);
+				GetRightsIdAndKeyGenerationByPath(im.GetSpan<byte>(0x19, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.SetBytes(16, _1);
 				break;
 			}
 			case 0x263: { // SetCurrentPosixTimeWithTimeDifference
+				om.Initialize(0, 0, 0);
+				SetCurrentPosixTimeWithTimeDifference(im.GetData<uint>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x264: { // GetFreeSpaceSizeForSaveData
+				om.Initialize(0, 0, 8);
+				var _return = GetFreeSpaceSizeForSaveData(im.GetData<byte>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x265: { // VerifySaveDataFileSystemBySaveDataSpaceId
+				om.Initialize(0, 0, 0);
+				VerifySaveDataFileSystemBySaveDataSpaceId(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x266: { // CorruptSaveDataFileSystemBySaveDataSpaceId
+				om.Initialize(0, 0, 0);
+				CorruptSaveDataFileSystemBySaveDataSpaceId(im.GetData<byte>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x267: { // QuerySaveDataInternalStorageTotalSize
+				om.Initialize(0, 0, 0);
+				QuerySaveDataInternalStorageTotalSize();
 				break;
 			}
 			case 0x26C: { // SetSdCardEncryptionSeed
+				om.Initialize(0, 0, 0);
+				SetSdCardEncryptionSeed(im.GetBytes(8, 0x10));
 				break;
 			}
 			case 0x276: { // SetSdCardAccessibility
+				om.Initialize(0, 0, 0);
+				SetSdCardAccessibility(im.GetData<byte>(8));
 				break;
 			}
 			case 0x277: { // IsSdCardAccessible
+				om.Initialize(0, 0, 1);
+				var _return = IsSdCardAccessible();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x280: { // IsSignedSystemPartitionOnSdCardValid
+				om.Initialize(0, 0, 1);
+				var _return = IsSignedSystemPartitionOnSdCardValid();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2BC: { // OpenAccessFailureResolver
+				om.Initialize(0, 0, 0);
+				OpenAccessFailureResolver();
 				break;
 			}
 			case 0x2BD: { // GetAccessFailureDetectionEvent
+				om.Initialize(0, 0, 0);
+				GetAccessFailureDetectionEvent();
 				break;
 			}
 			case 0x2BE: { // IsAccessFailureDetected
+				om.Initialize(0, 0, 0);
+				IsAccessFailureDetected();
 				break;
 			}
 			case 0x2C6: { // ResolveAccessFailure
+				om.Initialize(0, 0, 0);
+				ResolveAccessFailure();
 				break;
 			}
 			case 0x2D0: { // AbandonAccessFailure
+				om.Initialize(0, 0, 0);
+				AbandonAccessFailure();
 				break;
 			}
 			case 0x320: { // GetAndClearFileSystemProxyErrorInfo
+				om.Initialize(0, 0, 128);
+				GetAndClearFileSystemProxyErrorInfo(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3E8: { // SetBisRootForHost
+				om.Initialize(0, 0, 0);
+				SetBisRootForHost(im.GetData<uint>(8), im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x3E9: { // SetSaveDataSize
+				om.Initialize(0, 0, 0);
+				SetSaveDataSize(im.GetData<ulong>(8), im.GetData<ulong>(16));
 				break;
 			}
 			case 0x3EA: { // SetSaveDataRootPath
+				om.Initialize(0, 0, 0);
+				SetSaveDataRootPath(im.GetSpan<byte>(0x19, 0));
 				break;
 			}
 			case 0x3EB: { // DisableAutoSaveDataCreation
+				om.Initialize(0, 0, 0);
+				DisableAutoSaveDataCreation();
 				break;
 			}
 			case 0x3EC: { // SetGlobalAccessLogMode
+				om.Initialize(0, 0, 0);
+				SetGlobalAccessLogMode(im.GetData<uint>(8));
 				break;
 			}
 			case 0x3ED: { // GetGlobalAccessLogMode
+				om.Initialize(0, 0, 4);
+				var _return = GetGlobalAccessLogMode();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x3EE: { // OutputAccessLogToSdCard
+				om.Initialize(0, 0, 0);
+				OutputAccessLogToSdCard(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x3EF: { // RegisterUpdatePartition
+				om.Initialize(0, 0, 0);
+				RegisterUpdatePartition();
 				break;
 			}
 			case 0x3F0: { // OpenRegisteredUpdatePartition
+				om.Initialize(1, 0, 0);
+				var _return = OpenRegisteredUpdatePartition();
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x3F1: { // GetAndClearMemoryReportInfo
+				om.Initialize(0, 0, 128);
+				GetAndClearMemoryReportInfo(out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			case 0x3F2: { // Unknown1010
+				om.Initialize(0, 0, 0);
+				Unknown1010();
 				break;
 			}
 			case 0x44C: { // OverrideSaveDataTransferTokenSignVerificationKey
+				om.Initialize(0, 0, 0);
+				OverrideSaveDataTransferTokenSignVerificationKey(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			default:
@@ -860,15 +1235,23 @@ public abstract class _IFileSystemProxyForLoader_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.IFileSystemProxyForLoader.IsArchivedProgram not implemented");
 	protected virtual void SetCurrentProcess(ulong _0, ulong _1) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IFileSystemProxyForLoader.SetCurrentProcess");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenCodeFileSystem
+				om.Initialize(1, 0, 0);
+				var _return = OpenCodeFileSystem(im.GetData<ulong>(8), im.GetSpan<byte>(0x19, 0));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x1: { // IsArchivedProgram
+				om.Initialize(0, 0, 1);
+				var _return = IsArchivedProgram(im.GetData<ulong>(8));
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x2: { // SetCurrentProcess
+				om.Initialize(0, 0, 0);
+				SetCurrentProcess(im.GetData<ulong>(8), im.Pid);
 				break;
 			}
 			default:
@@ -887,18 +1270,26 @@ public abstract class _IProgramRegistry_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IProgramRegistry.SetCurrentProcess");
 	protected virtual void SetEnabledProgramVerification(byte _0) =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IProgramRegistry.SetEnabledProgramVerification");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterProgram
+				om.Initialize(0, 0, 0);
+				RegisterProgram(im.GetData<byte>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), im.GetData<ulong>(32), im.GetData<ulong>(40), im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x5, 1));
 				break;
 			}
 			case 0x1: { // UnregisterProgram
+				om.Initialize(0, 0, 0);
+				UnregisterProgram(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x2: { // SetCurrentProcess
+				om.Initialize(0, 0, 0);
+				SetCurrentProcess(im.GetData<ulong>(8), im.Pid);
 				break;
 			}
 			case 0x100: { // SetEnabledProgramVerification
+				om.Initialize(0, 0, 0);
+				SetEnabledProgramVerification(im.GetData<byte>(8));
 				break;
 			}
 			default:
@@ -917,18 +1308,28 @@ public abstract class _ISaveDataExporter_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataExporter.Unknown16 not implemented");
 	protected virtual void Unknown17(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataExporter.Unknown17 not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 0);
+				Unknown0(im.GetSpan<byte>(0x1A, 0));
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 8);
+				var _return = Unknown1();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x10: { // Unknown16
+				om.Initialize(0, 0, 8);
+				Unknown16(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			case 0x11: { // Unknown17
+				om.Initialize(0, 0, 0);
+				Unknown17(im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			default:
@@ -947,18 +1348,27 @@ public abstract class _ISaveDataImporter_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.ISaveDataImporter.Unknown16");
 	protected virtual void Unknown17() =>
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.ISaveDataImporter.Unknown17");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 0);
+				Unknown0(im.GetSpan<byte>(0x1A, 0));
 				break;
 			}
 			case 0x1: { // Unknown1
+				om.Initialize(0, 0, 8);
+				var _return = Unknown1();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x10: { // Unknown16
+				om.Initialize(0, 0, 0);
+				Unknown16(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x11: { // Unknown17
+				om.Initialize(0, 0, 0);
+				Unknown17();
 				break;
 			}
 			default:
@@ -971,9 +1381,12 @@ public partial class ISaveDataInfoReader : _ISaveDataInfoReader_Base;
 public abstract class _ISaveDataInfoReader_Base : IpcInterface {
 	protected virtual void ReadSaveDataInfo(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataInfoReader.ReadSaveDataInfo not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ReadSaveDataInfo
+				om.Initialize(0, 0, 8);
+				ReadSaveDataInfo(out var _0, im.GetSpan<byte>(0x6, 0));
+				om.SetData(8, _0);
 				break;
 			}
 			default:
@@ -990,20 +1403,31 @@ public abstract class _ISaveDataTransferManager_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown16");
 	protected virtual Nn.Fssrv.Sf.ISaveDataExporter Unknown32(byte _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown32 not implemented");
-	protected virtual void Unknown64(byte _0, Span<byte> _1, Span<byte> _2, out ulong _3, out Nn.Fssrv.Sf.ISaveDataImporter _4) =>
+	protected virtual void Unknown64(byte _0, byte[] _1, Span<byte> _2, out ulong _3, out Nn.Fssrv.Sf.ISaveDataImporter _4) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.ISaveDataTransferManager.Unknown64 not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
+				om.Initialize(0, 0, 0);
+				Unknown0(im.GetSpan<byte>(0x6, 0));
 				break;
 			}
 			case 0x10: { // Unknown16
+				om.Initialize(0, 0, 0);
+				Unknown16(im.GetSpan<byte>(0x5, 0));
 				break;
 			}
 			case 0x20: { // Unknown32
+				om.Initialize(1, 0, 0);
+				var _return = Unknown32(im.GetData<byte>(8), im.GetData<ulong>(16));
+				om.Move(0, CreateHandle(_return));
 				break;
 			}
 			case 0x40: { // Unknown64
+				om.Initialize(1, 0, 8);
+				Unknown64(im.GetData<byte>(8), im.GetBytes(16, 0x10), im.GetSpan<byte>(0x5, 0), out var _0, out var _1);
+				om.SetData(8, _0);
+				om.Move(0, CreateHandle(_1));
 				break;
 			}
 			default:
@@ -1024,26 +1448,40 @@ public abstract class _IStorage_Base : IpcInterface {
 		Console.WriteLine("Stub hit for Nn.Fssrv.Sf.IStorage.SetSize");
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IStorage.GetSize not implemented");
-	protected virtual void OperateRange(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
+	protected virtual void OperateRange(uint _0, ulong _1, ulong _2, out byte[] _3) =>
 		throw new NotImplementedException("Nn.Fssrv.Sf.IStorage.OperateRange not implemented");
-	protected override void _Dispatch(IncomingMessage im, OutgoingMessage om) {
+	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Read
+				om.Initialize(0, 0, 0);
+				Read(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x46, 0));
 				break;
 			}
 			case 0x1: { // Write
+				om.Initialize(0, 0, 0);
+				Write(im.GetData<ulong>(8), im.GetData<ulong>(16), im.GetSpan<byte>(0x45, 0));
 				break;
 			}
 			case 0x2: { // Flush
+				om.Initialize(0, 0, 0);
+				Flush();
 				break;
 			}
 			case 0x3: { // SetSize
+				om.Initialize(0, 0, 0);
+				SetSize(im.GetData<ulong>(8));
 				break;
 			}
 			case 0x4: { // GetSize
+				om.Initialize(0, 0, 8);
+				var _return = GetSize();
+				om.SetData(8, _return);
 				break;
 			}
 			case 0x5: { // OperateRange
+				om.Initialize(0, 0, 64);
+				OperateRange(im.GetData<uint>(8), im.GetData<ulong>(16), im.GetData<ulong>(24), out var _0);
+				om.SetBytes(8, _0);
 				break;
 			}
 			default:
