@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace UmbraCore;
@@ -20,6 +21,9 @@ public class Buffer<T>(ulong address, ulong size) : IEnumerable<T>
     public unsafe Span<T> Span => new((void *) Address, Size / ElementSize);
     public static implicit operator Span<T>(Buffer<T> buffer) => buffer.Span;
     public static implicit operator T(Buffer<T> buffer) => buffer.Value;
+
+    public static unsafe Buffer<T> FromSpan(Span<T> span) =>
+        new((ulong) Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), (ulong) span.Length);
 
     public static Buffer<T> operator +(Buffer<T> buffer, int offset) =>
         new(buffer.Address + (ulong) (buffer.ElementSize * offset),

@@ -60,7 +60,7 @@ public class MemoryManager {
             return 0;
         };
         game.Callbacks.CreateTransferMemory = (addr, size, perm, ref handle) => {
-            Console.WriteLine($"Transfer memory 'created'");
+            Console.WriteLine("Transfer memory 'created'");
             handle = 0xDEADBEEF;
             return 0;
         };

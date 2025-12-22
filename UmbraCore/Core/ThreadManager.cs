@@ -45,5 +45,12 @@ public class ThreadManager {
             priority = 5;
             return 0;
         };
+        game.Callbacks.SetThreadPriority = (handle, priority) => 0;
+        game.Callbacks.GetThreadId = (handle, ref id) => {
+            id = 0xDEADBEE1;
+            return 0;
+        };
+        game.Callbacks.SetThreadCoreMask = (handle, in1, in2) => 0;
+        game.Callbacks.GetCurrentProcessorNumber = () => 0;
     }
 }

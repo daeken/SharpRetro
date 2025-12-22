@@ -2,6 +2,13 @@ using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Am.Service;
 
+public partial class ISelfController {
+    protected override ulong CreateManagedDisplayLayer() {
+        Console.WriteLine("Attempting to create managed display layer");
+        return 1;
+    }
+}
+
 public partial class IWindowController {
     protected override ulong GetAppletResourceUserId() => 0xDEADBEEF_CAFEBABE;
 }
