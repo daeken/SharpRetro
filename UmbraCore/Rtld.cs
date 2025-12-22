@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using LibSharpRetro;
 using NxCommon;
@@ -9,6 +10,13 @@ namespace UmbraCore;
 public class Rtld {
     public readonly Dictionary<string, ulong> SymbolAddrs = [];
 
+    static unsafe ulong AbortImpl(byte* first, byte* second, byte* third, ulong errCode, byte* fourth) {
+        throw new Exception(
+            $"Aborted: '{Marshal.PtrToStringAnsi((IntPtr) first)!.Trim()}' " + 
+            $"'{Marshal.PtrToStringAnsi((IntPtr) second)!.Trim()}' " + 
+            $"'{Marshal.PtrToStringAnsi((IntPtr) third)!.Trim()}' 0x{errCode:X} '{Marshal.PtrToStringAnsi((IntPtr) fourth)!.Trim()}'");
+    }
+
     public unsafe Rtld(List<ExeModule> modules) {
         foreach(var module in modules)
             foreach(var symbol in module.Symbols) {
@@ -18,6 +26,7 @@ public class Rtld {
             }
         foreach(var (name, (_, addr)) in Kernel.HookManager.Hooks)
             SymbolAddrs[name] = (Kernel.IsNative ? 0 : 0x8000_0000_0000_0000UL) | addr;
+        SymbolAddrs["_ZN2nn4diag6detail9AbortImplEPKcS3_S3_iS3_z"] = (ulong) Marshal.GetFunctionPointerForDelegate(AbortImpl);
         foreach(var module in modules) {
             if(module.Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
                 var rels = module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.RELCOUNT]);
@@ -67,7 +76,7 @@ public class Rtld {
             Console.WriteLine("Exception handler ready!");
         void RunInitializers() {
             Console.WriteLine("Running initializers!");
-            foreach(var (i, module) in modules.Index()) {
+            foreach(var (i, module) in modules.OrderByDescending(x => x.LoadBase).Index()) {
                 if(module.Dynamic.TryGetValue(DynamicKey.INIT, out var init)) {
                     Console.WriteLine($"Running init function: {module.LoadBase + init:X} (0x{0x71_00000000UL + 0x1_00000000UL * (ulong) i + init:X})");
                     thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace UmbraCore.Core;
@@ -50,9 +51,17 @@ public class MemoryManager {
         game.Callbacks.SetHeapSize = (size, ref ptr) => {
             Debug.Assert(HeapAddress == 0);
             HeapSize = size;
-            HeapAddress = (ulong) Marshal.AllocHGlobal((int) HeapSize);
+            Console.WriteLine($"Heap size: {HeapSize:X}");
+            HeapAddress = (ulong) NativeMemory.AlignedAlloc((UIntPtr) HeapSize, 2 * 1024 * 1024);
+            Console.WriteLine($"Allocated heap at 0x{HeapAddress:X}");
             Regions[HeapAddress] = (HeapSize, 1);
             ptr = HeapAddress;
+            Unsafe.InitBlockUnaligned((void*) ptr, 0, (uint) HeapSize);
+            return 0;
+        };
+        game.Callbacks.CreateTransferMemory = (addr, size, perm, ref handle) => {
+            Console.WriteLine($"Transfer memory 'created'");
+            handle = 0xDEADBEEF;
             return 0;
         };
     }

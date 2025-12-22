@@ -20,10 +20,12 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.Stp(R.X5, R.X6, R.SP, 16 * 12);
     asm.Stp(R.X3, R.X4, R.SP, 16 * 13);
     asm.Stp(R.X1, R.X2, R.SP, 16 * 14);
-    asm.Stp(R.X0, R.XZR, R.SP, 16 * 15);
+    asm.ReadNzcv(R.X8);
+    asm.Stp(R.X0, R.X8, R.SP, 16 * 15);
     asm.Mov(R.X29, R.SP);
     func(asm);
-    asm.Ldp(R.X0, R.XZR, R.SP, 16 * 15);
+    asm.Ldp(R.X0, R.X8, R.SP, 16 * 15);
+    asm.WriteNzcv(R.X8);
     asm.Ldp(R.X1, R.X2, R.SP, 16 * 14);
     asm.Ldp(R.X3, R.X4, R.SP, 16 * 13);
     asm.Ldp(R.X5, R.X6, R.SP, 16 * 12);
@@ -154,7 +156,7 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     modules.Add((tramprw, trampx, loadBase, dataEnd - textStart));
     foreach(var symbol in mod.Symbols)
         if(symbol.Value != 0 && symbol.Name != "")
-            macho.AddSymbol(symbol.Name, loadBase + symbol.Value);
+            macho.AddSymbol("_" + symbol.Name, loadBase + symbol.Value);
     macho.AddSegment($".text_{i}", 
         loadBase + textStart, textEnd - textStart, 
         mod.Binary[(int) textStart..(int) textEnd].ToArray(),
@@ -230,7 +232,7 @@ abstract record Instruction {
             new Brk((insn >> 5) & 0xFFFFU),
         _ when (insn & 0xFFE0001F) == 0xD4000001 =>
             new Svc((insn >> 5) & 0xFFFFU),
-        _ when (insn & 0xFFF00000) == 0xD5100000 =>
+        _ when (insn & 0xFFF00000) == 0xD5100000 && (insn & 0xFFFFFFE0) != 0xd51bd040 => // Allow native TPIDR_EL0
             new Msr(
                 (insn >> 19) & 0x1U,
                 (insn >> 16) & 0x7U,
@@ -239,7 +241,7 @@ abstract record Instruction {
                 (insn >> 5) & 0x7U,
                 (insn >> 0) & 0x1FU
             ),
-        _ when (insn & 0xFFF00000) == 0xD5300000 =>
+        _ when (insn & 0xFFF00000) == 0xD5300000 && (insn & 0xFFFFFFE0) != 0xd53bd040 => // Allow native TPIDR_EL0
             new Mrs(
                 (insn >> 19) & 0x1U,
                 (insn >> 16) & 0x7U,

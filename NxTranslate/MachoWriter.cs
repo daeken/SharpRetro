@@ -131,12 +131,9 @@ public unsafe class MachoWriter {
                 SectFlag = prot.HasFlag(MemoryProtection.Execute) ? 0x80000400 : 0, 
                 SectReserved1 = 0, SectReserved2 = 0, SectReserved3 = 0,
             };
-            var nameBytes = prot .HasFlag(MemoryProtection.Execute)
-                ? "__STEXT"u8.ToArray()
-                : "__SDATA"u8.ToArray();
+            var nameBytes = Encoding.ASCII.GetBytes(name);
             nameBytes.CopyTo(new Span<byte>(cmd.Name, 16));
             nameBytes.CopyTo(new Span<byte>(cmd.SegName, 16));
-            nameBytes = Encoding.ASCII.GetBytes(name);
             Debug.Assert(nameBytes.Length <= 16);
             nameBytes.CopyTo(new Span<byte>(cmd.SectName, 16));
             Write(cmd);
@@ -181,12 +178,13 @@ public unsafe class MachoWriter {
             Size = (uint) Marshal.SizeOf<MachDysymtab>(),
             ExternalIndex = 0,
             ExternalCount = (uint) Symbols.Count,
+            UndefIndex = (uint) Symbols.Count,
         });
         
         Write(new MachUuid {
             Command = 0x1B,
             Size = 24,
-            A = 0xDEADBEEF,
+            A = unchecked((ulong) Random.Shared.NextInt64()),
             B = 0xCAFEBABE,
         });
         
@@ -233,10 +231,12 @@ public unsafe class MachoWriter {
         fp.Seek(binEnd, SeekOrigin.Begin); // We should already be right here...
         strOff = 1;
         foreach(var (name, addr) in Symbols) {
+            var sect = Segments.OrderBy(x => x.Start).Index()
+                .First(x => x.Item.Start <= addr && addr <= x.Item.Start + x.Item.Size).Index + 1;
             Write(new MachSymbol {
                 NameOff = strOff,
                 Type = 0b000_0_111_1, // defined external
-                SectNum = (byte) Segments.Index().First(x => x.Item.Start <= addr && addr <= x.Item.Start + x.Item.Size).Index,
+                SectNum = (byte) sect,
                 DataInfo = 0b0000_0000_0001_0000,
                 Address = addr + binSlide,
             });

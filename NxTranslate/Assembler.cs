@@ -98,6 +98,18 @@ public class Assembler {
         Instructions[I++] = insn;
     }
 
+    public void ReadNzcv(R.RX rt) {
+        var insn = 0b1101010100_1_1_1_011_0100_0010_000_00000;
+        insn |= (uint) rt.Number;
+        Instructions[I++] = insn;
+    }
+
+    public void WriteNzcv(R.RX rt) {
+        var insn = 0b1101010100_0_1_1_011_0100_0010_000_00000;
+        insn |= (uint) rt.Number;
+        Instructions[I++] = insn;
+    }
+
     public void Mov(R.RX rd, ulong value) {
         Movz(rd, (ushort) (value & 0xFFFF), 0);
         if((value & 0xFFFF_0000) != 0) Movk(rd, (ushort) ((value >> 16)  & 0xFFFF), 16);

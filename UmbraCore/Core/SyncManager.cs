@@ -118,14 +118,15 @@ public class SyncManager {
     
     public unsafe void Setup(GameWrapper game) {
         game.Callbacks.ClearEvent = handle => {
-            Core.Kernel.Get<Event>(handle).Triggered = false;
+            Kernel.Get<Event>(handle).Triggered = false;
             return 0;
         };
         game.Callbacks.ResetSignal = handle => {
-            Core.Kernel.Get<Event>(handle).Triggered = false;
+            Kernel.Get<Event>(handle).Triggered = false;
             return 0;
         };
         game.Callbacks.SignalProcessWideKey = (semaAddr, target) => {
+            Console.WriteLine($"SignalProcessWideKey {semaAddr:X}");
             var semaphore = EnsureSemaphore(semaAddr);
             semaphore.Increment();
             if(target == 1)
@@ -135,6 +136,7 @@ public class SyncManager {
             return 0;
         };
         game.Callbacks.WaitSynchronization = (handlesAddr, numHandles, timeout, ref _activated) => {
+            Console.WriteLine("WaitSynchronization");
             var handles = new Buffer<uint>(handlesAddr, numHandles * 4);
             var waitHandle = new AutoResetEvent(false);
             var activated = uint.MaxValue;

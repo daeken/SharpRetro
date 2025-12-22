@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Aarch64Cpu;
 
@@ -5,15 +6,18 @@ namespace UmbraCore.Core;
 
 public unsafe class KThread {
     public CpuState* CpuState;
-    public readonly IntPtr State, Stack, TlsBase;
+    public readonly IntPtr State, Stack;
+    public IntPtr TlsBase;
 
     public unsafe KThread(ulong stackSize = 8 * 1024 * 1024) {
         State = Marshal.AllocHGlobal(Marshal.SizeOf<CpuState>());
         CpuState = (CpuState*) State;
         Stack = Marshal.AllocHGlobal((int) stackSize);
         CpuState->SP = (ulong) Stack + stackSize;
-        TlsBase = Marshal.AllocHGlobal(0x200);
+        TlsBase = Marshal.AllocHGlobal(0x2000);
         CpuState->TlsBase = (ulong) TlsBase;
+        Unsafe.InitBlockUnaligned((void*) TlsBase, 0, 0x2000);
+        Console.WriteLine($"TLS base: {TlsBase:X}");
         /*var tls = (ulong*) CpuState->TlsBase;
         tls[63] = CpuState->TlsBase + 0x1000;
         tls = (ulong*) tls[63];

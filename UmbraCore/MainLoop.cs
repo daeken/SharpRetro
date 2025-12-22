@@ -38,11 +38,23 @@ public class MainLoop {
             Kernel.MemoryManager.Regions[loadBase] = (size, 0);
             Modules.Add(new(loadBase, size, doRelocate: true));
         };
-        Game.Callbacks.WriteSr = (_, _, _, _, _, _) => {
-            Console.WriteLine($"WriteSR attempted");
+        Game.Callbacks.WriteSr = (op0, op1, crn, crm, op2, value) => {
+            var reg = ((0b10 | (op0 & 0b1)) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111);
+            Console.WriteLine($"WriteSR attempted {reg:X} {value:X}");
+            switch(reg) {
+                case 0b11_011_1101_0000_010: // TPIDR
+                    Console.WriteLine($"Writing TPIDR: {value:X}");
+                    if(value != 0)
+                        Kernel.ThreadManager.CurrentThread.TlsBase = (IntPtr) value;
+                    break;
+                default:
+                    Console.WriteLine($"Unhandled SR write: {reg:X} {value:X}");
+                    break;
+            }
         };
         Game.Callbacks.ReadSr = (op0, op1, crn, crm, op2) => {
             var reg = ((0b10 | (op0 & 0b1)) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111);
+            Console.WriteLine($"ReadSR {reg:X}");
             var (found, value) = reg switch {
                 0b11_011_0000_0000_001 => // CtrEl0
                     (true, 0x8444c004UL),
@@ -50,10 +62,10 @@ public class MainLoop {
                     (true, 0UL),
                 0b11_011_0100_0100_001 => // FPSR
                     (true, 0UL),
-                0b11_011_1101_0000_011 => // TPIDR
+                0b11_011_1101_0000_011 => // TPIDRRO
                     (true, (ulong) Kernel.ThreadManager.CurrentThread.TlsBase),
                 0b11_011_1110_0000_001 => // CntpctEl0
-                    (true, 0UL),
+                    (true, 0xDEADUL),
                 0b11_011_0000_0000_111 => // DCZID_EL0
                     (true, 0UL),
                 _ => (false, 0UL),
@@ -68,6 +80,8 @@ public class MainLoop {
         Kernel.Setup(Game);
         Game.Setup();
         Console.WriteLine("Done with setup!");
+        Console.WriteLine("Press enter to continue...");
+        Console.ReadLine();
         if(false) {
             var thread = Kernel.ThreadManager.CurrentThread;
             thread.CpuState->X0 = 0;
