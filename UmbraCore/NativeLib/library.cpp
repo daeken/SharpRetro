@@ -12,6 +12,7 @@ void setupHooks(const hookRegister_t regFunc) {
     hook("_ZN2nn2vi10InitializeEv", nn::vi::Initialize);
     hook("_ZN2nn2vi11OpenDisplayEPPNS0_7DisplayEPKc", nn::vi::OpenDisplay);
     hook("_ZN2nn2vi18OpenDefaultDisplayEPPNS0_7DisplayE", nn::vi::OpenDefaultDisplay);
+    hook("_ZN2nn2vi20GetDisplayVsyncEventEPNS_2os15SystemEventTypeEPNS0_7DisplayE", nn::vi::GetDisplayVsyncEvent);
     hook("_ZN2nn2vi11CreateLayerEPPNS0_5LayerEPNS0_7DisplayE", nn::vi::CreateLayer);
     hook("_ZN2nn2vi19SetLayerScalingModeEPNS0_5LayerENS0_11ScalingModeE", nn::vi::SetLayerScalingMode);
 }

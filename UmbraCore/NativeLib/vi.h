@@ -18,6 +18,7 @@ namespace nn::vi {
     void Initialize();
     int64_t OpenDisplay(Display**, const char*);
     int64_t OpenDefaultDisplay(Display**);
+    int64_t GetDisplayVsyncEvent(uint32_t*, Display*);
     uint64_t CreateLayer(Layer**, Display*);
     uint64_t SetLayerScalingMode(Layer*, ScalingMode);
 }

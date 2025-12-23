@@ -16,6 +16,10 @@ int64_t nn::vi::OpenDefaultDisplay(Display** display) {
     return OpenDisplay(display, "Default");
 }
 
+int64_t nn::vi::GetDisplayVsyncEvent(uint32_t* eventHandle, Display* display) {
+    std::cout << "nn::GetDisplayVsyncEvent called! " << std::endl;
+}
+
 uint64_t nn::vi::CreateLayer(Layer** layer, Display* display) {
     std::cout << "nn::vi::CreateLayer called!" << std::endl;
     return 0;

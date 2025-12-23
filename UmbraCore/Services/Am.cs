@@ -17,6 +17,8 @@ public partial class ICommonStateGetter {
     protected override KObject GetEventHandle() => new Event(true);
     protected override uint ReceiveMessage() => 0xF; // Focused
     protected override byte GetCurrentFocusState() => 1;
+    protected override byte GetOperationMode() => 1;
+    protected override uint GetPerformanceMode() => 1;
 }
 
 public partial class IApplicationProxy {
