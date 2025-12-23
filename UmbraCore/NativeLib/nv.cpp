@@ -15,7 +15,48 @@ void nv::SetGraphicsAllocator(void*, void*, void*, void*) {
     std::cout << "nv::SetGraphicsAllocator called!" << std::endl;
 }
 
-#define NVN_STUB(name) void name() { std::cout << #name " called!" << std::endl; __builtin_trap(); exit(-1); }
+void nvnDeviceBuilderSetDefaults(void* deviceBuilder) {
+    std::cout << "nvnDeviceBuilderSetDefaults called!" << std::endl;
+}
+void nvnDeviceBuilderSetFlags(void* deviceBuilder, uint32_t flags) {
+    std::cout << "nvnDeviceBuilderSetFlags (" << flags << ") called!" << std::endl;
+}
+
+// according to symbols this seems to be NVNDevice...? or one of them are
+void nvnDeviceInitialize(void* unk, void* device) {
+    std::cout << "nvnDeviceInitialize called!" << std::endl;
+}
+
+// guesses
+void nvnDeviceGetInteger(void* device, int field, int32_t* value) {
+    std::cout << "nvnDeviceGetInteger(" << field << ") called!" << std::endl;
+}
+
+void nvnDeviceSetWindowOriginMode(void* device, const int mode) {
+    std::cout << "nvnDeviceSetWindowOriginMode (" << mode << ") called!" << std::endl;
+}
+
+void nvnMemoryPoolBuilderSetDevice(void* memoryPoolBuilder, void* device) {
+    std::cout << "nvnMemoryPoolBuilderSetDevice called!" << std::endl;
+}
+
+void nvnMemoryPoolBuilderSetDefaults(void* memoryPoolBuilder) {
+    std::cout << "nvnMemoryPoolBuilderSetDefaults called!" << std::endl;
+}
+
+void nvnMemoryPoolBuilderSetFlags(void* memoryPoolBuilder, const uint32_t flags) {
+    std::cout << "nvnMemoryPoolBuilderSetFlags (" << flags << ") called!" << std::endl;
+}
+
+void nvnMemoryPoolBuilderSetStorage(void* memoryPoolBuilder, void* storage, uint32_t size /* ? */) {
+    std::cout << "nvnMemoryPoolBuilderSetStorage called! size?: " << size << std::endl;
+}
+
+void nvnMemoryPoolInitialize(void** memoryPool, void* memoryPoolBuilder) {
+    std::cout << "nvnMemoryPoolInitialize called!" << std::endl;
+}
+
+#define NVN_STUB(name) void name() { std::cout << #name " stub!" << std::endl; __builtin_trap(); exit(-1); }
 
 NVN_STUB(nvnBlendStateGetAdvancedMode)
 NVN_STUB(nvnBlendStateGetAdvancedNormalizedDst)
@@ -200,19 +241,15 @@ NVN_STUB(nvnDepthStencilStateSetStencilFunc)
 NVN_STUB(nvnDepthStencilStateSetStencilOp)
 NVN_STUB(nvnDepthStencilStateSetStencilTestEnable)
 NVN_STUB(nvnDeviceApplyDeferredFinalizes)
-NVN_STUB(nvnDeviceBuilderSetDefaults)
-NVN_STUB(nvnDeviceBuilderSetFlags)
 NVN_STUB(nvnDeviceFinalize)
 NVN_STUB(nvnDeviceFinalizeCommandHandle)
 NVN_STUB(nvnDeviceGetCurrentTimestampInNanoseconds)
 NVN_STUB(nvnDeviceGetDepthMode)
 NVN_STUB(nvnDeviceGetImageHandle)
-NVN_STUB(nvnDeviceGetInteger)
 NVN_STUB(nvnDeviceGetTexelFetchHandle)
 NVN_STUB(nvnDeviceGetTextureHandle)
 NVN_STUB(nvnDeviceGetTimestampInNanoseconds)
 NVN_STUB(nvnDeviceGetWindowOriginMode)
-NVN_STUB(nvnDeviceInitialize)
 NVN_STUB(nvnDeviceInstallDebugCallback)
 NVN_STUB(nvnDeviceRegisterFastClearColor)
 NVN_STUB(nvnDeviceRegisterFastClearColori)
@@ -221,21 +258,15 @@ NVN_STUB(nvnDeviceRegisterFastClearDepth)
 NVN_STUB(nvnDeviceSetDebugLabel)
 NVN_STUB(nvnDeviceSetDepthMode)
 NVN_STUB(nvnDeviceSetIntermediateShaderCache)
-NVN_STUB(nvnDeviceSetWindowOriginMode)
 NVN_STUB(nvnDeviceWaitForError)
 NVN_STUB(nvnMemoryPoolBuilderGetFlags)
 NVN_STUB(nvnMemoryPoolBuilderGetMemory)
 NVN_STUB(nvnMemoryPoolBuilderGetSize)
-NVN_STUB(nvnMemoryPoolBuilderSetDefaults)
-NVN_STUB(nvnMemoryPoolBuilderSetDevice)
-NVN_STUB(nvnMemoryPoolBuilderSetFlags)
-NVN_STUB(nvnMemoryPoolBuilderSetStorage)
 NVN_STUB(nvnMemoryPoolFinalize)
 NVN_STUB(nvnMemoryPoolFlushMappedRange)
 NVN_STUB(nvnMemoryPoolGetBufferAddress)
 NVN_STUB(nvnMemoryPoolGetFlags)
 NVN_STUB(nvnMemoryPoolGetSize)
-NVN_STUB(nvnMemoryPoolInitialize)
 NVN_STUB(nvnMemoryPoolInvalidateMappedRange)
 NVN_STUB(nvnMemoryPoolMap)
 NVN_STUB(nvnMemoryPoolMapVirtual)
