@@ -200,7 +200,7 @@ public abstract class IpcInterface : KObject {
 	
 	public uint CreateHandle(KObject obj, bool copy = false) {
 		if(obj == null) throw new NotSupportedException();
-		Console.WriteLine($"Creating handle for object with real handle 0x{obj.Handle:X}");
+		Console.WriteLine($"Creating handle for object with real handle 0x{obj.Handle:X} ({obj}) {(copy ? "copy" : "move")}");
 		if(copy) return obj.Handle;
 		if(DomainOwner != null) return DomainOwner.CreateHandle(obj);
 		if(!IsDomainObject) return obj.Handle;
@@ -297,25 +297,28 @@ public abstract class IpcInterface : KObject {
 }
 
 public partial class IpcManager {
-	public readonly Dictionary<string, IpcInterface> Services = [];
+	public readonly Dictionary<string, Func<IpcInterface>> Services = [];
 	
     public void Setup(GameWrapper game) {
 	    CreateServices();
         game.Callbacks.ConnectToNamedPort = (name, ref handle) => {
 	        var sname = Marshal.PtrToStringAnsi((IntPtr) name)!;
             Console.WriteLine($"Attempting to connect to '{sname}'");
-            handle = Services[sname].Handle;
+            handle = Services[sname]().Handle;
             return 0;
         };
         game.Callbacks.SendSyncRequest = handle => {
+	        Console.WriteLine($"Handle for SendSyncRequest: 0x{handle:X}");
 	        var service = Kernel.Get<IpcInterface>(handle);
 	        Console.WriteLine($"SendSyncRequest({handle:X}, {service?.ToString() ?? "null"}, domain: {service?.IsDomainObject})");
 	        if(service == null)
 		        throw new Exception();
 	        var ret = service.SyncMessage((ulong) Kernel.ThreadManager.CurrentThread.TlsBase, 0x100, out var closeHandle);
-	        if(closeHandle) Kernel.Close(service);
+	        if(closeHandle) {
+		        Console.WriteLine($"Closing handle 0x{service.Handle:X}");
+		        Kernel.Close(service);
+	        }
 	        return ret;
-
         };
     }
 }

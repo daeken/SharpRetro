@@ -51,7 +51,7 @@ foreach(var (name, (_, ids)) in namespaces)
     foreach(var (iname, iface) in ids) {
         if(iface.ServiceNames.Count == 0) continue;
         foreach(var sname in iface.ServiceNames)
-            cb += $"Services[\"{sname}\"] = new UmbraCore.Services.{RenameNamespace(name)}.{Rename(iname)}(\"{sname}\");";
+            cb += $"Services[\"{sname}\"] = () => new UmbraCore.Services.{RenameNamespace(name)}.{Rename(iname)}(\"{sname}\");";
     }
 cb--;
 cb += "}";

@@ -4,6 +4,37 @@ using System.Runtime.InteropServices;
 
 namespace UmbraCore.Core;
 
+public class KSharedMemory : KObject {
+    readonly int Size;
+    byte[] InitialBackingMemory;
+    ulong _Address;
+    public ulong Address { set => SetAddress(value); }
+
+    unsafe void SetAddress(ulong value) {
+        var data = _Address != 0 ? new Span<byte>((byte*) _Address, Size).ToArray() : InitialBackingMemory;
+        _Address = value;
+        if(_Address == 0) {
+            InitialBackingMemory = new byte[Size];
+            return;
+        }
+        if(data != null) {
+            var span = new Span<byte>((byte*) _Address, Size);
+            for(var i = 0; i < Size; ++i)
+                span[i] = data[i];
+        }
+    }
+
+    public KSharedMemory(int size) {
+        Size = size;
+        InitialBackingMemory = new byte[size];
+    }
+
+    public KSharedMemory(byte[] data) {
+        Size = data.Length;
+        InitialBackingMemory = data;
+    }
+}
+
 public class MemoryManager {
     public ulong HeapAddress, HeapSize;
     public readonly Dictionary<ulong, (ulong Size, ulong Flags)> Regions = [];
