@@ -1,6 +1,7 @@
 #ifndef NATIVELIB_NV_H
 #define NATIVELIB_NV_H
 #include <cstdint>
+#include "nvn.h"
 
 class nv {
 public:

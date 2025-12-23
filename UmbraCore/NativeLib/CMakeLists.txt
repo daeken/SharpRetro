@@ -7,4 +7,5 @@ add_library(NativeLib SHARED library.cpp
         nv.cpp
         nv.h
         vi.cpp
-        vi.h)
+        vi.h
+        nvn.h)
