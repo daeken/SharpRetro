@@ -809,6 +809,7 @@ int nvnTextureBuilderGetSamples(const NVNtextureBuilder* builder) {
 }
 
 void nvnTextureBuilderGetSwizzle(const NVNtextureBuilder* builder, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a) {
+    std::cout << "nvnTextureBuilderGetSwizzle called!" << std::endl;
     if (r) *r = 0;
     if (g) *g = 0;
     if (b) *b = 0;
@@ -816,6 +817,7 @@ void nvnTextureBuilderGetSwizzle(const NVNtextureBuilder* builder, NVNtextureSwi
 }
 
 NVNtextureDepthStencilMode nvnTextureBuilderGetDepthStencilMode(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetDepthStencilMode called!" << std::endl;
     return 0;
 }
 
@@ -824,6 +826,7 @@ const void* nvnTextureBuilderGetPackagedTextureData(const NVNtextureBuilder* bui
 }
 
 ptrdiff_t nvnTextureBuilderGetStride(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetStride called!" << std::endl;
     return 0;
 }
 
@@ -836,14 +839,17 @@ uint32_t nvnTextureBuilderGetGLTextureName(const NVNtextureBuilder* builder) {
 }
 
 size_t nvnTextureBuilderGetZCullStorageSize(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetZCullStorageSize called!" << std::endl;
     return 0;
 }
 
 NVNmemoryPool nvnTextureBuilderGetMemoryPool(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetMemoryPool called!" << std::endl;
     return NVNmemoryPool{};
 }
 
 ptrdiff_t nvnTextureBuilderGetMemoryOffset(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetMemoryOffset called!" << std::endl;
     return 0;
 }
 
@@ -877,23 +883,27 @@ void nvnTextureViewSetTarget(NVNtextureView* view, NVNtextureTarget target) {
 }
 
 NVNboolean nvnTextureViewGetLevels(const NVNtextureView* view, int* baseLevel, int* numLevels) {
+    std::cout << "nvnTextureViewGetLevels called!" << std::endl;
     if (baseLevel) *baseLevel = 0;
     if (numLevels) *numLevels = 0;
     return 0;
 }
 
 NVNboolean nvnTextureViewGetLayers(const NVNtextureView* view, int* minLayer, int* numLayers) {
+    std::cout << "nvnTextureViewGetLayers called!" << std::endl;
     if (minLayer) *minLayer = 0;
     if (numLayers) *numLayers = 0;
     return 0;
 }
 
 NVNboolean nvnTextureViewGetFormat(const NVNtextureView* view, NVNformat* format) {
+    std::cout << "nvnTextureViewGetFormat called!" << std::endl;
     if (format) *format = 0;
     return 0;
 }
 
 NVNboolean nvnTextureViewGetSwizzle(const NVNtextureView* view, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a) {
+    std::cout << "nvnTextureViewGetSwizzle called!" << std::endl;
     if (r) *r = 0;
     if (g) *g = 0;
     if (b) *b = 0;
@@ -902,16 +912,19 @@ NVNboolean nvnTextureViewGetSwizzle(const NVNtextureView* view, NVNtextureSwizzl
 }
 
 NVNboolean nvnTextureViewGetDepthStencilMode(const NVNtextureView* view, NVNtextureDepthStencilMode* mode) {
+    std::cout << "nvnTextureViewGetDepthStencilMode called!" << std::endl;
     if (mode) *mode = 0;
     return 0;
 }
 
 NVNboolean nvnTextureViewGetTarget(const NVNtextureView* view, NVNtextureTarget* target) {
+    std::cout << "nvnTextureViewGetTarget called!" << std::endl;
     if (target) *target = 0;
     return 0;
 }
 
 NVNboolean nvnTextureViewCompare(const NVNtextureView* view1, const NVNtextureView* view2) {
+    std::cout << "nvnTextureViewCompare called!" << std::endl;
     return 0;
 }
 
@@ -922,6 +935,7 @@ NVNboolean nvnTextureInitialize(NVNtexture* texture, const NVNtextureBuilder* bu
 }
 
 size_t nvnTextureGetZCullStorageSize(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetZCullStorageSize called!" << std::endl;
     return 0;
 }
 
@@ -934,46 +948,57 @@ void nvnTextureSetDebugLabel(NVNtexture* texture, const char* label) {
 }
 
 NVNstorageClass nvnTextureGetStorageClass(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetStorageClass called!" << std::endl;
     return 0;
 }
 
 ptrdiff_t nvnTextureGetViewOffset(const NVNtexture* texture, const NVNtextureView* view) {
+    std::cout << "nvnTextureGetViewOffset called!" << std::endl;
     return 0;
 }
 
 NVNtextureFlags nvnTextureGetFlags(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetFlags called!" << std::endl;
     return 0;
 }
 
 NVNtextureTarget nvnTextureGetTarget(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetTarget called!" << std::endl;
     return 0;
 }
 
 int nvnTextureGetWidth(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetWidth called!" << std::endl;
     return 0;
 }
 
 int nvnTextureGetHeight(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetHeight called!" << std::endl;
     return 0;
 }
 
 int nvnTextureGetDepth(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetDepth called!" << std::endl;
     return 0;
 }
 
 int nvnTextureGetLevels(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetLevels called!" << std::endl;
     return 0;
 }
 
 NVNformat nvnTextureGetFormat(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetFormat called!" << std::endl;
     return 0;
 }
 
 int nvnTextureGetSamples(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetSamples called!" << std::endl;
     return 0;
 }
 
 void nvnTextureGetSwizzle(const NVNtexture* texture, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a) {
+    std::cout << "nvnTextureGetSwizzle called!" << std::endl;
     if (r) *r = 0;
     if (g) *g = 0;
     if (b) *b = 0;
@@ -981,14 +1006,17 @@ void nvnTextureGetSwizzle(const NVNtexture* texture, NVNtextureSwizzle* r, NVNte
 }
 
 NVNtextureDepthStencilMode nvnTextureGetDepthStencilMode(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetDepthStencilMode called!" << std::endl;
     return 0;
 }
 
 ptrdiff_t nvnTextureGetStride(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetStride called!" << std::endl;
     return 0;
 }
 
 NVNtextureAddress nvnTextureGetTextureAddress(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetTextureAddress called!" << std::endl;
     return 0;
 }
 
@@ -1021,22 +1049,27 @@ void nvnTextureInvalidateTexels(const NVNtexture* texture, const NVNtextureView*
 }
 
 NVNmemoryPool nvnTextureGetMemoryPool(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetMemoryPool called!" << std::endl;
     return NVNmemoryPool{};
 }
 
 ptrdiff_t nvnTextureGetMemoryOffset(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetMemoryOffset called!" << std::endl;
     return 0;
 }
 
 int nvnTextureGetStorageSize(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetStorageSize called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnTextureCompare(const NVNtexture* texture1, const NVNtexture* texture2) {
+    std::cout << "nvnTextureCompare called!" << std::endl;
     return 0;
 }
 
 uint64_t nvnTextureGetDebugID(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetDebugID called!" << std::endl;
     return 0;
 }
 
@@ -1094,31 +1127,37 @@ void nvnSamplerBuilderSetLodSnap(NVNsamplerBuilder* builder, float f) {
 }
 
 void nvnSamplerBuilderGetMinMagFilter(const NVNsamplerBuilder* builder, NVNminFilter* min, NVNmagFilter* mag) {
+    std::cout << "nvnSamplerBuilderGetMinMagFilter called!" << std::endl;
     if (min) *min = 0;
     if (mag) *mag = 0;
 }
 
 void nvnSamplerBuilderGetWrapMode(const NVNsamplerBuilder* builder, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r) {
+    std::cout << "nvnSamplerBuilderGetWrapMode called!" << std::endl;
     if (s) *s = 0;
     if (t) *t = 0;
     if (r) *r = 0;
 }
 
 void nvnSamplerBuilderGetLodClamp(const NVNsamplerBuilder* builder, float* min, float* max) {
+    std::cout << "nvnSamplerBuilderGetLodClamp called!" << std::endl;
     if (min) *min = 0.0f;
     if (max) *max = 0.0f;
 }
 
 float nvnSamplerBuilderGetLodBias(const NVNsamplerBuilder* builder) {
+    std::cout << "nvnSamplerBuilderGetLodBias called!" << std::endl;
     return 0.0f;
 }
 
 void nvnSamplerBuilderGetCompare(const NVNsamplerBuilder* builder, NVNcompareMode* mode, NVNcompareFunc* func) {
+    std::cout << "nvnSamplerBuilderGetCompare called!" << std::endl;
     if (mode) *mode = 0;
     if (func) *func = 0;
 }
 
 void nvnSamplerBuilderGetBorderColor(const NVNsamplerBuilder* builder, float* borderColor) {
+    std::cout << "nvnSamplerBuilderGetBorderColor called!" << std::endl;
     if (borderColor) {
         borderColor[0] = 0.0f;
         borderColor[1] = 0.0f;
@@ -1128,6 +1167,7 @@ void nvnSamplerBuilderGetBorderColor(const NVNsamplerBuilder* builder, float* bo
 }
 
 void nvnSamplerBuilderGetBorderColori(const NVNsamplerBuilder* builder, int* borderColor) {
+    std::cout << "nvnSamplerBuilderGetBorderColori called!" << std::endl;
     if (borderColor) {
         borderColor[0] = 0;
         borderColor[1] = 0;
@@ -1137,6 +1177,7 @@ void nvnSamplerBuilderGetBorderColori(const NVNsamplerBuilder* builder, int* bor
 }
 
 void nvnSamplerBuilderGetBorderColorui(const NVNsamplerBuilder* builder, uint32_t* borderColor) {
+    std::cout << "nvnSamplerBuilderGetBorderColorui called!" << std::endl;
     if (borderColor) {
         borderColor[0] = 0;
         borderColor[1] = 0;
@@ -1146,14 +1187,17 @@ void nvnSamplerBuilderGetBorderColorui(const NVNsamplerBuilder* builder, uint32_
 }
 
 float nvnSamplerBuilderGetMaxAnisotropy(const NVNsamplerBuilder* builder) {
+    std::cout << "nvnSamplerBuilderGetMaxAnisotropy called!" << std::endl;
     return 0.0f;
 }
 
 NVNsamplerReduction nvnSamplerBuilderGetReductionFilter(const NVNsamplerBuilder* builder) {
+    std::cout << "nvnSamplerBuilderGetReductionFilter called!" << std::endl;
     return 0;
 }
 
 float nvnSamplerBuilderGetLodSnap(const NVNsamplerBuilder* builder) {
+    std::cout << "nvnSamplerBuilderGetLodSnap called!" << std::endl;
     return 0.0f;
 }
 
@@ -1172,31 +1216,37 @@ void nvnSamplerSetDebugLabel(NVNsampler* sampler, const char* label) {
 }
 
 void nvnSamplerGetMinMagFilter(const NVNsampler* sampler, NVNminFilter* min, NVNmagFilter* mag) {
+    std::cout << "nvnSamplerGetMinMagFilter called!" << std::endl;
     if (min) *min = 0;
     if (mag) *mag = 0;
 }
 
 void nvnSamplerGetWrapMode(const NVNsampler* sampler, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r) {
+    std::cout << "nvnSamplerGetWrapMode called!" << std::endl;
     if (s) *s = 0;
     if (t) *t = 0;
     if (r) *r = 0;
 }
 
 void nvnSamplerGetLodClamp(const NVNsampler* sampler, float* min, float* max) {
+    std::cout << "nvnSamplerGetLodClamp called!" << std::endl;
     if (min) *min = 0.0f;
     if (max) *max = 0.0f;
 }
 
 float nvnSamplerGetLodBias(const NVNsampler* sampler) {
+    std::cout << "nvnSamplerGetLodBias called!" << std::endl;
     return 0.0f;
 }
 
 void nvnSamplerGetCompare(const NVNsampler* sampler, NVNcompareMode* mode, NVNcompareFunc* func) {
+    std::cout << "nvnSamplerGetCompare called!" << std::endl;
     if (mode) *mode = 0;
     if (func) *func = 0;
 }
 
 void nvnSamplerGetBorderColor(const NVNsampler* sampler, float* borderColor) {
+    std::cout << "nvnSamplerGetBorderColor called!" << std::endl;
     if (borderColor) {
         borderColor[0] = 0.0f;
         borderColor[1] = 0.0f;
@@ -1206,6 +1256,7 @@ void nvnSamplerGetBorderColor(const NVNsampler* sampler, float* borderColor) {
 }
 
 void nvnSamplerGetBorderColori(const NVNsampler* sampler, int* borderColor) {
+    std::cout << "nvnSamplerGetBorderColori called!" << std::endl;
     if (borderColor) {
         borderColor[0] = 0;
         borderColor[1] = 0;
@@ -1215,6 +1266,7 @@ void nvnSamplerGetBorderColori(const NVNsampler* sampler, int* borderColor) {
 }
 
 void nvnSamplerGetBorderColorui(const NVNsampler* sampler, uint32_t* borderColor) {
+    std::cout << "nvnSamplerGetBorderColorui called!" << std::endl;
     if (borderColor) {
         borderColor[0] = 0;
         borderColor[1] = 0;
@@ -1224,18 +1276,22 @@ void nvnSamplerGetBorderColorui(const NVNsampler* sampler, uint32_t* borderColor
 }
 
 float nvnSamplerGetMaxAnisotropy(const NVNsampler* sampler) {
+    std::cout << "nvnSamplerGetMaxAnisotropy called!" << std::endl;
     return 0.0f;
 }
 
 NVNsamplerReduction nvnSamplerGetReductionFilter(const NVNsampler* sampler) {
+    std::cout << "nvnSamplerGetReductionFilter called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnSamplerCompare(const NVNsampler* sampler1, const NVNsampler* sampler2) {
+    std::cout << "nvnSamplerCompare called!" << std::endl;
     return 0;
 }
 
 uint64_t nvnSamplerGetDebugID(const NVNsampler* sampler) {
+    std::cout << "nvnSamplerGetDebugID called!" << std::endl;
     return 0;
 }
 
@@ -1273,10 +1329,12 @@ void nvnBlendStateSetAdvancedNormalizedDst(NVNblendState* blend, NVNboolean b) {
 }
 
 int nvnBlendStateGetBlendTarget(const NVNblendState* blend) {
+    std::cout << "nvnBlendStateGetBlendTarget called!" << std::endl;
     return 0;
 }
 
 void nvnBlendStateGetBlendFunc(const NVNblendState* blend, NVNblendFunc* srcFunc, NVNblendFunc* dstFunc, NVNblendFunc* srcFuncAlpha, NVNblendFunc* dstFuncAlpha) {
+    std::cout << "nvnBlendStateGetBlendFunc called!" << std::endl;
     if (srcFunc) *srcFunc = 0;
     if (dstFunc) *dstFunc = 0;
     if (srcFuncAlpha) *srcFuncAlpha = 0;
@@ -1284,23 +1342,28 @@ void nvnBlendStateGetBlendFunc(const NVNblendState* blend, NVNblendFunc* srcFunc
 }
 
 void nvnBlendStateGetBlendEquation(const NVNblendState* blend, NVNblendEquation* modeRGB, NVNblendEquation* modeAlpha) {
+    std::cout << "nvnBlendStateGetBlendEquation called!" << std::endl;
     if (modeRGB) *modeRGB = 0;
     if (modeAlpha) *modeAlpha = 0;
 }
 
 NVNblendAdvancedMode nvnBlendStateGetAdvancedMode(const NVNblendState* blend) {
+    std::cout << "nvnBlendStateGetAdvancedMode called!" << std::endl;
     return 0;
 }
 
 NVNblendAdvancedOverlap nvnBlendStateGetAdvancedOverlap(const NVNblendState* blend) {
+    std::cout << "nvnBlendStateGetAdvancedOverlap called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnBlendStateGetAdvancedPremultipliedSrc(const NVNblendState* blend) {
+    std::cout << "nvnBlendStateGetAdvancedPremultipliedSrc called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnBlendStateGetAdvancedNormalizedDst(const NVNblendState* blend) {
+    std::cout << "nvnBlendStateGetAdvancedNormalizedDst called!" << std::endl;
     return 0;
 }
 
@@ -1322,14 +1385,17 @@ void nvnColorStateSetAlphaTest(NVNcolorState* color, NVNalphaFunc alphaFunc) {
 }
 
 NVNboolean nvnColorStateGetBlendEnable(const NVNcolorState* color, int index) {
+    std::cout << "nvnColorStateGetBlendEnable called!" << std::endl;
     return 0;
 }
 
 NVNlogicOp nvnColorStateGetLogicOp(const NVNcolorState* color) {
+    std::cout << "nvnColorStateGetLogicOp called!" << std::endl;
     return 0;
 }
 
 NVNalphaFunc nvnColorStateGetAlphaTest(const NVNcolorState* color) {
+    std::cout << "nvnColorStateGetAlphaTest called!" << std::endl;
     return 0;
 }
 
@@ -1343,6 +1409,7 @@ void nvnChannelMaskStateSetChannelMask(NVNchannelMaskState* channelMask, int ind
 }
 
 void nvnChannelMaskStateGetChannelMask(const NVNchannelMaskState* channelMask, int index, NVNboolean* r, NVNboolean* g, NVNboolean* b, NVNboolean* a) {
+    std::cout << "nvnChannelMaskStateGetChannelMask called!" << std::endl;
     if (r) *r = 0;
     if (g) *g = 0;
     if (b) *b = 0;
@@ -1371,18 +1438,22 @@ void nvnMultisampleStateSetAlphaToCoverageDither(NVNmultisampleState* multisampl
 }
 
 NVNboolean nvnMultisampleStateGetMultisampleEnable(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetMultisampleEnable called!" << std::endl;
     return 0;
 }
 
 int nvnMultisampleStateGetSamples(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetSamples called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnMultisampleStateGetAlphaToCoverageEnable(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetAlphaToCoverageEnable called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnMultisampleStateGetAlphaToCoverageDither(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetAlphaToCoverageDither called!" << std::endl;
     return 0;
 }
 
@@ -1391,6 +1462,7 @@ void nvnMultisampleStateSetRasterSamples(NVNmultisampleState* multisample, int s
 }
 
 int nvnMultisampleStateGetRasterSamples(NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetRasterSamples called!" << std::endl;
     return 0;
 }
 
@@ -1399,6 +1471,7 @@ void nvnMultisampleStateSetCoverageModulationMode(NVNmultisampleState* multisamp
 }
 
 NVNcoverageModulationMode nvnMultisampleStateGetCoverageModulationMode(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetCoverageModulationMode called!" << std::endl;
     return 0;
 }
 
@@ -1407,6 +1480,7 @@ void nvnMultisampleStateSetCoverageToColorEnable(NVNmultisampleState* multisampl
 }
 
 NVNboolean nvnMultisampleStateGetCoverageToColorEnable(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetCoverageToColorEnable called!" << std::endl;
     return 0;
 }
 
@@ -1415,6 +1489,7 @@ void nvnMultisampleStateSetCoverageToColorOutput(NVNmultisampleState* multisampl
 }
 
 int nvnMultisampleStateGetCoverageToColorOutput(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetCoverageToColorOutput called!" << std::endl;
     return 0;
 }
 
@@ -1423,10 +1498,12 @@ void nvnMultisampleStateSetSampleLocationsEnable(NVNmultisampleState* multisampl
 }
 
 NVNboolean nvnMultisampleStateGetSampleLocationsEnable(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetSampleLocationsEnable called!" << std::endl;
     return 0;
 }
 
 void nvnMultisampleStateGetSampleLocationsGrid(NVNmultisampleState* multisample, int* w, int* h) {
+    std::cout << "nvnMultisampleStateGetSampleLocationsGrid called!" << std::endl;
     if (w) *w = 0;
     if (h) *h = 0;
 }
@@ -1436,6 +1513,7 @@ void nvnMultisampleStateSetSampleLocationsGridEnable(NVNmultisampleState* multis
 }
 
 NVNboolean nvnMultisampleStateGetSampleLocationsGridEnable(const NVNmultisampleState* multisample) {
+    std::cout << "nvnMultisampleStateGetSampleLocationsGridEnable called!" << std::endl;
     return 0;
 }
 
@@ -1465,18 +1543,22 @@ void nvnPolygonStateSetPolygonOffsetEnables(NVNpolygonState* polygon, int enable
 }
 
 NVNface nvnPolygonStateGetCullFace(const NVNpolygonState* polygon) {
+    std::cout << "nvnPolygonStateGetCullFace called!" << std::endl;
     return 0;
 }
 
 NVNfrontFace nvnPolygonStateGetFrontFace(const NVNpolygonState* polygon) {
+    std::cout << "nvnPolygonStateGetFrontFace called!" << std::endl;
     return 0;
 }
 
 NVNpolygonMode nvnPolygonStateGetPolygonMode(const NVNpolygonState* polygon) {
+    std::cout << "nvnPolygonStateGetPolygonMode called!" << std::endl;
     return 0;
 }
 
 NVNpolygonOffsetEnable nvnPolygonStateGetPolygonOffsetEnables(const NVNpolygonState* polygon) {
+    std::cout << "nvnPolygonStateGetPolygonOffsetEnables called!" << std::endl;
     return 0;
 }
 
@@ -1510,26 +1592,32 @@ void nvnDepthStencilStateSetStencilOp(NVNdepthStencilState* depthStencil, NVNfac
 }
 
 NVNboolean nvnDepthStencilStateGetDepthTestEnable(const NVNdepthStencilState* depthStencil) {
+    std::cout << "nvnDepthStencilStateGetDepthTestEnable called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnDepthStencilStateGetDepthWriteEnable(const NVNdepthStencilState* depthStencil) {
+    std::cout << "nvnDepthStencilStateGetDepthWriteEnable called!" << std::endl;
     return 0;
 }
 
 NVNdepthFunc nvnDepthStencilStateGetDepthFunc(const NVNdepthStencilState* depthStencil) {
+    std::cout << "nvnDepthStencilStateGetDepthFunc called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnDepthStencilStateGetStencilTestEnable(const NVNdepthStencilState* depthStencil) {
+    std::cout << "nvnDepthStencilStateGetStencilTestEnable called!" << std::endl;
     return 0;
 }
 
 NVNstencilFunc nvnDepthStencilStateGetStencilFunc(const NVNdepthStencilState* depthStencil, NVNface faces) {
+    std::cout << "nvnDepthStencilStateGetStencilFunc called!" << std::endl;
     return 0;
 }
 
 void nvnDepthStencilStateGetStencilOp(const NVNdepthStencilState* depthStencil, NVNface faces, NVNstencilOp* fail, NVNstencilOp* depthFail, NVNstencilOp* depthPass) {
+    std::cout << "nvnDepthStencilStateGetStencilOp called!" << std::endl;
     if (fail) *fail = 0;
     if (depthFail) *depthFail = 0;
     if (depthPass) *depthPass = 0;
@@ -1549,11 +1637,13 @@ void nvnVertexAttribStateSetStreamIndex(NVNvertexAttribState* attrib, int stream
 }
 
 void nvnVertexAttribStateGetFormat(const NVNvertexAttribState* attrib, NVNformat* format, ptrdiff_t* relativeOffset) {
+    std::cout << "nvnVertexAttribStateGetFormat called!" << std::endl;
     if (format) *format = 0;
     if (relativeOffset) *relativeOffset = 0;
 }
 
 int nvnVertexAttribStateGetStreamIndex(const NVNvertexAttribState* attrib) {
+    std::cout << "nvnVertexAttribStateGetStreamIndex called!" << std::endl;
     return 0;
 }
 
@@ -1571,10 +1661,12 @@ void nvnVertexStreamStateSetDivisor(NVNvertexStreamState* stream, int divisor) {
 }
 
 ptrdiff_t nvnVertexStreamStateGetStride(const NVNvertexStreamState* stream) {
+    std::cout << "nvnVertexStreamStateGetStride called!" << std::endl;
     return 0;
 }
 
 int nvnVertexStreamStateGetDivisor(const NVNvertexStreamState* stream) {
+    std::cout << "nvnVertexStreamStateGetDivisor called!" << std::endl;
     return 0;
 }
 
@@ -1609,26 +1701,32 @@ void nvnCommandBufferAddControlMemory(NVNcommandBuffer* cmdBuf, void* memory, si
 }
 
 size_t nvnCommandBufferGetCommandMemorySize(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetCommandMemorySize called!" << std::endl;
     return 0;
 }
 
 size_t nvnCommandBufferGetCommandMemoryUsed(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetCommandMemoryUsed called!" << std::endl;
     return 0;
 }
 
 size_t nvnCommandBufferGetCommandMemoryFree(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetCommandMemoryFree called!" << std::endl;
     return 0;
 }
 
 size_t nvnCommandBufferGetControlMemorySize(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetControlMemorySize called!" << std::endl;
     return 0;
 }
 
 size_t nvnCommandBufferGetControlMemoryUsed(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetControlMemoryUsed called!" << std::endl;
     return 0;
 }
 
 size_t nvnCommandBufferGetControlMemoryFree(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetControlMemoryFree called!" << std::endl;
     return 0;
 }
 
@@ -2066,10 +2164,12 @@ void nvnCommandBufferSetCopyImageStride(NVNcommandBuffer* cmdBuf, ptrdiff_t stri
 }
 
 ptrdiff_t nvnCommandBufferGetCopyRowStride(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetCopyRowStride called!" << std::endl;
     return 0;
 }
 
 ptrdiff_t nvnCommandBufferGetCopyImageStride(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetCopyImageStride called!" << std::endl;
     return 0;
 }
 
@@ -2127,6 +2227,7 @@ void nvnCommandBufferInsertDebugMarker(NVNcommandBuffer* cmdBuf, const char* des
 }
 
 PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC nvnCommandBufferGetMemoryCallback(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferGetMemoryCallback called!" << std::endl;
     return nullptr;
 }
 
@@ -2135,6 +2236,7 @@ void nvnCommandBufferGetMemoryCallbackData(const NVNcommandBuffer* cmdBuf) {
 }
 
 NVNboolean nvnCommandBufferIsRecording(const NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferIsRecording called!" << std::endl;
     return 0;
 }
 
@@ -2157,10 +2259,12 @@ void nvnQueueFenceSync(NVNqueue* queue, NVNsync* sync, NVNsyncCondition conditio
 }
 
 NVNsyncWaitResult nvnSyncWait(const NVNsync* sync, uint64_t timeoutNs) {
+    std::cout << "nvnSyncWait called!" << std::endl;
     return 0;
 }
 
 NVNboolean nvnQueueWaitSync(NVNqueue* queue, const NVNsync* sync) {
+    std::cout << "nvnQueueWaitSync called!" << std::endl;
     return 1;
 }
 
@@ -2183,6 +2287,7 @@ void nvnEventFinalize(NVNevent* event) {
 }
 
 uint32_t nvnEventGetValue(const NVNevent* event) {
+    std::cout << "nvnEventGetValue called!" << std::endl;
     return 0;
 }
 
