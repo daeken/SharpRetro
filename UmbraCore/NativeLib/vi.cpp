@@ -29,3 +29,13 @@ uint64_t nn::vi::SetLayerScalingMode(Layer* layer, ScalingMode mode) {
     std::cout << "nn::vi::SetLayerScalingMode called! " << mode << std::endl;
     return 0;
 }
+
+uint64_t nn::vi::DestroyLayer(Layer* layer) {
+    std::cout << "nn::vi::DestroyLayer called! " << std::endl;
+    return 0;
+}
+
+uint64_t nn::vi::GetNativeWindow(Window** window, Layer* layer) {
+    std::cout << "nn::vi::GetNativeWindow called! " << std::endl;
+    return 0;
+}

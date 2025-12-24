@@ -11,6 +11,10 @@ namespace nn::vi {
     public:
     };
 
+    class Window {
+    public:
+    };
+
     enum ScalingMode {
         // Welp.
     };
@@ -21,6 +25,8 @@ namespace nn::vi {
     int64_t GetDisplayVsyncEvent(uint32_t*, Display*);
     uint64_t CreateLayer(Layer**, Display*);
     uint64_t SetLayerScalingMode(Layer*, ScalingMode);
+    uint64_t DestroyLayer(Layer*);
+    uint64_t GetNativeWindow(Window**, Layer*);
 }
 
 #endif //NATIVELIB_VI_H

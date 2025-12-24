@@ -26,7 +26,7 @@ void nvnDeviceSetDebugLabel(NVNdevice* device, const char* label) {
 
 void nvnDeviceGetInteger(const NVNdevice* device, NVNdeviceInfo pname, int* v) {
     std::cout << "nvnDeviceGetInteger(" << pname << ") called!" << std::endl;
-    if (v) *v = 0;
+    if (v) *v = 0x0EADBEEF;
 }
 
 uint64_t nvnDeviceGetCurrentTimestampInNanoseconds(const NVNdevice* device) {

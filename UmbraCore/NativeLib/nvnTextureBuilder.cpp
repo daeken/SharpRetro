@@ -68,7 +68,7 @@ size_t nvnTextureBuilderGetStorageSize(const NVNtextureBuilder* builder) {
 
 size_t nvnTextureBuilderGetStorageAlignment(const NVNtextureBuilder* builder) {
     std::cout << "nvnTextureBuilderGetStorageAlignment() called!" << std::endl;
-    return 0;
+    return 0x10;
 }
 
 void nvnTextureBuilderSetStorage(NVNtextureBuilder* builder, NVNmemoryPool* pool, ptrdiff_t offset) {
