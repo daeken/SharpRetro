@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using LibSharpRetro;
 using NxCommon;
 using UmbraCore.Core;
 
@@ -28,7 +29,8 @@ public class MainLoop {
         Game.Callbacks.LoadModule =
             (loadBase, data, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd) => {
                 Console.WriteLine($"Loading module at 0x{loadBase:X}");
-                Kernel.MemoryManager.Mmap(loadBase, size);
+                Kernel.MemoryManager.Regions[loadBase] = (size, 0);
+                MemoryHelpers.Mmap(loadBase, size, requirePosition: true);
                 Buffer.MemoryCopy(data, (void*) loadBase, size, size);
                 Modules.Add(new(loadBase, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd));
             };

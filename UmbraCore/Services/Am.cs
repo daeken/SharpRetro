@@ -21,6 +21,29 @@ public partial class ICommonStateGetter {
     protected override uint GetPerformanceMode() => 1;
 }
 
+public partial class IStorageAccessor(byte[] Data) {
+    protected override ulong GetSize() => (ulong) Data.Length;
+    protected override void Write(ulong _0, Span<byte> _1) => throw new NotImplementedException();
+    protected override void Read(ulong offset, Span<byte> span) => Data.CopyTo(span[..Math.Min(span.Length, Data.Length)]);
+}
+
+public partial class IStorage(byte[] Data) {
+    protected override IStorageAccessor Unknown0() => new(Data);
+}
+
+public partial class IApplicationFunctions {
+    protected override IStorage PopLaunchParameter(uint _0) {
+        var data = new byte[0x88];
+        data[0] = 0xCA;
+        data[1] = 0x97;
+        data[2] = 0x94;
+        data[3] = 0xC7;
+        data[4] = 1;
+        data[8] = 1;
+        return new IStorage(data);
+    }
+}
+
 public partial class IApplicationProxy {
     protected override IApplicationFunctions GetApplicationFunctions() => new();
     protected override ILibraryAppletCreator GetLibraryAppletCreator() => new();

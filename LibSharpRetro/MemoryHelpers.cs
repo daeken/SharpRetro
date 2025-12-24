@@ -4,6 +4,19 @@ using System.Runtime.InteropServices;
 namespace LibSharpRetro;
 
 public static class MemoryHelpers {
+    public static ulong Mmap(ulong addr, ulong size, bool requirePosition = false) {
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+            var maddr = mmapMac(addr, size, 3, 0x1000 | 0x0010 | 0x0002, -1, 0);
+            if(requirePosition && addr != maddr)
+                throw new Exception($"Couldn't allocate memory at 0x{addr:X}-0x{addr + size - 1:X}");
+            return maddr;
+        }
+        throw new NotImplementedException();
+    }
+    
+    [DllImport("libSystem.dylib", EntryPoint = "mmap")]
+    static extern ulong mmapMac(ulong addr, ulong len, int prot, int flags, int fd, ulong offset);
+    
     unsafe class UnsafeMemoryManager<T>(void* Pointer, int Length) : MemoryManager<T> {
         protected override void Dispose(bool disposing) {}
         public override Span<T> GetSpan() => new(Pointer, Length);
