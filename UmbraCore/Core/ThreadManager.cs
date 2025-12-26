@@ -84,5 +84,6 @@ public class ThreadManager {
             }).Start();
             return 0;
         };
+        game.Callbacks.SleepThread = ns => Thread.Sleep((int) (ns / 1_000_000));
     }
 }

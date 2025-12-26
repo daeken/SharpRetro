@@ -444,10 +444,9 @@ public unsafe class GameWrapper {
                         throw new NotImplementedException($"Unsupported op to nativeReentry: {op}");
                 }
             } catch(Exception e) {
-                lock(Callbacks) {
-                    $"Got exception in native reentry: {e}".Log();
-                    Debugger.Break();
-                }
+                $"Got exception in native reentry: {e}".Log();
+                Debugger.Break();
+                Environment.Exit(-1);
             }
         };
 	}

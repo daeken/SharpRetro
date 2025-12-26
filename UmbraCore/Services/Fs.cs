@@ -8,10 +8,18 @@ using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Fssrv.Sf;
 
+enum FileAccessMode {
+    Read = 1,
+    Write = 2,
+    ReadWrite = 3,
+    AllowAppend = 4,
+}
+
 class RomFSIStorageVfsBacked : IStorage {
     readonly IVfs Vfs;
     readonly ImmutableOffsetTable<long, string> FileOffsets;
     readonly byte[] HeaderData;
+    (IVfsFile File, string Path) LastFile = (null, null);
 
     public RomFSIStorageVfsBacked(IVfs vfs) {
         const uint None = 0xFFFFFFFF;
@@ -60,7 +68,7 @@ class RomFSIStorageVfsBacked : IStorage {
                     Offset = filePosOff,
                     Size = size,
                 };
-                filePartOffsets.Add((path, filePosOff, size));
+                filePartOffsets.Add(($"{path}/{sub}", filePosOff, size));
                 filePosOff += size;
                 
                 if(i == 0)
@@ -139,7 +147,7 @@ class RomFSIStorageVfsBacked : IStorage {
             fileHashTable[b] = entryOff;
         }
 
-        var dirHashTableOff = 0x48U;
+        var dirHashTableOff = 0x50U;
         var fileHashTableOff = dirHashTableOff + (uint) dirHashTable.Length * 4;
         var dirTableOff = fileHashTableOff + (uint) fileHashTable.Length * 4;
         var fileTableOff = dirTableOff + dirOff;
@@ -175,13 +183,6 @@ class RomFSIStorageVfsBacked : IStorage {
 
         FileOffsets = new(filePartOffsets.Select(x => ((long) (partitionOff + x.Start), (long) x.Size, x.Path)));
         HeaderData = blob.ToArray();
-        
-        Console.WriteLine($"Total header data length: 0x{HeaderData.Length:X}");
-        Console.WriteLine($"Dir hash table off: 0x{dirHashTableOff:X}");
-        Console.WriteLine($"File hash table off: 0x{fileHashTableOff:X}");
-        Console.WriteLine($"Dir table off: 0x{dirTableOff:X}");
-        Console.WriteLine($"File table off: 0x{fileTableOff:X}");
-        Console.WriteLine($"Partition off: 0x{partitionOff:X}");
     }
 
     static uint CalcPathHash(uint parent, string path) {
@@ -231,8 +232,22 @@ class RomFSIStorageVfsBacked : IStorage {
         $"IStorageVfsBacked::Read -- 0x{offset:X} 0x{length:X} (0x{data.Length:X} byte buffer)".Log();
         if(length == 0) return;
         if(offset >= (ulong) HeaderData.Length) {
-            if(FileOffsets.TryGetEntry((long) offset, out _, out var size, out var path)) {
-                Console.WriteLine($"Foo? {offset:X} {size:X} {path}");
+            if(FileOffsets.TryGetEntry((long) offset, out var foff, out var size, out var path)) {
+                $"Reading from file '{path}' -- 0x{foff:X} 0x{offset:X}".Log();
+                if(LastFile.File != null) {
+                    if(LastFile.Path == path) {
+                        LastFile.File.Position = offset - (ulong) foff;
+                        LastFile.File.Read(data);
+                        return;
+                    }
+                    LastFile.File.Dispose();
+                    LastFile = (null, null);
+                }
+                var file = Vfs.OpenRead(path);
+                LastFile = (file, path);
+                file.Position = offset - (ulong) foff;
+                file.Read(data);
+                return;
             }
             throw new NotImplementedException();
         }
@@ -240,6 +255,12 @@ class RomFSIStorageVfsBacked : IStorage {
     }}
 
 public class SaveDataFileSystem : IFileSystem {
+    protected override IFile OpenFile(uint mode, Span<byte> path) {
+        $"Attempting to open save data file '{Encoding.ASCII.GetString(path)}' with mode {mode}!".Log();
+        if(mode == (uint) FileAccessMode.Read)
+            throw new IpcException(0x80070002); // File not found
+        return new IFile();
+    }
 }
 
 public partial class IFileSystemProxy {

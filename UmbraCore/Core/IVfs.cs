@@ -32,8 +32,35 @@ public class DirectoryBackedVfs(string Root) : IVfs {
             .Where(fn => fn != ".DS_Store");
 
     public long GetFileSize(string path) => new FileInfo(Path.Join(Root, path)).Length;
-    public IVfsFile OpenRead(string path) => throw new NotImplementedException();
+    public IVfsFile OpenRead(string path) => new DirectoryBackedVfsFile(Path.Join(Root, path), false);
     public IVfsFile OpenWrite(string path) => throw new NotImplementedException();
+}
+
+public class DirectoryBackedVfsFile : IVfsFile, IAsyncDisposable {
+    public readonly string Path;
+    public readonly bool IsWritable;
+    public readonly FileStream Fp;
+
+    public DirectoryBackedVfsFile(string path, bool isWrite) {
+        Path = path;
+        IsWritable = isWrite;
+        Fp = File.Open(path, isWrite ? FileMode.Create : FileMode.Open);
+    }
+
+    public void Dispose() => Fp?.Dispose();
+
+    public async ValueTask DisposeAsync() {
+        if(Fp != null) await Fp.DisposeAsync();
+    }
+
+    public ulong Position {
+        get => (ulong) Fp.Position;
+        set => Fp.Position = (long) value;
+    }
+    
+    public ulong Read(Span<byte> data) => (ulong) Fp.Read(data);
+
+    public ulong Write(Span<byte> data) => throw new NotImplementedException();
 }
 
 public class EmptyVfs : IVfs {
