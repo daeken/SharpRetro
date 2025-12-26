@@ -9,7 +9,7 @@ public abstract class _IDebugManager_Base : IpcInterface {
 	protected virtual void GetLastThrottlingState(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Apm.IDebugManager.GetLastThrottlingState not implemented");
 	protected virtual void ClearLastThrottlingState() =>
-		Console.WriteLine("Stub hit for Nn.Apm.IDebugManager.ClearLastThrottlingState");
+		"Stub hit for Nn.Apm.IDebugManager.ClearLastThrottlingState".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetThrottlingState
@@ -88,7 +88,7 @@ public abstract class _IManagerPrivileged_Base : IpcInterface {
 public partial class ISession : _ISession_Base;
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual void SetPerformanceConfiguration(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Apm.ISession.SetPerformanceConfiguration");
+		"Stub hit for Nn.Apm.ISession.SetPerformanceConfiguration".Log();
 	protected virtual uint GetPerformanceConfiguration(uint _0) =>
 		throw new NotImplementedException("Nn.Apm.ISession.GetPerformanceConfiguration not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -116,7 +116,7 @@ public partial class ISystemManager : _ISystemManager_Base {
 }
 public abstract class _ISystemManager_Base : IpcInterface {
 	protected virtual void RequestPerformanceMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Apm.ISystemManager.RequestPerformanceMode");
+		"Stub hit for Nn.Apm.ISystemManager.RequestPerformanceMode".Log();
 	protected virtual KObject GetPerformanceEvent(uint _0) =>
 		throw new NotImplementedException("Nn.Apm.ISystemManager.GetPerformanceEvent not implemented");
 	protected virtual void GetThrottlingState(out byte[] _0) =>
@@ -124,9 +124,9 @@ public abstract class _ISystemManager_Base : IpcInterface {
 	protected virtual void GetLastThrottlingState(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Apm.ISystemManager.GetLastThrottlingState not implemented");
 	protected virtual void ClearLastThrottlingState() =>
-		Console.WriteLine("Stub hit for Nn.Apm.ISystemManager.ClearLastThrottlingState");
+		"Stub hit for Nn.Apm.ISystemManager.ClearLastThrottlingState".Log();
 	protected virtual void LoadAndApplySettings() =>
-		Console.WriteLine("Stub hit for Nn.Apm.ISystemManager.LoadAndApplySettings");
+		"Stub hit for Nn.Apm.ISystemManager.LoadAndApplySettings".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestPerformanceMode

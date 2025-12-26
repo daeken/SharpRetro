@@ -70,13 +70,13 @@ public abstract class _IAppletAccessor_Base : IpcInterface {
 	protected virtual byte IsCompleted() =>
 		throw new NotImplementedException("Nn.Am.Service.IAppletAccessor.IsCompleted not implemented");
 	protected virtual void Start() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAppletAccessor.Start");
+		"Stub hit for Nn.Am.Service.IAppletAccessor.Start".Log();
 	protected virtual void RequestExit() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAppletAccessor.RequestExit");
+		"Stub hit for Nn.Am.Service.IAppletAccessor.RequestExit".Log();
 	protected virtual void Terminate() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAppletAccessor.Terminate");
+		"Stub hit for Nn.Am.Service.IAppletAccessor.Terminate".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAppletAccessor.GetResult");
+		"Stub hit for Nn.Am.Service.IAppletAccessor.GetResult".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAppletStateChangedEvent
@@ -124,17 +124,17 @@ public abstract class _IApplicationAccessor_Base : IpcInterface {
 	protected virtual byte IsCompleted() =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.IsCompleted not implemented");
 	protected virtual void Start() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.Start");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.Start".Log();
 	protected virtual void RequestExit() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.RequestExit");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.RequestExit".Log();
 	protected virtual void Terminate() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.Terminate");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.Terminate".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.GetResult");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.GetResult".Log();
 	protected virtual void RequestForApplicationToGetForeground() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.RequestForApplicationToGetForeground");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.RequestForApplicationToGetForeground".Log();
 	protected virtual void TerminateAllLibraryApplets() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.TerminateAllLibraryApplets");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.TerminateAllLibraryApplets".Log();
 	protected virtual byte AreAnyLibraryAppletsLeft() =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.AreAnyLibraryAppletsLeft not implemented");
 	protected virtual Nn.Am.Service.IAppletAccessor GetCurrentLibraryApplet() =>
@@ -142,7 +142,7 @@ public abstract class _IApplicationAccessor_Base : IpcInterface {
 	protected virtual ulong GetApplicationId() =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.GetApplicationId not implemented");
 	protected virtual void PushLaunchParameter(uint _0, Nn.Am.Service.IStorage _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationAccessor.PushLaunchParameter");
+		"Stub hit for Nn.Am.Service.IApplicationAccessor.PushLaunchParameter".Log();
 	protected virtual void GetApplicationControlProperty(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationAccessor.GetApplicationControlProperty not implemented");
 	protected virtual void GetApplicationLaunchProperty(Span<byte> _0) =>
@@ -277,19 +277,19 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 	protected virtual Nn.Am.Service.IStorage PopLaunchParameter(uint _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.PopLaunchParameter not implemented");
 	protected virtual void CreateApplicationAndPushAndRequestToStart(ulong _0, Nn.Am.Service.IStorage _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndPushAndRequestToStart");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndPushAndRequestToStart".Log();
 	protected virtual void CreateApplicationAndPushAndRequestToStartForQuest(uint _0, uint _1, ulong _2, Nn.Am.Service.IStorage _3) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndPushAndRequestToStartForQuest");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndPushAndRequestToStartForQuest".Log();
 	protected virtual void CreateApplicationAndRequestToStart(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndRequestToStart");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndRequestToStart".Log();
 	protected virtual void CreateApplicationAndRequestToStartForQuest(uint _0, uint _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndRequestToStartForQuest");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.CreateApplicationAndRequestToStartForQuest".Log();
 	protected virtual ulong EnsureSaveData(byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.EnsureSaveData not implemented");
 	protected virtual void GetDesiredLanguage(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetDesiredLanguage not implemented");
 	protected virtual void SetTerminateResult(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.SetTerminateResult");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.SetTerminateResult".Log();
 	protected virtual void GetDisplayVersion(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetDisplayVersion not implemented");
 	protected virtual void GetLaunchStorageInfoForDebug(out byte _0, out byte _1) =>
@@ -299,35 +299,35 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 	protected virtual void GetSaveDataSize(byte _0, byte[] _1, out ulong _2, out ulong _3) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetSaveDataSize not implemented");
 	protected virtual void BeginBlockingHomeButtonShortAndLongPressed(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.BeginBlockingHomeButtonShortAndLongPressed");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.BeginBlockingHomeButtonShortAndLongPressed".Log();
 	protected virtual void EndBlockingHomeButtonShortAndLongPressed() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.EndBlockingHomeButtonShortAndLongPressed");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.EndBlockingHomeButtonShortAndLongPressed".Log();
 	protected virtual void BeginBlockingHomeButton(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.BeginBlockingHomeButton");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.BeginBlockingHomeButton".Log();
 	protected virtual void EndBlockingHomeButton() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.EndBlockingHomeButton");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.EndBlockingHomeButton".Log();
 	protected virtual byte NotifyRunning() =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.NotifyRunning not implemented");
 	protected virtual void GetPseudoDeviceId(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetPseudoDeviceId not implemented");
 	protected virtual void SetMediaPlaybackStateForApplication(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.SetMediaPlaybackStateForApplication");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.SetMediaPlaybackStateForApplication".Log();
 	protected virtual byte IsGamePlayRecordingSupported() =>
 		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.IsGamePlayRecordingSupported not implemented");
 	protected virtual void InitializeGamePlayRecording(ulong _0, KObject _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.InitializeGamePlayRecording");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.InitializeGamePlayRecording".Log();
 	protected virtual void SetGamePlayRecordingState(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.SetGamePlayRecordingState");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.SetGamePlayRecordingState".Log();
 	protected virtual void RequestFlushGamePlayingMovieForDebug() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.RequestFlushGamePlayingMovieForDebug");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.RequestFlushGamePlayingMovieForDebug".Log();
 	protected virtual void RequestToShutdown() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.RequestToShutdown");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.RequestToShutdown".Log();
 	protected virtual void RequestToReboot() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.RequestToReboot");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.RequestToReboot".Log();
 	protected virtual void ExitAndRequestToShowThanksMessage() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.ExitAndRequestToShowThanksMessage");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.ExitAndRequestToShowThanksMessage".Log();
 	protected virtual void EnableApplicationCrashReport(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IApplicationFunctions.EnableApplicationCrashReport");
+		"Stub hit for Nn.Am.Service.IApplicationFunctions.EnableApplicationCrashReport".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // PopLaunchParameter
@@ -589,15 +589,15 @@ public abstract class _IApplicationProxyService_Base : IpcInterface {
 public partial class IAudioController : _IAudioController_Base;
 public abstract class _IAudioController_Base : IpcInterface {
 	protected virtual void SetExpectedMasterVolume(float _0, float _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAudioController.SetExpectedMasterVolume");
+		"Stub hit for Nn.Am.Service.IAudioController.SetExpectedMasterVolume".Log();
 	protected virtual float GetMainAppletExpectedMasterVolume() =>
 		throw new NotImplementedException("Nn.Am.Service.IAudioController.GetMainAppletExpectedMasterVolume not implemented");
 	protected virtual float GetLibraryAppletExpectedMasterVolume() =>
 		throw new NotImplementedException("Nn.Am.Service.IAudioController.GetLibraryAppletExpectedMasterVolume not implemented");
 	protected virtual void ChangeMainAppletMasterVolume(float _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAudioController.ChangeMainAppletMasterVolume");
+		"Stub hit for Nn.Am.Service.IAudioController.ChangeMainAppletMasterVolume".Log();
 	protected virtual void SetTransparentVolumeRate(float _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IAudioController.SetTransparentVolumeRate");
+		"Stub hit for Nn.Am.Service.IAudioController.SetTransparentVolumeRate".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetExpectedMasterVolume
@@ -642,9 +642,9 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 	protected virtual void GetThisAppletKind(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetThisAppletKind not implemented");
 	protected virtual void AllowToEnterSleep() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.AllowToEnterSleep");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.AllowToEnterSleep".Log();
 	protected virtual void DisallowToEnterSleep() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.DisallowToEnterSleep");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.DisallowToEnterSleep".Log();
 	protected virtual byte GetOperationMode() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetOperationMode not implemented");
 	protected virtual uint GetPerformanceMode() =>
@@ -656,15 +656,15 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 	protected virtual byte GetCurrentFocusState() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetCurrentFocusState not implemented");
 	protected virtual void RequestToAcquireSleepLock() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.RequestToAcquireSleepLock");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.RequestToAcquireSleepLock".Log();
 	protected virtual void ReleaseSleepLock() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.ReleaseSleepLock");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.ReleaseSleepLock".Log();
 	protected virtual void ReleaseSleepLockTransiently() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.ReleaseSleepLockTransiently");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.ReleaseSleepLockTransiently".Log();
 	protected virtual KObject GetAcquiredSleepLockEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetAcquiredSleepLockEvent not implemented");
 	protected virtual void PushToGeneralChannel(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.PushToGeneralChannel");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.PushToGeneralChannel".Log();
 	protected virtual Nn.Am.Service.ILockAccessor GetHomeButtonReaderLockAccessor() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.GetHomeButtonReaderLockAccessor not implemented");
 	protected virtual Nn.Am.Service.ILockAccessor GetReaderLockAccessorEx(uint _0) =>
@@ -674,9 +674,9 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 	protected virtual byte IsVrModeEnabled() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.IsVrModeEnabled not implemented");
 	protected virtual void SetVrModeEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.SetVrModeEnabled");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.SetVrModeEnabled".Log();
 	protected virtual void SetLcdBacklighOffEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ICommonStateGetter.SetLcdBacklighOffEnabled");
+		"Stub hit for Nn.Am.Service.ICommonStateGetter.SetLcdBacklighOffEnabled".Log();
 	protected virtual byte IsInControllerFirmwareUpdateSection() =>
 		throw new NotImplementedException("Nn.Am.Service.ICommonStateGetter.IsInControllerFirmwareUpdateSection not implemented");
 	protected virtual void GetDefaultDisplayResolution(out uint _0, out uint _1) =>
@@ -850,13 +850,13 @@ public abstract class _ICommonStateGetter_Base : IpcInterface {
 public partial class IDebugFunctions : _IDebugFunctions_Base;
 public abstract class _IDebugFunctions_Base : IpcInterface {
 	protected virtual void NotifyMessageToHomeMenuForDebug(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDebugFunctions.NotifyMessageToHomeMenuForDebug");
+		"Stub hit for Nn.Am.Service.IDebugFunctions.NotifyMessageToHomeMenuForDebug".Log();
 	protected virtual Nn.Am.Service.IApplicationAccessor OpenMainApplication() =>
 		throw new NotImplementedException("Nn.Am.Service.IDebugFunctions.OpenMainApplication not implemented");
 	protected virtual void EmulateButtonEvent(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDebugFunctions.EmulateButtonEvent");
+		"Stub hit for Nn.Am.Service.IDebugFunctions.EmulateButtonEvent".Log();
 	protected virtual void InvalidateTransitionLayer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDebugFunctions.InvalidateTransitionLayer");
+		"Stub hit for Nn.Am.Service.IDebugFunctions.InvalidateTransitionLayer".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // NotifyMessageToHomeMenuForDebug
@@ -891,13 +891,13 @@ public abstract class _IDisplayController_Base : IpcInterface {
 	protected virtual void GetLastForegroundCaptureImage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastForegroundCaptureImage not implemented");
 	protected virtual void UpdateLastForegroundCaptureImage() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.UpdateLastForegroundCaptureImage");
+		"Stub hit for Nn.Am.Service.IDisplayController.UpdateLastForegroundCaptureImage".Log();
 	protected virtual void GetLastApplicationCaptureImage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastApplicationCaptureImage not implemented");
 	protected virtual void GetCallerAppletCaptureImage(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetCallerAppletCaptureImage not implemented");
 	protected virtual void UpdateCallerAppletCaptureImage() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.UpdateCallerAppletCaptureImage");
+		"Stub hit for Nn.Am.Service.IDisplayController.UpdateCallerAppletCaptureImage".Log();
 	protected virtual void GetLastForegroundCaptureImageEx(out byte _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetLastForegroundCaptureImageEx not implemented");
 	protected virtual void GetLastApplicationCaptureImageEx(out byte _0, Span<byte> _1) =>
@@ -905,19 +905,19 @@ public abstract class _IDisplayController_Base : IpcInterface {
 	protected virtual void GetCallerAppletCaptureImageEx(out byte _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.GetCallerAppletCaptureImageEx not implemented");
 	protected virtual void TakeScreenShotOfOwnLayer(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.TakeScreenShotOfOwnLayer");
+		"Stub hit for Nn.Am.Service.IDisplayController.TakeScreenShotOfOwnLayer".Log();
 	protected virtual KObject AcquireLastApplicationCaptureBuffer() =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastApplicationCaptureBuffer not implemented");
 	protected virtual void ReleaseLastApplicationCaptureBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastApplicationCaptureBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastApplicationCaptureBuffer".Log();
 	protected virtual KObject AcquireLastForegroundCaptureBuffer() =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastForegroundCaptureBuffer not implemented");
 	protected virtual void ReleaseLastForegroundCaptureBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastForegroundCaptureBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastForegroundCaptureBuffer".Log();
 	protected virtual KObject AcquireCallerAppletCaptureBuffer() =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireCallerAppletCaptureBuffer not implemented");
 	protected virtual void ReleaseCallerAppletCaptureBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseCallerAppletCaptureBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ReleaseCallerAppletCaptureBuffer".Log();
 	protected virtual void AcquireLastApplicationCaptureBufferEx(out byte _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastApplicationCaptureBufferEx not implemented");
 	protected virtual void AcquireLastForegroundCaptureBufferEx(out byte _0, out KObject _1) =>
@@ -925,21 +925,21 @@ public abstract class _IDisplayController_Base : IpcInterface {
 	protected virtual void AcquireCallerAppletCaptureBufferEx(out byte _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireCallerAppletCaptureBufferEx not implemented");
 	protected virtual void ClearCaptureBuffer(byte _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ClearCaptureBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ClearCaptureBuffer".Log();
 	protected virtual void ClearAppletTransitionBuffer(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ClearAppletTransitionBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ClearAppletTransitionBuffer".Log();
 	protected virtual void AcquireLastApplicationCaptureSharedBuffer(out byte _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastApplicationCaptureSharedBuffer not implemented");
 	protected virtual void ReleaseLastApplicationCaptureSharedBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastApplicationCaptureSharedBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastApplicationCaptureSharedBuffer".Log();
 	protected virtual void AcquireLastForegroundCaptureSharedBuffer(out byte _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireLastForegroundCaptureSharedBuffer not implemented");
 	protected virtual void ReleaseLastForegroundCaptureSharedBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastForegroundCaptureSharedBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ReleaseLastForegroundCaptureSharedBuffer".Log();
 	protected virtual void AcquireCallerAppletCaptureSharedBuffer(out byte _0, out uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IDisplayController.AcquireCallerAppletCaptureSharedBuffer not implemented");
 	protected virtual void ReleaseCallerAppletCaptureSharedBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IDisplayController.ReleaseCallerAppletCaptureSharedBuffer");
+		"Stub hit for Nn.Am.Service.IDisplayController.ReleaseCallerAppletCaptureSharedBuffer".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetLastForegroundCaptureImage
@@ -1099,23 +1099,23 @@ public abstract class _IDisplayController_Base : IpcInterface {
 public partial class IGlobalStateController : _IGlobalStateController_Base;
 public abstract class _IGlobalStateController_Base : IpcInterface {
 	protected virtual void RequestToEnterSleep() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.RequestToEnterSleep");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.RequestToEnterSleep".Log();
 	protected virtual void EnterSleep() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.EnterSleep");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.EnterSleep".Log();
 	protected virtual void StartSleepSequence(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.StartSleepSequence");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.StartSleepSequence".Log();
 	protected virtual void StartShutdownSequence() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.StartShutdownSequence");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.StartShutdownSequence".Log();
 	protected virtual void StartRebootSequence() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.StartRebootSequence");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.StartRebootSequence".Log();
 	protected virtual void LoadAndApplyIdlePolicySettings() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.LoadAndApplyIdlePolicySettings");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.LoadAndApplyIdlePolicySettings".Log();
 	protected virtual void NotifyCecSettingsChanged() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.NotifyCecSettingsChanged");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.NotifyCecSettingsChanged".Log();
 	protected virtual void SetDefaultHomeButtonLongPressTime(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.SetDefaultHomeButtonLongPressTime");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.SetDefaultHomeButtonLongPressTime".Log();
 	protected virtual void UpdateDefaultDisplayResolution() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IGlobalStateController.UpdateDefaultDisplayResolution");
+		"Stub hit for Nn.Am.Service.IGlobalStateController.UpdateDefaultDisplayResolution".Log();
 	protected virtual byte ShouldSleepOnBoot() =>
 		throw new NotImplementedException("Nn.Am.Service.IGlobalStateController.ShouldSleepOnBoot not implemented");
 	protected virtual KObject GetHdcpAuthenticationFailedEvent() =>
@@ -1188,11 +1188,11 @@ public abstract class _IGlobalStateController_Base : IpcInterface {
 public partial class IHomeMenuFunctions : _IHomeMenuFunctions_Base;
 public abstract class _IHomeMenuFunctions_Base : IpcInterface {
 	protected virtual void RequestToGetForeground() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IHomeMenuFunctions.RequestToGetForeground");
+		"Stub hit for Nn.Am.Service.IHomeMenuFunctions.RequestToGetForeground".Log();
 	protected virtual void LockForeground() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IHomeMenuFunctions.LockForeground");
+		"Stub hit for Nn.Am.Service.IHomeMenuFunctions.LockForeground".Log();
 	protected virtual void UnlockForeground() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IHomeMenuFunctions.UnlockForeground");
+		"Stub hit for Nn.Am.Service.IHomeMenuFunctions.UnlockForeground".Log();
 	protected virtual Nn.Am.Service.IStorage PopFromGeneralChannel() =>
 		throw new NotImplementedException("Nn.Am.Service.IHomeMenuFunctions.PopFromGeneralChannel not implemented");
 	protected virtual KObject GetPopFromGeneralChannelEvent() =>
@@ -1255,23 +1255,23 @@ public abstract class _ILibraryAppletAccessor_Base : IpcInterface {
 	protected virtual byte IsCompleted() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.IsCompleted not implemented");
 	protected virtual void Start() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.Start");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.Start".Log();
 	protected virtual void RequestExit() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.RequestExit");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.RequestExit".Log();
 	protected virtual void Terminate() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.Terminate");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.Terminate".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.GetResult");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.GetResult".Log();
 	protected virtual void SetOutOfFocusApplicationSuspendingEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.SetOutOfFocusApplicationSuspendingEnabled");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.SetOutOfFocusApplicationSuspendingEnabled".Log();
 	protected virtual void PushInData(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.PushInData");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.PushInData".Log();
 	protected virtual Nn.Am.Service.IStorage PopOutData() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.PopOutData not implemented");
 	protected virtual void PushExtraStorage(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.PushExtraStorage");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.PushExtraStorage".Log();
 	protected virtual void PushInteractiveInData(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.PushInteractiveInData");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.PushInteractiveInData".Log();
 	protected virtual Nn.Am.Service.IStorage PopInteractiveOutData() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.PopInteractiveOutData not implemented");
 	protected virtual KObject GetPopOutDataEvent() =>
@@ -1283,7 +1283,7 @@ public abstract class _ILibraryAppletAccessor_Base : IpcInterface {
 	protected virtual void GetLibraryAppletInfo(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.GetLibraryAppletInfo not implemented");
 	protected virtual void RequestForAppletToGetForeground() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletAccessor.RequestForAppletToGetForeground");
+		"Stub hit for Nn.Am.Service.ILibraryAppletAccessor.RequestForAppletToGetForeground".Log();
 	protected virtual ulong GetIndirectLayerConsumerHandle(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletAccessor.GetIndirectLayerConsumerHandle not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1398,7 +1398,7 @@ public abstract class _ILibraryAppletCreator_Base : IpcInterface {
 	protected virtual Nn.Am.Service.ILibraryAppletAccessor CreateLibraryApplet(uint _0, uint _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletCreator.CreateLibraryApplet not implemented");
 	protected virtual void TerminateAllLibraryApplets() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletCreator.TerminateAllLibraryApplets");
+		"Stub hit for Nn.Am.Service.ILibraryAppletCreator.TerminateAllLibraryApplets".Log();
 	protected virtual byte AreAnyLibraryAppletsLeft() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletCreator.AreAnyLibraryAppletsLeft not implemented");
 	protected virtual Nn.Am.Service.IStorage CreateStorage(ulong _0) =>
@@ -1537,25 +1537,25 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 	protected virtual Nn.Am.Service.IStorage PopInData() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.PopInData not implemented");
 	protected virtual void PushOutData(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.PushOutData");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.PushOutData".Log();
 	protected virtual Nn.Am.Service.IStorage PopInteractiveInData() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.PopInteractiveInData not implemented");
 	protected virtual void PushInteractiveOutData(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.PushInteractiveOutData");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.PushInteractiveOutData".Log();
 	protected virtual KObject GetPopInDataEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetPopInDataEvent not implemented");
 	protected virtual KObject GetPopInteractiveInDataEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetPopInteractiveInDataEvent not implemented");
 	protected virtual void ExitProcessAndReturn() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ExitProcessAndReturn");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ExitProcessAndReturn".Log();
 	protected virtual void GetLibraryAppletInfo(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetLibraryAppletInfo not implemented");
 	protected virtual void GetMainAppletIdentityInfo() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletIdentityInfo");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletIdentityInfo".Log();
 	protected virtual byte CanUseApplicationCore() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.CanUseApplicationCore not implemented");
 	protected virtual void GetCallerAppletIdentityInfo() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetCallerAppletIdentityInfo");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetCallerAppletIdentityInfo".Log();
 	protected virtual void GetMainAppletApplicationControlProperty(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletApplicationControlProperty not implemented");
 	protected virtual byte GetMainAppletStorageId() =>
@@ -1563,7 +1563,7 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 	protected virtual void GetCallerAppletIdentityInfoStack(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetCallerAppletIdentityInfoStack not implemented");
 	protected virtual void GetNextReturnDestinationAppletIdentityInfo() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetNextReturnDestinationAppletIdentityInfo");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.GetNextReturnDestinationAppletIdentityInfo".Log();
 	protected virtual uint GetDesirableKeyboardLayout() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetDesirableKeyboardLayout not implemented");
 	protected virtual Nn.Am.Service.IStorage PopExtraStorage() =>
@@ -1571,15 +1571,15 @@ public abstract class _ILibraryAppletSelfAccessor_Base : IpcInterface {
 	protected virtual KObject GetPopExtraStorageEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetPopExtraStorageEvent not implemented");
 	protected virtual void UnpopInData(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.UnpopInData");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.UnpopInData".Log();
 	protected virtual void UnpopExtraStorage(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.UnpopExtraStorage");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.UnpopExtraStorage".Log();
 	protected virtual ulong GetIndirectLayerProducerHandle() =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetIndirectLayerProducerHandle not implemented");
 	protected virtual void ReportVisibleError(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ReportVisibleError");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ReportVisibleError".Log();
 	protected virtual void ReportVisibleErrorWithErrorContext(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ReportVisibleErrorWithErrorContext");
+		"Stub hit for Nn.Am.Service.ILibraryAppletSelfAccessor.ReportVisibleErrorWithErrorContext".Log();
 	protected virtual void GetMainAppletApplicationDesiredLanguage(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Am.Service.ILibraryAppletSelfAccessor.GetMainAppletApplicationDesiredLanguage not implemented");
 	protected virtual Nn.Grcsrv.IGameMovieTrimmer CreateGameMovieTrimmer(ulong _0, KObject _1) =>
@@ -1736,7 +1736,7 @@ public abstract class _ILockAccessor_Base : IpcInterface {
 	protected virtual void TryLock(byte _0, out byte _1, out KObject _2) =>
 		throw new NotImplementedException("Nn.Am.Service.ILockAccessor.TryLock not implemented");
 	protected virtual void Unlock() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ILockAccessor.Unlock");
+		"Stub hit for Nn.Am.Service.ILockAccessor.Unlock".Log();
 	protected virtual KObject GetEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ILockAccessor.GetEvent not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1850,19 +1850,19 @@ public abstract class _IOverlayAppletProxy_Base : IpcInterface {
 public partial class IOverlayFunctions : _IOverlayFunctions_Base;
 public abstract class _IOverlayFunctions_Base : IpcInterface {
 	protected virtual void BeginToWatchShortHomeButtonMessage() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.BeginToWatchShortHomeButtonMessage");
+		"Stub hit for Nn.Am.Service.IOverlayFunctions.BeginToWatchShortHomeButtonMessage".Log();
 	protected virtual void EndToWatchShortHomeButtonMessage() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.EndToWatchShortHomeButtonMessage");
+		"Stub hit for Nn.Am.Service.IOverlayFunctions.EndToWatchShortHomeButtonMessage".Log();
 	protected virtual ulong GetApplicationIdForLogo() =>
 		throw new NotImplementedException("Nn.Am.Service.IOverlayFunctions.GetApplicationIdForLogo not implemented");
 	protected virtual void SetGpuTimeSliceBoost(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.SetGpuTimeSliceBoost");
+		"Stub hit for Nn.Am.Service.IOverlayFunctions.SetGpuTimeSliceBoost".Log();
 	protected virtual void SetAutoSleepTimeAndDimmingTimeEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.SetAutoSleepTimeAndDimmingTimeEnabled");
+		"Stub hit for Nn.Am.Service.IOverlayFunctions.SetAutoSleepTimeAndDimmingTimeEnabled".Log();
 	protected virtual void TerminateApplicationAndSetReason(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.TerminateApplicationAndSetReason");
+		"Stub hit for Nn.Am.Service.IOverlayFunctions.TerminateApplicationAndSetReason".Log();
 	protected virtual void SetScreenShotPermissionGlobally(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IOverlayFunctions.SetScreenShotPermissionGlobally");
+		"Stub hit for Nn.Am.Service.IOverlayFunctions.SetScreenShotPermissionGlobally".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BeginToWatchShortHomeButtonMessage
@@ -1914,17 +1914,17 @@ public abstract class _IProcessWindingController_Base : IpcInterface {
 	protected virtual Nn.Am.Service.ILibraryAppletAccessor OpenCallingLibraryApplet() =>
 		throw new NotImplementedException("Nn.Am.Service.IProcessWindingController.OpenCallingLibraryApplet not implemented");
 	protected virtual void PushContext(Nn.Am.Service.IStorage _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IProcessWindingController.PushContext");
+		"Stub hit for Nn.Am.Service.IProcessWindingController.PushContext".Log();
 	protected virtual Nn.Am.Service.IStorage PopContext() =>
 		throw new NotImplementedException("Nn.Am.Service.IProcessWindingController.PopContext not implemented");
 	protected virtual void CancelWindingReservation() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IProcessWindingController.CancelWindingReservation");
+		"Stub hit for Nn.Am.Service.IProcessWindingController.CancelWindingReservation".Log();
 	protected virtual void WindAndDoReserved() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IProcessWindingController.WindAndDoReserved");
+		"Stub hit for Nn.Am.Service.IProcessWindingController.WindAndDoReserved".Log();
 	protected virtual void ReserveToStartAndWaitAndUnwindThis(Nn.Am.Service.ILibraryAppletAccessor _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IProcessWindingController.ReserveToStartAndWaitAndUnwindThis");
+		"Stub hit for Nn.Am.Service.IProcessWindingController.ReserveToStartAndWaitAndUnwindThis".Log();
 	protected virtual void ReserveToStartAndWait(Nn.Am.Service.ILibraryAppletAccessor _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IProcessWindingController.ReserveToStartAndWait");
+		"Stub hit for Nn.Am.Service.IProcessWindingController.ReserveToStartAndWait".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetLaunchReason
@@ -1979,69 +1979,69 @@ public abstract class _IProcessWindingController_Base : IpcInterface {
 public partial class ISelfController : _ISelfController_Base;
 public abstract class _ISelfController_Base : IpcInterface {
 	protected virtual void Exit() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.Exit");
+		"Stub hit for Nn.Am.Service.ISelfController.Exit".Log();
 	protected virtual void LockExit() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.LockExit");
+		"Stub hit for Nn.Am.Service.ISelfController.LockExit".Log();
 	protected virtual void UnlockExit() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.UnlockExit");
+		"Stub hit for Nn.Am.Service.ISelfController.UnlockExit".Log();
 	protected virtual void EnterFatalSection() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.EnterFatalSection");
+		"Stub hit for Nn.Am.Service.ISelfController.EnterFatalSection".Log();
 	protected virtual void LeaveFatalSection() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.LeaveFatalSection");
+		"Stub hit for Nn.Am.Service.ISelfController.LeaveFatalSection".Log();
 	protected virtual KObject GetLibraryAppletLaunchableEvent() =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.GetLibraryAppletLaunchableEvent not implemented");
 	protected virtual void SetScreenShotPermission(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetScreenShotPermission");
+		"Stub hit for Nn.Am.Service.ISelfController.SetScreenShotPermission".Log();
 	protected virtual void SetOperationModeChangedNotification(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetOperationModeChangedNotification");
+		"Stub hit for Nn.Am.Service.ISelfController.SetOperationModeChangedNotification".Log();
 	protected virtual void SetPerformanceModeChangedNotification(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetPerformanceModeChangedNotification");
+		"Stub hit for Nn.Am.Service.ISelfController.SetPerformanceModeChangedNotification".Log();
 	protected virtual void SetFocusHandlingMode(byte _0, byte _1, byte _2) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetFocusHandlingMode");
+		"Stub hit for Nn.Am.Service.ISelfController.SetFocusHandlingMode".Log();
 	protected virtual void SetRestartMessageEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetRestartMessageEnabled");
+		"Stub hit for Nn.Am.Service.ISelfController.SetRestartMessageEnabled".Log();
 	protected virtual void SetScreenShotAppletIdentityInfo() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetScreenShotAppletIdentityInfo");
+		"Stub hit for Nn.Am.Service.ISelfController.SetScreenShotAppletIdentityInfo".Log();
 	protected virtual void SetOutOfFocusSuspendingEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetOutOfFocusSuspendingEnabled");
+		"Stub hit for Nn.Am.Service.ISelfController.SetOutOfFocusSuspendingEnabled".Log();
 	protected virtual void SetControllerFirmwareUpdateSection(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetControllerFirmwareUpdateSection");
+		"Stub hit for Nn.Am.Service.ISelfController.SetControllerFirmwareUpdateSection".Log();
 	protected virtual void SetRequiresCaptureButtonShortPressedMessage(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetRequiresCaptureButtonShortPressedMessage");
+		"Stub hit for Nn.Am.Service.ISelfController.SetRequiresCaptureButtonShortPressedMessage".Log();
 	protected virtual void SetScreenShotImageOrientation(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetScreenShotImageOrientation");
+		"Stub hit for Nn.Am.Service.ISelfController.SetScreenShotImageOrientation".Log();
 	protected virtual void SetDesirableKeyboardLayout(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetDesirableKeyboardLayout");
+		"Stub hit for Nn.Am.Service.ISelfController.SetDesirableKeyboardLayout".Log();
 	protected virtual ulong CreateManagedDisplayLayer() =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.CreateManagedDisplayLayer not implemented");
 	protected virtual void IsSystemBufferSharingEnabled() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.IsSystemBufferSharingEnabled");
+		"Stub hit for Nn.Am.Service.ISelfController.IsSystemBufferSharingEnabled".Log();
 	protected virtual void GetSystemSharedLayerHandle(out ulong _0, out ulong _1) =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.GetSystemSharedLayerHandle not implemented");
 	protected virtual void SetHandlesRequestToDisplay(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetHandlesRequestToDisplay");
+		"Stub hit for Nn.Am.Service.ISelfController.SetHandlesRequestToDisplay".Log();
 	protected virtual void ApproveToDisplay() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.ApproveToDisplay");
+		"Stub hit for Nn.Am.Service.ISelfController.ApproveToDisplay".Log();
 	protected virtual void OverrideAutoSleepTimeAndDimmingTime(uint _0, uint _1, uint _2, uint _3) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.OverrideAutoSleepTimeAndDimmingTime");
+		"Stub hit for Nn.Am.Service.ISelfController.OverrideAutoSleepTimeAndDimmingTime".Log();
 	protected virtual void SetMediaPlaybackState(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetMediaPlaybackState");
+		"Stub hit for Nn.Am.Service.ISelfController.SetMediaPlaybackState".Log();
 	protected virtual void SetIdleTimeDetectionExtension(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetIdleTimeDetectionExtension");
+		"Stub hit for Nn.Am.Service.ISelfController.SetIdleTimeDetectionExtension".Log();
 	protected virtual uint GetIdleTimeDetectionExtension() =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.GetIdleTimeDetectionExtension not implemented");
 	protected virtual void SetInputDetectionSourceSet(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetInputDetectionSourceSet");
+		"Stub hit for Nn.Am.Service.ISelfController.SetInputDetectionSourceSet".Log();
 	protected virtual void ReportUserIsActive() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.ReportUserIsActive");
+		"Stub hit for Nn.Am.Service.ISelfController.ReportUserIsActive".Log();
 	protected virtual float GetCurrentIlluminance() =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.GetCurrentIlluminance not implemented");
 	protected virtual byte IsIlluminanceAvailable() =>
 		throw new NotImplementedException("Nn.Am.Service.ISelfController.IsIlluminanceAvailable not implemented");
 	protected virtual void ReportMultimediaError(uint _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.ReportMultimediaError");
+		"Stub hit for Nn.Am.Service.ISelfController.ReportMultimediaError".Log();
 	protected virtual void SetWirelessPriorityMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.ISelfController.SetWirelessPriorityMode");
+		"Stub hit for Nn.Am.Service.ISelfController.SetWirelessPriorityMode".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Exit
@@ -2248,7 +2248,7 @@ public abstract class _IStorageAccessor_Base : IpcInterface {
 	protected virtual ulong GetSize() =>
 		throw new NotImplementedException("Nn.Am.Service.IStorageAccessor.GetSize not implemented");
 	protected virtual void Write(ulong _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IStorageAccessor.Write");
+		"Stub hit for Nn.Am.Service.IStorageAccessor.Write".Log();
 	protected virtual void Read(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Am.Service.IStorageAccessor.Read not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -2417,11 +2417,11 @@ public abstract class _IWindowController_Base : IpcInterface {
 	protected virtual ulong GetAppletResourceUserId() =>
 		throw new NotImplementedException("Nn.Am.Service.IWindowController.GetAppletResourceUserId not implemented");
 	protected virtual void AcquireForegroundRights() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IWindowController.AcquireForegroundRights");
+		"Stub hit for Nn.Am.Service.IWindowController.AcquireForegroundRights".Log();
 	protected virtual void ReleaseForegroundRights() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IWindowController.ReleaseForegroundRights");
+		"Stub hit for Nn.Am.Service.IWindowController.ReleaseForegroundRights".Log();
 	protected virtual void RejectToChangeIntoBackground() =>
-		Console.WriteLine("Stub hit for Nn.Am.Service.IWindowController.RejectToChangeIntoBackground");
+		"Stub hit for Nn.Am.Service.IWindowController.RejectToChangeIntoBackground".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateWindow

@@ -14,7 +14,7 @@ public abstract class _IManager_Base : IpcInterface {
 	protected virtual void GetDeviceId(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Nsd.Detail.IManager.GetDeviceId not implemented");
 	protected virtual void DeleteSettings(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Nsd.Detail.IManager.DeleteSettings");
+		"Stub hit for Nn.Nsd.Detail.IManager.DeleteSettings".Log();
 	protected virtual void ImportSettings(uint _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nsd.Detail.IManager.ImportSettings not implemented");
 	protected virtual void Resolve(Span<byte> _0, Span<byte> _1) =>
@@ -38,9 +38,9 @@ public abstract class _IManager_Base : IpcInterface {
 	protected virtual void ReadSaveDataFromFsForTest(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nsd.Detail.IManager.ReadSaveDataFromFsForTest not implemented");
 	protected virtual void WriteSaveDataToFsForTest(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Nsd.Detail.IManager.WriteSaveDataToFsForTest");
+		"Stub hit for Nn.Nsd.Detail.IManager.WriteSaveDataToFsForTest".Log();
 	protected virtual void DeleteSaveDataOfFsForTest() =>
-		Console.WriteLine("Stub hit for Nn.Nsd.Detail.IManager.DeleteSaveDataOfFsForTest");
+		"Stub hit for Nn.Nsd.Detail.IManager.DeleteSaveDataOfFsForTest".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xA: { // GetSettingName

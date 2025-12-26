@@ -11,23 +11,23 @@ public abstract class _ICtrlSession_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ahid.ICtrlSession.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.ICtrlSession.Unknown3");
+		"Stub hit for Nn.Ahid.ICtrlSession.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ahid.ICtrlSession.Unknown4 not implemented");
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.ICtrlSession.Unknown5");
+		"Stub hit for Nn.Ahid.ICtrlSession.Unknown5".Log();
 	protected virtual void Unknown6(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ahid.ICtrlSession.Unknown6 not implemented");
 	protected virtual void Unknown7(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.ICtrlSession.Unknown7");
+		"Stub hit for Nn.Ahid.ICtrlSession.Unknown7".Log();
 	protected virtual void Unknown8(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ahid.ICtrlSession.Unknown8 not implemented");
 	protected virtual void Unknown9(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.ICtrlSession.Unknown9");
+		"Stub hit for Nn.Ahid.ICtrlSession.Unknown9".Log();
 	protected virtual KObject Unknown10() =>
 		throw new NotImplementedException("Nn.Ahid.ICtrlSession.Unknown10 not implemented");
 	protected virtual void Unknown11() =>
-		Console.WriteLine("Stub hit for Nn.Ahid.ICtrlSession.Unknown11");
+		"Stub hit for Nn.Ahid.ICtrlSession.Unknown11".Log();
 	protected virtual void Unknown12(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Ahid.ICtrlSession.Unknown12 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -129,9 +129,9 @@ public partial class IServerSession : _IServerSession_Base {
 }
 public abstract class _IServerSession_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.IServerSession.Unknown0");
+		"Stub hit for Nn.Ahid.IServerSession.Unknown0".Log();
 	protected virtual void Unknown1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.IServerSession.Unknown1");
+		"Stub hit for Nn.Ahid.IServerSession.Unknown1".Log();
 	protected virtual Nn.Ahid.ICtrlSession Unknown2(byte[] _0) =>
 		throw new NotImplementedException("Nn.Ahid.IServerSession.Unknown2 not implemented");
 	protected virtual Nn.Ahid.IReadSession Unknown3(byte[] _0) =>

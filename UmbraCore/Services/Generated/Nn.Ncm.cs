@@ -8,31 +8,31 @@ public partial class IContentManager : _IContentManager_Base {
 }
 public abstract class _IContentManager_Base : IpcInterface {
 	protected virtual void CreateContentStorage(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CreateContentStorage");
+		"Stub hit for Nn.Ncm.IContentManager.CreateContentStorage".Log();
 	protected virtual void CreateContentMetaDatabase(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CreateContentMetaDatabase");
+		"Stub hit for Nn.Ncm.IContentManager.CreateContentMetaDatabase".Log();
 	protected virtual void VerifyContentStorage(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.VerifyContentStorage");
+		"Stub hit for Nn.Ncm.IContentManager.VerifyContentStorage".Log();
 	protected virtual void VerifyContentMetaDatabase(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.VerifyContentMetaDatabase");
+		"Stub hit for Nn.Ncm.IContentManager.VerifyContentMetaDatabase".Log();
 	protected virtual Nn.Ncm.IContentStorage OpenContentStorage(byte[] _0) =>
 		throw new NotImplementedException("Nn.Ncm.IContentManager.OpenContentStorage not implemented");
 	protected virtual Nn.Ncm.IContentMetaDatabase OpenContentMetaDatabase(byte[] _0) =>
 		throw new NotImplementedException("Nn.Ncm.IContentManager.OpenContentMetaDatabase not implemented");
 	protected virtual void CloseContentStorageForcibly(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentStorageForcibly");
+		"Stub hit for Nn.Ncm.IContentManager.CloseContentStorageForcibly".Log();
 	protected virtual void CloseContentMetaDatabaseForcibly(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentMetaDatabaseForcibly");
+		"Stub hit for Nn.Ncm.IContentManager.CloseContentMetaDatabaseForcibly".Log();
 	protected virtual void CleanupContentMetaDatabase(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CleanupContentMetaDatabase");
+		"Stub hit for Nn.Ncm.IContentManager.CleanupContentMetaDatabase".Log();
 	protected virtual void OpenContentStorage2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.OpenContentStorage2");
+		"Stub hit for Nn.Ncm.IContentManager.OpenContentStorage2".Log();
 	protected virtual void CloseContentStorage(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentStorage");
+		"Stub hit for Nn.Ncm.IContentManager.CloseContentStorage".Log();
 	protected virtual void OpenContentMetaDatabase2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.OpenContentMetaDatabase2");
+		"Stub hit for Nn.Ncm.IContentManager.OpenContentMetaDatabase2".Log();
 	protected virtual void CloseContentMetaDatabase(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentManager.CloseContentMetaDatabase");
+		"Stub hit for Nn.Ncm.IContentManager.CloseContentMetaDatabase".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateContentStorage
@@ -111,11 +111,11 @@ public abstract class _IContentManager_Base : IpcInterface {
 public partial class IContentMetaDatabase : _IContentMetaDatabase_Base;
 public abstract class _IContentMetaDatabase_Base : IpcInterface {
 	protected virtual void Set(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Set");
+		"Stub hit for Nn.Ncm.IContentMetaDatabase.Set".Log();
 	protected virtual void Get(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.Get not implemented");
 	protected virtual void Remove(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Remove");
+		"Stub hit for Nn.Ncm.IContentMetaDatabase.Remove".Log();
 	protected virtual void GetContentIdByType(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetContentIdByType not implemented");
 	protected virtual void ListContentInfo(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -137,11 +137,11 @@ public abstract class _IContentMetaDatabase_Base : IpcInterface {
 	protected virtual void GetPatchId(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetPatchId not implemented");
 	protected virtual void DisableForcibly() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.DisableForcibly");
+		"Stub hit for Nn.Ncm.IContentMetaDatabase.DisableForcibly".Log();
 	protected virtual void LookupOrphanContent(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.LookupOrphanContent not implemented");
 	protected virtual void Commit() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Commit");
+		"Stub hit for Nn.Ncm.IContentMetaDatabase.Commit".Log();
 	protected virtual void HasContent(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.HasContent not implemented");
 	protected virtual void ListContentMetaInfo(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -151,7 +151,7 @@ public abstract class _IContentMetaDatabase_Base : IpcInterface {
 	protected virtual void GetRequiredApplicationVersion(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentMetaDatabase.GetRequiredApplicationVersion not implemented");
 	protected virtual void Unknown20() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentMetaDatabase.Unknown20");
+		"Stub hit for Nn.Ncm.IContentMetaDatabase.Unknown20".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Set
@@ -285,17 +285,17 @@ public abstract class _IContentStorage_Base : IpcInterface {
 	protected virtual void GeneratePlaceHolderId(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.GeneratePlaceHolderId not implemented");
 	protected virtual void CreatePlaceHolder(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.CreatePlaceHolder");
+		"Stub hit for Nn.Ncm.IContentStorage.CreatePlaceHolder".Log();
 	protected virtual void DeletePlaceHolder(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.DeletePlaceHolder");
+		"Stub hit for Nn.Ncm.IContentStorage.DeletePlaceHolder".Log();
 	protected virtual void HasPlaceHolder(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.HasPlaceHolder not implemented");
 	protected virtual void WritePlaceHolder(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.WritePlaceHolder");
+		"Stub hit for Nn.Ncm.IContentStorage.WritePlaceHolder".Log();
 	protected virtual void Register(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.Register");
+		"Stub hit for Nn.Ncm.IContentStorage.Register".Log();
 	protected virtual void Delete(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.Delete");
+		"Stub hit for Nn.Ncm.IContentStorage.Delete".Log();
 	protected virtual void Has(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.Has not implemented");
 	protected virtual void GetPath(byte[] _0, Span<byte> _1) =>
@@ -303,7 +303,7 @@ public abstract class _IContentStorage_Base : IpcInterface {
 	protected virtual void GetPlaceHolderPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetPlaceHolderPath not implemented");
 	protected virtual void CleanupAllPlaceHolder() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.CleanupAllPlaceHolder");
+		"Stub hit for Nn.Ncm.IContentStorage.CleanupAllPlaceHolder".Log();
 	protected virtual void ListPlaceHolder(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.ListPlaceHolder not implemented");
 	protected virtual void GetContentCount(out byte[] _0) =>
@@ -313,11 +313,11 @@ public abstract class _IContentStorage_Base : IpcInterface {
 	protected virtual void GetSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetSize not implemented");
 	protected virtual void DisableForcibly() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.DisableForcibly");
+		"Stub hit for Nn.Ncm.IContentStorage.DisableForcibly".Log();
 	protected virtual void RevertToPlaceHolder(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.RevertToPlaceHolder");
+		"Stub hit for Nn.Ncm.IContentStorage.RevertToPlaceHolder".Log();
 	protected virtual void SetPlaceHolderSize(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.SetPlaceHolderSize");
+		"Stub hit for Nn.Ncm.IContentStorage.SetPlaceHolderSize".Log();
 	protected virtual void ReadContentIdFile(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.ReadContentIdFile not implemented");
 	protected virtual void GetRightsIdFromPlaceHolderId(byte[] _0, out byte[] _1) =>
@@ -325,17 +325,17 @@ public abstract class _IContentStorage_Base : IpcInterface {
 	protected virtual void GetRightsIdFromContentId(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetRightsIdFromContentId not implemented");
 	protected virtual void WriteContentForDebug(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.WriteContentForDebug");
+		"Stub hit for Nn.Ncm.IContentStorage.WriteContentForDebug".Log();
 	protected virtual void GetFreeSpaceSize(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetFreeSpaceSize not implemented");
 	protected virtual void GetTotalSpaceSize(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.GetTotalSpaceSize not implemented");
 	protected virtual void FlushStorage() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.FlushStorage");
+		"Stub hit for Nn.Ncm.IContentStorage.FlushStorage".Log();
 	protected virtual void Unknown25(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ncm.IContentStorage.Unknown25 not implemented");
 	protected virtual void Unknown26() =>
-		Console.WriteLine("Stub hit for Nn.Ncm.IContentStorage.Unknown26");
+		"Stub hit for Nn.Ncm.IContentStorage.Unknown26".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GeneratePlaceHolderId

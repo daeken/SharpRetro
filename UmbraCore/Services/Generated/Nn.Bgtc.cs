@@ -9,11 +9,11 @@ public abstract class _IStateControlService_Base : IpcInterface {
 	protected virtual KObject Unknown2() =>
 		throw new NotImplementedException("Nn.Bgtc.IStateControlService.Unknown2 not implemented");
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.IStateControlService.Unknown3");
+		"Stub hit for Nn.Bgtc.IStateControlService.Unknown3".Log();
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.IStateControlService.Unknown4");
+		"Stub hit for Nn.Bgtc.IStateControlService.Unknown4".Log();
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.IStateControlService.Unknown5");
+		"Stub hit for Nn.Bgtc.IStateControlService.Unknown5".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
@@ -52,27 +52,27 @@ public abstract class _IStateControlService_Base : IpcInterface {
 public partial class ITaskService : _ITaskService_Base;
 public abstract class _ITaskService_Base : IpcInterface {
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.ITaskService.Unknown1");
+		"Stub hit for Nn.Bgtc.ITaskService.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.ITaskService.Unknown2");
+		"Stub hit for Nn.Bgtc.ITaskService.Unknown2".Log();
 	protected virtual KObject Unknown3() =>
 		throw new NotImplementedException("Nn.Bgtc.ITaskService.Unknown3 not implemented");
 	protected virtual void Unknown4(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bgtc.ITaskService.Unknown4 not implemented");
 	protected virtual void Unknown5(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.ITaskService.Unknown5");
+		"Stub hit for Nn.Bgtc.ITaskService.Unknown5".Log();
 	protected virtual void Unknown6(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bgtc.ITaskService.Unknown6 not implemented");
 	protected virtual void Unknown11(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.ITaskService.Unknown11");
+		"Stub hit for Nn.Bgtc.ITaskService.Unknown11".Log();
 	protected virtual void Unknown12(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bgtc.ITaskService.Unknown12 not implemented");
 	protected virtual void Unknown13() =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.ITaskService.Unknown13");
+		"Stub hit for Nn.Bgtc.ITaskService.Unknown13".Log();
 	protected virtual KObject Unknown14() =>
 		throw new NotImplementedException("Nn.Bgtc.ITaskService.Unknown14 not implemented");
 	protected virtual void Unknown15(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bgtc.ITaskService.Unknown15");
+		"Stub hit for Nn.Bgtc.ITaskService.Unknown15".Log();
 	protected virtual void Unknown101(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bgtc.ITaskService.Unknown101 not implemented");
 	protected virtual void Unknown102(out byte[] _0) =>

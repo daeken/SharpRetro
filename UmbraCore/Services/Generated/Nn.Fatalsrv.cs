@@ -29,11 +29,11 @@ public partial class IService : _IService_Base {
 }
 public abstract class _IService_Base : IpcInterface {
 	protected virtual void ThrowFatal(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Fatalsrv.IService.ThrowFatal");
+		"Stub hit for Nn.Fatalsrv.IService.ThrowFatal".Log();
 	protected virtual void ThrowFatalWithPolicy(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Fatalsrv.IService.ThrowFatalWithPolicy");
+		"Stub hit for Nn.Fatalsrv.IService.ThrowFatalWithPolicy".Log();
 	protected virtual void ThrowFatalWithCpuContext(ulong errorCode, ulong _1, Span<byte> errorBuf, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Fatalsrv.IService.ThrowFatalWithCpuContext");
+		"Stub hit for Nn.Fatalsrv.IService.ThrowFatalWithCpuContext".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ThrowFatal

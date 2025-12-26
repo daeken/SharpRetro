@@ -14,9 +14,9 @@ public abstract class _IAlbumAccessorService_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorService.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown3");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown4");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown4".Log();
 	protected virtual void Unknown5(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorService.Unknown5 not implemented");
 	protected virtual void Unknown6(byte[] _0, out byte[] _1) =>
@@ -48,17 +48,17 @@ public abstract class _IAlbumAccessorService_Base : IpcInterface {
 	protected virtual void Unknown1002(byte[] _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorService.Unknown1002 not implemented");
 	protected virtual void Unknown8001(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8001");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8001".Log();
 	protected virtual void Unknown8002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8002");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8002".Log();
 	protected virtual void Unknown8011(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8011");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8011".Log();
 	protected virtual void Unknown8012(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8012 not implemented");
 	protected virtual void Unknown8021(byte[] _0, ulong _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorService.Unknown8021 not implemented");
 	protected virtual void Unknown10011(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown10011");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorService.Unknown10011".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -221,13 +221,13 @@ public abstract class _IAlbumAccessorSession_Base : IpcInterface {
 	protected virtual void Unknown2001(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2001 not implemented");
 	protected virtual void Unknown2002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2002");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2002".Log();
 	protected virtual void Unknown2003(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2003 not implemented");
 	protected virtual void Unknown2004(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2004 not implemented");
 	protected virtual void Unknown2005(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2005");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2005".Log();
 	protected virtual void Unknown2006(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumAccessorSession.Unknown2006 not implemented");
 	protected virtual void Unknown2007(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -294,25 +294,25 @@ public partial class IAlbumControlService : _IAlbumControlService_Base {
 }
 public abstract class _IAlbumControlService_Base : IpcInterface {
 	protected virtual void Unknown2001(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2001");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2001".Log();
 	protected virtual void Unknown2002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2002");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2002".Log();
 	protected virtual void Unknown2011(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2011");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2011".Log();
 	protected virtual void Unknown2012(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2012");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2012".Log();
 	protected virtual void Unknown2013(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlService.Unknown2013 not implemented");
 	protected virtual void Unknown2014(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2014");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2014".Log();
 	protected virtual void Unknown2101(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlService.Unknown2101 not implemented");
 	protected virtual void Unknown2102(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlService.Unknown2102 not implemented");
 	protected virtual void Unknown2201(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2201");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2201".Log();
 	protected virtual void Unknown2301(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2301");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlService.Unknown2301".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // Unknown2001
@@ -379,13 +379,13 @@ public abstract class _IAlbumControlSession_Base : IpcInterface {
 	protected virtual void Unknown2001(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2001 not implemented");
 	protected virtual void Unknown2002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2002");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2002".Log();
 	protected virtual void Unknown2003(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2003 not implemented");
 	protected virtual void Unknown2004(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2004 not implemented");
 	protected virtual void Unknown2005(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2005");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2005".Log();
 	protected virtual void Unknown2006(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2006 not implemented");
 	protected virtual void Unknown2007(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -395,33 +395,33 @@ public abstract class _IAlbumControlSession_Base : IpcInterface {
 	protected virtual void Unknown2401(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2401 not implemented");
 	protected virtual void Unknown2402(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2402");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2402".Log();
 	protected virtual void Unknown2403(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2403");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2403".Log();
 	protected virtual void Unknown2404(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2404");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2404".Log();
 	protected virtual void Unknown2405(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2405");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2405".Log();
 	protected virtual void Unknown2411(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2411");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2411".Log();
 	protected virtual void Unknown2412(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2412");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2412".Log();
 	protected virtual void Unknown2413(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2413");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2413".Log();
 	protected virtual void Unknown2414(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2414");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2414".Log();
 	protected virtual void Unknown2421(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2421 not implemented");
 	protected virtual void Unknown2422(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2422");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2422".Log();
 	protected virtual void Unknown2424(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2424");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2424".Log();
 	protected virtual void Unknown2431(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2431");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2431".Log();
 	protected virtual void Unknown2433(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IAlbumControlSession.Unknown2433 not implemented");
 	protected virtual void Unknown2434(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2434");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumControlSession.Unknown2434".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // Unknown2001
@@ -561,15 +561,15 @@ public abstract class _ICaptureControllerService_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.ICaptureControllerService.Unknown2 not implemented");
 	protected virtual void Unknown1001(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown1001");
+		"Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown1001".Log();
 	protected virtual void Unknown1002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown1002");
+		"Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown1002".Log();
 	protected virtual void Unknown1011(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown1011");
+		"Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown1011".Log();
 	protected virtual void Unknown2001(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown2001");
+		"Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown2001".Log();
 	protected virtual void Unknown2002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown2002");
+		"Stub hit for Nn.Capsrv.Sf.ICaptureControllerService.Unknown2002".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
@@ -652,19 +652,19 @@ public abstract class _IScreenShotControlService_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IScreenShotControlService.Unknown2 not implemented");
 	protected virtual void Unknown1001(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1001");
+		"Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1001".Log();
 	protected virtual void Unknown1002(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1002");
+		"Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1002".Log();
 	protected virtual void Unknown1003(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1003");
+		"Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1003".Log();
 	protected virtual void Unknown1011(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1011");
+		"Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1011".Log();
 	protected virtual void Unknown1012(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1012");
+		"Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1012".Log();
 	protected virtual void Unknown1201(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IScreenShotControlService.Unknown1201 not implemented");
 	protected virtual void Unknown1202() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1202");
+		"Stub hit for Nn.Capsrv.Sf.IScreenShotControlService.Unknown1202".Log();
 	protected virtual void Unknown1203(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Capsrv.Sf.IScreenShotControlService.Unknown1203 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -775,15 +775,15 @@ public abstract class _IScreenShotService_Base : IpcInterface {
 public partial class IAlbumAccessorApplicationSession : _IAlbumAccessorApplicationSession_Base;
 public abstract class _IAlbumAccessorApplicationSession_Base : IpcInterface {
 	protected virtual void OpenAlbumMovieReadStream() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.OpenAlbumMovieReadStream");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.OpenAlbumMovieReadStream".Log();
 	protected virtual void CloseAlbumMovieReadStream() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.CloseAlbumMovieReadStream");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.CloseAlbumMovieReadStream".Log();
 	protected virtual void GetAlbumMovieReadStreamMovieDataSize() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.GetAlbumMovieReadStreamMovieDataSize");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.GetAlbumMovieReadStreamMovieDataSize".Log();
 	protected virtual void ReadMovieDataFromAlbumMovieReadStream() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.ReadMovieDataFromAlbumMovieReadStream");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.ReadMovieDataFromAlbumMovieReadStream".Log();
 	protected virtual void GetAlbumMovieReadStreamBrokenReason() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.GetAlbumMovieReadStreamBrokenReason");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumAccessorApplicationSession.GetAlbumMovieReadStreamBrokenReason".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x7D1: { // OpenAlbumMovieReadStream
@@ -823,17 +823,17 @@ public partial class IAlbumApplicationService : _IAlbumApplicationService_Base {
 }
 public abstract class _IAlbumApplicationService_Base : IpcInterface {
 	protected virtual void GetAlbumFileListByAruid() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.GetAlbumFileListByAruid");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.GetAlbumFileListByAruid".Log();
 	protected virtual void DeleteAlbumFileByAruid() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.DeleteAlbumFileByAruid");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.DeleteAlbumFileByAruid".Log();
 	protected virtual void GetAlbumFileSizeByAruid() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.GetAlbumFileSizeByAruid");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.GetAlbumFileSizeByAruid".Log();
 	protected virtual void LoadAlbumScreenShotImageByAruid() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.LoadAlbumScreenShotImageByAruid");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.LoadAlbumScreenShotImageByAruid".Log();
 	protected virtual void LoadAlbumScreenShotThumbnailImageByAruid() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.LoadAlbumScreenShotThumbnailImageByAruid");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.LoadAlbumScreenShotThumbnailImageByAruid".Log();
 	protected virtual void OpenAccessorSessionForApplication() =>
-		Console.WriteLine("Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.OpenAccessorSessionForApplication");
+		"Stub hit for Nn.Capsrv.Sf.IAlbumApplicationService.OpenAccessorSessionForApplication".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x66: { // GetAlbumFileListByAruid

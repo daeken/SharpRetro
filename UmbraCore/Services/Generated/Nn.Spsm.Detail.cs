@@ -14,7 +14,7 @@ public abstract class _IPowerStateInterface_Base : IpcInterface {
 	protected virtual void Unknown2(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown3");
+		"Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown3".Log();
 	protected virtual KObject GetNotificationMessageEventHandle() =>
 		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.GetNotificationMessageEventHandle not implemented");
 	protected virtual void Unknown5(out byte[] _0) =>
@@ -22,15 +22,15 @@ public abstract class _IPowerStateInterface_Base : IpcInterface {
 	protected virtual void Unknown6(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.Unknown6 not implemented");
 	protected virtual void Unknown7() =>
-		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown7");
+		"Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown7".Log();
 	protected virtual void AnalyzePerformanceLogForLastSleepWakeSequence(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Spsm.Detail.IPowerStateInterface.AnalyzePerformanceLogForLastSleepWakeSequence not implemented");
 	protected virtual void ChangeHomeButtonLongPressingTime(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.ChangeHomeButtonLongPressingTime");
+		"Stub hit for Nn.Spsm.Detail.IPowerStateInterface.ChangeHomeButtonLongPressingTime".Log();
 	protected virtual void Unknown10() =>
-		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown10");
+		"Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown10".Log();
 	protected virtual void Unknown11(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown11");
+		"Stub hit for Nn.Spsm.Detail.IPowerStateInterface.Unknown11".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetState

@@ -8,31 +8,31 @@ public partial class ServerInterface : _ServerInterface_Base {
 }
 public abstract class _ServerInterface_Base : IpcInterface {
 	protected virtual void SetIfUp(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.SetIfUp");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.SetIfUp".Log();
 	protected virtual KObject SetIfUpWithEvent(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.SetIfUpWithEvent not implemented");
 	protected virtual void CancelIf(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.CancelIf");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.CancelIf".Log();
 	protected virtual void SetIfDown(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.SetIfDown");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.SetIfDown".Log();
 	protected virtual void GetIfState(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.GetIfState not implemented");
 	protected virtual void DhcpRenew(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.DhcpRenew");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.DhcpRenew".Log();
 	protected virtual void AddStaticArpEntry(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.AddStaticArpEntry");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.AddStaticArpEntry".Log();
 	protected virtual void RemoveArpEntry(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.RemoveArpEntry");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.RemoveArpEntry".Log();
 	protected virtual void LookupArpEntry(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.LookupArpEntry not implemented");
 	protected virtual void LookupArpEntry2(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bsdsocket.Cfg.ServerInterface.LookupArpEntry2 not implemented");
 	protected virtual void ClearArpEntries() =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.ClearArpEntries");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.ClearArpEntries".Log();
 	protected virtual void ClearArpEntries2(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.ClearArpEntries2");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.ClearArpEntries2".Log();
 	protected virtual void PrintArpEntries() =>
-		Console.WriteLine("Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.PrintArpEntries");
+		"Stub hit for Nn.Bsdsocket.Cfg.ServerInterface.PrintArpEntries".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetIfUp

@@ -16,33 +16,33 @@ public abstract class _IBtm_Base : IpcInterface {
 	protected virtual void Unknown3(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtm.Unknown3 not implemented");
 	protected virtual void Unknown4(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown4");
+		"Stub hit for Nn.Btm.IBtm.Unknown4".Log();
 	protected virtual void Unknown5(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown5");
+		"Stub hit for Nn.Btm.IBtm.Unknown5".Log();
 	protected virtual void Unknown6(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown6");
+		"Stub hit for Nn.Btm.IBtm.Unknown6".Log();
 	protected virtual void Unknown7(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown7");
+		"Stub hit for Nn.Btm.IBtm.Unknown7".Log();
 	protected virtual void RegisterSystemEventForRegisteredDeviceInfoImpl(out byte[] _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Btm.IBtm.RegisterSystemEventForRegisteredDeviceInfoImpl not implemented");
 	protected virtual void Unknown9(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtm.Unknown9 not implemented");
 	protected virtual void Unknown10(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown10");
+		"Stub hit for Nn.Btm.IBtm.Unknown10".Log();
 	protected virtual void Unknown11(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown11");
+		"Stub hit for Nn.Btm.IBtm.Unknown11".Log();
 	protected virtual void Unknown12(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown12");
+		"Stub hit for Nn.Btm.IBtm.Unknown12".Log();
 	protected virtual void Unknown13(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown13");
+		"Stub hit for Nn.Btm.IBtm.Unknown13".Log();
 	protected virtual void EnableRadioImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.EnableRadioImpl");
+		"Stub hit for Nn.Btm.IBtm.EnableRadioImpl".Log();
 	protected virtual void DisableRadioImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.DisableRadioImpl");
+		"Stub hit for Nn.Btm.IBtm.DisableRadioImpl".Log();
 	protected virtual void Unknown16(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown16");
+		"Stub hit for Nn.Btm.IBtm.Unknown16".Log();
 	protected virtual void Unknown17(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown17");
+		"Stub hit for Nn.Btm.IBtm.Unknown17".Log();
 	protected virtual void Unknown18(out byte[] _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Btm.IBtm.Unknown18 not implemented");
 	protected virtual void Unknown19(out byte[] _0, out KObject _1) =>
@@ -50,7 +50,7 @@ public abstract class _IBtm_Base : IpcInterface {
 	protected virtual void Unknown20(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtm.Unknown20 not implemented");
 	protected virtual void Unknown21(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtm.Unknown21");
+		"Stub hit for Nn.Btm.IBtm.Unknown21".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -188,21 +188,21 @@ public abstract class _IBtmDebug_Base : IpcInterface {
 	protected virtual void RegisterSystemEventForDiscoveryImpl(out byte[] _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Btm.IBtmDebug.RegisterSystemEventForDiscoveryImpl not implemented");
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown1");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown2");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown2".Log();
 	protected virtual void Unknown3(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtmDebug.Unknown3 not implemented");
 	protected virtual void Unknown4(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown4");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown4".Log();
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown5");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown5".Log();
 	protected virtual void Unknown6(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown6");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown6".Log();
 	protected virtual void Unknown7(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown7");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown7".Log();
 	protected virtual void Unknown8(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmDebug.Unknown8");
+		"Stub hit for Nn.Btm.IBtmDebug.Unknown8".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterSystemEventForDiscoveryImpl
@@ -282,17 +282,17 @@ public abstract class _IBtmSystem_Base : IpcInterface {
 public partial class IBtmSystemCore : _IBtmSystemCore_Base;
 public abstract class _IBtmSystemCore_Base : IpcInterface {
 	protected virtual void StartGamepadPairingImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmSystemCore.StartGamepadPairingImpl");
+		"Stub hit for Nn.Btm.IBtmSystemCore.StartGamepadPairingImpl".Log();
 	protected virtual void CancelGamepadPairingImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmSystemCore.CancelGamepadPairingImpl");
+		"Stub hit for Nn.Btm.IBtmSystemCore.CancelGamepadPairingImpl".Log();
 	protected virtual void ClearGamepadPairingDatabaseImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmSystemCore.ClearGamepadPairingDatabaseImpl");
+		"Stub hit for Nn.Btm.IBtmSystemCore.ClearGamepadPairingDatabaseImpl".Log();
 	protected virtual void GetPairedGamepadCountImpl(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtmSystemCore.GetPairedGamepadCountImpl not implemented");
 	protected virtual void EnableRadioImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmSystemCore.EnableRadioImpl");
+		"Stub hit for Nn.Btm.IBtmSystemCore.EnableRadioImpl".Log();
 	protected virtual void DisableRadioImpl() =>
-		Console.WriteLine("Stub hit for Nn.Btm.IBtmSystemCore.DisableRadioImpl");
+		"Stub hit for Nn.Btm.IBtmSystemCore.DisableRadioImpl".Log();
 	protected virtual void GetRadioOnOffImpl(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Btm.IBtmSystemCore.GetRadioOnOffImpl not implemented");
 	protected virtual void AcquireRadioEventImpl(out byte[] _0, out KObject _1) =>

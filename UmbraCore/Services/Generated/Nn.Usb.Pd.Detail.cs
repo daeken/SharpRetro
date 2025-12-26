@@ -26,11 +26,11 @@ public abstract class _IPdCradleManager_Base : IpcInterface {
 public partial class IPdCradleSession : _IPdCradleSession_Base;
 public abstract class _IPdCradleSession_Base : IpcInterface {
 	protected virtual void VdmUserWrite(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pd.Detail.IPdCradleSession.VdmUserWrite");
+		"Stub hit for Nn.Usb.Pd.Detail.IPdCradleSession.VdmUserWrite".Log();
 	protected virtual void VdmUserRead(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdCradleSession.VdmUserRead not implemented");
 	protected virtual void Vdm20Init() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pd.Detail.IPdCradleSession.Vdm20Init");
+		"Stub hit for Nn.Usb.Pd.Detail.IPdCradleSession.Vdm20Init".Log();
 	protected virtual void GetFwType(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdCradleSession.GetFwType not implemented");
 	protected virtual void GetFwRevision(out byte[] _0) =>
@@ -189,17 +189,17 @@ public abstract class _IPdSession_Base : IpcInterface {
 	protected virtual KObject BindNoticeEvent() =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdSession.BindNoticeEvent not implemented");
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pd.Detail.IPdSession.Unknown1");
+		"Stub hit for Nn.Usb.Pd.Detail.IPdSession.Unknown1".Log();
 	protected virtual void GetStatus(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdSession.GetStatus not implemented");
 	protected virtual void GetNotice(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Pd.Detail.IPdSession.GetNotice not implemented");
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pd.Detail.IPdSession.Unknown4");
+		"Stub hit for Nn.Usb.Pd.Detail.IPdSession.Unknown4".Log();
 	protected virtual void Unknown5() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pd.Detail.IPdSession.Unknown5");
+		"Stub hit for Nn.Usb.Pd.Detail.IPdSession.Unknown5".Log();
 	protected virtual void ReplyPowerRequest(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pd.Detail.IPdSession.ReplyPowerRequest");
+		"Stub hit for Nn.Usb.Pd.Detail.IPdSession.ReplyPowerRequest".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BindNoticeEvent

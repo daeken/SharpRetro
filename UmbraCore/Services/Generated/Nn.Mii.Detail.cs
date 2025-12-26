@@ -29,19 +29,19 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 	protected virtual uint FindIndex(byte[] _0, byte _1) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.FindIndex not implemented");
 	protected virtual void Move(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Move");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.Move".Log();
 	protected virtual void AddOrReplace(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.AddOrReplace");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.AddOrReplace".Log();
 	protected virtual void Delete(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Delete");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.Delete".Log();
 	protected virtual void DestroyFile() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.DestroyFile");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.DestroyFile".Log();
 	protected virtual void DeleteFile() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.DeleteFile");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.DeleteFile".Log();
 	protected virtual void Format() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Format");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.Format".Log();
 	protected virtual void Import(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Import");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.Import".Log();
 	protected virtual void Export(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.Export not implemented");
 	protected virtual byte IsBrokenDatabaseWithClearFlag() =>
@@ -49,9 +49,9 @@ public abstract class _IDatabaseService_Base : IpcInterface {
 	protected virtual uint GetIndex(byte[] _0) =>
 		throw new NotImplementedException("Nn.Mii.Detail.IDatabaseService.GetIndex not implemented");
 	protected virtual void SetInterfaceVersion() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.SetInterfaceVersion");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.SetInterfaceVersion".Log();
 	protected virtual void Convert() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IDatabaseService.Convert");
+		"Stub hit for Nn.Mii.Detail.IDatabaseService.Convert".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // IsUpdated
@@ -221,33 +221,33 @@ public partial class IImageDatabaseService : _IImageDatabaseService_Base {
 }
 public abstract class _IImageDatabaseService_Base : IpcInterface {
 	protected virtual void Initialize() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.Initialize");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.Initialize".Log();
 	protected virtual void Reload() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.Reload");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.Reload".Log();
 	protected virtual void GetCount() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.GetCount");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.GetCount".Log();
 	protected virtual void IsEmpty() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.IsEmpty");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.IsEmpty".Log();
 	protected virtual void IsFull() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.IsFull");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.IsFull".Log();
 	protected virtual void GetAttribute() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.GetAttribute");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.GetAttribute".Log();
 	protected virtual void LoadImage() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.LoadImage");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.LoadImage".Log();
 	protected virtual void AddOrUpdateImage() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.AddOrUpdateImage");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.AddOrUpdateImage".Log();
 	protected virtual void DeleteImages() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.DeleteImages");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.DeleteImages".Log();
 	protected virtual void DeleteFile() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.DeleteFile");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.DeleteFile".Log();
 	protected virtual void DestroyFile() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.DestroyFile");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.DestroyFile".Log();
 	protected virtual void ImportFile() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.ImportFile");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.ImportFile".Log();
 	protected virtual void ExportFile() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.ExportFile");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.ExportFile".Log();
 	protected virtual void ForceInitialize() =>
-		Console.WriteLine("Stub hit for Nn.Mii.Detail.IImageDatabaseService.ForceInitialize");
+		"Stub hit for Nn.Mii.Detail.IImageDatabaseService.ForceInitialize".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize

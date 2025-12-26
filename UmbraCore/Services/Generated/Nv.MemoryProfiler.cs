@@ -5,9 +5,9 @@ namespace UmbraCore.Services.Nv.MemoryProfiler;
 public partial class IMemoryProfiler : _IMemoryProfiler_Base;
 public abstract class _IMemoryProfiler_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nv.MemoryProfiler.IMemoryProfiler.Unknown0");
+		"Stub hit for Nv.MemoryProfiler.IMemoryProfiler.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nv.MemoryProfiler.IMemoryProfiler.Unknown1");
+		"Stub hit for Nv.MemoryProfiler.IMemoryProfiler.Unknown1".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

@@ -64,9 +64,22 @@ public class MemoryManager {
     
     public unsafe void Setup(GameWrapper game) {
         game.Callbacks.QueryMemory = (memoryInfoPtr, addr, ref pageInfo) => {
-            Console.WriteLine($"Querying memory for {addr:X} -- pointer is {memoryInfoPtr:X}");
+            $"Querying memory for {addr:X} -- pointer is {memoryInfoPtr:X}".Log();
             var memoryInfo = (MemoryInfo*) memoryInfoPtr;
-            foreach(var (resident, start, size, flags) in AllRegions()) {
+            foreach(var (start, size, exists, mapped, prot) in MemoryHelpers.GetAllRegions()) {
+                if(start <= addr && addr < start + size) {
+                    memoryInfo->Begin = start;
+                    memoryInfo->Size = size;
+                    memoryInfo->MemoryType = exists || start < 0x1_0000_0000 ? 3U : 0;
+                    memoryInfo->MemoryAttribute = 0;
+                    memoryInfo->Permission = exists ? (uint) prot | 1 : 0;
+                    memoryInfo->DeviceRefCount = memoryInfo->IpcRefCount = memoryInfo->__padding = 0;
+                    *(uint*) pageInfo = 0;
+                    $"Found? {start:X}-{start+size:X} {exists} {prot}".Log();
+                    break;
+                }
+            }
+            /*foreach(var (resident, start, size, flags) in AllRegions()) {
                 if(start <= addr && addr < start + size) {
                     memoryInfo->Begin = start;
                     memoryInfo->Size = size;
@@ -77,28 +90,42 @@ public class MemoryManager {
                     *(uint*) pageInfo = 0;
                     break;
                 }
-            }
+            }*/
             return 0;
         };
         game.Callbacks.SetHeapSize = (size, ref ptr) => {
             Debug.Assert(HeapAddress == 0);
             HeapSize = size;
-            Console.WriteLine($"Heap size: {HeapSize:X}");
+            $"Heap size: {HeapSize:X}".Log();
             HeapAddress = (ulong) NativeMemory.AlignedAlloc((UIntPtr) HeapSize, 2 * 1024 * 1024);
-            Console.WriteLine($"Allocated heap at 0x{HeapAddress:X}");
+            $"Allocated heap at 0x{HeapAddress:X}".Log();
             Regions[HeapAddress] = (HeapSize, 1);
             ptr = HeapAddress;
             Unsafe.InitBlockUnaligned((void*) ptr, 0, (uint) HeapSize);
             return 0;
         };
         game.Callbacks.CreateTransferMemory = (addr, size, perm, ref handle) => {
-            Console.WriteLine("Transfer memory 'created'");
+            "Transfer memory 'created'".Log();
             handle = 0xDEADBEEF;
             return 0;
         };
         game.Callbacks.MapSharedMemory = (handle, addr, size, perm) => {
-            Console.WriteLine($"Mapping shared memory handle 0x{handle:X} at 0x{addr:X} (size 0x{size:X})");
+            $"Mapping shared memory handle 0x{handle:X} at 0x{addr:X} (size 0x{size:X})".Log();
             MemoryHelpers.Mmap(addr, size, requirePosition: true);
+            return 0;
+        };
+        game.Callbacks.UnmapSharedMemory = (handle, addr, size) => {
+            $"Unmapping shared memory from handle 0x{handle:X} at 0x{addr:X} with size 0x{size:X}".Log();
+            return 0;
+        };
+        game.Callbacks.MapMemory = (dest, src, size) => {
+            $"Attempting to map memory from 0x{src:X} to 0x{dest:X} (size 0x{size:X})".Log();
+            var adest = dest;
+            while(adest % 16384 != 0) adest--;
+            var asize = size + (dest - adest);
+            while(asize % 16384 != 0) asize++;
+            MemoryHelpers.Mmap(adest, asize, requirePosition: true);
+            Unsafe.CopyBlockUnaligned((void*) dest, (void*) src, (uint) size);
             return 0;
         };
     }

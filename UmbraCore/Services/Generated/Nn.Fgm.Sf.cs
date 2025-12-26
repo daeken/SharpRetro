@@ -12,7 +12,7 @@ public abstract class _IDebugger_Base : IpcInterface {
 	protected virtual void Read(out uint _0, out uint _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Fgm.Sf.IDebugger.Read not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IDebugger.Cancel");
+		"Stub hit for Nn.Fgm.Sf.IDebugger.Cancel".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
@@ -45,11 +45,11 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected virtual KObject Initialize(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Fgm.Sf.IRequest.Initialize not implemented");
 	protected virtual void Set(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IRequest.Set");
+		"Stub hit for Nn.Fgm.Sf.IRequest.Set".Log();
 	protected virtual uint Get() =>
 		throw new NotImplementedException("Nn.Fgm.Sf.IRequest.Get not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Fgm.Sf.IRequest.Cancel");
+		"Stub hit for Nn.Fgm.Sf.IRequest.Cancel".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize

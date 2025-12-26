@@ -8,61 +8,61 @@ public partial class ILblController : _ILblController_Base {
 }
 public abstract class _ILblController_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown0");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown1");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown1".Log();
 	protected virtual void Unknown2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown2");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown2".Log();
 	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown3 not implemented");
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown4");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown4".Log();
 	protected virtual void Unknown5(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown5 not implemented");
 	protected virtual void TurnOnBacklight(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.TurnOnBacklight");
+		"Stub hit for Nn.Lbl.Detail.ILblController.TurnOnBacklight".Log();
 	protected virtual void TurnOffBacklight(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.TurnOffBacklight");
+		"Stub hit for Nn.Lbl.Detail.ILblController.TurnOffBacklight".Log();
 	protected virtual void GetBacklightStatus(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.GetBacklightStatus not implemented");
 	protected virtual void Unknown9() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown9");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown9".Log();
 	protected virtual void Unknown10() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown10");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown10".Log();
 	protected virtual void Unknown11(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown11 not implemented");
 	protected virtual void Unknown12() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown12");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown12".Log();
 	protected virtual void Unknown13() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown13");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown13".Log();
 	protected virtual void Unknown14(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown14 not implemented");
 	protected virtual void Unknown15(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown15");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown15".Log();
 	protected virtual void ReadRawLightSensor(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.ReadRawLightSensor not implemented");
 	protected virtual void Unknown17(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown17");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown17".Log();
 	protected virtual void Unknown18(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown18 not implemented");
 	protected virtual void Unknown19(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown19");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown19".Log();
 	protected virtual void Unknown20(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown20 not implemented");
 	protected virtual void Unknown21(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown21");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown21".Log();
 	protected virtual void Unknown22(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown22 not implemented");
 	protected virtual void Unknown23(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown23 not implemented");
 	protected virtual void Unknown24(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.Unknown24");
+		"Stub hit for Nn.Lbl.Detail.ILblController.Unknown24".Log();
 	protected virtual void Unknown25(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.Unknown25 not implemented");
 	protected virtual void EnableVrMode() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.EnableVrMode");
+		"Stub hit for Nn.Lbl.Detail.ILblController.EnableVrMode".Log();
 	protected virtual void DisableVrMode() =>
-		Console.WriteLine("Stub hit for Nn.Lbl.Detail.ILblController.DisableVrMode");
+		"Stub hit for Nn.Lbl.Detail.ILblController.DisableVrMode".Log();
 	protected virtual void GetVrMode(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Lbl.Detail.ILblController.GetVrMode not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

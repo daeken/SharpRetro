@@ -8,13 +8,13 @@ public partial class IControl : _IControl_Base {
 }
 public abstract class _IControl_Base : IpcInterface {
 	protected virtual void SetUrl(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IControl.SetUrl");
+		"Stub hit for Nn.Eupld.Sf.IControl.SetUrl".Log();
 	protected virtual void ImportCrt(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IControl.ImportCrt");
+		"Stub hit for Nn.Eupld.Sf.IControl.ImportCrt".Log();
 	protected virtual void ImportPki(Span<byte> _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IControl.ImportPki");
+		"Stub hit for Nn.Eupld.Sf.IControl.ImportPki".Log();
 	protected virtual void SetAutoUpload(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IControl.SetAutoUpload");
+		"Stub hit for Nn.Eupld.Sf.IControl.SetAutoUpload".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetUrl
@@ -51,15 +51,15 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected virtual KObject Initialize() =>
 		throw new NotImplementedException("Nn.Eupld.Sf.IRequest.Initialize not implemented");
 	protected virtual void UploadAll() =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.UploadAll");
+		"Stub hit for Nn.Eupld.Sf.IRequest.UploadAll".Log();
 	protected virtual void UploadSelected(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.UploadSelected");
+		"Stub hit for Nn.Eupld.Sf.IRequest.UploadSelected".Log();
 	protected virtual void GetUploadStatus(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Eupld.Sf.IRequest.GetUploadStatus not implemented");
 	protected virtual void CancelUpload() =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.CancelUpload");
+		"Stub hit for Nn.Eupld.Sf.IRequest.CancelUpload".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Eupld.Sf.IRequest.GetResult");
+		"Stub hit for Nn.Eupld.Sf.IRequest.GetResult".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize

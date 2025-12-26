@@ -9,7 +9,7 @@ public abstract class _CecManagerSubinterface100_Base : IpcInterface {
 	protected virtual void Unknown1(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Cec.CecManagerSubinterface100.Unknown1 not implemented");
 	protected virtual void Unknown2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Cec.CecManagerSubinterface100.Unknown2");
+		"Stub hit for Nn.Cec.CecManagerSubinterface100.Unknown2".Log();
 	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Cec.CecManagerSubinterface100.Unknown3 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -53,7 +53,7 @@ public abstract class _ICecManager_Base : IpcInterface {
 	protected virtual void Unknown1(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Cec.ICecManager.Unknown1 not implemented");
 	protected virtual void Unknown2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Cec.ICecManager.Unknown2");
+		"Stub hit for Nn.Cec.ICecManager.Unknown2".Log();
 	protected virtual void Unknown3(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Cec.ICecManager.Unknown3 not implemented");
 	protected virtual void Unknown4(byte[] _0, out byte[] _1) =>

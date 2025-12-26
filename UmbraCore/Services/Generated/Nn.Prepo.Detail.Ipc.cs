@@ -8,33 +8,33 @@ public partial class IPrepoService : _IPrepoService_Base {
 }
 public abstract class _IPrepoService_Base : IpcInterface {
 	protected virtual void SaveReport(ulong _0, ulong _1, Span<byte> _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveReport");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveReport".Log();
 	protected virtual void SaveReportWithUser(byte[] _0, ulong _1, ulong _2, Span<byte> _3, Span<byte> _4) =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveReportWithUser");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveReportWithUser".Log();
 	protected virtual void RequestImmediateTransmission() =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.RequestImmediateTransmission");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.RequestImmediateTransmission".Log();
 	protected virtual uint GetTransmissionStatus() =>
 		throw new NotImplementedException("Nn.Prepo.Detail.Ipc.IPrepoService.GetTransmissionStatus not implemented");
 	protected virtual void SaveSystemReport(ulong _0, Span<byte> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveSystemReport");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveSystemReport".Log();
 	protected virtual void SaveSystemReportWithUser(byte[] _0, ulong _1, Span<byte> _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveSystemReportWithUser");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SaveSystemReportWithUser".Log();
 	protected virtual void SetOperationMode(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SetOperationMode");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SetOperationMode".Log();
 	protected virtual void ClearStorage() =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.ClearStorage");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.ClearStorage".Log();
 	protected virtual byte IsUserAgreementCheckEnabled() =>
 		throw new NotImplementedException("Nn.Prepo.Detail.Ipc.IPrepoService.IsUserAgreementCheckEnabled not implemented");
 	protected virtual void SetUserAgreementCheckEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SetUserAgreementCheckEnabled");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.SetUserAgreementCheckEnabled".Log();
 	protected virtual void GetStorageUsage(out ulong _0, out ulong _1) =>
 		throw new NotImplementedException("Nn.Prepo.Detail.Ipc.IPrepoService.GetStorageUsage not implemented");
 	protected virtual void GetStatistics() =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.GetStatistics");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.GetStatistics".Log();
 	protected virtual void GetThroughputHistory() =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.GetThroughputHistory");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.GetThroughputHistory".Log();
 	protected virtual void GetLastUploadError() =>
-		Console.WriteLine("Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.GetLastUploadError");
+		"Stub hit for Nn.Prepo.Detail.Ipc.IPrepoService.GetLastUploadError".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2774: { // SaveReport

@@ -10,7 +10,7 @@ public abstract class _IAudioController_Base : IpcInterface {
 	protected virtual uint GetTargetVolume(uint _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetTargetVolume not implemented");
 	protected virtual void SetTargetVolume(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetTargetVolume");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetTargetVolume".Log();
 	protected virtual uint GetTargetVolumeMin() =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetTargetVolumeMin not implemented");
 	protected virtual uint GetTargetVolumeMax() =>
@@ -18,31 +18,31 @@ public abstract class _IAudioController_Base : IpcInterface {
 	protected virtual byte IsTargetMute(uint _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.IsTargetMute not implemented");
 	protected virtual void SetTargetMute(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetTargetMute");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetTargetMute".Log();
 	protected virtual byte IsTargetConnected(uint _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.IsTargetConnected not implemented");
 	protected virtual void SetDefaultTarget(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetDefaultTarget");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetDefaultTarget".Log();
 	protected virtual uint GetDefaultTarget() =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetDefaultTarget not implemented");
 	protected virtual uint GetAudioOutputMode(uint _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetAudioOutputMode not implemented");
 	protected virtual void SetAudioOutputMode(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetAudioOutputMode");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetAudioOutputMode".Log();
 	protected virtual void SetForceMutePolicy(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetForceMutePolicy");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetForceMutePolicy".Log();
 	protected virtual uint GetForceMutePolicy() =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetForceMutePolicy not implemented");
 	protected virtual uint GetOutputModeSetting(uint _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetOutputModeSetting not implemented");
 	protected virtual void SetOutputModeSetting(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetOutputModeSetting");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetOutputModeSetting".Log();
 	protected virtual void SetOutputTarget(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetOutputTarget");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetOutputTarget".Log();
 	protected virtual void SetInputTargetForceEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetInputTargetForceEnabled");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetInputTargetForceEnabled".Log();
 	protected virtual void SetHeadphoneOutputLevelMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetHeadphoneOutputLevelMode");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetHeadphoneOutputLevelMode".Log();
 	protected virtual uint GetHeadphoneOutputLevelMode() =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetHeadphoneOutputLevelMode not implemented");
 	protected virtual KObject AcquireAudioVolumeUpdateEventForPlayReport() =>
@@ -52,15 +52,15 @@ public abstract class _IAudioController_Base : IpcInterface {
 	protected virtual uint GetAudioOutputTargetForPlayReport() =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetAudioOutputTargetForPlayReport not implemented");
 	protected virtual void NotifyHeadphoneVolumeWarningDisplayedEvent() =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.NotifyHeadphoneVolumeWarningDisplayedEvent");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.NotifyHeadphoneVolumeWarningDisplayedEvent".Log();
 	protected virtual void SetSystemOutputMasterVolume(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.SetSystemOutputMasterVolume");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.SetSystemOutputMasterVolume".Log();
 	protected virtual uint GetSystemOutputMasterVolume() =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetSystemOutputMasterVolume not implemented");
 	protected virtual void GetAudioVolumeDataForPlayReport(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Audioctrl.Detail.IAudioController.GetAudioVolumeDataForPlayReport not implemented");
 	protected virtual void UpdateHeadphoneSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Audioctrl.Detail.IAudioController.UpdateHeadphoneSettings");
+		"Stub hit for Nn.Audioctrl.Detail.IAudioController.UpdateHeadphoneSettings".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetTargetVolume

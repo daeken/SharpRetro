@@ -24,7 +24,7 @@ public abstract class _IHtcManager_Base : IpcInterface {
 	protected virtual void GetBridgePort(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetBridgePort not implemented");
 	protected virtual void SetUsbDetachedForDebug(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Tma.IHtcManager.SetUsbDetachedForDebug");
+		"Stub hit for Nn.Tma.IHtcManager.SetUsbDetachedForDebug".Log();
 	protected virtual void GetBridgeSubnetMask(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Tma.IHtcManager.GetBridgeSubnetMask not implemented");
 	protected virtual void GetBridgeMacAddress(Span<byte> _0) =>
@@ -132,9 +132,9 @@ public abstract class _IHtcsManager_Base : IpcInterface {
 	protected virtual void CreateSocket(byte _0, out uint _1, out IpcInterface _2) =>
 		throw new NotImplementedException("Nn.Tma.IHtcsManager.CreateSocket not implemented");
 	protected virtual void RegisterProcessId(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Tma.IHtcsManager.RegisterProcessId");
+		"Stub hit for Nn.Tma.IHtcsManager.RegisterProcessId".Log();
 	protected virtual void MonitorManager(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Tma.IHtcsManager.MonitorManager");
+		"Stub hit for Nn.Tma.IHtcsManager.MonitorManager".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

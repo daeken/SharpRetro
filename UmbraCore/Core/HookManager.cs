@@ -23,9 +23,9 @@ public partial class HookManager {
     void NativeRegister(IntPtr namePtr, ulong funcPtr) {
         var name = Marshal.PtrToStringAnsi(namePtr)!;
         if(name.StartsWith("_Z"))
-            Console.WriteLine($"Registering native hook for {name} [{CxxDemangler.CxxDemangler.Demangle(name)}] -- 0x{funcPtr:X}");
+            $"Registering native hook for {name} [{CxxDemangler.CxxDemangler.Demangle(name)}] -- 0x{funcPtr:X}".Log();
         else
-            Console.WriteLine($"Registering native hook for {name} -- 0x{funcPtr:X}");
+            $"Registering native hook for {name} -- 0x{funcPtr:X}".Log();
         Hooks[name] = (null, funcPtr);
     }
 

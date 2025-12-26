@@ -7,29 +7,29 @@ public abstract class _IBcatService_Base : IpcInterface {
 	protected virtual Nn.Bcat.Detail.Ipc.IDeliveryCacheProgressService RequestSyncDeliveryCache() =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.RequestSyncDeliveryCache not implemented");
 	protected virtual void RequestSyncDeliveryCacheWithDirectoryName() =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.RequestSyncDeliveryCacheWithDirectoryName");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.RequestSyncDeliveryCacheWithDirectoryName".Log();
 	protected virtual void CancelSyncDeliveryCacheRequest() =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.CancelSyncDeliveryCacheRequest");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.CancelSyncDeliveryCacheRequest".Log();
 	protected virtual Nn.Bcat.Detail.Ipc.IDeliveryCacheProgressService RequestSyncDeliveryCacheWithApplicationId(uint _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.RequestSyncDeliveryCacheWithApplicationId not implemented");
 	protected virtual void RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName() =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.RequestSyncDeliveryCacheWithApplicationIdAndDirectoryName".Log();
 	protected virtual void SetPassphrase(ulong _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.SetPassphrase");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.SetPassphrase".Log();
 	protected virtual void RegisterBackgroundDeliveryTask(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.RegisterBackgroundDeliveryTask");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.RegisterBackgroundDeliveryTask".Log();
 	protected virtual void UnregisterBackgroundDeliveryTask(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.UnregisterBackgroundDeliveryTask");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.UnregisterBackgroundDeliveryTask".Log();
 	protected virtual void BlockDeliveryTask(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.BlockDeliveryTask");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.BlockDeliveryTask".Log();
 	protected virtual void UnblockDeliveryTask(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.UnblockDeliveryTask");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.UnblockDeliveryTask".Log();
 	protected virtual void EnumerateBackgroundDeliveryTask(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.EnumerateBackgroundDeliveryTask not implemented");
 	protected virtual void GetDeliveryList(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.GetDeliveryList not implemented");
 	protected virtual void ClearDeliveryCacheStorage(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.ClearDeliveryCacheStorage");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IBcatService.ClearDeliveryCacheStorage".Log();
 	protected virtual void GetPushNotificationLog(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IBcatService.GetPushNotificationLog not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -118,7 +118,7 @@ public abstract class _IBcatService_Base : IpcInterface {
 public partial class IDeliveryCacheDirectoryService : _IDeliveryCacheDirectoryService_Base;
 public abstract class _IDeliveryCacheDirectoryService_Base : IpcInterface {
 	protected virtual void Open(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService.Open");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService.Open".Log();
 	protected virtual void Read(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService.Read not implemented");
 	protected virtual uint GetCount() =>
@@ -151,7 +151,7 @@ public abstract class _IDeliveryCacheDirectoryService_Base : IpcInterface {
 public partial class IDeliveryCacheFileService : _IDeliveryCacheFileService_Base;
 public abstract class _IDeliveryCacheFileService_Base : IpcInterface {
 	protected virtual void Open(byte[] _0, byte[] _1) =>
-		Console.WriteLine("Stub hit for Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.Open");
+		"Stub hit for Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.Open".Log();
 	protected virtual void Read(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Bcat.Detail.Ipc.IDeliveryCacheFileService.Read not implemented");
 	protected virtual ulong GetSize() =>

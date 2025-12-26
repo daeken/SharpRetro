@@ -28,9 +28,9 @@ public abstract class _IFactorySettingsServer_Base : IpcInterface {
 	protected virtual void GetSerialNumber(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.IFactorySettingsServer.GetSerialNumber not implemented");
 	protected virtual void SetInitialSystemAppletProgramId(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.SetInitialSystemAppletProgramId");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.SetInitialSystemAppletProgramId".Log();
 	protected virtual void SetOverlayDispProgramId(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.SetOverlayDispProgramId");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.SetOverlayDispProgramId".Log();
 	protected virtual void GetBatteryLot(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.IFactorySettingsServer.GetBatteryLot not implemented");
 	protected virtual void GetEciDeviceCertificate(Span<byte> _0) =>
@@ -54,25 +54,25 @@ public abstract class _IFactorySettingsServer_Base : IpcInterface {
 	protected virtual uint GetLcdVendorId() =>
 		throw new NotImplementedException("Nn.Settings.IFactorySettingsServer.GetLcdVendorId not implemented");
 	protected virtual void GetEciDeviceCertificate2() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetEciDeviceCertificate2");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetEciDeviceCertificate2".Log();
 	protected virtual void GetEciDeviceKey2() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetEciDeviceKey2");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetEciDeviceKey2".Log();
 	protected virtual void GetAmiiboKey() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboKey");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboKey".Log();
 	protected virtual void GetAmiiboEcqvCertificate() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvCertificate");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvCertificate".Log();
 	protected virtual void GetAmiiboEcdsaCertificate() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcdsaCertificate");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcdsaCertificate".Log();
 	protected virtual void GetAmiiboEcqvBlsKey() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvBlsKey");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvBlsKey".Log();
 	protected virtual void GetAmiiboEcqvBlsCertificate() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvBlsCertificate");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvBlsCertificate".Log();
 	protected virtual void GetAmiiboEcqvBlsRootCertificate() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvBlsRootCertificate");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetAmiiboEcqvBlsRootCertificate".Log();
 	protected virtual void GetUnknownId() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetUnknownId");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetUnknownId".Log();
 	protected virtual void GetUnknownId2() =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFactorySettingsServer.GetUnknownId2");
+		"Stub hit for Nn.Settings.IFactorySettingsServer.GetUnknownId2".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetBluetoothBdAddress
@@ -266,21 +266,21 @@ public partial class IFirmwareDebugSettingsServer : _IFirmwareDebugSettingsServe
 }
 public abstract class _IFirmwareDebugSettingsServer_Base : IpcInterface {
 	protected virtual void SetSettingsItemValue(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetSettingsItemValue");
+		"Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetSettingsItemValue".Log();
 	protected virtual void ResetSettingsItemValue(Span<byte> _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.ResetSettingsItemValue");
+		"Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.ResetSettingsItemValue".Log();
 	protected virtual Nn.Settings.ISettingsItemKeyIterator CreateSettingsItemKeyIterator(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Settings.IFirmwareDebugSettingsServer.CreateSettingsItemKeyIterator not implemented");
 	protected virtual void ReadSettings(uint _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Settings.IFirmwareDebugSettingsServer.ReadSettings not implemented");
 	protected virtual void ResetSettings(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.ResetSettings");
+		"Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.ResetSettings".Log();
 	protected virtual void SetWebInspectorFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetWebInspectorFlag");
+		"Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetWebInspectorFlag".Log();
 	protected virtual void SetAllowedSslHosts(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetAllowedSslHosts");
+		"Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetAllowedSslHosts".Log();
 	protected virtual void SetHostFsMountPoint(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetHostFsMountPoint");
+		"Stub hit for Nn.Settings.IFirmwareDebugSettingsServer.SetHostFsMountPoint".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2: { // SetSettingsItemValue
@@ -334,7 +334,7 @@ public abstract class _IFirmwareDebugSettingsServer_Base : IpcInterface {
 public partial class ISettingsItemKeyIterator : _ISettingsItemKeyIterator_Base;
 public abstract class _ISettingsItemKeyIterator_Base : IpcInterface {
 	protected virtual void GoNext() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISettingsItemKeyIterator.GoNext");
+		"Stub hit for Nn.Settings.ISettingsItemKeyIterator.GoNext".Log();
 	protected virtual ulong GetKeySize() =>
 		throw new NotImplementedException("Nn.Settings.ISettingsItemKeyIterator.GetKeySize not implemented");
 	protected virtual void GetKey(out ulong _0, Span<byte> _1) =>
@@ -386,7 +386,7 @@ public abstract class _ISettingsServer_Base : IpcInterface {
 	protected virtual void GetKeyCodeMap(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Settings.ISettingsServer.GetKeyCodeMap not implemented");
 	protected virtual void GetQuestFlag() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISettingsServer.GetQuestFlag");
+		"Stub hit for Nn.Settings.ISettingsServer.GetQuestFlag".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetLanguageCode
@@ -453,9 +453,9 @@ public partial class ISystemSettingsServer : _ISystemSettingsServer_Base {
 }
 public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual void SetLanguageCode(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetLanguageCode");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetLanguageCode".Log();
 	protected virtual void SetNetworkSettings(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetNetworkSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetNetworkSettings".Log();
 	protected virtual void GetNetworkSettings(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetNetworkSettings not implemented");
 	protected virtual void GetFirmwareVersion(Span<byte> _0) =>
@@ -463,63 +463,63 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual void GetFirmwareVersion2(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetFirmwareVersion2 not implemented");
 	protected virtual void GetFirmwareVersionDigest() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.GetFirmwareVersionDigest");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.GetFirmwareVersionDigest".Log();
 	protected virtual byte GetLockScreenFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetLockScreenFlag not implemented");
 	protected virtual void SetLockScreenFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetLockScreenFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetLockScreenFlag".Log();
 	protected virtual void GetBacklightSettings(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBacklightSettings not implemented");
 	protected virtual void SetBacklightSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBacklightSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBacklightSettings".Log();
 	protected virtual void SetBluetoothDevicesSettings(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothDevicesSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothDevicesSettings".Log();
 	protected virtual void GetBluetoothDevicesSettings(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBluetoothDevicesSettings not implemented");
 	protected virtual void GetExternalSteadyClockSourceId(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetExternalSteadyClockSourceId not implemented");
 	protected virtual void SetExternalSteadyClockSourceId(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetExternalSteadyClockSourceId");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetExternalSteadyClockSourceId".Log();
 	protected virtual void GetUserSystemClockContext(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetUserSystemClockContext not implemented");
 	protected virtual void SetUserSystemClockContext(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetUserSystemClockContext");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetUserSystemClockContext".Log();
 	protected virtual uint GetAccountSettings() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAccountSettings not implemented");
 	protected virtual void SetAccountSettings(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAccountSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAccountSettings".Log();
 	protected virtual void GetAudioVolume(uint _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAudioVolume not implemented");
 	protected virtual void SetAudioVolume(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAudioVolume");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAudioVolume".Log();
 	protected virtual void GetEulaVersions(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetEulaVersions not implemented");
 	protected virtual void SetEulaVersions(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetEulaVersions");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetEulaVersions".Log();
 	protected virtual uint GetColorSetId() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetColorSetId not implemented");
 	protected virtual void SetColorSetId(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetColorSetId");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetColorSetId".Log();
 	protected virtual byte GetConsoleInformationUploadFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetConsoleInformationUploadFlag not implemented");
 	protected virtual void SetConsoleInformationUploadFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleInformationUploadFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleInformationUploadFlag".Log();
 	protected virtual byte GetAutomaticApplicationDownloadFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAutomaticApplicationDownloadFlag not implemented");
 	protected virtual void SetAutomaticApplicationDownloadFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAutomaticApplicationDownloadFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAutomaticApplicationDownloadFlag".Log();
 	protected virtual void GetNotificationSettings(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetNotificationSettings not implemented");
 	protected virtual void SetNotificationSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetNotificationSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetNotificationSettings".Log();
 	protected virtual void GetAccountNotificationSettings(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAccountNotificationSettings not implemented");
 	protected virtual void SetAccountNotificationSettings(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAccountNotificationSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAccountNotificationSettings".Log();
 	protected virtual float GetVibrationMasterVolume() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetVibrationMasterVolume not implemented");
 	protected virtual void SetVibrationMasterVolume(float _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetVibrationMasterVolume");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetVibrationMasterVolume".Log();
 	protected virtual ulong GetSettingsItemValueSize(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetSettingsItemValueSize not implemented");
 	protected virtual void GetSettingsItemValue(Span<byte> _0, Span<byte> _1, out ulong _2, Span<byte> _3) =>
@@ -527,27 +527,27 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual void GetTvSettings(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetTvSettings not implemented");
 	protected virtual void SetTvSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetTvSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetTvSettings".Log();
 	protected virtual void GetEdid(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetEdid not implemented");
 	protected virtual void SetEdid(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetEdid");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetEdid".Log();
 	protected virtual uint GetAudioOutputMode(uint _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAudioOutputMode not implemented");
 	protected virtual void SetAudioOutputMode(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAudioOutputMode");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAudioOutputMode".Log();
 	protected virtual byte IsForceMuteOnHeadphoneRemoved() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.IsForceMuteOnHeadphoneRemoved not implemented");
 	protected virtual void SetForceMuteOnHeadphoneRemoved(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetForceMuteOnHeadphoneRemoved");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetForceMuteOnHeadphoneRemoved".Log();
 	protected virtual byte GetQuestFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetQuestFlag not implemented");
 	protected virtual void SetQuestFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetQuestFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetQuestFlag".Log();
 	protected virtual void GetDataDeletionSettings(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetDataDeletionSettings not implemented");
 	protected virtual void SetDataDeletionSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetDataDeletionSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetDataDeletionSettings".Log();
 	protected virtual ulong GetInitialSystemAppletProgramId() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetInitialSystemAppletProgramId not implemented");
 	protected virtual ulong GetOverlayDispProgramId() =>
@@ -555,31 +555,31 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual void GetDeviceTimeZoneLocationName(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetDeviceTimeZoneLocationName not implemented");
 	protected virtual void SetDeviceTimeZoneLocationName(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetDeviceTimeZoneLocationName");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetDeviceTimeZoneLocationName".Log();
 	protected virtual ulong GetWirelessCertificationFileSize() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetWirelessCertificationFileSize not implemented");
 	protected virtual void GetWirelessCertificationFile(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetWirelessCertificationFile not implemented");
 	protected virtual void SetRegionCode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetRegionCode");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetRegionCode".Log();
 	protected virtual void GetNetworkSystemClockContext(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetNetworkSystemClockContext not implemented");
 	protected virtual void SetNetworkSystemClockContext(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetNetworkSystemClockContext");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetNetworkSystemClockContext".Log();
 	protected virtual byte IsUserSystemClockAutomaticCorrectionEnabled() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.IsUserSystemClockAutomaticCorrectionEnabled not implemented");
 	protected virtual void SetUserSystemClockAutomaticCorrectionEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetUserSystemClockAutomaticCorrectionEnabled");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetUserSystemClockAutomaticCorrectionEnabled".Log();
 	protected virtual byte GetDebugModeFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetDebugModeFlag not implemented");
 	protected virtual uint GetPrimaryAlbumStorage() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetPrimaryAlbumStorage not implemented");
 	protected virtual void SetPrimaryAlbumStorage(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetPrimaryAlbumStorage");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetPrimaryAlbumStorage".Log();
 	protected virtual byte GetUsb30EnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetUsb30EnableFlag not implemented");
 	protected virtual void SetUsb30EnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetUsb30EnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetUsb30EnableFlag".Log();
 	protected virtual void GetBatteryLot(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBatteryLot not implemented");
 	protected virtual void GetSerialNumber(out byte[] _0) =>
@@ -587,29 +587,29 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual byte GetNfcEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetNfcEnableFlag not implemented");
 	protected virtual void SetNfcEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetNfcEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetNfcEnableFlag".Log();
 	protected virtual void GetSleepSettings(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetSleepSettings not implemented");
 	protected virtual void SetSleepSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetSleepSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetSleepSettings".Log();
 	protected virtual byte GetWirelessLanEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetWirelessLanEnableFlag not implemented");
 	protected virtual void SetWirelessLanEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetWirelessLanEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetWirelessLanEnableFlag".Log();
 	protected virtual void GetInitialLaunchSettings(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetInitialLaunchSettings not implemented");
 	protected virtual void SetInitialLaunchSettings(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetInitialLaunchSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetInitialLaunchSettings".Log();
 	protected virtual void GetDeviceNickName(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetDeviceNickName not implemented");
 	protected virtual void SetDeviceNickName(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetDeviceNickName");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetDeviceNickName".Log();
 	protected virtual uint GetProductModel() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetProductModel not implemented");
 	protected virtual uint GetLdnChannel() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetLdnChannel not implemented");
 	protected virtual void SetLdnChannel(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetLdnChannel");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetLdnChannel".Log();
 	protected virtual KObject AcquireTelemetryDirtyFlagEventHandle() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.AcquireTelemetryDirtyFlagEventHandle not implemented");
 	protected virtual void GetTelemetryDirtyFlags(out byte[] _0) =>
@@ -617,19 +617,19 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual void GetPtmBatteryLot(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetPtmBatteryLot not implemented");
 	protected virtual void SetPtmBatteryLot(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetPtmBatteryLot");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetPtmBatteryLot".Log();
 	protected virtual void GetPtmFuelGaugeParameter(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetPtmFuelGaugeParameter not implemented");
 	protected virtual void SetPtmFuelGaugeParameter(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetPtmFuelGaugeParameter");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetPtmFuelGaugeParameter".Log();
 	protected virtual byte GetBluetoothEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBluetoothEnableFlag not implemented");
 	protected virtual void SetBluetoothEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothEnableFlag".Log();
 	protected virtual void GetMiiAuthorId(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetMiiAuthorId not implemented");
 	protected virtual void SetShutdownRtcValue(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetShutdownRtcValue");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetShutdownRtcValue".Log();
 	protected virtual ulong GetShutdownRtcValue() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetShutdownRtcValue not implemented");
 	protected virtual KObject AcquireFatalDirtyFlagEventHandle() =>
@@ -639,89 +639,89 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual byte GetAutoUpdateEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAutoUpdateEnableFlag not implemented");
 	protected virtual void SetAutoUpdateEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAutoUpdateEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAutoUpdateEnableFlag".Log();
 	protected virtual void GetNxControllerSettings(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetNxControllerSettings not implemented");
 	protected virtual void SetNxControllerSettings(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetNxControllerSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetNxControllerSettings".Log();
 	protected virtual byte GetBatteryPercentageFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBatteryPercentageFlag not implemented");
 	protected virtual void SetBatteryPercentageFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBatteryPercentageFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBatteryPercentageFlag".Log();
 	protected virtual byte GetExternalRtcResetFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetExternalRtcResetFlag not implemented");
 	protected virtual void SetExternalRtcResetFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetExternalRtcResetFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetExternalRtcResetFlag".Log();
 	protected virtual byte GetUsbFullKeyEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetUsbFullKeyEnableFlag not implemented");
 	protected virtual void SetUsbFullKeyEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetUsbFullKeyEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetUsbFullKeyEnableFlag".Log();
 	protected virtual void SetExternalSteadyClockInternalOffset(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetExternalSteadyClockInternalOffset");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetExternalSteadyClockInternalOffset".Log();
 	protected virtual ulong GetExternalSteadyClockInternalOffset() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetExternalSteadyClockInternalOffset not implemented");
 	protected virtual void GetBacklightSettingsEx(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBacklightSettingsEx not implemented");
 	protected virtual void SetBacklightSettingsEx(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBacklightSettingsEx");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBacklightSettingsEx".Log();
 	protected virtual uint GetHeadphoneVolumeWarningCount() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetHeadphoneVolumeWarningCount not implemented");
 	protected virtual void SetHeadphoneVolumeWarningCount(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetHeadphoneVolumeWarningCount");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetHeadphoneVolumeWarningCount".Log();
 	protected virtual byte GetBluetoothAfhEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBluetoothAfhEnableFlag not implemented");
 	protected virtual void SetBluetoothAfhEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothAfhEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothAfhEnableFlag".Log();
 	protected virtual byte GetBluetoothBoostEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetBluetoothBoostEnableFlag not implemented");
 	protected virtual void SetBluetoothBoostEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothBoostEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBluetoothBoostEnableFlag".Log();
 	protected virtual byte GetInRepairProcessEnableFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetInRepairProcessEnableFlag not implemented");
 	protected virtual void SetInRepairProcessEnableFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetInRepairProcessEnableFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetInRepairProcessEnableFlag".Log();
 	protected virtual byte GetHeadphoneVolumeUpdateFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetHeadphoneVolumeUpdateFlag not implemented");
 	protected virtual void SetHeadphoneVolumeUpdateFlag(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetHeadphoneVolumeUpdateFlag");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetHeadphoneVolumeUpdateFlag".Log();
 	protected virtual void NeedsToUpdateHeadphoneVolume(byte _0, out byte _1, out byte _2, out sbyte _3) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.NeedsToUpdateHeadphoneVolume not implemented");
 	protected virtual uint GetPushNotificationActivityModeOnSleep() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetPushNotificationActivityModeOnSleep not implemented");
 	protected virtual void SetPushNotificationActivityModeOnSleep(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetPushNotificationActivityModeOnSleep");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetPushNotificationActivityModeOnSleep".Log();
 	protected virtual uint GetServiceDiscoveryControlSettings() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetServiceDiscoveryControlSettings not implemented");
 	protected virtual void SetServiceDiscoveryControlSettings(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetServiceDiscoveryControlSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetServiceDiscoveryControlSettings".Log();
 	protected virtual uint GetErrorReportSharePermission() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetErrorReportSharePermission not implemented");
 	protected virtual void SetErrorReportSharePermission(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetErrorReportSharePermission");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetErrorReportSharePermission".Log();
 	protected virtual uint GetAppletLaunchFlags() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetAppletLaunchFlags not implemented");
 	protected virtual void SetAppletLaunchFlags(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetAppletLaunchFlags");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetAppletLaunchFlags".Log();
 	protected virtual void GetConsoleSixAxisSensorAccelerationBias(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAccelerationBias not implemented");
 	protected virtual void SetConsoleSixAxisSensorAccelerationBias(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAccelerationBias");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAccelerationBias".Log();
 	protected virtual void GetConsoleSixAxisSensorAngularVelocityBias(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAngularVelocityBias not implemented");
 	protected virtual void SetConsoleSixAxisSensorAngularVelocityBias(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularVelocityBias");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularVelocityBias".Log();
 	protected virtual void GetConsoleSixAxisSensorAccelerationGain(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAccelerationGain not implemented");
 	protected virtual void SetConsoleSixAxisSensorAccelerationGain(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAccelerationGain");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAccelerationGain".Log();
 	protected virtual void GetConsoleSixAxisSensorAngularVelocityGain(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAngularVelocityGain not implemented");
 	protected virtual void SetConsoleSixAxisSensorAngularVelocityGain(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularVelocityGain");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularVelocityGain".Log();
 	protected virtual uint GetKeyboardLayout() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetKeyboardLayout not implemented");
 	protected virtual void SetKeyboardLayout(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetKeyboardLayout");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetKeyboardLayout".Log();
 	protected virtual byte GetWebInspectorFlag() =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetWebInspectorFlag not implemented");
 	protected virtual void GetAllowedSslHosts(out uint _0, Span<byte> _1) =>
@@ -729,23 +729,23 @@ public abstract class _ISystemSettingsServer_Base : IpcInterface {
 	protected virtual void GetHostFsMountPoint(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Settings.ISystemSettingsServer.GetHostFsMountPoint not implemented");
 	protected virtual void GetRequiresRunRepairTimeReviser() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.GetRequiresRunRepairTimeReviser");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.GetRequiresRunRepairTimeReviser".Log();
 	protected virtual void SetRequiresRunRepairTimeReviser() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetRequiresRunRepairTimeReviser");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetRequiresRunRepairTimeReviser".Log();
 	protected virtual void SetBlePairingSettings() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetBlePairingSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetBlePairingSettings".Log();
 	protected virtual void GetBlePairingSettings() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.GetBlePairingSettings");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.GetBlePairingSettings".Log();
 	protected virtual void GetConsoleSixAxisSensorAngularVelocityTimeBias() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAngularVelocityTimeBias");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAngularVelocityTimeBias".Log();
 	protected virtual void SetConsoleSixAxisSensorAngularVelocityTimeBias() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularVelocityTimeBias");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularVelocityTimeBias".Log();
 	protected virtual void GetConsoleSixAxisSensorAngularAcceleration() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAngularAcceleration");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.GetConsoleSixAxisSensorAngularAcceleration".Log();
 	protected virtual void SetConsoleSixAxisSensorAngularAcceleration() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularAcceleration");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.SetConsoleSixAxisSensorAngularAcceleration".Log();
 	protected virtual void GetRebootlessSystemUpdateVersion() =>
-		Console.WriteLine("Stub hit for Nn.Settings.ISystemSettingsServer.GetRebootlessSystemUpdateVersion");
+		"Stub hit for Nn.Settings.ISystemSettingsServer.GetRebootlessSystemUpdateVersion".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetLanguageCode

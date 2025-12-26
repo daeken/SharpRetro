@@ -16,7 +16,7 @@ public abstract class _ISession_Base : IpcInterface {
 	protected virtual void Unknown3(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ahid.Hdr.ISession.Unknown3 not implemented");
 	protected virtual void Unknown4(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ahid.Hdr.ISession.Unknown4");
+		"Stub hit for Nn.Ahid.Hdr.ISession.Unknown4".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

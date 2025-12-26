@@ -10,15 +10,15 @@ public abstract class _IPolicyManagerSystem_Base : IpcInterface {
 	protected virtual KObject GetAutoPowerDownEvent() =>
 		throw new NotImplementedException("Nn.Idle.Detail.IPolicyManagerSystem.GetAutoPowerDownEvent not implemented");
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown1");
+		"Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown2");
+		"Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown2".Log();
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown3");
+		"Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown3".Log();
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown4");
+		"Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown4".Log();
 	protected virtual void Unknown5() =>
-		Console.WriteLine("Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown5");
+		"Stub hit for Nn.Idle.Detail.IPolicyManagerSystem.Unknown5".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetAutoPowerDownEvent

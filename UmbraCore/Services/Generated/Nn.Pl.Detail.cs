@@ -8,7 +8,7 @@ public partial class ISharedFontManager : _ISharedFontManager_Base {
 }
 public abstract class _ISharedFontManager_Base : IpcInterface {
 	protected virtual void RequestLoad(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Pl.Detail.ISharedFontManager.RequestLoad");
+		"Stub hit for Nn.Pl.Detail.ISharedFontManager.RequestLoad".Log();
 	protected virtual uint GetLoadState(uint _0) =>
 		throw new NotImplementedException("Nn.Pl.Detail.ISharedFontManager.GetLoadState not implemented");
 	protected virtual uint GetSize(uint _0) =>

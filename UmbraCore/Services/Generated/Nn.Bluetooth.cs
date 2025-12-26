@@ -8,79 +8,79 @@ public partial class IBluetoothDriver : _IBluetoothDriver_Base {
 }
 public abstract class _IBluetoothDriver_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.Unknown0");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.Unknown0".Log();
 	protected virtual KObject Init() =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.Init not implemented");
 	protected virtual void Enable() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.Enable");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.Enable".Log();
 	protected virtual void Disable() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.Disable");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.Disable".Log();
 	protected virtual void CleanupAndShutdown() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.CleanupAndShutdown");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.CleanupAndShutdown".Log();
 	protected virtual void GetAdapterProperties(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.GetAdapterProperties not implemented");
 	protected virtual void GetAdapterProperty(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.GetAdapterProperty not implemented");
 	protected virtual void SetAdapterProperty(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.SetAdapterProperty");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.SetAdapterProperty".Log();
 	protected virtual void StartDiscovery() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.StartDiscovery");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.StartDiscovery".Log();
 	protected virtual void CancelDiscovery() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.CancelDiscovery");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.CancelDiscovery".Log();
 	protected virtual void CreateBond(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.CreateBond");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.CreateBond".Log();
 	protected virtual void RemoveBond(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.RemoveBond");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.RemoveBond".Log();
 	protected virtual void CancelBond(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.CancelBond");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.CancelBond".Log();
 	protected virtual void PinReply(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.PinReply");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.PinReply".Log();
 	protected virtual void SspReply(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.SspReply");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.SspReply".Log();
 	protected virtual void Unknown15(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.Unknown15 not implemented");
 	protected virtual KObject InitInterfaces(byte[] _0) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.InitInterfaces not implemented");
 	protected virtual void HidHostInterface_Connect(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_Connect");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_Connect".Log();
 	protected virtual void HidHostInterface_Disconnect(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_Disconnect");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_Disconnect".Log();
 	protected virtual void HidHostInterface_SendData(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_SendData");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_SendData".Log();
 	protected virtual void HidHostInterface_SendData2(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_SendData2");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_SendData2".Log();
 	protected virtual void HidHostInterface_SetReport(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_SetReport");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_SetReport".Log();
 	protected virtual void HidHostInterface_GetReport(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_GetReport");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_GetReport".Log();
 	protected virtual void HidHostInterface_WakeController(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_WakeController");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_WakeController".Log();
 	protected virtual void HidHostInterface_AddPairedDevice(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_AddPairedDevice");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_AddPairedDevice".Log();
 	protected virtual void HidHostInterface_GetPairedDevice(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.HidHostInterface_GetPairedDevice not implemented");
 	protected virtual void HidHostInterface_CleanupAndShutdown() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_CleanupAndShutdown");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_CleanupAndShutdown".Log();
 	protected virtual void Unknown27(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.Unknown27 not implemented");
 	protected virtual void ExtInterface_SetTSI(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetTSI");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetTSI".Log();
 	protected virtual void ExtInterface_SetBurstMode(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetBurstMode");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetBurstMode".Log();
 	protected virtual void ExtInterface_SetZeroRetran(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetZeroRetran");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetZeroRetran".Log();
 	protected virtual void ExtInterface_SetMcMode(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetMcMode");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetMcMode".Log();
 	protected virtual void ExtInterface_StartLlrMode() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_StartLlrMode");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_StartLlrMode".Log();
 	protected virtual void ExtInterface_ExitLlrMode() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_ExitLlrMode");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_ExitLlrMode".Log();
 	protected virtual void ExtInterface_SetRadio(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetRadio");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetRadio".Log();
 	protected virtual void ExtInterface_SetVisibility(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetVisibility");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.ExtInterface_SetVisibility".Log();
 	protected virtual void Unknown36(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.Unknown36");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.Unknown36".Log();
 	protected virtual KObject Unknown37() =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.Unknown37 not implemented");
 	protected virtual void HidHostInterface_GetLatestPlr(out byte[] _0, Span<byte> _1) =>
@@ -88,15 +88,15 @@ public abstract class _IBluetoothDriver_Base : IpcInterface {
 	protected virtual void ExtInterface_GetPendingConnections(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.ExtInterface_GetPendingConnections not implemented");
 	protected virtual void HidHostInterface_GetChannelMap() =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_GetChannelMap");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.HidHostInterface_GetChannelMap".Log();
 	protected virtual void SetIsBluetoothBoostEnabled(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.SetIsBluetoothBoostEnabled not implemented");
 	protected virtual void GetIsBluetoothBoostEnabled(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.GetIsBluetoothBoostEnabled");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.GetIsBluetoothBoostEnabled".Log();
 	protected virtual void SetIsBluetoothAfhEnabled(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bluetooth.IBluetoothDriver.SetIsBluetoothAfhEnabled not implemented");
 	protected virtual void GetIsBluetoothAfhEnabled(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bluetooth.IBluetoothDriver.GetIsBluetoothAfhEnabled");
+		"Stub hit for Nn.Bluetooth.IBluetoothDriver.GetIsBluetoothAfhEnabled".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

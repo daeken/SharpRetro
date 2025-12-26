@@ -11,11 +11,11 @@ public abstract class _ICryptoInterface_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ICryptoInterface.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown3");
+		"Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ICryptoInterface.Unknown4 not implemented");
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown5");
+		"Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown5".Log();
 	protected virtual void Unknown7(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ICryptoInterface.Unknown7 not implemented");
 	protected virtual void Unknown11(out byte[] _0) =>
@@ -29,11 +29,11 @@ public abstract class _ICryptoInterface_Base : IpcInterface {
 	protected virtual void Unknown21(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ICryptoInterface.Unknown21 not implemented");
 	protected virtual void Unknown22(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown22");
+		"Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown22".Log();
 	protected virtual KObject Unknown23() =>
 		throw new NotImplementedException("Nn.Spl.Detail.ICryptoInterface.Unknown23 not implemented");
 	protected virtual void Unknown24(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown24");
+		"Stub hit for Nn.Spl.Detail.ICryptoInterface.Unknown24".Log();
 	protected virtual void Unknown25(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ICryptoInterface.Unknown25 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -142,11 +142,11 @@ public abstract class _IEsInterface_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IEsInterface.Unknown3");
+		"Stub hit for Nn.Spl.Detail.IEsInterface.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown4 not implemented");
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IEsInterface.Unknown5");
+		"Stub hit for Nn.Spl.Detail.IEsInterface.Unknown5".Log();
 	protected virtual void Unknown7(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown7 not implemented");
 	protected virtual void Unknown11(out byte[] _0) =>
@@ -160,7 +160,7 @@ public abstract class _IEsInterface_Base : IpcInterface {
 	protected virtual void Unknown16(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown16 not implemented");
 	protected virtual void Unknown17(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IEsInterface.Unknown17");
+		"Stub hit for Nn.Spl.Detail.IEsInterface.Unknown17".Log();
 	protected virtual void Unknown18(byte[] _0, Span<byte> _1, Span<byte> _2, Span<byte> _3, out byte[] _4) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown18 not implemented");
 	protected virtual void Unknown20(byte[] _0, out byte[] _1) =>
@@ -168,11 +168,11 @@ public abstract class _IEsInterface_Base : IpcInterface {
 	protected virtual void Unknown21(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown21 not implemented");
 	protected virtual void Unknown22(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IEsInterface.Unknown22");
+		"Stub hit for Nn.Spl.Detail.IEsInterface.Unknown22".Log();
 	protected virtual KObject Unknown23() =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown23 not implemented");
 	protected virtual void Unknown24(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IEsInterface.Unknown24");
+		"Stub hit for Nn.Spl.Detail.IEsInterface.Unknown24".Log();
 	protected virtual void Unknown25(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IEsInterface.Unknown25 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -303,15 +303,15 @@ public abstract class _IFsInterface_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IFsInterface.Unknown3");
+		"Stub hit for Nn.Spl.Detail.IFsInterface.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown4 not implemented");
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IFsInterface.Unknown5");
+		"Stub hit for Nn.Spl.Detail.IFsInterface.Unknown5".Log();
 	protected virtual void Unknown7(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown7 not implemented");
 	protected virtual void Unknown9(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IFsInterface.Unknown9");
+		"Stub hit for Nn.Spl.Detail.IFsInterface.Unknown9".Log();
 	protected virtual void Unknown10(Span<byte> _0, Span<byte> _1, Span<byte> _2, out byte[] _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown10 not implemented");
 	protected virtual void Unknown11(out byte[] _0) =>
@@ -325,15 +325,15 @@ public abstract class _IFsInterface_Base : IpcInterface {
 	protected virtual void Unknown16(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown16 not implemented");
 	protected virtual void Unknown19(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IFsInterface.Unknown19");
+		"Stub hit for Nn.Spl.Detail.IFsInterface.Unknown19".Log();
 	protected virtual void Unknown21(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown21 not implemented");
 	protected virtual void Unknown22(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IFsInterface.Unknown22");
+		"Stub hit for Nn.Spl.Detail.IFsInterface.Unknown22".Log();
 	protected virtual KObject Unknown23() =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown23 not implemented");
 	protected virtual void Unknown24(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IFsInterface.Unknown24");
+		"Stub hit for Nn.Spl.Detail.IFsInterface.Unknown24".Log();
 	protected virtual void Unknown25(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IFsInterface.Unknown25 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -467,15 +467,15 @@ public abstract class _IGeneralInterface_Base : IpcInterface {
 	protected virtual void GenerateAesKek(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.GenerateAesKek not implemented");
 	protected virtual void LoadAesKey(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadAesKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadAesKey".Log();
 	protected virtual void GenerateAesKey(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.GenerateAesKey not implemented");
 	protected virtual void SetConfig(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.SetConfig");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.SetConfig".Log();
 	protected virtual void GetRandomBytes(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.GetRandomBytes not implemented");
 	protected virtual void LoadSecureExpModKey(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadSecureExpModKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadSecureExpModKey".Log();
 	protected virtual void SecureExpMod(Span<byte> _0, Span<byte> _1, Span<byte> _2, out byte[] _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.SecureExpMod not implemented");
 	protected virtual void IsDevelopment(out byte[] _0) =>
@@ -491,35 +491,35 @@ public abstract class _IGeneralInterface_Base : IpcInterface {
 	protected virtual void ComputeCmac(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.ComputeCmac not implemented");
 	protected virtual void LoadRsaOaepKey(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadRsaOaepKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadRsaOaepKey".Log();
 	protected virtual void UnwrapRsaOaepWrappedTitleKey(byte[] _0, Span<byte> _1, Span<byte> _2, Span<byte> _3, out byte[] _4) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.UnwrapRsaOaepWrappedTitleKey not implemented");
 	protected virtual void LoadTitleKey(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadTitleKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.LoadTitleKey".Log();
 	protected virtual void UnwrapAesWrappedTitleKey(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.UnwrapAesWrappedTitleKey not implemented");
 	protected virtual void LockAesEngine(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.LockAesEngine not implemented");
 	protected virtual void UnlockAesEngine(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.UnlockAesEngine");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.UnlockAesEngine".Log();
 	protected virtual KObject GetSplWaitEvent() =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.GetSplWaitEvent not implemented");
 	protected virtual void SetSharedData(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.SetSharedData");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.SetSharedData".Log();
 	protected virtual void GetSharedData(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.IGeneralInterface.GetSharedData not implemented");
 	protected virtual void ImportSslRsaKey() =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.ImportSslRsaKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.ImportSslRsaKey".Log();
 	protected virtual void SecureExpModWithSslKey() =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.SecureExpModWithSslKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.SecureExpModWithSslKey".Log();
 	protected virtual void ImportEsRsaKey() =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.ImportEsRsaKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.ImportEsRsaKey".Log();
 	protected virtual void SecureExpModWithEsKey() =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.SecureExpModWithEsKey");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.SecureExpModWithEsKey".Log();
 	protected virtual void EncryptManuRsaKeyForImport() =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.EncryptManuRsaKeyForImport");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.EncryptManuRsaKeyForImport".Log();
 	protected virtual void GetPackage2Hash() =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.IGeneralInterface.GetPackage2Hash");
+		"Stub hit for Nn.Spl.Detail.IGeneralInterface.GetPackage2Hash".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetConfig
@@ -720,11 +720,11 @@ public abstract class _ISslInterface_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ISslInterface.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ISslInterface.Unknown3");
+		"Stub hit for Nn.Spl.Detail.ISslInterface.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ISslInterface.Unknown4 not implemented");
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ISslInterface.Unknown5");
+		"Stub hit for Nn.Spl.Detail.ISslInterface.Unknown5".Log();
 	protected virtual void Unknown7(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ISslInterface.Unknown7 not implemented");
 	protected virtual void Unknown11(out byte[] _0) =>
@@ -740,11 +740,11 @@ public abstract class _ISslInterface_Base : IpcInterface {
 	protected virtual void Unknown21(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ISslInterface.Unknown21 not implemented");
 	protected virtual void Unknown22(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ISslInterface.Unknown22");
+		"Stub hit for Nn.Spl.Detail.ISslInterface.Unknown22".Log();
 	protected virtual KObject Unknown23() =>
 		throw new NotImplementedException("Nn.Spl.Detail.ISslInterface.Unknown23 not implemented");
 	protected virtual void Unknown24(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Spl.Detail.ISslInterface.Unknown24");
+		"Stub hit for Nn.Spl.Detail.ISslInterface.Unknown24".Log();
 	protected virtual void Unknown25(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Spl.Detail.ISslInterface.Unknown25 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

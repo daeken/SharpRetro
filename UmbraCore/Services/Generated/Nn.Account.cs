@@ -26,7 +26,7 @@ public abstract class _IAccountServiceForAdministrator_Base : IpcInterface {
 	protected virtual void TrySelectUserWithoutInteraction(byte _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.TrySelectUserWithoutInteraction not implemented");
 	protected virtual void ListOpenContextStoredUsers() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.ListOpenContextStoredUsers");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.ListOpenContextStoredUsers".Log();
 	protected virtual Nn.Account.Detail.INotifier GetUserRegistrationNotifier() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.GetUserRegistrationNotifier not implemented");
 	protected virtual Nn.Account.Detail.INotifier GetUserStateChangeNotifier() =>
@@ -40,31 +40,31 @@ public abstract class _IAccountServiceForAdministrator_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext CheckNetworkServiceAvailabilityAsync(ulong _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.CheckNetworkServiceAvailabilityAsync not implemented");
 	protected virtual void StoreSaveDataThumbnail(byte[] _0, ulong _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.StoreSaveDataThumbnail");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.StoreSaveDataThumbnail".Log();
 	protected virtual void ClearSaveDataThumbnail(byte[] _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.ClearSaveDataThumbnail");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.ClearSaveDataThumbnail".Log();
 	protected virtual void LoadSaveDataThumbnail(byte[] _0, ulong _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.LoadSaveDataThumbnail not implemented");
 	protected virtual void GetSaveDataThumbnailExistence() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.GetSaveDataThumbnailExistence");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.GetSaveDataThumbnailExistence".Log();
 	protected virtual void GetUserLastOpenedApplication(byte[] _0, out uint _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.GetUserLastOpenedApplication not implemented");
 	protected virtual void ActivateOpenContextHolder() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.ActivateOpenContextHolder");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.ActivateOpenContextHolder".Log();
 	protected virtual void BeginUserRegistration(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.BeginUserRegistration not implemented");
 	protected virtual void CompleteUserRegistration(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.CompleteUserRegistration");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.CompleteUserRegistration".Log();
 	protected virtual void CancelUserRegistration(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.CancelUserRegistration");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.CancelUserRegistration".Log();
 	protected virtual void DeleteUser(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.DeleteUser");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.DeleteUser".Log();
 	protected virtual void SetUserPosition(uint _0, byte[] _1) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.SetUserPosition");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.SetUserPosition".Log();
 	protected virtual Nn.Account.Profile.IProfileEditor GetProfileEditor(byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.GetProfileEditor not implemented");
 	protected virtual void CompleteUserRegistrationForcibly(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.CompleteUserRegistrationForcibly");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.CompleteUserRegistrationForcibly".Log();
 	protected virtual Nn.Account.Baas.IFloatingRegistrationRequest CreateFloatingRegistrationRequest(uint _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.CreateFloatingRegistrationRequest not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext AuthenticateServiceAsync() =>
@@ -78,11 +78,11 @@ public abstract class _IAccountServiceForAdministrator_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.ISessionObject SuspendBackgroundDaemon() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForAdministrator.SuspendBackgroundDaemon not implemented");
 	protected virtual void DebugInvalidateTokenCacheForUser(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.DebugInvalidateTokenCacheForUser");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.DebugInvalidateTokenCacheForUser".Log();
 	protected virtual void DebugSetUserStateClose(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.DebugSetUserStateClose");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.DebugSetUserStateClose".Log();
 	protected virtual void DebugSetUserStateOpen(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForAdministrator.DebugSetUserStateOpen");
+		"Stub hit for Nn.Account.IAccountServiceForAdministrator.DebugSetUserStateOpen".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount
@@ -329,9 +329,9 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 	protected virtual void TrySelectUserWithoutInteraction(byte _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.TrySelectUserWithoutInteraction not implemented");
 	protected virtual void ListOpenContextStoredUsers() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForApplication.ListOpenContextStoredUsers");
+		"Stub hit for Nn.Account.IAccountServiceForApplication.ListOpenContextStoredUsers".Log();
 	protected virtual void InitializeApplicationInfo(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForApplication.InitializeApplicationInfo");
+		"Stub hit for Nn.Account.IAccountServiceForApplication.InitializeApplicationInfo".Log();
 	protected virtual Nn.Account.Baas.IManagerForApplication GetBaasAccountManagerForApplication(byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.GetBaasAccountManagerForApplication not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext AuthenticateApplicationAsync() =>
@@ -339,13 +339,13 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext CheckNetworkServiceAvailabilityAsync() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.CheckNetworkServiceAvailabilityAsync not implemented");
 	protected virtual void StoreSaveDataThumbnail(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForApplication.StoreSaveDataThumbnail");
+		"Stub hit for Nn.Account.IAccountServiceForApplication.StoreSaveDataThumbnail".Log();
 	protected virtual void ClearSaveDataThumbnail(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForApplication.ClearSaveDataThumbnail");
+		"Stub hit for Nn.Account.IAccountServiceForApplication.ClearSaveDataThumbnail".Log();
 	protected virtual Nn.Account.Baas.IGuestLoginRequest CreateGuestLoginRequest(uint _0, KObject _1) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.CreateGuestLoginRequest not implemented");
 	protected virtual void LoadOpenContext() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForApplication.LoadOpenContext");
+		"Stub hit for Nn.Account.IAccountServiceForApplication.LoadOpenContext".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount
@@ -479,7 +479,7 @@ public abstract class _IAccountServiceForSystemService_Base : IpcInterface {
 	protected virtual void TrySelectUserWithoutInteraction(byte _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForSystemService.TrySelectUserWithoutInteraction not implemented");
 	protected virtual void ListOpenContextStoredUsers() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.ListOpenContextStoredUsers");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.ListOpenContextStoredUsers".Log();
 	protected virtual Nn.Account.Detail.INotifier GetUserRegistrationNotifier() =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForSystemService.GetUserRegistrationNotifier not implemented");
 	protected virtual Nn.Account.Detail.INotifier GetUserStateChangeNotifier() =>
@@ -493,23 +493,23 @@ public abstract class _IAccountServiceForSystemService_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext CheckNetworkServiceAvailabilityAsync(ulong _0, ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForSystemService.CheckNetworkServiceAvailabilityAsync not implemented");
 	protected virtual void StoreSaveDataThumbnail(byte[] _0, ulong _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.StoreSaveDataThumbnail");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.StoreSaveDataThumbnail".Log();
 	protected virtual void ClearSaveDataThumbnail(byte[] _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.ClearSaveDataThumbnail");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.ClearSaveDataThumbnail".Log();
 	protected virtual void LoadSaveDataThumbnail(byte[] _0, ulong _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForSystemService.LoadSaveDataThumbnail not implemented");
 	protected virtual void GetSaveDataThumbnailExistence() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.GetSaveDataThumbnailExistence");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.GetSaveDataThumbnailExistence".Log();
 	protected virtual void GetUserLastOpenedApplication(byte[] _0, out uint _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForSystemService.GetUserLastOpenedApplication not implemented");
 	protected virtual void ActivateOpenContextHolder() =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.ActivateOpenContextHolder");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.ActivateOpenContextHolder".Log();
 	protected virtual void DebugInvalidateTokenCacheForUser(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.DebugInvalidateTokenCacheForUser");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.DebugInvalidateTokenCacheForUser".Log();
 	protected virtual void DebugSetUserStateClose(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.DebugSetUserStateClose");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.DebugSetUserStateClose".Log();
 	protected virtual void DebugSetUserStateOpen(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.IAccountServiceForSystemService.DebugSetUserStateOpen");
+		"Stub hit for Nn.Account.IAccountServiceForSystemService.DebugSetUserStateOpen".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount

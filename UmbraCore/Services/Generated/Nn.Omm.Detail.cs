@@ -12,45 +12,45 @@ public abstract class _IOperationModeManager_Base : IpcInterface {
 	protected virtual KObject GetOperationModeChangeEvent() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetOperationModeChangeEvent not implemented");
 	protected virtual void EnableAudioVisual() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.EnableAudioVisual");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.EnableAudioVisual".Log();
 	protected virtual void DisableAudioVisual() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.DisableAudioVisual");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.DisableAudioVisual".Log();
 	protected virtual void EnterSleepAndWait(KObject _0) =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.EnterSleepAndWait");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.EnterSleepAndWait".Log();
 	protected virtual void GetCradleStatus(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.GetCradleStatus not implemented");
 	protected virtual void FadeInDisplay() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeInDisplay");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeInDisplay".Log();
 	protected virtual void FadeOutDisplay() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeOutDisplay");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.FadeOutDisplay".Log();
 	protected virtual void Unknown8(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown8 not implemented");
 	protected virtual void Unknown9() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown9");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown9".Log();
 	protected virtual void Unknown10(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown10");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown10".Log();
 	protected virtual void Unknown11(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown11 not implemented");
 	protected virtual KObject Unknown12() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown12 not implemented");
 	protected virtual void Unknown13() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown13");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown13".Log();
 	protected virtual void Unknown14(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown14 not implemented");
 	protected virtual void Unknown15() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown15");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown15".Log();
 	protected virtual void Unknown16() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown16");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown16".Log();
 	protected virtual void Unknown17() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown17");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown17".Log();
 	protected virtual void Unknown18() =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown18");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown18".Log();
 	protected virtual KObject Unknown19() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown19 not implemented");
 	protected virtual void Unknown20(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown20 not implemented");
 	protected virtual void Unknown21(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown21");
+		"Stub hit for Nn.Omm.Detail.IOperationModeManager.Unknown21".Log();
 	protected virtual KObject Unknown22() =>
 		throw new NotImplementedException("Nn.Omm.Detail.IOperationModeManager.Unknown22 not implemented");
 	protected virtual void Unknown23(out byte[] _0) =>

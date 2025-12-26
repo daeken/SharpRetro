@@ -5,7 +5,7 @@ namespace UmbraCore.Services.Nn.Account.Baas;
 public partial class IAdministrator : _IAdministrator_Base;
 public abstract class _IAdministrator_Base : IpcInterface {
 	protected virtual void CheckAvailability() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.CheckAvailability");
+		"Stub hit for Nn.Account.Baas.IAdministrator.CheckAvailability".Log();
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.GetAccountId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
@@ -13,13 +13,13 @@ public abstract class _IAdministrator_Base : IpcInterface {
 	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.LoadIdTokenCache not implemented");
 	protected virtual void SetSystemProgramIdentification(ulong _0, ulong _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.SetSystemProgramIdentification");
+		"Stub hit for Nn.Account.Baas.IAdministrator.SetSystemProgramIdentification".Log();
 	protected virtual uint GetServiceEntryRequirementCache(ulong _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.GetServiceEntryRequirementCache not implemented");
 	protected virtual void InvalidateServiceEntryRequirementCache(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.InvalidateServiceEntryRequirementCache");
+		"Stub hit for Nn.Account.Baas.IAdministrator.InvalidateServiceEntryRequirementCache".Log();
 	protected virtual void InvalidateTokenCache(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.InvalidateTokenCache");
+		"Stub hit for Nn.Account.Baas.IAdministrator.InvalidateTokenCache".Log();
 	protected virtual ulong GetNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.GetNintendoAccountId not implemented");
 	protected virtual void GetNintendoAccountUserResourceCache(out ulong _0, Span<byte> _1, Span<byte> _2) =>
@@ -29,11 +29,11 @@ public abstract class _IAdministrator_Base : IpcInterface {
 	protected virtual void RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(uint _0, out byte _1, out Nn.Account.Detail.IAsyncContext _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed not implemented");
 	protected virtual void GetNetworkServiceLicenseCache() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.GetNetworkServiceLicenseCache");
+		"Stub hit for Nn.Account.Baas.IAdministrator.GetNetworkServiceLicenseCache".Log();
 	protected virtual void RefreshNetworkServiceLicenseCacheAsync() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.RefreshNetworkServiceLicenseCacheAsync");
+		"Stub hit for Nn.Account.Baas.IAdministrator.RefreshNetworkServiceLicenseCacheAsync".Log();
 	protected virtual void RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed");
+		"Stub hit for Nn.Account.Baas.IAdministrator.RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed".Log();
 	protected virtual Nn.Account.Nas.IAuthorizationRequest CreateAuthorizationRequest(uint _0, KObject _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.CreateAuthorizationRequest not implemented");
 	protected virtual byte IsRegistered() =>
@@ -43,7 +43,7 @@ public abstract class _IAdministrator_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext UnregisterAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.UnregisterAsync not implemented");
 	protected virtual void DeleteRegistrationInfoLocally() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.DeleteRegistrationInfoLocally");
+		"Stub hit for Nn.Account.Baas.IAdministrator.DeleteRegistrationInfoLocally".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext SynchronizeProfileAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.SynchronizeProfileAsync not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext UploadProfileAsync() =>
@@ -69,7 +69,7 @@ public abstract class _IAdministrator_Base : IpcInterface {
 	protected virtual Nn.Account.Detail.IAsyncContext DebugUnlinkNintendoAccountAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IAdministrator.DebugUnlinkNintendoAccountAsync not implemented");
 	protected virtual void DebugSetAvailabilityErrorDetail(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IAdministrator.DebugSetAvailabilityErrorDetail");
+		"Stub hit for Nn.Account.Baas.IAdministrator.DebugSetAvailabilityErrorDetail".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CheckAvailability
@@ -286,13 +286,13 @@ public abstract class _IFloatingRegistrationRequest_Base : IpcInterface {
 	protected virtual void RegisterUser(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.RegisterUser not implemented");
 	protected virtual void RegisterUserWithUid(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IFloatingRegistrationRequest.RegisterUserWithUid");
+		"Stub hit for Nn.Account.Baas.IFloatingRegistrationRequest.RegisterUserWithUid".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext RegisterNetworkServiceAccountAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.RegisterNetworkServiceAccountAsync not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext RegisterNetworkServiceAccountWithUidAsync(byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.RegisterNetworkServiceAccountWithUidAsync not implemented");
 	protected virtual void SetSystemProgramIdentification(ulong _0, ulong _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IFloatingRegistrationRequest.SetSystemProgramIdentification");
+		"Stub hit for Nn.Account.Baas.IFloatingRegistrationRequest.SetSystemProgramIdentification".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
 		throw new NotImplementedException("Nn.Account.Baas.IFloatingRegistrationRequest.EnsureIdTokenCacheAsync not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -432,7 +432,7 @@ public abstract class _IGuestLoginRequest_Base : IpcInterface {
 public partial class IManagerForApplication : _IManagerForApplication_Base;
 public abstract class _IManagerForApplication_Base : IpcInterface {
 	protected virtual void CheckAvailability() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForApplication.CheckAvailability");
+		"Stub hit for Nn.Account.Baas.IManagerForApplication.CheckAvailability".Log();
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.GetAccountId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
@@ -444,7 +444,7 @@ public abstract class _IManagerForApplication_Base : IpcInterface {
 	protected virtual Nn.Account.Nas.IAuthorizationRequest CreateAuthorizationRequest(uint _0, KObject _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForApplication.CreateAuthorizationRequest not implemented");
 	protected virtual void StoreOpenContext() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForApplication.StoreOpenContext");
+		"Stub hit for Nn.Account.Baas.IManagerForApplication.StoreOpenContext".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CheckAvailability
@@ -496,7 +496,7 @@ public abstract class _IManagerForApplication_Base : IpcInterface {
 public partial class IManagerForSystemService : _IManagerForSystemService_Base;
 public abstract class _IManagerForSystemService_Base : IpcInterface {
 	protected virtual void CheckAvailability() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.CheckAvailability");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.CheckAvailability".Log();
 	protected virtual ulong GetAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.GetAccountId not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext EnsureIdTokenCacheAsync() =>
@@ -504,13 +504,13 @@ public abstract class _IManagerForSystemService_Base : IpcInterface {
 	protected virtual void LoadIdTokenCache(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.LoadIdTokenCache not implemented");
 	protected virtual void SetSystemProgramIdentification(ulong _0, ulong _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.SetSystemProgramIdentification");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.SetSystemProgramIdentification".Log();
 	protected virtual uint GetServiceEntryRequirementCache(ulong _0) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.GetServiceEntryRequirementCache not implemented");
 	protected virtual void InvalidateServiceEntryRequirementCache(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.InvalidateServiceEntryRequirementCache");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.InvalidateServiceEntryRequirementCache".Log();
 	protected virtual void InvalidateTokenCache(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.InvalidateTokenCache");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.InvalidateTokenCache".Log();
 	protected virtual ulong GetNintendoAccountId() =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.GetNintendoAccountId not implemented");
 	protected virtual void GetNintendoAccountUserResourceCache(out ulong _0, Span<byte> _1, Span<byte> _2) =>
@@ -520,11 +520,11 @@ public abstract class _IManagerForSystemService_Base : IpcInterface {
 	protected virtual void RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed(uint _0, out byte _1, out Nn.Account.Detail.IAsyncContext _2) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.RefreshNintendoAccountUserResourceCacheAsyncIfSecondsElapsed not implemented");
 	protected virtual void GetNetworkServiceLicenseCache() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.GetNetworkServiceLicenseCache");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.GetNetworkServiceLicenseCache".Log();
 	protected virtual void RefreshNetworkServiceLicenseCacheAsync() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.RefreshNetworkServiceLicenseCacheAsync");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.RefreshNetworkServiceLicenseCacheAsync".Log();
 	protected virtual void RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed() =>
-		Console.WriteLine("Stub hit for Nn.Account.Baas.IManagerForSystemService.RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed");
+		"Stub hit for Nn.Account.Baas.IManagerForSystemService.RefreshNetworkServiceLicenseCacheAsyncIfSecondsElapsed".Log();
 	protected virtual Nn.Account.Nas.IAuthorizationRequest CreateAuthorizationRequest(uint _0, KObject _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Account.Baas.IManagerForSystemService.CreateAuthorizationRequest not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

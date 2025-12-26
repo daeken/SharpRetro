@@ -8,21 +8,21 @@ public partial class IManager : _IManager_Base {
 }
 public abstract class _IManager_Base : IpcInterface {
 	protected virtual void SetOperatingMode(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Tc.IManager.SetOperatingMode");
+		"Stub hit for Nn.Tc.IManager.SetOperatingMode".Log();
 	protected virtual KObject GetThermalEvent(byte[] _0) =>
 		throw new NotImplementedException("Nn.Tc.IManager.GetThermalEvent not implemented");
 	protected virtual void Unknown2(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Tc.IManager.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown3");
+		"Stub hit for Nn.Tc.IManager.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown4");
+		"Stub hit for Nn.Tc.IManager.Unknown4".Log();
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown5");
+		"Stub hit for Nn.Tc.IManager.Unknown5".Log();
 	protected virtual void Unknown6() =>
-		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown6");
+		"Stub hit for Nn.Tc.IManager.Unknown6".Log();
 	protected virtual void Unknown7() =>
-		Console.WriteLine("Stub hit for Nn.Tc.IManager.Unknown7");
+		"Stub hit for Nn.Tc.IManager.Unknown7".Log();
 	protected virtual void Unknown8(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Tc.IManager.Unknown8 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

@@ -24,11 +24,11 @@ public abstract class _IHardwareOpusDecoder_Base : IpcInterface {
 	protected virtual void DecodeInterleaved(Span<byte> _0, out uint _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.DecodeInterleaved not implemented");
 	protected virtual void SetContext(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Codec.Detail.IHardwareOpusDecoder.SetContext");
+		"Stub hit for Nn.Codec.Detail.IHardwareOpusDecoder.SetContext".Log();
 	protected virtual void Unknown2(Span<byte> _0, out uint _1, out uint _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.Unknown2 not implemented");
 	protected virtual void Unknown3(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Codec.Detail.IHardwareOpusDecoder.Unknown3");
+		"Stub hit for Nn.Codec.Detail.IHardwareOpusDecoder.Unknown3".Log();
 	protected virtual void Unknown4(Span<byte> _0, out uint _1, out uint _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Codec.Detail.IHardwareOpusDecoder.Unknown4 not implemented");
 	protected virtual void Unknown5(Span<byte> _0, out uint _1, out uint _2, out ulong _3, Span<byte> _4) =>

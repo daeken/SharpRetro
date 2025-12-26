@@ -10,7 +10,7 @@ public abstract class _IBootModeInterface_Base : IpcInterface {
 	protected virtual void GetBootMode(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IBootModeInterface.GetBootMode not implemented");
 	protected virtual void SetMaintenanceBoot() =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IBootModeInterface.SetMaintenanceBoot");
+		"Stub hit for Nn.Pm.Detail.IBootModeInterface.SetMaintenanceBoot".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetBootMode
@@ -40,7 +40,7 @@ public abstract class _IDebugMonitorInterface_Base : IpcInterface {
 	protected virtual void StartDebugProcess(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IDebugMonitorInterface.StartDebugProcess not implemented");
 	protected virtual void GetTitlePid(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IDebugMonitorInterface.GetTitlePid");
+		"Stub hit for Nn.Pm.Detail.IDebugMonitorInterface.GetTitlePid".Log();
 	protected virtual void EnableDebugForTitleId(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IDebugMonitorInterface.EnableDebugForTitleId not implemented");
 	protected virtual KObject GetApplicationPid(byte[] _0) =>
@@ -127,23 +127,23 @@ public abstract class _IShellInterface_Base : IpcInterface {
 	protected virtual void LaunchProcess(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IShellInterface.LaunchProcess not implemented");
 	protected virtual void TerminateProcessByPid(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IShellInterface.TerminateProcessByPid");
+		"Stub hit for Nn.Pm.Detail.IShellInterface.TerminateProcessByPid".Log();
 	protected virtual void TerminateProcessByTitleId(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IShellInterface.TerminateProcessByTitleId");
+		"Stub hit for Nn.Pm.Detail.IShellInterface.TerminateProcessByTitleId".Log();
 	protected virtual KObject GetProcessEventWaiter() =>
 		throw new NotImplementedException("Nn.Pm.Detail.IShellInterface.GetProcessEventWaiter not implemented");
 	protected virtual void GetProcessEventType(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IShellInterface.GetProcessEventType not implemented");
 	protected virtual void NotifyBootFinished(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IShellInterface.NotifyBootFinished");
+		"Stub hit for Nn.Pm.Detail.IShellInterface.NotifyBootFinished".Log();
 	protected virtual void GetApplicationPid_0(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IShellInterface.GetApplicationPid_0");
+		"Stub hit for Nn.Pm.Detail.IShellInterface.GetApplicationPid_0".Log();
 	protected virtual void BoostSystemMemoryResourceLimit_0() =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IShellInterface.BoostSystemMemoryResourceLimit_0");
+		"Stub hit for Nn.Pm.Detail.IShellInterface.BoostSystemMemoryResourceLimit_0".Log();
 	protected virtual void GetApplicationPid_1(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Pm.Detail.IShellInterface.GetApplicationPid_1 not implemented");
 	protected virtual void BoostSystemMemoryResourceLimit_1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pm.Detail.IShellInterface.BoostSystemMemoryResourceLimit_1");
+		"Stub hit for Nn.Pm.Detail.IShellInterface.BoostSystemMemoryResourceLimit_1".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // LaunchProcess

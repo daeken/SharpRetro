@@ -5,19 +5,19 @@ namespace UmbraCore.Services.Nn.Nfc.Detail;
 public partial class ISystem : _ISystem_Base;
 public abstract class _ISystem_Base : IpcInterface {
 	protected virtual void Initialize(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.Initialize");
+		"Stub hit for Nn.Nfc.Detail.ISystem.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem._Finalize");
+		"Stub hit for Nn.Nfc.Detail.ISystem._Finalize".Log();
 	protected virtual uint GetStateOld() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetStateOld not implemented");
 	protected virtual byte IsNfcEnabledOld() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.IsNfcEnabledOld not implemented");
 	protected virtual void SetNfcEnabledOld(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.SetNfcEnabledOld");
+		"Stub hit for Nn.Nfc.Detail.ISystem.SetNfcEnabledOld".Log();
 	protected virtual void InitializeSystem(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.InitializeSystem");
+		"Stub hit for Nn.Nfc.Detail.ISystem.InitializeSystem".Log();
 	protected virtual void FinalizeSystem() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.FinalizeSystem");
+		"Stub hit for Nn.Nfc.Detail.ISystem.FinalizeSystem".Log();
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetState not implemented");
 	protected virtual byte IsNfcEnabled() =>
@@ -31,9 +31,9 @@ public abstract class _ISystem_Base : IpcInterface {
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.AttachAvailabilityChangeEvent not implemented");
 	protected virtual void StartDetection(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.StartDetection");
+		"Stub hit for Nn.Nfc.Detail.ISystem.StartDetection".Log();
 	protected virtual void StopDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.StopDetection");
+		"Stub hit for Nn.Nfc.Detail.ISystem.StopDetection".Log();
 	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.GetTagInfo not implemented");
 	protected virtual KObject AttachActivateEvent(byte[] _0) =>
@@ -41,17 +41,17 @@ public abstract class _ISystem_Base : IpcInterface {
 	protected virtual KObject AttachDeactivateEvent(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.AttachDeactivateEvent not implemented");
 	protected virtual void SetNfcEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.SetNfcEnabled");
+		"Stub hit for Nn.Nfc.Detail.ISystem.SetNfcEnabled".Log();
 	protected virtual void ReadMifare(byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.ReadMifare not implemented");
 	protected virtual void WriteMifare(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.WriteMifare");
+		"Stub hit for Nn.Nfc.Detail.ISystem.WriteMifare".Log();
 	protected virtual void SendCommandByPassThrough(byte[] _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.ISystem.SendCommandByPassThrough not implemented");
 	protected virtual void KeepPassThroughSession(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.KeepPassThroughSession");
+		"Stub hit for Nn.Nfc.Detail.ISystem.KeepPassThroughSession".Log();
 	protected virtual void ReleasePassThroughSession(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.ISystem.ReleasePassThroughSession");
+		"Stub hit for Nn.Nfc.Detail.ISystem.ReleasePassThroughSession".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
@@ -215,17 +215,17 @@ public abstract class _ISystemManager_Base : IpcInterface {
 public partial class IUser : _IUser_Base;
 public abstract class _IUser_Base : IpcInterface {
 	protected virtual void InitializeOld(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.InitializeOld");
+		"Stub hit for Nn.Nfc.Detail.IUser.InitializeOld".Log();
 	protected virtual void FinalizeOld() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.FinalizeOld");
+		"Stub hit for Nn.Nfc.Detail.IUser.FinalizeOld".Log();
 	protected virtual uint GetStateOld() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetStateOld not implemented");
 	protected virtual byte IsNfcEnabledOld() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.IsNfcEnabledOld not implemented");
 	protected virtual void Initialize(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.Initialize");
+		"Stub hit for Nn.Nfc.Detail.IUser.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser._Finalize");
+		"Stub hit for Nn.Nfc.Detail.IUser._Finalize".Log();
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetState not implemented");
 	protected virtual byte IsNfcEnabled() =>
@@ -239,9 +239,9 @@ public abstract class _IUser_Base : IpcInterface {
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.AttachAvailabilityChangeEvent not implemented");
 	protected virtual void StartDetection(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.StartDetection");
+		"Stub hit for Nn.Nfc.Detail.IUser.StartDetection".Log();
 	protected virtual void StopDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.StopDetection");
+		"Stub hit for Nn.Nfc.Detail.IUser.StopDetection".Log();
 	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.GetTagInfo not implemented");
 	protected virtual KObject AttachActivateEvent(byte[] _0) =>
@@ -251,13 +251,13 @@ public abstract class _IUser_Base : IpcInterface {
 	protected virtual void ReadMifare(byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.ReadMifare not implemented");
 	protected virtual void WriteMifare(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.WriteMifare");
+		"Stub hit for Nn.Nfc.Detail.IUser.WriteMifare".Log();
 	protected virtual void SendCommandByPassThrough(byte[] _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nfc.Detail.IUser.SendCommandByPassThrough not implemented");
 	protected virtual void KeepPassThroughSession(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.KeepPassThroughSession");
+		"Stub hit for Nn.Nfc.Detail.IUser.KeepPassThroughSession".Log();
 	protected virtual void ReleasePassThroughSession(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Detail.IUser.ReleasePassThroughSession");
+		"Stub hit for Nn.Nfc.Detail.IUser.ReleasePassThroughSession".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // InitializeOld

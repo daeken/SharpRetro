@@ -9,7 +9,7 @@ public abstract class _IOAuthProcedure_Base : IpcInterface {
 	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Http.IOAuthProcedure.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Http.IOAuthProcedure.ApplyResponse");
+		"Stub hit for Nn.Account.Http.IOAuthProcedure.ApplyResponse".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Http.IOAuthProcedure.ApplyResponseAsync not implemented");
 	protected virtual void Suspend(out byte[] _0) =>

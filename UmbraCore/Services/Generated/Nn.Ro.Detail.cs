@@ -25,13 +25,13 @@ public abstract class _IRoInterface_Base : IpcInterface {
 	protected virtual ulong Unknown0(ulong _0, ulong _1, ulong _2, ulong _3, ulong _4, ulong _5) =>
 		throw new NotImplementedException("Nn.Ro.Detail.IRoInterface.Unknown0 not implemented");
 	protected virtual void Unknown1(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Ro.Detail.IRoInterface.Unknown1");
+		"Stub hit for Nn.Ro.Detail.IRoInterface.Unknown1".Log();
 	protected virtual void Unknown2(ulong _0, ulong _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Ro.Detail.IRoInterface.Unknown2");
+		"Stub hit for Nn.Ro.Detail.IRoInterface.Unknown2".Log();
 	protected virtual void Unknown3(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Ro.Detail.IRoInterface.Unknown3");
+		"Stub hit for Nn.Ro.Detail.IRoInterface.Unknown3".Log();
 	protected virtual void Unknown4(ulong _0, ulong _1, KObject _2) =>
-		Console.WriteLine("Stub hit for Nn.Ro.Detail.IRoInterface.Unknown4");
+		"Stub hit for Nn.Ro.Detail.IRoInterface.Unknown4".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

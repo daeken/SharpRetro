@@ -5,19 +5,19 @@ namespace UmbraCore.Services.Nn.Fan.Detail;
 public partial class IController : _IController_Base;
 public abstract class _IController_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IController.Unknown0");
+		"Stub hit for Nn.Fan.Detail.IController.Unknown0".Log();
 	protected virtual void Unknown1(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Fan.Detail.IController.Unknown1 not implemented");
 	protected virtual void Unknown2(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Fan.Detail.IController.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IController.Unknown3");
+		"Stub hit for Nn.Fan.Detail.IController.Unknown3".Log();
 	protected virtual void Unknown4(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Fan.Detail.IController.Unknown4 not implemented");
 	protected virtual void Unknown5() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IController.Unknown5");
+		"Stub hit for Nn.Fan.Detail.IController.Unknown5".Log();
 	protected virtual void Unknown6() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IController.Unknown6");
+		"Stub hit for Nn.Fan.Detail.IController.Unknown6".Log();
 	protected virtual void Unknown7(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Fan.Detail.IController.Unknown7 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -80,19 +80,19 @@ public abstract class _IManager_Base : IpcInterface {
 	protected virtual Nn.Fan.Detail.IController Unknown0(byte[] _0) =>
 		throw new NotImplementedException("Nn.Fan.Detail.IManager.Unknown0 not implemented");
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown1");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown2");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown2".Log();
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown3");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown3".Log();
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown4");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown4".Log();
 	protected virtual void Unknown5() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown5");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown5".Log();
 	protected virtual void Unknown6() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown6");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown6".Log();
 	protected virtual void Unknown7() =>
-		Console.WriteLine("Stub hit for Nn.Fan.Detail.IManager.Unknown7");
+		"Stub hit for Nn.Fan.Detail.IManager.Unknown7".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

@@ -12,7 +12,7 @@ public abstract class _IMeasurementServer_Base : IpcInterface {
 	protected virtual void Unknown1(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ts.Server.IMeasurementServer.Unknown1 not implemented");
 	protected virtual void Unknown2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ts.Server.IMeasurementServer.Unknown2");
+		"Stub hit for Nn.Ts.Server.IMeasurementServer.Unknown2".Log();
 	protected virtual void Unknown3(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ts.Server.IMeasurementServer.Unknown3 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

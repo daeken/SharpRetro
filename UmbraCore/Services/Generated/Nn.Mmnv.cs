@@ -8,19 +8,19 @@ public partial class IRequest : _IRequest_Base {
 }
 public abstract class _IRequest_Base : IpcInterface {
 	protected virtual void InitializeOld(uint _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Mmnv.IRequest.InitializeOld");
+		"Stub hit for Nn.Mmnv.IRequest.InitializeOld".Log();
 	protected virtual void FinalizeOld(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Mmnv.IRequest.FinalizeOld");
+		"Stub hit for Nn.Mmnv.IRequest.FinalizeOld".Log();
 	protected virtual void SetAndWaitOld(uint _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Mmnv.IRequest.SetAndWaitOld");
+		"Stub hit for Nn.Mmnv.IRequest.SetAndWaitOld".Log();
 	protected virtual uint GetOld(uint _0) =>
 		throw new NotImplementedException("Nn.Mmnv.IRequest.GetOld not implemented");
 	protected virtual uint Initialize(uint _0, uint _1, uint _2) =>
 		throw new NotImplementedException("Nn.Mmnv.IRequest.Initialize not implemented");
 	protected virtual void _Finalize(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Mmnv.IRequest._Finalize");
+		"Stub hit for Nn.Mmnv.IRequest._Finalize".Log();
 	protected virtual void SetAndWait(uint _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Mmnv.IRequest.SetAndWait");
+		"Stub hit for Nn.Mmnv.IRequest.SetAndWait".Log();
 	protected virtual uint Get(uint _0) =>
 		throw new NotImplementedException("Nn.Mmnv.IRequest.Get not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

@@ -10,37 +10,37 @@ public abstract class _ISystemServer_Base : IpcInterface {
 	protected virtual void GetDataFormat(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Xcd.Detail.ISystemServer.GetDataFormat not implemented");
 	protected virtual void SetDataFormat(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.SetDataFormat");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.SetDataFormat".Log();
 	protected virtual void GetMcuState(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Xcd.Detail.ISystemServer.GetMcuState not implemented");
 	protected virtual void SetMcuState(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.SetMcuState");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.SetMcuState".Log();
 	protected virtual void GetMcuVersionForNfc(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Xcd.Detail.ISystemServer.GetMcuVersionForNfc not implemented");
 	protected virtual void CheckNfcDevicePower(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.CheckNfcDevicePower");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.CheckNfcDevicePower".Log();
 	protected virtual void SetNfcEvent(byte[] _0, out KObject _1, out KObject _2) =>
 		throw new NotImplementedException("Nn.Xcd.Detail.ISystemServer.SetNfcEvent not implemented");
 	protected virtual void GetNfcInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Xcd.Detail.ISystemServer.GetNfcInfo not implemented");
 	protected virtual void StartNfcDiscovery(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.StartNfcDiscovery");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.StartNfcDiscovery".Log();
 	protected virtual void StopNfcDiscovery(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.StopNfcDiscovery");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.StopNfcDiscovery".Log();
 	protected virtual void StartNtagRead(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.StartNtagRead");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.StartNtagRead".Log();
 	protected virtual void StartNtagWrite(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.StartNtagWrite");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.StartNtagWrite".Log();
 	protected virtual void SendNfcRawData(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.SendNfcRawData");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.SendNfcRawData".Log();
 	protected virtual void RegisterMifareKey(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.RegisterMifareKey");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.RegisterMifareKey".Log();
 	protected virtual void ClearMifareKey(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.ClearMifareKey");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.ClearMifareKey".Log();
 	protected virtual void StartMifareRead(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.StartMifareRead");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.StartMifareRead".Log();
 	protected virtual void StartMifareWrite(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Xcd.Detail.ISystemServer.StartMifareWrite");
+		"Stub hit for Nn.Xcd.Detail.ISystemServer.StartMifareWrite".Log();
 	protected virtual void GetAwakeTriggerReasonForLeftRail(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Xcd.Detail.ISystemServer.GetAwakeTriggerReasonForLeftRail not implemented");
 	protected virtual void GetAwakeTriggerReasonForRightRail(out byte[] _0) =>

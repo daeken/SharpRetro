@@ -7,11 +7,11 @@ public abstract class _ISslConnection_Base : IpcInterface {
 	protected virtual uint SetSocketDescriptor(uint _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.SetSocketDescriptor not implemented");
 	protected virtual void SetHostName(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetHostName");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.SetHostName".Log();
 	protected virtual void SetVerifyOption(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetVerifyOption");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.SetVerifyOption".Log();
 	protected virtual void SetIoMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetIoMode");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.SetIoMode".Log();
 	protected virtual uint GetSocketDescriptor() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetSocketDescriptor not implemented");
 	protected virtual void GetHostName(out uint _0, Span<byte> _1) =>
@@ -21,7 +21,7 @@ public abstract class _ISslConnection_Base : IpcInterface {
 	protected virtual uint GetIoMode() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetIoMode not implemented");
 	protected virtual void DoHandshake() =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.DoHandshake");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.DoHandshake".Log();
 	protected virtual void DoHandshakeGetServerCert(out uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.DoHandshakeGetServerCert not implemented");
 	protected virtual void Read(out uint _0, Span<byte> _1) =>
@@ -35,21 +35,21 @@ public abstract class _ISslConnection_Base : IpcInterface {
 	protected virtual uint Poll(uint _0, uint _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.Poll not implemented");
 	protected virtual void GetVerifyCertError() =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.GetVerifyCertError");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.GetVerifyCertError".Log();
 	protected virtual uint GetNeededServerCertBufferSize() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetNeededServerCertBufferSize not implemented");
 	protected virtual void SetSessionCacheMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetSessionCacheMode");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.SetSessionCacheMode".Log();
 	protected virtual uint GetSessionCacheMode() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetSessionCacheMode not implemented");
 	protected virtual void FlushSessionCache() =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.FlushSessionCache");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.FlushSessionCache".Log();
 	protected virtual void SetRenegotiationMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetRenegotiationMode");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.SetRenegotiationMode".Log();
 	protected virtual uint GetRenegotiationMode() =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetRenegotiationMode not implemented");
 	protected virtual void SetOption(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslConnection.SetOption");
+		"Stub hit for Nn.Ssl.Sf.ISslConnection.SetOption".Log();
 	protected virtual byte GetOption(uint _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslConnection.GetOption not implemented");
 	protected virtual void GetVerifyCertErrors(out uint _0, out uint _1, Span<byte> _2) =>
@@ -215,7 +215,7 @@ public abstract class _ISslConnection_Base : IpcInterface {
 public partial class ISslContext : _ISslContext_Base;
 public abstract class _ISslContext_Base : IpcInterface {
 	protected virtual void SetOption(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.SetOption");
+		"Stub hit for Nn.Ssl.Sf.ISslContext.SetOption".Log();
 	protected virtual uint GetOption(uint _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslContext.GetOption not implemented");
 	protected virtual Nn.Ssl.Sf.ISslConnection CreateConnection() =>
@@ -227,17 +227,17 @@ public abstract class _ISslContext_Base : IpcInterface {
 	protected virtual ulong ImportClientPki(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslContext.ImportClientPki not implemented");
 	protected virtual void RemoveServerPki(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.RemoveServerPki");
+		"Stub hit for Nn.Ssl.Sf.ISslContext.RemoveServerPki".Log();
 	protected virtual void RemoveClientPki(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.RemoveClientPki");
+		"Stub hit for Nn.Ssl.Sf.ISslContext.RemoveClientPki".Log();
 	protected virtual ulong RegisterInternalPki(uint _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslContext.RegisterInternalPki not implemented");
 	protected virtual void AddPolicyOid(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.AddPolicyOid");
+		"Stub hit for Nn.Ssl.Sf.ISslContext.AddPolicyOid".Log();
 	protected virtual ulong ImportCrl(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslContext.ImportCrl not implemented");
 	protected virtual void RemoveCrl(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslContext.RemoveCrl");
+		"Stub hit for Nn.Ssl.Sf.ISslContext.RemoveCrl".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetOption
@@ -329,9 +329,9 @@ public abstract class _ISslService_Base : IpcInterface {
 	protected virtual void DebugIoctl(ulong _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ssl.Sf.ISslService.DebugIoctl not implemented");
 	protected virtual void SetInterfaceVersion(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslService.SetInterfaceVersion");
+		"Stub hit for Nn.Ssl.Sf.ISslService.SetInterfaceVersion".Log();
 	protected virtual void FlushSessionCache() =>
-		Console.WriteLine("Stub hit for Nn.Ssl.Sf.ISslService.FlushSessionCache");
+		"Stub hit for Nn.Ssl.Sf.ISslService.FlushSessionCache".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateContext

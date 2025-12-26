@@ -21,7 +21,7 @@ public abstract class _IGeneralService_Base : IpcInterface {
 	protected virtual void SetNetworkProfile(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.SetNetworkProfile not implemented");
 	protected virtual void RemoveNetworkProfile(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.RemoveNetworkProfile");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.RemoveNetworkProfile".Log();
 	protected virtual void GetScanDataOld(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetScanDataOld not implemented");
 	protected virtual void GetCurrentIpAddress(out byte[] _0) =>
@@ -33,13 +33,13 @@ public abstract class _IGeneralService_Base : IpcInterface {
 	protected virtual void GetCurrentIpConfigInfo(out byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentIpConfigInfo not implemented");
 	protected virtual void SetWirelessCommunicationEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetWirelessCommunicationEnabled");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetWirelessCommunicationEnabled".Log();
 	protected virtual byte IsWirelessCommunicationEnabled() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.IsWirelessCommunicationEnabled not implemented");
 	protected virtual void GetInternetConnectionStatus(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetInternetConnectionStatus not implemented");
 	protected virtual void SetEthernetCommunicationEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetEthernetCommunicationEnabled");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetEthernetCommunicationEnabled".Log();
 	protected virtual byte IsEthernetCommunicationEnabled() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.IsEthernetCommunicationEnabled not implemented");
 	protected virtual byte IsAnyInternetRequestAccepted(Span<byte> _0) =>
@@ -47,35 +47,35 @@ public abstract class _IGeneralService_Base : IpcInterface {
 	protected virtual byte IsAnyForegroundRequestAccepted() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.IsAnyForegroundRequestAccepted not implemented");
 	protected virtual void PutToSleep() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.PutToSleep");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.PutToSleep".Log();
 	protected virtual void WakeUp() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.WakeUp");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.WakeUp".Log();
 	protected virtual void GetSsidListVersion(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetSsidListVersion not implemented");
 	protected virtual void SetExclusiveClient(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetExclusiveClient");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetExclusiveClient".Log();
 	protected virtual void GetDefaultIpSetting(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetDefaultIpSetting not implemented");
 	protected virtual void SetDefaultIpSetting(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetDefaultIpSetting");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetDefaultIpSetting".Log();
 	protected virtual void SetWirelessCommunicationEnabledForTest(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetWirelessCommunicationEnabledForTest");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetWirelessCommunicationEnabledForTest".Log();
 	protected virtual void SetEthernetCommunicationEnabledForTest(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetEthernetCommunicationEnabledForTest");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetEthernetCommunicationEnabledForTest".Log();
 	protected virtual KObject GetTelemetorySystemEventReadableHandle() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetTelemetorySystemEventReadableHandle not implemented");
 	protected virtual void GetTelemetryInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetTelemetryInfo not implemented");
 	protected virtual void ConfirmSystemAvailability() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.ConfirmSystemAvailability");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.ConfirmSystemAvailability".Log();
 	protected virtual void SetBackgroundRequestEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.SetBackgroundRequestEnabled");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.SetBackgroundRequestEnabled".Log();
 	protected virtual void GetScanData(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetScanData not implemented");
 	protected virtual void GetCurrentAccessPoint(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IGeneralService.GetCurrentAccessPoint not implemented");
 	protected virtual void Shutdown() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IGeneralService.Shutdown");
+		"Stub hit for Nn.Nifm.Detail.IGeneralService.Shutdown".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // GetClientId
@@ -322,39 +322,39 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected virtual uint GetRequestState() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetRequestState not implemented");
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.GetResult");
+		"Stub hit for Nn.Nifm.Detail.IRequest.GetResult".Log();
 	protected virtual void GetSystemEventReadableHandles(out KObject _0, out KObject _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetSystemEventReadableHandles not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.Cancel");
+		"Stub hit for Nn.Nifm.Detail.IRequest.Cancel".Log();
 	protected virtual void Submit() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.Submit");
+		"Stub hit for Nn.Nifm.Detail.IRequest.Submit".Log();
 	protected virtual void SetRequirement(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetRequirement");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetRequirement".Log();
 	protected virtual void SetRequirementPreset(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetRequirementPreset");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetRequirementPreset".Log();
 	protected virtual void SetPriority(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetPriority");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetPriority".Log();
 	protected virtual void SetNetworkProfileId(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetNetworkProfileId");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetNetworkProfileId".Log();
 	protected virtual void SetRejectable(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetRejectable");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetRejectable".Log();
 	protected virtual void SetConnectionConfirmationOption(sbyte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetConnectionConfirmationOption");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetConnectionConfirmationOption".Log();
 	protected virtual void SetPersistent(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetPersistent");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetPersistent".Log();
 	protected virtual void SetInstant(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetInstant");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetInstant".Log();
 	protected virtual void SetSustainable(byte _0, byte _1) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetSustainable");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetSustainable".Log();
 	protected virtual void SetRawPriority(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetRawPriority");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetRawPriority".Log();
 	protected virtual void SetGreedy(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetGreedy");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetGreedy".Log();
 	protected virtual void SetSharable(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetSharable");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetSharable".Log();
 	protected virtual void SetRequirementByRevision(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetRequirementByRevision");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetRequirementByRevision".Log();
 	protected virtual void GetRequirement(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetRequirement not implemented");
 	protected virtual uint GetRevision() =>
@@ -364,11 +364,11 @@ public abstract class _IRequest_Base : IpcInterface {
 	protected virtual void GetAdditionalInfo(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IRequest.GetAdditionalInfo not implemented");
 	protected virtual void SetKeptInSleep(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.SetKeptInSleep");
+		"Stub hit for Nn.Nifm.Detail.IRequest.SetKeptInSleep".Log();
 	protected virtual void RegisterSocketDescriptor(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.RegisterSocketDescriptor");
+		"Stub hit for Nn.Nifm.Detail.IRequest.RegisterSocketDescriptor".Log();
 	protected virtual void UnregisterSocketDescriptor(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IRequest.UnregisterSocketDescriptor");
+		"Stub hit for Nn.Nifm.Detail.IRequest.UnregisterSocketDescriptor".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetRequestState
@@ -514,11 +514,11 @@ public abstract class _IRequest_Base : IpcInterface {
 public partial class IScanRequest : _IScanRequest_Base;
 public abstract class _IScanRequest_Base : IpcInterface {
 	protected virtual void Submit() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IScanRequest.Submit");
+		"Stub hit for Nn.Nifm.Detail.IScanRequest.Submit".Log();
 	protected virtual byte IsProcessing() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IScanRequest.IsProcessing not implemented");
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Nifm.Detail.IScanRequest.GetResult");
+		"Stub hit for Nn.Nifm.Detail.IScanRequest.GetResult".Log();
 	protected virtual KObject GetSystemEventReadableHandle() =>
 		throw new NotImplementedException("Nn.Nifm.Detail.IScanRequest.GetSystemEventReadableHandle not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

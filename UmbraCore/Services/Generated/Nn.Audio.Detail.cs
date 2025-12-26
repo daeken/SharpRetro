@@ -40,13 +40,13 @@ public unsafe struct AudioRendererParameterInternal {
 public partial class IAudioDebugManager : _IAudioDebugManager_Base;
 public abstract class _IAudioDebugManager_Base : IpcInterface {
 	protected virtual void Unknown0(uint _0, ulong _1, KObject _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown0");
+		"Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown1");
+		"Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown2");
+		"Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown2".Log();
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown3");
+		"Stub hit for Nn.Audio.Detail.IAudioDebugManager.Unknown3".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -80,7 +80,7 @@ public abstract class _IAudioDevice_Base : IpcInterface {
 	protected virtual void Unknown0(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown0 not implemented");
 	protected virtual void Unknown1(uint _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDevice.Unknown1");
+		"Stub hit for Nn.Audio.Detail.IAudioDevice.Unknown1".Log();
 	protected virtual uint Unknown2(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown2 not implemented");
 	protected virtual void Unknown3(Span<byte> _0) =>
@@ -92,7 +92,7 @@ public abstract class _IAudioDevice_Base : IpcInterface {
 	protected virtual void Unknown6(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown6 not implemented");
 	protected virtual void Unknown7(uint _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioDevice.Unknown7");
+		"Stub hit for Nn.Audio.Detail.IAudioDevice.Unknown7".Log();
 	protected virtual uint Unknown8(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown8 not implemented");
 	protected virtual void Unknown10(Span<byte> _0) =>
@@ -182,11 +182,11 @@ public abstract class _IAudioIn_Base : IpcInterface {
 	protected virtual uint GetAudioInState() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.GetAudioInState not implemented");
 	protected virtual void StartAudioIn() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.StartAudioIn");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.StartAudioIn".Log();
 	protected virtual void StopAudioIn() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.StopAudioIn");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.StopAudioIn".Log();
 	protected virtual void AppendAudioInBuffer(ulong tag, Span<Nn.Audio.AudioInBuffer> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBuffer");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBuffer".Log();
 	protected virtual KObject RegisterBufferEvent() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.RegisterBufferEvent not implemented");
 	protected virtual void GetReleasedAudioInBuffer(out uint count, Span<Nn.Audio.AudioInBuffer> _1) =>
@@ -194,17 +194,17 @@ public abstract class _IAudioIn_Base : IpcInterface {
 	protected virtual byte ContainsAudioInBuffer(ulong tag) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.ContainsAudioInBuffer not implemented");
 	protected virtual void AppendAudioInBufferWithUserEvent(ulong tag, KObject _1, Span<Nn.Audio.AudioInBuffer> _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBufferWithUserEvent");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBufferWithUserEvent".Log();
 	protected virtual void AppendAudioInBufferAuto(ulong tag, Span<Nn.Audio.AudioInBuffer> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBufferAuto");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBufferAuto".Log();
 	protected virtual void GetReleasedAudioInBufferAuto(out uint count, Span<Nn.Audio.AudioInBuffer> _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.GetReleasedAudioInBufferAuto not implemented");
 	protected virtual void AppendAudioInBufferWithUserEventAuto(ulong tag, KObject _1, Span<Nn.Audio.AudioInBuffer> _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBufferWithUserEventAuto");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.AppendAudioInBufferWithUserEventAuto".Log();
 	protected virtual uint GetAudioInBufferCount() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.GetAudioInBufferCount not implemented");
 	protected virtual void SetAudioInDeviceGain(uint gain) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioIn.SetAudioInDeviceGain");
+		"Stub hit for Nn.Audio.Detail.IAudioIn.SetAudioInDeviceGain".Log();
 	protected virtual uint GetAudioInDeviceGain() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioIn.GetAudioInDeviceGain not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -359,13 +359,13 @@ public partial class IAudioInManagerForApplet : _IAudioInManagerForApplet_Base {
 }
 public abstract class _IAudioInManagerForApplet_Base : IpcInterface {
 	protected virtual void RequestSuspendAudioIns(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.RequestSuspendAudioIns");
+		"Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.RequestSuspendAudioIns".Log();
 	protected virtual void RequestResumeAudioIns(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.RequestResumeAudioIns");
+		"Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.RequestResumeAudioIns".Log();
 	protected virtual uint GetAudioInsProcessMasterVolume(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioInManagerForApplet.GetAudioInsProcessMasterVolume not implemented");
 	protected virtual void SetAudioInsProcessMasterVolume(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.SetAudioInsProcessMasterVolume");
+		"Stub hit for Nn.Audio.Detail.IAudioInManagerForApplet.SetAudioInsProcessMasterVolume".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioIns
@@ -401,9 +401,9 @@ public partial class IAudioInManagerForDebugger : _IAudioInManagerForDebugger_Ba
 }
 public abstract class _IAudioInManagerForDebugger_Base : IpcInterface {
 	protected virtual void RequestSuspendAudioInsForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForDebugger.RequestSuspendAudioInsForDebug");
+		"Stub hit for Nn.Audio.Detail.IAudioInManagerForDebugger.RequestSuspendAudioInsForDebug".Log();
 	protected virtual void RequestResumeAudioInsForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioInManagerForDebugger.RequestResumeAudioInsForDebug");
+		"Stub hit for Nn.Audio.Detail.IAudioInManagerForDebugger.RequestResumeAudioInsForDebug".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioInsForDebug
@@ -427,11 +427,11 @@ public abstract class _IAudioOut_Base : IpcInterface {
 	protected virtual uint GetAudioOutState() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOut.GetAudioOutState not implemented");
 	protected virtual void StartAudioOut() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOut.StartAudioOut");
+		"Stub hit for Nn.Audio.Detail.IAudioOut.StartAudioOut".Log();
 	protected virtual void StopAudioOut() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOut.StopAudioOut");
+		"Stub hit for Nn.Audio.Detail.IAudioOut.StopAudioOut".Log();
 	protected virtual void AppendAudioOutBuffer(ulong tag, Span<Nn.Audio.AudioOutBuffer> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOut.AppendAudioOutBuffer");
+		"Stub hit for Nn.Audio.Detail.IAudioOut.AppendAudioOutBuffer".Log();
 	protected virtual KObject RegisterBufferEvent() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOut.RegisterBufferEvent not implemented");
 	protected virtual void GetReleasedAudioOutBuffer(out uint count, Span<Nn.Audio.AudioOutBuffer> _1) =>
@@ -439,7 +439,7 @@ public abstract class _IAudioOut_Base : IpcInterface {
 	protected virtual byte ContainsAudioOutBuffer(ulong tag) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOut.ContainsAudioOutBuffer not implemented");
 	protected virtual void AppendAudioOutBufferAuto(ulong tag, Span<Nn.Audio.AudioOutBuffer> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOut.AppendAudioOutBufferAuto");
+		"Stub hit for Nn.Audio.Detail.IAudioOut.AppendAudioOutBufferAuto".Log();
 	protected virtual void GetReleasedAudioOutBufferAuto(out uint count, Span<Nn.Audio.AudioOutBuffer> _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOut.GetReleasedAudioOutBufferAuto not implemented");
 	protected virtual uint GetAudioOutBufferCount() =>
@@ -583,17 +583,17 @@ public partial class IAudioOutManagerForApplet : _IAudioOutManagerForApplet_Base
 }
 public abstract class _IAudioOutManagerForApplet_Base : IpcInterface {
 	protected virtual void RequestSuspendAudioOuts(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.RequestSuspendAudioOuts");
+		"Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.RequestSuspendAudioOuts".Log();
 	protected virtual void RequestResumeAudioOuts(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.RequestResumeAudioOuts");
+		"Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.RequestResumeAudioOuts".Log();
 	protected virtual uint GetAudioOutsProcessMasterVolume(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManagerForApplet.GetAudioOutsProcessMasterVolume not implemented");
 	protected virtual void SetAudioOutsProcessMasterVolume(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.SetAudioOutsProcessMasterVolume");
+		"Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.SetAudioOutsProcessMasterVolume".Log();
 	protected virtual uint GetAudioOutsProcessRecordVolume(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManagerForApplet.GetAudioOutsProcessRecordVolume not implemented");
 	protected virtual void SetAudioOutsProcessRecordVolume(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.SetAudioOutsProcessRecordVolume");
+		"Stub hit for Nn.Audio.Detail.IAudioOutManagerForApplet.SetAudioOutsProcessRecordVolume".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioOuts
@@ -640,9 +640,9 @@ public partial class IAudioOutManagerForDebugger : _IAudioOutManagerForDebugger_
 }
 public abstract class _IAudioOutManagerForDebugger_Base : IpcInterface {
 	protected virtual void RequestSuspendAudioOutsForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForDebugger.RequestSuspendAudioOutsForDebug");
+		"Stub hit for Nn.Audio.Detail.IAudioOutManagerForDebugger.RequestSuspendAudioOutsForDebug".Log();
 	protected virtual void RequestResumeAudioOutsForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioOutManagerForDebugger.RequestResumeAudioOutsForDebug");
+		"Stub hit for Nn.Audio.Detail.IAudioOutManagerForDebugger.RequestResumeAudioOutsForDebug".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioOutsForDebug
@@ -674,19 +674,19 @@ public abstract class _IAudioRenderer_Base : IpcInterface {
 	protected virtual void RequestUpdateAudioRenderer(Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _0, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _1, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _2) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.RequestUpdateAudioRenderer not implemented");
 	protected virtual void Start() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRenderer.Start");
+		"Stub hit for Nn.Audio.Detail.IAudioRenderer.Start".Log();
 	protected virtual void Stop() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRenderer.Stop");
+		"Stub hit for Nn.Audio.Detail.IAudioRenderer.Stop".Log();
 	protected virtual KObject QuerySystemEvent() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.QuerySystemEvent not implemented");
 	protected virtual void SetAudioRendererRenderingTimeLimit(uint limit) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRenderer.SetAudioRendererRenderingTimeLimit");
+		"Stub hit for Nn.Audio.Detail.IAudioRenderer.SetAudioRendererRenderingTimeLimit".Log();
 	protected virtual uint GetAudioRendererRenderingTimeLimit() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.GetAudioRendererRenderingTimeLimit not implemented");
 	protected virtual void RequestUpdateAudioRendererAuto(Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _0, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _1, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _2) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.RequestUpdateAudioRendererAuto not implemented");
 	protected virtual void ExecuteAudioRendererRendering() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRenderer.ExecuteAudioRendererRendering");
+		"Stub hit for Nn.Audio.Detail.IAudioRenderer.ExecuteAudioRendererRendering".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSampleRate
@@ -820,21 +820,21 @@ public partial class IAudioRendererManagerForApplet : _IAudioRendererManagerForA
 }
 public abstract class _IAudioRendererManagerForApplet_Base : IpcInterface {
 	protected virtual void RequestSuspendAudioRenderers(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.RequestSuspendAudioRenderers");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.RequestSuspendAudioRenderers".Log();
 	protected virtual void RequestResumeAudioRenderers(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.RequestResumeAudioRenderers");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.RequestResumeAudioRenderers".Log();
 	protected virtual uint GetAudioRenderersProcessMasterVolume(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManagerForApplet.GetAudioRenderersProcessMasterVolume not implemented");
 	protected virtual void SetAudioRenderersProcessMasterVolume(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.SetAudioRenderersProcessMasterVolume");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.SetAudioRenderersProcessMasterVolume".Log();
 	protected virtual void RegisterAppletResourceUserId(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.RegisterAppletResourceUserId");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.RegisterAppletResourceUserId".Log();
 	protected virtual void UnregisterAppletResourceUserId(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.UnregisterAppletResourceUserId");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.UnregisterAppletResourceUserId".Log();
 	protected virtual uint GetAudioRenderersProcessRecordVolume(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManagerForApplet.GetAudioRenderersProcessRecordVolume not implemented");
 	protected virtual void SetAudioRenderersProcessRecordVolume(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.SetAudioRenderersProcessRecordVolume");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForApplet.SetAudioRenderersProcessRecordVolume".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendAudioRenderers
@@ -891,9 +891,9 @@ public partial class IAudioRendererManagerForDebugger : _IAudioRendererManagerFo
 }
 public abstract class _IAudioRendererManagerForDebugger_Base : IpcInterface {
 	protected virtual void RequestSuspendForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForDebugger.RequestSuspendForDebug");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForDebugger.RequestSuspendForDebug".Log();
 	protected virtual void RequestResumeForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IAudioRendererManagerForDebugger.RequestResumeForDebug");
+		"Stub hit for Nn.Audio.Detail.IAudioRendererManagerForDebugger.RequestResumeForDebug".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendForDebug
@@ -918,21 +918,21 @@ public partial class ICodecController : _ICodecController_Base {
 }
 public abstract class _ICodecController_Base : IpcInterface {
 	protected virtual void InitializeCodecController() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.InitializeCodecController");
+		"Stub hit for Nn.Audio.Detail.ICodecController.InitializeCodecController".Log();
 	protected virtual void FinalizeCodecController() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.FinalizeCodecController");
+		"Stub hit for Nn.Audio.Detail.ICodecController.FinalizeCodecController".Log();
 	protected virtual void SleepCodecController() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.SleepCodecController");
+		"Stub hit for Nn.Audio.Detail.ICodecController.SleepCodecController".Log();
 	protected virtual void WakeCodecController() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.WakeCodecController");
+		"Stub hit for Nn.Audio.Detail.ICodecController.WakeCodecController".Log();
 	protected virtual void SetCodecVolume(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.SetCodecVolume");
+		"Stub hit for Nn.Audio.Detail.ICodecController.SetCodecVolume".Log();
 	protected virtual uint GetCodecVolumeMax() =>
 		throw new NotImplementedException("Nn.Audio.Detail.ICodecController.GetCodecVolumeMax not implemented");
 	protected virtual uint GetCodecVolumeMin() =>
 		throw new NotImplementedException("Nn.Audio.Detail.ICodecController.GetCodecVolumeMin not implemented");
 	protected virtual void SetCodecActiveTarget(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.SetCodecActiveTarget");
+		"Stub hit for Nn.Audio.Detail.ICodecController.SetCodecActiveTarget".Log();
 	protected virtual uint GetCodecActiveTarget() =>
 		throw new NotImplementedException("Nn.Audio.Detail.ICodecController.GetCodecActiveTarget not implemented");
 	protected virtual KObject BindCodecHeadphoneMicJackInterrupt() =>
@@ -940,7 +940,7 @@ public abstract class _ICodecController_Base : IpcInterface {
 	protected virtual byte IsCodecHeadphoneMicJackInserted() =>
 		throw new NotImplementedException("Nn.Audio.Detail.ICodecController.IsCodecHeadphoneMicJackInserted not implemented");
 	protected virtual void ClearCodecHeadphoneMicJackInterrupt() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.ICodecController.ClearCodecHeadphoneMicJackInterrupt");
+		"Stub hit for Nn.Audio.Detail.ICodecController.ClearCodecHeadphoneMicJackInterrupt".Log();
 	protected virtual byte IsCodecDeviceRequested() =>
 		throw new NotImplementedException("Nn.Audio.Detail.ICodecController.IsCodecDeviceRequested not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1027,11 +1027,11 @@ public abstract class _IFinalOutputRecorder_Base : IpcInterface {
 	protected virtual uint GetFinalOutputRecorderState() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IFinalOutputRecorder.GetFinalOutputRecorderState not implemented");
 	protected virtual void StartFinalOutputRecorder() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.StartFinalOutputRecorder");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.StartFinalOutputRecorder".Log();
 	protected virtual void StopFinalOutputRecorder() =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.StopFinalOutputRecorder");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.StopFinalOutputRecorder".Log();
 	protected virtual void AppendFinalOutputRecorderBuffer(ulong _0, Span<Nn.Audio.AudioInBuffer> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.AppendFinalOutputRecorderBuffer");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.AppendFinalOutputRecorderBuffer".Log();
 	protected virtual KObject RegisterBufferEvent() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IFinalOutputRecorder.RegisterBufferEvent not implemented");
 	protected virtual void GetReleasedFinalOutputRecorderBuffer(out uint _0, out ulong _1, Span<Nn.Audio.AudioInBuffer> _2) =>
@@ -1041,7 +1041,7 @@ public abstract class _IFinalOutputRecorder_Base : IpcInterface {
 	protected virtual ulong Unknown7(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IFinalOutputRecorder.Unknown7 not implemented");
 	protected virtual void AppendFinalOutputRecorderBufferAuto(ulong _0, Span<Nn.Audio.AudioInBuffer> _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.AppendFinalOutputRecorderBufferAuto");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorder.AppendFinalOutputRecorderBufferAuto".Log();
 	protected virtual void GetReleasedFinalOutputRecorderBufferAuto(out uint _0, out ulong _1, Span<Nn.Audio.AudioInBuffer> _2) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IFinalOutputRecorder.GetReleasedFinalOutputRecorderBufferAuto not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1138,9 +1138,9 @@ public partial class IFinalOutputRecorderManagerForApplet : _IFinalOutputRecorde
 }
 public abstract class _IFinalOutputRecorderManagerForApplet_Base : IpcInterface {
 	protected virtual void RequestSuspendFinalOutputRecorders(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForApplet.RequestSuspendFinalOutputRecorders");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForApplet.RequestSuspendFinalOutputRecorders".Log();
 	protected virtual void RequestResumeFinalOutputRecorders(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForApplet.RequestResumeFinalOutputRecorders");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForApplet.RequestResumeFinalOutputRecorders".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendFinalOutputRecorders
@@ -1165,9 +1165,9 @@ public partial class IFinalOutputRecorderManagerForDebugger : _IFinalOutputRecor
 }
 public abstract class _IFinalOutputRecorderManagerForDebugger_Base : IpcInterface {
 	protected virtual void RequestSuspendForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForDebugger.RequestSuspendForDebug");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForDebugger.RequestSuspendForDebug".Log();
 	protected virtual void RequestResumeForDebug(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForDebugger.RequestResumeForDebug");
+		"Stub hit for Nn.Audio.Detail.IFinalOutputRecorderManagerForDebugger.RequestResumeForDebug".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RequestSuspendForDebug

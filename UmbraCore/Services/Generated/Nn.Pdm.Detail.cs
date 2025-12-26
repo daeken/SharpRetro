@@ -5,19 +5,19 @@ namespace UmbraCore.Services.Nn.Pdm.Detail;
 public partial class INotifyService : _INotifyService_Base;
 public abstract class _INotifyService_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown0");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown0".Log();
 	protected virtual void Unknown2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown2");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown2".Log();
 	protected virtual void Unknown3(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown3");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown3".Log();
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown4");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown4".Log();
 	protected virtual void Unknown5(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown5");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown5".Log();
 	protected virtual void Unknown6(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown6");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown6".Log();
 	protected virtual void Unknown7(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pdm.Detail.INotifyService.Unknown7");
+		"Stub hit for Nn.Pdm.Detail.INotifyService.Unknown7".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

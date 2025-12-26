@@ -8,19 +8,19 @@ public partial class IContext : _IContext_Base {
 }
 public abstract class _IContext_Base : IpcInterface {
 	protected virtual void SubmitContext(Span<byte> _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.SubmitContext");
+		"Stub hit for Nn.Erpt.Sf.IContext.SubmitContext".Log();
 	protected virtual void CreateReport(byte[] _0, Span<byte> _1, Span<byte> _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.CreateReport");
+		"Stub hit for Nn.Erpt.Sf.IContext.CreateReport".Log();
 	protected virtual void Unknown2(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown2");
+		"Stub hit for Nn.Erpt.Sf.IContext.Unknown2".Log();
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown3");
+		"Stub hit for Nn.Erpt.Sf.IContext.Unknown3".Log();
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown4");
+		"Stub hit for Nn.Erpt.Sf.IContext.Unknown4".Log();
 	protected virtual void Unknown5() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown5");
+		"Stub hit for Nn.Erpt.Sf.IContext.Unknown5".Log();
 	protected virtual void Unknown6() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IContext.Unknown6");
+		"Stub hit for Nn.Erpt.Sf.IContext.Unknown6".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SubmitContext
@@ -71,11 +71,11 @@ public abstract class _IManager_Base : IpcInterface {
 	protected virtual KObject GetEvent() =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IManager.GetEvent not implemented");
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IManager.Unknown2");
+		"Stub hit for Nn.Erpt.Sf.IManager.Unknown2".Log();
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IManager.Unknown3");
+		"Stub hit for Nn.Erpt.Sf.IManager.Unknown3".Log();
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IManager.Unknown4");
+		"Stub hit for Nn.Erpt.Sf.IManager.Unknown4".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetReportList
@@ -113,15 +113,15 @@ public abstract class _IManager_Base : IpcInterface {
 public partial class IReport : _IReport_Base;
 public abstract class _IReport_Base : IpcInterface {
 	protected virtual void Open(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.Open");
+		"Stub hit for Nn.Erpt.Sf.IReport.Open".Log();
 	protected virtual void Read(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.Read not implemented");
 	protected virtual void SetFlags(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport.SetFlags");
+		"Stub hit for Nn.Erpt.Sf.IReport.SetFlags".Log();
 	protected virtual void GetFlags(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.GetFlags not implemented");
 	protected virtual void _Close() =>
-		Console.WriteLine("Stub hit for Nn.Erpt.Sf.IReport._Close");
+		"Stub hit for Nn.Erpt.Sf.IReport._Close".Log();
 	protected virtual void GetSize(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Erpt.Sf.IReport.GetSize not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

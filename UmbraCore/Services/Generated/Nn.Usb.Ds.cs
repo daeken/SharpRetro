@@ -7,15 +7,15 @@ public abstract class _IDsEndpoint_Base : IpcInterface {
 	protected virtual uint PostBufferAsync(uint size, ulong buffer) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.PostBufferAsync not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.Cancel");
+		"Stub hit for Nn.Usb.Ds.IDsEndpoint.Cancel".Log();
 	protected virtual KObject GetCompletionEvent() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.GetCompletionEvent not implemented");
 	protected virtual void GetReportData(out Nn.Usb.Usb_report_entry[] entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsEndpoint.GetReportData not implemented");
 	protected virtual void Stall() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.Stall");
+		"Stub hit for Nn.Usb.Ds.IDsEndpoint.Stall".Log();
 	protected virtual void SetZlt(bool _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsEndpoint.SetZlt");
+		"Stub hit for Nn.Usb.Ds.IDsEndpoint.SetZlt".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // PostBufferAsync
@@ -75,9 +75,9 @@ public abstract class _IDsInterface_Base : IpcInterface {
 	protected virtual void GetSetupPacket(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetSetupPacket not implemented");
 	protected virtual void EnableInterface() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.EnableInterface");
+		"Stub hit for Nn.Usb.Ds.IDsInterface.EnableInterface".Log();
 	protected virtual void DisableInterface() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.DisableInterface");
+		"Stub hit for Nn.Usb.Ds.IDsInterface.DisableInterface".Log();
 	protected virtual uint CtrlInPostBufferAsync(uint size, ulong buffer) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.CtrlInPostBufferAsync not implemented");
 	protected virtual uint CtrlOutPostBufferAsync(uint size, ulong buffer) =>
@@ -91,9 +91,9 @@ public abstract class _IDsInterface_Base : IpcInterface {
 	protected virtual void GetCtrlOutReportData(out Nn.Usb.Usb_report_entry[] entries, out uint report_count) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsInterface.GetCtrlOutReportData not implemented");
 	protected virtual void StallCtrl() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.StallCtrl");
+		"Stub hit for Nn.Usb.Ds.IDsInterface.StallCtrl".Log();
 	protected virtual void AppendConfigurationData(byte interface_number, Nn.Usb.Usb_device_speed speed_mode, Span<byte> descriptor) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsInterface.AppendConfigurationData");
+		"Stub hit for Nn.Usb.Ds.IDsInterface.AppendConfigurationData".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // RegisterEndpoint
@@ -199,9 +199,9 @@ public partial class IDsService : _IDsService_Base {
 }
 public abstract class _IDsService_Base : IpcInterface {
 	protected virtual void BindDevice(uint complexId) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.BindDevice");
+		"Stub hit for Nn.Usb.Ds.IDsService.BindDevice".Log();
 	protected virtual void BindClientProcess(KObject _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.BindClientProcess");
+		"Stub hit for Nn.Usb.Ds.IDsService.BindClientProcess".Log();
 	protected virtual Nn.Usb.Ds.IDsInterface RegisterInterface(byte address) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsService.RegisterInterface not implemented");
 	protected virtual KObject GetStateChangeEvent() =>
@@ -209,19 +209,19 @@ public abstract class _IDsService_Base : IpcInterface {
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsService.GetState not implemented");
 	protected virtual void ClearDeviceData() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.ClearDeviceData");
+		"Stub hit for Nn.Usb.Ds.IDsService.ClearDeviceData".Log();
 	protected virtual byte AddUsbStringDescriptor(Span<byte> string_descriptor) =>
 		throw new NotImplementedException("Nn.Usb.Ds.IDsService.AddUsbStringDescriptor not implemented");
 	protected virtual void DeleteUsbStringDescriptor(byte index) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.DeleteUsbStringDescriptor");
+		"Stub hit for Nn.Usb.Ds.IDsService.DeleteUsbStringDescriptor".Log();
 	protected virtual void SetUsbDeviceDescriptor(Nn.Usb.Usb_device_speed speed_mode, Span<Nn.Usb.Usb_device_descriptor> descriptor) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.SetUsbDeviceDescriptor");
+		"Stub hit for Nn.Usb.Ds.IDsService.SetUsbDeviceDescriptor".Log();
 	protected virtual void SetBinaryObjectStore(Span<Nn.Usb.Usb_bos_descriptor> _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.SetBinaryObjectStore");
+		"Stub hit for Nn.Usb.Ds.IDsService.SetBinaryObjectStore".Log();
 	protected virtual void Enable() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.Enable");
+		"Stub hit for Nn.Usb.Ds.IDsService.Enable".Log();
 	protected virtual void Disable() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Ds.IDsService.Disable");
+		"Stub hit for Nn.Usb.Ds.IDsService.Disable".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BindDevice

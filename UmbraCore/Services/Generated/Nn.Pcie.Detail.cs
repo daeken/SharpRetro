@@ -39,7 +39,7 @@ public abstract class _ISession_Base : IpcInterface {
 	protected virtual KObject AcquireFunction(byte[] _0) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.AcquireFunction not implemented");
 	protected virtual void ReleaseFunction(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.ReleaseFunction");
+		"Stub hit for Nn.Pcie.Detail.ISession.ReleaseFunction".Log();
 	protected virtual void GetFunctionState(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.GetFunctionState not implemented");
 	protected virtual void GetBarProfile(byte[] _0, out byte[] _1) =>
@@ -47,11 +47,11 @@ public abstract class _ISession_Base : IpcInterface {
 	protected virtual void ReadConfig(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.ReadConfig not implemented");
 	protected virtual void WriteConfig(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.WriteConfig");
+		"Stub hit for Nn.Pcie.Detail.ISession.WriteConfig".Log();
 	protected virtual void ReadBarRegion(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.ReadBarRegion not implemented");
 	protected virtual void WriteBarRegion(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.WriteBarRegion");
+		"Stub hit for Nn.Pcie.Detail.ISession.WriteBarRegion".Log();
 	protected virtual void FindCapability(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.FindCapability not implemented");
 	protected virtual void FindExtendedCapability(byte[] _0, out byte[] _1) =>
@@ -59,23 +59,23 @@ public abstract class _ISession_Base : IpcInterface {
 	protected virtual void MapDma(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.MapDma not implemented");
 	protected virtual void UnmapDma(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.UnmapDma");
+		"Stub hit for Nn.Pcie.Detail.ISession.UnmapDma".Log();
 	protected virtual void UnmapDmaBusAddress(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.UnmapDmaBusAddress");
+		"Stub hit for Nn.Pcie.Detail.ISession.UnmapDmaBusAddress".Log();
 	protected virtual void GetDmaBusAddress(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.GetDmaBusAddress not implemented");
 	protected virtual void GetDmaBusAddressRange(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.GetDmaBusAddressRange not implemented");
 	protected virtual void SetDmaEnable(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.SetDmaEnable");
+		"Stub hit for Nn.Pcie.Detail.ISession.SetDmaEnable".Log();
 	protected virtual KObject AcquireIrq(byte[] _0) =>
 		throw new NotImplementedException("Nn.Pcie.Detail.ISession.AcquireIrq not implemented");
 	protected virtual void ReleaseIrq(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.ReleaseIrq");
+		"Stub hit for Nn.Pcie.Detail.ISession.ReleaseIrq".Log();
 	protected virtual void SetIrqEnable(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.SetIrqEnable");
+		"Stub hit for Nn.Pcie.Detail.ISession.SetIrqEnable".Log();
 	protected virtual void SetAspmEnable(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcie.Detail.ISession.SetAspmEnable");
+		"Stub hit for Nn.Pcie.Detail.ISession.SetAspmEnable".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // QueryFunctions

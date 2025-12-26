@@ -126,7 +126,7 @@ public class SyncManager {
             return 0;
         };
         game.Callbacks.SignalProcessWideKey = (semaAddr, target) => {
-            Console.WriteLine($"SignalProcessWideKey {semaAddr:X}");
+            $"SignalProcessWideKey {semaAddr:X}".Log();
             var semaphore = EnsureSemaphore(semaAddr);
             semaphore.Increment();
             if(target == 1)
@@ -136,7 +136,7 @@ public class SyncManager {
             return 0;
         };
         game.Callbacks.WaitSynchronization = (handlesAddr, numHandles, timeout, ref _activated) => {
-            Console.WriteLine("WaitSynchronization");
+            "WaitSynchronization".Log();
             var handles = new Buffer<uint>(handlesAddr, numHandles * 4);
             var waitHandle = new AutoResetEvent(false);
             var activated = uint.MaxValue;
@@ -157,6 +157,37 @@ public class SyncManager {
             }
             completed = true;
             return 0xea01;
+        };
+        game.Callbacks.WaitProcessWideKeyAtomic = (mutexAddr, semaAddr, threadHandle, timeout) => {
+            $"WaitProcessWideKeyAtomic(0x{mutexAddr:X}, 0x{semaAddr:X}, 0x{threadHandle:X}, {timeout})".Log();
+            var mutex = EnsureMutex(mutexAddr);
+            var sema = EnsureSemaphore(semaAddr);
+            if(sema.Value > 0) {
+                $"Early bailout 0x{sema.Value:X}".Log();
+                sema.Decrement();
+                return 0;
+            }
+            game.Callbacks.ArbitrateUnlock(mutexAddr);
+            sema.Wait();
+            game.Callbacks.ArbitrateLock(0, mutexAddr, threadHandle);
+            "Waited".Log();
+            sema.Decrement();
+            return 0;
+        };
+        game.Callbacks.ArbitrateLock = (curThread, mutexAddr, reqThread) => {
+            $"LockMutex(0x{curThread:X}, 0x{mutexAddr:X}, 0x{reqThread:X})".Log();
+            EnsureMutex(mutexAddr).WaitOne();
+            "Locked mutex".Log();
+            *(uint*) mutexAddr = (*(uint*) mutexAddr & 0x40000000) | (uint) reqThread;
+            return 0;
+        };
+        game.Callbacks.ArbitrateUnlock = mutexAddr => {
+            (*(uint*) mutexAddr) &= 0x40000000;
+            try {
+                EnsureMutex(mutexAddr).ReleaseMutex();
+            } catch(ApplicationException) {
+            }
+            return 0;
         };
     }
 }

@@ -8,19 +8,19 @@ public partial class IETicketService : _IETicketService_Base {
 }
 public abstract class _IETicketService_Base : IpcInterface {
 	protected virtual void ImportTicket(Span<byte> _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.ImportTicket");
+		"Stub hit for Nn.Es.IETicketService.ImportTicket".Log();
 	protected virtual void ImportTicketCertificateSet(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.ImportTicketCertificateSet");
+		"Stub hit for Nn.Es.IETicketService.ImportTicketCertificateSet".Log();
 	protected virtual void DeleteTicket(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteTicket");
+		"Stub hit for Nn.Es.IETicketService.DeleteTicket".Log();
 	protected virtual void DeletePersonalizedTicket(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeletePersonalizedTicket");
+		"Stub hit for Nn.Es.IETicketService.DeletePersonalizedTicket".Log();
 	protected virtual void DeleteAllCommonTicket() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllCommonTicket");
+		"Stub hit for Nn.Es.IETicketService.DeleteAllCommonTicket".Log();
 	protected virtual void DeleteAllPersonalizedTicket() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllPersonalizedTicket");
+		"Stub hit for Nn.Es.IETicketService.DeleteAllPersonalizedTicket".Log();
 	protected virtual void DeleteAllPersonalizedTicketEx(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllPersonalizedTicketEx");
+		"Stub hit for Nn.Es.IETicketService.DeleteAllPersonalizedTicketEx".Log();
 	protected virtual void GetTitleKey_0(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetTitleKey_0 not implemented");
 	protected virtual void CountCommonTicket(out byte[] _0) =>
@@ -54,11 +54,11 @@ public abstract class _IETicketService_Base : IpcInterface {
 	protected virtual void GetCommonTicketAndCertificateData(byte[] _0, out byte[] _1, Span<byte> _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.GetCommonTicketAndCertificateData not implemented");
 	protected virtual void ImportPrepurchaseRecord(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.ImportPrepurchaseRecord");
+		"Stub hit for Nn.Es.IETicketService.ImportPrepurchaseRecord".Log();
 	protected virtual void DeletePrepurchaseRecord(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeletePrepurchaseRecord");
+		"Stub hit for Nn.Es.IETicketService.DeletePrepurchaseRecord".Log();
 	protected virtual void DeleteAllPrepurchaseRecord() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.DeleteAllPrepurchaseRecord");
+		"Stub hit for Nn.Es.IETicketService.DeleteAllPrepurchaseRecord".Log();
 	protected virtual void CountPrepurchaseRecord(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.CountPrepurchaseRecord not implemented");
 	protected virtual void ListPrepurchaseRecord(out byte[] _0, Span<byte> _1) =>
@@ -66,79 +66,79 @@ public abstract class _IETicketService_Base : IpcInterface {
 	protected virtual void ListPrepurchaseRecordInfo(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Es.IETicketService.ListPrepurchaseRecordInfo not implemented");
 	protected virtual void Unknown30() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown30");
+		"Stub hit for Nn.Es.IETicketService.Unknown30".Log();
 	protected virtual void Unknown31() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown31");
+		"Stub hit for Nn.Es.IETicketService.Unknown31".Log();
 	protected virtual void Unknown32() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown32");
+		"Stub hit for Nn.Es.IETicketService.Unknown32".Log();
 	protected virtual void Unknown33() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown33");
+		"Stub hit for Nn.Es.IETicketService.Unknown33".Log();
 	protected virtual void Unknown34() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown34");
+		"Stub hit for Nn.Es.IETicketService.Unknown34".Log();
 	protected virtual void Unknown35() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown35");
+		"Stub hit for Nn.Es.IETicketService.Unknown35".Log();
 	protected virtual void Unknown36() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown36");
+		"Stub hit for Nn.Es.IETicketService.Unknown36".Log();
 	protected virtual void Unknown501() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown501");
+		"Stub hit for Nn.Es.IETicketService.Unknown501".Log();
 	protected virtual void Unknown502() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown502");
+		"Stub hit for Nn.Es.IETicketService.Unknown502".Log();
 	protected virtual void GetTitleKey_1() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.GetTitleKey_1");
+		"Stub hit for Nn.Es.IETicketService.GetTitleKey_1".Log();
 	protected virtual void Unknown504() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown504");
+		"Stub hit for Nn.Es.IETicketService.Unknown504".Log();
 	protected virtual void Unknown508() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown508");
+		"Stub hit for Nn.Es.IETicketService.Unknown508".Log();
 	protected virtual void Unknown509() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown509");
+		"Stub hit for Nn.Es.IETicketService.Unknown509".Log();
 	protected virtual void Unknown510() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown510");
+		"Stub hit for Nn.Es.IETicketService.Unknown510".Log();
 	protected virtual void Unknown1001() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1001");
+		"Stub hit for Nn.Es.IETicketService.Unknown1001".Log();
 	protected virtual void Unknown1002() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1002");
+		"Stub hit for Nn.Es.IETicketService.Unknown1002".Log();
 	protected virtual void Unknown1003() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1003");
+		"Stub hit for Nn.Es.IETicketService.Unknown1003".Log();
 	protected virtual void Unknown1004() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1004");
+		"Stub hit for Nn.Es.IETicketService.Unknown1004".Log();
 	protected virtual void Unknown1005() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1005");
+		"Stub hit for Nn.Es.IETicketService.Unknown1005".Log();
 	protected virtual void Unknown1006() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1006");
+		"Stub hit for Nn.Es.IETicketService.Unknown1006".Log();
 	protected virtual void Unknown1007() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1007");
+		"Stub hit for Nn.Es.IETicketService.Unknown1007".Log();
 	protected virtual void Unknown1009() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1009");
+		"Stub hit for Nn.Es.IETicketService.Unknown1009".Log();
 	protected virtual void Unknown1010() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1010");
+		"Stub hit for Nn.Es.IETicketService.Unknown1010".Log();
 	protected virtual void Unknown1011() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1011");
+		"Stub hit for Nn.Es.IETicketService.Unknown1011".Log();
 	protected virtual void Unknown1012() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1012");
+		"Stub hit for Nn.Es.IETicketService.Unknown1012".Log();
 	protected virtual void Unknown1013() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1013");
+		"Stub hit for Nn.Es.IETicketService.Unknown1013".Log();
 	protected virtual void Unknown1014() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1014");
+		"Stub hit for Nn.Es.IETicketService.Unknown1014".Log();
 	protected virtual void Unknown1015() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1015");
+		"Stub hit for Nn.Es.IETicketService.Unknown1015".Log();
 	protected virtual void Unknown1016() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1016");
+		"Stub hit for Nn.Es.IETicketService.Unknown1016".Log();
 	protected virtual void Unknown1501() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1501");
+		"Stub hit for Nn.Es.IETicketService.Unknown1501".Log();
 	protected virtual void Unknown1502() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1502");
+		"Stub hit for Nn.Es.IETicketService.Unknown1502".Log();
 	protected virtual void Unknown1503() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1503");
+		"Stub hit for Nn.Es.IETicketService.Unknown1503".Log();
 	protected virtual void Unknown1504() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1504");
+		"Stub hit for Nn.Es.IETicketService.Unknown1504".Log();
 	protected virtual void Unknown1505() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown1505");
+		"Stub hit for Nn.Es.IETicketService.Unknown1505".Log();
 	protected virtual void Unknown2000() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown2000");
+		"Stub hit for Nn.Es.IETicketService.Unknown2000".Log();
 	protected virtual void Unknown2501() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown2501");
+		"Stub hit for Nn.Es.IETicketService.Unknown2501".Log();
 	protected virtual void Unknown2502() =>
-		Console.WriteLine("Stub hit for Nn.Es.IETicketService.Unknown2502");
+		"Stub hit for Nn.Es.IETicketService.Unknown2502".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // ImportTicket

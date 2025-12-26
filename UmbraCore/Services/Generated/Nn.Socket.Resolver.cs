@@ -8,7 +8,7 @@ public partial class IResolver : _IResolver_Base {
 }
 public abstract class _IResolver_Base : IpcInterface {
 	protected virtual void SetDnsAddressesPrivate(uint _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Socket.Resolver.IResolver.SetDnsAddressesPrivate");
+		"Stub hit for Nn.Socket.Resolver.IResolver.SetDnsAddressesPrivate".Log();
 	protected virtual void GetDnsAddressPrivate(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Socket.Resolver.IResolver.GetDnsAddressPrivate not implemented");
 	protected virtual void GetHostByName(byte _0, uint _1, ulong _2, ulong _3, Span<byte> _4, out uint _5, out uint _6, out uint _7, Span<byte> _8) =>
@@ -26,7 +26,7 @@ public abstract class _IResolver_Base : IpcInterface {
 	protected virtual uint RequestCancelHandle(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Socket.Resolver.IResolver.RequestCancelHandle not implemented");
 	protected virtual void CancelSocketCall(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Socket.Resolver.IResolver.CancelSocketCall");
+		"Stub hit for Nn.Socket.Resolver.IResolver.CancelSocketCall".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetDnsAddressesPrivate

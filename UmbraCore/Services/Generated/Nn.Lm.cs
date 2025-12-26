@@ -26,9 +26,9 @@ public abstract class _ILogService_Base : IpcInterface {
 public partial class ILogger : _ILogger_Base;
 public abstract class _ILogger_Base : IpcInterface {
 	protected virtual void Initialize(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Lm.ILogger.Initialize");
+		"Stub hit for Nn.Lm.ILogger.Initialize".Log();
 	protected virtual void SetDestination(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Lm.ILogger.SetDestination");
+		"Stub hit for Nn.Lm.ILogger.SetDestination".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
@@ -53,11 +53,11 @@ public partial class ILogGetter : _ILogGetter_Base {
 }
 public abstract class _ILogGetter_Base : IpcInterface {
 	protected virtual void StartLogging() =>
-		Console.WriteLine("Stub hit for Nn.Lm.ILogGetter.StartLogging");
+		"Stub hit for Nn.Lm.ILogGetter.StartLogging".Log();
 	protected virtual void StopLogging() =>
-		Console.WriteLine("Stub hit for Nn.Lm.ILogGetter.StopLogging");
+		"Stub hit for Nn.Lm.ILogGetter.StopLogging".Log();
 	protected virtual void GetLog() =>
-		Console.WriteLine("Stub hit for Nn.Lm.ILogGetter.GetLog");
+		"Stub hit for Nn.Lm.ILogGetter.GetLog".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // StartLogging

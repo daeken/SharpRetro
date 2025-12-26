@@ -26,13 +26,13 @@ public abstract class _IManager_Base : IpcInterface {
 public partial class ISession : _ISession_Base;
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Sasbus.ISession.Unknown0");
+		"Stub hit for Nn.Sasbus.ISession.Unknown0".Log();
 	protected virtual void Unknown1(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Sasbus.ISession.Unknown1 not implemented");
 	protected virtual void Unknown2(byte[] _0, KObject _1) =>
-		Console.WriteLine("Stub hit for Nn.Sasbus.ISession.Unknown2");
+		"Stub hit for Nn.Sasbus.ISession.Unknown2".Log();
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Sasbus.ISession.Unknown3");
+		"Stub hit for Nn.Sasbus.ISession.Unknown3".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

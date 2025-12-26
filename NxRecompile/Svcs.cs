@@ -12,7 +12,7 @@ public static class Svcs {
         [0x06] = ("QueryMemory", [0, 2], [0, 1]),
         [0x07] = ("ExitProcess", [], []),
         [0x08] = ("CreateThread", [1, 2, 3, 4, 5], [0, 1]),
-        [0x09] = ("StartThread", [0, 2, 3], [0]),
+        [0x09] = ("StartThread", [0], [0]),
         [0x0A] = ("ExitThread", [], []),
         [0x0B] = ("SleepThread", [0], []),
         [0x0C] = ("GetThreadPriority", [1], [0, 1]),

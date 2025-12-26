@@ -7,11 +7,11 @@ public abstract class _IAsyncContext_Base : IpcInterface {
 	protected virtual KObject Unknown0() =>
 		throw new NotImplementedException("Nn.Migration.Detail.IAsyncContext.Unknown0 not implemented");
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Migration.Detail.IAsyncContext.Unknown1");
+		"Stub hit for Nn.Migration.Detail.IAsyncContext.Unknown1".Log();
 	protected virtual void Unknown2(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Migration.Detail.IAsyncContext.Unknown2 not implemented");
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Migration.Detail.IAsyncContext.Unknown3");
+		"Stub hit for Nn.Migration.Detail.IAsyncContext.Unknown3".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

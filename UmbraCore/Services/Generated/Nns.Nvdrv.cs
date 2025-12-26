@@ -10,7 +10,7 @@ public abstract class _INvDrvDebugFSServices_Base : IpcInterface {
 	protected virtual void OpenLog(KObject _0, out byte[] _1) =>
 		throw new NotImplementedException("Nns.Nvdrv.INvDrvDebugFSServices.OpenLog not implemented");
 	protected virtual void CloseLog(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nns.Nvdrv.INvDrvDebugFSServices.CloseLog");
+		"Stub hit for Nns.Nvdrv.INvDrvDebugFSServices.CloseLog".Log();
 	protected virtual void ReadLog(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nns.Nvdrv.INvDrvDebugFSServices.ReadLog not implemented");
 	protected virtual void Unknown3(byte[] _0, Span<byte> _1, out byte[] _2, Span<byte> _3) =>
@@ -78,7 +78,7 @@ public abstract class _INvDrvServices_Base : IpcInterface {
 	protected virtual uint SetClientPID(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nns.Nvdrv.INvDrvServices.SetClientPID not implemented");
 	protected virtual void DumpGraphicsMemoryInfo() =>
-		Console.WriteLine("Stub hit for Nns.Nvdrv.INvDrvServices.DumpGraphicsMemoryInfo");
+		"Stub hit for Nns.Nvdrv.INvDrvServices.DumpGraphicsMemoryInfo".Log();
 	protected virtual uint Unknown10(uint _0, KObject _1) =>
 		throw new NotImplementedException("Nns.Nvdrv.INvDrvServices.Unknown10 not implemented");
 	protected virtual void Ioctl2(uint _0, uint _1, Span<byte> _2, Span<byte> _3, out uint _4, Span<byte> _5) =>
@@ -86,7 +86,7 @@ public abstract class _INvDrvServices_Base : IpcInterface {
 	protected virtual void Ioctl3(uint _0, uint _1, Span<byte> _2, out uint _3, Span<byte> _4, Span<byte> _5) =>
 		throw new NotImplementedException("Nns.Nvdrv.INvDrvServices.Ioctl3 not implemented");
 	protected virtual void Unknown13(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nns.Nvdrv.INvDrvServices.Unknown13");
+		"Stub hit for Nns.Nvdrv.INvDrvServices.Unknown13".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Open

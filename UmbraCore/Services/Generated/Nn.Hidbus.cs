@@ -8,31 +8,31 @@ public partial class IHidbusServer : _IHidbusServer_Base {
 }
 public abstract class _IHidbusServer_Base : IpcInterface {
 	protected virtual void GetBusHandle() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.GetBusHandle");
+		"Stub hit for Nn.Hidbus.IHidbusServer.GetBusHandle".Log();
 	protected virtual void IsExternalDeviceConnected() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.IsExternalDeviceConnected");
+		"Stub hit for Nn.Hidbus.IHidbusServer.IsExternalDeviceConnected".Log();
 	protected virtual void Initialize() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.Initialize");
+		"Stub hit for Nn.Hidbus.IHidbusServer.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer._Finalize");
+		"Stub hit for Nn.Hidbus.IHidbusServer._Finalize".Log();
 	protected virtual void EnableExternalDevice() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.EnableExternalDevice");
+		"Stub hit for Nn.Hidbus.IHidbusServer.EnableExternalDevice".Log();
 	protected virtual void GetExternalDeviceId() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.GetExternalDeviceId");
+		"Stub hit for Nn.Hidbus.IHidbusServer.GetExternalDeviceId".Log();
 	protected virtual void SendCommandAsync() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.SendCommandAsync");
+		"Stub hit for Nn.Hidbus.IHidbusServer.SendCommandAsync".Log();
 	protected virtual void GetSendCommandAsynceResult() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.GetSendCommandAsynceResult");
+		"Stub hit for Nn.Hidbus.IHidbusServer.GetSendCommandAsynceResult".Log();
 	protected virtual void SetEventForSendCommandAsycResult() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.SetEventForSendCommandAsycResult");
+		"Stub hit for Nn.Hidbus.IHidbusServer.SetEventForSendCommandAsycResult".Log();
 	protected virtual void GetSharedMemoryHandle() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.GetSharedMemoryHandle");
+		"Stub hit for Nn.Hidbus.IHidbusServer.GetSharedMemoryHandle".Log();
 	protected virtual void EnableJoyPollingReceiveMode() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.EnableJoyPollingReceiveMode");
+		"Stub hit for Nn.Hidbus.IHidbusServer.EnableJoyPollingReceiveMode".Log();
 	protected virtual void DisableJoyPollingReceiveMode() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.DisableJoyPollingReceiveMode");
+		"Stub hit for Nn.Hidbus.IHidbusServer.DisableJoyPollingReceiveMode".Log();
 	protected virtual void GetPollingData() =>
-		Console.WriteLine("Stub hit for Nn.Hidbus.IHidbusServer.GetPollingData");
+		"Stub hit for Nn.Hidbus.IHidbusServer.GetPollingData".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // GetBusHandle

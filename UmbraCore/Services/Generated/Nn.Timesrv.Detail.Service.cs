@@ -20,13 +20,13 @@ public abstract class _IStaticService_Base : IpcInterface {
 	protected virtual Nn.Timesrv.Detail.Service.ISystemClock GetEphemeralNetworkSystemClock() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.GetEphemeralNetworkSystemClock not implemented");
 	protected virtual void SetStandardSteadyClockInternalOffset(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.IStaticService.SetStandardSteadyClockInternalOffset");
+		"Stub hit for Nn.Timesrv.Detail.Service.IStaticService.SetStandardSteadyClockInternalOffset".Log();
 	protected virtual byte IsStandardUserSystemClockAutomaticCorrectionEnabled() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.IsStandardUserSystemClockAutomaticCorrectionEnabled not implemented");
 	protected virtual void SetStandardUserSystemClockAutomaticCorrectionEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.IStaticService.SetStandardUserSystemClockAutomaticCorrectionEnabled");
+		"Stub hit for Nn.Timesrv.Detail.Service.IStaticService.SetStandardUserSystemClockAutomaticCorrectionEnabled".Log();
 	protected virtual void GetStandardUserSystemClockInitialYear() =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.IStaticService.GetStandardUserSystemClockInitialYear");
+		"Stub hit for Nn.Timesrv.Detail.Service.IStaticService.GetStandardUserSystemClockInitialYear".Log();
 	protected virtual byte IsStandardNetworkSystemClockAccuracySufficient() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.IStaticService.IsStandardNetworkSystemClockAccuracySufficient not implemented");
 	protected virtual ulong CalculateMonotonicSystemClockBaseTimePoint(byte[] _0) =>
@@ -145,7 +145,7 @@ public abstract class _ISteadyClock_Base : IpcInterface {
 	protected virtual ulong GetTestOffset() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISteadyClock.GetTestOffset not implemented");
 	protected virtual void SetTestOffset(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISteadyClock.SetTestOffset");
+		"Stub hit for Nn.Timesrv.Detail.Service.ISteadyClock.SetTestOffset".Log();
 	protected virtual ulong GetRtcValue() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISteadyClock.GetRtcValue not implemented");
 	protected virtual byte IsRtcResetDetected() =>
@@ -155,7 +155,7 @@ public abstract class _ISteadyClock_Base : IpcInterface {
 	protected virtual ulong GetInternalOffset() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISteadyClock.GetInternalOffset not implemented");
 	protected virtual void SetInternalOffset(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISteadyClock.SetInternalOffset");
+		"Stub hit for Nn.Timesrv.Detail.Service.ISteadyClock.SetInternalOffset".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCurrentTimePoint
@@ -215,11 +215,11 @@ public abstract class _ISystemClock_Base : IpcInterface {
 	protected virtual ulong GetCurrentTime() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISystemClock.GetCurrentTime not implemented");
 	protected virtual void SetCurrentTime(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISystemClock.SetCurrentTime");
+		"Stub hit for Nn.Timesrv.Detail.Service.ISystemClock.SetCurrentTime".Log();
 	protected virtual void GetSystemClockContext(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ISystemClock.GetSystemClockContext not implemented");
 	protected virtual void SetSystemClockContext(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ISystemClock.SetSystemClockContext");
+		"Stub hit for Nn.Timesrv.Detail.Service.ISystemClock.SetSystemClockContext".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetCurrentTime
@@ -255,7 +255,7 @@ public abstract class _ITimeZoneService_Base : IpcInterface {
 	protected virtual void GetDeviceLocationName(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.GetDeviceLocationName not implemented");
 	protected virtual void SetDeviceLocationName(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Timesrv.Detail.Service.ITimeZoneService.SetDeviceLocationName");
+		"Stub hit for Nn.Timesrv.Detail.Service.ITimeZoneService.SetDeviceLocationName".Log();
 	protected virtual uint GetTotalLocationNameCount() =>
 		throw new NotImplementedException("Nn.Timesrv.Detail.Service.ITimeZoneService.GetTotalLocationNameCount not implemented");
 	protected virtual void LoadLocationNameList(uint _0, out uint _1, Span<byte> _2) =>

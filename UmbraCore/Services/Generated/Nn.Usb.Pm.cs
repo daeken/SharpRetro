@@ -16,7 +16,7 @@ public abstract class _IPmService_Base : IpcInterface {
 	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Pm.IPmService.Unknown3 not implemented");
 	protected virtual void Unknown4(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Pm.IPmService.Unknown4");
+		"Stub hit for Nn.Usb.Pm.IPmService.Unknown4".Log();
 	protected virtual void Unknown5(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Usb.Pm.IPmService.Unknown5 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

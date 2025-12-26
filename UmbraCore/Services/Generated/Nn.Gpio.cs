@@ -18,9 +18,9 @@ public abstract class _IManager_Base : IpcInterface {
 	protected virtual void Unknown4(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Gpio.IManager.Unknown4 not implemented");
 	protected virtual void Unknown5(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IManager.Unknown5");
+		"Stub hit for Nn.Gpio.IManager.Unknown5".Log();
 	protected virtual void Unknown6(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IManager.Unknown6");
+		"Stub hit for Nn.Gpio.IManager.Unknown6".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -72,39 +72,39 @@ public abstract class _IManager_Base : IpcInterface {
 public partial class IPadSession : _IPadSession_Base;
 public abstract class _IPadSession_Base : IpcInterface {
 	protected virtual void SetDirection(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetDirection");
+		"Stub hit for Nn.Gpio.IPadSession.SetDirection".Log();
 	protected virtual uint GetDirection() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetDirection not implemented");
 	protected virtual void SetInterruptMode(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetInterruptMode");
+		"Stub hit for Nn.Gpio.IPadSession.SetInterruptMode".Log();
 	protected virtual uint GetInterruptMode() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetInterruptMode not implemented");
 	protected virtual void SetInterruptEnable(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetInterruptEnable");
+		"Stub hit for Nn.Gpio.IPadSession.SetInterruptEnable".Log();
 	protected virtual byte GetInterruptEnable() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetInterruptEnable not implemented");
 	protected virtual uint GetInterruptStatus() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetInterruptStatus not implemented");
 	protected virtual void ClearInterruptStatus() =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.ClearInterruptStatus");
+		"Stub hit for Nn.Gpio.IPadSession.ClearInterruptStatus".Log();
 	protected virtual void SetValue(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetValue");
+		"Stub hit for Nn.Gpio.IPadSession.SetValue".Log();
 	protected virtual uint GetValue() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetValue not implemented");
 	protected virtual KObject BindInterrupt() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.BindInterrupt not implemented");
 	protected virtual void UnbindInterrupt() =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.UnbindInterrupt");
+		"Stub hit for Nn.Gpio.IPadSession.UnbindInterrupt".Log();
 	protected virtual void SetDebounceEnabled(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetDebounceEnabled");
+		"Stub hit for Nn.Gpio.IPadSession.SetDebounceEnabled".Log();
 	protected virtual byte GetDebounceEnabled() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetDebounceEnabled not implemented");
 	protected virtual void SetDebounceTime(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetDebounceTime");
+		"Stub hit for Nn.Gpio.IPadSession.SetDebounceTime".Log();
 	protected virtual uint GetDebounceTime() =>
 		throw new NotImplementedException("Nn.Gpio.IPadSession.GetDebounceTime not implemented");
 	protected virtual void SetValueForSleepState(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Gpio.IPadSession.SetValueForSleepState");
+		"Stub hit for Nn.Gpio.IPadSession.SetValueForSleepState".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetDirection

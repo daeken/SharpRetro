@@ -8,11 +8,11 @@ public partial class IProfiler : _IProfiler_Base {
 }
 public abstract class _IProfiler_Base : IpcInterface {
 	protected virtual void GetSystemEvent() =>
-		Console.WriteLine("Stub hit for Nn.Profiler.IProfiler.GetSystemEvent");
+		"Stub hit for Nn.Profiler.IProfiler.GetSystemEvent".Log();
 	protected virtual void StartSignalingEvent() =>
-		Console.WriteLine("Stub hit for Nn.Profiler.IProfiler.StartSignalingEvent");
+		"Stub hit for Nn.Profiler.IProfiler.StartSignalingEvent".Log();
 	protected virtual void StopSignalingEvent() =>
-		Console.WriteLine("Stub hit for Nn.Profiler.IProfiler.StopSignalingEvent");
+		"Stub hit for Nn.Profiler.IProfiler.StopSignalingEvent".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent

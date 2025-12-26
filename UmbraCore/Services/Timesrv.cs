@@ -17,7 +17,7 @@ public partial class ISystemClock {
 
 public partial class ITimeZoneService {
     protected override void ToCalendarTimeWithMyRule(ulong _0, out CalendarTime _1, out CalendarAdditionalInfo _2) {
-        Console.WriteLine($"ToCalendarTimeWithMyRule(0x{_0:X})");
+        $"ToCalendarTimeWithMyRule(0x{_0:X})".Log();
         _1 = new CalendarTime {
             Year = 2025,
             Month = 12,

@@ -5,9 +5,9 @@ namespace UmbraCore.Services.Nn.Nim.Detail;
 public partial class IAsyncData : _IAsyncData_Base;
 public abstract class _IAsyncData_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncData.Unknown0");
+		"Stub hit for Nn.Nim.Detail.IAsyncData.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncData.Unknown1");
+		"Stub hit for Nn.Nim.Detail.IAsyncData.Unknown1".Log();
 	protected virtual void Unknown2(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Nim.Detail.IAsyncData.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -60,9 +60,9 @@ public abstract class _IAsyncData_Base : IpcInterface {
 public partial class IAsyncProgressResult : _IAsyncProgressResult_Base;
 public abstract class _IAsyncProgressResult_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncProgressResult.Unknown0");
+		"Stub hit for Nn.Nim.Detail.IAsyncProgressResult.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncProgressResult.Unknown1");
+		"Stub hit for Nn.Nim.Detail.IAsyncProgressResult.Unknown1".Log();
 	protected virtual void Unknown2(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Nim.Detail.IAsyncProgressResult.Unknown2 not implemented");
 	protected virtual void Unknown3(Span<byte> _0) =>
@@ -99,9 +99,9 @@ public abstract class _IAsyncProgressResult_Base : IpcInterface {
 public partial class IAsyncResult : _IAsyncResult_Base;
 public abstract class _IAsyncResult_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncResult.Unknown0");
+		"Stub hit for Nn.Nim.Detail.IAsyncResult.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncResult.Unknown1");
+		"Stub hit for Nn.Nim.Detail.IAsyncResult.Unknown1".Log();
 	protected virtual void Unknown2(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nim.Detail.IAsyncResult.Unknown2 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -134,7 +134,7 @@ public abstract class _IAsyncValue_Base : IpcInterface {
 	protected virtual void Unknown1(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nim.Detail.IAsyncValue.Unknown1 not implemented");
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.IAsyncValue.Unknown2");
+		"Stub hit for Nn.Nim.Detail.IAsyncValue.Unknown2".Log();
 	protected virtual void Unknown3(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Nim.Detail.IAsyncValue.Unknown3 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -174,7 +174,7 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void CreateSystemUpdateTask(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CreateSystemUpdateTask not implemented");
 	protected virtual void DestroySystemUpdateTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroySystemUpdateTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroySystemUpdateTask".Log();
 	protected virtual void ListSystemUpdateTask(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListSystemUpdateTask not implemented");
 	protected virtual void RequestSystemUpdateTaskRun(byte[] _0, out KObject _1, out Nn.Nim.Detail.IAsyncResult _2) =>
@@ -182,11 +182,11 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void GetSystemUpdateTaskInfo(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetSystemUpdateTaskInfo not implemented");
 	protected virtual void CommitSystemUpdateTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitSystemUpdateTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitSystemUpdateTask".Log();
 	protected virtual void CreateNetworkInstallTask(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CreateNetworkInstallTask not implemented");
 	protected virtual void DestroyNetworkInstallTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroyNetworkInstallTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroyNetworkInstallTask".Log();
 	protected virtual void ListNetworkInstallTask(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListNetworkInstallTask not implemented");
 	protected virtual void RequestNetworkInstallTaskRun(byte[] _0, out KObject _1, out Nn.Nim.Detail.IAsyncResult _2) =>
@@ -194,7 +194,7 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void GetNetworkInstallTaskInfo(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetNetworkInstallTaskInfo not implemented");
 	protected virtual void CommitNetworkInstallTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitNetworkInstallTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitNetworkInstallTask".Log();
 	protected virtual void RequestLatestSystemUpdateMeta(out KObject _0, out Nn.Nim.Detail.IAsyncValue _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestLatestSystemUpdateMeta not implemented");
 	protected virtual void ListApplicationNetworkInstallTask(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -204,9 +204,9 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void RequestLatestVersion(byte[] _0, out KObject _1, out Nn.Nim.Detail.IAsyncValue _2) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.RequestLatestVersion not implemented");
 	protected virtual void SetNetworkInstallTaskAttribute(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.SetNetworkInstallTaskAttribute");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.SetNetworkInstallTaskAttribute".Log();
 	protected virtual void AddNetworkInstallTaskContentMeta(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.AddNetworkInstallTaskContentMeta");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.AddNetworkInstallTaskContentMeta".Log();
 	protected virtual void GetDownloadedSystemDataPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.GetDownloadedSystemDataPath not implemented");
 	protected virtual void CalculateNetworkInstallTaskRequiredSize(byte[] _0, out byte[] _1) =>
@@ -234,7 +234,7 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void CreateApplyDeltaTask(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CreateApplyDeltaTask not implemented");
 	protected virtual void DestroyApplyDeltaTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroyApplyDeltaTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.DestroyApplyDeltaTask".Log();
 	protected virtual void ListApplicationApplyDeltaTask(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplicationApplyDeltaTask not implemented");
 	protected virtual void RequestApplyDeltaTaskRun(byte[] _0, out KObject _1, out Nn.Nim.Detail.IAsyncResult _2) =>
@@ -244,15 +244,15 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void ListApplyDeltaTask(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplyDeltaTask not implemented");
 	protected virtual void CommitApplyDeltaTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitApplyDeltaTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.CommitApplyDeltaTask".Log();
 	protected virtual void CalculateApplyDeltaTaskRequiredSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.CalculateApplyDeltaTaskRequiredSize not implemented");
 	protected virtual void PrepareShutdown() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.PrepareShutdown");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.PrepareShutdown".Log();
 	protected virtual void ListApplyDeltaTask2(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.ListApplyDeltaTask2 not implemented");
 	protected virtual void ClearNotEnoughSpaceStateOfApplyDeltaTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.ClearNotEnoughSpaceStateOfApplyDeltaTask");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.ClearNotEnoughSpaceStateOfApplyDeltaTask".Log();
 	protected virtual void Unknown42(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.Unknown42 not implemented");
 	protected virtual void Unknown43(out byte[] _0) =>
@@ -262,7 +262,7 @@ public abstract class _INetworkInstallManager_Base : IpcInterface {
 	protected virtual void Unknown45(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Nim.Detail.INetworkInstallManager.Unknown45 not implemented");
 	protected virtual void Unknown46() =>
-		Console.WriteLine("Stub hit for Nn.Nim.Detail.INetworkInstallManager.Unknown46");
+		"Stub hit for Nn.Nim.Detail.INetworkInstallManager.Unknown46".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateSystemUpdateTask

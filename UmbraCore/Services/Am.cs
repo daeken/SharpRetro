@@ -4,7 +4,7 @@ namespace UmbraCore.Services.Nn.Am.Service;
 
 public partial class ISelfController {
     protected override ulong CreateManagedDisplayLayer() {
-        Console.WriteLine("Attempting to create managed display layer");
+        "Attempting to create managed display layer".Log();
         return 1;
     }
 }
@@ -42,6 +42,8 @@ public partial class IApplicationFunctions {
         data[8] = 1;
         return new IStorage(data);
     }
+
+    protected override ulong EnsureSaveData(byte[] _0) => 0;
 }
 
 public partial class IApplicationProxy {

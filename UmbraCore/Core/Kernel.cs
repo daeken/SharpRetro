@@ -1,19 +1,21 @@
 namespace UmbraCore.Core;
 
 public static class Kernel {
+    public static uint HandleIter;
+    public static readonly Dictionary<uint, KObject> Handles = [];
+    public static readonly Dictionary<(ulong Start, ulong End), string> Symbols = [];
+
+    public static string RomFsPath;
     public static bool IsNative;
-    public static readonly Core.HookManager HookManager = new();
+    public static readonly HookManager HookManager = new();
     public static readonly IpcManager IpcManager = new();
     public static readonly MemoryManager MemoryManager = new();
     public static readonly ThreadManager ThreadManager = new();
     public static readonly MiscManager MiscManager = new();
     public static readonly SyncManager SyncManager = new();
     
-    public static uint HandleIter;
-    public static readonly Dictionary<uint, KObject> Handles = [];
-    public static readonly Dictionary<(ulong Start, ulong End), string> Symbols = [];
-
-    public static void Setup(GameWrapper game) {
+    public static void Setup(GameWrapper game, string romFsPath) {
+        RomFsPath = romFsPath;
         IpcManager.Setup(game);
         MemoryManager.Setup(game);
         ThreadManager.Setup(game);
@@ -45,7 +47,7 @@ public static class Kernel {
     public static T Get<T>(uint handle) where T : KObject => Handles.TryGetValue(handle, out var obj) ? obj as T : null;
 
     public static unsafe void StackTrace(ulong* fp) {
-        Console.WriteLine("Stack trace:");
+        "Stack trace:".Log();
         while(fp != null) {
             var lr = fp[1];
             if(MemoryManager.IsKnownPointer(lr)) {
@@ -57,9 +59,9 @@ public static class Kernel {
                     var name = symbol.Value;
                     if(name.StartsWith("_Z"))
                         name = CxxDemangler.CxxDemangler.Demangle(name);
-                    Console.WriteLine($"- 0x{rebased:X} - {name}");
+                    $"- 0x{rebased:X} - {name}".Log();
                 } else
-                    Console.WriteLine($"- 0x{rebased:X}");
+                    $"- 0x{rebased:X}".Log();
             }
             var nfp = *fp;
             if(nfp < (ulong) fp || nfp == (ulong) fp) break;

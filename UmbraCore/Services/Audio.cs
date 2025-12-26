@@ -6,7 +6,7 @@ namespace UmbraCore.Services.Nn.Audio.Detail;
 public partial class IAudioRenderer {
     protected override KObject QuerySystemEvent() => new Event();
     protected override void RequestUpdateAudioRenderer(Span<AudioRendererUpdateDataHeader> _0, Span<AudioRendererUpdateDataHeader> _1, Span<AudioRendererUpdateDataHeader> _2) {
-        Console.WriteLine("IAudioRenderer.RequestUpdateAudioRenderer hit");
+        "IAudioRenderer.RequestUpdateAudioRenderer hit".Log();
     }
 }
 

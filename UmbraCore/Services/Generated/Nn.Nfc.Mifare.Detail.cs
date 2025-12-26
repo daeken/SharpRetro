@@ -5,19 +5,19 @@ namespace UmbraCore.Services.Nn.Nfc.Mifare.Detail;
 public partial class IUser : _IUser_Base;
 public abstract class _IUser_Base : IpcInterface {
 	protected virtual void Initialize(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Mifare.Detail.IUser.Initialize");
+		"Stub hit for Nn.Nfc.Mifare.Detail.IUser.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Mifare.Detail.IUser._Finalize");
+		"Stub hit for Nn.Nfc.Mifare.Detail.IUser._Finalize".Log();
 	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Mifare.Detail.IUser.ListDevices not implemented");
 	protected virtual void StartDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Mifare.Detail.IUser.StartDetection");
+		"Stub hit for Nn.Nfc.Mifare.Detail.IUser.StartDetection".Log();
 	protected virtual void StopDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Mifare.Detail.IUser.StopDetection");
+		"Stub hit for Nn.Nfc.Mifare.Detail.IUser.StopDetection".Log();
 	protected virtual void Read(byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfc.Mifare.Detail.IUser.Read not implemented");
 	protected virtual void Write(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Mifare.Detail.IUser.Write");
+		"Stub hit for Nn.Nfc.Mifare.Detail.IUser.Write".Log();
 	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfc.Mifare.Detail.IUser.GetTagInfo not implemented");
 	protected virtual KObject GetActivateEventHandle(byte[] _0) =>

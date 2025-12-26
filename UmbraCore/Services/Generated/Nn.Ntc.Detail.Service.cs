@@ -5,13 +5,13 @@ namespace UmbraCore.Services.Nn.Ntc.Detail.Service;
 public partial class IEnsureNetworkClockAvailabilityService : _IEnsureNetworkClockAvailabilityService_Base;
 public abstract class _IEnsureNetworkClockAvailabilityService_Base : IpcInterface {
 	protected virtual void StartTask() =>
-		Console.WriteLine("Stub hit for Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.StartTask");
+		"Stub hit for Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.StartTask".Log();
 	protected virtual KObject GetFinishNotificationEvent() =>
 		throw new NotImplementedException("Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.GetFinishNotificationEvent not implemented");
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.GetResult");
+		"Stub hit for Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.GetResult".Log();
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.Cancel");
+		"Stub hit for Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.Cancel".Log();
 	protected virtual byte IsProcessing() =>
 		throw new NotImplementedException("Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService.IsProcessing not implemented");
 	protected virtual ulong GetServerTime() =>
@@ -65,9 +65,9 @@ public abstract class _IStaticService_Base : IpcInterface {
 	protected virtual Nn.Ntc.Detail.Service.IEnsureNetworkClockAvailabilityService OpenEnsureNetworkClockAvailabilityService(uint _0, uint _1) =>
 		throw new NotImplementedException("Nn.Ntc.Detail.Service.IStaticService.OpenEnsureNetworkClockAvailabilityService not implemented");
 	protected virtual void SuspendAutonomicTimeCorrection() =>
-		Console.WriteLine("Stub hit for Nn.Ntc.Detail.Service.IStaticService.SuspendAutonomicTimeCorrection");
+		"Stub hit for Nn.Ntc.Detail.Service.IStaticService.SuspendAutonomicTimeCorrection".Log();
 	protected virtual void ResumeAutonomicTimeCorrection() =>
-		Console.WriteLine("Stub hit for Nn.Ntc.Detail.Service.IStaticService.ResumeAutonomicTimeCorrection");
+		"Stub hit for Nn.Ntc.Detail.Service.IStaticService.ResumeAutonomicTimeCorrection".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // OpenEnsureNetworkClockAvailabilityService

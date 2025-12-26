@@ -41,7 +41,7 @@ public abstract class _IClient_Base : IpcInterface {
 	protected virtual Nn.Migration.Detail.IAsyncContext CompleteAsync() =>
 		throw new NotImplementedException("Nn.Migration.User.IClient.CompleteAsync not implemented");
 	protected virtual void Abort() =>
-		Console.WriteLine("Stub hit for Nn.Migration.User.IClient.Abort");
+		"Stub hit for Nn.Migration.User.IClient.Abort".Log();
 	protected virtual Nn.Migration.Detail.IAsyncContext DebugSynchronizeStateInFinalizationAsync() =>
 		throw new NotImplementedException("Nn.Migration.User.IClient.DebugSynchronizeStateInFinalizationAsync not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -193,7 +193,7 @@ public abstract class _IServer_Base : IpcInterface {
 	protected virtual Nn.Migration.Detail.IAsyncContext CompleteAsync() =>
 		throw new NotImplementedException("Nn.Migration.User.IServer.CompleteAsync not implemented");
 	protected virtual void Abort() =>
-		Console.WriteLine("Stub hit for Nn.Migration.User.IServer.Abort");
+		"Stub hit for Nn.Migration.User.IServer.Abort".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUid
@@ -321,13 +321,13 @@ public abstract class _IService_Base : IpcInterface {
 public partial class IAsyncContext : _IAsyncContext_Base;
 public abstract class _IAsyncContext_Base : IpcInterface {
 	protected virtual void GetSystemEvent() =>
-		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.GetSystemEvent");
+		"Stub hit for Nn.Migration.User.IAsyncContext.GetSystemEvent".Log();
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.Cancel");
+		"Stub hit for Nn.Migration.User.IAsyncContext.Cancel".Log();
 	protected virtual void HasDone() =>
-		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.HasDone");
+		"Stub hit for Nn.Migration.User.IAsyncContext.HasDone".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Migration.User.IAsyncContext.GetResult");
+		"Stub hit for Nn.Migration.User.IAsyncContext.GetResult".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent

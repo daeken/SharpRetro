@@ -8,11 +8,11 @@ public partial class ISrepoService : _ISrepoService_Base {
 }
 public abstract class _ISrepoService_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Srepo.Detail.Ipc.ISrepoService.Unknown0");
+		"Stub hit for Nn.Srepo.Detail.Ipc.ISrepoService.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Srepo.Detail.Ipc.ISrepoService.Unknown1");
+		"Stub hit for Nn.Srepo.Detail.Ipc.ISrepoService.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Srepo.Detail.Ipc.ISrepoService.Unknown2");
+		"Stub hit for Nn.Srepo.Detail.Ipc.ISrepoService.Unknown2".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0

@@ -12,25 +12,25 @@ public abstract class _IPsmServer_Base : IpcInterface {
 	protected virtual void GetChargerType(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psm.IPsmServer.GetChargerType not implemented");
 	protected virtual void EnableBatteryCharging() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.EnableBatteryCharging");
+		"Stub hit for Nn.Psm.IPsmServer.EnableBatteryCharging".Log();
 	protected virtual void DisableBatteryCharging() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.DisableBatteryCharging");
+		"Stub hit for Nn.Psm.IPsmServer.DisableBatteryCharging".Log();
 	protected virtual void IsBatteryChargingEnabled(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psm.IPsmServer.IsBatteryChargingEnabled not implemented");
 	protected virtual void AcquireControllerPowerSupply() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.AcquireControllerPowerSupply");
+		"Stub hit for Nn.Psm.IPsmServer.AcquireControllerPowerSupply".Log();
 	protected virtual void ReleaseControllerPowerSupply() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.ReleaseControllerPowerSupply");
+		"Stub hit for Nn.Psm.IPsmServer.ReleaseControllerPowerSupply".Log();
 	protected virtual Nn.Psm.IPsmSession OpenSession() =>
 		throw new NotImplementedException("Nn.Psm.IPsmServer.OpenSession not implemented");
 	protected virtual void EnableEnoughPowerChargeEmulation() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.EnableEnoughPowerChargeEmulation");
+		"Stub hit for Nn.Psm.IPsmServer.EnableEnoughPowerChargeEmulation".Log();
 	protected virtual void DisableEnoughPowerChargeEmulation() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.DisableEnoughPowerChargeEmulation");
+		"Stub hit for Nn.Psm.IPsmServer.DisableEnoughPowerChargeEmulation".Log();
 	protected virtual void EnableFastBatteryCharging() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.EnableFastBatteryCharging");
+		"Stub hit for Nn.Psm.IPsmServer.EnableFastBatteryCharging".Log();
 	protected virtual void DisableFastBatteryCharging() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmServer.DisableFastBatteryCharging");
+		"Stub hit for Nn.Psm.IPsmServer.DisableFastBatteryCharging".Log();
 	protected virtual void GetBatteryVoltageState(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psm.IPsmServer.GetBatteryVoltageState not implemented");
 	protected virtual void GetRawBatteryChargePercentage(out byte[] _0) =>
@@ -156,13 +156,13 @@ public abstract class _IPsmSession_Base : IpcInterface {
 	protected virtual KObject BindStateChangeEvent() =>
 		throw new NotImplementedException("Nn.Psm.IPsmSession.BindStateChangeEvent not implemented");
 	protected virtual void UnbindStateChangeEvent() =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmSession.UnbindStateChangeEvent");
+		"Stub hit for Nn.Psm.IPsmSession.UnbindStateChangeEvent".Log();
 	protected virtual void SetChargerTypeChangeEventEnabled(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmSession.SetChargerTypeChangeEventEnabled");
+		"Stub hit for Nn.Psm.IPsmSession.SetChargerTypeChangeEventEnabled".Log();
 	protected virtual void SetPowerSupplyChangeEventEnabled(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmSession.SetPowerSupplyChangeEventEnabled");
+		"Stub hit for Nn.Psm.IPsmSession.SetPowerSupplyChangeEventEnabled".Log();
 	protected virtual void SetBatteryVoltageStateChangeEventEnabled(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Psm.IPsmSession.SetBatteryVoltageStateChangeEventEnabled");
+		"Stub hit for Nn.Psm.IPsmSession.SetBatteryVoltageStateChangeEventEnabled".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // BindStateChangeEvent

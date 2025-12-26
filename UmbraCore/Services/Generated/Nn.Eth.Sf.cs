@@ -10,13 +10,13 @@ public abstract class _IEthInterface_Base : IpcInterface {
 	protected virtual KObject Initialize(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterface.Initialize not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Eth.Sf.IEthInterface.Cancel");
+		"Stub hit for Nn.Eth.Sf.IEthInterface.Cancel".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Eth.Sf.IEthInterface.GetResult");
+		"Stub hit for Nn.Eth.Sf.IEthInterface.GetResult".Log();
 	protected virtual void GetMediaList(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterface.GetMediaList not implemented");
 	protected virtual void SetMediaType(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Eth.Sf.IEthInterface.SetMediaType");
+		"Stub hit for Nn.Eth.Sf.IEthInterface.SetMediaType".Log();
 	protected virtual void GetMediaType(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterface.GetMediaType not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -67,9 +67,9 @@ public abstract class _IEthInterfaceGroup_Base : IpcInterface {
 	protected virtual KObject GetReadableHandle() =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterfaceGroup.GetReadableHandle not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Eth.Sf.IEthInterfaceGroup.Cancel");
+		"Stub hit for Nn.Eth.Sf.IEthInterfaceGroup.Cancel".Log();
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Eth.Sf.IEthInterfaceGroup.GetResult");
+		"Stub hit for Nn.Eth.Sf.IEthInterfaceGroup.GetResult".Log();
 	protected virtual void GetInterfaceList(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Eth.Sf.IEthInterfaceGroup.GetInterfaceList not implemented");
 	protected virtual void GetInterfaceCount(out byte[] _0) =>

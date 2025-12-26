@@ -6,16 +6,66 @@ namespace LibSharpRetro;
 public static class MemoryHelpers {
     public static ulong Mmap(ulong addr, ulong size, bool requirePosition = false) {
         if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-            var maddr = mmapMac(addr, size, 3, 0x1000 | 0x0010 | 0x0002, -1, 0);
+            var maddr = mmapMac(addr, size, 3, 
+                0x1000 | (requirePosition ? 0x0010 : 0) | 0x0002, 
+                -1, 0);
             if(requirePosition && addr != maddr)
                 throw new Exception($"Couldn't allocate memory at 0x{addr:X}-0x{addr + size - 1:X}");
             return maddr;
         }
         throw new NotImplementedException();
     }
-    
     [DllImport("libSystem.dylib", EntryPoint = "mmap")]
     static extern ulong mmapMac(ulong addr, ulong len, int prot, int flags, int fd, ulong offset);
+    
+    [StructLayout(LayoutKind.Sequential)]
+    struct vm_region_basic_info_data_64_t {
+        public int protection;
+        public int max_protection;
+        public int inheritance;
+        public int shared;
+        public int reserved;
+        public ulong offset;
+        public int behavior;
+        public ushort user_wired_count;
+    }
+    
+    [DllImport("libSystem.B.dylib")]
+    static extern int mach_vm_region(
+        uint target_task,
+        ref ulong address,
+        out ulong size,
+        int flavor,
+        out vm_region_basic_info_data_64_t info,
+        ref uint infoCnt,
+        ref uint object_name);
+
+    static bool TryQueryRegion(uint mach_task_self, ulong addr, out (ulong Start, ulong Size, int Protection) res) {
+        var infoCnt = 10U;
+        var objName = 0U;
+        var kr = mach_vm_region(mach_task_self, ref addr, out var size, 9, out var info, ref infoCnt, ref objName);
+        res = (addr, size, info.protection);
+        return kr == 0;
+    }
+
+    public static IEnumerable<(ulong Start, ulong Size, bool Exists, bool Mapped, int Protection)> GetAllRegions() {
+        var lib = NativeLibrary.Load("libSystem.B.dylib");
+        uint mach_task_self;
+        unsafe { mach_task_self = *(uint*) NativeLibrary.GetExport(lib, "mach_task_self_"); }
+        var addr = 0UL;
+        while(addr < 0x8000_0000_0000_0000) {
+            if(!TryQueryRegion(mach_task_self, addr, out var res)) break;
+            var (start, size, prot) = res;
+            if(start > addr) yield return (addr, start - addr, false, false, 0);
+            var mprot = 0;
+            if((prot & 1) != 0) mprot |= 1;
+            if((prot & 2) != 0) mprot |= 4;
+            if((prot & 4) != 0) mprot |= 2;
+            yield return (start, size, true, true, mprot);
+            addr = start + size;
+        }
+        yield return (addr, 0xFFFF_FFFF_FFFF_FFFFUL - addr + 1, false, false, 0);
+    }
     
     unsafe class UnsafeMemoryManager<T>(void* Pointer, int Length) : MemoryManager<T> {
         protected override void Dispose(bool disposing) {}

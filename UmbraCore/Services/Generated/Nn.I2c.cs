@@ -50,13 +50,13 @@ public abstract class _IManager_Base : IpcInterface {
 public partial class ISession : _ISession_Base;
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual void Send(uint _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.I2c.ISession.Send");
+		"Stub hit for Nn.I2c.ISession.Send".Log();
 	protected virtual void Receive(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.I2c.ISession.Receive not implemented");
 	protected virtual void ExecuteCommandList(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.I2c.ISession.ExecuteCommandList not implemented");
 	protected virtual void SendAuto(uint _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.I2c.ISession.SendAuto");
+		"Stub hit for Nn.I2c.ISession.SendAuto".Log();
 	protected virtual void ReceiveAuto(uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.I2c.ISession.ReceiveAuto not implemented");
 	protected virtual void ExecuteCommandListAuto(Span<byte> _0, Span<byte> _1) =>

@@ -5,13 +5,13 @@ namespace UmbraCore.Services.Nn.Usb.Hs;
 public partial class IClientEpSession : _IClientEpSession_Base;
 public abstract class _IClientEpSession_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown0");
+		"Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown1");
+		"Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown1".Log();
 	protected virtual KObject Unknown2() =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientEpSession.Unknown2 not implemented");
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown3");
+		"Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown3".Log();
 	protected virtual void PostBufferAsync(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientEpSession.PostBufferAsync not implemented");
 	protected virtual void Unknown5(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -19,9 +19,9 @@ public abstract class _IClientEpSession_Base : IpcInterface {
 	protected virtual void Unknown6(byte[] _0, Span<byte> _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientEpSession.Unknown6 not implemented");
 	protected virtual void Unknown7(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown7");
+		"Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown7".Log();
 	protected virtual void Unknown8(byte[] _0, KObject _1) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown8");
+		"Stub hit for Nn.Usb.Hs.IClientEpSession.Unknown8".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -92,13 +92,13 @@ public abstract class _IClientIfSession_Base : IpcInterface {
 	protected virtual void Unknown4(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientIfSession.Unknown4 not implemented");
 	protected virtual void CtrlXferAsync(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientIfSession.CtrlXferAsync");
+		"Stub hit for Nn.Usb.Hs.IClientIfSession.CtrlXferAsync".Log();
 	protected virtual KObject Unknown6() =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientIfSession.Unknown6 not implemented");
 	protected virtual void GetCtrlXferReport(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientIfSession.GetCtrlXferReport not implemented");
 	protected virtual void Unknown8() =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientIfSession.Unknown8");
+		"Stub hit for Nn.Usb.Hs.IClientIfSession.Unknown8".Log();
 	protected virtual void GetClientEpSession(byte[] _0, out byte[] _1, out Nn.Usb.Hs.IClientEpSession _2) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientIfSession.GetClientEpSession not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -170,7 +170,7 @@ public partial class IClientRootSession : _IClientRootSession_Base {
 }
 public abstract class _IClientRootSession_Base : IpcInterface {
 	protected virtual void BindClientProcess(KObject _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientRootSession.BindClientProcess");
+		"Stub hit for Nn.Usb.Hs.IClientRootSession.BindClientProcess".Log();
 	protected virtual void Unknown1(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientRootSession.Unknown1 not implemented");
 	protected virtual void Unknown2(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -180,7 +180,7 @@ public abstract class _IClientRootSession_Base : IpcInterface {
 	protected virtual KObject Unknown4(byte[] _0) =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientRootSession.Unknown4 not implemented");
 	protected virtual void Unknown5(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Usb.Hs.IClientRootSession.Unknown5");
+		"Stub hit for Nn.Usb.Hs.IClientRootSession.Unknown5".Log();
 	protected virtual KObject GetInterfaceStateChangeEvent() =>
 		throw new NotImplementedException("Nn.Usb.Hs.IClientRootSession.GetInterfaceStateChangeEvent not implemented");
 	protected virtual void GetClientIfSession(byte[] _0, Span<byte> _1, Span<byte> _2, out Nn.Usb.Hs.IClientIfSession _3) =>

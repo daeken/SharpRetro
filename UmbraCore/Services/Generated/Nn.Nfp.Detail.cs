@@ -5,31 +5,31 @@ namespace UmbraCore.Services.Nn.Nfp.Detail;
 public partial class IDebug : _IDebug_Base;
 public abstract class _IDebug_Base : IpcInterface {
 	protected virtual void InitializeDebug(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.InitializeDebug");
+		"Stub hit for Nn.Nfp.Detail.IDebug.InitializeDebug".Log();
 	protected virtual void FinalizeDebug() =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.FinalizeDebug");
+		"Stub hit for Nn.Nfp.Detail.IDebug.FinalizeDebug".Log();
 	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.ListDevices not implemented");
 	protected virtual void StartDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.StartDetection");
+		"Stub hit for Nn.Nfp.Detail.IDebug.StartDetection".Log();
 	protected virtual void StopDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.StopDetection");
+		"Stub hit for Nn.Nfp.Detail.IDebug.StopDetection".Log();
 	protected virtual void Mount(byte[] _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Mount");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Mount".Log();
 	protected virtual void Unmount(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unmount");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unmount".Log();
 	protected virtual void OpenApplicationArea(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.OpenApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IDebug.OpenApplicationArea".Log();
 	protected virtual void GetApplicationArea(byte[] _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetApplicationArea not implemented");
 	protected virtual void SetApplicationArea(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.SetApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IDebug.SetApplicationArea".Log();
 	protected virtual void Flush(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Flush");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Flush".Log();
 	protected virtual void Restore(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Restore");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Restore".Log();
 	protected virtual void CreateApplicationArea(byte[] _0, uint _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.CreateApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IDebug.CreateApplicationArea".Log();
 	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetTagInfo not implemented");
 	protected virtual void GetRegisterInfo(byte[] _0, Span<byte> _1) =>
@@ -53,45 +53,45 @@ public abstract class _IDebug_Base : IpcInterface {
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.AttachAvailabilityChangeEvent not implemented");
 	protected virtual void RecreateApplicationArea(byte[] _0, uint _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.RecreateApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IDebug.RecreateApplicationArea".Log();
 	protected virtual void Format(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Format");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Format".Log();
 	protected virtual void GetAdminInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetAdminInfo not implemented");
 	protected virtual void GetRegisterInfo2(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetRegisterInfo2 not implemented");
 	protected virtual void SetRegisterInfo(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.SetRegisterInfo");
+		"Stub hit for Nn.Nfp.Detail.IDebug.SetRegisterInfo".Log();
 	protected virtual void DeleteRegisterInfo(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.DeleteRegisterInfo");
+		"Stub hit for Nn.Nfp.Detail.IDebug.DeleteRegisterInfo".Log();
 	protected virtual void DeleteApplicationArea(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.DeleteApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IDebug.DeleteApplicationArea".Log();
 	protected virtual byte ExistsApplicationArea(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.ExistsApplicationArea not implemented");
 	protected virtual void GetAll(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.GetAll not implemented");
 	protected virtual void SetAll(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.SetAll");
+		"Stub hit for Nn.Nfp.Detail.IDebug.SetAll".Log();
 	protected virtual void FlushDebug(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.FlushDebug");
+		"Stub hit for Nn.Nfp.Detail.IDebug.FlushDebug".Log();
 	protected virtual void BreakTag(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.BreakTag");
+		"Stub hit for Nn.Nfp.Detail.IDebug.BreakTag".Log();
 	protected virtual void ReadBackupData(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.ReadBackupData not implemented");
 	protected virtual void WriteBackupData(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.WriteBackupData");
+		"Stub hit for Nn.Nfp.Detail.IDebug.WriteBackupData".Log();
 	protected virtual void WriteNtf(byte[] _0, uint _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.WriteNtf");
+		"Stub hit for Nn.Nfp.Detail.IDebug.WriteNtf".Log();
 	protected virtual void Unknown300(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown300");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unknown300".Log();
 	protected virtual void Unknown301() =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown301");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unknown301".Log();
 	protected virtual void Unknown302(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown302 not implemented");
 	protected virtual void Unknown303(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown303");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unknown303".Log();
 	protected virtual void Unknown304(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown304");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unknown304".Log();
 	protected virtual void Unknown305(byte[] _0, ulong _1, Span<byte> _2, out uint _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown305 not implemented");
 	protected virtual void Unknown306(byte[] _0, Span<byte> _1) =>
@@ -107,9 +107,9 @@ public abstract class _IDebug_Base : IpcInterface {
 	protected virtual uint Unknown311(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown311 not implemented");
 	protected virtual void Unknown312(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown312");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unknown312".Log();
 	protected virtual void Unknown313(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IDebug.Unknown313");
+		"Stub hit for Nn.Nfp.Detail.IDebug.Unknown313".Log();
 	protected virtual KObject Unknown314() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IDebug.Unknown314 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -433,23 +433,23 @@ public abstract class _IDebugManager_Base : IpcInterface {
 public partial class ISystem : _ISystem_Base;
 public abstract class _ISystem_Base : IpcInterface {
 	protected virtual void InitializeSystem(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.InitializeSystem");
+		"Stub hit for Nn.Nfp.Detail.ISystem.InitializeSystem".Log();
 	protected virtual void FinalizeSystem() =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.FinalizeSystem");
+		"Stub hit for Nn.Nfp.Detail.ISystem.FinalizeSystem".Log();
 	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.ListDevices not implemented");
 	protected virtual void StartDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.StartDetection");
+		"Stub hit for Nn.Nfp.Detail.ISystem.StartDetection".Log();
 	protected virtual void StopDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.StopDetection");
+		"Stub hit for Nn.Nfp.Detail.ISystem.StopDetection".Log();
 	protected virtual void Mount(byte[] _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Mount");
+		"Stub hit for Nn.Nfp.Detail.ISystem.Mount".Log();
 	protected virtual void Unmount(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Unmount");
+		"Stub hit for Nn.Nfp.Detail.ISystem.Unmount".Log();
 	protected virtual void Flush(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Flush");
+		"Stub hit for Nn.Nfp.Detail.ISystem.Flush".Log();
 	protected virtual void Restore(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Restore");
+		"Stub hit for Nn.Nfp.Detail.ISystem.Restore".Log();
 	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetTagInfo not implemented");
 	protected virtual void GetRegisterInfo(byte[] _0, Span<byte> _1) =>
@@ -471,17 +471,17 @@ public abstract class _ISystem_Base : IpcInterface {
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.AttachAvailabilityChangeEvent not implemented");
 	protected virtual void Format(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.Format");
+		"Stub hit for Nn.Nfp.Detail.ISystem.Format".Log();
 	protected virtual void GetAdminInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetAdminInfo not implemented");
 	protected virtual void GetRegisterInfo2(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.GetRegisterInfo2 not implemented");
 	protected virtual void SetRegisterInfo(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.SetRegisterInfo");
+		"Stub hit for Nn.Nfp.Detail.ISystem.SetRegisterInfo".Log();
 	protected virtual void DeleteRegisterInfo(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.DeleteRegisterInfo");
+		"Stub hit for Nn.Nfp.Detail.ISystem.DeleteRegisterInfo".Log();
 	protected virtual void DeleteApplicationArea(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.ISystem.DeleteApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.ISystem.DeleteApplicationArea".Log();
 	protected virtual byte ExistsApplicationArea(byte[] _0) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.ISystem.ExistsApplicationArea not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -654,31 +654,31 @@ public abstract class _ISystemManager_Base : IpcInterface {
 public partial class IUser : _IUser_Base;
 public abstract class _IUser_Base : IpcInterface {
 	protected virtual void Initialize(ulong _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Initialize");
+		"Stub hit for Nn.Nfp.Detail.IUser.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser._Finalize");
+		"Stub hit for Nn.Nfp.Detail.IUser._Finalize".Log();
 	protected virtual void ListDevices(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.ListDevices not implemented");
 	protected virtual void StartDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.StartDetection");
+		"Stub hit for Nn.Nfp.Detail.IUser.StartDetection".Log();
 	protected virtual void StopDetection(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.StopDetection");
+		"Stub hit for Nn.Nfp.Detail.IUser.StopDetection".Log();
 	protected virtual void Mount(byte[] _0, uint _1, uint _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Mount");
+		"Stub hit for Nn.Nfp.Detail.IUser.Mount".Log();
 	protected virtual void Unmount(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Unmount");
+		"Stub hit for Nn.Nfp.Detail.IUser.Unmount".Log();
 	protected virtual void OpenApplicationArea(byte[] _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.OpenApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IUser.OpenApplicationArea".Log();
 	protected virtual void GetApplicationArea(byte[] _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetApplicationArea not implemented");
 	protected virtual void SetApplicationArea(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.SetApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IUser.SetApplicationArea".Log();
 	protected virtual void Flush(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Flush");
+		"Stub hit for Nn.Nfp.Detail.IUser.Flush".Log();
 	protected virtual void Restore(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.Restore");
+		"Stub hit for Nn.Nfp.Detail.IUser.Restore".Log();
 	protected virtual void CreateApplicationArea(byte[] _0, uint _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.CreateApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IUser.CreateApplicationArea".Log();
 	protected virtual void GetTagInfo(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.GetTagInfo not implemented");
 	protected virtual void GetRegisterInfo(byte[] _0, Span<byte> _1) =>
@@ -702,7 +702,7 @@ public abstract class _IUser_Base : IpcInterface {
 	protected virtual KObject AttachAvailabilityChangeEvent() =>
 		throw new NotImplementedException("Nn.Nfp.Detail.IUser.AttachAvailabilityChangeEvent not implemented");
 	protected virtual void RecreateApplicationArea(byte[] _0, uint _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Nfp.Detail.IUser.RecreateApplicationArea");
+		"Stub hit for Nn.Nfp.Detail.IUser.RecreateApplicationArea".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize

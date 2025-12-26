@@ -20,9 +20,9 @@ public abstract class _IAddOnContentManager_Base : IpcInterface {
 	protected virtual ulong GetAddOnContentBaseId(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.GetAddOnContentBaseId not implemented");
 	protected virtual void PrepareAddOnContentByApplicationId(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Aocsrv.Detail.IAddOnContentManager.PrepareAddOnContentByApplicationId");
+		"Stub hit for Nn.Aocsrv.Detail.IAddOnContentManager.PrepareAddOnContentByApplicationId".Log();
 	protected virtual void PrepareAddOnContent(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Aocsrv.Detail.IAddOnContentManager.PrepareAddOnContent");
+		"Stub hit for Nn.Aocsrv.Detail.IAddOnContentManager.PrepareAddOnContent".Log();
 	protected virtual KObject GetAddOnContentListChangedEvent() =>
 		throw new NotImplementedException("Nn.Aocsrv.Detail.IAddOnContentManager.GetAddOnContentListChangedEvent not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

@@ -5,13 +5,13 @@ namespace UmbraCore.Services.Nn.Jitsrv;
 public partial class IJitEnvironment : _IJitEnvironment_Base;
 public abstract class _IJitEnvironment_Base : IpcInterface {
 	protected virtual void Control() =>
-		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitEnvironment.Control");
+		"Stub hit for Nn.Jitsrv.IJitEnvironment.Control".Log();
 	protected virtual void GenerateCode() =>
-		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitEnvironment.GenerateCode");
+		"Stub hit for Nn.Jitsrv.IJitEnvironment.GenerateCode".Log();
 	protected virtual void LoadPlugin() =>
-		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitEnvironment.LoadPlugin");
+		"Stub hit for Nn.Jitsrv.IJitEnvironment.LoadPlugin".Log();
 	protected virtual void GetCodeAddress() =>
-		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitEnvironment.GetCodeAddress");
+		"Stub hit for Nn.Jitsrv.IJitEnvironment.GetCodeAddress".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Control
@@ -46,7 +46,7 @@ public partial class IJitService : _IJitService_Base {
 }
 public abstract class _IJitService_Base : IpcInterface {
 	protected virtual void CreateJitEnvironment() =>
-		Console.WriteLine("Stub hit for Nn.Jitsrv.IJitService.CreateJitEnvironment");
+		"Stub hit for Nn.Jitsrv.IJitService.CreateJitEnvironment".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateJitEnvironment

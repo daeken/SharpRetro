@@ -17,9 +17,9 @@ public abstract class _IMonitorService_Base : IpcInterface {
 	protected virtual void GetNetworkConfigForMonitor(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IMonitorService.GetNetworkConfigForMonitor not implemented");
 	protected virtual void InitializeMonitor() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IMonitorService.InitializeMonitor");
+		"Stub hit for Nn.Ldn.Detail.IMonitorService.InitializeMonitor".Log();
 	protected virtual void FinalizeMonitor() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IMonitorService.FinalizeMonitor");
+		"Stub hit for Nn.Ldn.Detail.IMonitorService.FinalizeMonitor".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetStateForMonitor
@@ -118,39 +118,39 @@ public abstract class _ISystemLocalCommunicationService_Base : IpcInterface {
 	protected virtual void ScanPrivate(ushort _0, byte[] _1, out ushort _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.ISystemLocalCommunicationService.ScanPrivate not implemented");
 	protected virtual void OpenAccessPoint() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.OpenAccessPoint");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.OpenAccessPoint".Log();
 	protected virtual void CloseAccessPoint() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CloseAccessPoint");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CloseAccessPoint".Log();
 	protected virtual void CreateNetwork(byte[] _0, byte[] _1, byte[] _2) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CreateNetwork");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CreateNetwork".Log();
 	protected virtual void CreateNetworkPrivate(byte[] _0, byte[] _1, byte[] _2, byte[] _3, Span<byte> _4) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CreateNetworkPrivate");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CreateNetworkPrivate".Log();
 	protected virtual void DestroyNetwork() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.DestroyNetwork");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.DestroyNetwork".Log();
 	protected virtual void Reject(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.Reject");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.Reject".Log();
 	protected virtual void SetAdvertiseData(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.SetAdvertiseData");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.SetAdvertiseData".Log();
 	protected virtual void SetStationAcceptPolicy(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.SetStationAcceptPolicy");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.SetStationAcceptPolicy".Log();
 	protected virtual void AddAcceptFilterEntry(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.AddAcceptFilterEntry");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.AddAcceptFilterEntry".Log();
 	protected virtual void ClearAcceptFilter() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.ClearAcceptFilter");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.ClearAcceptFilter".Log();
 	protected virtual void OpenStation() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.OpenStation");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.OpenStation".Log();
 	protected virtual void CloseStation() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CloseStation");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.CloseStation".Log();
 	protected virtual void Connect(byte[] _0, byte[] _1, uint _2, uint _3, Span<byte> _4) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.Connect");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.Connect".Log();
 	protected virtual void ConnectPrivate(byte[] _0, byte[] _1, byte[] _2, uint _3, uint _4, byte[] _5) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.ConnectPrivate");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.ConnectPrivate".Log();
 	protected virtual void Disconnect() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.Disconnect");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.Disconnect".Log();
 	protected virtual void InitializeSystem(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.InitializeSystem");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.InitializeSystem".Log();
 	protected virtual void FinalizeSystem() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.FinalizeSystem");
+		"Stub hit for Nn.Ldn.Detail.ISystemLocalCommunicationService.FinalizeSystem".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetState
@@ -347,39 +347,39 @@ public abstract class _IUserLocalCommunicationService_Base : IpcInterface {
 	protected virtual void ScanPrivate(ushort _0, byte[] _1, out ushort _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ldn.Detail.IUserLocalCommunicationService.ScanPrivate not implemented");
 	protected virtual void OpenAccessPoint() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.OpenAccessPoint");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.OpenAccessPoint".Log();
 	protected virtual void CloseAccessPoint() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CloseAccessPoint");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CloseAccessPoint".Log();
 	protected virtual void CreateNetwork(byte[] _0, byte[] _1, byte[] _2) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CreateNetwork");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CreateNetwork".Log();
 	protected virtual void CreateNetworkPrivate(byte[] _0, byte[] _1, byte[] _2, byte[] _3, Span<byte> _4) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CreateNetworkPrivate");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CreateNetworkPrivate".Log();
 	protected virtual void DestroyNetwork() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.DestroyNetwork");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.DestroyNetwork".Log();
 	protected virtual void Reject(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Reject");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Reject".Log();
 	protected virtual void SetAdvertiseData(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.SetAdvertiseData");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.SetAdvertiseData".Log();
 	protected virtual void SetStationAcceptPolicy(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.SetStationAcceptPolicy");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.SetStationAcceptPolicy".Log();
 	protected virtual void AddAcceptFilterEntry(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.AddAcceptFilterEntry");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.AddAcceptFilterEntry".Log();
 	protected virtual void ClearAcceptFilter() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.ClearAcceptFilter");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.ClearAcceptFilter".Log();
 	protected virtual void OpenStation() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.OpenStation");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.OpenStation".Log();
 	protected virtual void CloseStation() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CloseStation");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.CloseStation".Log();
 	protected virtual void Connect(byte[] _0, byte[] _1, uint _2, uint _3, Span<byte> _4) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Connect");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Connect".Log();
 	protected virtual void ConnectPrivate(byte[] _0, byte[] _1, byte[] _2, uint _3, uint _4, byte[] _5) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.ConnectPrivate");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.ConnectPrivate".Log();
 	protected virtual void Disconnect() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Disconnect");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Disconnect".Log();
 	protected virtual void Initialize(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Initialize");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService._Finalize");
+		"Stub hit for Nn.Ldn.Detail.IUserLocalCommunicationService._Finalize".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetState

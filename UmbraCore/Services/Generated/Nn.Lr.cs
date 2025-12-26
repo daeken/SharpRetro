@@ -7,9 +7,9 @@ public abstract class _IAddOnContentLocationResolver_Base : IpcInterface {
 	protected virtual void ResolveAddOnContentPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.IAddOnContentLocationResolver.ResolveAddOnContentPath not implemented");
 	protected virtual void RegisterAddOnContentStorage(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IAddOnContentLocationResolver.RegisterAddOnContentStorage");
+		"Stub hit for Nn.Lr.IAddOnContentLocationResolver.RegisterAddOnContentStorage".Log();
 	protected virtual void UnregisterAllAddOnContentPath() =>
-		Console.WriteLine("Stub hit for Nn.Lr.IAddOnContentLocationResolver.UnregisterAllAddOnContentPath");
+		"Stub hit for Nn.Lr.IAddOnContentLocationResolver.UnregisterAllAddOnContentPath".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ResolveAddOnContentPath
@@ -38,7 +38,7 @@ public abstract class _ILocationResolver_Base : IpcInterface {
 	protected virtual void ResolveProgramPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveProgramPath not implemented");
 	protected virtual void RedirectProgramPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectProgramPath");
+		"Stub hit for Nn.Lr.ILocationResolver.RedirectProgramPath".Log();
 	protected virtual void ResolveApplicationControlPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveApplicationControlPath not implemented");
 	protected virtual void ResolveApplicationHtmlDocumentPath(byte[] _0, Span<byte> _1) =>
@@ -46,27 +46,27 @@ public abstract class _ILocationResolver_Base : IpcInterface {
 	protected virtual void ResolveDataPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveDataPath not implemented");
 	protected virtual void RedirectApplicationControlPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationControlPath");
+		"Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationControlPath".Log();
 	protected virtual void RedirectApplicationHtmlDocumentPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationHtmlDocumentPath");
+		"Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationHtmlDocumentPath".Log();
 	protected virtual void ResolveApplicationLegalInformationPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolver.ResolveApplicationLegalInformationPath not implemented");
 	protected virtual void RedirectApplicationLegalInformationPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationLegalInformationPath");
+		"Stub hit for Nn.Lr.ILocationResolver.RedirectApplicationLegalInformationPath".Log();
 	protected virtual void Refresh() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.Refresh");
+		"Stub hit for Nn.Lr.ILocationResolver.Refresh".Log();
 	protected virtual void SetProgramNcaPath2() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.SetProgramNcaPath2");
+		"Stub hit for Nn.Lr.ILocationResolver.SetProgramNcaPath2".Log();
 	protected virtual void ClearLocationResolver2() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.ClearLocationResolver2");
+		"Stub hit for Nn.Lr.ILocationResolver.ClearLocationResolver2".Log();
 	protected virtual void DeleteProgramNcaPath() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.DeleteProgramNcaPath");
+		"Stub hit for Nn.Lr.ILocationResolver.DeleteProgramNcaPath".Log();
 	protected virtual void DeleteControlNcaPath() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.DeleteControlNcaPath");
+		"Stub hit for Nn.Lr.ILocationResolver.DeleteControlNcaPath".Log();
 	protected virtual void DeleteDocHtmlNcaPath() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.DeleteDocHtmlNcaPath");
+		"Stub hit for Nn.Lr.ILocationResolver.DeleteDocHtmlNcaPath".Log();
 	protected virtual void DeleteInfoHtmlNcaPath() =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolver.DeleteInfoHtmlNcaPath");
+		"Stub hit for Nn.Lr.ILocationResolver.DeleteInfoHtmlNcaPath".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ResolveProgramPath
@@ -165,7 +165,7 @@ public abstract class _ILocationResolverManager_Base : IpcInterface {
 	protected virtual Nn.Lr.IRegisteredLocationResolver OpenRegisteredLocationResolver() =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolverManager.OpenRegisteredLocationResolver not implemented");
 	protected virtual void RefreshLocationResolver(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lr.ILocationResolverManager.RefreshLocationResolver");
+		"Stub hit for Nn.Lr.ILocationResolverManager.RefreshLocationResolver".Log();
 	protected virtual Nn.Lr.IAddOnContentLocationResolver OpenAddOnContentLocationResolver() =>
 		throw new NotImplementedException("Nn.Lr.ILocationResolverManager.OpenAddOnContentLocationResolver not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -204,19 +204,19 @@ public abstract class _IRegisteredLocationResolver_Base : IpcInterface {
 	protected virtual void ResolveProgramPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.IRegisteredLocationResolver.ResolveProgramPath not implemented");
 	protected virtual void RegisterProgramPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RegisterProgramPath");
+		"Stub hit for Nn.Lr.IRegisteredLocationResolver.RegisterProgramPath".Log();
 	protected virtual void UnregisterProgramPath(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.UnregisterProgramPath");
+		"Stub hit for Nn.Lr.IRegisteredLocationResolver.UnregisterProgramPath".Log();
 	protected virtual void RedirectProgramPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RedirectProgramPath");
+		"Stub hit for Nn.Lr.IRegisteredLocationResolver.RedirectProgramPath".Log();
 	protected virtual void ResolveHtmlDocumentPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Lr.IRegisteredLocationResolver.ResolveHtmlDocumentPath not implemented");
 	protected virtual void RegisterHtmlDocumentPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RegisterHtmlDocumentPath");
+		"Stub hit for Nn.Lr.IRegisteredLocationResolver.RegisterHtmlDocumentPath".Log();
 	protected virtual void UnregisterHtmlDocumentPath(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.UnregisterHtmlDocumentPath");
+		"Stub hit for Nn.Lr.IRegisteredLocationResolver.UnregisterHtmlDocumentPath".Log();
 	protected virtual void RedirectHtmlDocumentPath(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Lr.IRegisteredLocationResolver.RedirectHtmlDocumentPath");
+		"Stub hit for Nn.Lr.IRegisteredLocationResolver.RedirectHtmlDocumentPath".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ResolveProgramPath

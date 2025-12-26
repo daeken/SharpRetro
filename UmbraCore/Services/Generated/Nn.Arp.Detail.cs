@@ -48,11 +48,11 @@ public abstract class _IReader_Base : IpcInterface {
 public partial class IRegistrar : _IRegistrar_Base;
 public abstract class _IRegistrar_Base : IpcInterface {
 	protected virtual void Issue(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.Issue");
+		"Stub hit for Nn.Arp.Detail.IRegistrar.Issue".Log();
 	protected virtual void SetApplicationLaunchProperty(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationLaunchProperty");
+		"Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationLaunchProperty".Log();
 	protected virtual void SetApplicationControlProperty(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationControlProperty");
+		"Stub hit for Nn.Arp.Detail.IRegistrar.SetApplicationControlProperty".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Issue
@@ -84,7 +84,7 @@ public abstract class _IWriter_Base : IpcInterface {
 	protected virtual Nn.Arp.Detail.IRegistrar AcquireRegistrar() =>
 		throw new NotImplementedException("Nn.Arp.Detail.IWriter.AcquireRegistrar not implemented");
 	protected virtual void DeleteProperties(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Arp.Detail.IWriter.DeleteProperties");
+		"Stub hit for Nn.Arp.Detail.IWriter.DeleteProperties".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // AcquireRegistrar

@@ -7,11 +7,11 @@ public abstract class _IAsyncContext_Base : IpcInterface {
 	protected virtual KObject GetSystemEvent() =>
 		throw new NotImplementedException("Nn.Account.Detail.IAsyncContext.GetSystemEvent not implemented");
 	protected virtual void Cancel() =>
-		Console.WriteLine("Stub hit for Nn.Account.Detail.IAsyncContext.Cancel");
+		"Stub hit for Nn.Account.Detail.IAsyncContext.Cancel".Log();
 	protected virtual byte HasDone() =>
 		throw new NotImplementedException("Nn.Account.Detail.IAsyncContext.HasDone not implemented");
 	protected virtual void GetResult() =>
-		Console.WriteLine("Stub hit for Nn.Account.Detail.IAsyncContext.GetResult");
+		"Stub hit for Nn.Account.Detail.IAsyncContext.GetResult".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetSystemEvent
@@ -63,7 +63,7 @@ public abstract class _INotifier_Base : IpcInterface {
 public partial class ISessionObject : _ISessionObject_Base;
 public abstract class _ISessionObject_Base : IpcInterface {
 	protected virtual void Dummy() =>
-		Console.WriteLine("Stub hit for Nn.Account.Detail.ISessionObject.Dummy");
+		"Stub hit for Nn.Account.Detail.ISessionObject.Dummy".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x3E7: { // Dummy

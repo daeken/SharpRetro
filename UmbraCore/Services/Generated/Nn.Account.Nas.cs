@@ -66,7 +66,7 @@ public abstract class _IOAuthProcedureForExternalNsa_Base : IpcInterface {
 	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Nas.IOAuthProcedureForExternalNsa.ApplyResponse");
+		"Stub hit for Nn.Account.Nas.IOAuthProcedureForExternalNsa.ApplyResponse".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForExternalNsa.ApplyResponseAsync not implemented");
 	protected virtual void Suspend(out byte[] _0) =>
@@ -145,7 +145,7 @@ public abstract class _IOAuthProcedureForGuestLogin_Base : IpcInterface {
 	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Nas.IOAuthProcedureForGuestLogin.ApplyResponse");
+		"Stub hit for Nn.Account.Nas.IOAuthProcedureForGuestLogin.ApplyResponse".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForGuestLogin.ApplyResponseAsync not implemented");
 	protected virtual void Suspend(out byte[] _0) =>
@@ -224,7 +224,7 @@ public abstract class _IOAuthProcedureForNintendoAccountLinkage_Base : IpcInterf
 	protected virtual void GetRequest(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.GetRequest not implemented");
 	protected virtual void ApplyResponse(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.ApplyResponse");
+		"Stub hit for Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.ApplyResponse".Log();
 	protected virtual Nn.Account.Detail.IAsyncContext ApplyResponseAsync(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Account.Nas.IOAuthProcedureForNintendoAccountLinkage.ApplyResponseAsync not implemented");
 	protected virtual void Suspend(out byte[] _0) =>

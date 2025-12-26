@@ -23,9 +23,9 @@ public abstract class _INewlyArrivedEventHolder_Base : IpcInterface {
 public partial class INewsDataService : _INewsDataService_Base;
 public abstract class _INewsDataService_Base : IpcInterface {
 	protected virtual void Unknown0(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsDataService.Unknown0");
+		"Stub hit for Nn.News.Detail.Ipc.INewsDataService.Unknown0".Log();
 	protected virtual void Unknown1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsDataService.Unknown1");
+		"Stub hit for Nn.News.Detail.Ipc.INewsDataService.Unknown1".Log();
 	protected virtual void Unknown2(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsDataService.Unknown2 not implemented");
 	protected virtual void Unknown3(out byte[] _0) =>
@@ -69,11 +69,11 @@ public abstract class _INewsDatabaseService_Base : IpcInterface {
 	protected virtual void Unknown2(byte[] _0, Span<byte> _1, Span<byte> _2, out byte[] _3) =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsDatabaseService.Unknown2 not implemented");
 	protected virtual void Unknown3(byte[] _0, Span<byte> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsDatabaseService.Unknown3");
+		"Stub hit for Nn.News.Detail.Ipc.INewsDatabaseService.Unknown3".Log();
 	protected virtual void Unknown4(byte[] _0, Span<byte> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsDatabaseService.Unknown4");
+		"Stub hit for Nn.News.Detail.Ipc.INewsDatabaseService.Unknown4".Log();
 	protected virtual void Unknown5(Span<byte> _0, Span<byte> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsDatabaseService.Unknown5");
+		"Stub hit for Nn.News.Detail.Ipc.INewsDatabaseService.Unknown5".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -118,9 +118,9 @@ public abstract class _INewsDatabaseService_Base : IpcInterface {
 public partial class INewsService : _INewsService_Base;
 public abstract class _INewsService_Base : IpcInterface {
 	protected virtual void Unknown10100(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown10100");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown10100".Log();
 	protected virtual void Unknown20100(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown20100");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown20100".Log();
 	protected virtual void Unknown30100(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsService.Unknown30100 not implemented");
 	protected virtual void Unknown30101(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -128,7 +128,7 @@ public abstract class _INewsService_Base : IpcInterface {
 	protected virtual void Unknown30200(out byte[] _0) =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsService.Unknown30200 not implemented");
 	protected virtual void Unknown30300(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown30300");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown30300".Log();
 	protected virtual void Unknown30400(Span<byte> _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsService.Unknown30400 not implemented");
 	protected virtual Nn.News.Detail.Ipc.INewlyArrivedEventHolder Unknown30900() =>
@@ -138,13 +138,13 @@ public abstract class _INewsService_Base : IpcInterface {
 	protected virtual Nn.News.Detail.Ipc.INewsDatabaseService Unknown30902() =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsService.Unknown30902 not implemented");
 	protected virtual void Unknown40100(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40100");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40100".Log();
 	protected virtual void Unknown40101(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40101");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40101".Log();
 	protected virtual void Unknown40200() =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40200");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40200".Log();
 	protected virtual void Unknown40201() =>
-		Console.WriteLine("Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40201");
+		"Stub hit for Nn.News.Detail.Ipc.INewsService.Unknown40201".Log();
 	protected virtual void Unknown90100(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.News.Detail.Ipc.INewsService.Unknown90100 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

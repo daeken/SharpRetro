@@ -5,7 +5,7 @@ namespace UmbraCore.Services.Nn.Ns.Detail;
 public partial class IAccountProxyInterface : _IAccountProxyInterface_Base;
 public abstract class _IAccountProxyInterface_Base : IpcInterface {
 	protected virtual void CreateUserAccount(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IAccountProxyInterface.CreateUserAccount");
+		"Stub hit for Nn.Ns.Detail.IAccountProxyInterface.CreateUserAccount".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // CreateUserAccount
@@ -33,21 +33,21 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void GetApplicationViewDeprecated(Span<byte> _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationViewDeprecated not implemented");
 	protected virtual void DeleteApplicationEntity(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationEntity");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationEntity".Log();
 	protected virtual void DeleteApplicationCompletely(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationCompletely");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationCompletely".Log();
 	protected virtual void IsAnyApplicationEntityRedundant(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsAnyApplicationEntityRedundant not implemented");
 	protected virtual void DeleteRedundantApplicationEntity() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteRedundantApplicationEntity");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteRedundantApplicationEntity".Log();
 	protected virtual void IsApplicationEntityMovable(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsApplicationEntityMovable not implemented");
 	protected virtual void MoveApplicationEntity(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.MoveApplicationEntity");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.MoveApplicationEntity".Log();
 	protected virtual void CalculateApplicationOccupiedSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.CalculateApplicationOccupiedSize not implemented");
 	protected virtual void PushApplicationRecord(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PushApplicationRecord");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PushApplicationRecord".Log();
 	protected virtual void ListApplicationRecordContentMeta(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationRecordContentMeta not implemented");
 	protected virtual void LaunchApplication(byte[] _0, out byte[] _1) =>
@@ -55,37 +55,37 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void GetApplicationContentPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationContentPath not implemented");
 	protected virtual void TerminateApplication(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateApplication");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateApplication".Log();
 	protected virtual void ResolveApplicationContentPath(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResolveApplicationContentPath");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResolveApplicationContentPath".Log();
 	protected virtual void BeginInstallApplication(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.BeginInstallApplication");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.BeginInstallApplication".Log();
 	protected virtual void DeleteApplicationRecord(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationRecord");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationRecord".Log();
 	protected virtual void RequestApplicationUpdateInfo(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncValue _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestApplicationUpdateInfo not implemented");
 	protected virtual void CancelApplicationDownload(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CancelApplicationDownload");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CancelApplicationDownload".Log();
 	protected virtual void ResumeApplicationDownload(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResumeApplicationDownload");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResumeApplicationDownload".Log();
 	protected virtual void UpdateVersionList(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.UpdateVersionList");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.UpdateVersionList".Log();
 	protected virtual void PushLaunchVersion(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PushLaunchVersion");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PushLaunchVersion".Log();
 	protected virtual void ListRequiredVersion(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListRequiredVersion not implemented");
 	protected virtual void CheckApplicationLaunchVersion(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckApplicationLaunchVersion");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckApplicationLaunchVersion".Log();
 	protected virtual void CheckApplicationLaunchRights(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckApplicationLaunchRights");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckApplicationLaunchRights".Log();
 	protected virtual void GetApplicationLogoData(byte[] _0, Span<byte> _1, out byte[] _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationLogoData not implemented");
 	protected virtual void CalculateApplicationDownloadRequiredSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.CalculateApplicationDownloadRequiredSize not implemented");
 	protected virtual void CleanupSdCard() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CleanupSdCard");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CleanupSdCard".Log();
 	protected virtual void CheckSdCardMountStatus() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckSdCardMountStatus");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckSdCardMountStatus".Log();
 	protected virtual KObject GetSdCardMountStatusChangedEvent() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetSdCardMountStatusChangedEvent not implemented");
 	protected virtual KObject GetGameCardAttachmentEvent() =>
@@ -101,17 +101,17 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual KObject GetGameCardUpdateDetectionEvent() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetGameCardUpdateDetectionEvent not implemented");
 	protected virtual void DisableApplicationAutoDelete(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DisableApplicationAutoDelete");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DisableApplicationAutoDelete".Log();
 	protected virtual void EnableApplicationAutoDelete(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnableApplicationAutoDelete");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnableApplicationAutoDelete".Log();
 	protected virtual void GetApplicationDesiredLanguage(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationDesiredLanguage not implemented");
 	protected virtual void SetApplicationTerminateResult(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.SetApplicationTerminateResult");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.SetApplicationTerminateResult".Log();
 	protected virtual void ClearApplicationTerminateResult(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ClearApplicationTerminateResult");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ClearApplicationTerminateResult".Log();
 	protected virtual void GetLastSdCardMountUnexpectedResult() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetLastSdCardMountUnexpectedResult");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetLastSdCardMountUnexpectedResult".Log();
 	protected virtual void ConvertApplicationLanguageToLanguageCode(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ConvertApplicationLanguageToLanguageCode not implemented");
 	protected virtual void ConvertLanguageCodeToApplicationLanguage(byte[] _0, out byte[] _1) =>
@@ -123,19 +123,19 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void IsSystemProgramInstalled(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsSystemProgramInstalled not implemented");
 	protected virtual void StartApplyDeltaTask(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.StartApplyDeltaTask");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.StartApplyDeltaTask".Log();
 	protected virtual Nn.Ns.Detail.IRequestServerStopper GetRequestServerStopper() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetRequestServerStopper not implemented");
 	protected virtual void GetBackgroundApplyDeltaStressTaskInfo(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetBackgroundApplyDeltaStressTaskInfo not implemented");
 	protected virtual void CancelApplicationApplyDelta(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CancelApplicationApplyDelta");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CancelApplicationApplyDelta".Log();
 	protected virtual void ResumeApplicationApplyDelta(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResumeApplicationApplyDelta");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResumeApplicationApplyDelta".Log();
 	protected virtual void CalculateApplicationApplyDeltaRequiredSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.CalculateApplicationApplyDeltaRequiredSize not implemented");
 	protected virtual void ResumeAll() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResumeAll");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResumeAll".Log();
 	protected virtual void GetStorageSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetStorageSize not implemented");
 	protected virtual void RequestDownloadApplication(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncResult _2) =>
@@ -143,53 +143,53 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void RequestDownloadAddOnContent(byte[] _0, Span<byte> _1, out KObject _2, out Nn.Ns.Detail.IAsyncResult _3) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestDownloadAddOnContent not implemented");
 	protected virtual void DownloadApplication(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DownloadApplication");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DownloadApplication".Log();
 	protected virtual void CheckApplicationResumeRights(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckApplicationResumeRights");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CheckApplicationResumeRights".Log();
 	protected virtual KObject GetDynamicCommitEvent() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetDynamicCommitEvent not implemented");
 	protected virtual void RequestUpdateApplication2(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncResult _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestUpdateApplication2 not implemented");
 	protected virtual void EnableApplicationCrashReport(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnableApplicationCrashReport");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnableApplicationCrashReport".Log();
 	protected virtual void IsApplicationCrashReportEnabled(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsApplicationCrashReportEnabled not implemented");
 	protected virtual void BoostSystemMemoryResourceLimit(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.BoostSystemMemoryResourceLimit");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.BoostSystemMemoryResourceLimit".Log();
 	protected virtual void Unknown91() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown91");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown91".Log();
 	protected virtual void Unknown92() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown92");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown92".Log();
 	protected virtual void Unknown93() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown93");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown93".Log();
 	protected virtual void LaunchApplication2() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.LaunchApplication2");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.LaunchApplication2".Log();
 	protected virtual void Unknown95() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown95");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown95".Log();
 	protected virtual void Unknown96() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown96");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown96".Log();
 	protected virtual void Unknown97() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown97");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown97".Log();
 	protected virtual void Unknown98() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown98");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown98".Log();
 	protected virtual void ResetToFactorySettings() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetToFactorySettings");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetToFactorySettings".Log();
 	protected virtual void ResetToFactorySettingsWithoutUserSaveData() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetToFactorySettingsWithoutUserSaveData");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetToFactorySettingsWithoutUserSaveData".Log();
 	protected virtual void ResetToFactorySettingsForRefurbishment() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetToFactorySettingsForRefurbishment");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetToFactorySettingsForRefurbishment".Log();
 	protected virtual void CalculateUserSaveDataStatistics(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.CalculateUserSaveDataStatistics not implemented");
 	protected virtual Nn.Ns.Detail.IProgressMonitorForDeleteUserSaveDataAll DeleteUserSaveDataAll(byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.DeleteUserSaveDataAll not implemented");
 	protected virtual void DeleteUserSystemSaveData(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteUserSystemSaveData");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteUserSystemSaveData".Log();
 	protected virtual void Unknown211() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown211");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown211".Log();
 	protected virtual void UnregisterNetworkServiceAccount(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.UnregisterNetworkServiceAccount");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.UnregisterNetworkServiceAccount".Log();
 	protected virtual void Unknown221() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown221");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown221".Log();
 	protected virtual KObject GetApplicationShellEvent() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationShellEvent not implemented");
 	protected virtual void PopApplicationShellEventInfo(out byte[] _0, Span<byte> _1) =>
@@ -197,29 +197,29 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void LaunchLibraryApplet(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.LaunchLibraryApplet not implemented");
 	protected virtual void TerminateLibraryApplet(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateLibraryApplet");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateLibraryApplet".Log();
 	protected virtual void LaunchSystemApplet(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.LaunchSystemApplet not implemented");
 	protected virtual void TerminateSystemApplet(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateSystemApplet");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateSystemApplet".Log();
 	protected virtual void LaunchOverlayApplet(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.LaunchOverlayApplet not implemented");
 	protected virtual void TerminateOverlayApplet(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateOverlayApplet");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TerminateOverlayApplet".Log();
 	protected virtual void GetApplicationControlData(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationControlData not implemented");
 	protected virtual void InvalidateAllApplicationControlCache() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.InvalidateAllApplicationControlCache");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.InvalidateAllApplicationControlCache".Log();
 	protected virtual void RequestDownloadApplicationControlData(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncResult _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestDownloadApplicationControlData not implemented");
 	protected virtual void GetMaxApplicationControlCacheCount(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetMaxApplicationControlCacheCount not implemented");
 	protected virtual void InvalidateApplicationControlCache(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.InvalidateApplicationControlCache");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.InvalidateApplicationControlCache".Log();
 	protected virtual void ListApplicationControlCacheEntryInfo(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationControlCacheEntryInfo not implemented");
 	protected virtual void Unknown406() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown406");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown406".Log();
 	protected virtual void RequestCheckGameCardRegistration(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncResult _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestCheckGameCardRegistration not implemented");
 	protected virtual void RequestGameCardRegistrationGoldPoint(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncValue _2) =>
@@ -231,11 +231,11 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void IsGameCardInserted(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsGameCardInserted not implemented");
 	protected virtual void EnsureGameCardAccess() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnsureGameCardAccess");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnsureGameCardAccess".Log();
 	protected virtual void GetLastGameCardMountFailureResult() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetLastGameCardMountFailureResult");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetLastGameCardMountFailureResult".Log();
 	protected virtual void ListApplicationIdOnGameCard() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationIdOnGameCard");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationIdOnGameCard".Log();
 	protected virtual void CountApplicationContentMeta(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.CountApplicationContentMeta not implemented");
 	protected virtual void ListApplicationContentMetaStatus(byte[] _0, out byte[] _1, Span<byte> _2) =>
@@ -245,19 +245,19 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void GetOwnedApplicationContentMetaStatus(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetOwnedApplicationContentMetaStatus not implemented");
 	protected virtual void RegisterContentsExternalKey(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RegisterContentsExternalKey");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RegisterContentsExternalKey".Log();
 	protected virtual void ListApplicationContentMetaStatusWithRightsCheck(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationContentMetaStatusWithRightsCheck not implemented");
 	protected virtual void GetContentMetaStorage(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetContentMetaStorage not implemented");
 	protected virtual void Unknown607() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown607");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown607".Log();
 	protected virtual void PushDownloadTaskList(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PushDownloadTaskList");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PushDownloadTaskList".Log();
 	protected virtual void ClearTaskStatusList() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ClearTaskStatusList");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ClearTaskStatusList".Log();
 	protected virtual void RequestDownloadTaskList() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestDownloadTaskList");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestDownloadTaskList".Log();
 	protected virtual void RequestEnsureDownloadTask(out KObject _0, out Nn.Ns.Detail.IAsyncResult _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestEnsureDownloadTask not implemented");
 	protected virtual void ListDownloadTaskStatus(out byte[] _0, Span<byte> _1) =>
@@ -265,7 +265,7 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void RequestDownloadTaskListData(out KObject _0, out Nn.Ns.Detail.IAsyncValue _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestDownloadTaskListData not implemented");
 	protected virtual void RequestVersionList() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestVersionList");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestVersionList".Log();
 	protected virtual void ListVersionList(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListVersionList not implemented");
 	protected virtual void RequestVersionListData(out KObject _0, out Nn.Ns.Detail.IAsyncValue _1) =>
@@ -275,69 +275,69 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void GetApplicationRecordProperty(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationRecordProperty not implemented");
 	protected virtual void EnableApplicationAutoUpdate(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnableApplicationAutoUpdate");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.EnableApplicationAutoUpdate".Log();
 	protected virtual void DisableApplicationAutoUpdate(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DisableApplicationAutoUpdate");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DisableApplicationAutoUpdate".Log();
 	protected virtual void TouchApplication(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TouchApplication");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.TouchApplication".Log();
 	protected virtual void RequestApplicationUpdate(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestApplicationUpdate");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestApplicationUpdate".Log();
 	protected virtual void IsApplicationUpdateRequested(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsApplicationUpdateRequested not implemented");
 	protected virtual void WithdrawApplicationUpdateRequest(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.WithdrawApplicationUpdateRequest");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.WithdrawApplicationUpdateRequest".Log();
 	protected virtual void ListApplicationRecordInstalledContentMeta(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationRecordInstalledContentMeta not implemented");
 	protected virtual void WithdrawCleanupAddOnContentsWithNoRightsRecommendation(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.WithdrawCleanupAddOnContentsWithNoRightsRecommendation");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.WithdrawCleanupAddOnContentsWithNoRightsRecommendation".Log();
 	protected virtual void Unknown910() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown910");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown910".Log();
 	protected virtual void Unknown911() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown911");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown911".Log();
 	protected virtual void Unknown912() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown912");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown912".Log();
 	protected virtual void RequestVerifyApplicationDeprecated(byte[] _0, KObject _1, out KObject _2, out Nn.Ns.Detail.IProgressAsyncResult _3) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestVerifyApplicationDeprecated not implemented");
 	protected virtual void CorruptApplicationForDebug(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CorruptApplicationForDebug");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CorruptApplicationForDebug".Log();
 	protected virtual void RequestVerifyAddOnContentsRights(byte[] _0, out KObject _1, out Nn.Ns.Detail.IProgressAsyncResult _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestVerifyAddOnContentsRights not implemented");
 	protected virtual void RequestVerifyApplication() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestVerifyApplication");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RequestVerifyApplication".Log();
 	protected virtual void CorruptContentForDebug() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CorruptContentForDebug");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CorruptContentForDebug".Log();
 	protected virtual void NeedsUpdateVulnerability(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.NeedsUpdateVulnerability not implemented");
 	protected virtual void IsAnyApplicationEntityInstalled(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.IsAnyApplicationEntityInstalled not implemented");
 	protected virtual void DeleteApplicationContentEntities(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationContentEntities");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationContentEntities".Log();
 	protected virtual void CleanupUnrecordedApplicationEntity(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CleanupUnrecordedApplicationEntity");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CleanupUnrecordedApplicationEntity".Log();
 	protected virtual void CleanupAddOnContentsWithNoRights(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CleanupAddOnContentsWithNoRights");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CleanupAddOnContentsWithNoRights".Log();
 	protected virtual void DeleteApplicationContentEntity(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationContentEntity");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.DeleteApplicationContentEntity".Log();
 	protected virtual void Unknown1308() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown1308");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown1308".Log();
 	protected virtual void Unknown1309() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown1309");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown1309".Log();
 	protected virtual void PrepareShutdown() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PrepareShutdown");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.PrepareShutdown".Log();
 	protected virtual void FormatSdCard() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.FormatSdCard");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.FormatSdCard".Log();
 	protected virtual void NeedsSystemUpdateToFormatSdCard(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.NeedsSystemUpdateToFormatSdCard not implemented");
 	protected virtual void GetLastSdCardFormatUnexpectedResult() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetLastSdCardFormatUnexpectedResult");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetLastSdCardFormatUnexpectedResult".Log();
 	protected virtual void InsertSdCard() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.InsertSdCard");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.InsertSdCard".Log();
 	protected virtual void RemoveSdCard() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RemoveSdCard");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.RemoveSdCard".Log();
 	protected virtual void GetSystemSeedForPseudoDeviceId(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetSystemSeedForPseudoDeviceId not implemented");
 	protected virtual void ResetSystemSeedForPseudoDeviceId() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetSystemSeedForPseudoDeviceId");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.ResetSystemSeedForPseudoDeviceId".Log();
 	protected virtual void ListApplicationDownloadingContentMeta(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListApplicationDownloadingContentMeta not implemented");
 	protected virtual void GetApplicationView(Span<byte> _0, Span<byte> _1) =>
@@ -359,13 +359,13 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void RequestDownloadApplicationPrepurchasedRights(byte[] _0, out KObject _1, out Nn.Ns.Detail.IAsyncResult _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestDownloadApplicationPrepurchasedRights not implemented");
 	protected virtual void GetApplicationTicketInfo() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationTicketInfo");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationTicketInfo".Log();
 	protected virtual void GetSystemDeliveryInfo(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetSystemDeliveryInfo not implemented");
 	protected virtual void SelectLatestSystemDeliveryInfo(Span<byte> _0, Span<byte> _1, Span<byte> _2, out byte[] _3) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.SelectLatestSystemDeliveryInfo not implemented");
 	protected virtual void VerifyDeliveryProtocolVersion(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.VerifyDeliveryProtocolVersion");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.VerifyDeliveryProtocolVersion".Log();
 	protected virtual void GetApplicationDeliveryInfo(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetApplicationDeliveryInfo not implemented");
 	protected virtual void HasAllContentsToDeliver(Span<byte> _0, out byte[] _1) =>
@@ -383,7 +383,7 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void RequestReceiveApplication(byte[] _0, Span<byte> _1, out KObject _2, out Nn.Ns.Detail.IAsyncResult _3) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.RequestReceiveApplication not implemented");
 	protected virtual void CommitReceiveApplication(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CommitReceiveApplication");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CommitReceiveApplication".Log();
 	protected virtual void GetReceiveApplicationProgress(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.GetReceiveApplicationProgress not implemented");
 	protected virtual void RequestSendApplication(byte[] _0, Span<byte> _1, out KObject _2, out Nn.Ns.Detail.IAsyncResult _3) =>
@@ -395,51 +395,51 @@ public abstract class _IApplicationManagerInterface_Base : IpcInterface {
 	protected virtual void ListNotCommittedContentMeta(byte[] _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationManagerInterface.ListNotCommittedContentMeta not implemented");
 	protected virtual void CreateDownloadTask(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CreateDownloadTask");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.CreateDownloadTask".Log();
 	protected virtual void Unknown2018() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2018");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2018".Log();
 	protected virtual void Unknown2050() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2050");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2050".Log();
 	protected virtual void Unknown2100() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2100");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2100".Log();
 	protected virtual void Unknown2101() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2101");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2101".Log();
 	protected virtual void Unknown2150() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2150");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2150".Log();
 	protected virtual void Unknown2151() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2151");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2151".Log();
 	protected virtual void Unknown2152() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2152");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2152".Log();
 	protected virtual void Unknown2153() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2153");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2153".Log();
 	protected virtual void Unknown2154() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2154");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2154".Log();
 	protected virtual void Unknown2160() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2160");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2160".Log();
 	protected virtual void Unknown2161() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2161");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2161".Log();
 	protected virtual void Unknown2170() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2170");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2170".Log();
 	protected virtual void Unknown2171() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2171");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2171".Log();
 	protected virtual void Unknown2180() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2180");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2180".Log();
 	protected virtual void Unknown2181() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2181");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2181".Log();
 	protected virtual void Unknown2182() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2182");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2182".Log();
 	protected virtual void Unknown2190() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2190");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2190".Log();
 	protected virtual void Unknown2199() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2199");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2199".Log();
 	protected virtual void Unknown2200() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2200");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2200".Log();
 	protected virtual void Unknown2201() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2201");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2201".Log();
 	protected virtual void Unknown2250() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2250");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2250".Log();
 	protected virtual void Unknown2300() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2300");
+		"Stub hit for Nn.Ns.Detail.IApplicationManagerInterface.Unknown2300".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ListApplicationRecord
@@ -1601,21 +1601,21 @@ public abstract class _IApplicationVersionInterface_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationVersionInterface.Unknown0 not implemented");
 	protected virtual void Unknown1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown1");
+		"Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown1".Log();
 	protected virtual void Unknown35(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown35");
+		"Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown35".Log();
 	protected virtual void Unknown36(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown36");
+		"Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown36".Log();
 	protected virtual void Unknown37(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationVersionInterface.Unknown37 not implemented");
 	protected virtual void Unknown800() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown800");
+		"Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown800".Log();
 	protected virtual void Unknown801(out byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationVersionInterface.Unknown801 not implemented");
 	protected virtual void Unknown802(out KObject _0, out Nn.Ns.Detail.IAsyncValue _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IApplicationVersionInterface.Unknown802 not implemented");
 	protected virtual void Unknown1000() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown1000");
+		"Stub hit for Nn.Ns.Detail.IApplicationVersionInterface.Unknown1000".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -1677,9 +1677,9 @@ public abstract class _IApplicationVersionInterface_Base : IpcInterface {
 public partial class IAsyncResult : _IAsyncResult_Base;
 public abstract class _IAsyncResult_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IAsyncResult.Unknown0");
+		"Stub hit for Nn.Ns.Detail.IAsyncResult.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IAsyncResult.Unknown1");
+		"Stub hit for Nn.Ns.Detail.IAsyncResult.Unknown1".Log();
 	protected virtual void Unknown2(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IAsyncResult.Unknown2 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1712,7 +1712,7 @@ public abstract class _IAsyncValue_Base : IpcInterface {
 	protected virtual void Unknown1(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IAsyncValue.Unknown1 not implemented");
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IAsyncValue.Unknown2");
+		"Stub hit for Nn.Ns.Detail.IAsyncValue.Unknown2".Log();
 	protected virtual void Unknown3(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IAsyncValue.Unknown3 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1749,7 +1749,7 @@ public abstract class _IContentManagementInterface_Base : IpcInterface {
 	protected virtual void CalculateApplicationOccupiedSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IContentManagementInterface.CalculateApplicationOccupiedSize not implemented");
 	protected virtual void CheckSdCardMountStatus() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IContentManagementInterface.CheckSdCardMountStatus");
+		"Stub hit for Nn.Ns.Detail.IContentManagementInterface.CheckSdCardMountStatus".Log();
 	protected virtual void GetTotalSpaceSize(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IContentManagementInterface.GetTotalSpaceSize not implemented");
 	protected virtual void GetFreeSpaceSize(byte[] _0, out byte[] _1) =>
@@ -1825,15 +1825,15 @@ public abstract class _IDevelopInterface_Base : IpcInterface {
 	protected virtual void LaunchProgram(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDevelopInterface.LaunchProgram not implemented");
 	protected virtual void TerminateProcess(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDevelopInterface.TerminateProcess");
+		"Stub hit for Nn.Ns.Detail.IDevelopInterface.TerminateProcess".Log();
 	protected virtual void TerminateProgram(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDevelopInterface.TerminateProgram");
+		"Stub hit for Nn.Ns.Detail.IDevelopInterface.TerminateProgram".Log();
 	protected virtual KObject GetShellEventHandle() =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDevelopInterface.GetShellEventHandle not implemented");
 	protected virtual void GetShellEventInfo(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDevelopInterface.GetShellEventInfo not implemented");
 	protected virtual void TerminateApplication() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDevelopInterface.TerminateApplication");
+		"Stub hit for Nn.Ns.Detail.IDevelopInterface.TerminateApplication".Log();
 	protected virtual void PrepareLaunchProgramFromHost(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDevelopInterface.PrepareLaunchProgramFromHost not implemented");
 	protected virtual void LaunchApplication(byte[] _0, out byte[] _1) =>
@@ -1904,7 +1904,7 @@ public abstract class _IDocumentInterface_Base : IpcInterface {
 	protected virtual void GetApplicationContentPath(byte[] _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDocumentInterface.GetApplicationContentPath not implemented");
 	protected virtual void ResolveApplicationContentPath(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDocumentInterface.ResolveApplicationContentPath");
+		"Stub hit for Nn.Ns.Detail.IDocumentInterface.ResolveApplicationContentPath".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x15: { // GetApplicationContentPath
@@ -1926,9 +1926,9 @@ public abstract class _IDocumentInterface_Base : IpcInterface {
 public partial class IDownloadTaskInterface : _IDownloadTaskInterface_Base;
 public abstract class _IDownloadTaskInterface_Base : IpcInterface {
 	protected virtual void ClearTaskStatusList() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.ClearTaskStatusList");
+		"Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.ClearTaskStatusList".Log();
 	protected virtual void RequestDownloadTaskList() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.RequestDownloadTaskList");
+		"Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.RequestDownloadTaskList".Log();
 	protected virtual void RequestEnsureDownloadTask(out KObject _0, out Nn.Ns.Detail.IAsyncResult _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDownloadTaskInterface.RequestEnsureDownloadTask not implemented");
 	protected virtual void ListDownloadTaskStatus(out byte[] _0, Span<byte> _1) =>
@@ -1936,13 +1936,13 @@ public abstract class _IDownloadTaskInterface_Base : IpcInterface {
 	protected virtual void RequestDownloadTaskListData(out KObject _0, out Nn.Ns.Detail.IAsyncValue _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IDownloadTaskInterface.RequestDownloadTaskListData not implemented");
 	protected virtual void TryCommitCurrentApplicationDownloadTask() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.TryCommitCurrentApplicationDownloadTask");
+		"Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.TryCommitCurrentApplicationDownloadTask".Log();
 	protected virtual void EnableAutoCommit() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.EnableAutoCommit");
+		"Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.EnableAutoCommit".Log();
 	protected virtual void DisableAutoCommit() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.DisableAutoCommit");
+		"Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.DisableAutoCommit".Log();
 	protected virtual void TriggerDynamicCommitEvent() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.TriggerDynamicCommitEvent");
+		"Stub hit for Nn.Ns.Detail.IDownloadTaskInterface.TriggerDynamicCommitEvent".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x2BD: { // ClearTaskStatusList
@@ -2023,11 +2023,11 @@ public abstract class _IECommerceInterface_Base : IpcInterface {
 public partial class IFactoryResetInterface : _IFactoryResetInterface_Base;
 public abstract class _IFactoryResetInterface_Base : IpcInterface {
 	protected virtual void ResetToFactorySettings() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IFactoryResetInterface.ResetToFactorySettings");
+		"Stub hit for Nn.Ns.Detail.IFactoryResetInterface.ResetToFactorySettings".Log();
 	protected virtual void ResetToFactorySettingsWithoutUserSaveData() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IFactoryResetInterface.ResetToFactorySettingsWithoutUserSaveData");
+		"Stub hit for Nn.Ns.Detail.IFactoryResetInterface.ResetToFactorySettingsWithoutUserSaveData".Log();
 	protected virtual void ResetToFactorySettingsForRefurbishment() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IFactoryResetInterface.ResetToFactorySettingsForRefurbishment");
+		"Stub hit for Nn.Ns.Detail.IFactoryResetInterface.ResetToFactorySettingsForRefurbishment".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x64: { // ResetToFactorySettings
@@ -2064,13 +2064,13 @@ public abstract class _IGameCardStopper_Base : IpcInterface {
 public partial class IProgressAsyncResult : _IProgressAsyncResult_Base;
 public abstract class _IProgressAsyncResult_Base : IpcInterface {
 	protected virtual void Unknown0() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IProgressAsyncResult.Unknown0");
+		"Stub hit for Nn.Ns.Detail.IProgressAsyncResult.Unknown0".Log();
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IProgressAsyncResult.Unknown1");
+		"Stub hit for Nn.Ns.Detail.IProgressAsyncResult.Unknown1".Log();
 	protected virtual void Unknown2(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IProgressAsyncResult.Unknown2 not implemented");
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IProgressAsyncResult.Unknown3");
+		"Stub hit for Nn.Ns.Detail.IProgressAsyncResult.Unknown3".Log();
 	protected virtual void Unknown4(Span<byte> _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IProgressAsyncResult.Unknown4 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -2113,7 +2113,7 @@ public abstract class _IProgressMonitorForDeleteUserSaveDataAll_Base : IpcInterf
 	protected virtual void Unknown1(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IProgressMonitorForDeleteUserSaveDataAll.Unknown1 not implemented");
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IProgressMonitorForDeleteUserSaveDataAll.Unknown2");
+		"Stub hit for Nn.Ns.Detail.IProgressMonitorForDeleteUserSaveDataAll.Unknown2".Log();
 	protected virtual void Unknown10(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IProgressMonitorForDeleteUserSaveDataAll.Unknown10 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -2245,7 +2245,7 @@ public abstract class _ISystemUpdateControl_Base : IpcInterface {
 	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown3 not implemented");
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown4");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown4".Log();
 	protected virtual void Unknown5(out KObject _0, out Nn.Ns.Detail.IAsyncResult _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown5 not implemented");
 	protected virtual void Unknown6(out byte[] _0) =>
@@ -2253,19 +2253,19 @@ public abstract class _ISystemUpdateControl_Base : IpcInterface {
 	protected virtual void Unknown7(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown7 not implemented");
 	protected virtual void Unknown8() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown8");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown8".Log();
 	protected virtual void Unknown9(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown9 not implemented");
 	protected virtual void Unknown10(Span<byte> _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown10 not implemented");
 	protected virtual void Unknown11(byte[] _0, KObject _1) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown11");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown11".Log();
 	protected virtual void Unknown12(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown12 not implemented");
 	protected virtual void Unknown13(Span<byte> _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown13 not implemented");
 	protected virtual void Unknown14(byte[] _0, KObject _1) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown14");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown14".Log();
 	protected virtual void Unknown15(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown15 not implemented");
 	protected virtual void Unknown16(byte[] _0, Span<byte> _1, out KObject _2, out Nn.Ns.Detail.IAsyncResult _3) =>
@@ -2273,13 +2273,13 @@ public abstract class _ISystemUpdateControl_Base : IpcInterface {
 	protected virtual void Unknown17(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown17 not implemented");
 	protected virtual void Unknown18() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown18");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown18".Log();
 	protected virtual void Unknown19(Span<byte> _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown19 not implemented");
 	protected virtual void Unknown20(Span<byte> _0, out byte[] _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateControl.Unknown20 not implemented");
 	protected virtual void Unknown21() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown21");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateControl.Unknown21".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Unknown0
@@ -2428,23 +2428,23 @@ public abstract class _ISystemUpdateInterface_Base : IpcInterface {
 	protected virtual Nn.Ns.Detail.ISystemUpdateControl OpenSystemUpdateControl() =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateInterface.OpenSystemUpdateControl not implemented");
 	protected virtual void NotifyExFatDriverRequired() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifyExFatDriverRequired");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifyExFatDriverRequired".Log();
 	protected virtual void ClearExFatDriverStatusForDebug() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.ClearExFatDriverStatusForDebug");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.ClearExFatDriverStatusForDebug".Log();
 	protected virtual void RequestBackgroundNetworkUpdate() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.RequestBackgroundNetworkUpdate");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.RequestBackgroundNetworkUpdate".Log();
 	protected virtual void NotifyBackgroundNetworkUpdate(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifyBackgroundNetworkUpdate");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifyBackgroundNetworkUpdate".Log();
 	protected virtual void NotifyExFatDriverDownloadedForDebug() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifyExFatDriverDownloadedForDebug");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifyExFatDriverDownloadedForDebug".Log();
 	protected virtual KObject GetSystemUpdateNotificationEventForContentDelivery() =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateInterface.GetSystemUpdateNotificationEventForContentDelivery not implemented");
 	protected virtual void NotifySystemUpdateForContentDelivery() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifySystemUpdateForContentDelivery");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.NotifySystemUpdateForContentDelivery".Log();
 	protected virtual void PrepareShutdown() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.PrepareShutdown");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.PrepareShutdown".Log();
 	protected virtual void DestroySystemUpdateTask() =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.DestroySystemUpdateTask");
+		"Stub hit for Nn.Ns.Detail.ISystemUpdateInterface.DestroySystemUpdateTask".Log();
 	protected virtual void RequestSendSystemUpdate(byte[] _0, Span<byte> _1, out KObject _2, out Nn.Ns.Detail.IAsyncResult _3) =>
 		throw new NotImplementedException("Nn.Ns.Detail.ISystemUpdateInterface.RequestSendSystemUpdate not implemented");
 	protected virtual void GetSendSystemUpdateProgress(out byte[] _0) =>
@@ -2536,7 +2536,7 @@ public abstract class _IVulnerabilityManagerInterface_Base : IpcInterface {
 	protected virtual void NeedsUpdateVulnerability(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IVulnerabilityManagerInterface.NeedsUpdateVulnerability not implemented");
 	protected virtual void UpdateSafeSystemVersionForDebug(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ns.Detail.IVulnerabilityManagerInterface.UpdateSafeSystemVersionForDebug");
+		"Stub hit for Nn.Ns.Detail.IVulnerabilityManagerInterface.UpdateSafeSystemVersionForDebug".Log();
 	protected virtual void GetSafeSystemVersion(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ns.Detail.IVulnerabilityManagerInterface.GetSafeSystemVersion not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

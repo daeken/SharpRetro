@@ -9,7 +9,7 @@ public abstract class _IService_Base : IpcInterface {
 	protected virtual ulong GetVariableLength(byte[] _0) =>
 		throw new NotImplementedException("Nn.Htc.Tenv.IService.GetVariableLength not implemented");
 	protected virtual void WaitUntilVariableAvailable(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Htc.Tenv.IService.WaitUntilVariableAvailable");
+		"Stub hit for Nn.Htc.Tenv.IService.WaitUntilVariableAvailable".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetVariable

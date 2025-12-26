@@ -9,6 +9,7 @@ namespace UmbraCore;
 
 public class Rtld {
     public readonly Dictionary<string, ulong> SymbolAddrs = [];
+    public readonly Dictionary<ulong, string> ReverseSymbols = [];
 
     static unsafe ulong AbortImpl(byte* first, byte* second, byte* third, ulong errCode, byte* fourth) {
         throw new Exception(
@@ -17,16 +18,49 @@ public class Rtld {
             $"'{Marshal.PtrToStringAnsi((IntPtr) third)!.Trim()}' 0x{errCode:X} '{Marshal.PtrToStringAnsi((IntPtr) fourth)!.Trim()}'");
     }
 
+    static unsafe ulong AllocateSpace(void* ignore, ulong asize) {
+        $"Replacement for nn::os::detail::AddressSpaceAllocator::AllocateSpace fired for size 0x{asize:X}".Log();
+        while(asize % 16384 != 0) asize++;
+        asize += 0x8000; // guard pages
+        foreach(var (start, size, exists, _, _) in MemoryHelpers.GetAllRegions())
+            if(start >= 0x1_0000_0000 && size >= asize && !exists)
+                return start + 0x4000; // guard pages
+        throw new NotSupportedException();
+    }
+
+    static unsafe ulong OutputAccessLogBare(
+        uint result, ulong tick, ulong tick2, byte* func, ulong unk, byte* message, byte* arg
+    ) {
+        $"OutputAccessLogBare(0x{result:X}, '{Marshal.PtrToStringAnsi((IntPtr) func)}', 0x{unk:X}, '{Marshal.PtrToStringAnsi((IntPtr) message)}', '{Marshal.PtrToStringAnsi((IntPtr) arg)}')".Log();
+        return 0;
+    }
+
+    static unsafe ulong* IsEnabledAccessLog() {
+        return (ulong*) 1;
+    }
+
     public unsafe Rtld(List<ExeModule> modules) {
         foreach(var module in modules)
             foreach(var symbol in module.Symbols) {
                 if(symbol.Value == 0 || symbol.Name == "") continue;
                 SymbolAddrs[symbol.Name] = module.LoadBase + symbol.Value;
+                ReverseSymbols[module.LoadBase + symbol.Value] = symbol.Name;
                 Kernel.Symbols[(module.LoadBase + symbol.Value, module.LoadBase + symbol.Value + symbol.Size)] = symbol.Name;
             }
         foreach(var (name, (_, addr)) in Kernel.HookManager.Hooks)
             SymbolAddrs[name] = (Kernel.IsNative ? 0 : 0x8000_0000_0000_0000UL) | addr;
-        SymbolAddrs["_ZN2nn4diag6detail9AbortImplEPKcS3_S3_iS3_z"] = (ulong) Marshal.GetFunctionPointerForDelegate(AbortImpl);
+        /*SymbolAddrs["_ZN2nn4diag6detail9AbortImplEPKcS3_S3_iS3_z"] = 
+        SymbolAddrs["_ZN2nn4diag6detail9AbortImplEPKcS3_S3_i"] = 
+        SymbolAddrs["_ZN2nn4diag6detail10VAbortImplEPKcS3_S3_iPKNS_6ResultEPKNS_2os17UserExceptionInfoES3_St9__va_list"] =
+        SymbolAddrs["_ZN2nn4diag6detail9AbortImplEPKcS3_S3_iPKNS_6ResultES3_z"] = 
+        SymbolAddrs["_ZN2nn4diag6detail9AbortImplEPKcS3_S3_iPKNS_6ResultEPKNS_2os17UserExceptionInfoES3_z"] = 
+            (ulong) Marshal.GetFunctionPointerForDelegate(AbortImpl);*/
+        SymbolAddrs["_ZN2nn2os6detail21AddressSpaceAllocator13AllocateSpaceEmm"] =
+            (ulong) Marshal.GetFunctionPointerForDelegate(AllocateSpace);
+        SymbolAddrs["_ZN2nn2fs6detail15OutputAccessLogENS_6ResultENS_2os4TickES4_PKcPKvS6_z"] =
+            (ulong) Marshal.GetFunctionPointerForDelegate(OutputAccessLogBare);
+        SymbolAddrs["_ZN2nn2fs6detail18IsEnabledAccessLogEv"] =
+            (ulong) Marshal.GetFunctionPointerForDelegate(IsEnabledAccessLog);
         foreach(var module in modules) {
             if(module.Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
                 var rels = module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.RELCOUNT]);
@@ -64,24 +98,24 @@ public class Rtld {
             thread.CpuState->X2 = x2;
             thread.CpuState->X3 = x3;
             thread.CpuState->X30 = 0;
-            Console.WriteLine($"Running {name}");
+            $"Running {name}".Log();
             if(SymbolAddrs.TryGetValue(name, out var addr))
                 thread.RunFrom(addr, 0);
             else
-                Console.WriteLine($"Warning: Couldn't find init symbol '{name}'");
-            Console.WriteLine("Done");
+                $"Warning: Couldn't find init symbol '{name}'".Log();
+            "Done".Log();
         }
 
         void NotifyExceptionHandlerReady() =>
-            Console.WriteLine("Exception handler ready!");
+            "Exception handler ready!".Log();
         void RunInitializers() {
-            Console.WriteLine("Running initializers!");
+            "Running initializers!".Log();
             foreach(var (i, module) in modules.OrderByDescending(x => x.LoadBase).Index()) {
                 if(module.Dynamic.TryGetValue(DynamicKey.INIT, out var init)) {
-                    Console.WriteLine($"Running init function: {module.LoadBase + init:X} (0x{0x71_00000000UL + 0x1_00000000UL * (ulong) i + init:X})");
+                    $"Running init function: {module.LoadBase + init:X} (0x{0x71_00000000UL + 0x1_00000000UL * (ulong) i + init:X})".Log();
                     thread.CpuState->X30 = 0xCAFEBABEDEADBEEFUL;
                     thread.RunFrom(module.LoadBase + init, 0xCAFEBABEDEADBEEFUL);
-                    Console.WriteLine("Done");
+                    "Done".Log();
                 }
             }
         }
@@ -111,16 +145,24 @@ public class Rtld {
     void Relocate(ExeModule module, ulong offset, uint type, uint sym, long addend, bool isRel) =>
         Relocate(module, offset, (RelocationType) type, sym, addend, isRel);
     unsafe void Relocate(ExeModule module, ulong offset, RelocationType type, uint sym, long addend, bool isRel) {
-        if(sym == 0) return;
-        ulong addr;
-        var symbol = module.Symbols[(int) sym];
-        if(symbol.Value != 0)
-            addr = module.LoadBase + symbol.Value;
-        else {
-            var name = symbol.Name;
-            if(!SymbolAddrs.TryGetValue(name, out addr)) {
-                Console.WriteLine($"Warning: Couldn't resolve symbol '{name}'");
-                return;
+        ulong Patch(ulong addr) =>
+            ReverseSymbols.TryGetValue(addr, out var name) && 
+            SymbolAddrs.TryGetValue(name, out var naddr) &&
+            addr != naddr
+                ? naddr
+                : addr;
+
+        var addr = 0UL;
+        if(sym != 0) {
+            var symbol = module.Symbols[(int) sym];
+            if(symbol.Value != 0)
+                addr = module.LoadBase + symbol.Value;
+            else {
+                var name = symbol.Name;
+                if(!SymbolAddrs.TryGetValue(name, out addr)) {
+                    $"Warning: Couldn't resolve symbol '{name}'".Log();
+                    return;
+                }
             }
         }
 
@@ -128,7 +170,14 @@ public class Rtld {
             case RelocationType.R_AARCH64_JUMP_SLOT:
             case RelocationType.R_AARCH64_ABS64:
             case RelocationType.R_AARCH64_GLOB_DAT:
-                *(ulong*) (module.LoadBase + offset) = unchecked(addr + (ulong) addend);
+                Debug.Assert(sym != 0);
+                *(ulong*) (module.LoadBase + offset) = Patch(unchecked(addr + (ulong) addend));
+                break;
+            case RelocationType.R_AARCH64_RELATIVE:
+                if(sym != 0) throw new NotSupportedException();
+                *(ulong*) (module.LoadBase + offset) =
+                    Patch(unchecked(module.LoadBase + 
+                                    (isRel ? *(ulong*) (module.LoadBase + offset) : 0) + (ulong) addend));
                 break;
             default:
                 throw new NotSupportedException($"Rtld relocation type {type} not supported");

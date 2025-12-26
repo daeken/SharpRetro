@@ -26,11 +26,11 @@ public abstract class _IManager_Base : IpcInterface {
 public partial class ISession : _ISession_Base;
 public abstract class _ISession_Base : IpcInterface {
 	protected virtual void SetPinAssignment(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pinmux.ISession.SetPinAssignment");
+		"Stub hit for Nn.Pinmux.ISession.SetPinAssignment".Log();
 	protected virtual void GetPinAssignment(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Pinmux.ISession.GetPinAssignment not implemented");
 	protected virtual void SetPinAssignmentForHardwareTest(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Pinmux.ISession.SetPinAssignmentForHardwareTest");
+		"Stub hit for Nn.Pinmux.ISession.SetPinAssignmentForHardwareTest".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // SetPinAssignment

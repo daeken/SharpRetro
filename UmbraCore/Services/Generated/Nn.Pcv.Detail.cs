@@ -8,47 +8,47 @@ public partial class IPcvService : _IPcvService_Base {
 }
 public abstract class _IPcvService_Base : IpcInterface {
 	protected virtual void SetPowerEnabled(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetPowerEnabled");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetPowerEnabled".Log();
 	protected virtual void SetClockEnabled(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetClockEnabled");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetClockEnabled".Log();
 	protected virtual void SetClockRate(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetClockRate");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetClockRate".Log();
 	protected virtual uint GetClockRate(uint _0) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetClockRate not implemented");
 	protected virtual void GetState(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.GetState");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.GetState".Log();
 	protected virtual void GetPossibleClockRates(uint _0, uint _1, out uint _2, out uint _3, Span<uint> _4) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetPossibleClockRates not implemented");
 	protected virtual void SetMinVClockRate(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetMinVClockRate");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetMinVClockRate".Log();
 	protected virtual void SetReset(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetReset");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetReset".Log();
 	protected virtual void SetVoltageEnabled(byte _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetVoltageEnabled");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetVoltageEnabled".Log();
 	protected virtual byte GetVoltageEnabled(uint _0) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetVoltageEnabled not implemented");
 	protected virtual void GetVoltageRange(uint _0, out uint _1, out uint _2, out uint _3) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetVoltageRange not implemented");
 	protected virtual void SetVoltageValue(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetVoltageValue");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetVoltageValue".Log();
 	protected virtual uint GetVoltageValue(uint _0) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetVoltageValue not implemented");
 	protected virtual void GetTemperatureThresholds(uint _0, out uint _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetTemperatureThresholds not implemented");
 	protected virtual void SetTemperature(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.SetTemperature");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.SetTemperature".Log();
 	protected virtual void Initialize() =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.Initialize");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.Initialize".Log();
 	protected virtual byte IsInitialized() =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.IsInitialized not implemented");
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService._Finalize");
+		"Stub hit for Nn.Pcv.Detail.IPcvService._Finalize".Log();
 	protected virtual void PowerOn(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.PowerOn");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.PowerOn".Log();
 	protected virtual void PowerOff(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.PowerOff");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.PowerOff".Log();
 	protected virtual void ChangeVoltage(uint _0, uint _1) =>
-		Console.WriteLine("Stub hit for Nn.Pcv.Detail.IPcvService.ChangeVoltage");
+		"Stub hit for Nn.Pcv.Detail.IPcvService.ChangeVoltage".Log();
 	protected virtual KObject GetPowerClockInfoEvent() =>
 		throw new NotImplementedException("Nn.Pcv.Detail.IPcvService.GetPowerClockInfoEvent not implemented");
 	protected virtual uint GetOscillatorClock() =>

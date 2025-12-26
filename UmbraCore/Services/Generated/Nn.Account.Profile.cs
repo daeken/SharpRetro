@@ -55,9 +55,9 @@ public abstract class _IProfileEditor_Base : IpcInterface {
 	protected virtual void LoadImage(out uint _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Account.Profile.IProfileEditor.LoadImage not implemented");
 	protected virtual void Store(byte[] _0, Span<byte> _1) =>
-		Console.WriteLine("Stub hit for Nn.Account.Profile.IProfileEditor.Store");
+		"Stub hit for Nn.Account.Profile.IProfileEditor.Store".Log();
 	protected virtual void StoreWithImage(byte[] _0, Span<byte> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Account.Profile.IProfileEditor.StoreWithImage");
+		"Stub hit for Nn.Account.Profile.IProfileEditor.StoreWithImage".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Get

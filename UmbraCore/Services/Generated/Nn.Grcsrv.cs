@@ -5,17 +5,17 @@ namespace UmbraCore.Services.Nn.Grcsrv;
 public partial class IContinuousRecorder : _IContinuousRecorder_Base;
 public abstract class _IContinuousRecorder_Base : IpcInterface {
 	protected virtual void Unknown1() =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown1");
+		"Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown2");
+		"Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown2".Log();
 	protected virtual KObject Unknown10() =>
 		throw new NotImplementedException("Nn.Grcsrv.IContinuousRecorder.Unknown10 not implemented");
 	protected virtual void Unknown11() =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown11");
+		"Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown11".Log();
 	protected virtual void Unknown12() =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown12");
+		"Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown12".Log();
 	protected virtual void Unknown13(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown13");
+		"Stub hit for Nn.Grcsrv.IContinuousRecorder.Unknown13".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // Unknown1
@@ -58,13 +58,13 @@ public abstract class _IContinuousRecorder_Base : IpcInterface {
 public partial class IGameMovieTrimmer : _IGameMovieTrimmer_Base;
 public abstract class _IGameMovieTrimmer_Base : IpcInterface {
 	protected virtual void BeginTrim(uint _0, uint _1, byte[] _2) =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IGameMovieTrimmer.BeginTrim");
+		"Stub hit for Nn.Grcsrv.IGameMovieTrimmer.BeginTrim".Log();
 	protected virtual void EndTrim(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Grcsrv.IGameMovieTrimmer.EndTrim not implemented");
 	protected virtual KObject GetNotTrimmingEvent() =>
 		throw new NotImplementedException("Nn.Grcsrv.IGameMovieTrimmer.GetNotTrimmingEvent not implemented");
 	protected virtual void SetThumbnailRgba(uint _0, uint _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Grcsrv.IGameMovieTrimmer.SetThumbnailRgba");
+		"Stub hit for Nn.Grcsrv.IGameMovieTrimmer.SetThumbnailRgba".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // BeginTrim

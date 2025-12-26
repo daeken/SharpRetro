@@ -5,9 +5,9 @@ namespace UmbraCore.Services.Nn.Ovln;
 public partial class IReceiver : _IReceiver_Base;
 public abstract class _IReceiver_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ovln.IReceiver.Unknown0");
+		"Stub hit for Nn.Ovln.IReceiver.Unknown0".Log();
 	protected virtual void Unknown1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ovln.IReceiver.Unknown1");
+		"Stub hit for Nn.Ovln.IReceiver.Unknown1".Log();
 	protected virtual KObject Unknown2() =>
 		throw new NotImplementedException("Nn.Ovln.IReceiver.Unknown2 not implemented");
 	protected virtual void Unknown3(out byte[] _0) =>
@@ -71,7 +71,7 @@ public abstract class _IReceiverService_Base : IpcInterface {
 public partial class ISender : _ISender_Base;
 public abstract class _ISender_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Ovln.ISender.Unknown0");
+		"Stub hit for Nn.Ovln.ISender.Unknown0".Log();
 	protected virtual void Unknown1(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Ovln.ISender.Unknown1 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

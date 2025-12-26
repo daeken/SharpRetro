@@ -10,7 +10,7 @@ public abstract class _IClient_Base : IpcInterface {
 	protected virtual uint RegisterClient(Nn.Socket.BsdBufferConfig config, ulong pid, ulong transferMemorySize, KObject _3, ulong _4) =>
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.RegisterClient not implemented");
 	protected virtual void StartMonitoring(ulong pid, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Socket.Sf.IClient.StartMonitoring");
+		"Stub hit for Nn.Socket.Sf.IClient.StartMonitoring".Log();
 	protected virtual void Socket(uint domain, uint type, uint protocol, out int ret, out uint bsd_errno) =>
 		throw new NotImplementedException("Nn.Socket.Sf.IClient.Socket not implemented");
 	protected virtual void SocketExempt(uint _0, uint _1, uint _2, out int ret, out uint bsd_errno) =>

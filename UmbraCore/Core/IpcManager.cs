@@ -164,7 +164,7 @@ public unsafe class OutgoingMessage {
 	public void Move(uint offset, uint handle) {
 		var buf = (uint*) Buffer;
 		if(IsDomainObject) {
-			Console.WriteLine($"Sending back domain object 0x{handle:X}");
+			$"Sending back domain object 0x{handle:X}".Log();
 			buf[(SfcoOffset >> 2) + 4 + offset] = handle;
 		} else
 			buf[3 + CopyCount + offset] = handle;
@@ -200,7 +200,7 @@ public abstract class IpcInterface : KObject {
 	
 	public uint CreateHandle(KObject obj, bool copy = false) {
 		if(obj == null) throw new NotSupportedException();
-		Console.WriteLine($"Creating handle for object with real handle 0x{obj.Handle:X} ({obj}) {(copy ? "copy" : "move")}");
+		$"Creating handle for object with real handle 0x{obj.Handle:X} ({obj}) {(copy ? "copy" : "move")}".Log();
 		if(copy) return obj.Handle;
 		if(DomainOwner != null) return DomainOwner.CreateHandle(obj);
 		if(!IsDomainObject) return obj.Handle;
@@ -242,7 +242,7 @@ public abstract class IpcInterface : KObject {
 					break;
 				case 4:
 				case 6:
-					Console.WriteLine($"IPC command {incoming.CommandId} for {target}");
+					$"IPC command {incoming.CommandId} for {target}".Log();
 					target.Dispatch(incoming, outgoing);
 					ret = 0;
 					break;
@@ -250,7 +250,7 @@ public abstract class IpcInterface : KObject {
 				case 7:
 					switch(incoming.CommandId) {
 						case 0: // ConvertSessionToDomain
-							Console.WriteLine("Converting session to domain...");
+							"Converting session to domain...".Log();
 							outgoing.Initialize(0, 0, 4);
 							IsDomainObject = true;
 							outgoing.SetData(8, ThisHandle);
@@ -303,19 +303,19 @@ public partial class IpcManager {
 	    CreateServices();
         game.Callbacks.ConnectToNamedPort = (name, ref handle) => {
 	        var sname = Marshal.PtrToStringAnsi((IntPtr) name)!;
-            Console.WriteLine($"Attempting to connect to '{sname}'");
+            $"Attempting to connect to '{sname}'".Log();
             handle = Services[sname]().Handle;
             return 0;
         };
         game.Callbacks.SendSyncRequest = handle => {
-	        Console.WriteLine($"Handle for SendSyncRequest: 0x{handle:X}");
+	        $"Handle for SendSyncRequest: 0x{handle:X}".Log();
 	        var service = Kernel.Get<IpcInterface>(handle);
-	        Console.WriteLine($"SendSyncRequest({handle:X}, {service?.ToString() ?? "null"}, domain: {service?.IsDomainObject})");
+	        $"SendSyncRequest({handle:X}, {service?.ToString() ?? "null"}, domain: {service?.IsDomainObject})".Log();
 	        if(service == null)
 		        throw new Exception();
 	        var ret = service.SyncMessage((ulong) Kernel.ThreadManager.CurrentThread.TlsBase, 0x100, out var closeHandle);
 	        if(closeHandle) {
-		        Console.WriteLine($"Closing handle 0x{service.Handle:X}");
+		        $"Closing handle 0x{service.Handle:X}".Log();
 		        Kernel.Close(service);
 	        }
 	        return ret;

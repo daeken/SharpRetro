@@ -10,15 +10,15 @@ public abstract class _IPmControl_Base : IpcInterface {
 	protected virtual KObject Unknown0() =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown0 not implemented");
 	protected virtual void Unknown1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown1");
+		"Stub hit for Nn.Psc.Sf.IPmControl.Unknown1".Log();
 	protected virtual void Unknown2() =>
-		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown2");
+		"Stub hit for Nn.Psc.Sf.IPmControl.Unknown2".Log();
 	protected virtual void Unknown3(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown3 not implemented");
 	protected virtual void Unknown4() =>
-		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown4");
+		"Stub hit for Nn.Psc.Sf.IPmControl.Unknown4".Log();
 	protected virtual void Unknown5() =>
-		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmControl.Unknown5");
+		"Stub hit for Nn.Psc.Sf.IPmControl.Unknown5".Log();
 	protected virtual void Unknown6(out byte[] _0, Span<byte> _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmControl.Unknown6 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -74,9 +74,9 @@ public abstract class _IPmModule_Base : IpcInterface {
 	protected virtual void GetRequest(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Psc.Sf.IPmModule.GetRequest not implemented");
 	protected virtual void Acknowledge() =>
-		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmModule.Acknowledge");
+		"Stub hit for Nn.Psc.Sf.IPmModule.Acknowledge".Log();
 	protected virtual void Unknown3() =>
-		Console.WriteLine("Stub hit for Nn.Psc.Sf.IPmModule.Unknown3");
+		"Stub hit for Nn.Psc.Sf.IPmModule.Unknown3".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize

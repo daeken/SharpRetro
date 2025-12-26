@@ -5,7 +5,7 @@ namespace UmbraCore.Services.Nn.Hid;
 public partial class IActiveVibrationDeviceList : _IActiveVibrationDeviceList_Base;
 public abstract class _IActiveVibrationDeviceList_Base : IpcInterface {
 	protected virtual void ActivateVibrationDevice(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IActiveVibrationDeviceList.ActivateVibrationDevice");
+		"Stub hit for Nn.Hid.IActiveVibrationDeviceList.ActivateVibrationDevice".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // ActivateVibrationDevice
@@ -43,79 +43,79 @@ public partial class IHidDebugServer : _IHidDebugServer_Base {
 }
 public abstract class _IHidDebugServer_Base : IpcInterface {
 	protected virtual void DeactivateDebugPad() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateDebugPad");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateDebugPad".Log();
 	protected virtual void SetDebugPadAutoPilotState(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetDebugPadAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetDebugPadAutoPilotState".Log();
 	protected virtual void UnsetDebugPadAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetDebugPadAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetDebugPadAutoPilotState".Log();
 	protected virtual void DeactivateTouchScreen() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateTouchScreen");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateTouchScreen".Log();
 	protected virtual void SetTouchScreenAutoPilotState(Span<byte> _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetTouchScreenAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetTouchScreenAutoPilotState".Log();
 	protected virtual void UnsetTouchScreenAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetTouchScreenAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetTouchScreenAutoPilotState".Log();
 	protected virtual void DeactivateMouse() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateMouse");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateMouse".Log();
 	protected virtual void SetMouseAutoPilotState(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetMouseAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetMouseAutoPilotState".Log();
 	protected virtual void UnsetMouseAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetMouseAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetMouseAutoPilotState".Log();
 	protected virtual void DeactivateKeyboard() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateKeyboard");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateKeyboard".Log();
 	protected virtual void SetKeyboardAutoPilotState(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetKeyboardAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetKeyboardAutoPilotState".Log();
 	protected virtual void UnsetKeyboardAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetKeyboardAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetKeyboardAutoPilotState".Log();
 	protected virtual void DeactivateXpad(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateXpad");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateXpad".Log();
 	protected virtual void SetXpadAutoPilotState(uint _0, byte[] _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetXpadAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetXpadAutoPilotState".Log();
 	protected virtual void UnsetXpadAutoPilotState(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetXpadAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetXpadAutoPilotState".Log();
 	protected virtual void DeactivateJoyXpad(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateJoyXpad");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateJoyXpad".Log();
 	protected virtual void DeactivateGesture() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateGesture");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateGesture".Log();
 	protected virtual void DeactivateHomeButton() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateHomeButton");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateHomeButton".Log();
 	protected virtual void SetHomeButtonAutoPilotState(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetHomeButtonAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetHomeButtonAutoPilotState".Log();
 	protected virtual void UnsetHomeButtonAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetHomeButtonAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetHomeButtonAutoPilotState".Log();
 	protected virtual void DeactivateSleepButton() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateSleepButton");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateSleepButton".Log();
 	protected virtual void SetSleepButtonAutoPilotState(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetSleepButtonAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetSleepButtonAutoPilotState".Log();
 	protected virtual void UnsetSleepButtonAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetSleepButtonAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetSleepButtonAutoPilotState".Log();
 	protected virtual void DeactivateInputDetector() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateInputDetector");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateInputDetector".Log();
 	protected virtual void DeactivateCaptureButton() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateCaptureButton");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateCaptureButton".Log();
 	protected virtual void SetCaptureButtonAutoPilotState(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetCaptureButtonAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetCaptureButtonAutoPilotState".Log();
 	protected virtual void UnsetCaptureButtonAutoPilotState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetCaptureButtonAutoPilotState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetCaptureButtonAutoPilotState".Log();
 	protected virtual void SetShiftAccelerometerCalibrationValue(uint _0, float _1, float _2, ulong _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetShiftAccelerometerCalibrationValue");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetShiftAccelerometerCalibrationValue".Log();
 	protected virtual void GetShiftAccelerometerCalibrationValue(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetShiftAccelerometerCalibrationValue not implemented");
 	protected virtual void SetShiftGyroscopeCalibrationValue(uint _0, float _1, float _2, ulong _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetShiftGyroscopeCalibrationValue");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetShiftGyroscopeCalibrationValue".Log();
 	protected virtual void GetShiftGyroscopeCalibrationValue(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetShiftGyroscopeCalibrationValue not implemented");
 	protected virtual void DeactivateConsoleSixAxisSensor() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateConsoleSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateConsoleSixAxisSensor".Log();
 	protected virtual void GetConsoleSixAxisSensorSamplingFrequency() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.GetConsoleSixAxisSensorSamplingFrequency");
+		"Stub hit for Nn.Hid.IHidDebugServer.GetConsoleSixAxisSensorSamplingFrequency".Log();
 	protected virtual void DeactivateSevenSixAxisSensor() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateSevenSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateSevenSixAxisSensor".Log();
 	protected virtual void ActivateFirmwareUpdate() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.ActivateFirmwareUpdate");
+		"Stub hit for Nn.Hid.IHidDebugServer.ActivateFirmwareUpdate".Log();
 	protected virtual void DeactivateFirmwareUpdate() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DeactivateFirmwareUpdate");
+		"Stub hit for Nn.Hid.IHidDebugServer.DeactivateFirmwareUpdate".Log();
 	protected virtual void StartFirmwareUpdate(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.StartFirmwareUpdate");
+		"Stub hit for Nn.Hid.IHidDebugServer.StartFirmwareUpdate".Log();
 	protected virtual void GetFirmwareUpdateStage(out ulong _0, out ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetFirmwareUpdateStage not implemented");
 	protected virtual void GetFirmwareVersion(uint _0, uint _1, out byte[] _2) =>
@@ -123,39 +123,39 @@ public abstract class _IHidDebugServer_Base : IpcInterface {
 	protected virtual void GetDestinationFirmwareVersion(uint _0, uint _1, out byte[] _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetDestinationFirmwareVersion not implemented");
 	protected virtual void DiscardFirmwareInfoCacheForRevert() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DiscardFirmwareInfoCacheForRevert");
+		"Stub hit for Nn.Hid.IHidDebugServer.DiscardFirmwareInfoCacheForRevert".Log();
 	protected virtual void StartFirmwareUpdateForRevert(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.StartFirmwareUpdateForRevert");
+		"Stub hit for Nn.Hid.IHidDebugServer.StartFirmwareUpdateForRevert".Log();
 	protected virtual void GetAvailableFirmwareVersionForRevert(ulong _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.GetAvailableFirmwareVersionForRevert not implemented");
 	protected virtual byte IsFirmwareUpdatingDevice(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidDebugServer.IsFirmwareUpdatingDevice not implemented");
 	protected virtual void UpdateControllerColor(byte[] _0, byte[] _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UpdateControllerColor");
+		"Stub hit for Nn.Hid.IHidDebugServer.UpdateControllerColor".Log();
 	protected virtual void ConnectUsbPadsAsync() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.ConnectUsbPadsAsync");
+		"Stub hit for Nn.Hid.IHidDebugServer.ConnectUsbPadsAsync".Log();
 	protected virtual void DisconnectUsbPadsAsync() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.DisconnectUsbPadsAsync");
+		"Stub hit for Nn.Hid.IHidDebugServer.DisconnectUsbPadsAsync".Log();
 	protected virtual void UpdateDesignInfo() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UpdateDesignInfo");
+		"Stub hit for Nn.Hid.IHidDebugServer.UpdateDesignInfo".Log();
 	protected virtual void GetUniquePadDriverState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.GetUniquePadDriverState");
+		"Stub hit for Nn.Hid.IHidDebugServer.GetUniquePadDriverState".Log();
 	protected virtual void GetSixAxisSensorDriverStates() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.GetSixAxisSensorDriverStates");
+		"Stub hit for Nn.Hid.IHidDebugServer.GetSixAxisSensorDriverStates".Log();
 	protected virtual void GetAbstractedPadHandles() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.GetAbstractedPadHandles");
+		"Stub hit for Nn.Hid.IHidDebugServer.GetAbstractedPadHandles".Log();
 	protected virtual void GetAbstractedPadState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.GetAbstractedPadState");
+		"Stub hit for Nn.Hid.IHidDebugServer.GetAbstractedPadState".Log();
 	protected virtual void GetAbstractedPadsState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.GetAbstractedPadsState");
+		"Stub hit for Nn.Hid.IHidDebugServer.GetAbstractedPadsState".Log();
 	protected virtual void SetAutoPilotVirtualPadState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.SetAutoPilotVirtualPadState");
+		"Stub hit for Nn.Hid.IHidDebugServer.SetAutoPilotVirtualPadState".Log();
 	protected virtual void UnsetAutoPilotVirtualPadState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetAutoPilotVirtualPadState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetAutoPilotVirtualPadState".Log();
 	protected virtual void UnsetAllAutoPilotVirtualPadState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.UnsetAllAutoPilotVirtualPadState");
+		"Stub hit for Nn.Hid.IHidDebugServer.UnsetAllAutoPilotVirtualPadState".Log();
 	protected virtual void AddRegisteredDevice() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidDebugServer.AddRegisteredDevice");
+		"Stub hit for Nn.Hid.IHidDebugServer.AddRegisteredDevice".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // DeactivateDebugPad
@@ -467,171 +467,171 @@ public abstract class _IHidServer_Base : IpcInterface {
 	protected virtual Nn.Hid.IAppletResource CreateAppletResource(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.CreateAppletResource not implemented");
 	protected virtual void ActivateDebugPad(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateDebugPad");
+		"Stub hit for Nn.Hid.IHidServer.ActivateDebugPad".Log();
 	protected virtual void ActivateTouchScreen(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateTouchScreen");
+		"Stub hit for Nn.Hid.IHidServer.ActivateTouchScreen".Log();
 	protected virtual void ActivateMouse(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateMouse");
+		"Stub hit for Nn.Hid.IHidServer.ActivateMouse".Log();
 	protected virtual void ActivateKeyboard(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateKeyboard");
+		"Stub hit for Nn.Hid.IHidServer.ActivateKeyboard".Log();
 	protected virtual void Unknown32(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.Unknown32");
+		"Stub hit for Nn.Hid.IHidServer.Unknown32".Log();
 	protected virtual KObject AcquireXpadIdEventHandle(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.AcquireXpadIdEventHandle not implemented");
 	protected virtual void ReleaseXpadIdEventHandle(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ReleaseXpadIdEventHandle");
+		"Stub hit for Nn.Hid.IHidServer.ReleaseXpadIdEventHandle".Log();
 	protected virtual void ActivateXpad(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateXpad");
+		"Stub hit for Nn.Hid.IHidServer.ActivateXpad".Log();
 	protected virtual void GetXpadIds(out long _0, Span<uint> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetXpadIds not implemented");
 	protected virtual void ActivateJoyXpad(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateJoyXpad");
+		"Stub hit for Nn.Hid.IHidServer.ActivateJoyXpad".Log();
 	protected virtual KObject GetJoyXpadLifoHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetJoyXpadLifoHandle not implemented");
 	protected virtual void GetJoyXpadIds(out long _0, Span<uint> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetJoyXpadIds not implemented");
 	protected virtual void ActivateSixAxisSensor(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.ActivateSixAxisSensor".Log();
 	protected virtual void DeactivateSixAxisSensor(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.DeactivateSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.DeactivateSixAxisSensor".Log();
 	protected virtual KObject GetSixAxisSensorLifoHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetSixAxisSensorLifoHandle not implemented");
 	protected virtual void ActivateJoySixAxisSensor(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateJoySixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.ActivateJoySixAxisSensor".Log();
 	protected virtual void DeactivateJoySixAxisSensor(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.DeactivateJoySixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.DeactivateJoySixAxisSensor".Log();
 	protected virtual KObject GetJoySixAxisSensorLifoHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetJoySixAxisSensorLifoHandle not implemented");
 	protected virtual void StartSixAxisSensor(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StartSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.StartSixAxisSensor".Log();
 	protected virtual void StopSixAxisSensor(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StopSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.StopSixAxisSensor".Log();
 	protected virtual bool IsSixAxisSensorFusionEnabled(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsSixAxisSensorFusionEnabled not implemented");
 	protected virtual void EnableSixAxisSensorFusion(bool _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EnableSixAxisSensorFusion");
+		"Stub hit for Nn.Hid.IHidServer.EnableSixAxisSensorFusion".Log();
 	protected virtual void SetSixAxisSensorFusionParameters(uint _0, float _1, float _2, ulong _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetSixAxisSensorFusionParameters");
+		"Stub hit for Nn.Hid.IHidServer.SetSixAxisSensorFusionParameters".Log();
 	protected virtual void GetSixAxisSensorFusionParameters(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetSixAxisSensorFusionParameters not implemented");
 	protected virtual void ResetSixAxisSensorFusionParameters(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetSixAxisSensorFusionParameters");
+		"Stub hit for Nn.Hid.IHidServer.ResetSixAxisSensorFusionParameters".Log();
 	protected virtual void SetAccelerometerParameters(uint _0, float _1, float _2, ulong _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetAccelerometerParameters");
+		"Stub hit for Nn.Hid.IHidServer.SetAccelerometerParameters".Log();
 	protected virtual void GetAccelerometerParameters(uint _0, ulong _1, ulong _2, out float _3, out float _4) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetAccelerometerParameters not implemented");
 	protected virtual void ResetAccelerometerParameters(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetAccelerometerParameters");
+		"Stub hit for Nn.Hid.IHidServer.ResetAccelerometerParameters".Log();
 	protected virtual void SetAccelerometerPlayMode(uint _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetAccelerometerPlayMode");
+		"Stub hit for Nn.Hid.IHidServer.SetAccelerometerPlayMode".Log();
 	protected virtual uint GetAccelerometerPlayMode(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetAccelerometerPlayMode not implemented");
 	protected virtual void ResetAccelerometerPlayMode(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetAccelerometerPlayMode");
+		"Stub hit for Nn.Hid.IHidServer.ResetAccelerometerPlayMode".Log();
 	protected virtual void SetGyroscopeZeroDriftMode(uint _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetGyroscopeZeroDriftMode");
+		"Stub hit for Nn.Hid.IHidServer.SetGyroscopeZeroDriftMode".Log();
 	protected virtual uint GetGyroscopeZeroDriftMode(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetGyroscopeZeroDriftMode not implemented");
 	protected virtual void ResetGyroscopeZeroDriftMode(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetGyroscopeZeroDriftMode");
+		"Stub hit for Nn.Hid.IHidServer.ResetGyroscopeZeroDriftMode".Log();
 	protected virtual bool IsSixAxisSensorAtRest(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsSixAxisSensorAtRest not implemented");
 	protected virtual bool Unknown83(ulong _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.Unknown83 not implemented");
 	protected virtual void ActivateGesture(int _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateGesture");
+		"Stub hit for Nn.Hid.IHidServer.ActivateGesture".Log();
 	protected virtual void SetSupportedNpadStyleSet(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetSupportedNpadStyleSet");
+		"Stub hit for Nn.Hid.IHidServer.SetSupportedNpadStyleSet".Log();
 	protected virtual uint GetSupportedNpadStyleSet(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetSupportedNpadStyleSet not implemented");
 	protected virtual void SetSupportedNpadIdType(ulong _0, ulong _1, Span<uint> _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetSupportedNpadIdType");
+		"Stub hit for Nn.Hid.IHidServer.SetSupportedNpadIdType".Log();
 	protected virtual void ActivateNpad(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateNpad");
+		"Stub hit for Nn.Hid.IHidServer.ActivateNpad".Log();
 	protected virtual void DeactivateNpad(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.DeactivateNpad");
+		"Stub hit for Nn.Hid.IHidServer.DeactivateNpad".Log();
 	protected virtual KObject AcquireNpadStyleSetUpdateEventHandle(uint _0, ulong _1, ulong _2, ulong _3) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.AcquireNpadStyleSetUpdateEventHandle not implemented");
 	protected virtual void DisconnectNpad(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.DisconnectNpad");
+		"Stub hit for Nn.Hid.IHidServer.DisconnectNpad".Log();
 	protected virtual ulong GetPlayerLedPattern(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetPlayerLedPattern not implemented");
 	protected virtual void SetNpadJoyHoldType(ulong _0, long _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetNpadJoyHoldType");
+		"Stub hit for Nn.Hid.IHidServer.SetNpadJoyHoldType".Log();
 	protected virtual long GetNpadJoyHoldType(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetNpadJoyHoldType not implemented");
 	protected virtual void SetNpadJoyAssignmentModeSingleByDefault(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetNpadJoyAssignmentModeSingleByDefault");
+		"Stub hit for Nn.Hid.IHidServer.SetNpadJoyAssignmentModeSingleByDefault".Log();
 	protected virtual void SetNpadJoyAssignmentModeSingle(uint _0, ulong _1, long _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetNpadJoyAssignmentModeSingle");
+		"Stub hit for Nn.Hid.IHidServer.SetNpadJoyAssignmentModeSingle".Log();
 	protected virtual void SetNpadJoyAssignmentModeDual(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetNpadJoyAssignmentModeDual");
+		"Stub hit for Nn.Hid.IHidServer.SetNpadJoyAssignmentModeDual".Log();
 	protected virtual void MergeSingleJoyAsDualJoy(uint _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.MergeSingleJoyAsDualJoy");
+		"Stub hit for Nn.Hid.IHidServer.MergeSingleJoyAsDualJoy".Log();
 	protected virtual void StartLrAssignmentMode(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StartLrAssignmentMode");
+		"Stub hit for Nn.Hid.IHidServer.StartLrAssignmentMode".Log();
 	protected virtual void StopLrAssignmentMode(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StopLrAssignmentMode");
+		"Stub hit for Nn.Hid.IHidServer.StopLrAssignmentMode".Log();
 	protected virtual void SetNpadHandheldActivationMode(ulong _0, long _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetNpadHandheldActivationMode");
+		"Stub hit for Nn.Hid.IHidServer.SetNpadHandheldActivationMode".Log();
 	protected virtual long GetNpadHandheldActivationMode(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetNpadHandheldActivationMode not implemented");
 	protected virtual void SwapNpadAssignment(uint _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SwapNpadAssignment");
+		"Stub hit for Nn.Hid.IHidServer.SwapNpadAssignment".Log();
 	protected virtual bool IsUnintendedHomeButtonInputProtectionEnabled(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsUnintendedHomeButtonInputProtectionEnabled not implemented");
 	protected virtual void EnableUnintendedHomeButtonInputProtection(bool _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EnableUnintendedHomeButtonInputProtection");
+		"Stub hit for Nn.Hid.IHidServer.EnableUnintendedHomeButtonInputProtection".Log();
 	protected virtual void SetNpadJoyAssignmentModeSingleWithDestination(uint _0, ulong _1, ulong _2, ulong _3, out bool _4, out uint _5) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.SetNpadJoyAssignmentModeSingleWithDestination not implemented");
 	protected virtual void GetVibrationDeviceInfo(uint _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetVibrationDeviceInfo not implemented");
 	protected virtual void SendVibrationValue(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SendVibrationValue");
+		"Stub hit for Nn.Hid.IHidServer.SendVibrationValue".Log();
 	protected virtual void GetActualVibrationValue(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.GetActualVibrationValue");
+		"Stub hit for Nn.Hid.IHidServer.GetActualVibrationValue".Log();
 	protected virtual Nn.Hid.IActiveVibrationDeviceList CreateActiveVibrationDeviceList() =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.CreateActiveVibrationDeviceList not implemented");
 	protected virtual void PermitVibration(bool _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.PermitVibration");
+		"Stub hit for Nn.Hid.IHidServer.PermitVibration".Log();
 	protected virtual bool IsVibrationPermitted() =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsVibrationPermitted not implemented");
 	protected virtual void SendVibrationValues(ulong _0, Span<uint> _1, Span<byte> _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SendVibrationValues");
+		"Stub hit for Nn.Hid.IHidServer.SendVibrationValues".Log();
 	protected virtual void SendVibrationGcErmCommand(uint _0, ulong _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SendVibrationGcErmCommand");
+		"Stub hit for Nn.Hid.IHidServer.SendVibrationGcErmCommand".Log();
 	protected virtual ulong GetActualVibrationGcErmCommand(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetActualVibrationGcErmCommand not implemented");
 	protected virtual void BeginPermitVibrationSession(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.BeginPermitVibrationSession");
+		"Stub hit for Nn.Hid.IHidServer.BeginPermitVibrationSession".Log();
 	protected virtual void EndPermitVibrationSession() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EndPermitVibrationSession");
+		"Stub hit for Nn.Hid.IHidServer.EndPermitVibrationSession".Log();
 	protected virtual void ActivateConsoleSixAxisSensor(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateConsoleSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.ActivateConsoleSixAxisSensor".Log();
 	protected virtual void StartConsoleSixAxisSensor(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StartConsoleSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.StartConsoleSixAxisSensor".Log();
 	protected virtual void StopConsoleSixAxisSensor(uint _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StopConsoleSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.StopConsoleSixAxisSensor".Log();
 	protected virtual void ActivateSevenSixAxisSensor(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ActivateSevenSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.ActivateSevenSixAxisSensor".Log();
 	protected virtual void StartSevenSixAxisSensor(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StartSevenSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.StartSevenSixAxisSensor".Log();
 	protected virtual void StopSevenSixAxisSensor(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.StopSevenSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.StopSevenSixAxisSensor".Log();
 	protected virtual void InitializeSevenSixAxisSensor(uint _0, ulong _1, uint _2, ulong _3, ulong _4, ulong _5) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.InitializeSevenSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.InitializeSevenSixAxisSensor".Log();
 	protected virtual void FinalizeSevenSixAxisSensor(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.FinalizeSevenSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidServer.FinalizeSevenSixAxisSensor".Log();
 	protected virtual void SetSevenSixAxisSensorFusionStrength(float _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetSevenSixAxisSensorFusionStrength");
+		"Stub hit for Nn.Hid.IHidServer.SetSevenSixAxisSensorFusionStrength".Log();
 	protected virtual float GetSevenSixAxisSensorFusionStrength(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetSevenSixAxisSensorFusionStrength not implemented");
 	protected virtual void Unknown310(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.Unknown310");
+		"Stub hit for Nn.Hid.IHidServer.Unknown310".Log();
 	protected virtual bool IsUsbFullKeyControllerEnabled() =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsUsbFullKeyControllerEnabled not implemented");
 	protected virtual void EnableUsbFullKeyController(bool _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EnableUsbFullKeyController");
+		"Stub hit for Nn.Hid.IHidServer.EnableUsbFullKeyController".Log();
 	protected virtual bool IsUsbFullKeyControllerConnected(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.IsUsbFullKeyControllerConnected not implemented");
 	protected virtual bool HasBattery(uint _0) =>
@@ -645,57 +645,57 @@ public abstract class _IHidServer_Base : IpcInterface {
 	protected virtual ulong GetPalmaConnectionHandle(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetPalmaConnectionHandle not implemented");
 	protected virtual void InitializePalma(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.InitializePalma");
+		"Stub hit for Nn.Hid.IHidServer.InitializePalma".Log();
 	protected virtual KObject AcquirePalmaOperationCompleteEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.AcquirePalmaOperationCompleteEvent not implemented");
 	protected virtual void GetPalmaOperationInfo(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetPalmaOperationInfo not implemented");
 	protected virtual void PlayPalmaActivity(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.PlayPalmaActivity");
+		"Stub hit for Nn.Hid.IHidServer.PlayPalmaActivity".Log();
 	protected virtual void SetPalmaFrModeType(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetPalmaFrModeType");
+		"Stub hit for Nn.Hid.IHidServer.SetPalmaFrModeType".Log();
 	protected virtual void ReadPalmaStep(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ReadPalmaStep");
+		"Stub hit for Nn.Hid.IHidServer.ReadPalmaStep".Log();
 	protected virtual void EnablePalmaStep(bool _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.EnablePalmaStep");
+		"Stub hit for Nn.Hid.IHidServer.EnablePalmaStep".Log();
 	protected virtual void ResetPalmaStep(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetPalmaStep");
+		"Stub hit for Nn.Hid.IHidServer.ResetPalmaStep".Log();
 	protected virtual void ReadPalmaApplicationSection(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ReadPalmaApplicationSection");
+		"Stub hit for Nn.Hid.IHidServer.ReadPalmaApplicationSection".Log();
 	protected virtual void WritePalmaApplicationSection(ulong _0, ulong _1, Span<byte> _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.WritePalmaApplicationSection");
+		"Stub hit for Nn.Hid.IHidServer.WritePalmaApplicationSection".Log();
 	protected virtual void ReadPalmaUniqueCode(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ReadPalmaUniqueCode");
+		"Stub hit for Nn.Hid.IHidServer.ReadPalmaUniqueCode".Log();
 	protected virtual void SetPalmaUniqueCodeInvalid(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetPalmaUniqueCodeInvalid");
+		"Stub hit for Nn.Hid.IHidServer.SetPalmaUniqueCodeInvalid".Log();
 	protected virtual void WritePalmaActivityEntry(ulong _0, ulong _1, ulong _2, ulong _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.WritePalmaActivityEntry");
+		"Stub hit for Nn.Hid.IHidServer.WritePalmaActivityEntry".Log();
 	protected virtual void WritePalmaRgbLedPatternEntry(ulong _0, Span<byte> _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.WritePalmaRgbLedPatternEntry");
+		"Stub hit for Nn.Hid.IHidServer.WritePalmaRgbLedPatternEntry".Log();
 	protected virtual void WritePalmaWaveEntry(ulong _0, ulong _1, KObject _2, ulong _3, ulong _4, ulong _5) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.WritePalmaWaveEntry");
+		"Stub hit for Nn.Hid.IHidServer.WritePalmaWaveEntry".Log();
 	protected virtual void SetPalmaDataBaseIdentificationVersion(uint _0, ulong _1, int _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetPalmaDataBaseIdentificationVersion");
+		"Stub hit for Nn.Hid.IHidServer.SetPalmaDataBaseIdentificationVersion".Log();
 	protected virtual void GetPalmaDataBaseIdentificationVersion(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.GetPalmaDataBaseIdentificationVersion");
+		"Stub hit for Nn.Hid.IHidServer.GetPalmaDataBaseIdentificationVersion".Log();
 	protected virtual void SuspendPalmaFeature(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SuspendPalmaFeature");
+		"Stub hit for Nn.Hid.IHidServer.SuspendPalmaFeature".Log();
 	protected virtual void GetPalmaOperationResult(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.GetPalmaOperationResult");
+		"Stub hit for Nn.Hid.IHidServer.GetPalmaOperationResult".Log();
 	protected virtual void ReadPalmaPlayLog(ulong _0, ushort _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ReadPalmaPlayLog");
+		"Stub hit for Nn.Hid.IHidServer.ReadPalmaPlayLog".Log();
 	protected virtual void ResetPalmaPlayLog(ulong _0, ushort _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.ResetPalmaPlayLog");
+		"Stub hit for Nn.Hid.IHidServer.ResetPalmaPlayLog".Log();
 	protected virtual void SetIsPalmaAllConnectable(ulong _0, bool _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetIsPalmaAllConnectable");
+		"Stub hit for Nn.Hid.IHidServer.SetIsPalmaAllConnectable".Log();
 	protected virtual void SetIsPalmaPairedConnectable(ulong _0, bool _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetIsPalmaPairedConnectable");
+		"Stub hit for Nn.Hid.IHidServer.SetIsPalmaPairedConnectable".Log();
 	protected virtual void PairPalma(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.PairPalma");
+		"Stub hit for Nn.Hid.IHidServer.PairPalma".Log();
 	protected virtual void SetPalmaBoostMode(bool _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetPalmaBoostMode");
+		"Stub hit for Nn.Hid.IHidServer.SetPalmaBoostMode".Log();
 	protected virtual void SetNpadCommunicationMode(ulong _0, long _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidServer.SetNpadCommunicationMode");
+		"Stub hit for Nn.Hid.IHidServer.SetNpadCommunicationMode".Log();
 	protected virtual long GetNpadCommunicationMode() =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetNpadCommunicationMode not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -1338,19 +1338,19 @@ public partial class IHidSystemServer : _IHidSystemServer_Base {
 }
 public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual void SendKeyboardLockKeyEvent(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SendKeyboardLockKeyEvent");
+		"Stub hit for Nn.Hid.IHidSystemServer.SendKeyboardLockKeyEvent".Log();
 	protected virtual KObject AcquireHomeButtonEventHandle(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireHomeButtonEventHandle not implemented");
 	protected virtual void ActivateHomeButton(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateHomeButton");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateHomeButton".Log();
 	protected virtual KObject AcquireSleepButtonEventHandle(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireSleepButtonEventHandle not implemented");
 	protected virtual void ActivateSleepButton(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateSleepButton");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateSleepButton".Log();
 	protected virtual KObject AcquireCaptureButtonEventHandle(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireCaptureButtonEventHandle not implemented");
 	protected virtual void ActivateCaptureButton(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateCaptureButton");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateCaptureButton".Log();
 	protected virtual KObject AcquireNfcDeviceUpdateEventHandle() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireNfcDeviceUpdateEventHandle not implemented");
 	protected virtual void GetNpadsWithNfc(out ulong _0, Span<uint> _1) =>
@@ -1358,7 +1358,7 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual KObject AcquireNfcActivateEventHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireNfcActivateEventHandle not implemented");
 	protected virtual void ActivateNfc(byte _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateNfc");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateNfc".Log();
 	protected virtual ulong GetXcdHandleForNpadWithNfc(uint _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetXcdHandleForNpadWithNfc not implemented");
 	protected virtual byte IsNfcActivated(uint _0) =>
@@ -1366,25 +1366,25 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual KObject AcquireIrSensorEventHandle(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireIrSensorEventHandle not implemented");
 	protected virtual void ActivateIrSensor(byte _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateIrSensor");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateIrSensor".Log();
 	protected virtual void ActivateNpadSystem(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateNpadSystem");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateNpadSystem".Log();
 	protected virtual void ApplyNpadSystemCommonPolicy(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ApplyNpadSystemCommonPolicy");
+		"Stub hit for Nn.Hid.IHidSystemServer.ApplyNpadSystemCommonPolicy".Log();
 	protected virtual void EnableAssigningSingleOnSlSrPress(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.EnableAssigningSingleOnSlSrPress");
+		"Stub hit for Nn.Hid.IHidSystemServer.EnableAssigningSingleOnSlSrPress".Log();
 	protected virtual void DisableAssigningSingleOnSlSrPress(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DisableAssigningSingleOnSlSrPress");
+		"Stub hit for Nn.Hid.IHidSystemServer.DisableAssigningSingleOnSlSrPress".Log();
 	protected virtual uint GetLastActiveNpad() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetLastActiveNpad not implemented");
 	protected virtual void GetNpadSystemExtStyle(uint _0, out ulong _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetNpadSystemExtStyle not implemented");
 	protected virtual void ApplyNpadSystemCommonPolicyFull() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ApplyNpadSystemCommonPolicyFull");
+		"Stub hit for Nn.Hid.IHidSystemServer.ApplyNpadSystemCommonPolicyFull".Log();
 	protected virtual void GetNpadFullKeyGripColor() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetNpadFullKeyGripColor");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetNpadFullKeyGripColor".Log();
 	protected virtual void SetNpadPlayerLedBlinkingDevice(uint _0, uint _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SetNpadPlayerLedBlinkingDevice");
+		"Stub hit for Nn.Hid.IHidSystemServer.SetNpadPlayerLedBlinkingDevice".Log();
 	protected virtual void GetUniquePadsFromNpad(uint _0, out ulong _1, Span<ulong> _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetUniquePadsFromNpad not implemented");
 	protected virtual ulong GetIrSensorState(uint _0, ulong _1, ulong _2) =>
@@ -1392,29 +1392,29 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual ulong GetXcdHandleForNpadWithIrSensor(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetXcdHandleForNpadWithIrSensor not implemented");
 	protected virtual void SetAppletResourceUserId(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SetAppletResourceUserId");
+		"Stub hit for Nn.Hid.IHidSystemServer.SetAppletResourceUserId".Log();
 	protected virtual void RegisterAppletResourceUserId(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.RegisterAppletResourceUserId");
+		"Stub hit for Nn.Hid.IHidSystemServer.RegisterAppletResourceUserId".Log();
 	protected virtual void UnregisterAppletResourceUserId(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.UnregisterAppletResourceUserId");
+		"Stub hit for Nn.Hid.IHidSystemServer.UnregisterAppletResourceUserId".Log();
 	protected virtual void EnableAppletToGetInput(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.EnableAppletToGetInput");
+		"Stub hit for Nn.Hid.IHidSystemServer.EnableAppletToGetInput".Log();
 	protected virtual void SetAruidValidForVibration(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SetAruidValidForVibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.SetAruidValidForVibration".Log();
 	protected virtual void EnableAppletToGetSixAxisSensor(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.EnableAppletToGetSixAxisSensor");
+		"Stub hit for Nn.Hid.IHidSystemServer.EnableAppletToGetSixAxisSensor".Log();
 	protected virtual void SetVibrationMasterVolume(float _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SetVibrationMasterVolume");
+		"Stub hit for Nn.Hid.IHidSystemServer.SetVibrationMasterVolume".Log();
 	protected virtual float GetVibrationMasterVolume() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetVibrationMasterVolume not implemented");
 	protected virtual void BeginPermitVibrationSession(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.BeginPermitVibrationSession");
+		"Stub hit for Nn.Hid.IHidSystemServer.BeginPermitVibrationSession".Log();
 	protected virtual void EndPermitVibrationSession() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.EndPermitVibrationSession");
+		"Stub hit for Nn.Hid.IHidSystemServer.EndPermitVibrationSession".Log();
 	protected virtual void EnableHandheldHids() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.EnableHandheldHids");
+		"Stub hit for Nn.Hid.IHidSystemServer.EnableHandheldHids".Log();
 	protected virtual void DisableHandheldHids() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DisableHandheldHids");
+		"Stub hit for Nn.Hid.IHidSystemServer.DisableHandheldHids".Log();
 	protected virtual KObject AcquirePlayReportControllerUsageUpdateEvent() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquirePlayReportControllerUsageUpdateEvent not implemented");
 	protected virtual void GetPlayReportControllerUsages(out ulong _0, Span<byte> _1) =>
@@ -1426,15 +1426,15 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual KObject AcquireConnectionTriggerTimeoutEvent() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireConnectionTriggerTimeoutEvent not implemented");
 	protected virtual void SendConnectionTrigger(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.SendConnectionTrigger");
+		"Stub hit for Nn.Hid.IHidSystemServer.SendConnectionTrigger".Log();
 	protected virtual KObject AcquireDeviceRegisteredEventForControllerSupport() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireDeviceRegisteredEventForControllerSupport not implemented");
 	protected virtual ulong GetAllowedBluetoothLinksCount() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetAllowedBluetoothLinksCount not implemented");
 	protected virtual void GetRegisteredDevices() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetRegisteredDevices");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetRegisteredDevices".Log();
 	protected virtual void ActivateUniquePad(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateUniquePad");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateUniquePad".Log();
 	protected virtual KObject AcquireUniquePadConnectionEventHandle() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireUniquePadConnectionEventHandle not implemented");
 	protected virtual void GetUniquePadIds(out ulong _0, Span<ulong> _1) =>
@@ -1446,55 +1446,55 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual byte IsSixAxisSensorUserCalibrationSupported() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.IsSixAxisSensorUserCalibrationSupported not implemented");
 	protected virtual void ResetSixAxisSensorCalibrationValues() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ResetSixAxisSensorCalibrationValues");
+		"Stub hit for Nn.Hid.IHidSystemServer.ResetSixAxisSensorCalibrationValues".Log();
 	protected virtual void StartSixAxisSensorUserCalibration() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.StartSixAxisSensorUserCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.StartSixAxisSensorUserCalibration".Log();
 	protected virtual void CancelSixAxisSensorUserCalibration() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.CancelSixAxisSensorUserCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.CancelSixAxisSensorUserCalibration".Log();
 	protected virtual void GetUniquePadBluetoothAddress(ulong _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetUniquePadBluetoothAddress not implemented");
 	protected virtual void DisconnectUniquePad(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DisconnectUniquePad");
+		"Stub hit for Nn.Hid.IHidSystemServer.DisconnectUniquePad".Log();
 	protected virtual void GetUniquePadType() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadType");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadType".Log();
 	protected virtual void GetUniquePadInterface() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadInterface");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadInterface".Log();
 	protected virtual void GetUniquePadSerialNumber() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadSerialNumber");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadSerialNumber".Log();
 	protected virtual void GetUniquePadControllerNumber() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadControllerNumber");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetUniquePadControllerNumber".Log();
 	protected virtual void GetSixAxisSensorUserCalibrationStage() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetSixAxisSensorUserCalibrationStage");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetSixAxisSensorUserCalibrationStage".Log();
 	protected virtual void StartAnalogStickManualCalibration(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.StartAnalogStickManualCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.StartAnalogStickManualCalibration".Log();
 	protected virtual void RetryCurrentAnalogStickManualCalibrationStage(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.RetryCurrentAnalogStickManualCalibrationStage");
+		"Stub hit for Nn.Hid.IHidSystemServer.RetryCurrentAnalogStickManualCalibrationStage".Log();
 	protected virtual void CancelAnalogStickManualCalibration(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.CancelAnalogStickManualCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.CancelAnalogStickManualCalibration".Log();
 	protected virtual void ResetAnalogStickManualCalibration(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ResetAnalogStickManualCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.ResetAnalogStickManualCalibration".Log();
 	protected virtual void GetAnalogStickState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetAnalogStickState");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetAnalogStickState".Log();
 	protected virtual void GetAnalogStickManualCalibrationStage() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetAnalogStickManualCalibrationStage");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetAnalogStickManualCalibrationStage".Log();
 	protected virtual void IsAnalogStickButtonPressed() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.IsAnalogStickButtonPressed");
+		"Stub hit for Nn.Hid.IHidSystemServer.IsAnalogStickButtonPressed".Log();
 	protected virtual void IsAnalogStickInReleasePosition() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.IsAnalogStickInReleasePosition");
+		"Stub hit for Nn.Hid.IHidSystemServer.IsAnalogStickInReleasePosition".Log();
 	protected virtual void IsAnalogStickInCircumference() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.IsAnalogStickInCircumference");
+		"Stub hit for Nn.Hid.IHidSystemServer.IsAnalogStickInCircumference".Log();
 	protected virtual byte IsUsbFullKeyControllerEnabled() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.IsUsbFullKeyControllerEnabled not implemented");
 	protected virtual void EnableUsbFullKeyController(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.EnableUsbFullKeyController");
+		"Stub hit for Nn.Hid.IHidSystemServer.EnableUsbFullKeyController".Log();
 	protected virtual byte IsUsbConnected(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.IsUsbConnected not implemented");
 	protected virtual void ActivateInputDetector(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateInputDetector");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateInputDetector".Log();
 	protected virtual void NotifyInputDetector(uint _0) =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.NotifyInputDetector");
+		"Stub hit for Nn.Hid.IHidSystemServer.NotifyInputDetector".Log();
 	protected virtual void InitializeFirmwareUpdate() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.InitializeFirmwareUpdate");
+		"Stub hit for Nn.Hid.IHidSystemServer.InitializeFirmwareUpdate".Log();
 	protected virtual void GetFirmwareVersion(ulong _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetFirmwareVersion not implemented");
 	protected virtual void GetAvailableFirmwareVersion(ulong _0, out byte[] _1) =>
@@ -1506,27 +1506,27 @@ public abstract class _IHidSystemServer_Base : IpcInterface {
 	protected virtual ulong StartFirmwareUpdate(ulong _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.StartFirmwareUpdate not implemented");
 	protected virtual void AbortFirmwareUpdate() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.AbortFirmwareUpdate");
+		"Stub hit for Nn.Hid.IHidSystemServer.AbortFirmwareUpdate".Log();
 	protected virtual void GetFirmwareUpdateState(ulong _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetFirmwareUpdateState not implemented");
 	protected virtual void ActivateAudioControl() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.ActivateAudioControl");
+		"Stub hit for Nn.Hid.IHidSystemServer.ActivateAudioControl".Log();
 	protected virtual KObject AcquireAudioControlEventHandle() =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.AcquireAudioControlEventHandle not implemented");
 	protected virtual void GetAudioControlStates(out ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Hid.IHidSystemServer.GetAudioControlStates not implemented");
 	protected virtual void DeactivateAudioControl() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.DeactivateAudioControl");
+		"Stub hit for Nn.Hid.IHidSystemServer.DeactivateAudioControl".Log();
 	protected virtual void IsSixAxisSensorAccurateUserCalibrationSupported() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.IsSixAxisSensorAccurateUserCalibrationSupported");
+		"Stub hit for Nn.Hid.IHidSystemServer.IsSixAxisSensorAccurateUserCalibrationSupported".Log();
 	protected virtual void StartSixAxisSensorAccurateUserCalibration() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.StartSixAxisSensorAccurateUserCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.StartSixAxisSensorAccurateUserCalibration".Log();
 	protected virtual void CancelSixAxisSensorAccurateUserCalibration() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.CancelSixAxisSensorAccurateUserCalibration");
+		"Stub hit for Nn.Hid.IHidSystemServer.CancelSixAxisSensorAccurateUserCalibration".Log();
 	protected virtual void GetSixAxisSensorAccurateUserCalibrationState() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetSixAxisSensorAccurateUserCalibrationState");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetSixAxisSensorAccurateUserCalibrationState".Log();
 	protected virtual void GetHidbusSystemServiceObject() =>
-		Console.WriteLine("Stub hit for Nn.Hid.IHidSystemServer.GetHidbusSystemServiceObject");
+		"Stub hit for Nn.Hid.IHidSystemServer.GetHidbusSystemServiceObject".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1F: { // SendKeyboardLockKeyEvent

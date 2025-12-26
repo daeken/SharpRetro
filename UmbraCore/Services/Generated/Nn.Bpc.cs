@@ -8,9 +8,9 @@ public partial class IBoardPowerControlManager : _IBoardPowerControlManager_Base
 }
 public abstract class _IBoardPowerControlManager_Base : IpcInterface {
 	protected virtual void ShutdownSystem() =>
-		Console.WriteLine("Stub hit for Nn.Bpc.IBoardPowerControlManager.ShutdownSystem");
+		"Stub hit for Nn.Bpc.IBoardPowerControlManager.ShutdownSystem".Log();
 	protected virtual void RebootSystem() =>
-		Console.WriteLine("Stub hit for Nn.Bpc.IBoardPowerControlManager.RebootSystem");
+		"Stub hit for Nn.Bpc.IBoardPowerControlManager.RebootSystem".Log();
 	protected virtual void GetWakeupReason(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bpc.IBoardPowerControlManager.GetWakeupReason not implemented");
 	protected virtual void GetShutdownReason(out byte[] _0) =>
@@ -26,7 +26,7 @@ public abstract class _IBoardPowerControlManager_Base : IpcInterface {
 	protected virtual void Unknown8(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Bpc.IBoardPowerControlManager.Unknown8 not implemented");
 	protected virtual void Unknown9(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bpc.IBoardPowerControlManager.Unknown9");
+		"Stub hit for Nn.Bpc.IBoardPowerControlManager.Unknown9".Log();
 	protected virtual void Unknown10(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bpc.IBoardPowerControlManager.Unknown10 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
@@ -134,11 +134,11 @@ public abstract class _IRtcManager_Base : IpcInterface {
 	protected virtual void GetExternalRtcValue(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bpc.IRtcManager.GetExternalRtcValue not implemented");
 	protected virtual void SetExternalRtcValue(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bpc.IRtcManager.SetExternalRtcValue");
+		"Stub hit for Nn.Bpc.IRtcManager.SetExternalRtcValue".Log();
 	protected virtual void ReadExternalRtcResetFlag(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bpc.IRtcManager.ReadExternalRtcResetFlag not implemented");
 	protected virtual void ClearExternalRtcResetFlag() =>
-		Console.WriteLine("Stub hit for Nn.Bpc.IRtcManager.ClearExternalRtcResetFlag");
+		"Stub hit for Nn.Bpc.IRtcManager.ClearExternalRtcResetFlag".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetExternalRtcValue
@@ -174,7 +174,7 @@ public abstract class _IWakeupConfigManager_Base : IpcInterface {
 	protected virtual void Unknown0(byte[] _0, out byte[] _1) =>
 		throw new NotImplementedException("Nn.Bpc.IWakeupConfigManager.Unknown0 not implemented");
 	protected virtual void Unknown1(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Bpc.IWakeupConfigManager.Unknown1");
+		"Stub hit for Nn.Bpc.IWakeupConfigManager.Unknown1".Log();
 	protected virtual void Unknown2(out byte[] _0) =>
 		throw new NotImplementedException("Nn.Bpc.IWakeupConfigManager.Unknown2 not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {

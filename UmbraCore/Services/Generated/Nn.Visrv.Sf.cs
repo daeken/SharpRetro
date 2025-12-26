@@ -19,23 +19,23 @@ public abstract class _IApplicationDisplayService_Base : IpcInterface {
 	protected virtual ulong OpenDefaultDisplay() =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.OpenDefaultDisplay not implemented");
 	protected virtual void CloseDisplay(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.CloseDisplay");
+		"Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.CloseDisplay".Log();
 	protected virtual void SetDisplayEnabled(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.SetDisplayEnabled");
+		"Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.SetDisplayEnabled".Log();
 	protected virtual void GetDisplayResolution(ulong _0, out ulong _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetDisplayResolution not implemented");
 	protected virtual void OpenLayer(byte[] _0, ulong _1, ulong _2, ulong _3, out ulong _4, Span<byte> _5) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.OpenLayer not implemented");
 	protected virtual void CloseLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.CloseLayer");
+		"Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.CloseLayer".Log();
 	protected virtual void CreateStrayLayer(uint _0, ulong _1, out ulong _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.CreateStrayLayer not implemented");
 	protected virtual void DestroyStrayLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.DestroyStrayLayer");
+		"Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.DestroyStrayLayer".Log();
 	protected virtual void SetLayerScalingMode(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.SetLayerScalingMode");
+		"Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.SetLayerScalingMode".Log();
 	protected virtual void ConvertScalingMode() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.ConvertScalingMode");
+		"Stub hit for Nn.Visrv.Sf.IApplicationDisplayService.ConvertScalingMode".Log();
 	protected virtual void GetIndirectLayerImageMap(ulong _0, ulong _1, ulong _2, ulong _3, ulong _4, out ulong _5, out ulong _6, Span<byte> _7) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IApplicationDisplayService.GetIndirectLayerImageMap not implemented");
 	protected virtual void GetIndirectLayerImageCropMap(float _0, float _1, float _2, float _3, ulong _4, ulong _5, ulong _6, ulong _7, ulong _8, out ulong _9, out ulong _10, Span<byte> _11) =>
@@ -205,29 +205,29 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 	protected virtual ulong AllocateProcessHeapBlock(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.AllocateProcessHeapBlock not implemented");
 	protected virtual void FreeProcessHeapBlock(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FreeProcessHeapBlock");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FreeProcessHeapBlock".Log();
 	protected virtual void GetDisplayResolution(ulong _0, out ulong _1, out ulong _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayResolution not implemented");
 	protected virtual ulong CreateManagedLayer(uint _0, ulong _1, ulong _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateManagedLayer not implemented");
 	protected virtual void DestroyManagedLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyManagedLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyManagedLayer".Log();
 	protected virtual ulong CreateIndirectLayer() =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateIndirectLayer not implemented");
 	protected virtual void DestroyIndirectLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyIndirectLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyIndirectLayer".Log();
 	protected virtual ulong CreateIndirectProducerEndPoint(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateIndirectProducerEndPoint not implemented");
 	protected virtual void DestroyIndirectProducerEndPoint(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyIndirectProducerEndPoint");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyIndirectProducerEndPoint".Log();
 	protected virtual ulong CreateIndirectConsumerEndPoint(ulong _0, ulong _1) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateIndirectConsumerEndPoint not implemented");
 	protected virtual void DestroyIndirectConsumerEndPoint(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyIndirectConsumerEndPoint");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroyIndirectConsumerEndPoint".Log();
 	protected virtual KObject AcquireLayerTexturePresentingEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.AcquireLayerTexturePresentingEvent not implemented");
 	protected virtual void ReleaseLayerTexturePresentingEvent(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ReleaseLayerTexturePresentingEvent");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ReleaseLayerTexturePresentingEvent".Log();
 	protected virtual KObject GetDisplayHotplugEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayHotplugEvent not implemented");
 	protected virtual uint GetDisplayHotplugState(ulong _0) =>
@@ -237,69 +237,69 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 	protected virtual KObject GetDisplayErrorEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDisplayErrorEvent not implemented");
 	protected virtual void SetDisplayAlpha(float _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDisplayAlpha");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDisplayAlpha".Log();
 	protected virtual void SetDisplayLayerStack(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDisplayLayerStack");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDisplayLayerStack".Log();
 	protected virtual void SetDisplayPowerState(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDisplayPowerState");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDisplayPowerState".Log();
 	protected virtual void SetDefaultDisplay(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDefaultDisplay");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDefaultDisplay".Log();
 	protected virtual void AddToLayerStack(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.AddToLayerStack");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.AddToLayerStack".Log();
 	protected virtual void RemoveFromLayerStack(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.RemoveFromLayerStack");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.RemoveFromLayerStack".Log();
 	protected virtual void SetLayerVisibility(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetLayerVisibility");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetLayerVisibility".Log();
 	protected virtual void SetLayerConfig() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetLayerConfig");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetLayerConfig".Log();
 	protected virtual void AttachLayerPresentationTracer() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.AttachLayerPresentationTracer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.AttachLayerPresentationTracer".Log();
 	protected virtual void DetachLayerPresentationTracer() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DetachLayerPresentationTracer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DetachLayerPresentationTracer".Log();
 	protected virtual void StartLayerPresentationRecording() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StartLayerPresentationRecording");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StartLayerPresentationRecording".Log();
 	protected virtual void StopLayerPresentationRecording() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StopLayerPresentationRecording");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StopLayerPresentationRecording".Log();
 	protected virtual void StartLayerPresentationFenceWait() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StartLayerPresentationFenceWait");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StartLayerPresentationFenceWait".Log();
 	protected virtual void StopLayerPresentationFenceWait() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StopLayerPresentationFenceWait");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StopLayerPresentationFenceWait".Log();
 	protected virtual void GetLayerPresentationAllFencesExpiredEvent() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.GetLayerPresentationAllFencesExpiredEvent");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.GetLayerPresentationAllFencesExpiredEvent".Log();
 	protected virtual void SetContentVisibility(byte _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetContentVisibility");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetContentVisibility".Log();
 	protected virtual void SetConductorLayer(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetConductorLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetConductorLayer".Log();
 	protected virtual void SetIndirectProducerFlipOffset(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetIndirectProducerFlipOffset");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetIndirectProducerFlipOffset".Log();
 	protected virtual ulong CreateSharedBufferStaticStorage(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateSharedBufferStaticStorage not implemented");
 	protected virtual ulong CreateSharedBufferTransferMemory(ulong _0, KObject _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateSharedBufferTransferMemory not implemented");
 	protected virtual void DestroySharedBuffer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroySharedBuffer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroySharedBuffer".Log();
 	protected virtual void BindSharedLowLevelLayerToManagedLayer(byte[] _0, ulong _1, ulong _2, ulong _3) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.BindSharedLowLevelLayerToManagedLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.BindSharedLowLevelLayerToManagedLayer".Log();
 	protected virtual void BindSharedLowLevelLayerToIndirectLayer(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.BindSharedLowLevelLayerToIndirectLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.BindSharedLowLevelLayerToIndirectLayer".Log();
 	protected virtual void UnbindSharedLowLevelLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.UnbindSharedLowLevelLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.UnbindSharedLowLevelLayer".Log();
 	protected virtual void ConnectSharedLowLevelLayerToSharedBuffer(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ConnectSharedLowLevelLayerToSharedBuffer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ConnectSharedLowLevelLayerToSharedBuffer".Log();
 	protected virtual void DisconnectSharedLowLevelLayerFromSharedBuffer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DisconnectSharedLowLevelLayerFromSharedBuffer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DisconnectSharedLowLevelLayerFromSharedBuffer".Log();
 	protected virtual ulong CreateSharedLayer(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateSharedLayer not implemented");
 	protected virtual void DestroySharedLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroySharedLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.DestroySharedLayer".Log();
 	protected virtual void AttachSharedLayerToLowLevelLayer(byte[] _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.AttachSharedLayerToLowLevelLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.AttachSharedLayerToLowLevelLayer".Log();
 	protected virtual void ForceDetachSharedLayerFromLowLevelLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ForceDetachSharedLayerFromLowLevelLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ForceDetachSharedLayerFromLowLevelLayer".Log();
 	protected virtual void StartDetachSharedLayerFromLowLevelLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StartDetachSharedLayerFromLowLevelLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.StartDetachSharedLayerFromLowLevelLayer".Log();
 	protected virtual void FinishDetachSharedLayerFromLowLevelLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FinishDetachSharedLayerFromLowLevelLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FinishDetachSharedLayerFromLowLevelLayer".Log();
 	protected virtual KObject GetSharedLayerDetachReadyEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetSharedLayerDetachReadyEvent not implemented");
 	protected virtual KObject GetSharedLowLevelLayerSynchronizedEvent(ulong _0) =>
@@ -307,31 +307,31 @@ public abstract class _IManagerDisplayService_Base : IpcInterface {
 	protected virtual ulong CheckSharedLowLevelLayerSynchronized(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CheckSharedLowLevelLayerSynchronized not implemented");
 	protected virtual void RegisterSharedBufferImporterAruid(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.RegisterSharedBufferImporterAruid");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.RegisterSharedBufferImporterAruid".Log();
 	protected virtual void UnregisterSharedBufferImporterAruid(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.UnregisterSharedBufferImporterAruid");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.UnregisterSharedBufferImporterAruid".Log();
 	protected virtual ulong CreateSharedBufferProcessHeap(ulong _0, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.CreateSharedBufferProcessHeap not implemented");
 	protected virtual uint GetSharedLayerLayerStacks(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetSharedLayerLayerStacks not implemented");
 	protected virtual void SetSharedLayerLayerStacks(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetSharedLayerLayerStacks");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetSharedLayerLayerStacks".Log();
 	protected virtual void PresentDetachedSharedFrameBufferToLowLevelLayer(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.PresentDetachedSharedFrameBufferToLowLevelLayer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.PresentDetachedSharedFrameBufferToLowLevelLayer".Log();
 	protected virtual void FillDetachedSharedFrameBufferColor(uint _0, uint _1, uint _2, uint _3, uint _4, ulong _5, ulong _6) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FillDetachedSharedFrameBufferColor");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.FillDetachedSharedFrameBufferColor".Log();
 	protected virtual void GetDetachedSharedFrameBufferImage(ulong _0, ulong _1, out ulong _2, Span<byte> _3) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetDetachedSharedFrameBufferImage not implemented");
 	protected virtual void SetDetachedSharedFrameBufferImage(uint _0, ulong _1, ulong _2, Span<byte> _3) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDetachedSharedFrameBufferImage");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDetachedSharedFrameBufferImage".Log();
 	protected virtual void CopyDetachedSharedFrameBufferImage(uint _0, uint _1, ulong _2, ulong _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.CopyDetachedSharedFrameBufferImage");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.CopyDetachedSharedFrameBufferImage".Log();
 	protected virtual void SetDetachedSharedFrameBufferSubImage(uint _0, uint _1, uint _2, uint _3, uint _4, uint _5, ulong _6, ulong _7, Span<byte> _8) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDetachedSharedFrameBufferSubImage");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.SetDetachedSharedFrameBufferSubImage".Log();
 	protected virtual void GetSharedFrameBufferContentParameter(ulong _0, ulong _1, out uint _2, out byte[] _3, out uint _4, out uint _5, out uint _6) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.IManagerDisplayService.GetSharedFrameBufferContentParameter not implemented");
 	protected virtual void ExpandStartupLogoOnSharedFrameBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ExpandStartupLogoOnSharedFrameBuffer");
+		"Stub hit for Nn.Visrv.Sf.IManagerDisplayService.ExpandStartupLogoOnSharedFrameBuffer".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0xC8: { // AllocateProcessHeapBlock
@@ -729,27 +729,27 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 	protected virtual void GetDisplayLogicalResolution(ulong _0, out uint _1, out uint _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayLogicalResolution not implemented");
 	protected virtual void SetDisplayMagnification(uint _0, uint _1, uint _2, uint _3, ulong _4) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayMagnification");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayMagnification".Log();
 	protected virtual void SetLayerPosition(float _0, float _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerPosition");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerPosition".Log();
 	protected virtual void SetLayerSize(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerSize");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerSize".Log();
 	protected virtual ulong GetLayerZ(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetLayerZ not implemented");
 	protected virtual void SetLayerZ(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerZ");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerZ".Log();
 	protected virtual void SetLayerVisibility(byte _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerVisibility");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerVisibility".Log();
 	protected virtual void SetLayerAlpha(float _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerAlpha");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetLayerAlpha".Log();
 	protected virtual void CreateStrayLayer(uint _0, ulong _1, out ulong _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.CreateStrayLayer not implemented");
 	protected virtual void OpenIndirectLayer(ulong _0, ulong _1, ulong _2, out ulong _3, Span<byte> _4) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.OpenIndirectLayer not implemented");
 	protected virtual void CloseIndirectLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CloseIndirectLayer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CloseIndirectLayer".Log();
 	protected virtual void FlipIndirectLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.FlipIndirectLayer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.FlipIndirectLayer".Log();
 	protected virtual void ListDisplayModes(ulong _0, out ulong _1, Span<byte> _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.ListDisplayModes not implemented");
 	protected virtual void ListDisplayRgbRanges(ulong _0, out ulong _1, Span<uint> _2) =>
@@ -757,57 +757,57 @@ public abstract class _ISystemDisplayService_Base : IpcInterface {
 	protected virtual void ListDisplayContentTypes(ulong _0, out ulong _1, Span<uint> _2) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.ListDisplayContentTypes not implemented");
 	protected virtual void GetDisplayMode(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.GetDisplayMode");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.GetDisplayMode".Log();
 	protected virtual void SetDisplayMode(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayMode");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayMode".Log();
 	protected virtual ulong GetDisplayUnderscan(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayUnderscan not implemented");
 	protected virtual void SetDisplayUnderscan(ulong _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayUnderscan");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayUnderscan".Log();
 	protected virtual uint GetDisplayContentType(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayContentType not implemented");
 	protected virtual void SetDisplayContentType(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayContentType");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayContentType".Log();
 	protected virtual uint GetDisplayRgbRange(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayRgbRange not implemented");
 	protected virtual void SetDisplayRgbRange(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayRgbRange");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayRgbRange".Log();
 	protected virtual uint GetDisplayCmuMode(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayCmuMode not implemented");
 	protected virtual void SetDisplayCmuMode(uint _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayCmuMode");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayCmuMode".Log();
 	protected virtual float GetDisplayContrastRatio(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayContrastRatio not implemented");
 	protected virtual void SetDisplayContrastRatio(float _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayContrastRatio");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayContrastRatio".Log();
 	protected virtual float GetDisplayGamma(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayGamma not implemented");
 	protected virtual void SetDisplayGamma(float _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayGamma");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayGamma".Log();
 	protected virtual float GetDisplayCmuLuma(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetDisplayCmuLuma not implemented");
 	protected virtual void SetDisplayCmuLuma(float _0, ulong _1) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayCmuLuma");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.SetDisplayCmuLuma".Log();
 	protected virtual void GetSharedBufferMemoryHandleId(ulong _0, ulong _1, ulong _2, out uint _3, out ulong _4, Span<byte> _5) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetSharedBufferMemoryHandleId not implemented");
 	protected virtual void OpenSharedLayer(ulong _0, ulong _1, ulong _2) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.OpenSharedLayer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.OpenSharedLayer".Log();
 	protected virtual void CloseSharedLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CloseSharedLayer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CloseSharedLayer".Log();
 	protected virtual void ConnectSharedLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.ConnectSharedLayer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.ConnectSharedLayer".Log();
 	protected virtual void DisconnectSharedLayer(ulong _0) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.DisconnectSharedLayer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.DisconnectSharedLayer".Log();
 	protected virtual void AcquireSharedFrameBuffer(ulong _0, out byte[] _1, out byte[] _2, out ulong _3) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.AcquireSharedFrameBuffer not implemented");
 	protected virtual void PresentSharedFrameBuffer(byte[] _0, byte[] _1, uint _2, uint _3, ulong _4, ulong _5) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.PresentSharedFrameBuffer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.PresentSharedFrameBuffer".Log();
 	protected virtual KObject GetSharedFrameBufferAcquirableEvent(ulong _0) =>
 		throw new NotImplementedException("Nn.Visrv.Sf.ISystemDisplayService.GetSharedFrameBufferAcquirableEvent not implemented");
 	protected virtual void FillSharedFrameBufferColor(uint _0, uint _1, uint _2, uint _3, ulong _4, ulong _5) =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.FillSharedFrameBufferColor");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.FillSharedFrameBufferColor".Log();
 	protected virtual void CancelSharedFrameBuffer() =>
-		Console.WriteLine("Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CancelSharedFrameBuffer");
+		"Stub hit for Nn.Visrv.Sf.ISystemDisplayService.CancelSharedFrameBuffer".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x4B0: { // GetZOrderCountMin

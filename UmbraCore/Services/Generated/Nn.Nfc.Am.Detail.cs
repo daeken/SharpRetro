@@ -5,11 +5,11 @@ namespace UmbraCore.Services.Nn.Nfc.Am.Detail;
 public partial class IAm : _IAm_Base;
 public abstract class _IAm_Base : IpcInterface {
 	protected virtual void Initialize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Am.Detail.IAm.Initialize");
+		"Stub hit for Nn.Nfc.Am.Detail.IAm.Initialize".Log();
 	protected virtual void _Finalize() =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Am.Detail.IAm._Finalize");
+		"Stub hit for Nn.Nfc.Am.Detail.IAm._Finalize".Log();
 	protected virtual void NotifyForegroundApplet(byte[] _0) =>
-		Console.WriteLine("Stub hit for Nn.Nfc.Am.Detail.IAm.NotifyForegroundApplet");
+		"Stub hit for Nn.Nfc.Am.Detail.IAm.NotifyForegroundApplet".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Initialize
