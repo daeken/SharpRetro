@@ -128,6 +128,10 @@ public class MemoryManager {
             Unsafe.CopyBlockUnaligned((void*) dest, (void*) src, (uint) size);
             return 0;
         };
+        game.Callbacks.UnmapMemory = (dest, src, size) => {
+            $"Unmapping memory from 0x{src:X} to 0x{dest:X} (size 0x{size:X})".Log();
+            return 0;
+        };
     }
     
     void MapAt(ulong addr, ulong size) => throw new NotImplementedException();

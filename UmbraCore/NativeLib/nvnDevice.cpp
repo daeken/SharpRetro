@@ -160,6 +160,10 @@ int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
             return 32;
         case NVNdeviceInfo::QueueComputeMemoryDefaultSize:
             return 262144;
+        case NVNdeviceInfo::QueueCommandMemoryDefaultSize:
+            return 65536;
+        case NVNdeviceInfo::QueueControlMemoryDefaultSize:
+            return 16384;
         case NVNdeviceInfo::CommandBufferControlAlignment:
             return 8;
         case NVNdeviceInfo::ShaderScratchMemoryAlignment:
