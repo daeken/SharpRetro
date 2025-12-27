@@ -12,7 +12,7 @@ public partial class IStaticService {
 }
 
 public partial class ISystemClock {
-    protected override ulong GetCurrentTime() => 0xCAFEBABE;
+    protected override ulong GetCurrentTime() => (ulong) DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 }
 
 public partial class ITimeZoneService {

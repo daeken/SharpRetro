@@ -5,11 +5,11 @@ namespace UmbraCore.Services.Nn.Nifm.Detail;
 
 public partial class IRequest {
     protected override void GetSystemEventReadableHandles(out KObject _0, out KObject _1) {
-        _0 = new Event();
-        _1 = new Event();
+        _0 = new Event(triggered: true);
+        _1 = new Event(triggered: true);
     }
 
-    protected override uint GetRequestState() => 0;
+    protected override uint GetRequestState() => 3; // Available
 }
 
 public partial class IGeneralService {

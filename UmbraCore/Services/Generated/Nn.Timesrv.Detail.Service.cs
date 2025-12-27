@@ -310,16 +310,16 @@ public abstract class _ITimeZoneService_Base : IpcInterface {
 			}
 			case 0x64: { // ToCalendarTime
 				ToCalendarTime(im.GetData<ulong>(8), im.GetSpan<byte>(0x15, 0), out var _0, out var _1);
-				om.Initialize(0, 0, 0);
+				om.Initialize(0, 0, 32);
 				*(Nn.Time.CalendarTime*) om.GetDataPointer(8) = _0;
-				*(Nn.Time.Sf.CalendarAdditionalInfo*) om.GetDataPointer(8) = _1;
+				*(Nn.Time.Sf.CalendarAdditionalInfo*) om.GetDataPointer(16) = _1;
 				break;
 			}
 			case 0x65: { // ToCalendarTimeWithMyRule
 				ToCalendarTimeWithMyRule(im.GetData<ulong>(8), out var _0, out var _1);
-				om.Initialize(0, 0, 0);
+				om.Initialize(0, 0, 32);
 				*(Nn.Time.CalendarTime*) om.GetDataPointer(8) = _0;
-				*(Nn.Time.Sf.CalendarAdditionalInfo*) om.GetDataPointer(8) = _1;
+				*(Nn.Time.Sf.CalendarAdditionalInfo*) om.GetDataPointer(16) = _1;
 				break;
 			}
 			case 0xC9: { // ToPosixTime

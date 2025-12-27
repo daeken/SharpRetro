@@ -6,15 +6,16 @@
 PFNNVNGENERICFUNCPTRPROC nvnDeviceGetProcAddress(const NVNdevice* device, const char* name) {
     std::cout << "nvnDeviceGetProcAddress (from device) '" << name << "'" << std::endl;
     NVN_ALL(NVN_FUNC);
-    if(strcmp(name, "nvnDeviceGetProcAddress") == 0) return reinterpret_cast<PFNNVNGENERICFUNCPTRPROC>((void*)nvnDeviceGetProcAddress);
+    if(strcmp(name, "nvnDeviceGetProcAddress") == 0) return reinterpret_cast<PFNNVNGENERICFUNCPTRPROC>(nvnDeviceGetProcAddress);
     std::cout << "Could not find nvn function " << name << std::endl;
     __builtin_trap();
     return nullptr;
 }
 
-void* nvnBootstrapLoader(const char* name) {
+PFNNVNGENERICFUNCPTRPROC nvnBootstrapLoader(const char* name) {
     std::cout << "nvnBootstrapLoader called! '" << name << "'" << std::endl;
-    if(strcmp(name, "nvnDeviceGetProcAddress") == 0)
-        return reinterpret_cast<void*>(nvnDeviceGetProcAddress);
+    if(strcmp(name, "nvnDeviceGetProcAddress") == 0)return reinterpret_cast<void*>(nvnDeviceGetProcAddress);
+    NVN_ALL(NVN_FUNC);
+    __builtin_trap();
     return nullptr;
 }

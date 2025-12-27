@@ -117,7 +117,7 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
             cb += $"protected virtual {retType} {Rename(func.Name)}({string.Join(", ", args)}) =>";
             cb++;
             if(func.Outputs.Count == 0)
-                cb += $"Console.WriteLine(\"Stub hit for {csns}.{Rename(name)}.{Rename(func.Name)}\");";
+                cb += $"\"Stub hit for {csns}.{Rename(name)}.{Rename(func.Name)}\".Log();";
             else
                 cb += $"throw new NotImplementedException(\"{csns}.{Rename(name)}.{Rename(func.Name)} not implemented\");";
             cb--;
@@ -137,6 +137,15 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
             var copyOutOffset = 0;
             var bufferNums = new Dictionary<int, int>();
             var after = new CodeBuilder();
+
+            int GetSize(IpcType type) => type switch {
+                IpcType.StructType(var fields) => fields.Select(x => GetSize(x.Type)).Sum(),
+                IpcType.IntType(var bits, var signed) => bits / 8,
+                IpcType.FloatType(var bits) => bits / 8,
+                IpcType.BoolType => 4,
+                IpcType.BytesType(var size, _) => size,
+                _ => throw new NotImplementedException($"Can't get size for {type}"),
+            };
 
             string GenInputArg(IpcType type) {
                 void Align(int align) {
@@ -241,7 +250,8 @@ static void BuildNamespace(string nsName, Dictionary<string, IpcType> typedefs, 
                         break;
                     case IpcType.StructType { Alignment: var alignment }:
                         Align(alignment == -1 ? 8 : alignment);
-                        after += $"*({GenType(type)}*) om.GetDataPointer({outputOffset}) = {vname};"; // TODO: Inc offset
+                        after += $"*({GenType(type)}*) om.GetDataPointer({outputOffset}) = {vname};";
+                        outputOffset += GetSize(type);
                         break;
                     case IpcType.ArrayType(var etype, var length): {
                         Debug.Assert(length > 0);

@@ -9,6 +9,6 @@ public:
     static void SetGraphicsAllocator(void*, void*, void*, void*);
 };
 
-void* nvnBootstrapLoader(const char*);
+PFNNVNGENERICFUNCPTRPROC nvnBootstrapLoader(const char*);
 
 #endif //NATIVELIB_NV_H

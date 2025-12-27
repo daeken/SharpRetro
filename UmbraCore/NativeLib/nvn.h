@@ -47,7 +47,6 @@ struct NVNdrawTextureRegion {};
 
 // Enum types
 typedef int NVNboolean;
-typedef int NVNdeviceInfo;
 typedef int NVNwindowOriginMode;
 typedef int NVNdepthMode;
 typedef int NVNformat;
@@ -110,6 +109,107 @@ typedef void* PFNNVNGENERICFUNCPTRPROC;
 typedef void (*PFNNVNDEBUGCALLBACKPROC)(void*, void*, void*, void*);
 typedef void (*PFNNVNWALKDEBUGDATABASECALLBACKPROC)(void*, void*);
 typedef void (*PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC)(void*, void*, void*);
+
+enum class NVNdeviceInfo : int {
+    ApiMajorVersion                                   = 0x0,
+    ApiMinorVersion                                   = 0x1,
+    UniformBufferBindingsPerStage                     = 0x2,
+    MaxUniformBufferSize                              = 0x3,
+    UniformBufferAlignment                            = 0x4,
+    ColorBufferBindings                               = 0x5,
+    VertexBufferBindings                              = 0x6,
+    TransformFeedbackBufferBindings                   = 0x7,
+    ShaderStorageBufferBindingsPerStage               = 0x8,
+    TextureBindingsPerStage                           = 0x9,
+    CounterAlignment                                  = 0xA,
+    TransformFeedbackBufferAlignment                  = 0xB,
+    TransformFeedbackControlAlignment                 = 0xC,
+    IndirectDrawAlignment                             = 0xD,
+    VertexAttributes                                  = 0xE,
+    TextureDescriptorSize                             = 0xF,
+    SamplerDescriptorSize                             = 0x10,
+    ReservedTextureDescriptors                        = 0x11,
+    ReservedSamplerDescriptors                        = 0x12,
+    CommandBufferCommandAlignment                     = 0x13,
+    CommandBufferControlAlignment                     = 0x14,
+    CommandBufferMinCommandSize                       = 0x15,
+    CommandBufferMinControlSize                       = 0x16,
+    ShaderScratchMemoryScaleFactorMinimum             = 0x17,
+    ShaderScratchMemoryScaleFactorRecommended         = 0x18,
+    ShaderScratchMemoryAlignment                      = 0x19,
+    ShaderScratchMemoryGranularity                    = 0x1A,
+    MaxTextureAnisotropy                              = 0x1B,
+    MaxComputeWorkGroupSizeX                          = 0x1C,
+    MaxComputeWorkGroupSizeY                          = 0x1D,
+    MaxComputeWorkGroupSizeZ                          = 0x1E,
+    MaxComputeWorkGroupSizeThreads                    = 0x1F,
+    MaxComputeDispatchWorkGroupsX                     = 0x20,
+    MaxComputeDispatchWorkGroupsY                     = 0x21,
+    MaxComputeDispatchWorkGroupsZ                     = 0x22,
+    ImageBindingsPerStage                             = 0x23,
+    MaxTexturePoolSize                                = 0x24,
+    MaxSamplerPoolSize                                = 0x25,
+    MaxViewports                                      = 0x26,
+    MempoolTextureObjectPageAlignment                 = 0x27,
+    SupportsMinMaxFiltering                           = 0x28,
+    SupportsStencil8Format                            = 0x29,
+    SupportsAstcFormats                               = 0x2A,
+    L2Size                                            = 0x2B,
+    MaxTextureLevels                                  = 0x2C,
+    MaxTextureLayers                                  = 0x2D,
+    GlslcMaxSupportedGpuCodeMajorVersion              = 0x2E,
+    GlslcMinSupportedGpuCodeMajorVersion              = 0x2F,
+    GlslcMaxSupportedGpuCodeMinorVersion              = 0x30,
+    GlslcMinSupportedGpuCodeMinorVersion              = 0x31,
+    SupportsConservativeRaster                        = 0x32,
+    SubpixelBits                                      = 0x33,
+    MaxSubpixelBiasBits                               = 0x34,
+    IndirectDispatchAlignment                         = 0x35,
+    ZcullSaveRestoreAlignment                         = 0x36,
+    ShaderScratchMemoryComputeScaleFactorMinimum      = 0x37,
+    LinearTextureStrideAlignment                      = 0x38,
+    LinearRenderTargetStrideAlignment                 = 0x39,
+    MemoryPoolPageSize                                = 0x3A,
+    SupportsZeroFromUnmappedVirtualPoolPages          = 0x3B,
+    UniformBufferUpdateAlignment                      = 0x3C,
+    MaxTextureSize                                    = 0x3D,
+    MaxBufferTextureSize                              = 0x3E,
+    Max3DTextureSize                                  = 0x3F,
+    MaxCubeMapTextureSize                             = 0x40,
+    MaxRectangleTextureSize                           = 0x41,
+    SupportsPassthroughGeometryShaders                = 0x42,
+    SupportsViewportSwizzle                           = 0x43,
+    SupportsSparseTiledPackagedTextures               = 0x44,
+    SupportsAdvancedBlendModes                        = 0x45,
+    MaxPresentInterval                                = 0x46,
+    SupportsDrawTexture                               = 0x47,
+    SupportsTargetIndependentRasterization            = 0x48,
+    SupportsFragmentCoverageToColor                   = 0x49,
+    SupportsPostDepthCoverage                         = 0x4A,
+    SupportsImagesUsingTextureHandles                 = 0x4B,
+    SupportsSampleLocations                           = 0x4C,
+    MaxSampleLocationTableEntries                     = 0x4D,
+    ShaderCodeMemoryPoolPaddingSize                   = 0x4E,
+    MaxPatchSize                                      = 0x4F,
+    QueueCommandMemoryGranularity                     = 0x50,
+    QueueCommandMemoryMinSize                         = 0x51,
+    QueueCommandMemoryDefaultSize                     = 0x52,
+    QueueComputeMemoryGranularity                     = 0x53,
+    QueueComputeMemoryMinSize                         = 0x54,
+    QueueComputeMemoryDefaultSize                     = 0x55,
+    QueueCommandMemoryMinFlushThreshold               = 0x56,
+    SupportsFragmentShaderInterlock                   = 0x57,
+    MaxTexturesPerWindow                              = 0x58,
+    MinTexturesPerWindow                              = 0x59,
+    SupportsDebugLayer                                = 0x5A,
+    QueueControlMemoryMinSize                         = 0x5B,
+    QueueControlMemoryDefaultSize                     = 0x5C,
+    QueueControlMemoryGranularity                     = 0x5D,
+    SeparateTextureBindingsPerStage                   = 0x5E,
+    SeparateSamplerBindingsPerStage                   = 0x5F,
+    DebugGroupsMaxDomainId                            = 0x60,
+    EventsSupportReductionOperations                  = 0x61,
+};
 
 void nvnDeviceBuilderSetDefaults(NVNdeviceBuilder* builder);
 void nvnDeviceBuilderSetFlags(NVNdeviceBuilder* builder, int flags);
@@ -709,11 +809,14 @@ with(nvnCommandBufferMultiDrawArraysIndirectCount) \
 with(nvnCommandBufferMultiDrawElementsIndirectCount) \
 with(nvnCommandBufferPauseTransformFeedback) \
 with(nvnCommandBufferPopDebugGroup) \
+with(nvnCommandBufferPopDebugGroupId) \
 with(nvnCommandBufferPushDebugGroup) \
 with(nvnCommandBufferReportCounter) \
 with(nvnCommandBufferReportValue) \
 with(nvnCommandBufferResetCounter) \
 with(nvnCommandBufferResolveDepthBuffer) \
+with(nvnCommandBufferPushDebugGroupStatic) \
+with(nvnCommandBufferPushDebugGroupDynamic) \
 with(nvnCommandBufferRestoreZCullData) \
 with(nvnCommandBufferResumeTransformFeedback) \
 with(nvnCommandBufferSaveZCullData) \
@@ -754,6 +857,10 @@ with(nvnCommandBufferSetSubpixelPrecisionBias) \
 with(nvnCommandBufferSetTexturePool) \
 with(nvnCommandBufferSetTiledCacheAction) \
 with(nvnCommandBufferSetTiledCacheTileSize) \
+with(nvnCommandBufferBindSeparateTexture) \
+with(nvnCommandBufferBindSeparateSampler) \
+with(nvnCommandBufferBindSeparateTextures) \
+with(nvnCommandBufferBindSeparateSamplers) \
 with(nvnCommandBufferSetViewport) \
 with(nvnCommandBufferSetViewportSwizzles) \
 with(nvnCommandBufferSetViewports) \
@@ -778,6 +885,9 @@ with(nvnDeviceBuilderSetDefaults) \
 with(nvnDeviceBuilderSetFlags) \
 with(nvnDeviceFinalize) \
 with(nvnDeviceFinalizeCommandHandle) \
+with(nvnDeviceWalkDebugDatabase) \
+with(nvnDeviceGetSeparateTextureHandle) \
+with(nvnDeviceGetSeparateSamplerHandle) \
 with(nvnDeviceGetCurrentTimestampInNanoseconds) \
 with(nvnDeviceGetDepthMode) \
 with(nvnDeviceGetImageHandle) \
@@ -917,6 +1027,7 @@ with(nvnSamplerPoolGetMemoryPool) \
 with(nvnSamplerPoolGetSize) \
 with(nvnSamplerPoolInitialize) \
 with(nvnSamplerPoolRegisterSampler) \
+with(nvnSamplerPoolRegisterSamplerBuilder) \
 with(nvnSamplerPoolSetDebugLabel) \
 with(nvnSamplerSetDebugLabel) \
 with(nvnSyncFinalize) \
@@ -997,6 +1108,7 @@ with(nvnTexturePoolRegisterImage) \
 with(nvnTexturePoolRegisterTexture) \
 with(nvnTexturePoolSetDebugLabel) \
 with(nvnTextureReadTexels) \
+with(nvnTextureReadTexelsStrided) \
 with(nvnTextureSetDebugLabel) \
 with(nvnTextureViewCompare) \
 with(nvnTextureViewGetDepthStencilMode) \
@@ -1013,6 +1125,7 @@ with(nvnTextureViewSetLevels) \
 with(nvnTextureViewSetSwizzle) \
 with(nvnTextureViewSetTarget) \
 with(nvnTextureWriteTexels) \
+with(nvnTextureWriteTexelsStrided) \
 with(nvnVertexAttribStateGetFormat) \
 with(nvnVertexAttribStateGetStreamIndex) \
 with(nvnVertexAttribStateSetDefaults) \
@@ -1036,6 +1149,7 @@ with(nvnWindowGetNativeWindow) \
 with(nvnWindowGetPresentInterval) \
 with(nvnWindowInitialize) \
 with(nvnWindowSetCrop) \
+with(nvnWindowGetCrop) \
 with(nvnWindowSetDebugLabel) \
 with(nvnWindowSetPresentInterval)
 

@@ -31,7 +31,7 @@ public class Rtld {
     static unsafe ulong OutputAccessLogBare(
         uint result, ulong tick, ulong tick2, byte* func, ulong unk, byte* message, byte* arg
     ) {
-        $"OutputAccessLogBare(0x{result:X}, '{Marshal.PtrToStringAnsi((IntPtr) func)}', 0x{unk:X}, '{Marshal.PtrToStringAnsi((IntPtr) message)}', '{Marshal.PtrToStringAnsi((IntPtr) arg)}')".Log();
+        //$"OutputAccessLogBare(0x{result:X}, '{Marshal.PtrToStringAnsi((IntPtr) func)}', 0x{unk:X}, '{Marshal.PtrToStringAnsi((IntPtr) message)}', '{Marshal.PtrToStringAnsi((IntPtr) arg)}')".Log();
         return 0;
     }
 

@@ -84,9 +84,6 @@ public class MainLoop {
         };
         Kernel.Setup(Game, romFsPath);
         Game.Setup();
-        "Done with setup!".Log();
-        "Press enter to continue...".Log();
-        Console.ReadLine();
         if(false) {
             var thread = Kernel.ThreadManager.CurrentThread;
             thread.CpuState->X0 = 0;
