@@ -11,6 +11,8 @@ void nvnMemoryPoolBuilderSetDefaults(NVNmemoryPoolBuilder* builder) {
 
 void nvnMemoryPoolBuilderSetStorage(NVNmemoryPoolBuilder* builder, void* memory, size_t size) {
     std::cout << "nvnMemoryPoolBuilderSetStorage called! size: " << size << std::endl;
+    builder->pool = memory;
+    builder->size = size;
 }
 
 void nvnMemoryPoolBuilderSetFlags(NVNmemoryPoolBuilder* builder, int flags) {
@@ -33,6 +35,8 @@ NVNmemoryPoolFlags nvnMemoryPoolBuilderGetFlags(const NVNmemoryPoolBuilder* buil
 
 NVNboolean nvnMemoryPoolInitialize(NVNmemoryPool* pool, const NVNmemoryPoolBuilder* builder) {
     std::cout << "nvnMemoryPoolInitialize called!" << std::endl;
+    pool->pool = builder->pool;
+    pool->size = builder->size;
     return 1;
 }
 
@@ -46,7 +50,7 @@ void nvnMemoryPoolFinalize(NVNmemoryPool* pool) {
 
 void* nvnMemoryPoolMap(const NVNmemoryPool* pool) {
     std::cout << "nvnMemoryPoolMap() called!" << std::endl;
-    return nullptr;
+    return pool->pool;
 }
 
 void nvnMemoryPoolFlushMappedRange(const NVNmemoryPool* pool, ptrdiff_t offset, size_t size) {

@@ -48,7 +48,7 @@ void* nvnBufferMap(const NVNbuffer* buffer) {
 
 NVNbufferAddress nvnBufferGetAddress(const NVNbuffer* buffer) {
     std::cout << "nvnBufferGetAddress() called!" << std::endl;
-    return 0;
+    return 0xDEADBEEF00120000;
 }
 
 void nvnBufferFlushMappedRange(const NVNbuffer* buffer, ptrdiff_t offset, size_t size) {

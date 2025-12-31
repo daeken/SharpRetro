@@ -1,6 +1,7 @@
 #include "library.h"
 #include "nv.h"
 #include "vi.h"
+#include "glslc.h"
 
 #define hook(name, func) regFunc(name, reinterpret_cast<void*>(func))
 
@@ -17,4 +18,12 @@ void setupHooks(const hookRegister_t regFunc) {
     hook("_ZN2nn2vi19SetLayerScalingModeEPNS0_5LayerENS0_11ScalingModeE", nn::vi::SetLayerScalingMode);
     hook("_ZN2nn2vi12DestroyLayerEPNS0_5LayerE", nn::vi::DestroyLayer);
     hook("_ZN2nn2vi15GetNativeWindowEPPvPNS0_5LayerE", nn::vi::GetNativeWindow);
+
+    hook("glslcCompilePreSpecialized", glslcCompilePreSpecialized);
+    hook("glslcCompileSpecialized", glslcCompileSpecialized);
+    hook("glslcInitialize", glslcInitialize);
+    hook("glslcFinalize", glslcFinalize);
+    hook("glslcGetVersion", glslcGetVersion);
+    hook("glslcSetAllocator", glslcSetAllocator);
+    hook("glslcGetDefaultOptions", glslcGetDefaultOptions);
 }

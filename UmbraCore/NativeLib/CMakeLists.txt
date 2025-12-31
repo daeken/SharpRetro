@@ -33,4 +33,6 @@ add_library(NativeLib SHARED library.cpp
         nvnCommandBuffer.cpp
         nvnSync.cpp
         nvnEvent.cpp
-        nvnBootstrap.cpp)
+        nvnBootstrap.cpp
+        glslc.h
+        glslc.cpp)

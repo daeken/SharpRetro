@@ -10,8 +10,14 @@ struct NVNqueueBuilder {};
 struct NVNwindow {};
 struct NVNwindowBuilder {};
 struct NVNprogram {};
-struct NVNmemoryPool {};
-struct NVNmemoryPoolBuilder {};
+struct NVNmemoryPool {
+    void* pool;
+    uint64_t size;
+};
+struct NVNmemoryPoolBuilder {
+    void* pool;
+    uint64_t size;
+};
 struct NVNtexturePool {};
 struct NVNsamplerPool {};
 struct NVNbuffer {};
@@ -109,6 +115,16 @@ typedef void* PFNNVNGENERICFUNCPTRPROC;
 typedef void (*PFNNVNDEBUGCALLBACKPROC)(void*, void*, void*, void*);
 typedef void (*PFNNVNWALKDEBUGDATABASECALLBACKPROC)(void*, void*);
 typedef void (*PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC)(void*, void*, void*);
+
+enum class NVNshaderStageBits : int {
+    VertexBit = 0x1,
+    FragmentBit = 0x2,
+    GeometryBit = 0x4,
+    TessControlBit = 0x8,
+    TessEvaluationBit = 0x10,
+    ComputeBit = 0x20,
+    AllGraphicsBits = 31,
+};
 
 enum class NVNdeviceInfo : int {
     ApiMajorVersion                                   = 0x0,

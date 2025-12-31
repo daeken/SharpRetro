@@ -164,6 +164,8 @@ int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
             return 65536;
         case NVNdeviceInfo::QueueControlMemoryDefaultSize:
             return 16384;
+        case NVNdeviceInfo::CommandBufferCommandAlignment:
+            return 4;
         case NVNdeviceInfo::CommandBufferControlAlignment:
             return 8;
         case NVNdeviceInfo::ShaderScratchMemoryAlignment:
@@ -174,6 +176,17 @@ int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
             return 256;
         case NVNdeviceInfo::LinearRenderTargetStrideAlignment:
             return 128;
+        case NVNdeviceInfo::MaxSamplerPoolSize:
+            return 4096;
+        case NVNdeviceInfo::MaxTexturePoolSize:
+            return 1048576;
+        case NVNdeviceInfo::GlslcMinSupportedGpuCodeMajorVersion:
+        case NVNdeviceInfo::GlslcMaxSupportedGpuCodeMajorVersion:
+            return 1;
+        case NVNdeviceInfo::GlslcMinSupportedGpuCodeMinorVersion:
+            return 5;
+        case NVNdeviceInfo::GlslcMaxSupportedGpuCodeMinorVersion:
+            return 14;
         default:
             __builtin_trap();
     }
@@ -196,7 +209,7 @@ void nvnDeviceSetIntermediateShaderCache(NVNdevice* device, int i) {
 
 NVNtextureHandle nvnDeviceGetTextureHandle(const NVNdevice* device, int textureID, int samplerID) {
     std::cout << "nvnDeviceGetTextureHandle(textureID=" << textureID << ", samplerID=" << samplerID << ") called!" << std::endl;
-    return 0;
+    return 0xDEADBEEFCAFEBA00;
 }
 
 NVNtextureHandle nvnDeviceGetTexelFetchHandle(const NVNdevice* device, int textureID) {

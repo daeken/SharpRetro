@@ -63,7 +63,7 @@ void nvnTextureBuilderSetDepthStencilMode(NVNtextureBuilder* builder, NVNtexture
 
 size_t nvnTextureBuilderGetStorageSize(const NVNtextureBuilder* builder) {
     std::cout << "nvnTextureBuilderGetStorageSize() called!" << std::endl;
-    return 0;
+    return 0x9000; // Random number chosen
 }
 
 size_t nvnTextureBuilderGetStorageAlignment(const NVNtextureBuilder* builder) {

@@ -14,7 +14,7 @@ public class MiscManager {
                 (5, 0) => Kernel.MemoryManager.HeapSize,
                 (6, 0) => 0x1_00000000, // Total memory
                 (7, 0) => 0x40000000, // Used memory
-                (8, 0) => 0,
+                (8, 0) => 1, // Is debugger attached
                 (11, 2) => 0xDEADBEEF,
                 (11, 3) => 0xCAFEBABE,
                 (12, 0) => 0,
