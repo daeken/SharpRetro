@@ -1,0 +1,3 @@
+interface nn::lm::ILogService is lm {
+	[0] Initialize(u64, pid) -> object<nn::lm::ILogger> Log;
+}
