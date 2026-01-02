@@ -176,6 +176,8 @@ int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
             return 256;
         case NVNdeviceInfo::LinearRenderTargetStrideAlignment:
             return 128;
+        case NVNdeviceInfo::LinearTextureStrideAlignment:
+            return 32;
         case NVNdeviceInfo::MaxSamplerPoolSize:
             return 4096;
         case NVNdeviceInfo::MaxTexturePoolSize:

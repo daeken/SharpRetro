@@ -9,7 +9,10 @@ public partial class IRequest {
         _1 = new Event(triggered: true);
     }
 
-    protected override uint GetRequestState() => 3; // Available
+    protected override uint GetRequestState() => 4; // Blocking
+    protected override void GetResult() {
+        Thread.Sleep(10000); // TODO: Actually unfuck nifm, but for now this works
+    }
 }
 
 public partial class IGeneralService {

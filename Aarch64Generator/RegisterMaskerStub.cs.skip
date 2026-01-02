@@ -1,0 +1,14 @@
+// ReSharper disable CheckNamespace
+#pragma warning disable 162, 1633, 164, 219
+namespace Aarch64Cpu;
+using System.Runtime.Intrinsics;
+using static Aarch64Common.Common;
+using Math = LibSharpRetro.CpuHelpers.Math;
+
+public partial class RegisterMasker {
+    public IEnumerable<(bool PossiblySp, int Shift)> GetMasks(uint insn) {
+        unchecked {
+/*%CODE%*/
+        }
+    }
+}

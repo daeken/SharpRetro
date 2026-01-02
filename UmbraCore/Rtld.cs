@@ -39,6 +39,10 @@ public class Rtld {
         return (ulong*) 1;
     }
 
+    static unsafe void KageLog(void* logger, char* message) {
+        Console.WriteLine($"Kage log: '{Marshal.PtrToStringAnsi((IntPtr) message)!.Trim()}'");
+    }
+
     public unsafe Rtld(List<ExeModule> modules) {
         foreach(var module in modules)
             foreach(var symbol in module.Symbols) {
@@ -60,7 +64,10 @@ public class Rtld {
         SymbolAddrs["_ZN2nn2fs6detail15OutputAccessLogENS_6ResultENS_2os4TickES4_PKcPKvS6_z"] =
             (ulong) Marshal.GetFunctionPointerForDelegate(OutputAccessLogBare);
         SymbolAddrs["_ZN2nn2fs6detail18IsEnabledAccessLogEv"] =
+        SymbolAddrs["_ZN4KAGE7Filesys6Logger9IsLoggingENS1_8eLogTypeE"] = 
             (ulong) Marshal.GetFunctionPointerForDelegate(IsEnabledAccessLog);
+        //SymbolAddrs["_ZN4KAGE7Filesys6Logger3LogEPKcNS1_8eLogTypeE"] = 
+        //    (ulong) Marshal.GetFunctionPointerForDelegate(KageLog);
         foreach(var module in modules) {
             if(module.Dynamic.TryGetValue(DynamicKey.REL, out var start)) {
                 var rels = module.Binary.Read<ulong, uint, uint>(start, (int) module.Dynamic[DynamicKey.RELCOUNT]);

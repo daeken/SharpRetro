@@ -175,9 +175,9 @@ public class SyncManager {
             return 0;
         };
         game.Callbacks.ArbitrateLock = (curThread, mutexAddr, reqThread) => {
-            $"LockMutex(0x{curThread:X}, 0x{mutexAddr:X}, 0x{reqThread:X})".Log();
+            //$"LockMutex(0x{curThread:X}, 0x{mutexAddr:X}, 0x{reqThread:X})".Log();
             EnsureMutex(mutexAddr).WaitOne();
-            "Locked mutex".Log();
+            //"Locked mutex".Log();
             *(uint*) mutexAddr = (*(uint*) mutexAddr & 0x40000000) | (uint) reqThread;
             return 0;
         };

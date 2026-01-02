@@ -23,7 +23,7 @@ public unsafe class GameWrapper {
 
         Callbacks.NativeReentry = (state, op, a, b, replAddr) => {
             try {
-                if(op != 3) {
+                if(op != 3 && !(op == 1 && a is 0x1A or 0x1B)) {
                     Log(() => {
                         $"Native reentry (thread {Kernel.ThreadManager.CurrentThread.Handle:X}) from {0x71_00000000 + replAddr:X} ({op})".Log();
                         Kernel.StackTrace((ulong*) state);
@@ -33,7 +33,9 @@ public unsafe class GameWrapper {
                     case 0:
                         throw new NotImplementedException($"Brk? 0x{a:X}");
                     case 1:
-                        $"Svc 0x{a:X}".Log();
+                        // This is going to bite us in the ass at some point debugging-wise
+                        if(a is not 0x1A and not 0x1B)
+                            $"Svc 0x{a:X}".Log();
                         switch(a) {
                             case 0x01:
                                 state->X0 = Callbacks.SetHeapSize(state->X1, ref state->X1);

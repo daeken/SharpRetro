@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UmbraCore.Services.Nn.Time.Sf;
 using UmbraCore.Services.Nn.Time;
 
@@ -16,16 +17,23 @@ public partial class ISystemClock {
 }
 
 public partial class ITimeZoneService {
-    protected override void ToCalendarTimeWithMyRule(ulong _0, out CalendarTime _1, out CalendarAdditionalInfo _2) {
+    protected override unsafe void ToCalendarTimeWithMyRule(ulong _0, out CalendarTime _1, out CalendarAdditionalInfo _2) {
         $"ToCalendarTimeWithMyRule(0x{_0:X})".Log();
         _1 = new CalendarTime {
-            Year = 2025,
-            Month = 12,
-            Day = 25,
+            Year = 2026,
+            Month = 1,
+            Day = 1,
             Hour = 13,
-            Minute = 14,
-            Second = 15,
+            Minute = 37,
+            Second = 00,
         };
-        _2 = new CalendarAdditionalInfo();
+        _2 = new CalendarAdditionalInfo {
+            Tm_wday = 1,
+            Tm_yday = 1,
+            Utc_offset_seconds = 1,
+            Is_daylight_saving_time = false,
+        };
+        fixed(byte* ptr = _2.Tz_name)
+            "GMT"u8.CopyTo(new Span<byte>(ptr, 8));
     }
 }
