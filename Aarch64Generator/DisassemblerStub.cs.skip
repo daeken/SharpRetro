@@ -16,5 +16,13 @@ public partial class Disassembler {
         return null;
     }
 
+    public static IEnumerable<(bool PossiblySp, bool IsRead, bool IsWritten, int Shift)> GetGprMasks(uint insn) {
+/*%MASK_CODE%*/
+    }
+    
+    public static bool IsPcDependent(uint insn) {
+        return /*%PCD_CODE%*/;
+    }
+    
     public const int InstructionCount = /*%IC_COUNT%*/ + 0;
 }

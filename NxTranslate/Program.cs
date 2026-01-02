@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Aarch64Cpu;
 using LibSharpRetro;
 using NxCommon;
 using NxTranslate;
@@ -11,7 +12,7 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.Stp(R.X23, R.X24, R.SP, 16 * 3);
     asm.Stp(R.X21, R.X22, R.SP, 16 * 4);
     asm.Stp(R.X19, R.X20, R.SP, 16 * 5);
-    asm.Stp(R.X17, R.X18, R.SP, 16 * 6);
+    asm.Stp(R.X17, R.XZR, R.SP, 16 * 6);
     asm.Stp(R.X15, R.X16, R.SP, 16 * 7);
     asm.Stp(R.X13, R.X14, R.SP, 16 * 8);
     asm.Stp(R.X11, R.X12, R.SP, 16 * 9);
@@ -34,7 +35,7 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.Ldp(R.X11, R.X12, R.SP, 16 * 9);
     asm.Ldp(R.X13, R.X14, R.SP, 16 * 8);
     asm.Ldp(R.X15, R.X16, R.SP, 16 * 7);
-    asm.Ldp(R.X17, R.X18, R.SP, 16 * 6);
+    asm.Ldp(R.X17, R.XZR, R.SP, 16 * 6);
     asm.Ldp(R.X19, R.X20, R.SP, 16 * 5);
     asm.Ldp(R.X21, R.X22, R.SP, 16 * 4);
     asm.Ldp(R.X23, R.X24, R.SP, 16 * 3);
@@ -102,6 +103,41 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
         if(insn == null) continue;
         problematic.Add((j - mod.TextStart, insn));
     }
+
+    var x18Usage = new List<(ulong Addr, List<int> Shifts)>();
+    for(var j = mod.TextStart; j < mod.TextEnd; j += 4) {
+        var insn = mod.Load<uint>(j);
+        var shifts = Disassembler.GetGprMasks(insn)
+            .Select(x => x.Shift)
+            .Where(shift => ((insn >> shift) & 0b11111) == 18)
+            .ToList();
+        if(shifts.Count != 0)
+            x18Usage.Add((j, shifts));
+    }
+
+    var groupRange = 25UL;
+    var regRange = 100UL;
+    var groupedUsages = x18Usage.GroupByProximity(groupRange * 4UL, x => x.Addr).ToList();
+    var safeGroups = groupedUsages.Select(group => {
+        var start = Math.Max(mod.TextStart, group.MinBy(x => x.Addr).Addr - regRange * 4);
+        var end = Math.Min(mod.TextEnd, group.MaxBy(x => x.Addr).Addr + regRange * 4);
+        var regsUsed = new HashSet<int>();
+        for(var j = start; j < end; j += 4) {
+            var insn = mod.Load<uint>(j);
+            var regs = Disassembler.GetGprMasks(insn)
+                .Select(x => (int) ((insn >> x.Shift) & 0b11111));
+            foreach(var reg in regs)
+                regsUsed.Add(reg);
+        }
+        var safeReg = 0;
+        for(var reg = 28; reg >= 19; reg--)
+            if(!regsUsed.Contains(reg)) {
+                safeReg = reg;
+                break;
+            }
+        return safeReg;
+    }).Where(x => x != 0).ToList();
+    Console.WriteLine($"Found X18 usages: {x18Usage.Count} / {groupedUsages.Count} / {safeGroups.Count}");
 
     var textStart = mod.TextStart - mod.LoadBase;
     var textEnd = mod.TextEnd - mod.LoadBase;
@@ -212,7 +248,7 @@ SaveLoadAll(glue, asm => {
     asm.Ldp(R.X12, R.X13, R.X30, 16 * 7);
     asm.Ldp(R.X14, R.X15, R.X30, 16 * 8);
     asm.Ldp(R.X16, R.X17, R.X30, 16 * 9);
-    asm.Ldp(R.X18, R.X19, R.X30, 16 * 10);
+    asm.Ldp(R.XZR, R.X19, R.X30, 16 * 10);
     asm.Ldp(R.X20, R.X21, R.X30, 16 * 11);
     asm.Ldp(R.X22, R.X23, R.X30, 16 * 12);
     asm.Ldp(R.X24, R.X25, R.X30, 16 * 13);

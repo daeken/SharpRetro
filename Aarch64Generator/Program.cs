@@ -11,7 +11,6 @@ public class Program : Core {
 		BuildDisassembler(defs);
 		//BuildInterpreter(defs);
 		BuildRecompiler(defs);
-		BuildRegisterMasker(defs);
 
 		//CleanupCode("../Aarch64Cpu/Generated");
 	}
@@ -46,12 +45,78 @@ public class Program : Core {
 			c += $"{NextLabel}:";
 			ic += $"{NextLabel}:";
 		}
+		
+		var gprc = new CodeBuilder();
+		gprc += 2;
+		var isFirst = true;
+		
+		foreach(var def in defs) {
+			var regSet = new HashSet<(bool PossiblySp, bool IsRead, bool IsWritten, string Name)>();
+			void FindRegisters(PTree elem) {
+				if(elem is not PList list) return;
+				if(list.Count is 2 or 3 && list[0] is PName(var name)) {
+					if(name == "=" && list.Count == 3 &&
+					   list[1] is PList { Count: 2 } slist &&
+					   slist[0] is PName(var sname and ("gpr32" or "gpr64" or "gpr-or-sp32" or "gpr-or-sp64")) &&
+					   slist[1] is PName(var sregname)
+					) {
+						regSet.Add((sname is "gpr-or-sp32" or "gpr-or-sp64", false, true, sregname));
+						FindRegisters(list[2]);
+						return;
+					}
+					if(name is "gpr32" or "gpr64" or "gpr-or-sp32" or "gpr-or-sp64")
+						if(list[1] is PName(var regname)) {
+							regSet.Add((name is "gpr-or-sp32" or "gpr-or-sp64", true, false, regname));
+							return;
+						}
+				}
+				foreach(var selem in list)
+					FindRegisters(selem);
+			}
+			FindRegisters(def.Eval);
+			if(regSet.Count == 0) continue;
+			regSet = new(regSet.GroupBy(x => x.Name).Select(x => (
+				x.Any(y => y.PossiblySp),
+				x.Any(y => y.IsRead),
+				x.Any(y => y.IsWritten),
+				x.Key
+			)));
+			gprc += $"/* {def.Name} */";
+			gprc += $"{(!isFirst ? "else " : "")}if((insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}) {{";
+			isFirst = false;
+			gprc++;
+			foreach(var (psp, r, w, reg) in regSet) {
+				Debug.Assert(def.Fields.ContainsKey(reg));
+				var shift = def.Fields[reg].Shift;
+				gprc += $"yield return ({(psp ? "true" : "false")}, {(r ? "true" : "false")}, {(w ? "true" : "false")}, {shift});";
+			}
+			gprc--;
+			gprc += "}";
+		}
+
+		var pcDependent = new List<string>();
+		foreach(var def in defs) {
+			var isDep = false;
+
+			void FindDependent(PTree elem) {
+				if(elem is not PList list || list.Count < 1) return;
+				if(list.Count == 1 && list[0] is PName("pc"))
+					isDep = true;
+			}
+			def.Decode.WalkLeaves(FindDependent);
+			def.Eval.WalkLeaves(FindDependent);
+			
+			if(isDep)
+				pcDependent.Add($"/* {def.Name} */ (insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}");
+		}
 
 		using var fp = File.Open("../Aarch64Cpu/Generated/Disassembler.cs", FileMode.Create);
 		using var sw = new StreamWriter(fp);
 		sw.Write(File.ReadAllText("DisassemblerStub.cs.skip")
 			.Replace("/*%D_CODE%*/", c.Code)
 			.Replace("/*%IC_CODE%*/", ic.Code)
+			.Replace("/*%MASK_CODE%*/", gprc.Code)
+			.Replace("/*%PCD_CODE%*/", string.Join(" || \n\t\t\t", pcDependent))
 			.Replace("/*%IC_COUNT%*/", defs.Count.ToString()));
 	}
 	
@@ -105,44 +170,6 @@ public class Program : Core {
 		using var fp = File.Open("../Aarch64Cpu/Generated/Recompiler.cs", FileMode.Create);
 		using var sw = new StreamWriter(fp);
 		sw.Write(File.ReadAllText("RecompilerStub.cs.skip").Replace("/*%CODE%*/", c.Code));
-	}
-
-	static void BuildRegisterMasker(List<Aarch64Def> defs) {
-		var c = new CodeBuilder();
-		c += 2;
-		var labelNum = 0;
-		
-		foreach(var def in defs) {
-			NextLabel = $"insn_{++labelNum}";
-			c += $"/* {def.Name} */";
-			c += $"if((insn & 0x{def.Mask:X08}) == 0x{def.Match:X08}) {{";
-			c++;
-			var regSet = new HashSet<(bool PossiblySp, string Name)>();
-			void FindRegisters(PTree elem) {
-				if(elem is not PList { Count: 2 } list) return;
-				if(list[0] is not PName(var name) ||
-				   name is not "gpr32" and not "gpr64" and not "gpr-or-sp32" and not "gpr-or-sp64") return;
-				if(list[1] is PName(var regname))
-					regSet.Add((name is "gpr-or-sp32" or "gpr-or-sp64", regname));
-			}
-			def.Eval.WalkLeaves(FindRegisters);
-			foreach(var (psp, reg) in regSet) {
-				Debug.Assert(def.Fields.ContainsKey(reg));
-				var (bits, shift) =  def.Fields[reg];
-				c += $"yield return ({(psp ? "true" : "false")}, {shift});";
-			}
-			c--;
-			c += "}";
-			c += $"{NextLabel}:";
-		}
-
-		c++;
-		c += "yield break;";
-		c--;
-
-		using var fp = File.Open("../Aarch64Cpu/Generated/RegisterMasker.cs", FileMode.Create);
-		using var sw = new StreamWriter(fp);
-		sw.Write(File.ReadAllText("RegisterMaskerStub.cs.skip").Replace("/*%CODE%*/", c.Code));
 	}
 
 	static void GenerateFields(CodeBuilder c, Aarch64Def def) {

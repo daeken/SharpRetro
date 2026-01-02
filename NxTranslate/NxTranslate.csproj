@@ -5,10 +5,13 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Aarch64Cpu\Aarch64Cpu.csproj" />
       <ProjectReference Include="..\NxCommon\NxCommon.csproj" />
     </ItemGroup>
 

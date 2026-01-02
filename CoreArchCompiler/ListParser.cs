@@ -140,6 +140,7 @@ public class PList : PTree, IEnumerable<PTree> {
 	public readonly List<PTree> Children = [];
 	public PTree Head => Children.First();
 	public int Count => Children.Count;
+	public int Length => Children.Count;
 		
 	public PList() {}
 	public PList(IEnumerable<PTree> elems) => elems.ForEach(Add);

@@ -9206,5 +9206,1086 @@ public partial class Disassembler {
         return null;
     }
 
+    public static IEnumerable<(bool PossiblySp, bool IsRead, bool IsWritten, int Shift)> GetGprMasks(uint insn) {
+		/* ADCS */
+		if((insn & 0x7FE0FC00) == 0x3A000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ADD-extended-register */
+		else if((insn & 0x7FE00000) == 0x0B200000) {
+			yield return (false, true, false, 16);
+			yield return (true, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* ADD-immediate */
+		else if((insn & 0x7F800000) == 0x11000000) {
+			yield return (true, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* ADD-shifted-register */
+		else if((insn & 0x7F200000) == 0x0B000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ADDS-extended-register */
+		else if((insn & 0x7FE00000) == 0x2B200000) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* ADDS-immediate */
+		else if((insn & 0x7F800000) == 0x31000000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* ADDS-shifted-register */
+		else if((insn & 0x7F200000) == 0x2B000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ADR */
+		else if((insn & 0x9F000000) == 0x10000000) {
+			yield return (false, false, true, 0);
+		}
+		/* ADRP */
+		else if((insn & 0x9F000000) == 0x90000000) {
+			yield return (false, false, true, 0);
+		}
+		/* AND-immediate */
+		else if((insn & 0x7F800000) == 0x12000000) {
+			yield return (true, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* AND-shifted-register */
+		else if((insn & 0x7F200000) == 0x0A000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ANDS-shifted-register */
+		else if((insn & 0x7F200000) == 0x6A000000) {
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+		}
+		/* ANDS-immediate */
+		else if((insn & 0x7F800000) == 0x72000000) {
+			yield return (false, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* ASRV */
+		else if((insn & 0x7FE0FC00) == 0x1AC02800) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* BFM */
+		else if((insn & 0x7F800000) == 0x33000000) {
+			yield return (false, true, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* BIC */
+		else if((insn & 0x7F200000) == 0x0A200000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* BICS */
+		else if((insn & 0x7F200000) == 0x6A200000) {
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+		}
+		/* BLR */
+		else if((insn & 0xFFFFFC1F) == 0xD63F0000) {
+			yield return (false, true, false, 5);
+		}
+		/* BR */
+		else if((insn & 0xFFFFFC1F) == 0xD61F0000) {
+			yield return (false, true, false, 5);
+		}
+		/* CASPAL */
+		else if((insn & 0xBFE0FC00) == 0x0860FC00) {
+			yield return (false, true, true, 16);
+			yield return (false, true, false, 0);
+			yield return (true, true, false, 5);
+		}
+		/* CBNZ */
+		else if((insn & 0x7F000000) == 0x35000000) {
+			yield return (false, true, false, 0);
+		}
+		/* CBZ */
+		else if((insn & 0x7F000000) == 0x34000000) {
+			yield return (false, true, false, 0);
+		}
+		/* CCMN-immediate */
+		else if((insn & 0x7FE00C10) == 0x3A400800) {
+			yield return (false, true, false, 5);
+		}
+		/* CCMP-immediate */
+		else if((insn & 0x7FE00C10) == 0x7A400800) {
+			yield return (false, true, false, 5);
+		}
+		/* CCMP-register */
+		else if((insn & 0x7FE00C10) == 0x7A400000) {
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* CLZ */
+		else if((insn & 0x7FFFFC00) == 0x5AC01000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* CSEL */
+		else if((insn & 0x7FE00C00) == 0x1A800000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* CSINC */
+		else if((insn & 0x7FE00C00) == 0x1A800400) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* CSINV */
+		else if((insn & 0x7FE00C00) == 0x5A800000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* CSNEG */
+		else if((insn & 0x7FE00C00) == 0x5A800400) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* DUP-general */
+		else if((insn & 0xBFE0FC00) == 0x0E000C00) {
+			yield return (false, true, false, 5);
+		}
+		/* EON-shifted-register */
+		else if((insn & 0x7F200000) == 0x4A200000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* EOR-immediate */
+		else if((insn & 0x7F800000) == 0x52000000) {
+			yield return (true, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* EOR-shifted-register */
+		else if((insn & 0x7F200000) == 0x4A000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* EXTR */
+		else if((insn & 0x7FA00000) == 0x13800000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* FCVTAS-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E240000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTAU-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E250000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTMS-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E300000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTMU-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E310000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTPS-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E280000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTPU-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E290000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTZS-scalar-fixedpoint */
+		else if((insn & 0x7F3F0000) == 0x1E180000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTZS-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E380000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTZU-scalar-fixedpoint */
+		else if((insn & 0x7F3F0000) == 0x1E190000) {
+			yield return (false, false, true, 0);
+		}
+		/* FCVTZU-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E390000) {
+			yield return (false, false, true, 0);
+		}
+		/* FMOV-general */
+		else if((insn & 0x7F36FC00) == 0x1E260000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* INS-general */
+		else if((insn & 0xFFE0FC00) == 0x4E001C00) {
+			yield return (false, true, false, 5);
+		}
+		/* LD1-multi-no-offset-one-register */
+		else if((insn & 0xBFFFF000) == 0x0C407000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD1-multi-no-offset-one-register-postindex-immediate */
+		else if((insn & 0xBFFFF000) == 0x0CDF7000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD1-multi-no-offset-two-registers */
+		else if((insn & 0xBFFFF000) == 0x0C40A000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD1-multi-no-offset-two-registers-postindex-immediate */
+		else if((insn & 0xBFFFF000) == 0x0CDFA000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD1-multi-no-offset-three-registers */
+		else if((insn & 0xBFFFF000) == 0x0C406000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD1-multi-no-offset-three-registers-postindex-immediate */
+		else if((insn & 0xBFFFF000) == 0x0CDF6000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD1-multi-no-offset-four-registers */
+		else if((insn & 0xBFFFF000) == 0x0C402000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD1-multi-no-offset-four-registers-postindex-immediate */
+		else if((insn & 0xBFFFF000) == 0x0C5F2000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD1-single-no-offset */
+		else if((insn & 0xBFFF2000) == 0x0D400000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD1R-single-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0D40C000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD1R-single-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0DC0C000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD1R-single-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0DC0C000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* LD2-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C408000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD2-multi-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0CC08000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD2-multi-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0CC08000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* LD3-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C404000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD3-multi-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0CC04000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD3-multi-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0CC04000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* LD4-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C400000) {
+			yield return (true, true, false, 5);
+		}
+		/* LD4-multi-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0CC00000) {
+			yield return (true, true, true, 5);
+		}
+		/* LD4-multi-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0CC00000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* LDAR */
+		else if((insn & 0xBFFFFC00) == 0x88DFFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDARB */
+		else if((insn & 0xFFFFFC00) == 0x08DFFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDARH */
+		else if((insn & 0xFFFFFC00) == 0x48DFFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDAXB */
+		else if((insn & 0xBFFFFC00) == 0x885FFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDAXRB */
+		else if((insn & 0xFFFFFC00) == 0x085FFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDAXRH */
+		else if((insn & 0xFFFFFC00) == 0x485FFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDP-immediate-postindex */
+		else if((insn & 0x7FC00000) == 0x28C00000) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+			yield return (false, false, true, 10);
+		}
+		/* LDP-immediate-preindex */
+		else if((insn & 0x7FC00000) == 0x29C00000) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+			yield return (false, false, true, 10);
+		}
+		/* LDP-immediate-signed-offset */
+		else if((insn & 0x7FC00000) == 0x29400000) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+			yield return (false, false, true, 10);
+		}
+		/* LDP-simd-preindex */
+		else if((insn & 0x3FC00000) == 0x2DC00000) {
+			yield return (true, true, true, 5);
+		}
+		/* LDP-simd-postindex */
+		else if((insn & 0x3FC00000) == 0x2CC00000) {
+			yield return (true, true, true, 5);
+		}
+		/* LDP-simd-preindex */
+		else if((insn & 0x3FC00000) == 0x2DC00000) {
+			yield return (true, true, true, 5);
+		}
+		/* LDP-simd-signed-offset */
+		else if((insn & 0x3FC00000) == 0x2D400000) {
+			yield return (true, true, false, 5);
+		}
+		/* LDPSW-immediate-signed-offset */
+		else if((insn & 0xFFC00000) == 0x69400000) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+			yield return (false, false, true, 10);
+		}
+		/* LDR-immediate-preindex */
+		else if((insn & 0xBFE00C00) == 0xB8400C00) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDR-immediate-postindex */
+		else if((insn & 0xBFE00C00) == 0xB8400400) {
+			yield return (false, false, true, 0);
+			yield return (true, true, true, 5);
+		}
+		/* LDR-immediate-unsigned-offset */
+		else if((insn & 0xBFC00000) == 0xB9400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDR-literal */
+		else if((insn & 0xBF000000) == 0x18000000) {
+			yield return (false, false, true, 0);
+		}
+		/* LDR-simd-immediate-postindex */
+		else if((insn & 0x3F600C00) == 0x3C400400) {
+			yield return (true, true, true, 5);
+		}
+		/* LDR-simd-immediate-preindex */
+		else if((insn & 0x3F600C00) == 0x3C400C00) {
+			yield return (true, true, true, 5);
+		}
+		/* LDR-simd-immediate-unsigned-offset */
+		else if((insn & 0x3F400000) == 0x3D400000) {
+			yield return (true, true, false, 5);
+		}
+		/* LDR-simd-register */
+		else if((insn & 0x3F600C00) == 0x3C600800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+		}
+		/* LDR-register */
+		else if((insn & 0xBFE00C00) == 0xB8600800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRB-immediate-postindex */
+		else if((insn & 0xFFE00C00) == 0x38400400) {
+			yield return (false, false, true, 0);
+			yield return (true, true, true, 5);
+		}
+		/* LDRB-immediate-preindex */
+		else if((insn & 0xFFE00C00) == 0x38400C00) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRB-immediate-unsigned-offset */
+		else if((insn & 0xFFC00000) == 0x39400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRB-register */
+		else if((insn & 0xFFE00C00) == 0x38600800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRH-immediate-postindex */
+		else if((insn & 0xFFE00C00) == 0x78400400) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRH-immediate-preindex */
+		else if((insn & 0xFFE00C00) == 0x78400C00) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRH-immediate-unsigned-offset */
+		else if((insn & 0xFFC00000) == 0x79400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRH-register */
+		else if((insn & 0xFFE00C00) == 0x78600800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSB-immediate-postindex */
+		else if((insn & 0xFFA00C00) == 0x38800400) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRSB-immediate-preindex */
+		else if((insn & 0xFFA00C00) == 0x38800C00) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRSB-immediate-unsigned-offset */
+		else if((insn & 0xFF800000) == 0x39800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSB-register */
+		else if((insn & 0xFFA00C00) == 0x38A00800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSH-immediate-postindex */
+		else if((insn & 0xFFA00C00) == 0x78800400) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRSH-immediate-preindex */
+		else if((insn & 0xFFA00C00) == 0x78800C00) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRSH-immediate-unsigned-offset */
+		else if((insn & 0xFF800000) == 0x79800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSH-register */
+		else if((insn & 0xFFA00C00) == 0x78A00800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSW-immediate-postindex */
+		else if((insn & 0xFFE00C00) == 0xB8800400) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRSW-immediate-preindex */
+		else if((insn & 0xFFE00C00) == 0xB8800C00) {
+			yield return (true, true, true, 5);
+			yield return (false, false, true, 0);
+		}
+		/* LDRSW-immediate-unsigned-offset */
+		else if((insn & 0xFFC00000) == 0xB9800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSW-literal */
+		else if((insn & 0xFF000000) == 0x98000000) {
+			yield return (false, false, true, 0);
+		}
+		/* LDRSW-register */
+		else if((insn & 0xFFE00C00) == 0xB8A00800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDUR */
+		else if((insn & 0xBFE00C00) == 0xB8400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDURB */
+		else if((insn & 0xFFE00C00) == 0x38400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDURH */
+		else if((insn & 0xFFE00C00) == 0x78400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDURSB */
+		else if((insn & 0xFFA00C00) == 0x38800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDURSH */
+		else if((insn & 0xFFA00C00) == 0x78800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDURSW */
+		else if((insn & 0xFFE00C00) == 0xB8800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDUR-simd */
+		else if((insn & 0x3F600C00) == 0x3C400000) {
+			yield return (true, true, false, 5);
+		}
+		/* LDXR */
+		else if((insn & 0xBFFFFC00) == 0x885F7C00) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDXRB */
+		else if((insn & 0xFFFFFC00) == 0x085F7C00) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDXRH */
+		else if((insn & 0xFFFFFC00) == 0x485F7C00) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDXP */
+		else if((insn & 0xBFFF8000) == 0x887F0000) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 0);
+			yield return (false, false, true, 10);
+		}
+		/* LSL-register */
+		else if((insn & 0x7FE0FC00) == 0x1AC02000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* LSRV */
+		else if((insn & 0x7FE0FC00) == 0x1AC02400) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* MADD */
+		else if((insn & 0x7FE08000) == 0x1B000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+			yield return (false, true, false, 10);
+		}
+		/* MOVK */
+		else if((insn & 0x7F800000) == 0x72800000) {
+			yield return (false, true, true, 0);
+		}
+		/* MOVN */
+		else if((insn & 0x7F800000) == 0x12800000) {
+			yield return (false, false, true, 0);
+		}
+		/* MOVZ */
+		else if((insn & 0x7F800000) == 0x52800000) {
+			yield return (false, false, true, 0);
+		}
+		/* MRS */
+		else if((insn & 0xFFF00000) == 0xD5300000) {
+			yield return (false, false, true, 0);
+		}
+		/* MSR-register */
+		else if((insn & 0xFFF00000) == 0xD5100000) {
+			yield return (false, true, false, 0);
+		}
+		/* MSUB */
+		else if((insn & 0x7FE08000) == 0x1B008000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 10);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ORN-shifted-register */
+		else if((insn & 0x7F200000) == 0x2A200000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ORR-immediate */
+		else if((insn & 0x7F800000) == 0x32000000) {
+			yield return (true, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* ORR-shifted-register */
+		else if((insn & 0x7F200000) == 0x2A000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* RBIT */
+		else if((insn & 0x7FFFFC00) == 0x5AC00000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* RET */
+		else if((insn & 0xFFFFFC1F) == 0xD65F0000) {
+			yield return (false, true, false, 5);
+		}
+		/* REV */
+		else if((insn & 0x7FFFF800) == 0x5AC00800) {
+			yield return (false, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* REV16 */
+		else if((insn & 0x7FFFFC00) == 0x5AC00400) {
+			yield return (false, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* RORV */
+		else if((insn & 0x7FE0FC00) == 0x1AC02C00) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* SBCS */
+		else if((insn & 0x7FE0FC00) == 0x7A000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* SBFM */
+		else if((insn & 0x7F800000) == 0x13000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* SCVTF-scalar-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E220000) {
+			yield return (false, true, false, 5);
+		}
+		/* SDIV */
+		else if((insn & 0x7FE0FC00) == 0x1AC00C00) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* SMADDL */
+		else if((insn & 0xFFE08000) == 0x9B200000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 10);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* SMULH */
+		else if((insn & 0xFFE0FC00) == 0x9B407C00) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST1-multi-no-offset-one-register */
+		else if((insn & 0xBFFFF000) == 0x0C007000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST1-multi-postindex-immediate-one-register */
+		else if((insn & 0xBFE0F000) == 0x0C807000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST1-multi-postindex-register-one-register */
+		else if((insn & 0xBFE0F000) == 0x0C807000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST1-multi-no-offset-two-registers */
+		else if((insn & 0xBFFFF000) == 0x0C00A000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST1-multi-postindex-immediate-two-registers */
+		else if((insn & 0xBFE0F000) == 0x0C80A000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST1-multi-postindex-register-two-registers */
+		else if((insn & 0xBFE0F000) == 0x0C80A000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST1-multi-no-offset-three-registers */
+		else if((insn & 0xBFFFF000) == 0x0C006000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST1-multi-postindex-immediate-three-registers */
+		else if((insn & 0xBFE0F000) == 0x0C806000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST1-multi-postindex-register-three-registers */
+		else if((insn & 0xBFE0F000) == 0x0C806000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST1-multi-no-offset-four-registers */
+		else if((insn & 0xBFFFF000) == 0x0C002000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST1-multi-postindex-immediate-four-registers */
+		else if((insn & 0xBFE0F000) == 0x0C802000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST1-multi-postindex-register-four-registers */
+		else if((insn & 0xBFE0F000) == 0x0C802000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST1-single-no-offset */
+		else if((insn & 0xBFFF2000) == 0x0D000000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST2-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C008000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST2-multi-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0C808000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST2-multi-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0C808000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST3-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C004000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST3-multi-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0C804000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST3-multi-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0C804000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* ST4-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C000000) {
+			yield return (true, true, false, 5);
+		}
+		/* ST4-multi-postindex-immediate */
+		else if((insn & 0xBFE0F000) == 0x0C800000) {
+			yield return (true, true, true, 5);
+		}
+		/* ST4-multi-postindex-register */
+		else if((insn & 0xBFE0F000) == 0x0C800000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 16);
+		}
+		/* STLR */
+		else if((insn & 0xBFFFFC00) == 0x889FFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STLRB */
+		else if((insn & 0xFFFFFC00) == 0x089FFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STLRH */
+		else if((insn & 0xFFFFFC00) == 0x489FFC00) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STLXR */
+		else if((insn & 0xBFE0FC00) == 0x8800FC00) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+			yield return (false, false, true, 16);
+		}
+		/* STLXRB */
+		else if((insn & 0xFFE0FC00) == 0x0800FC00) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+			yield return (false, false, true, 16);
+		}
+		/* STP-postindex */
+		else if((insn & 0x7FC00000) == 0x28800000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+			yield return (false, true, false, 10);
+		}
+		/* STP-preindex */
+		else if((insn & 0x7FC00000) == 0x29800000) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+			yield return (false, true, false, 10);
+		}
+		/* STP-signed-offset */
+		else if((insn & 0x7FC00000) == 0x29000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+			yield return (false, true, false, 10);
+		}
+		/* STP-simd-postindex */
+		else if((insn & 0x3FC00000) == 0x2C800000) {
+			yield return (true, true, true, 5);
+		}
+		/* STP-simd-preindex */
+		else if((insn & 0x3FC00000) == 0x2D800000) {
+			yield return (true, true, true, 5);
+		}
+		/* STP-simd-signed-offset */
+		else if((insn & 0x3FC00000) == 0x2D000000) {
+			yield return (true, true, false, 5);
+		}
+		/* STR-immediate-postindex */
+		else if((insn & 0xBFE00C00) == 0xB8000400) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STR-immediate-preindex */
+		else if((insn & 0xBFE00C00) == 0xB8000C00) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STR-immediate-unsigned-offset */
+		else if((insn & 0xBFC00000) == 0xB9000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STR-register */
+		else if((insn & 0xBFE00C00) == 0xB8200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STR-simd-postindex */
+		else if((insn & 0x3F600C00) == 0x3C000400) {
+			yield return (true, true, true, 5);
+		}
+		/* STR-simd-preindex */
+		else if((insn & 0x3F600C00) == 0x3C000C00) {
+			yield return (true, true, true, 5);
+		}
+		/* STR-simd-unsigned-offset */
+		else if((insn & 0x3F400000) == 0x3D000000) {
+			yield return (true, true, false, 5);
+		}
+		/* STR-simd-register */
+		else if((insn & 0x3F600C00) == 0x3C200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+		}
+		/* STRB-immediate-postindex */
+		else if((insn & 0xFFE00C00) == 0x38000400) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRB-immediate-preindex */
+		else if((insn & 0xFFE00C00) == 0x38000C00) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRB-immediate-unsigned-offset */
+		else if((insn & 0xFFC00000) == 0x39000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRB-register */
+		else if((insn & 0xFFE00C00) == 0x38200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRH-immediate-postindex */
+		else if((insn & 0xFFE00C00) == 0x78000400) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRH-immediate-preindex */
+		else if((insn & 0xFFE00C00) == 0x78000C00) {
+			yield return (true, true, true, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRH-immediate-unsigned-offset */
+		else if((insn & 0xFFC00000) == 0x79000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRH-register */
+		else if((insn & 0xFFE00C00) == 0x78200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STUR */
+		else if((insn & 0xBFE00C00) == 0xB8000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STUR-simd */
+		else if((insn & 0x3F600C00) == 0x3C000000) {
+			yield return (true, true, false, 5);
+		}
+		/* STURB */
+		else if((insn & 0xFFE00C00) == 0x38000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STURH */
+		else if((insn & 0xFFE00C00) == 0x78000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STXRB */
+		else if((insn & 0xFFE0FC00) == 0x08007C00) {
+			yield return (false, false, true, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STXR */
+		else if((insn & 0xBFE0FC00) == 0x88007C00) {
+			yield return (false, false, true, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STXP */
+		else if((insn & 0xBFE08000) == 0x88200000) {
+			yield return (true, true, false, 5);
+			yield return (false, false, true, 16);
+			yield return (false, true, false, 0);
+		}
+		/* SUB-immediate */
+		else if((insn & 0x7F800000) == 0x51000000) {
+			yield return (true, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* SUB-extended-register */
+		else if((insn & 0x7FE00000) == 0x4B200000) {
+			yield return (false, true, false, 16);
+			yield return (true, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* SUB-shifted-register */
+		else if((insn & 0x7F200000) == 0x4B000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* SUBS-extended-register */
+		else if((insn & 0x7FE00000) == 0x6B200000) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* SUBS-shifted-register */
+		else if((insn & 0x7F200000) == 0x6B000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* SUBS-immediate */
+		else if((insn & 0x7F800000) == 0x71000000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* TBZ */
+		else if((insn & 0x7F000000) == 0x36000000) {
+			yield return (false, true, false, 0);
+		}
+		/* TBNZ */
+		else if((insn & 0x7F000000) == 0x37000000) {
+			yield return (false, true, false, 0);
+		}
+		/* UBFM */
+		else if((insn & 0x7F800000) == 0x53000000) {
+			yield return (false, true, false, 5);
+			yield return (false, false, true, 0);
+		}
+		/* UCVTF-scalar-gpr-integer */
+		else if((insn & 0x7F3FFC00) == 0x1E230000) {
+			yield return (false, true, false, 5);
+		}
+		/* UDIV */
+		else if((insn & 0x7FE0FC00) == 0x1AC00800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+		}
+		/* UMADDL */
+		else if((insn & 0xFFE08000) == 0x9BA00000) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 10);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+		/* UMOV */
+		else if((insn & 0xBFE0FC00) == 0x0E003C00) {
+			yield return (false, false, true, 0);
+		}
+		/* UMULH */
+		else if((insn & 0xFFE0FC00) == 0x9BC07C00) {
+			yield return (false, false, true, 0);
+			yield return (false, true, false, 5);
+			yield return (false, true, false, 16);
+		}
+
+    }
+    
+    public static bool IsPcDependent(uint insn) {
+        return /* ADR */ (insn & 0x9F000000) == 0x10000000 || 
+			/* ADRP */ (insn & 0x9F000000) == 0x90000000 || 
+			/* B */ (insn & 0xFC000000) == 0x14000000 || 
+			/* B.cond */ (insn & 0xFF000010) == 0x54000000 || 
+			/* BL */ (insn & 0xFC000000) == 0x94000000 || 
+			/* CBNZ */ (insn & 0x7F000000) == 0x35000000 || 
+			/* CBZ */ (insn & 0x7F000000) == 0x34000000 || 
+			/* LDR-literal */ (insn & 0xBF000000) == 0x18000000 || 
+			/* LDR-simd-literal */ (insn & 0x3F000000) == 0x1C000000 || 
+			/* LDRSW-literal */ (insn & 0xFF000000) == 0x98000000 || 
+			/* TBZ */ (insn & 0x7F000000) == 0x36000000 || 
+			/* TBNZ */ (insn & 0x7F000000) == 0x37000000;
+    }
+    
     public const int InstructionCount = 344 + 0;
 }
