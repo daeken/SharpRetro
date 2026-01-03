@@ -8,6 +8,7 @@ public unsafe class KThread : KObject {
     public CpuState* CpuState;
     public readonly IntPtr State, Stack;
     public IntPtr TlsBase;
+    public ulong Tpidr;
 
     public unsafe KThread(ulong stackSize = 8 * 1024 * 1024) {
         State = Marshal.AllocHGlobal(Marshal.SizeOf<CpuState>());

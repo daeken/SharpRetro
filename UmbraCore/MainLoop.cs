@@ -49,8 +49,7 @@ public class MainLoop {
             switch(reg) {
                 case 0b11_011_1101_0000_010: // TPIDR
                     $"Writing TPIDR: {value:X}".Log();
-                    if(value != 0)
-                        Kernel.ThreadManager.CurrentThread.TlsBase = (IntPtr) value;
+                    Kernel.ThreadManager.CurrentThread.Tpidr = value;
                     break;
                 default:
                     $"Unhandled SR write: {reg:X} {value:X}".Log();
@@ -69,6 +68,8 @@ public class MainLoop {
                     (true, 0UL),
                 0b11_011_1101_0000_011 => // TPIDRRO
                     (true, (ulong) Kernel.ThreadManager.CurrentThread.TlsBase),
+                0b11_011_1101_0000_010 => // TPIDR
+                    (true, Kernel.ThreadManager.CurrentThread.Tpidr),
                 0b11_011_1110_0000_001 => // CntpctEl0
                     (true, 0xDEADUL),
                 0b11_011_0000_0000_111 => // DCZID_EL0

@@ -29,6 +29,7 @@ public class Assembler {
 
     public ulong Size => (ulong) Instructions.Length * 4;
     public byte[] AsBytes => MemoryMarshal.Cast<uint, byte>(Instructions).ToArray();
+    public uint LastInsn => Instructions[I - 1];
     
     public Assembler(int regionSize) {
         Debug.Assert(regionSize % 4 == 0);
@@ -174,6 +175,30 @@ public class Assembler {
         rn ??= R.X30;
         var insn = 0b1101011_0_0_10_11111_0000_0_0_00000_00000U;
         insn |= (uint) rn.Number << 5;
+        Instructions[I++] = insn;
+    }
+
+    public void LoadTpidr(R.RX rn) {
+        var insn = 0xD53BD040U;
+        insn |= (uint) rn.Number;
+        Instructions[I++] = insn;
+    }
+
+    public void StoreTpidr(R.RX rn) {
+        var insn = 0xD51BD040U;
+        insn |= (uint) rn.Number;
+        Instructions[I++] = insn;
+    }
+
+    public void Adrp(R.RX rd, ulong imm) {
+        var insn = 0b1_00_10000_0000000000000000000_00000;
+        insn |= (uint) (imm & 0b11) << 29;
+        insn |= (uint) ((imm >> 2) & 0x7FFFF) << 5;
+        insn |= (uint) rd.Number;
+        Instructions[I++] = insn;
+    }
+
+    public void Raw(uint insn) {
         Instructions[I++] = insn;
     }
 }

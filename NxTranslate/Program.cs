@@ -44,12 +44,15 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.LdpPostindex(R.X29, R.X30, R.SP, 256);
 }
 
-byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List<(ulong Addr, Instruction Instruction)> insns, Memory<byte> text) {
+byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List<(ulong Addr, Instruction Instruction)> insns, List<(ulong Addr, uint Insn)> x18Usage, Memory<byte> text) {
     insns = insns.OrderByDescending(x => x.Addr).ToList(); // Work back to front to maximize odds of being in range
-    var asm = new Assembler(0xC000);
-    foreach(var (i, (addr, insn)) in insns.Index()) {
+    var size = textBase - trampBase;
+    var asm = new Assembler((int) size);
+    var jumpBase = size;
+    foreach(var (addr, insn) in insns) {
+        jumpBase -= 4;
         var pc = asm.PC;
-        asm.PC = 0xC000 - (ulong) (i + 1) * 4;
+        asm.PC = jumpBase;
         var tasm = new Assembler(4);
         tasm.B((long) (trampBase + asm.PC) - (long) (textBase + addr));
         tasm.AsBytes.CopyTo(text[(int) addr..].Span);
@@ -88,6 +91,157 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
             asm.Blr(R.X8);
         });
         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+        Debug.Assert(asm.PC < jumpBase);
+    }
+    foreach(var (addr, insn) in x18Usage) {
+        void Sub() {
+            jumpBase -= 4;
+            var pc = asm.PC;
+            asm.PC = jumpBase;
+            var tasm = new Assembler(4);
+            tasm.B((long) (trampBase + asm.PC) - (long) (textBase + addr));
+            tasm.AsBytes.CopyTo(text[(int) addr..].Span);
+            asm.B((long) pc - (long) asm.PC);
+            asm.PC = pc;
+
+            var regInfo = Disassembler.GetGprMasks(insn)
+                .Select(x => (x.PossiblySp, x.IsRead, x.IsWritten, x.Shift,
+                    Register: (int) ((insn >> x.Shift) & 0b11111)))
+                .ToList();
+            var writesSp = regInfo.Any(x => x is { PossiblySp: true, IsWritten: true, Register: 0b11111 });
+            var specialCase = writesSp || Disassembler.IsPcDependent(insn);
+
+            var regsUsed = regInfo.Select(x => x.Register).ToHashSet();
+            var safeA = -1;
+            var safeB = -1;
+            for(var i = 0; i < 18; ++i) {
+                if(regsUsed.Contains(i)) continue;
+                if(safeA == -1)
+                    safeA = i;
+                else {
+                    safeB = i;
+                    break;
+                }
+            }
+            var sregA = new R.RX(safeA);
+            var sregB = new R.RX(safeB);
+
+            if(specialCase) {
+                switch(Disassembler.ClassifyInstruction(insn)) {
+                    case "ADRP": {
+                        asm.Stp(sregA, R.XZR, R.SP, -128);
+                        var immlo = (insn >> 29) & 0x3U;
+                        var immhi = (insn >> 5) & 0x7FFFFU;
+                        var uimm = ((ulong) immlo << 12) | ((ulong) immhi << 14);
+                        var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(uimm, 33);
+                        var taddr = unchecked((((textBase + addr) >> 12) << 12) + (ulong) simm);
+
+                        var baddr = ((trampBase + asm.PC) >> 12) << 12;
+                        simm = unchecked((long) (taddr - baddr));
+                        var temp = simm >> (12 + 21);
+                        if(temp is not 0 and not -1)
+                            throw new Exception("ADRP OUT OF RANGE!");
+                        uimm = unchecked((ulong) (simm >> 12));
+                        asm.Adrp(sregA, uimm);
+                        asm.StoreTpidr(sregA);
+                        asm.Ldp(sregA, R.XZR, R.SP, -128);
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        return;
+                    }
+                    case "CBZ":
+                    case "CBNZ": {
+                        asm.Stp(sregA, R.XZR, R.SP, -128);
+                        var imm = ((insn >> 5) & 0x7FFFFU) << 2;
+                        var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(imm, 21);
+                        var taddr = unchecked(textBase + addr + (ulong) simm);
+                        asm.LoadTpidr(sregA);
+                        var reinsn = insn & 0b1_111111_1_0000000000000000000_00000;
+                        reinsn |= (uint) safeA;
+                        asm.Raw(reinsn | (3 << 5)); // skip 2 instructions for taken
+                        // not taken
+                        asm.Ldp(sregA, R.XZR, R.SP, -128);
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        // taken
+                        asm.Ldp(sregA, R.XZR, R.SP, -128);
+                        asm.B((long) taddr - (long) (trampBase + asm.PC));
+                        return;
+                    }
+                    case "TBZ":
+                    case "TBNZ": {
+                        asm.Stp(sregA, R.XZR, R.SP, -128);
+                        var imm = ((insn >> 5) & 0x3FFFU) << 2;
+                        var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(imm, 16);
+                        var taddr = unchecked(textBase + addr + (ulong) simm);
+                        asm.LoadTpidr(sregA);
+                        var reinsn = insn & 0b1_111111_1_11111_00000000000000_00000;
+                        reinsn |= (uint) safeA;
+                        asm.Raw(reinsn | (3 << 5)); // skip 2 instructions for taken
+                        // not taken
+                        asm.Ldp(sregA, R.XZR, R.SP, -128);
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        // taken
+                        asm.Ldp(sregA, R.XZR, R.SP, -128);
+                        asm.B((long) taddr - (long) (trampBase + asm.PC));
+                        return;
+                    }
+                    case "STP-preindex": {
+                        asm.Stp(sregA, R.XZR, R.SP, -128);
+                        asm.LoadTpidr(sregA);
+                        var size = (insn >> 31) & 0x1U;
+                        var imm = (insn >> 15) & 0x7FU;
+                        var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(imm, 7) << (size == 1 ? 3 : 2);
+                        var reinsn = insn;
+                        foreach(var (_, _, _, shift, reg) in regInfo)
+                            if(reg == 18) {
+                                reinsn &= 0xFFFFFFFFU ^ (0b11111U << shift);
+                                reinsn |= (uint) safeA << shift;
+                            }
+                        asm.Raw(reinsn);
+                        asm.Ldp(sregA, R.XZR, R.SP, unchecked((int) (-128L - simm)));
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        return;
+                    }
+                    case "LDP-immediate-postindex": {
+                        asm.Stp(sregA, R.XZR, R.SP, -128);
+                        var size = (insn >> 31) & 0x1U;
+                        var imm = (insn >> 15) & 0x7FU;
+                        var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(imm, 7) << (size == 1 ? 3 : 2);
+                        var reinsn = insn;
+                        foreach(var (_, _, _, shift, reg) in regInfo)
+                            if(reg == 18) {
+                                reinsn &= 0xFFFFFFFFU ^ (0b11111U << shift);
+                                reinsn |= (uint) safeA << shift;
+                            }
+                        asm.Raw(reinsn);
+                        asm.StoreTpidr(sregA);
+                        asm.Ldp(sregA, R.XZR, R.SP, unchecked((int) (-128L - simm)));
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        return;
+                    }
+                    default:
+                        Console.WriteLine(
+                            $"Unhandled instruction classification {Disassembler.ClassifyInstruction(insn)} for r18 rewrite: {Disassembler.Disassemble(insn, addr)}");
+                        break;
+                }
+            }
+            asm.Stp(sregA, R.XZR, R.SP, -128);
+            var reinsnn = insn;
+            foreach(var (_, read, _, shift, reg) in regInfo)
+                if(reg == 18) {
+                    reinsnn &= 0xFFFFFFFFU ^ (0b11111U << shift);
+                    reinsnn |= (uint) safeA << shift;
+                    if(read)
+                        asm.LoadTpidr(sregA);
+                }
+            asm.Raw(reinsnn);
+            foreach(var (_, _, write, _, reg) in regInfo)
+                if(reg == 18 && write)
+                    asm.StoreTpidr(sregA);
+            asm.Ldp(sregA, R.XZR, R.SP, -128);
+            asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+        }
+        Sub();
+        Debug.Assert(asm.PC < jumpBase);
     }
     return asm.AsBytes;
 }
@@ -104,40 +258,14 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
         problematic.Add((j - mod.TextStart, insn));
     }
 
-    var x18Usage = new List<(ulong Addr, List<int> Shifts)>();
+    var x18Usage = new List<(ulong Addr, uint Insn)>();
     for(var j = mod.TextStart; j < mod.TextEnd; j += 4) {
         var insn = mod.Load<uint>(j);
-        var shifts = Disassembler.GetGprMasks(insn)
+        var usesX18 = Disassembler.GetGprMasks(insn)
             .Select(x => x.Shift)
-            .Where(shift => ((insn >> shift) & 0b11111) == 18)
-            .ToList();
-        if(shifts.Count != 0)
-            x18Usage.Add((j, shifts));
+            .Any(shift => ((insn >> shift) & 0b11111) == 18);
+        if(usesX18) x18Usage.Add((j - mod.TextStart, insn));
     }
-
-    var groupRange = 25UL;
-    var regRange = 100UL;
-    var groupedUsages = x18Usage.GroupByProximity(groupRange * 4UL, x => x.Addr).ToList();
-    var safeGroups = groupedUsages.Select(group => {
-        var start = Math.Max(mod.TextStart, group.MinBy(x => x.Addr).Addr - regRange * 4);
-        var end = Math.Min(mod.TextEnd, group.MaxBy(x => x.Addr).Addr + regRange * 4);
-        var regsUsed = new HashSet<int>();
-        for(var j = start; j < end; j += 4) {
-            var insn = mod.Load<uint>(j);
-            var regs = Disassembler.GetGprMasks(insn)
-                .Select(x => (int) ((insn >> x.Shift) & 0b11111));
-            foreach(var reg in regs)
-                regsUsed.Add(reg);
-        }
-        var safeReg = 0;
-        for(var reg = 28; reg >= 19; reg--)
-            if(!regsUsed.Contains(reg)) {
-                safeReg = reg;
-                break;
-            }
-        return safeReg;
-    }).Where(x => x != 0).ToList();
-    Console.WriteLine($"Found X18 usages: {x18Usage.Count} / {groupedUsages.Count} / {safeGroups.Count}");
 
     var textStart = mod.TextStart - mod.LoadBase;
     var textEnd = mod.TextEnd - mod.LoadBase;
@@ -179,15 +307,19 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     Debug.Assert(dataStart % 0x4000 == 0);
     Debug.Assert(dataEnd % 0x4000 == 0);
 
+    var fullTrampSize = 0x10000UL;
+    fullTrampSize += (ulong) (128 * x18Usage.Count); // Give ourselves some space
+    while(fullTrampSize % 0x10000 != 0) fullTrampSize++;
+
     var tramprw = ulong.MaxValue;
     var trampx = ulong.MaxValue;
-    if(problematic.Count != 0) {
+    if(problematic.Count != 0 || x18Usage.Count != 0) {
         tramprw = loadBase;
         trampx = loadBase + 0x4000;
-        var trampolines = BuildTrampolines(loadBase + 0x10000, loadBase + 0x4000, loadBase, problematic, mod.Binary[(int) textStart..]);
+        var trampolines = BuildTrampolines(loadBase + fullTrampSize, loadBase + 0x4000, loadBase, problematic, x18Usage, mod.Binary[(int) textStart..]);
         macho.AddSegment($".tramprw_{i}", loadBase, 0x4000, [], MemoryProtection.Read | MemoryProtection.Write);
-        macho.AddSegment($".trampx_{i}", loadBase + 0x4000, 0xC000, trampolines, MemoryProtection.Read | MemoryProtection.Execute);
-        loadBase += 0x10000;
+        macho.AddSegment($".trampx_{i}", loadBase + 0x4000, fullTrampSize - 0x4000, trampolines, MemoryProtection.Read | MemoryProtection.Execute);
+        loadBase += fullTrampSize;
     }
     modules.Add((tramprw, trampx, loadBase, dataEnd - textStart));
     foreach(var symbol in mod.Symbols)
@@ -268,7 +400,7 @@ abstract record Instruction {
             new Brk((insn >> 5) & 0xFFFFU),
         _ when (insn & 0xFFE0001F) == 0xD4000001 =>
             new Svc((insn >> 5) & 0xFFFFU),
-        _ when (insn & 0xFFF00000) == 0xD5100000 && (insn & 0xFFFFFFE0) != 0xd51bd040 => // Allow native TPIDR_EL0
+        _ when (insn & 0xFFF00000) == 0xD5100000 => // NO LONGER && (insn & 0xFFFFFFE0) != 0xd51bd040 => // Allow native TPIDR_EL0
             new Msr(
                 (insn >> 19) & 0x1U,
                 (insn >> 16) & 0x7U,
@@ -277,7 +409,7 @@ abstract record Instruction {
                 (insn >> 5) & 0x7U,
                 (insn >> 0) & 0x1FU
             ),
-        _ when (insn & 0xFFF00000) == 0xD5300000 && (insn & 0xFFFFFFE0) != 0xd53bd040 => // Allow native TPIDR_EL0
+        _ when (insn & 0xFFF00000) == 0xD5300000 => // NO LONGER && (insn & 0xFFFFFFE0) != 0xd53bd040 => // Allow native TPIDR_EL0
             new Mrs(
                 (insn >> 19) & 0x1U,
                 (insn >> 16) & 0x7U,
