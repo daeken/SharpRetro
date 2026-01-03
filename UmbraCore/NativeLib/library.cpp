@@ -12,11 +12,11 @@
 thread_local uint64_t x18 = 0;
 
 uint64_t getX18() {
-    std::cout << "getX18: " << std::hex << x18 << std::dec << std::endl;
+    //std::cout << "getX18: " << std::hex << x18 << std::dec << std::endl;
     return x18;
 }
 void setX18(uint64_t value) {
-    std::cout << "setX18: " << std::hex << value << std::dec << std::endl;
+    //std::cout << "setX18: " << std::hex << value << std::dec << std::endl;
     x18 = value;
 }
 

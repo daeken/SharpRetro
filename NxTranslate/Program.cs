@@ -130,11 +130,11 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
 
             void Prologue() {
                 asm.Stp(sregA, sregB, R.SP, -64);
-                asm.Stp(R.X30, R.XZR, R.SP, -64 + 16);
+                asm.Stp(R.X30, R.XZR, R.SP, -64 - 16);
             }
 
             void Epilogue(int offset = 0) {
-                asm.Ldp(R.X30, R.XZR, R.SP, -64 + 16 + offset);
+                asm.Ldp(R.X30, R.XZR, R.SP, -64 - 16 + offset);
                 asm.Ldp(sregA, sregB, R.SP, -64 + offset);
             }
 
@@ -149,7 +149,8 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                     if(a == R.XZR && b == R.XZR) return;
                     asm.Ldp(a, b, sp, imm);
                 }
-                asm.StpPreindex(E(R.X29), E(R.X30), R.SP, -512);
+                asm.Sub(R.SP, R.SP, 512);
+                Stp(E(R.X29), E(R.X30), R.SP, 16 * 0);
                 Stp(E(R.X27), E(R.X28), R.SP, 16 * 1);
                 Stp(E(R.X25), E(R.X26), R.SP, 16 * 2);
                 Stp(E(R.X23), E(R.X24), R.SP, 16 * 3);
@@ -184,7 +185,9 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                 Ldp(E(R.X23), E(R.X24), R.SP, 16 * 3);
                 Ldp(E(R.X25), E(R.X26), R.SP, 16 * 2);
                 Ldp(E(R.X27), E(R.X28), R.SP, 16 * 1);
-                asm.LdpPostindex(E(R.X29), E(R.X30), R.SP, 512);
+                Ldp(E(R.X29), E(R.X30), R.SP, 16 * 0);
+                asm.Add(R.SP, R.SP, 512);
+                asm.Ret();
             }
 
             void LoadX18() {
@@ -199,7 +202,6 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         if(sregA != R.X0)
                             asm.Mov(sregA, R.X0);
                     });
-                    asm.Ret();
                     var end = asm.PC;
                     asm.PC = prev;
                     asm.B((long) (end - prev));
@@ -221,7 +223,6 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                             asm.Mov(R.X0, sregA);
                         asm.Blr(sregB);
                     });
-                    asm.Ret();
                     var end = asm.PC;
                     asm.PC = prev;
                     asm.B((long) (end - prev));
