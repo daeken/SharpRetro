@@ -91,6 +91,12 @@ public class Assembler {
         Instructions[I++] = insn;
     }
     
+    public void BL(long imm) {
+        var insn = 0b1_00101_00000000000000000000000000U;
+        insn |= unchecked((uint) (ulong) (imm >> 2)) & 0b11111111111111111111111111;
+        Instructions[I++] = insn;
+    }
+    
     public void BlSelf() => Instructions[I++] = 0b1_00101_00000000000000000000000001U;
 
     public void Blr(R.RX rn) {
@@ -163,6 +169,14 @@ public class Assembler {
         Instructions[I++] = insn;
     }
     
+    public void Sub(R rd, R rn, ushort imm) {
+        var insn = 0b1_1_0_10001_00_000000000000_00000_00000U;
+        insn |= rd is R.RX td ? (uint) td.Number << 0 : (uint) 0b11111 << 0;
+        insn |= rn is R.RX tn ? (uint) tn.Number << 5 : (uint) 0b11111 << 5;
+        insn |= (uint) (imm & 0b1111_1111_1111) << 10;
+        Instructions[I++] = insn;
+    }
+    
     public void Orr(R.RX rd, R.RX rn, R.RX rm) {
         var insn = 0b1_01_01010_00_0_00000_000000_00000_00000U;
         insn |= (uint) rd.Number << 0;
@@ -178,24 +192,20 @@ public class Assembler {
         Instructions[I++] = insn;
     }
 
-    public void LoadTpidr(R.RX rn) {
-        var insn = 0xD53BD040U;
-        insn |= (uint) rn.Number;
-        Instructions[I++] = insn;
-    }
-
-    public void StoreTpidr(R.RX rn) {
-        var insn = 0xD51BD040U;
-        insn |= (uint) rn.Number;
-        Instructions[I++] = insn;
-    }
-
     public void Adrp(R.RX rd, ulong imm) {
         var insn = 0b1_00_10000_0000000000000000000_00000;
         insn |= (uint) (imm & 0b11) << 29;
         insn |= (uint) ((imm >> 2) & 0x7FFFF) << 5;
         insn |= (uint) rd.Number;
         Instructions[I++] = insn;
+    }
+
+    public void AddrOf(R.RX rd, ulong current, ulong target) {
+        var delta = (long) ((target >> 12) << 12) - (long) ((current >> 12) << 12);
+        Adrp(rd, unchecked((ulong) (delta >> 12)));
+        var sdelta = target & 0xFFF;
+        if(sdelta > 0)
+            Add(rd, rd, (ushort) sdelta);
     }
 
     public void Raw(uint insn) {

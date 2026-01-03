@@ -13,6 +13,8 @@ public partial class HookManager {
     delegate void SetupHooksDelegate(IntPtr register);
     delegate void RegisterHookDelegate(IntPtr namePtr, ulong funcPtr);
 
+    public ulong LoadX18, StoreX18;
+
     public HookManager() {
         InitializeWrappers();
         var lib = NativeLibrary.Load("../UmbraCore/NativeLib/cmake-build-debug/libNativeLib.dylib");
@@ -22,6 +24,19 @@ public partial class HookManager {
 
     void NativeRegister(IntPtr namePtr, ulong funcPtr) {
         var name = Marshal.PtrToStringAnsi(namePtr)!;
+        if(name.StartsWith('$')) {
+            switch(name) {
+                case "$getX18":
+                    LoadX18 = funcPtr;
+                    break;
+                case "$setX18":
+                    StoreX18 = funcPtr;
+                    break;
+                default:
+                    throw new NotSupportedException($"Unhandled magic hook name '{name}'");
+            }
+            return;
+        }
         if(name.StartsWith("_Z"))
             $"Registering native hook for {name} [{CxxDemangler.CxxDemangler.Demangle(name)}] -- 0x{funcPtr:X}".Log();
         else

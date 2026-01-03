@@ -11,7 +11,7 @@ public partial class IRequest {
 
     protected override uint GetRequestState() => 4; // Blocking
     protected override void GetResult() {
-        Thread.Sleep(10000); // TODO: Actually unfuck nifm, but for now this works
+        //Thread.Sleep(10000); // TODO: Actually unfuck nifm, but for now this works
     }
 }
 

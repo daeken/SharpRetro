@@ -481,7 +481,7 @@ public struct NativeState {
 public delegate void StubDelegate();
 public delegate void DebugDelegate(ulong pc);
 public unsafe delegate void LoadModuleDelegate(ulong loadBase, byte* data, ulong size, ulong textStart, ulong textEnd, ulong roStart, ulong roEnd, ulong dataStart, ulong dataEnd);
-public delegate void InitModuleDelegate(ulong loadBase, ulong size);
+public delegate void InitModuleDelegate(ulong slide, ulong textBase, ulong trampRwBase, ulong size);
 public unsafe delegate void NativeReentryDelegate(NativeState* state, uint op, ulong a, ulong b, ulong repl);
 public delegate ulong ReadSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2);
 public delegate void WriteSrDelegate(uint op0, uint op1, uint crn, uint crm, uint op2, ulong value);
@@ -628,7 +628,7 @@ public unsafe class Callbacks {
     public InitModuleDelegate InitModule {
         get;
         set => CallbackTable->initModule = Marshal.GetFunctionPointerForDelegate(field = value);
-    } = (_, _) => throw new NotImplementedException("InitModule not implemented");
+    } = (_, _, _, _) => throw new NotImplementedException("InitModule not implemented");
 
     public NativeReentryDelegate NativeReentry {
         get;

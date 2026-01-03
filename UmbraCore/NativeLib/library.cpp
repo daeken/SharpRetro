@@ -1,11 +1,29 @@
 #include "library.h"
+
+#include <iostream>
+#include <ostream>
+
 #include "nv.h"
 #include "vi.h"
 #include "glslc.h"
 
 #define hook(name, func) regFunc(name, reinterpret_cast<void*>(func))
 
+thread_local uint64_t x18 = 0;
+
+uint64_t getX18() {
+    std::cout << "getX18: " << std::hex << x18 << std::dec << std::endl;
+    return x18;
+}
+void setX18(uint64_t value) {
+    std::cout << "setX18: " << std::hex << value << std::dec << std::endl;
+    x18 = value;
+}
+
 void setupHooks(const hookRegister_t regFunc) {
+    hook("$getX18", getX18);
+    hook("$setX18", setX18);
+
     hook("_ZN2nv18InitializeGraphicsEPvm", nv::InitializeGraphics);
     hook("_ZN2nv20SetGraphicsAllocatorEPFPvmmS0_EPFvS0_S0_EPFS0_S0_mS0_ES0_", nv::SetGraphicsAllocator);
     hook("nvnBootstrapLoader", nvnBootstrapLoader);

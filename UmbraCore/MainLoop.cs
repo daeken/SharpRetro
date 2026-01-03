@@ -37,9 +37,17 @@ public class MainLoop {
                 Buffer.MemoryCopy(data, (void*) loadBase, size, size);
                 Modules.Add(new(loadBase, size, textStart, textEnd, roStart, roEnd, dataStart, dataEnd));
             };
-        Game.Callbacks.InitModule = (loadBase, size) => {
+        Game.Callbacks.InitModule = (slide, textBase, trampRwBase, size) => {
+            var loadBase = unchecked(slide + textBase);
             Kernel.IsNative = true;
             $"Module loaded at 0x{loadBase:X}-0x{loadBase+size:X}".Log();
+            if(trampRwBase != ulong.MaxValue) {
+                $"TrampRwBase is at 0x{unchecked(slide + trampRwBase):X}".Log();
+                var trampRw = (ulong*) unchecked(slide + trampRwBase);
+                trampRw![0] = (ulong) Game.Callbacks.CallbackTable;
+                trampRw[1] = Kernel.HookManager.LoadX18;
+                trampRw[2] = Kernel.HookManager.StoreX18;
+            }
             Kernel.MemoryManager.Regions[loadBase] = (size, 0);
             Modules.Add(new(loadBase, size, doRelocate: false));
         };
