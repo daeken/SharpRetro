@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using LibSharpRetro;
@@ -64,6 +65,7 @@ public class MainLoop {
                     break;
             }
         };
+        var stopwatch = Stopwatch.StartNew();
         Game.Callbacks.ReadSr = (op0, op1, crn, crm, op2) => {
             var reg = ((0b10 | (op0 & 0b1)) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111);
             //$"ReadSR {reg:X}".Log();
@@ -79,7 +81,7 @@ public class MainLoop {
                 0b11_011_1101_0000_010 => // TPIDR
                     (true, Kernel.ThreadManager.CurrentThread.Tpidr),
                 0b11_011_1110_0000_001 => // CntpctEl0
-                    (true, 0xDEADUL),
+                    (true, (ulong) stopwatch.ElapsedMilliseconds * 19_200),
                 0b11_011_0000_0000_111 => // DCZID_EL0
                     (true, 0UL),
                 _ => (false, 0UL),

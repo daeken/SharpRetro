@@ -5,13 +5,15 @@ namespace UmbraCore.Services.Nn.Nifm.Detail;
 
 public partial class IRequest {
     protected override void GetSystemEventReadableHandles(out KObject _0, out KObject _1) {
-        _0 = new Event(triggered: true);
-        _1 = new Event(triggered: true);
+        _0 = new Event(triggered: false);
+        _1 = new Event(triggered: false);
     }
 
-    protected override uint GetRequestState() => 4; // Blocking
+    protected override uint GetRequestState() => 1; // Free
     protected override void GetResult() {
-        //Thread.Sleep(10000); // TODO: Actually unfuck nifm, but for now this works
+        // TODO: Actually unfuck nifm, but for now this works
+        Thread.Sleep(1000000);
+        throw new IpcException((1111 << 9) | 110); // 110=nifm, 1111 == ResultNetworkCommunicationDisabled
     }
 }
 
