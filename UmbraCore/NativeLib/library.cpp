@@ -11,12 +11,13 @@
 
 thread_local uint64_t x18 = 0;
 
-uint64_t getX18() {
-    //std::cout << "getX18: " << std::hex << x18 << std::dec << std::endl;
-    return x18;
+uint64_t getX18() noexcept {
+    auto temp = x18;
+    printf("getX18: %llx\n", temp);
+    return temp;
 }
-void setX18(uint64_t value) {
-    //std::cout << "setX18: " << std::hex << value << std::dec << std::endl;
+void setX18(uint64_t value) noexcept {
+    printf("setX18: %llx\n", value);
     x18 = value;
 }
 

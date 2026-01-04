@@ -111,7 +111,8 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                     Register: (int) ((insn >> x.Shift) & 0b11111)))
                 .ToList();
             var writesSp = regInfo.Any(x => x is { PossiblySp: true, IsWritten: true, Register: 0b11111 });
-            var specialCase = writesSp || Disassembler.IsPcDependent(insn);
+            var usesSp = regInfo.Any(x => x is { PossiblySp: true, Register: 0b11111 });
+            var specialCase = writesSp || Disassembler.IsPcDependent(insn) || Disassembler.ClassifyInstruction(insn) is "BR" or "BLR" or "RET";
 
             var regsUsed = regInfo.Select(x => x.Register).ToHashSet();
             var safeA = -1;
@@ -129,13 +130,13 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
             var sregB = new R.RX(safeB);
 
             void Prologue() {
-                asm.Stp(sregA, sregB, R.SP, -64);
-                asm.Stp(R.X30, R.XZR, R.SP, -64 - 16);
+                asm.StpPreindex(sregA, sregB, R.SP, -32);
+                asm.Stp(R.X30, R.XZR, R.SP, 16);
             }
 
-            void Epilogue(int offset = 0) {
-                asm.Ldp(R.X30, R.XZR, R.SP, -64 - 16 + offset);
-                asm.Ldp(sregA, sregB, R.SP, -64 + offset);
+            void Epilogue() {
+                asm.Ldp(R.X30, R.XZR, R.SP, 16);
+                asm.LdpPostindex(sregA, sregB, R.SP, 32);
             }
 
             void SaveBut(Action func) {
@@ -149,7 +150,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                     if(a == R.XZR && b == R.XZR) return;
                     asm.Ldp(a, b, sp, imm);
                 }
-                asm.Sub(R.SP, R.SP, 512);
+                asm.Sub(R.SP, R.SP, 1024);
                 Stp(E(R.X29), E(R.X30), R.SP, 16 * 0);
                 Stp(E(R.X27), E(R.X28), R.SP, 16 * 1);
                 Stp(E(R.X25), E(R.X26), R.SP, 16 * 2);
@@ -167,8 +168,12 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                 Stp(E(R.X1), E(R.X2), R.SP, 16 * 14);
                 asm.ReadNzcv(R.X24);
                 asm.Stp(E(R.X0), R.X24, R.SP, 16 * 15);
+                for(var i = 0; i < 16; ++i)
+                    asm.Stp(new V(i * 2), new V(i * 2 + 1), R.SP, 32 * (8 + i));
                 asm.Mov(R.X29, R.SP);
                 func();
+                for(var i = 0; i < 16; ++i)
+                    asm.Ldp(new V(i * 2), new V(i * 2 + 1), R.SP, 32 * (8 + i));
                 asm.Ldp(E(R.X0), R.X24, R.SP, 16 * 15);
                 asm.WriteNzcv(R.X24);
                 Ldp(E(R.X1), E(R.X2), R.SP, 16 * 14);
@@ -186,28 +191,29 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                 Ldp(E(R.X25), E(R.X26), R.SP, 16 * 2);
                 Ldp(E(R.X27), E(R.X28), R.SP, 16 * 1);
                 Ldp(E(R.X29), E(R.X30), R.SP, 16 * 0);
-                asm.Add(R.SP, R.SP, 512);
+                asm.Add(R.SP, R.SP, 1024);
                 asm.Ret();
             }
 
-            void LoadX18() {
-                if(!loadX18Cache.ContainsKey((sregA, sregB))) {
+            void LoadX18(R.RX reg = null) {
+                reg ??= sregA;
+                if(!loadX18Cache.ContainsKey((reg, sregB))) {
                     var prev = asm.PC;
                     asm.PC += 4;
-                    loadX18Cache[(sregA, sregB)] = asm.PC;
+                    loadX18Cache[(reg, sregB)] = asm.PC;
                     SaveBut(() => {
                         asm.AddrOf(sregB, trampBase + asm.PC, trampRwBase + 0x8);
                         asm.Ldr(sregB, sregB);
                         asm.Blr(sregB);
-                        if(sregA != R.X0)
-                            asm.Mov(sregA, R.X0);
+                        if(reg != R.X0)
+                            asm.Mov(reg, R.X0);
                     });
                     var end = asm.PC;
                     asm.PC = prev;
                     asm.B((long) (end - prev));
                     asm.PC = end;
                 }
-                var func = loadX18Cache[(sregA, sregB)];
+                var func = loadX18Cache[(reg, sregB)];
                 asm.BL((long) func - (long) asm.PC);
             }
 
@@ -291,19 +297,26 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         return;
                     }
                     case "STP-preindex": {
-                        Prologue();
-                        LoadX18();
                         var size = (insn >> 31) & 0x1U;
                         var imm = (insn >> 15) & 0x7FU;
                         var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(imm, 7) << (size == 1 ? 3 : 2);
+                        if(simm >= 0)
+                            asm.Add(R.SP, R.SP, unchecked((ushort) (ulong) simm));
+                        else
+                            asm.Sub(R.SP, R.SP, unchecked((ushort) (ulong) -simm));
+                        Prologue();
+                        LoadX18();
                         var reinsn = insn;
+                        reinsn ^= 0b00_000_0_001_0_0000000_00000_00000_00000; // no more preindex
+                        reinsn &= 0b11_111_1_111_1_0000000_11111_11111_11111; // nuke the immediate
+                        reinsn |= (32U >> (size == 1 ? 3 : 2)) << 15; // shift back to 'real sp'
                         foreach(var (_, _, _, shift, reg) in regInfo)
                             if(reg == 18) {
                                 reinsn &= 0xFFFFFFFFU ^ (0b11111U << shift);
                                 reinsn |= (uint) safeA << shift;
                             }
                         asm.Raw(reinsn);
-                        Epilogue((int) -simm);
+                        Epilogue();
                         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
                         return;
                     }
@@ -313,6 +326,9 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         var imm = (insn >> 15) & 0x7FU;
                         var simm = LibSharpRetro.CpuHelpers.Math.SignExt<long>(imm, 7) << (size == 1 ? 3 : 2);
                         var reinsn = insn;
+                        reinsn ^= 0b00_000_0_011_0_0000000_00000_00000_00000; // no more postindex
+                        reinsn &= 0b11_111_1_111_1_0000000_11111_11111_11111; // nuke the immediate
+                        reinsn |= (32U >> (size == 1 ? 3 : 2)) << 15; // shift back to 'real sp'
                         foreach(var (_, _, _, shift, reg) in regInfo)
                             if(reg == 18) {
                                 reinsn &= 0xFFFFFFFFU ^ (0b11111U << shift);
@@ -320,7 +336,32 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                             }
                         asm.Raw(reinsn);
                         StoreX18();
-                        Epilogue((int) -simm);
+                        Epilogue();
+                        if(simm >= 0)
+                            asm.Add(R.SP, R.SP, unchecked((ushort) (ulong) simm));
+                        else
+                            asm.Sub(R.SP, R.SP, unchecked((ushort) (ulong) -simm));
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        return;
+                    }
+                    case "BR": {
+                        asm.StpPreindex(sregA, sregB, R.SP, -16);
+                        var t = sregA;
+                        sregA = R.X30;
+                        LoadX18(R.X30); // Force overwrite LR -- fuck your frame consistency
+                        sregA = t;
+                        asm.LdpPostindex(sregA, sregB, R.SP, -16);
+                        asm.Br(R.X30);
+                        return;
+                    }
+                    case "BLR": {
+                        asm.StpPreindex(sregA, sregB, R.SP, -16);
+                        var t = sregA;
+                        sregA = R.X30;
+                        LoadX18(R.X30);
+                        sregA = t;
+                        asm.LdpPostindex(sregA, sregB, R.SP, -16);
+                        asm.Blr(R.X30);
                         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
                         return;
                     }
@@ -342,7 +383,11 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         hasRead = true;
                     }
                 }
+            if(usesSp)
+                asm.Add(R.SP, R.SP, 32);
             asm.Raw(reinsnn);
+            if(usesSp)
+                asm.Sub(R.SP, R.SP, 32);
             var hasWritten = false;
             foreach(var (_, _, write, _, reg) in regInfo)
                 if(reg == 18 && write && !hasWritten) {

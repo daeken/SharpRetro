@@ -19,6 +19,18 @@ public abstract record R {
     public record RSP : R;
 }
 
+public record V(int Number) {
+    public static readonly V
+        V0  = new( 0), V1  = new( 1), V2  = new( 2), V3  = new( 3), 
+        V4  = new( 4), V5  = new( 5), V6  = new( 6), V7  = new( 7),
+        V8  = new( 8), V9  = new( 9), V10 = new(10), V11 = new(11),
+        V12 = new(12), V13 = new(13), V14 = new(14), V15 = new(15), 
+        V16 = new(16), V17 = new(17), V18 = new(18), V19 = new(19),
+        V20 = new(20), V21 = new(21), V22 = new(22), V23 = new(23),
+        V24 = new(24), V25 = new(25), V26 = new(26), V27 = new(27),
+        V28 = new(28), V29 = new(29), V30 = new(30), V31 = new(31);
+}
+
 public class Assembler {
     readonly uint[] Instructions;
     public int I = 0;
@@ -68,6 +80,15 @@ public class Assembler {
         Instructions[I++] = insn;
     }
 
+    public void Stp(V a, V b, R t, int imm = 0) {
+        var insn = 0b10_101_1_010_0_0000000_00000_00000_00000;
+        insn |= ((unchecked((uint) imm) >> 4) & 0b1111111) << 15;
+        insn |= (uint) a.Number << 0;
+        insn |= (uint) b.Number << 10;
+        insn |= t is R.RX tr ? (uint) tr.Number << 5 : (uint) 0b11111 << 5;
+        Instructions[I++] = insn;
+    }
+    
     public void Ldp(R.RX a, R.RX b, R t, int imm = 0) {
         var insn = 0b10_101_0_010_1_0000000_00000_00000_00000U;
         insn |= ((unchecked((uint) imm) >> 3) & 0b1111111) << 15;
@@ -85,6 +106,15 @@ public class Assembler {
         Instructions[I++] = insn;
     }
 
+    public void Ldp(V a, V b, R t, int imm = 0) {
+        var insn = 0b10_101_1_010_1_0000000_00000_00000_00000;
+        insn |= ((unchecked((uint) imm) >> 4) & 0b1111111) << 15;
+        insn |= (uint) a.Number << 0;
+        insn |= (uint) b.Number << 10;
+        insn |= t is R.RX tr ? (uint) tr.Number << 5 : (uint) 0b11111 << 5;
+        Instructions[I++] = insn;
+    }
+    
     public void B(long imm) {
         var insn = 0b0_00101_00000000000000000000000000U;
         insn |= unchecked((uint) (ulong) (imm >> 2)) & 0b11111111111111111111111111;
@@ -98,6 +128,12 @@ public class Assembler {
     }
     
     public void BlSelf() => Instructions[I++] = 0b1_00101_00000000000000000000000001U;
+
+    public void Br(R.RX rn) {
+        var insn = 0b1101011_0_0_00_11111_0000_0_0_00000_00000U;
+        insn |= (uint) rn.Number << 5;
+        Instructions[I++] = insn;
+    }
 
     public void Blr(R.RX rn) {
         var insn = 0b1101011_0_0_01_11111_0000_0_0_00000_00000U;
