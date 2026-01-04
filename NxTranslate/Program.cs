@@ -44,7 +44,7 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.LdpPostindex(R.X29, R.X30, R.SP, 256);
 }
 
-byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List<(ulong Addr, Instruction Instruction)> insns, List<(ulong Addr, uint Insn)> x18Usage, Memory<byte> text) {
+byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List<(ulong Addr, Instruction Instruction)> insns, List<(ulong Addr, uint Insn)> x18Usage, Memory<byte> text, Dictionary<string, ulong> symbols) {
     insns = insns.OrderByDescending(x => x.Addr).ToList(); // Work back to front to maximize odds of being in range
     var size = textBase - trampBase;
     var asm = new Assembler((int) size);
@@ -100,11 +100,13 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
             jumpBase -= 4;
             var pc = asm.PC;
             asm.PC = jumpBase;
+            symbols[$"tramp_tramp_{textBase + addr:X}"] = asm.PC;
             var tasm = new Assembler(4);
             tasm.B((long) (trampBase + asm.PC) - (long) (textBase + addr));
             tasm.AsBytes.CopyTo(text[(int) addr..].Span);
             asm.B((long) pc - (long) asm.PC);
             asm.PC = pc;
+            symbols[$"tramp_{textBase + addr:X}"] = asm.PC;
 
             var regInfo = Disassembler.GetGprMasks(insn)
                 .Select(x => (x.PossiblySp, x.IsRead, x.IsWritten, x.Shift,
@@ -129,14 +131,21 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
             var sregA = new R.RX(safeA);
             var sregB = new R.RX(safeB);
 
+            const int spOffset = 48;
             void Prologue() {
-                asm.StpPreindex(sregA, sregB, R.SP, -32);
-                asm.Stp(R.X30, R.XZR, R.SP, 16);
+                asm.StpPreindex(R.X29, R.X30, R.SP, -32);
+                asm.Stp(sregA, sregB, R.SP, 16);
+                asm.Mov(R.X29, R.SP);
+                asm.AddrOf(R.X30, trampBase + asm.PC, textBase + addr + 4);
+                asm.StpPreindex(R.X29, R.X30, R.SP, -16);
+                asm.Mov(R.X29, R.SP);
             }
 
+            const int epilogueInsns = 3;
             void Epilogue() {
-                asm.Ldp(R.X30, R.XZR, R.SP, 16);
-                asm.LdpPostindex(sregA, sregB, R.SP, 32);
+                asm.Add(R.SP, R.SP, 16);
+                asm.Ldp(sregA, sregB, R.SP, 16);
+                asm.LdpPostindex(R.X29, R.X30, R.SP, 32);
             }
 
             void SaveBut(Action func) {
@@ -269,7 +278,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         LoadX18();
                         var reinsn = insn & 0b1_111111_1_0000000000000000000_00000;
                         reinsn |= (uint) safeA;
-                        asm.Raw(reinsn | (4 << 5)); // skip 3 instructions for taken
+                        asm.Raw(reinsn | (((uint) epilogueInsns + 2) << 5));
                         // not taken
                         Epilogue();
                         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
@@ -287,7 +296,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         LoadX18();
                         var reinsn = insn & 0b1_111111_1_11111_00000000000000_00000;
                         reinsn |= (uint) safeA;
-                        asm.Raw(reinsn | (4 << 5)); // skip 3 instructions for taken
+                        asm.Raw(reinsn | (((uint) epilogueInsns + 2) << 5));
                         // not taken
                         Epilogue();
                         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
@@ -309,7 +318,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         var reinsn = insn;
                         reinsn ^= 0b00_000_0_001_0_0000000_00000_00000_00000; // no more preindex
                         reinsn &= 0b11_111_1_111_1_0000000_11111_11111_11111; // nuke the immediate
-                        reinsn |= (32U >> (size == 1 ? 3 : 2)) << 15; // shift back to 'real sp'
+                        reinsn |= ((uint) spOffset >> (size == 1 ? 3 : 2)) << 15; // shift back to 'real sp'
                         foreach(var (_, _, _, shift, reg) in regInfo)
                             if(reg == 18) {
                                 reinsn &= 0xFFFFFFFFU ^ (0b11111U << shift);
@@ -328,7 +337,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         var reinsn = insn;
                         reinsn ^= 0b00_000_0_011_0_0000000_00000_00000_00000; // no more postindex
                         reinsn &= 0b11_111_1_111_1_0000000_11111_11111_11111; // nuke the immediate
-                        reinsn |= (32U >> (size == 1 ? 3 : 2)) << 15; // shift back to 'real sp'
+                        reinsn |= ((uint) spOffset >> (size == 1 ? 3 : 2)) << 15; // shift back to 'real sp'
                         foreach(var (_, _, _, shift, reg) in regInfo)
                             if(reg == 18) {
                                 reinsn &= 0xFFFFFFFFU ^ (0b11111U << shift);
@@ -346,21 +355,17 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                     }
                     case "BR": {
                         asm.StpPreindex(sregA, sregB, R.SP, -16);
-                        var t = sregA;
-                        sregA = R.X30;
-                        LoadX18(R.X30); // Force overwrite LR -- fuck your frame consistency
-                        sregA = t;
-                        asm.LdpPostindex(sregA, sregB, R.SP, -16);
+                        LoadX18();
+                        asm.Mov(R.X30, sregA); // Force overwrite LR -- fuck your frame consistency
+                        asm.LdpPostindex(sregA, sregB, R.SP, 16);
                         asm.Br(R.X30);
                         return;
                     }
                     case "BLR": {
                         asm.StpPreindex(sregA, sregB, R.SP, -16);
-                        var t = sregA;
-                        sregA = R.X30;
-                        LoadX18(R.X30);
-                        sregA = t;
-                        asm.LdpPostindex(sregA, sregB, R.SP, -16);
+                        LoadX18();
+                        asm.Mov(R.X30, sregA);
+                        asm.LdpPostindex(sregA, sregB, R.SP, 16);
                         asm.Blr(R.X30);
                         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
                         return;
@@ -384,10 +389,10 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                     }
                 }
             if(usesSp)
-                asm.Add(R.SP, R.SP, 32);
+                asm.Add(R.SP, R.SP, spOffset);
             asm.Raw(reinsnn);
             if(usesSp)
-                asm.Sub(R.SP, R.SP, 32);
+                asm.Sub(R.SP, R.SP, spOffset);
             var hasWritten = false;
             foreach(var (_, _, write, _, reg) in regInfo)
                 if(reg == 18 && write && !hasWritten) {
@@ -473,7 +478,10 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     if(problematic.Count != 0 || x18Usage.Count != 0) {
         tramprw = loadBase;
         trampx = loadBase + 0x4000;
-        var trampolines = BuildTrampolines(loadBase + fullTrampSize, loadBase + 0x4000, loadBase, problematic, x18Usage, mod.Binary[(int) textStart..]);
+        var trampSymbols = new Dictionary<string, ulong>();
+        var trampolines = BuildTrampolines(loadBase + fullTrampSize, loadBase + 0x4000, loadBase, problematic, x18Usage, mod.Binary[(int) textStart..], trampSymbols);
+        foreach(var (name, addr) in trampSymbols)
+            macho.AddSymbol(name, trampx + addr);
         macho.AddSegment($".tramprw_{i}", loadBase, 0x4000, [], MemoryProtection.Read | MemoryProtection.Write);
         macho.AddSegment($".trampx_{i}", loadBase + 0x4000, fullTrampSize - 0x4000, trampolines, MemoryProtection.Read | MemoryProtection.Execute);
         loadBase += fullTrampSize;
