@@ -11,6 +11,9 @@ void nvnBufferBuilderSetDefaults(NVNbufferBuilder* builder) {
 
 void nvnBufferBuilderSetStorage(NVNbufferBuilder* builder, NVNmemoryPool* pool, ptrdiff_t offset, size_t size) {
     std::cout << "nvnBufferBuilderSetStorage(pool=" << std::hex << reinterpret_cast<uint64_t>(pool) << ", offset=" << std::dec << offset << ", size=" << size << ") called!" << std::endl;
+    builder->pool = pool;
+    builder->offset = offset;
+    builder->size = size;
 }
 
 NVNmemoryPool nvnBufferBuilderGetMemoryPool(const NVNbufferBuilder* builder) {
@@ -30,6 +33,9 @@ size_t nvnBufferBuilderGetSize(const NVNbufferBuilder* builder) {
 
 NVNboolean nvnBufferInitialize(NVNbuffer* buffer, const NVNbufferBuilder* builder) {
     std::cout << "nvnBufferInitialize called!" << std::endl;
+    buffer->pool = builder->pool;
+    buffer->offset = builder->offset;
+    buffer->size = builder->size;
     return 1;
 }
 
@@ -43,12 +49,12 @@ void nvnBufferFinalize(NVNbuffer* buffer) {
 
 void* nvnBufferMap(const NVNbuffer* buffer) {
     std::cout << "nvnBufferMap() called!" << std::endl;
-    return nullptr;
+    return static_cast<uint8_t*>(buffer->pool->pool) + buffer->offset;
 }
 
 NVNbufferAddress nvnBufferGetAddress(const NVNbuffer* buffer) {
     std::cout << "nvnBufferGetAddress() called!" << std::endl;
-    return 0xDEADBEEF00120000;
+    return reinterpret_cast<NVNbufferAddress>(buffer->pool->pool) + buffer->offset;
 }
 
 void nvnBufferFlushMappedRange(const NVNbuffer* buffer, ptrdiff_t offset, size_t size) {

@@ -66,7 +66,7 @@ public class MemoryManager {
         game.Callbacks.QueryMemory = (memoryInfoPtr, addr, ref pageInfo) => {
             $"Querying memory for {addr:X} -- pointer is {memoryInfoPtr:X}".Log();
             var memoryInfo = (MemoryInfo*) memoryInfoPtr;
-            foreach(var (start, size, exists, mapped, prot) in MemoryHelpers.GetAllRegions()) {
+            /*foreach(var (start, size, exists, mapped, prot) in MemoryHelpers.GetAllRegions()) {
                 if(start <= addr && addr < start + size) {
                     memoryInfo->Begin = start;
                     memoryInfo->Size = size;
@@ -78,8 +78,8 @@ public class MemoryManager {
                     $"Found? {start:X}-{start+size:X} {exists} {prot}".Log();
                     break;
                 }
-            }
-            /*foreach(var (resident, start, size, flags) in AllRegions()) {
+            }*/
+            foreach(var (resident, start, size, flags) in AllRegions()) {
                 if(start <= addr && addr < start + size) {
                     memoryInfo->Begin = start;
                     memoryInfo->Size = size;
@@ -90,7 +90,7 @@ public class MemoryManager {
                     *(uint*) pageInfo = 0;
                     break;
                 }
-            }*/
+            }
             return 0;
         };
         game.Callbacks.SetHeapSize = (size, ref ptr) => {
@@ -112,6 +112,7 @@ public class MemoryManager {
         game.Callbacks.MapSharedMemory = (handle, addr, size, perm) => {
             $"Mapping shared memory handle 0x{handle:X} at 0x{addr:X} (size 0x{size:X})".Log();
             MemoryHelpers.Mmap(addr, size, requirePosition: true);
+            Regions[addr] = (size, 1);
             return 0;
         };
         game.Callbacks.UnmapSharedMemory = (handle, addr, size) => {
@@ -126,6 +127,7 @@ public class MemoryManager {
             while(asize % 16384 != 0) asize++;
             MemoryHelpers.Mmap(adest, asize, requirePosition: true);
             Unsafe.CopyBlockUnaligned((void*) dest, (void*) src, (uint) size);
+            Regions[dest] = (size, 1);
             return 0;
         };
         game.Callbacks.UnmapMemory = (dest, src, size) => {

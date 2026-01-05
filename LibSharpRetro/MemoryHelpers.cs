@@ -4,6 +4,26 @@ using System.Runtime.InteropServices;
 namespace LibSharpRetro;
 
 public static class MemoryHelpers {
+    const string Printable = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-[]{}`~!@#$%^&*()-=\\|;:'\",./<>?";
+    public static void Hexdump(this Span<byte> _buffer) {
+        var buffer = _buffer.ToArray();
+        for(var i = 0; i < buffer.Length; i += 16) {
+            Console.Write($"{i:X4} | ");
+            for(var j = 0; j < 16; ++j) {
+                Console.Write(i + j >= buffer.Length ? $"   " : $"{buffer[i + j]:X2} ");
+                if(j == 7) Console.Write(" ");
+            }
+            Console.Write("| ");
+            for(var j = 0; j < 16; ++j) {
+                if(i + j >= buffer.Length) break;
+                Console.Write(Printable.Contains((char) buffer[i + j]) ? new string((char) buffer[i + j], 1) : ".");
+                if(j == 7) Console.Write(" ");
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine($"{buffer.Length:X4}");
+    }
+    
     public static ulong Mmap(ulong addr, ulong size, bool requirePosition = false) {
         if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
             var maddr = mmapMac(addr, size, 3, 

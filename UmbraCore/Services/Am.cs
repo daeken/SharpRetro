@@ -44,6 +44,10 @@ public partial class IApplicationFunctions {
     }
 
     protected override ulong EnsureSaveData(byte[] _0) => 0;
+
+    protected override void GetDesiredLanguage(out byte[] _0) {
+        _0 = "en-US\0\0\0"u8.ToArray();
+    }
 }
 
 public partial class IApplicationProxy {

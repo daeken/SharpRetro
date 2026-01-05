@@ -25,14 +25,14 @@ public abstract class _ILogService_Base : IpcInterface {
 
 public partial class ILogger : _ILogger_Base;
 public abstract class _ILogger_Base : IpcInterface {
-	protected virtual void Initialize(Span<byte> _0) =>
-		"Stub hit for Nn.Lm.ILogger.Initialize".Log();
+	protected virtual void Log(Span<byte> _0) =>
+		"Stub hit for Nn.Lm.ILogger.Log".Log();
 	protected virtual void SetDestination(uint _0) =>
 		"Stub hit for Nn.Lm.ILogger.SetDestination".Log();
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: { // Initialize
-				Initialize(im.GetSpan<byte>(0x21, 0));
+			case 0x0: { // Log
+				Log(im.GetSpan<byte>(0x21, 0));
 				om.Initialize(0, 0, 0);
 				break;
 			}

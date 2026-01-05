@@ -20,8 +20,16 @@ struct NVNmemoryPoolBuilder {
 };
 struct NVNtexturePool {};
 struct NVNsamplerPool {};
-struct NVNbuffer {};
-struct NVNbufferBuilder {};
+struct NVNbuffer {
+    NVNmemoryPool* pool;
+    ptrdiff_t offset;
+    uint64_t size;
+};
+struct NVNbufferBuilder {
+    NVNmemoryPool* pool;
+    ptrdiff_t offset;
+    uint64_t size;
+};
 struct NVNtexture {};
 struct NVNtextureBuilder {};
 struct NVNtextureView {};
