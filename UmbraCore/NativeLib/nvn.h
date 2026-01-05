@@ -31,7 +31,9 @@ struct NVNbufferBuilder {
     uint64_t size;
 };
 struct NVNtexture {};
-struct NVNtextureBuilder {};
+struct NVNtextureBuilder {
+    int width, height;
+};
 struct NVNtextureView {};
 struct NVNsampler {};
 struct NVNsamplerBuilder {};

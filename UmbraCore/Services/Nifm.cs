@@ -22,5 +22,6 @@ public partial class IGeneralService {
 }
 
 public partial class IStaticService {
+    protected override IGeneralService CreateGeneralService(ulong _0, ulong _1) => new();
     protected override IGeneralService CreateGeneralServiceOld() => new();
 }

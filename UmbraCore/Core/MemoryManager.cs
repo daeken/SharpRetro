@@ -6,8 +6,8 @@ using LibSharpRetro;
 namespace UmbraCore.Core;
 
 public class KSharedMemory : KObject {
-    readonly int Size;
-    byte[] InitialBackingMemory;
+    public readonly int Size;
+    public byte[] InitialBackingMemory;
     ulong _Address;
     public ulong Address { set => SetAddress(value); }
 
@@ -44,14 +44,16 @@ public class MemoryManager {
         Regions.Any(x => x.Key <= addr && addr < x.Key + x.Value.Size);
 
     IEnumerable<(bool Resident, ulong Start, ulong Size, ulong Flags)> AllRegions() {
-        var cur = 0UL;
-        foreach(var (start, (size, flags)) in Regions.OrderBy(x => x.Key)) {
-            if(cur < start)
-                yield return (false, cur, start - cur, 0);
-            yield return (true, start, size, flags);
-            cur = start + size;
+        lock(Regions) {
+            var cur = 0UL;
+            foreach(var (start, (size, flags)) in Regions.OrderBy(x => x.Key)) {
+                if(cur < start)
+                    yield return (false, cur, start - cur, 0);
+                yield return (true, start, size, flags);
+                cur = start + size;
+            }
+            yield return (false, cur, 0x0FFF_FFFF_FFFF_FFFF - cur + 1, 0);
         }
-        yield return (false, cur, 0x0FFF_FFFF_FFFF_FFFF - cur + 1, 0);
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -79,7 +81,8 @@ public class MemoryManager {
                     break;
                 }
             }*/
-            foreach(var (resident, start, size, flags) in AllRegions()) {
+            var regions = AllRegions().ToList();
+            foreach(var (resident, start, size, flags) in regions) {
                 if(start <= addr && addr < start + size) {
                     memoryInfo->Begin = start;
                     memoryInfo->Size = size;
@@ -99,7 +102,8 @@ public class MemoryManager {
             $"Heap size: {HeapSize:X}".Log();
             HeapAddress = (ulong) NativeMemory.AlignedAlloc((UIntPtr) HeapSize, 2 * 1024 * 1024);
             $"Allocated heap at 0x{HeapAddress:X}".Log();
-            Regions[HeapAddress] = (HeapSize, 1);
+            lock(Regions)
+                Regions[HeapAddress] = (HeapSize, 1);
             ptr = HeapAddress;
             Unsafe.InitBlockUnaligned((void*) ptr, 0, (uint) HeapSize);
             return 0;
@@ -111,8 +115,11 @@ public class MemoryManager {
         };
         game.Callbacks.MapSharedMemory = (handle, addr, size, perm) => {
             $"Mapping shared memory handle 0x{handle:X} at 0x{addr:X} (size 0x{size:X})".Log();
+            var shmem = Kernel.Get<KSharedMemory>(handle);
             MemoryHelpers.Mmap(addr, size, requirePosition: true);
-            Regions[addr] = (size, 1);
+            lock(Regions)
+                Regions[addr] = (size, 1);
+            shmem.Address = addr;
             return 0;
         };
         game.Callbacks.UnmapSharedMemory = (handle, addr, size) => {
@@ -127,7 +134,8 @@ public class MemoryManager {
             while(asize % 16384 != 0) asize++;
             MemoryHelpers.Mmap(adest, asize, requirePosition: true);
             Unsafe.CopyBlockUnaligned((void*) dest, (void*) src, (uint) size);
-            Regions[dest] = (size, 1);
+            lock(Regions)
+                Regions[dest] = (size, 1);
             return 0;
         };
         game.Callbacks.UnmapMemory = (dest, src, size) => {

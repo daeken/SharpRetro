@@ -189,6 +189,8 @@ int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
             return 5;
         case NVNdeviceInfo::GlslcMaxSupportedGpuCodeMinorVersion:
             return 14;
+        case NVNdeviceInfo::UniformBufferAlignment:
+            return 256;
         default:
             __builtin_trap();
     }

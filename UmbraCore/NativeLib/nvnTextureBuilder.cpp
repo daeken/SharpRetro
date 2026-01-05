@@ -19,10 +19,12 @@ void nvnTextureBuilderSetTarget(NVNtextureBuilder* builder, NVNtextureTarget tar
 
 void nvnTextureBuilderSetWidth(NVNtextureBuilder* builder, int width) {
     std::cout << "nvnTextureBuilderSetWidth(width=" << width << ") called!" << std::endl;
+    builder->width = width;
 }
 
 void nvnTextureBuilderSetHeight(NVNtextureBuilder* builder, int height) {
     std::cout << "nvnTextureBuilderSetHeight(height=" << height << ") called!" << std::endl;
+    builder->height = height;
 }
 
 void nvnTextureBuilderSetDepth(NVNtextureBuilder* builder, int depth) {
@@ -63,7 +65,10 @@ void nvnTextureBuilderSetDepthStencilMode(NVNtextureBuilder* builder, NVNtexture
 
 size_t nvnTextureBuilderGetStorageSize(const NVNtextureBuilder* builder) {
     std::cout << "nvnTextureBuilderGetStorageSize() called!" << std::endl;
-    return 0x80; // Random number chosen
+    /*auto ret = builder->width * builder->height * 4;
+    while(ret % 0x10) ret++;
+    return ret;*/
+    return 0x80; // Just BS
 }
 
 size_t nvnTextureBuilderGetStorageAlignment(const NVNtextureBuilder* builder) {
