@@ -10,8 +10,8 @@ public class MiscManager {
                 (1, 0) => 0xFFFFFFFF00000000UL,
                 (2, 0) => 0xbb0000000,
                 (3, 0) => 0x1000000000,
-                (4, 0) => Kernel.MemoryManager.HeapAddress,
-                (5, 0) => Kernel.MemoryManager.HeapSize,
+                (4, 0) => throw new NotImplementedException(), //Kernel.MemoryManager.HeapAddress,
+                (5, 0) => throw new NotImplementedException(), //Kernel.MemoryManager.HeapSize,
                 (6, 0) => 0x1_00000000, // Total memory
                 (7, 0) => 0x40000000, // Used memory
                 (8, 0) => 1, // Is debugger attached
