@@ -176,6 +176,10 @@ public partial class IAudioRenderer {
 public partial class IAudioDevice {
     protected override KObject QueryAudioDeviceOutputEvent() => new Event(false);
     protected override int GetActiveChannelCount() => 2;
+    protected override void ListAudioDeviceNames(out uint count, Span<byte> names) {
+        count = 1;
+        "TV\0"u8.CopyTo(names);
+    }
 }
 
 public partial class IAudioOutManager {
@@ -209,6 +213,8 @@ public partial class IAudioRendererManager {
     protected override ulong GetWorkBufferSize(AudioRendererParameterInternal _0) => 0x100; // Sure!
 
     protected override IAudioRenderer OpenAudioRenderer(AudioRendererParameterInternal _0, ulong _1, ulong _2, ulong _3, KObject _4, KObject _5) => new();
-    
+
+    protected override IAudioDevice GetAudioDeviceService(ulong _0) => new();
+
     protected override IAudioDevice GetAudioDeviceServiceWithRevisionInfo(ulong _0, uint _1) => new();
 }

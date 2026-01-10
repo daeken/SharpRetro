@@ -11,8 +11,6 @@ public partial class IRequest {
 
     protected override uint GetRequestState() => 1; // Free
     protected override void GetResult() {
-        // TODO: Actually unfuck nifm, but for now this works
-        Thread.Sleep(1000000);
         throw new IpcException((1111 << 9) | 110); // 110=nifm, 1111 == ResultNetworkCommunicationDisabled
     }
 }
