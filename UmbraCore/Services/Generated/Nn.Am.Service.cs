@@ -328,6 +328,8 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 		"Stub hit for Nn.Am.Service.IApplicationFunctions.ExitAndRequestToShowThanksMessage".Log();
 	protected virtual void EnableApplicationCrashReport(byte _0) =>
 		"Stub hit for Nn.Am.Service.IApplicationFunctions.EnableApplicationCrashReport".Log();
+	protected virtual KObject GetGpuErrorDetectedSystemEvent() =>
+		throw new NotImplementedException("Nn.Am.Service.IApplicationFunctions.GetGpuErrorDetectedSystemEvent not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x1: { // PopLaunchParameter
@@ -475,6 +477,12 @@ public abstract class _IApplicationFunctions_Base : IpcInterface {
 			case 0x5A: { // EnableApplicationCrashReport
 				EnableApplicationCrashReport(im.GetData<byte>(8));
 				om.Initialize(0, 0, 0);
+				break;
+			}
+			case 0x82: { // GetGpuErrorDetectedSystemEvent
+				var _return = GetGpuErrorDetectedSystemEvent();
+				om.Initialize(0, 1, 0);
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			default:
@@ -2042,6 +2050,8 @@ public abstract class _ISelfController_Base : IpcInterface {
 		"Stub hit for Nn.Am.Service.ISelfController.ReportMultimediaError".Log();
 	protected virtual void SetWirelessPriorityMode(uint _0) =>
 		"Stub hit for Nn.Am.Service.ISelfController.SetWirelessPriorityMode".Log();
+	protected virtual KObject GetAccumulatedSuspendedTickChangedEvent() =>
+		throw new NotImplementedException("Nn.Am.Service.ISelfController.GetAccumulatedSuspendedTickChangedEvent not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // Exit
@@ -2209,6 +2219,12 @@ public abstract class _ISelfController_Base : IpcInterface {
 			case 0x50: { // SetWirelessPriorityMode
 				SetWirelessPriorityMode(im.GetData<uint>(8));
 				om.Initialize(0, 0, 0);
+				break;
+			}
+			case 0x5B: { // GetAccumulatedSuspendedTickChangedEvent
+				var _return = GetAccumulatedSuspendedTickChangedEvent();
+				om.Initialize(0, 1, 0);
+				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
 			default:

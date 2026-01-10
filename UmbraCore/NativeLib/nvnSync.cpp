@@ -6,6 +6,16 @@ NVNboolean nvnSyncInitialize(NVNsync* sync, NVNdevice* device) {
     return 1;
 }
 
+NVNboolean nvnSyncInitializeFromFencedGLSync(NVNsync* sync) {
+    std::cout << "nvnSyncInitializeFromFencedGLSync called!" << std::endl;
+    return 1;
+}
+
+void* nvnSyncCreateGLSync(NVNsync* sync) {
+    std::cout << "nvnSyncCreateGLSync called!" << std::endl;
+    return nullptr;
+}
+
 void nvnSyncFinalize(NVNsync* sync) {
     std::cout << "nvnSyncFinalize called!" << std::endl;
 }

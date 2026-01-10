@@ -36,3 +36,8 @@ int nvnSamplerPoolGetSize(const NVNsamplerPool* pool) {
     std::cout << "nvnSamplerPoolGetSize() called!" << std::endl;
     return 0;
 }
+
+NVNdevice* nvnBufferBuilderGetDevice(NVNbufferBuilder* builder) {
+    std::cout << "nvnBufferBuilderGetDevice() called!" << std::endl;
+    return nullptr;
+}

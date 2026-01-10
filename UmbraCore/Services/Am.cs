@@ -7,6 +7,10 @@ public partial class ISelfController {
         "Attempting to create managed display layer".Log();
         return 1;
     }
+
+    protected override KObject GetAccumulatedSuspendedTickChangedEvent() => new Event(false);
+
+    protected override KObject GetLibraryAppletLaunchableEvent() => new Event(true, true);
 }
 
 public partial class IWindowController {
@@ -23,8 +27,13 @@ public partial class ICommonStateGetter {
 
 public partial class IStorageAccessor(byte[] Data) {
     protected override ulong GetSize() => (ulong) Data.Length;
-    protected override void Write(ulong _0, Span<byte> _1) => throw new NotImplementedException();
-    protected override void Read(ulong offset, Span<byte> span) => Data.CopyTo(span[..Math.Min(span.Length, Data.Length)]);
+    protected override void Write(ulong offset, Span<byte> span) {
+        Console.WriteLine($"IStorageAccessor writing to offset {offset} -- size {Data.Length}, span {span.Length}");
+        span.CopyTo(Data.AsSpan()[(int) offset..]);
+    }
+
+    protected override void Read(ulong offset, Span<byte> span) =>
+        Data[(int) offset..].CopyTo(span[..Math.Min(span.Length, Data.Length - (int) offset)]);
 }
 
 public partial class IStorage(byte[] Data) {
@@ -48,6 +57,19 @@ public partial class IApplicationFunctions {
     protected override void GetDesiredLanguage(out byte[] _0) {
         _0 = "en-US\0\0\0"u8.ToArray();
     }
+
+    protected override KObject GetGpuErrorDetectedSystemEvent() => new Event(false);
+}
+
+public partial class ILibraryAppletAccessor {
+    readonly Event Event = new(true, true);
+    protected override KObject GetAppletStateChangedEvent() => Event;
+    protected override IStorage PopOutData() => new([]);
+}
+
+public partial class ILibraryAppletCreator {
+    protected override ILibraryAppletAccessor CreateLibraryApplet(uint _0, uint _1) => new();
+    protected override IStorage CreateStorage(ulong _0) => new(new byte[_0]);
 }
 
 public partial class IApplicationProxy {

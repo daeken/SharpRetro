@@ -325,8 +325,20 @@ void nvnCommandBufferSetStencilRef(NVNcommandBuffer* cmdBuf, NVNface faces, int 
     std::cout << "nvnCommandBufferSetStencilRef called!" << std::endl;
 }
 
+void nvnCommandBufferSetStencilCullCriteria(NVNcommandBuffer* cmdBuf) {
+    std::cout << "nvnCommandBufferSetStencilCullCriteria called!" << std::endl;
+}
+
 void nvnCommandBufferSetBlendColor(NVNcommandBuffer* cmdBuf, const float* blendColor) {
     std::cout << "nvnCommandBufferSetBlendColor called!" << std::endl;
+}
+
+void nvnCommandBufferSetColorReductionEnable(NVNcommandBuffer* cmdBuf, NVNboolean enable) {
+    std::cout << "nvnCommandBufferSetColorReductionEnable called!" << std::endl;
+}
+
+void nvnCommandBufferSetColorReductionThresholds(NVNcommandBuffer* cmdBuf, float f) {
+    std::cout << "nvnCommandBufferSetColorReductionThresholds called!" << std::endl;
 }
 
 void nvnCommandBufferSetPointSize(NVNcommandBuffer* cmdBuf, float pointSize) {
@@ -367,6 +379,10 @@ void nvnCommandBufferSetConservativeRasterDilate(NVNcommandBuffer* cmdBuf, float
 
 void nvnCommandBufferSetSubpixelPrecisionBias(NVNcommandBuffer* cmdBuf, int i1, int i2) {
     std::cout << "nvnCommandBufferSetSubpixelPrecisionBias called!" << std::endl;
+}
+
+void nvnCommandBufferSetCommandMemoryCallbackEnabled(NVNcommandBuffer* cmdBuf, NVNboolean enable) {
+    std::cout << "nvnCommandBufferSetCommandMemoryCallbackEnabled called!" << std::endl;
 }
 
 void nvnCommandBufferCopyBufferToTexture(NVNcommandBuffer* cmdBuf, NVNbufferAddress buffer, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, int flags) {

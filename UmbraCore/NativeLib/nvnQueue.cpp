@@ -25,6 +25,16 @@ void nvnQueueResetMemoryUsageCounts(NVNqueue* queue) {
     std::cout << "nvnQueueResetMemoryUsageCounts called!" << std::endl;
 }
 
+void* nvnQueueBuilderGetMemory(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetMemory() called!" << std::endl;
+    return nullptr;
+}
+
+NVNdevice* nvnQueueBuilderGetDevice(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetDevice() called!" << std::endl;
+    return nullptr;
+}
+
 void nvnQueueBuilderSetDevice(NVNqueueBuilder* builder, NVNdevice* device) {
     std::cout << "nvnQueueBuilderSetDevice called!" << std::endl;
 }
@@ -33,16 +43,36 @@ void nvnQueueBuilderSetDefaults(NVNqueueBuilder* builder) {
     std::cout << "nvnQueueBuilderSetDefaults called!" << std::endl;
 }
 
+int nvnQueueBuilderGetFlags(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetFlags called!" << std::endl;
+    return 0;
+}
+
 void nvnQueueBuilderSetFlags(NVNqueueBuilder* builder, int flags) {
     std::cout << "nvnQueueBuilderSetFlags(flags=" << flags << ") called!" << std::endl;
+}
+
+size_t nvnQueueBuilderGetCommandMemorySize(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetCommandMemorySize() called!" << std::endl;
+    return 0;
 }
 
 void nvnQueueBuilderSetCommandMemorySize(NVNqueueBuilder* builder, size_t size) {
     std::cout << "nvnQueueBuilderSetCommandMemorySize(size=" << size << ") called!" << std::endl;
 }
 
+size_t nvnQueueBuilderGetComputeMemorySize(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetComputeMemorySize() called!" << std::endl;
+    return 0;
+}
+
 void nvnQueueBuilderSetComputeMemorySize(NVNqueueBuilder* builder, size_t size) {
     std::cout << "nvnQueueBuilderSetComputeMemorySize(size=" << size << ") called!" << std::endl;
+}
+
+size_t nvnQueueBuilderGetControlMemorySize(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetControlMemorySize() called!" << std::endl;
+    return 0;
 }
 
 void nvnQueueBuilderSetControlMemorySize(NVNqueueBuilder* builder, size_t size) {
@@ -56,6 +86,25 @@ size_t nvnQueueBuilderGetQueueMemorySize(const NVNqueueBuilder* builder) {
 
 void nvnQueueBuilderSetQueueMemory(NVNqueueBuilder* builder, void* memory, size_t size) {
     std::cout << "nvnQueueBuilderSetQueueMemory(memory=" << std::hex << reinterpret_cast<uint64_t>(memory) << ", size=" << std::dec << size << ") called!" << std::endl;
+}
+
+size_t nvnQueueBuilderGetMemorySize(const NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetMemorySize() called!" << std::endl;
+    return 0;
+}
+
+void nvnQueueBuilderSetQueuePriority(NVNqueueBuilder* builder, int priority) {
+    std::cout << "nvnQueueBuilderSetQueuePriority(priority=" << priority << ") called!" << std::endl;
+}
+
+size_t nvnQueueBuilderGetCommandFlushThreshold(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetCommandFlushThreshold() called!" << std::endl;
+    return 0;
+}
+
+int nvnQueueBuilderGetQueuePriority(NVNqueueBuilder* builder) {
+    std::cout << "nvnQueueBuilderGetQueuePriority called!" << std::endl;
+    return 0;
 }
 
 void nvnQueueBuilderSetCommandFlushThreshold(NVNqueueBuilder* builder, size_t size) {
@@ -95,6 +144,11 @@ NVNqueueAcquireTextureResult nvnQueueAcquireTexture(NVNqueue* queue, NVNwindow* 
     std::cout << "nvnQueueAcquireTexture(window=" << std::hex << reinterpret_cast<uint64_t>(window) << std::dec << ") called!" << std::endl;
     if (textureIndex) *textureIndex = 0;
     return 0;
+}
+
+NVNdevice* nvnWindowBuilderGetDevice(NVNwindowBuilder* builder) {
+    std::cout << "nvnWindowBuilderGetDevice called!" << std::endl;
+    return nullptr;
 }
 
 void nvnQueueFenceSync(NVNqueue* queue, NVNsync* sync, NVNsyncCondition condition, int flags) {

@@ -1,0 +1,125 @@
+interface nn::am::service::ISelfController {
+	[0] Exit();
+	[1] LockExit();
+	[2] UnlockExit();
+	@version(2.0.0+)
+	[3] EnterFatalSection();
+	@version(2.0.0+)
+	[4] LeaveFatalSection();
+
+	[9] GetLibraryAppletLaunchableEvent() -> handle<copy>;
+	[10] SetScreenShotPermission(u32);
+	[11] SetOperationModeChangedNotification(b8);
+	[12] SetPerformanceModeChangedNotification(b8);
+	[13] SetFocusHandlingMode(b8, b8, b8);
+	[14] SetRestartMessageEnabled(b8);
+	@version(2.0.0+)
+	[15] SetScreenShotAppletIdentityInfo(nn::am::service::AppletIdentityInfo);
+	@version(2.0.0+)
+	[16] SetOutOfFocusSuspendingEnabled(b8);
+	@version(3.0.0+)
+	[17] SetControllerFirmwareUpdateSection(b8);
+	@version(3.0.0+)
+	[18] SetRequiresCaptureButtonShortPressedMessage(b8);
+	@version(3.0.0+)
+	[19] SetScreenShotImageOrientation(u32);
+	@version(4.0.0+)
+	[20] SetDesirableKeyboardLayout(u32);
+
+	[40] CreateManagedDisplayLayer() -> u64;
+	@version(4.0.0+)
+	[41] IsSystemBufferSharingEnabled();
+	@version(4.0.0+)
+	[42] GetSystemSharedLayerHandle() -> (nn::vi::fbshare::SharedBufferHandle, nn::vi::fbshare::SharedLayerHandle);
+
+	[50] SetHandlesRequestToDisplay(b8);
+	[51] ApproveToDisplay();
+
+	[60] OverrideAutoSleepTimeAndDimmingTime(u32, u32, u32, u32);
+	[61] SetMediaPlaybackState(b8);
+	[62] SetIdleTimeDetectionExtension(u32);
+	[63] GetIdleTimeDetectionExtension() -> u32;
+	[64] SetInputDetectionSourceSet(u32);
+	@version(2.0.0+)
+	[65] ReportUserIsActive();
+	@version(3.0.0+)
+	[66] GetCurrentIlluminance() -> f32;
+	@version(3.0.0+)
+	[67] IsIlluminanceAvailable() -> b8;
+
+	@version(4.0.0+)
+	[70] ReportMultimediaError(u32, buffer<bytes, 0x5>);
+
+	@version(4.0.0+)
+	[80] SetWirelessPriorityMode(u32);
+
+	@version(6.0.0+)
+	[91] GetAccumulatedSuspendedTickChangedEvent() -> handle<copy>;
+}
+
+interface nn::am::service::IApplicationFunctions {
+	[1] PopLaunchParameter(u32) -> object<nn::am::service::IStorage>;
+
+	[10] CreateApplicationAndPushAndRequestToStart(nn::ncm::ApplicationId, object<nn::am::service::IStorage>);
+	@version(3.0.0+)
+	[11] CreateApplicationAndPushAndRequestToStartForQuest(u32, u32, nn::ncm::ApplicationId, object<nn::am::service::IStorage>);
+	@version(4.0.0+)
+	[12] CreateApplicationAndRequestToStart(nn::ncm::ApplicationId);
+	@version(4.0.0+)
+	[13] CreateApplicationAndRequestToStartForQuest(u32, u32, nn::ncm::ApplicationId);
+
+	[20] EnsureSaveData(nn::account::Uid) -> u64;
+	[21] GetDesiredLanguage() -> nn::settings::LanguageCode;
+	[22] SetTerminateResult(u32);
+	[23] GetDisplayVersion() -> nn::oe::DisplayVersion;
+	@version(2.0.0+)
+	[24] GetLaunchStorageInfoForDebug() -> (nn::ncm::StorageId, nn::ncm::StorageId);
+	@version(3.0.0+)
+	[25] ExtendSaveData(u8, nn::account::Uid, u64, u64) -> u64;
+	@version(3.0.0+)
+	[26] GetSaveDataSize(u8, nn::account::Uid) -> (u64, u64);
+
+	@version(1.0.0)
+	[30] BeginBlockingHomeButton(unknown<0x8>);
+	@version(2.0.0+)
+	[30] BeginBlockingHomeButtonShortAndLongPressed(u64);
+	@version(1.0.0)
+	[31] EndBlockingHomeButton();
+	@version(2.0.0+)
+	[31] EndBlockingHomeButtonShortAndLongPressed();
+	@version(2.0.0+)
+	[32] BeginBlockingHomeButton(u64);
+	@version(2.0.0+)
+	[33] EndBlockingHomeButton();
+
+	[40] NotifyRunning() -> b8;
+
+	@version(2.0.0+)
+	[50] GetPseudoDeviceId() -> nn::util::Uuid;
+
+	@version(2.0.0+)
+	[60] SetMediaPlaybackStateForApplication(b8);
+
+	@version(3.0.0+)
+	[65] IsGamePlayRecordingSupported() -> b8;
+	@version(3.0.0+)
+	[66] InitializeGamePlayRecording(u64, handle<copy>);
+	@version(3.0.0+)
+	[67] SetGamePlayRecordingState(u32);
+	@version(4.0.0+)
+	[68] RequestFlushGamePlayingMovieForDebug();
+
+	@version(3.0.0+)
+	[70] RequestToShutdown();
+	@version(3.0.0+)
+	[71] RequestToReboot();
+
+	@version(4.0.0+)
+	[80] ExitAndRequestToShowThanksMessage();
+
+	@version(4.0.0+)
+	[90] EnableApplicationCrashReport(b8);
+
+	@version(8.0.0+)
+	[130] GetGpuErrorDetectedSystemEvent() -> handle<copy>;
+}

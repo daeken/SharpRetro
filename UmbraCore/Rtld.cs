@@ -40,7 +40,7 @@ public class Rtld {
     }
 
     static unsafe void KageLog(void* logger, char* message) {
-        Console.WriteLine($"Kage log: '{Marshal.PtrToStringAnsi((IntPtr) message)!.Trim()}'");
+        $"Kage log: '{Marshal.PtrToStringAnsi((IntPtr) message)!.Trim()}'".Log();
     }
 
     public unsafe Rtld(List<ExeModule> modules) {
@@ -152,12 +152,14 @@ public class Rtld {
     void Relocate(ExeModule module, ulong offset, uint type, uint sym, long addend, bool isRel) =>
         Relocate(module, offset, (RelocationType) type, sym, addend, isRel);
     unsafe void Relocate(ExeModule module, ulong offset, RelocationType type, uint sym, long addend, bool isRel) {
-        ulong Patch(ulong addr) =>
-            ReverseSymbols.TryGetValue(addr, out var name) && 
-            SymbolAddrs.TryGetValue(name, out var naddr) &&
-            addr != naddr
-                ? naddr
-                : addr;
+        ulong Patch(ulong addr) {
+            if(!ReverseSymbols.TryGetValue(addr, out var name)) return addr;
+            if(!SymbolAddrs.TryGetValue(name, out var naddr) ||
+               addr == naddr)
+                return addr;
+            $"Patching {name}".Log();
+            return naddr;
+        }
 
         var addr = 0UL;
         if(sym != 0) {

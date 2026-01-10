@@ -135,6 +135,11 @@ int nvnTextureGetStorageSize(const NVNtexture* texture) {
     return 0;
 }
 
+int nvnTextureGetRawStorageClass(const NVNtexture* texture) {
+    std::cout << "nvnTextureGetRawStorageClass called!" << std::endl;
+    return 0;
+}
+
 NVNboolean nvnTextureCompare(const NVNtexture* texture1, const NVNtexture* texture2) {
     std::cout << "nvnTextureCompare called!" << std::endl;
     return 0;
@@ -143,4 +148,9 @@ NVNboolean nvnTextureCompare(const NVNtexture* texture1, const NVNtexture* textu
 uint64_t nvnTextureGetDebugID(const NVNtexture* texture) {
     std::cout << "nvnTextureGetDebugID called!" << std::endl;
     return 0;
+}
+
+NVNdevice* nvnSamplerBuilderGetDevice(NVNsamplerBuilder* builder) {
+    std::cout << "nvnSamplerBuilderGetDevice called!" << std::endl;
+    return nullptr;
 }

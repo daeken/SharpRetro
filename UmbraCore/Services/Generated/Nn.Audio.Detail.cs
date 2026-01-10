@@ -2,39 +2,31 @@ using System.Runtime.InteropServices;
 using UmbraCore.Core;
 // ReSharper disable once CheckNamespace
 namespace UmbraCore.Services.Nn.Audio.Detail;
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
-public unsafe struct AudioRendererUpdateDataHeader {
-	public int Revision;
-	public int BehaviorSize;
-	public int MemoryPoolSize;
-	public int VoiceSize;
-	public int VoiceResourceSize;
-	public int EffectSize;
-	public int MixSize;
-	public int SinkSize;
-	public int PerformanceManagerSize;
-	public int Unknown24;
-	public int Unknown28;
-	public int Unknown2C;
-	public int Unknown30;
-	public int Unknown34;
-	public int Unknown38;
-	public int TotalSize;
+public enum AudioRendererRenderingDevice : byte {
+	Dsp = 0x0,
+	Cpu = 0x1,
+}
+public enum AudioRendererExecutionMode : byte {
+	Auto = 0x0,
+	Manual = 0x1,
 }
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public unsafe struct AudioRendererParameterInternal {
 	public int SampleRate;
 	public int SampleCount;
-	public int Unknown8;
-	public int MixCount;
+	public int MixBufferCount;
+	public int SubMixBufferCount;
 	public int VoiceCount;
 	public int SinkCount;
 	public int EffectCount;
 	public int PerformanceManagerCount;
-	public int VoiceDropEnable;
+	public byte VoiceDropEnable;
+	public byte Reserved;
+	public Nn.Audio.Detail.AudioRendererRenderingDevice RenderingDevice;
+	public Nn.Audio.Detail.AudioRendererExecutionMode ExecutionMode;
 	public int SplitterCount;
 	public int SplitterDestinationDataCount;
-	public int Unknown2C;
+	public int ExternalContextSize;
 	public int Revision;
 }
 public partial class IAudioDebugManager : _IAudioDebugManager_Base;
@@ -77,96 +69,96 @@ public abstract class _IAudioDebugManager_Base : IpcInterface {
 
 public partial class IAudioDevice : _IAudioDevice_Base;
 public abstract class _IAudioDevice_Base : IpcInterface {
-	protected virtual void Unknown0(out uint _0, Span<byte> _1) =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown0 not implemented");
-	protected virtual void Unknown1(uint _0, Span<byte> _1) =>
-		"Stub hit for Nn.Audio.Detail.IAudioDevice.Unknown1".Log();
-	protected virtual uint Unknown2(Span<byte> _0) =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown2 not implemented");
-	protected virtual void Unknown3(Span<byte> _0) =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown3 not implemented");
-	protected virtual KObject Unknown4() =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown4 not implemented");
-	protected virtual uint Unknown5() =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown5 not implemented");
-	protected virtual void Unknown6(out uint _0, Span<byte> _1) =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown6 not implemented");
-	protected virtual void Unknown7(uint _0, Span<byte> _1) =>
-		"Stub hit for Nn.Audio.Detail.IAudioDevice.Unknown7".Log();
-	protected virtual uint Unknown8(Span<byte> _0) =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown8 not implemented");
-	protected virtual void Unknown10(Span<byte> _0) =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown10 not implemented");
-	protected virtual KObject Unknown11() =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown11 not implemented");
-	protected virtual KObject Unknown12() =>
-		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.Unknown12 not implemented");
+	protected virtual void ListAudioDeviceNames(out uint count, Span<byte> names) =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.ListAudioDeviceNames not implemented");
+	protected virtual void SetAudioDeviceOutputVolume(float volume, Span<byte> name) =>
+		"Stub hit for Nn.Audio.Detail.IAudioDevice.SetAudioDeviceOutputVolume".Log();
+	protected virtual float GetAudioDeviceOutputVolume(Span<byte> name) =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.GetAudioDeviceOutputVolume not implemented");
+	protected virtual void GetActiveAudioDeviceName(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.GetActiveAudioDeviceName not implemented");
+	protected virtual KObject QueryAudioDeviceSystemEvent() =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.QueryAudioDeviceSystemEvent not implemented");
+	protected virtual int GetActiveChannelCount() =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.GetActiveChannelCount not implemented");
+	protected virtual void ListAudioDeviceNameAuto(out uint count, Span<byte> names) =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.ListAudioDeviceNameAuto not implemented");
+	protected virtual void SetAudioDeviceOutputVolumeAuto(float volume, Span<byte> name) =>
+		"Stub hit for Nn.Audio.Detail.IAudioDevice.SetAudioDeviceOutputVolumeAuto".Log();
+	protected virtual float GetAudioDeviceOutputVolumeAuto(Span<byte> name) =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.GetAudioDeviceOutputVolumeAuto not implemented");
+	protected virtual void GetActiveAudioDeviceNameAuto(Span<byte> _0) =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.GetActiveAudioDeviceNameAuto not implemented");
+	protected virtual KObject QueryAudioDeviceInputEvent() =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.QueryAudioDeviceInputEvent not implemented");
+	protected virtual KObject QueryAudioDeviceOutputEvent() =>
+		throw new NotImplementedException("Nn.Audio.Detail.IAudioDevice.QueryAudioDeviceOutputEvent not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
-			case 0x0: { // Unknown0
-				Unknown0(out var _0, im.GetSpan<byte>(0x6, 0));
+			case 0x0: { // ListAudioDeviceNames
+				ListAudioDeviceNames(out var _0, im.GetSpan<byte>(0x6, 0));
 				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
-			case 0x1: { // Unknown1
-				Unknown1(im.GetData<uint>(8), im.GetSpan<byte>(0x5, 0));
+			case 0x1: { // SetAudioDeviceOutputVolume
+				SetAudioDeviceOutputVolume(im.GetData<float>(8), im.GetSpan<byte>(0x5, 0));
 				om.Initialize(0, 0, 0);
 				break;
 			}
-			case 0x2: { // Unknown2
-				var _return = Unknown2(im.GetSpan<byte>(0x5, 0));
+			case 0x2: { // GetAudioDeviceOutputVolume
+				var _return = GetAudioDeviceOutputVolume(im.GetSpan<byte>(0x5, 0));
 				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
-			case 0x3: { // Unknown3
-				Unknown3(im.GetSpan<byte>(0x6, 0));
+			case 0x3: { // GetActiveAudioDeviceName
+				GetActiveAudioDeviceName(im.GetSpan<byte>(0x6, 0));
 				om.Initialize(0, 0, 0);
 				break;
 			}
-			case 0x4: { // Unknown4
-				var _return = Unknown4();
+			case 0x4: { // QueryAudioDeviceSystemEvent
+				var _return = QueryAudioDeviceSystemEvent();
 				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
-			case 0x5: { // Unknown5
-				var _return = Unknown5();
+			case 0x5: { // GetActiveChannelCount
+				var _return = GetActiveChannelCount();
 				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
-			case 0x6: { // Unknown6
-				Unknown6(out var _0, im.GetSpan<byte>(0x22, 0));
+			case 0x6: { // ListAudioDeviceNameAuto
+				ListAudioDeviceNameAuto(out var _0, im.GetSpan<byte>(0x22, 0));
 				om.Initialize(0, 0, 4);
 				om.SetData(8, _0);
 				break;
 			}
-			case 0x7: { // Unknown7
-				Unknown7(im.GetData<uint>(8), im.GetSpan<byte>(0x21, 0));
+			case 0x7: { // SetAudioDeviceOutputVolumeAuto
+				SetAudioDeviceOutputVolumeAuto(im.GetData<float>(8), im.GetSpan<byte>(0x21, 0));
 				om.Initialize(0, 0, 0);
 				break;
 			}
-			case 0x8: { // Unknown8
-				var _return = Unknown8(im.GetSpan<byte>(0x21, 0));
+			case 0x8: { // GetAudioDeviceOutputVolumeAuto
+				var _return = GetAudioDeviceOutputVolumeAuto(im.GetSpan<byte>(0x21, 0));
 				om.Initialize(0, 0, 4);
 				om.SetData(8, _return);
 				break;
 			}
-			case 0xA: { // Unknown10
-				Unknown10(im.GetSpan<byte>(0x22, 0));
+			case 0xA: { // GetActiveAudioDeviceNameAuto
+				GetActiveAudioDeviceNameAuto(im.GetSpan<byte>(0x22, 0));
 				om.Initialize(0, 0, 0);
 				break;
 			}
-			case 0xB: { // Unknown11
-				var _return = Unknown11();
+			case 0xB: { // QueryAudioDeviceInputEvent
+				var _return = QueryAudioDeviceInputEvent();
 				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
 			}
-			case 0xC: { // Unknown12
-				var _return = Unknown12();
+			case 0xC: { // QueryAudioDeviceOutputEvent
+				var _return = QueryAudioDeviceOutputEvent();
 				om.Initialize(0, 1, 0);
 				om.Copy(0, CreateHandle(_return, copy: true));
 				break;
@@ -531,7 +523,7 @@ public partial class IAudioOutManager : _IAudioOutManager_Base {
 public abstract class _IAudioOutManager_Base : IpcInterface {
 	protected virtual void ListAudioOuts(out uint count, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManager.ListAudioOuts not implemented");
-	protected virtual void OpenAudioOut(uint sample_rate, ushort unused, ushort channel_count, ulong _3, ulong _4, KObject _5, Span<byte> name_in, out uint sample_rate_out, out uint channel_count_out, out uint pcm_format, out uint _10, out Nn.Audio.Detail.IAudioOut _11, Span<byte> name_out) =>
+	protected virtual void OpenAudioOut(uint sample_rate, ushort channel_count, ushort unused, ulong _3, ulong _4, KObject _5, Span<byte> name_in, out uint sample_rate_out, out uint channel_count_out, out uint pcm_format, out uint state, out Nn.Audio.Detail.IAudioOut _11, Span<byte> name_out) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManager.OpenAudioOut not implemented");
 	protected virtual void ListAudioOutsAuto(out uint count, Span<byte> _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioOutManager.ListAudioOutsAuto not implemented");
@@ -671,7 +663,7 @@ public abstract class _IAudioRenderer_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.GetMixBufferCount not implemented");
 	protected virtual uint GetState() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.GetState not implemented");
-	protected virtual void RequestUpdateAudioRenderer(Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _0, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _1, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _2) =>
+	protected virtual void RequestUpdateAudioRenderer(Span<byte> input, Span<byte> output, Span<byte> performance) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.RequestUpdateAudioRenderer not implemented");
 	protected virtual void Start() =>
 		"Stub hit for Nn.Audio.Detail.IAudioRenderer.Start".Log();
@@ -683,7 +675,7 @@ public abstract class _IAudioRenderer_Base : IpcInterface {
 		"Stub hit for Nn.Audio.Detail.IAudioRenderer.SetAudioRendererRenderingTimeLimit".Log();
 	protected virtual uint GetAudioRendererRenderingTimeLimit() =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.GetAudioRendererRenderingTimeLimit not implemented");
-	protected virtual void RequestUpdateAudioRendererAuto(Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _0, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _1, Span<Nn.Audio.Detail.AudioRendererUpdateDataHeader> _2) =>
+	protected virtual void RequestUpdateAudioRendererAuto(Span<byte> input, Span<byte> output, Span<byte> performance) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRenderer.RequestUpdateAudioRendererAuto not implemented");
 	protected virtual void ExecuteAudioRendererRendering() =>
 		"Stub hit for Nn.Audio.Detail.IAudioRenderer.ExecuteAudioRendererRendering".Log();
@@ -714,7 +706,7 @@ public abstract class _IAudioRenderer_Base : IpcInterface {
 				break;
 			}
 			case 0x4: { // RequestUpdateAudioRenderer
-				RequestUpdateAudioRenderer(im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x5, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x6, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x6, 1));
+				RequestUpdateAudioRenderer(im.GetSpan<byte>(0x5, 0), im.GetSpan<byte>(0x6, 0), im.GetSpan<byte>(0x6, 1));
 				om.Initialize(0, 0, 0);
 				break;
 			}
@@ -746,7 +738,7 @@ public abstract class _IAudioRenderer_Base : IpcInterface {
 				break;
 			}
 			case 0xA: { // RequestUpdateAudioRendererAuto
-				RequestUpdateAudioRendererAuto(im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x21, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x22, 0), im.GetSpan<Nn.Audio.Detail.AudioRendererUpdateDataHeader>(0x22, 1));
+				RequestUpdateAudioRendererAuto(im.GetSpan<byte>(0x21, 0), im.GetSpan<byte>(0x22, 0), im.GetSpan<byte>(0x22, 1));
 				om.Initialize(0, 0, 0);
 				break;
 			}
@@ -766,13 +758,13 @@ public partial class IAudioRendererManager : _IAudioRendererManager_Base {
 	public IAudioRendererManager(string serviceName) => ServiceName = serviceName;
 }
 public abstract class _IAudioRendererManager_Base : IpcInterface {
-	protected virtual Nn.Audio.Detail.IAudioRenderer OpenAudioRenderer(Nn.Audio.Detail.AudioRendererParameterInternal _0, ulong _1, ulong _2, ulong _3, KObject _4, KObject _5) =>
+	protected virtual Nn.Audio.Detail.IAudioRenderer OpenAudioRenderer(Nn.Audio.Detail.AudioRendererParameterInternal parameter, ulong workBufferSize, ulong _2, ulong _3, KObject workBufferTransferMemory, KObject process) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.OpenAudioRenderer not implemented");
-	protected virtual ulong GetWorkBufferSize(Nn.Audio.Detail.AudioRendererParameterInternal _0) =>
+	protected virtual ulong GetWorkBufferSize(Nn.Audio.Detail.AudioRendererParameterInternal parameter) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.GetWorkBufferSize not implemented");
 	protected virtual Nn.Audio.Detail.IAudioDevice GetAudioDeviceService(ulong _0) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.GetAudioDeviceService not implemented");
-	protected virtual Nn.Audio.Detail.IAudioRenderer OpenAudioRendererAuto(Nn.Audio.Detail.AudioRendererParameterInternal _0, ulong _1, ulong _2, ulong _3, ulong _4, KObject _5) =>
+	protected virtual Nn.Audio.Detail.IAudioRenderer OpenAudioRendererAuto(Nn.Audio.Detail.AudioRendererParameterInternal parameter, ulong workBufferAddr, ulong workBufferSize, ulong _3, ulong _4, KObject process) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.OpenAudioRendererAuto not implemented");
 	protected virtual Nn.Audio.Detail.IAudioDevice GetAudioDeviceServiceWithRevisionInfo(ulong _0, uint _1) =>
 		throw new NotImplementedException("Nn.Audio.Detail.IAudioRendererManager.GetAudioDeviceServiceWithRevisionInfo not implemented");

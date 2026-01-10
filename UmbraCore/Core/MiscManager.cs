@@ -22,6 +22,8 @@ public class MiscManager {
                 (14, 0) => 0xcafeb00000, // stack base
                 (15, 0) => 0x100000000, // stack size
                 (18, 0) => 0x10000,
+                (21, 0) => 0xD0000000, // Total non-system memory
+                (22, 0) => 0xC0000000, // Used non-system memory
                 (11, _) => 0,
                 _ => ret = 0xF001,
             };

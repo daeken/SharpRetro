@@ -24,19 +24,32 @@ type nn::audio::AudioOutBuffer = struct<0x28> {
 	u64 offset;
 };
 
+type nn::audio::detail::AudioRendererRenderingDevice = enum<u8> {
+	Dsp = 0;
+	Cpu = 1;
+};
+
+type nn::audio::detail::AudioRendererExecutionMode = enum<u8> {
+	Auto = 0;
+	Manual = 1;
+};
+
 type nn::audio::detail::AudioRendererParameterInternal = struct<0x34> {
   s32 SampleRate;
   s32 SampleCount;
-  s32 Unknown8;
-  s32 MixCount;
+  s32 MixBufferCount;
+  s32 SubMixBufferCount;
   s32 VoiceCount;
   s32 SinkCount;
   s32 EffectCount;
   s32 PerformanceManagerCount;
-  s32 VoiceDropEnable;
+  u8 VoiceDropEnable;
+  u8 Reserved;
+  nn::audio::detail::AudioRendererRenderingDevice RenderingDevice;
+  nn::audio::detail::AudioRendererExecutionMode ExecutionMode;
   s32 SplitterCount;
   s32 SplitterDestinationDataCount;
-  s32 Unknown2C;
+  s32 ExternalContextSize;
   s32 Revision;
 };
 
@@ -67,18 +80,18 @@ interface nn::audio::detail::IAudioDebugManager {
 }
 
 interface nn::audio::detail::IAudioDevice {
-	[0] Unknown0() -> (u32, buffer<bytes, 6>);
-	[1] Unknown1(u32, buffer<bytes, 5>);
-	[2] Unknown2(buffer<bytes, 5>) -> u32;
-	[3] Unknown3() -> buffer<bytes, 6>;
-	[4] Unknown4() -> handle<copy, event>;
-	[5] Unknown5() -> u32;
-	[6] Unknown6() -> (u32, buffer<bytes, 0x22>);
-	[7] Unknown7(u32, buffer<bytes, 0x21>);
-	[8] Unknown8(buffer<bytes, 0x21>) -> u32;
-	[10] Unknown10() -> buffer<bytes, 0x22>;
-	[11] Unknown11() -> handle<copy, event>;
-	[12] Unknown12() -> handle<copy, event>;
+	[0] ListAudioDeviceNames() -> (u32 count, buffer<bytes, 6> names);
+	[1] SetAudioDeviceOutputVolume(f32 volume, buffer<bytes, 5> name);
+	[2] GetAudioDeviceOutputVolume(buffer<bytes, 5> name) -> f32;
+	[3] GetActiveAudioDeviceName() -> buffer<bytes, 6>;
+	[4] QueryAudioDeviceSystemEvent() -> handle<copy, event>;
+	[5] GetActiveChannelCount() -> i32;
+	[6] ListAudioDeviceNameAuto() -> (u32 count, buffer<bytes, 0x22> names);
+	[7] SetAudioDeviceOutputVolumeAuto(f32 volume, buffer<bytes, 0x21> name);
+	[8] GetAudioDeviceOutputVolumeAuto(buffer<bytes, 0x21> name) -> f32;
+	[10] GetActiveAudioDeviceNameAuto() -> buffer<bytes, 0x22>;
+	[11] QueryAudioDeviceInputEvent() -> handle<copy, event>;
+	[12] QueryAudioDeviceOutputEvent() -> handle<copy, event>;
 }
 
 interface nn::audio::detail::IAudioIn {
@@ -156,7 +169,7 @@ interface nn::audio::detail::IAudioOut {
 
 interface nn::audio::detail::IAudioOutManager is audout:u {
 	[0] ListAudioOuts() -> (u32 count, buffer<bytes, 6>);
-	[1] OpenAudioOut(u32 sample_rate, u16 unused, u16 channel_count, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 5> name_in) -> (u32 sample_rate_out, u32 channel_count_out, u32 pcm_format, u32, object<nn::audio::detail::IAudioOut>, buffer<bytes, 6> name_out);
+	[1] OpenAudioOut(u32 sample_rate, u16 channel_count, u16 unused, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 5> name_in) -> (u32 sample_rate_out, u32 channel_count_out, u32 pcm_format, u32 state, object<nn::audio::detail::IAudioOut>, buffer<bytes, 6> name_out);
 	@version(3.0.0+)
 	[2] ListAudioOutsAuto() -> (u32 count, buffer<bytes, 0x22>);
 	@version(3.0.0+)
@@ -190,25 +203,25 @@ interface nn::audio::detail::IAudioRenderer {
 	[1] GetSampleCount() -> u32 sample_count;
 	[2] GetMixBufferCount() -> u32 mix_buffer_count;
 	[3] GetState() -> u32 state;
-	[4] RequestUpdateAudioRenderer(buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 5>) -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6>, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6>);
+	[4] RequestUpdateAudioRenderer(buffer<u8, 5> input) -> (buffer<u8, 6> output, buffer<u8, 6> performance);
 	[5] Start();
 	[6] Stop();
 	[7] QuerySystemEvent() -> handle<copy, event>;
 	[8] SetAudioRendererRenderingTimeLimit(u32 limit);
 	[9] GetAudioRendererRenderingTimeLimit() -> u32 limit;
 	# guessed to be the same as RequestUpdateAudioRenderer, just with different buffer types
-  @version(3.0.0+)
-	[10] RequestUpdateAudioRendererAuto(buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x21>) -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x22>, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x22>);
+    @version(3.0.0+)
+	[10] RequestUpdateAudioRendererAuto(buffer<u8, 0x21> input) -> (buffer<u8, 0x22> output, buffer<u8, 0x22> performance);
 	@version(3.0.0+)
 	[11] ExecuteAudioRendererRendering();
 }
 
 interface nn::audio::detail::IAudioRendererManager is audren:u {
-	[0] OpenAudioRenderer(nn::audio::detail::AudioRendererParameterInternal, u64, nn::applet::AppletResourceUserId, pid, handle<copy>, handle<copy>) -> object<nn::audio::detail::IAudioRenderer>;
-	[1] GetWorkBufferSize(nn::audio::detail::AudioRendererParameterInternal) -> u64;
+	[0] OpenAudioRenderer(nn::audio::detail::AudioRendererParameterInternal parameter, u64 workBufferSize, nn::applet::AppletResourceUserId, pid, handle<copy> workBufferTransferMemory, handle<copy> process) -> object<nn::audio::detail::IAudioRenderer>;
+	[1] GetWorkBufferSize(nn::audio::detail::AudioRendererParameterInternal parameter) -> u64;
 	[2] GetAudioDeviceService(nn::applet::AppletResourceUserId) -> object<nn::audio::detail::IAudioDevice>;
 	@version(3.0.0+)
-	[3] OpenAudioRendererAuto(nn::audio::detail::AudioRendererParameterInternal, u64, u64, u64, pid, handle<copy>) -> object<nn::audio::detail::IAudioRenderer>;
+	[3] OpenAudioRendererAuto(nn::audio::detail::AudioRendererParameterInternal parameter, u64 workBufferAddr, u64 workBufferSize, nn::applet::AppletResourceUserId, pid, handle<copy> process) -> object<nn::audio::detail::IAudioRenderer>;
 	@version(4.0.0+)
 	[4] GetAudioDeviceServiceWithRevisionInfo(nn::applet::AppletResourceUserId, u32) -> object<nn::audio::detail::IAudioDevice>;
 }

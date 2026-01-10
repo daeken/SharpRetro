@@ -1,0 +1,27 @@
+interface nn::account::IAccountServiceForApplication is acc:u0 {
+	[0] GetUserCount() -> u32;
+	[1] GetUserExistence(nn::account::Uid) -> b8;
+	[2] ListAllUsers() -> buffer<nn::account::Uid,0xa>;
+	[3] ListOpenUsers() -> buffer<nn::account::Uid,0xa>;
+	[4] GetLastOpenedUser() -> nn::account::Uid;
+	[5] GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>;
+	[6] GetProfileDigest(nn::account::Uid) -> nn::account::ProfileDigest;
+	[50] IsUserRegistrationRequestPermitted(u64, pid) -> b8;
+	[51] TrySelectUserWithoutInteraction(b8) -> nn::account::Uid;
+	@version(5.0.0+)
+	@undocumented
+	[60] ListOpenContextStoredUsers(unknown) -> unknown;
+	[100] InitializeApplicationInfo(u64, pid);
+	[101] GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>;
+	[102] AuthenticateApplicationAsync() -> object<nn::account::detail::IAsyncContext>;
+	@version(4.0.0+)
+	[103] CheckNetworkServiceAvailabilityAsync() -> object<nn::account::detail::IAsyncContext>;
+	[110] StoreSaveDataThumbnail(nn::account::Uid, buffer<bytes,5>);
+	[111] ClearSaveDataThumbnail(nn::account::Uid);
+	[120] CreateGuestLoginRequest(u32, handle<copy>) -> object<nn::account::baas::IGuestLoginRequest>;
+	@version(5.0.0+)
+	@undocumented
+	[130] LoadOpenContext(unknown) -> unknown;
+	[140] InitializeApplicationInfo(u64, pid);
+	[150] IsUserAccountSwitchLocked() -> b8;
+}

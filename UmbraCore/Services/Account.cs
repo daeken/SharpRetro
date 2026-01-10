@@ -11,4 +11,6 @@ public partial class IAccountServiceForApplication {
         Console.WriteLine("IAccountServiceForApplication.GetLastOpenedUser called -- handing back 16 nulls");
         _0 = new byte[16];
     }
+
+    protected override byte IsUserAccountSwitchLocked() => 0;
 }

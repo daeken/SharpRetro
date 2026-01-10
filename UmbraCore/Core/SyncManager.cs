@@ -83,19 +83,32 @@ public unsafe class Semaphore : Waitable {
 }
 
 public class Event : Waitable {
-    bool _Triggered;
+    public readonly bool AlwaysTriggered;
+
     public bool Triggered {
-        get => _Triggered;
+        get;
         set {
-            var doSignal = !_Triggered && value; 
-            Presignaled = _Triggered = value;
+            var doSignal = !field && (value || AlwaysTriggered);
+            Presignaled = field = value || AlwaysTriggered;
             if(doSignal) Signal();
         }
     }
 
-    public Event(bool? triggered = null) {
+    public Event(bool? triggered = null, bool alwaysTriggered = false) {
+        AlwaysTriggered = alwaysTriggered;
+        if(AlwaysTriggered)
+            triggered = true;
         if(triggered != null)
             Triggered = triggered.Value;
+    }
+    
+    public override void Wait(Func<bool, int> cb) {
+        lock(this) {
+            if(!Triggered || (Triggered && cb(Canceled) == 0))
+                Waiters.Enqueue(cb);
+            Triggered = AlwaysTriggered;
+            Canceled = false;
+        }
     }
 }
 
@@ -136,15 +149,22 @@ public class SyncManager {
             return 0;
         };
         game.Callbacks.WaitSynchronization = (handlesAddr, numHandles, timeout, ref _activated) => {
-            "WaitSynchronization".Log();
             var handles = new Buffer<uint>(handlesAddr, numHandles * 4);
+            $"WaitSynchronization([{string.Join(", ", handles.ToArray().Select(x => $"0x{x:X}"))}])".Log();
+            foreach(var handle in handles) {
+                var waitable = Kernel.Get<Waitable>(handle);
+                if(waitable is Event evt)
+                    $"0x{handle:X} is event {evt} -- Triggered {evt.Triggered} always? {evt.AlwaysTriggered}".Log();
+            }
             var waitHandle = new AutoResetEvent(false);
             var activated = uint.MaxValue;
             var completed = false;
             Enumerable.Range(0, (int) numHandles).ForEach(i =>
                 Kernel.Get<Waitable>(handles[i]).Wait(() => {
+                    $"ASDPFOJDSFP??? {handles[i]:X}".Log();
                     if(completed) return -1;
                     lock(waitHandle) {
+                        Console.WriteLine($"Activated! {i}");
                         activated = (uint) i;
                         waitHandle.Set();
                         return 1;
@@ -157,6 +177,10 @@ public class SyncManager {
             }
             completed = true;
             return 0xea01;
+        };
+        game.Callbacks.CancelSynchronization = handle => {
+            $"CancelSynchronization(0x{handle:X})".Log();
+            return 0xe401; // Thread isn't waiting. Surely this won't blow up later
         };
         game.Callbacks.WaitProcessWideKeyAtomic = (mutexAddr, semaAddr, threadHandle, timeout) => {
             $"WaitProcessWideKeyAtomic(0x{mutexAddr:X}, 0x{semaAddr:X}, 0x{threadHandle:X}, {timeout})".Log();

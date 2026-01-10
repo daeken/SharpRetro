@@ -49,12 +49,13 @@ public unsafe class IncomingMessage {
 		RawOffset = pos * 4;
 		if((pos & 3) != 0)
 			pos += 4 - (pos & 3);
-		if(isDomainObject && Type == 4) {
+		if(isDomainObject && Type is 4 or 6) {
 			DomainHandle = buf[pos + 1];
 			DomainCommand = buf[pos] & 0xFF;
 			pos += 4;
 		}
 		
+		//Console.WriteLine($"Type: {Type}, isDomainObject: {isDomainObject}, DomainComamnd: {DomainCommand}, pos: 0x{pos:X}, buf[pos]: 0x{buf[pos]:X}");
 		Debug.Assert(Type == 2 || isDomainObject && DomainCommand == 2 || buf[pos] == 0x49434653); // SFCI
 		SfciOffset = pos * 4;
 
@@ -170,8 +171,10 @@ public unsafe class OutgoingMessage {
 			buf[3 + CopyCount + offset] = handle;
 	}
 
-	public void Copy(uint offset, uint handle) =>
+	public void Copy(uint offset, uint handle) {
+		$"Copying handle 0x{handle:X} at offset 0x{offset:X}".Log();
 		((uint*) Buffer)[3 + offset] = handle;
+	}
 
 	public void Bake() {
 		var buf = (uint*) Buffer;
@@ -231,9 +234,9 @@ public abstract class IpcInterface : KObject {
 		var ret = 0xF601U;
 		closeHandle = false;
 		var target = this;
-		if(IsDomainObject && incoming.DomainHandle != ThisHandle && incoming.Type == 4)
+		if(IsDomainObject && incoming.DomainHandle != ThisHandle && incoming.Type is 4 or 6)
 			target = (IpcInterface) DomainHandles[incoming.DomainHandle];
-		if(!IsDomainObject || incoming.DomainCommand == 1 || incoming.Type == 2 || incoming.Type == 5)
+		if(!IsDomainObject || incoming.DomainCommand == 1 || incoming.Type is 2 or 5 or 7)
 			switch(incoming.Type) {
 				case 2:
 					closeHandle = true;

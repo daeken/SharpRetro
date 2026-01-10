@@ -158,6 +158,11 @@ const void* nvnTextureBuilderGetPackagedTextureData(const NVNtextureBuilder* bui
     return nullptr;
 }
 
+const void* nvnTextureBuilderGetPackagedTextureLayout(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetPackagedTextureLayout called!" << std::endl;
+    return nullptr;
+}
+
 ptrdiff_t nvnTextureBuilderGetStride(const NVNtextureBuilder* builder) {
     std::cout << "nvnTextureBuilderGetStride called!" << std::endl;
     return 0;
@@ -183,5 +188,10 @@ NVNmemoryPool nvnTextureBuilderGetMemoryPool(const NVNtextureBuilder* builder) {
 
 ptrdiff_t nvnTextureBuilderGetMemoryOffset(const NVNtextureBuilder* builder) {
     std::cout << "nvnTextureBuilderGetMemoryOffset called!" << std::endl;
+    return 0;
+}
+
+int nvnTextureBuilderGetRawStorageClass(const NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetRawStorageClass called!" << std::endl;
     return 0;
 }

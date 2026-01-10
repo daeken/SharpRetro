@@ -10,6 +10,11 @@ void nvnDeviceBuilderSetFlags(NVNdeviceBuilder* builder, int flags) {
     std::cout << "nvnDeviceBuilderSetFlags (" << flags << ") called!" << std::endl;
 }
 
+int nvnDeviceBuilderGetFlags(NVNdeviceBuilder* builder) {
+    std::cout << "nvnDeviceBuilderGetFlags called!" << std::endl;
+    return 0;
+}
+
 // Device functions
 NVNboolean nvnDeviceInitialize(NVNdevice* device, const NVNdeviceBuilder* builder) {
     std::cout << "nvnDeviceInitialize called!" << std::endl;

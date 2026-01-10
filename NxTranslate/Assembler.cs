@@ -179,7 +179,12 @@ public class Assembler {
     }
 
     public void Mov(R.RX rd, R.RX rm) => Orr(rd, R.XZR, rm);
-    public void Mov(R.RX rd, R.RSP rn) => Add(rd, rn, R.XZR);
+    public void Mov(R rd, R rn) {
+        var insn = 0b1_0_0_10001_00_000000000000_00000_00000U;
+        insn |= rd is R.RX td ? (uint) td.Number << 0 : (uint) 0b11111 << 0;
+        insn |= rn is R.RX tn ? (uint) tn.Number << 5 : (uint) 0b11111 << 5;
+        Instructions[I++] = insn;
+    }
 
     public void Add(R rd, R rn, R.RX rm) {
         var insn = 0b1_0_0_01011_00_1_00000_111_000_00000_00000U;

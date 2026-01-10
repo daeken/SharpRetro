@@ -24,9 +24,17 @@ namespace nn::vi {
     int64_t OpenDefaultDisplay(Display**);
     int64_t GetDisplayVsyncEvent(uint32_t*, Display*);
     uint64_t CreateLayer(Layer**, Display*);
+    uint64_t CreateLayerExtra(Layer**, Display*, int, int); // Really CreateLayer
+    uint64_t SetLayerCrop(Layer*, int, int, int, int);
     uint64_t SetLayerScalingMode(Layer*, ScalingMode);
     uint64_t DestroyLayer(Layer*);
     uint64_t GetNativeWindow(Window**, Layer*);
+
+    namespace native {
+        namespace NativeWindowHolder {
+            uint64_t GetNativeWindow(void*);
+        }
+    }
 }
 
 #endif //NATIVELIB_VI_H

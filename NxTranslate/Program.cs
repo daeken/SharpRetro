@@ -269,6 +269,21 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                         asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
                         return;
                     }
+                    case "ADD-immediate": { // This will always be add X31, X18, #0, LSL #0
+                        var imm = (insn >> 10) & 0xFFFU;
+                        Debug.Assert(imm == 0); // We can only handle an effective mov
+                        sregA = R.X0; // This is dangerous, but let's roll with it for Metro...
+                        sregB = R.X12;
+                        Console.WriteLine($"DANGEROUS PATCH FOR METRO ONLY -- {0x71_00000000 + addr:X} {textBase + addr:X}");
+                        Prologue();
+                        LoadX18();
+                        asm.Mov(R.X12, R.X0);
+                        sregB = R.XZR;
+                        Epilogue();
+                        asm.Mov(R.SP, R.X12);
+                        asm.B((long) (textBase + addr + 4) - (long) (trampBase + asm.PC));
+                        return;
+                    }
                     case "CBZ":
                     case "CBNZ": {
                         Prologue();
@@ -408,6 +423,13 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
     return asm.AsBytes;
 }
 
+var nopList = new List<string> {
+    // "_ZN2al11AudioSystem4initERKNS_19AudioSystemInitInfoE",
+    // "_ZN2al11AudioSystem6updateEv",
+    // "_ZN2al11AudioSystem8finalizeEv",
+    // "_ZN2al11AudioSystem21updateHWOutputSettingEv",
+};
+
 var exeLoader = new ExeLoader(args[0], includeRtld: false, doRelocate: false);
 var macho = new MachoWriter();
 var loadBase = 0UL;
@@ -487,12 +509,22 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
         loadBase += fullTrampSize;
     }
     modules.Add((tramprw, trampx, loadBase, dataEnd - textStart));
+    var textData = mod.Binary[(int) textStart..(int) textEnd].ToArray();
     foreach(var symbol in mod.Symbols)
-        if(symbol.Value != 0 && symbol.Name != "")
+        if(symbol.Value != 0 && symbol.Name != "") {
             macho.AddSymbol("_" + symbol.Name, loadBase + symbol.Value);
+            if(nopList.Contains(symbol.Name)) {
+                Console.WriteLine($"Attempting to nop out {symbol.Name}");
+                var off = (int) (textStart + symbol.Value);
+                textData[off + 0] = 0xC0;
+                textData[off + 1] = 0x03;
+                textData[off + 2] = 0x5F;
+                textData[off + 3] = 0xD6;
+            }
+        }
     macho.AddSegment($".text_{i}", 
         loadBase + textStart, textEnd - textStart, 
-        mod.Binary[(int) textStart..(int) textEnd].ToArray(),
+        textData,
         MemoryProtection.Read | MemoryProtection.Execute);
     if(roStart != roEnd)
         macho.AddSegment($".rodata_{i}", 

@@ -556,6 +556,8 @@ public abstract class _IHidServer_Base : IpcInterface {
 		"Stub hit for Nn.Hid.IHidServer.DisconnectNpad".Log();
 	protected virtual ulong GetPlayerLedPattern(uint _0) =>
 		throw new NotImplementedException("Nn.Hid.IHidServer.GetPlayerLedPattern not implemented");
+	protected virtual void ActivateNpadWithRevision(uint _0, ulong _1, ulong _2) =>
+		"Stub hit for Nn.Hid.IHidServer.ActivateNpadWithRevision".Log();
 	protected virtual void SetNpadJoyHoldType(ulong _0, long _1, ulong _2) =>
 		"Stub hit for Nn.Hid.IHidServer.SetNpadJoyHoldType".Log();
 	protected virtual long GetNpadJoyHoldType(ulong _0, ulong _1) =>
@@ -947,6 +949,11 @@ public abstract class _IHidServer_Base : IpcInterface {
 				var _return = GetPlayerLedPattern(im.GetData<uint>(8));
 				om.Initialize(0, 0, 8);
 				om.SetData(8, _return);
+				break;
+			}
+			case 0x6D: { // ActivateNpadWithRevision
+				ActivateNpadWithRevision(im.GetData<uint>(8), im.GetData<ulong>(16), im.Pid);
+				om.Initialize(0, 0, 0);
 				break;
 			}
 			case 0x78: { // SetNpadJoyHoldType

@@ -330,8 +330,8 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.TrySelectUserWithoutInteraction not implemented");
 	protected virtual void ListOpenContextStoredUsers() =>
 		"Stub hit for Nn.Account.IAccountServiceForApplication.ListOpenContextStoredUsers".Log();
-	protected virtual void InitializeApplicationInfo(ulong _0, ulong _1) =>
-		"Stub hit for Nn.Account.IAccountServiceForApplication.InitializeApplicationInfo".Log();
+	protected virtual void InitializeApplicationInfo_0(ulong _0, ulong _1) =>
+		"Stub hit for Nn.Account.IAccountServiceForApplication.InitializeApplicationInfo_0".Log();
 	protected virtual Nn.Account.Baas.IManagerForApplication GetBaasAccountManagerForApplication(byte[] _0) =>
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.GetBaasAccountManagerForApplication not implemented");
 	protected virtual Nn.Account.Detail.IAsyncContext AuthenticateApplicationAsync() =>
@@ -346,6 +346,10 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.CreateGuestLoginRequest not implemented");
 	protected virtual void LoadOpenContext() =>
 		"Stub hit for Nn.Account.IAccountServiceForApplication.LoadOpenContext".Log();
+	protected virtual void InitializeApplicationInfo_1(ulong _0, ulong _1) =>
+		"Stub hit for Nn.Account.IAccountServiceForApplication.InitializeApplicationInfo_1".Log();
+	protected virtual byte IsUserAccountSwitchLocked() =>
+		throw new NotImplementedException("Nn.Account.IAccountServiceForApplication.IsUserAccountSwitchLocked not implemented");
 	protected override unsafe void _Dispatch(IncomingMessage im, OutgoingMessage om) {
 		switch(im.CommandId) {
 			case 0x0: { // GetUserCount
@@ -405,8 +409,8 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 				om.Initialize(0, 0, 0);
 				break;
 			}
-			case 0x64: { // InitializeApplicationInfo
-				InitializeApplicationInfo(im.GetData<ulong>(8), im.Pid);
+			case 0x64: { // InitializeApplicationInfo_0
+				InitializeApplicationInfo_0(im.GetData<ulong>(8), im.Pid);
 				om.Initialize(0, 0, 0);
 				break;
 			}
@@ -447,6 +451,17 @@ public abstract class _IAccountServiceForApplication_Base : IpcInterface {
 			case 0x82: { // LoadOpenContext
 				LoadOpenContext();
 				om.Initialize(0, 0, 0);
+				break;
+			}
+			case 0x8C: { // InitializeApplicationInfo_1
+				InitializeApplicationInfo_1(im.GetData<ulong>(8), im.Pid);
+				om.Initialize(0, 0, 0);
+				break;
+			}
+			case 0x96: { // IsUserAccountSwitchLocked
+				var _return = IsUserAccountSwitchLocked();
+				om.Initialize(0, 0, 1);
+				om.SetData(8, _return);
 				break;
 			}
 			default:

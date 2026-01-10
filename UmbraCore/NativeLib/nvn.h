@@ -238,6 +238,7 @@ enum class NVNdeviceInfo : int {
 };
 
 void nvnDeviceBuilderSetDefaults(NVNdeviceBuilder* builder);
+int nvnDeviceBuilderGetFlags(NVNdeviceBuilder* builder);
 void nvnDeviceBuilderSetFlags(NVNdeviceBuilder* builder, int flags);
 NVNboolean nvnDeviceInitialize(NVNdevice* device, const NVNdeviceBuilder* builder);
 void nvnDeviceFinalize(NVNdevice* device);
@@ -272,14 +273,27 @@ size_t nvnQueueGetTotalCommandMemoryUsed(NVNqueue* queue);
 size_t nvnQueueGetTotalControlMemoryUsed(NVNqueue* queue);
 size_t nvnQueueGetTotalComputeMemoryUsed(NVNqueue* queue);
 void nvnQueueResetMemoryUsageCounts(NVNqueue* queue);
+void* nvnQueueBuilderGetMemory(NVNqueueBuilder* builder); // guess
+NVNdevice* nvnQueueBuilderGetDevice(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetDevice(NVNqueueBuilder* builder, NVNdevice* device);
 void nvnQueueBuilderSetDefaults(NVNqueueBuilder* builder);
+int nvnQueueBuilderGetFlags(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetFlags(NVNqueueBuilder* builder, int flags);
+size_t nvnQueueBuilderGetCommandMemorySize(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetCommandMemorySize(NVNqueueBuilder* builder, size_t size);
+size_t nvnQueueBuilderGetComputeMemorySize(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetComputeMemorySize(NVNqueueBuilder* builder, size_t size);
+size_t nvnQueueBuilderGetControlMemorySize(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetControlMemorySize(NVNqueueBuilder* builder, size_t size);
 size_t nvnQueueBuilderGetQueueMemorySize(const NVNqueueBuilder* builder);
 void nvnQueueBuilderSetQueueMemory(NVNqueueBuilder* builder, void* memory, size_t size);
+size_t nvnQueueBuilderGetMemorySize(const NVNqueueBuilder* builder);
+
+// guess
+int nvnQueueBuilderGetQueuePriority(NVNqueueBuilder* builder);
+void nvnQueueBuilderSetQueuePriority(NVNqueueBuilder* builder, int priority);
+
+size_t nvnQueueBuilderGetCommandFlushThreshold(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetCommandFlushThreshold(NVNqueueBuilder* builder, size_t size);
 NVNboolean nvnQueueInitialize(NVNqueue* queue, const NVNqueueBuilder* builder);
 void nvnQueueFinalize(NVNqueue* queue);
@@ -289,10 +303,15 @@ void nvnQueueFlush(NVNqueue* queue);
 void nvnQueueFinish(NVNqueue* queue);
 void nvnQueuePresentTexture(NVNqueue* queue, NVNwindow* window, int textureIndex);
 NVNqueueAcquireTextureResult nvnQueueAcquireTexture(NVNqueue* queue, NVNwindow* window, int* textureIndex);
+NVNdevice* nvnWindowBuilderGetDevice(NVNwindowBuilder* builder);
 void nvnWindowBuilderSetDevice(NVNwindowBuilder* builder, NVNdevice* device);
 void nvnWindowBuilderSetDefaults(NVNwindowBuilder* builder);
 void nvnWindowBuilderSetNativeWindow(NVNwindowBuilder* builder, NVNnativeWindow nativeWindow);
+int nvnWindowBuilderGetNumTextures(NVNwindowBuilder* builder);
+NVNtexture* nvnWindowBuilderGetTexture(NVNwindowBuilder* builder, int texture);
 void nvnWindowBuilderSetTextures(NVNwindowBuilder* builder, int numTextures, NVNtexture* const* textures);
+int nvnWindowBuilderGetNumActiveTextures(NVNwindowBuilder* builder); // guess
+void nvnWindowBuilderSetNumActiveTextures(NVNwindowBuilder* builder, int numActiveTextures); // guess
 void nvnWindowBuilderSetPresentInterval(NVNwindowBuilder* builder, int presentInterval);
 NVNnativeWindow nvnWindowBuilderGetNativeWindow(const NVNwindowBuilder* builder);
 int nvnWindowBuilderGetPresentInterval(const NVNwindowBuilder* builder);
@@ -305,10 +324,16 @@ int nvnWindowGetPresentInterval(const NVNwindow* window);
 void nvnWindowSetPresentInterval(NVNwindow* window, int presentInterval);
 void nvnWindowSetCrop(NVNwindow* window, int x, int y, int w, int h);
 void nvnWindowGetCrop(const NVNwindow* window, NVNrectangle* rectangle);
+int nvnWindowGetNumTextures(NVNwindow* builder);
+int nvnWindowGetNumActiveTextures(NVNwindow* builder); // guess
+void nvnWindowSetNumActiveTextures(NVNwindow* builder, int numActiveTextures); // guess
 NVNboolean nvnProgramInitialize(NVNprogram* program, NVNdevice* device);
 void nvnProgramFinalize(NVNprogram* program);
 void nvnProgramSetDebugLabel(NVNprogram* program, const char* label);
+void nvnProgramSetSampleShading(NVNprogram* program); // absolutely no idea
 NVNboolean nvnProgramSetShaders(NVNprogram* program, int count, const NVNshaderData* stageData);
+NVNboolean nvnProgramSetShadersExt(NVNprogram* program, int count, const NVNshaderData* stageData); // guess -- why is this different
+NVNdevice* nvnMemoryPoolBuilderGetDevice(NVNmemoryPoolBuilder* builder);
 void nvnMemoryPoolBuilderSetDevice(NVNmemoryPoolBuilder* builder, NVNdevice* device);
 void nvnMemoryPoolBuilderSetDefaults(NVNmemoryPoolBuilder* builder);
 void nvnMemoryPoolBuilderSetStorage(NVNmemoryPoolBuilder* builder, void* memory, size_t size);
@@ -342,6 +367,7 @@ void nvnSamplerPoolRegisterSamplerBuilder(const NVNsamplerPool* pool, int id, co
 const NVNmemoryPool* nvnSamplerPoolGetMemoryPool(const NVNsamplerPool* pool);
 ptrdiff_t nvnSamplerPoolGetMemoryOffset(const NVNsamplerPool* pool);
 int nvnSamplerPoolGetSize(const NVNsamplerPool* pool);
+NVNdevice* nvnBufferBuilderGetDevice(NVNbufferBuilder* builder);
 void nvnBufferBuilderSetDevice(NVNbufferBuilder* builder, NVNdevice* device);
 void nvnBufferBuilderSetDefaults(NVNbufferBuilder* builder);
 void nvnBufferBuilderSetStorage(NVNbufferBuilder* builder, NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
@@ -359,6 +385,7 @@ NVNmemoryPool* nvnBufferGetMemoryPool(const NVNbuffer* buffer);
 ptrdiff_t nvnBufferGetMemoryOffset(const NVNbuffer* buffer);
 size_t nvnBufferGetSize(const NVNbuffer* buffer);
 uint64_t nvnBufferGetDebugID(const NVNbuffer* buffer);
+NVNdevice* nvnTextureBuilderGetDevice(NVNtextureBuilder* builder);
 void nvnTextureBuilderSetDevice(NVNtextureBuilder* builder, NVNdevice* device);
 void nvnTextureBuilderSetDefaults(NVNtextureBuilder* builder);
 void nvnTextureBuilderSetFlags(NVNtextureBuilder* builder, int flags);
@@ -393,12 +420,14 @@ int nvnTextureBuilderGetSamples(const NVNtextureBuilder* builder);
 void nvnTextureBuilderGetSwizzle(const NVNtextureBuilder* builder, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
 NVNtextureDepthStencilMode nvnTextureBuilderGetDepthStencilMode(const NVNtextureBuilder* builder);
 const void* nvnTextureBuilderGetPackagedTextureData(const NVNtextureBuilder* builder);
+const void* nvnTextureBuilderGetPackagedTextureLayout(const NVNtextureBuilder* builder); // Literally no idea
 ptrdiff_t nvnTextureBuilderGetStride(const NVNtextureBuilder* builder);
 void nvnTextureBuilderGetSparseTileLayout(const NVNtextureBuilder* builder, NVNtextureSparseTileLayout* layout);
 uint32_t nvnTextureBuilderGetGLTextureName(const NVNtextureBuilder* builder);
 size_t nvnTextureBuilderGetZCullStorageSize(const NVNtextureBuilder* builder);
 NVNmemoryPool nvnTextureBuilderGetMemoryPool(const NVNtextureBuilder* builder);
 ptrdiff_t nvnTextureBuilderGetMemoryOffset(const NVNtextureBuilder* builder);
+int nvnTextureBuilderGetRawStorageClass(const NVNtextureBuilder* builder); // guess
 void nvnTextureViewSetDefaults(NVNtextureView* view);
 void nvnTextureViewSetLevels(NVNtextureView* view, int baseLevel, int numLevels);
 void nvnTextureViewSetLayers(NVNtextureView* view, int minLayer, int numLayers);
@@ -441,8 +470,10 @@ void nvnTextureInvalidateTexels(const NVNtexture* texture, const NVNtextureView*
 NVNmemoryPool nvnTextureGetMemoryPool(const NVNtexture* texture);
 ptrdiff_t nvnTextureGetMemoryOffset(const NVNtexture* texture);
 int nvnTextureGetStorageSize(const NVNtexture* texture);
+int nvnTextureGetRawStorageClass(const NVNtexture* texture); // guess
 NVNboolean nvnTextureCompare(const NVNtexture* texture1, const NVNtexture* texture2);
 uint64_t nvnTextureGetDebugID(const NVNtexture* texture);
+NVNdevice* nvnSamplerBuilderGetDevice(NVNsamplerBuilder* builder);
 void nvnSamplerBuilderSetDevice(NVNsamplerBuilder* builder, NVNdevice* device);
 void nvnSamplerBuilderSetDefaults(NVNsamplerBuilder* builder);
 void nvnSamplerBuilderSetMinMagFilter(NVNsamplerBuilder* builder, NVNminFilter min, NVNmagFilter mag);
@@ -641,7 +672,10 @@ void nvnCommandBufferBindSeparateSamplers(NVNcommandBuffer* cmdBuf, NVNshaderSta
 void nvnCommandBufferSetStencilValueMask(NVNcommandBuffer* cmdBuf, NVNface faces, int mask);
 void nvnCommandBufferSetStencilMask(NVNcommandBuffer* cmdBuf, NVNface faces, int mask);
 void nvnCommandBufferSetStencilRef(NVNcommandBuffer* cmdBuf, NVNface faces, int ref);
+void nvnCommandBufferSetStencilCullCriteria(NVNcommandBuffer* cmdBuf); // no idea
 void nvnCommandBufferSetBlendColor(NVNcommandBuffer* cmdBuf, const float* blendColor);
+void nvnCommandBufferSetColorReductionEnable(NVNcommandBuffer* cmdBuf, NVNboolean enable);
+void nvnCommandBufferSetColorReductionThresholds(NVNcommandBuffer* cmdBuf, float f); // pure guess
 void nvnCommandBufferSetPointSize(NVNcommandBuffer* cmdBuf, float pointSize);
 void nvnCommandBufferSetLineWidth(NVNcommandBuffer* cmdBuf, float lineWidth);
 void nvnCommandBufferSetPolygonOffsetClamp(NVNcommandBuffer* cmdBuf, float factor, float units, float clamp);
@@ -652,6 +686,7 @@ void nvnCommandBufferSetDepthClamp(NVNcommandBuffer* cmdBuf, NVNboolean clamp);
 void nvnCommandBufferSetConservativeRasterEnable(NVNcommandBuffer* cmdBuf, NVNboolean enable);
 void nvnCommandBufferSetConservativeRasterDilate(NVNcommandBuffer* cmdBuf, float f);
 void nvnCommandBufferSetSubpixelPrecisionBias(NVNcommandBuffer* cmdBuf, int i1, int i2);
+void nvnCommandBufferSetCommandMemoryCallbackEnabled(NVNcommandBuffer* cmdBuf, NVNboolean enable); // guess
 void nvnCommandBufferCopyBufferToTexture(NVNcommandBuffer* cmdBuf, NVNbufferAddress buffer, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, int flags);
 void nvnCommandBufferCopyTextureToBuffer(NVNcommandBuffer* cmdBuf, const NVNtexture* srcTexture, const NVNtextureView* srcView, const NVNcopyRegion* srcRegion, NVNbufferAddress buffer, int flags);
 void nvnCommandBufferCopyTextureToTexture(NVNcommandBuffer* cmdBuf, const NVNtexture* srcTexture, const NVNtextureView* srcView, const NVNcopyRegion* srcRegion, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, int flags);
@@ -702,16 +737,23 @@ PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC nvnCommandBufferGetMemoryCallback(const NV
 void nvnCommandBufferGetMemoryCallbackData(const NVNcommandBuffer* cmdBuf);
 NVNboolean nvnCommandBufferIsRecording(const NVNcommandBuffer* cmdBuf);
 NVNboolean nvnSyncInitialize(NVNsync* sync, NVNdevice* device);
+NVNboolean nvnSyncInitializeFromFencedGLSync(NVNsync* sync); // pure guess
+void* nvnSyncCreateGLSync(NVNsync* sync); // pure guess
 void nvnSyncFinalize(NVNsync* sync);
 void nvnSyncSetDebugLabel(NVNsync* sync, const char* label);
 void nvnQueueFenceSync(NVNqueue* queue, NVNsync* sync, NVNsyncCondition condition, int flags);
 NVNsyncWaitResult nvnSyncWait(const NVNsync* sync, uint64_t timeoutNs);
 NVNboolean nvnQueueWaitSync(NVNqueue* queue, const NVNsync* sync);
 void nvnEventBuilderSetDefaults(NVNeventBuilder* builder);
+NVNmemoryPool* nvnEventBuilderGetMemoryPool(NVNeventBuilder* builder); // guess
+int nvnEventBuilderGetMemoryOffset(NVNeventBuilder* builder); // guess
+NVNmemoryPool* nvnEventBuilderGetStorage(NVNeventBuilder* builder); // guess
 void nvnEventBuilderSetStorage(NVNeventBuilder* builder, const NVNmemoryPool* pool, int64_t size);
 NVNboolean nvnEventInitialize(NVNevent* event, const NVNeventBuilder* builder);
 void nvnEventFinalize(NVNevent* event);
 uint32_t nvnEventGetValue(const NVNevent* event);
+NVNmemoryPool* nvnEventGetMemoryPool(NVNevent* builder); // guess
+int nvnEventGetMemoryOffset(NVNevent* builder); // guess
 void nvnEventSignal(NVNevent* event, NVNeventSignalMode mode, uint32_t i);
 void nvnCommandBufferWaitEvent(NVNcommandBuffer* cmdBuf, const NVNevent* event, NVNeventWaitMode mode, uint32_t i);
 void nvnCommandBufferSignalEvent(NVNcommandBuffer* cmdBuf, const NVNevent* event, NVNeventSignalMode mode, NVNeventSignalLocation location, int flags, uint32_t i);
@@ -736,6 +778,7 @@ with(nvnBufferBuilderGetMemoryOffset) \
 with(nvnBufferBuilderGetMemoryPool) \
 with(nvnBufferBuilderGetSize) \
 with(nvnBufferBuilderSetDefaults) \
+with(nvnBufferBuilderGetDevice) \
 with(nvnBufferBuilderSetDevice) \
 with(nvnBufferBuilderSetStorage) \
 with(nvnBufferFinalize) \
@@ -836,6 +879,8 @@ with(nvnCommandBufferMultiDrawElementsIndirectCount) \
 with(nvnCommandBufferPauseTransformFeedback) \
 with(nvnCommandBufferPopDebugGroup) \
 with(nvnCommandBufferPopDebugGroupId) \
+with(nvnCommandBufferInsertDebugMarkerStatic) \
+with(nvnCommandBufferInsertDebugMarkerDynamic) \
 with(nvnCommandBufferPushDebugGroup) \
 with(nvnCommandBufferReportCounter) \
 with(nvnCommandBufferReportValue) \
@@ -848,6 +893,8 @@ with(nvnCommandBufferResumeTransformFeedback) \
 with(nvnCommandBufferSaveZCullData) \
 with(nvnCommandBufferSetAlphaRef) \
 with(nvnCommandBufferSetBlendColor) \
+with(nvnCommandBufferSetColorReductionEnable) \
+with(nvnCommandBufferSetColorReductionThresholds) \
 with(nvnCommandBufferSetConservativeRasterDilate) \
 with(nvnCommandBufferSetConservativeRasterEnable) \
 with(nvnCommandBufferSetCopyImageStride) \
@@ -879,7 +926,9 @@ with(nvnCommandBufferSetShaderScratchMemory) \
 with(nvnCommandBufferSetStencilMask) \
 with(nvnCommandBufferSetStencilRef) \
 with(nvnCommandBufferSetStencilValueMask) \
+with(nvnCommandBufferSetStencilCullCriteria) \
 with(nvnCommandBufferSetSubpixelPrecisionBias) \
+with(nvnCommandBufferSetCommandMemoryCallbackEnabled) \
 with(nvnCommandBufferSetTexturePool) \
 with(nvnCommandBufferSetTiledCacheAction) \
 with(nvnCommandBufferSetTiledCacheTileSize) \
@@ -891,6 +940,8 @@ with(nvnCommandBufferSetViewport) \
 with(nvnCommandBufferSetViewportSwizzles) \
 with(nvnCommandBufferSetViewports) \
 with(nvnCommandBufferTiledDownsample) \
+with(nvnCommandBufferDownsampleTextureView) \
+with(nvnCommandBufferTiledDownsampleTextureView) \
 with(nvnCommandBufferUpdateUniformBuffer) \
 with(nvnCommandBufferWaitSync) \
 with(nvnDepthStencilStateGetDepthFunc) \
@@ -908,15 +959,19 @@ with(nvnDepthStencilStateSetStencilOp) \
 with(nvnDepthStencilStateSetStencilTestEnable) \
 with(nvnDeviceApplyDeferredFinalizes) \
 with(nvnDeviceBuilderSetDefaults) \
+with(nvnDeviceBuilderGetFlags) \
 with(nvnDeviceBuilderSetFlags) \
 with(nvnDeviceFinalize) \
 with(nvnDeviceFinalizeCommandHandle) \
 with(nvnDeviceWalkDebugDatabase) \
 with(nvnDeviceGetSeparateTextureHandle) \
 with(nvnDeviceGetSeparateSamplerHandle) \
+with(nvnDeviceIsExternalDebuggerAttached) \
 with(nvnDeviceGetCurrentTimestampInNanoseconds) \
 with(nvnDeviceGetDepthMode) \
 with(nvnDeviceGetImageHandle) \
+with(nvnDeviceInstallDebugCallback) \
+with(nvnDeviceGenerateDebugDomainId) \
 with(nvnDeviceGetInteger) \
 with(nvnDeviceGetTexelFetchHandle) \
 with(nvnDeviceGetTextureHandle) \
@@ -937,6 +992,7 @@ with(nvnMemoryPoolBuilderGetFlags) \
 with(nvnMemoryPoolBuilderGetMemory) \
 with(nvnMemoryPoolBuilderGetSize) \
 with(nvnMemoryPoolBuilderSetDefaults) \
+with(nvnMemoryPoolBuilderGetDevice) \
 with(nvnMemoryPoolBuilderSetDevice) \
 with(nvnMemoryPoolBuilderSetFlags) \
 with(nvnMemoryPoolBuilderSetStorage) \
@@ -985,18 +1041,30 @@ with(nvnPolygonStateSetPolygonOffsetEnables) \
 with(nvnProgramFinalize) \
 with(nvnProgramInitialize) \
 with(nvnProgramSetDebugLabel) \
+with(nvnProgramSetSampleShading) \
 with(nvnProgramSetShaders) \
+with(nvnProgramSetShadersExt) \
 with(nvnProgramSetSubroutineLinkage) \
 with(nvnQueueAcquireTexture) \
 with(nvnQueueBuilderGetQueueMemorySize) \
+with(nvnQueueBuilderGetCommandFlushThreshold) \
 with(nvnQueueBuilderSetCommandFlushThreshold) \
+with(nvnQueueBuilderGetCommandMemorySize) \
 with(nvnQueueBuilderSetCommandMemorySize) \
+with(nvnQueueBuilderGetComputeMemorySize) \
 with(nvnQueueBuilderSetComputeMemorySize) \
+with(nvnQueueBuilderGetControlMemorySize) \
 with(nvnQueueBuilderSetControlMemorySize) \
 with(nvnQueueBuilderSetDefaults) \
+with(nvnQueueBuilderGetMemory) \
+with(nvnQueueBuilderGetDevice) \
 with(nvnQueueBuilderSetDevice) \
+with(nvnQueueBuilderGetFlags) \
 with(nvnQueueBuilderSetFlags) \
 with(nvnQueueBuilderSetQueueMemory) \
+with(nvnQueueBuilderGetMemorySize) \
+with(nvnQueueBuilderGetQueuePriority) \
+with(nvnQueueBuilderSetQueuePriority) \
 with(nvnQueueFenceSync) \
 with(nvnQueueFinalize) \
 with(nvnQueueFinish) \
@@ -1026,12 +1094,15 @@ with(nvnSamplerBuilderSetBorderColori) \
 with(nvnSamplerBuilderSetBorderColorui) \
 with(nvnSamplerBuilderSetCompare) \
 with(nvnSamplerBuilderSetDefaults) \
+with(nvnSamplerBuilderGetDevice) \
 with(nvnSamplerBuilderSetDevice) \
 with(nvnSamplerBuilderSetLodBias) \
 with(nvnSamplerBuilderSetLodClamp) \
 with(nvnSamplerBuilderSetMaxAnisotropy) \
 with(nvnSamplerBuilderSetMinMagFilter) \
 with(nvnSamplerBuilderSetReductionFilter) \
+with(nvnSamplerBuilderGetLodSnap) \
+with(nvnSamplerBuilderSetLodSnap) \
 with(nvnSamplerBuilderSetWrapMode) \
 with(nvnSamplerCompare) \
 with(nvnSamplerFinalize) \
@@ -1058,6 +1129,8 @@ with(nvnSamplerPoolSetDebugLabel) \
 with(nvnSamplerSetDebugLabel) \
 with(nvnSyncFinalize) \
 with(nvnSyncInitialize) \
+with(nvnSyncInitializeFromFencedGLSync) \
+with(nvnSyncCreateGLSync) \
 with(nvnSyncSetDebugLabel) \
 with(nvnSyncWait) \
 with(nvnTextureBuilderGetDepth) \
@@ -1068,8 +1141,10 @@ with(nvnTextureBuilderGetGLTextureName) \
 with(nvnTextureBuilderGetHeight) \
 with(nvnTextureBuilderGetLevels) \
 with(nvnTextureBuilderGetMemoryOffset) \
+with(nvnTextureBuilderGetRawStorageClass) \
 with(nvnTextureBuilderGetMemoryPool) \
 with(nvnTextureBuilderGetPackagedTextureData) \
+with(nvnTextureBuilderGetPackagedTextureLayout) \
 with(nvnTextureBuilderGetSamples) \
 with(nvnTextureBuilderGetSparseTileLayout) \
 with(nvnTextureBuilderGetStorageAlignment) \
@@ -1083,6 +1158,7 @@ with(nvnTextureBuilderGetZCullStorageSize) \
 with(nvnTextureBuilderSetDefaults) \
 with(nvnTextureBuilderSetDepth) \
 with(nvnTextureBuilderSetDepthStencilMode) \
+with(nvnTextureBuilderGetDevice) \
 with(nvnTextureBuilderSetDevice) \
 with(nvnTextureBuilderSetFlags) \
 with(nvnTextureBuilderSetFormat) \
@@ -1116,6 +1192,7 @@ with(nvnTextureGetSamples) \
 with(nvnTextureGetSparseTileLayout) \
 with(nvnTextureGetStorageClass) \
 with(nvnTextureGetStorageSize) \
+with(nvnTextureGetRawStorageClass) \
 with(nvnTextureGetStride) \
 with(nvnTextureGetSwizzle) \
 with(nvnTextureGetTarget) \
@@ -1166,17 +1243,38 @@ with(nvnWindowAcquireTexture) \
 with(nvnWindowBuilderGetNativeWindow) \
 with(nvnWindowBuilderGetPresentInterval) \
 with(nvnWindowBuilderSetDefaults) \
+with(nvnWindowBuilderGetDevice) \
 with(nvnWindowBuilderSetDevice) \
 with(nvnWindowBuilderSetNativeWindow) \
 with(nvnWindowBuilderSetPresentInterval) \
+with(nvnWindowBuilderGetNumTextures) \
+with(nvnWindowBuilderGetTexture) \
 with(nvnWindowBuilderSetTextures) \
+with(nvnWindowBuilderGetNumActiveTextures) \
+with(nvnWindowBuilderSetNumActiveTextures) \
 with(nvnWindowFinalize) \
 with(nvnWindowGetNativeWindow) \
 with(nvnWindowGetPresentInterval) \
 with(nvnWindowInitialize) \
 with(nvnWindowSetCrop) \
 with(nvnWindowGetCrop) \
+with(nvnWindowGetNumTextures) \
+with(nvnWindowGetNumActiveTextures) \
+with(nvnWindowSetNumActiveTextures) \
 with(nvnWindowSetDebugLabel) \
-with(nvnWindowSetPresentInterval)
+with(nvnWindowSetPresentInterval) \
+with(nvnEventBuilderSetDefaults) \
+with(nvnEventBuilderGetMemoryPool) \
+with(nvnEventBuilderGetMemoryOffset) \
+with(nvnEventBuilderGetStorage) \
+with(nvnEventBuilderSetStorage) \
+with(nvnEventInitialize) \
+with(nvnEventGetMemoryPool) \
+with(nvnEventGetMemoryOffset) \
+with(nvnEventFinalize) \
+with(nvnEventGetValue) \
+with(nvnEventSignal) \
+with(nvnCommandBufferWaitEvent) \
+with(nvnCommandBufferSignalEvent)
 
 #endif //NATIVELIB_NVN_H

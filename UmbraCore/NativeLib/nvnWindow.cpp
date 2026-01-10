@@ -13,8 +13,27 @@ void nvnWindowBuilderSetNativeWindow(NVNwindowBuilder* builder, NVNnativeWindow 
     std::cout << "nvnWindowBuilderSetNativeWindow called!" << std::endl;
 }
 
+int nvnWindowBuilderGetNumTextures(NVNwindowBuilder* builder) {
+    std::cout << "nvnWindowBuilderGetNumTextures() called!" << std::endl;
+    return 0;
+}
+
+NVNtexture* nvnWindowBuilderGetTexture(NVNwindowBuilder* builder, int texture) {
+    std::cout << "nvnWindowBuilderGetTexture() called!" << std::endl;
+    return nullptr;
+}
+
 void nvnWindowBuilderSetTextures(NVNwindowBuilder* builder, int numTextures, NVNtexture* const* textures) {
     std::cout << "nvnWindowBuilderSetTextures(numTextures=" << numTextures << ", textures=" << std::hex << reinterpret_cast<uint64_t>(textures) << std::dec << ") called!" << std::endl;
+}
+
+int nvnWindowBuilderGetNumActiveTextures(NVNwindowBuilder* builder) {
+    std::cout << "nvnWindowBuilderGetNumActiveTextures() called!" << std::endl;
+    return 0;
+}
+
+void nvnWindowBuilderSetNumActiveTextures(NVNwindowBuilder* builder, int numActiveTextures) {
+    std::cout << "nvnWindowBuilderSetNumActiveTextures(numTextures=" << numActiveTextures << ") called!" << std::endl;
 }
 
 void nvnWindowBuilderSetPresentInterval(NVNwindowBuilder* builder, int presentInterval) {
@@ -70,4 +89,18 @@ void nvnWindowSetCrop(NVNwindow* window, int x, int y, int w, int h) {
 
 void nvnWindowGetCrop(const NVNwindow* window, NVNrectangle* rectangle) {
     std::cout << "nvnWindowGetCrop called!" << std::endl;
+}
+
+int nvnWindowGetNumTextures(NVNwindow* builder) {
+    std::cout << "nvnWindowGetNumTextures() called!" << std::endl;
+    return 0;
+}
+
+int nvnWindowGetNumActiveTextures(NVNwindow* builder) {
+    std::cout << "nvnWindowGetNumActiveTextures() called!" << std::endl;
+    return 0;
+}
+
+void nvnWindowSetNumActiveTextures(NVNwindow* builder, int numActiveTextures) {
+    std::cout << "nvnWindowSetNumActiveTextures(numTextures=" << numActiveTextures << ") called!" << std::endl;
 }

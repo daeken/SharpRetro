@@ -84,3 +84,8 @@ uint64_t nvnBufferGetDebugID(const NVNbuffer* buffer) {
     std::cout << "nvnBufferGetDebugID() called!" << std::endl;
     return 0;
 }
+
+NVNdevice* nvnTextureBuilderGetDevice(NVNtextureBuilder* builder) {
+    std::cout << "nvnTextureBuilderGetDevice() called!" << std::endl;
+    return nullptr;
+}

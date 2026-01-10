@@ -14,7 +14,21 @@ void nvnProgramSetDebugLabel(NVNprogram* program, const char* label) {
     std::cout << "nvnProgramSetDebugLabel called!" << std::endl;
 }
 
+void nvnProgramSetSampleShading(NVNprogram* program) {
+    std::cout << "nvnProgramSetSampleShading called!" << std::endl;
+}
+
 NVNboolean nvnProgramSetShaders(NVNprogram* program, int count, const NVNshaderData* stageData) {
     std::cout << "nvnProgramSetShaders called!" << std::endl;
     return 1;
+}
+
+NVNboolean nvnProgramSetShadersExt(NVNprogram* program, int count, const NVNshaderData* stageData) {
+    std::cout << "nvnProgramSetShadersExt called!" << std::endl;
+    return 1;
+}
+
+NVNdevice* nvnMemoryPoolBuilderGetDevice(NVNmemoryPoolBuilder* builder) {
+    std::cout << "nvnMemoryPoolBuilderGetDevice called!" << std::endl;
+    return nullptr;
 }

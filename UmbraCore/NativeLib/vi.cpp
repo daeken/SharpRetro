@@ -18,10 +18,21 @@ int64_t nn::vi::OpenDefaultDisplay(Display** display) {
 
 int64_t nn::vi::GetDisplayVsyncEvent(uint32_t* eventHandle, Display* display) {
     std::cout << "nn::GetDisplayVsyncEvent called! " << std::endl;
+    return 0;
 }
 
 uint64_t nn::vi::CreateLayer(Layer** layer, Display* display) {
     std::cout << "nn::vi::CreateLayer called!" << std::endl;
+    return 0;
+}
+
+uint64_t nn::vi::CreateLayerExtra(Layer**, Display*, int, int) {
+    std::cout << "nn::vi::CreateLayer[Extra] called!" << std::endl;
+    return 0;
+}
+
+uint64_t nn::vi::SetLayerCrop(Layer*, int, int, int, int) {
+    std::cout << "nn::vi::SetLayerCrop called! " << std::endl;
     return 0;
 }
 
@@ -37,5 +48,10 @@ uint64_t nn::vi::DestroyLayer(Layer* layer) {
 
 uint64_t nn::vi::GetNativeWindow(Window** window, Layer* layer) {
     std::cout << "nn::vi::GetNativeWindow called! " << std::endl;
+    return 0;
+}
+
+uint64_t nn::vi::native::NativeWindowHolder::GetNativeWindow(void*) {
+    std::cout << "nn::vi::native::GetNativeWindow called!" << std::endl;
     return 0;
 }
