@@ -60,7 +60,7 @@ public partial class IAudioRenderer {
             0;
         oheader.TotalSize = (uint) Marshal.SizeOf<UpdateDataHeader>();
         
-        $"Raw data: [{string.Join(", ", MemoryMarshal.Cast<byte, uint>(input).ToArray().Select(x => $"0x{x:X}"))}]".Log();
+        //$"Raw data: [{string.Join(", ", MemoryMarshal.Cast<byte, uint>(input).ToArray().Select(x => $"0x{x:X}"))}]".Log();
 
         uint[] odata = [
             0x33564552, 0xb0, 0x18e0, 0x600, 0x0, 0xE0, 0x0, 0x20, 0x10, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
