@@ -1,38 +1,42 @@
 cmake_minimum_required(VERSION 4.1)
-project(NativeLib)
+project(NativeLib LANGUAGES OBJCXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_OBJCXX_STANDARD 20)
 
-add_library(NativeLib SHARED library.cpp
-        nv.cpp
+find_package(SDL2 REQUIRED)
+include_directories(NativeLib ${SDL2_INCLUDE_DIRS})
+
+add_library(NativeLib SHARED library.mm
+        nv.mm
         nv.h
-        vi.cpp
+        vi.mm
         vi.h
         nvn.h
-        nvnDevice.cpp
-        nvnQueue.cpp
-        nvnWindow.cpp
-        nvnProgram.cpp
-        nvnMemoryPool.cpp
-        nvnTexturePool.cpp
-        nvnSamplerPool.cpp
-        nvnBuffer.cpp
-        nvnTextureBuilder.cpp
-        nvnTextureView.cpp
-        nvnTexture.cpp
-        nvnSamplerBuilder.cpp
-        nvnSampler.cpp
-        nvnBlendState.cpp
-        nvnColorState.cpp
-        nvnChannelMaskState.cpp
-        nvnMultisampleState.cpp
-        nvnPolygonState.cpp
-        nvnDepthStencilState.cpp
-        nvnVertexAttribState.cpp
-        nvnVertexStreamState.cpp
-        nvnCommandBuffer.cpp
-        nvnSync.cpp
-        nvnEvent.cpp
-        nvnBootstrap.cpp
+        nvnDevice.mm
+        nvnQueue.mm
+        nvnWindow.mm
+        nvnProgram.mm
+        nvnMemoryPool.mm
+        nvnTexturePool.mm
+        nvnSamplerPool.mm
+        nvnBuffer.mm
+        nvnTextureBuilder.mm
+        nvnTextureView.mm
+        nvnTexture.mm
+        nvnSamplerBuilder.mm
+        nvnSampler.mm
+        nvnBlendState.mm
+        nvnColorState.mm
+        nvnChannelMaskState.mm
+        nvnMultisampleState.mm
+        nvnPolygonState.mm
+        nvnDepthStencilState.mm
+        nvnVertexAttribState.mm
+        nvnVertexStreamState.mm
+        nvnCommandBuffer.mm
+        nvnSync.mm
+        nvnEvent.mm
+        nvnBootstrap.mm
         glslc.h
-        glslc.cpp)
+        glslc.mm)
+target_link_libraries(NativeLib ${SDL2_LIBRARIES})

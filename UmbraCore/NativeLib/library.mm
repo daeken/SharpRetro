@@ -7,7 +7,9 @@
 #include "vi.h"
 #include "glslc.h"
 
-#define hook(name, func) regFunc(name, reinterpret_cast<void*>(func))
+ManagedCallbacks* Callbacks;
+
+#define hook(name, func) Callbacks->registerHook(name, reinterpret_cast<void*>(func))
 
 thread_local uint64_t x18 = 0;
 
@@ -93,7 +95,8 @@ void movie_SetAllocator() {
     std::cout << "movie_SetAllocator!" << std::endl;
 }
 
-void setupHooks(const hookRegister_t regFunc) {
+void setup(ManagedCallbacks* callbacks) {
+    Callbacks = callbacks;
     hook("$getX18", getX18);
     hook("$setX18", setX18);
 

@@ -21,6 +21,7 @@
 
     <ItemGroup>
       <PackageReference Include="CxxDemangler" Version="0.2.4.11" />
+      <PackageReference Include="ppy.SDL2-CS" Version="1.0.741-alpha" />
     </ItemGroup>
 
     <ItemGroup>

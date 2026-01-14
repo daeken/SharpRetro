@@ -8,18 +8,49 @@ public unsafe delegate ulong HookDelegate(CpuState* cpuState);
 [AttributeUsage(AttributeTargets.Method)]
 public class Hook(string Symbol) : Attribute;
 
-public partial class HookManager {
+public unsafe partial class HookManager {
     public readonly Dictionary<string, (HookDelegate Delegate, ulong FuncPtr)> Hooks = [];
-    delegate void SetupHooksDelegate(IntPtr register);
+    delegate void SetupDelegate(NativeLibCallbacks* callbacks);
     delegate void RegisterHookDelegate(IntPtr namePtr, ulong funcPtr);
+    delegate IntPtr GetSdlWindowDelegate();
+    delegate IntPtr GetSdlRendererDelegate();
+    delegate IntPtr RecompileShaderDelegate(IntPtr shader, ulong size);
+    delegate void FreeShaderDelegate(IntPtr shader);
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct NativeLibCallbacks {
+        public RegisterHookDelegate RegisterHook;
+        public GetSdlWindowDelegate GetSdlWindow;
+        public GetSdlRendererDelegate GetSdlRenderer;
+        public RecompileShaderDelegate RecompileShader;
+        public FreeShaderDelegate FreeShader;
+    }
+
+    readonly NativeLibCallbacks* Callbacks;
 
     public ulong LoadX18, StoreX18;
 
     public HookManager() {
         InitializeWrappers();
         var lib = NativeLibrary.Load("../UmbraCore/NativeLib/cmake-build-debug/libNativeLib.dylib");
-        var setupHooks = Marshal.GetDelegateForFunctionPointer<SetupHooksDelegate>(NativeLibrary.GetExport(lib, "setupHooks"));
-        setupHooks(Marshal.GetFunctionPointerForDelegate<RegisterHookDelegate>(NativeRegister));
+        Callbacks = (NativeLibCallbacks*) Marshal.AllocHGlobal(sizeof(NativeLibCallbacks));
+        Callbacks->RegisterHook = NativeRegister;
+        Callbacks->GetSdlWindow = GetSdlWindow;
+        Callbacks->GetSdlRenderer = GetSdlRenderer;
+        Callbacks->RecompileShader = RecompileShader;
+        Callbacks->FreeShader = FreeShader;
+        var setup = Marshal.GetDelegateForFunctionPointer<SetupDelegate>(NativeLibrary.GetExport(lib, "setup"));
+        setup(Callbacks);
+    }
+
+    IntPtr GetSdlWindow() => Kernel.Renderer.SdlWindow;
+    IntPtr GetSdlRenderer() => Kernel.Renderer.SdlRenderer;
+
+    IntPtr RecompileShader(IntPtr shader, ulong size) {
+        throw new NotImplementedException();
+    }
+    void FreeShader(IntPtr shader) {
+        throw new NotImplementedException();
     }
 
     void NativeRegister(IntPtr namePtr, ulong funcPtr) {

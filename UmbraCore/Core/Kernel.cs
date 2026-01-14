@@ -13,6 +13,7 @@ public static class Kernel {
     public static readonly ThreadManager ThreadManager = new();
     public static readonly MiscManager MiscManager = new();
     public static readonly SyncManager SyncManager = new();
+    public static readonly Renderer Renderer = new();
     
     public static void Setup(GameWrapper game, string romFsPath) {
         RomFsPath = romFsPath;
