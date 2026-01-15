@@ -3,7 +3,7 @@
 
 #define NVN_FUNC(fname) if(strcmp(name, #fname) == 0) return reinterpret_cast<void*>((void*)fname);
 
-PFNNVNGENERICFUNCPTRPROC nvnDeviceGetProcAddress(const NVNdevice* device, const char* name) {
+PFNNVNGENERICFUNCPTRPROC nvnDeviceGetProcAddress(NVNdevice* device, const char* name) {
     std::cout << "nvnDeviceGetProcAddress (from device) '" << name << "'" << std::endl;
     NVN_ALL(NVN_FUNC);
     if(strcmp(name, "nvnDeviceGetProcAddress") == 0) return reinterpret_cast<PFNNVNGENERICFUNCPTRPROC>(nvnDeviceGetProcAddress);

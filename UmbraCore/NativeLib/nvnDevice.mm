@@ -2,31 +2,38 @@
 #include "nv.h"
 
 // Device Builder functions
-void nvnDeviceBuilderSetDefaults(NVNdeviceBuilder* builder) {
+void nvnDeviceBuilderSetDefaults(NVNdeviceBuilder* _builder) {
     std::cout << "nvnDeviceBuilderSetDefaults called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnDeviceBuilderSetFlags(NVNdeviceBuilder* builder, int flags) {
+void nvnDeviceBuilderSetFlags(NVNdeviceBuilder* _builder, int flags) {
     std::cout << "nvnDeviceBuilderSetFlags (" << flags << ") called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-int nvnDeviceBuilderGetFlags(NVNdeviceBuilder* builder) {
+int nvnDeviceBuilderGetFlags(NVNdeviceBuilder* _builder) {
     std::cout << "nvnDeviceBuilderGetFlags called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     return 0;
 }
 
 // Device functions
-NVNboolean nvnDeviceInitialize(NVNdevice* device, const NVNdeviceBuilder* builder) {
+NVNboolean nvnDeviceInitialize(NVNdevice* _device, NVNdeviceBuilder* _builder) {
     std::cout << "nvnDeviceInitialize called!" << std::endl;
+    auto device = UNWRAP(_device);
+    auto builder = UNWRAP(_builder);
     return 1;
 }
 
-void nvnDeviceFinalize(NVNdevice* device) {
+void nvnDeviceFinalize(NVNdevice* _device) {
     std::cout << "nvnDeviceFinalize called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-void nvnDeviceSetDebugLabel(NVNdevice* device, const char* label) {
+void nvnDeviceSetDebugLabel(NVNdevice* _device, const char* label) {
     std::cout << "nvnDeviceSetDebugLabel (" << label << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
 inline std::string_view ToString(NVNdeviceInfo v) {
@@ -133,7 +140,8 @@ inline std::string_view ToString(NVNdeviceInfo v) {
     }
 }
 
-int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
+int getIntegerWrapper(NVNdevice* _device, NVNdeviceInfo pname) {
+    auto device = UNWRAP(_device);
     switch(pname) {
         case NVNdeviceInfo::ApiMajorVersion:
             return 0x35; // SMO needs this version
@@ -201,117 +209,142 @@ int getIntegerWrapper(const NVNdevice* device, NVNdeviceInfo pname) {
     }
 }
 
-void nvnDeviceGetInteger(const NVNdevice* device, NVNdeviceInfo pname, int* v) {
+void nvnDeviceGetInteger(NVNdevice* _device, NVNdeviceInfo pname, int* v) {
     std::cout << "nvnDeviceGetInteger(" << ToString(pname) << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     if(!v) return;
-    *v = getIntegerWrapper(device, pname);
+    *v = getIntegerWrapper(_device, pname);
 }
 
-uint64_t nvnDeviceGetCurrentTimestampInNanoseconds(const NVNdevice* device) {
+uint64_t nvnDeviceGetCurrentTimestampInNanoseconds(NVNdevice* _device) {
     std::cout << "nvnDeviceGetCurrentTimestampInNanoseconds() called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-void nvnDeviceSetIntermediateShaderCache(NVNdevice* device, int i) {
+void nvnDeviceSetIntermediateShaderCache(NVNdevice* _device, int i) {
     std::cout << "nvnDeviceSetIntermediateShaderCache(i=" << i << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-NVNtextureHandle nvnDeviceGetTextureHandle(const NVNdevice* device, int textureID, int samplerID) {
+NVNtextureHandle nvnDeviceGetTextureHandle(NVNdevice* _device, int textureID, int samplerID) {
     std::cout << "nvnDeviceGetTextureHandle(textureID=" << textureID << ", samplerID=" << samplerID << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0xDEADBEEFCAFEBA00;
 }
 
-NVNtextureHandle nvnDeviceGetTexelFetchHandle(const NVNdevice* device, int textureID) {
+NVNtextureHandle nvnDeviceGetTexelFetchHandle(NVNdevice* _device, int textureID) {
     std::cout << "nvnDeviceGetTexelFetchHandle(textureID=" << textureID << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-NVNimageHandle nvnDeviceGetImageHandle(const NVNdevice* device, int textureID) {
+NVNimageHandle nvnDeviceGetImageHandle(NVNdevice* _device, int textureID) {
     std::cout << "nvnDeviceGetImageHandle(textureID=" << textureID << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-void nvnDeviceInstallDebugCallback(NVNdevice* device, const PFNNVNDEBUGCALLBACKPROC callback, void* callbackData, NVNboolean enable) {
+void nvnDeviceInstallDebugCallback(NVNdevice* _device, const PFNNVNDEBUGCALLBACKPROC callback, void* callbackData, NVNboolean enable) {
     std::cout << "nvnDeviceInstallDebugCallback(callback=" << std::hex << reinterpret_cast<uint64_t>(callback)
               << ", callbackData=" << reinterpret_cast<uint64_t>(callbackData)
               << ", enable=" << std::dec << enable << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-NVNdebugDomainId nvnDeviceGenerateDebugDomainId(const NVNdevice* device, const char* s) {
+NVNdebugDomainId nvnDeviceGenerateDebugDomainId(NVNdevice* _device, const char* s) {
     std::cout << "nvnDeviceGenerateDebugDomainId(s=\"" << (s ? s : "null") << "\") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-void nvnDeviceSetWindowOriginMode(NVNdevice* device, NVNwindowOriginMode windowOriginMode) {
+void nvnDeviceSetWindowOriginMode(NVNdevice* _device, NVNwindowOriginMode windowOriginMode) {
     std::cout << "nvnDeviceSetWindowOriginMode(windowOriginMode=" << windowOriginMode << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-void nvnDeviceSetDepthMode(NVNdevice* device, NVNdepthMode depthMode) {
+void nvnDeviceSetDepthMode(NVNdevice* _device, NVNdepthMode depthMode) {
     std::cout << "nvnDeviceSetDepthMode(depthMode=" << depthMode << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-NVNboolean nvnDeviceRegisterFastClearColor(NVNdevice* device, const float* color, NVNformat format) {
+NVNboolean nvnDeviceRegisterFastClearColor(NVNdevice* _device, const float* color, NVNformat format) {
     std::cout << "nvnDeviceRegisterFastClearColor(color=[" << (color ? std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]) + "," + std::to_string(color[3]) : "null") << "], format=" << format << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 1;
 }
 
-NVNboolean nvnDeviceRegisterFastClearColori(NVNdevice* device, const int* color, NVNformat format) {
+NVNboolean nvnDeviceRegisterFastClearColori(NVNdevice* _device, const int* color, NVNformat format) {
     std::cout << "nvnDeviceRegisterFastClearColori(color=[" << (color ? std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]) + "," + std::to_string(color[3]) : "null") << "], format=" << format << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 1;
 }
 
-NVNboolean nvnDeviceRegisterFastClearColorui(NVNdevice* device, const uint32_t* color, NVNformat format) {
+NVNboolean nvnDeviceRegisterFastClearColorui(NVNdevice* _device, const uint32_t* color, NVNformat format) {
     std::cout << "nvnDeviceRegisterFastClearColorui(color=[" << (color ? std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]) + "," + std::to_string(color[3]) : "null") << "], format=" << format << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 1;
 }
 
-NVNboolean nvnDeviceRegisterFastClearDepth(NVNdevice* device, float f) {
+NVNboolean nvnDeviceRegisterFastClearDepth(NVNdevice* _device, float f) {
     std::cout << "nvnDeviceRegisterFastClearDepth(f=" << f << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 1;
 }
 
-NVNwindowOriginMode nvnDeviceGetWindowOriginMode(const NVNdevice* device) {
+NVNwindowOriginMode nvnDeviceGetWindowOriginMode(NVNdevice* _device) {
     std::cout << "nvnDeviceGetWindowOriginMode() called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-NVNdepthMode nvnDeviceGetDepthMode(const NVNdevice* device) {
+NVNdepthMode nvnDeviceGetDepthMode(NVNdevice* _device) {
     std::cout << "nvnDeviceGetDepthMode() called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-uint64_t nvnDeviceGetTimestampInNanoseconds(const NVNdevice* device, const NVNcounterData* counterData) {
-    std::cout << "nvnDeviceGetTimestampInNanoseconds(counterData=" << std::hex << reinterpret_cast<uint64_t>(counterData) << std::dec << ") called!" << std::endl;
+uint64_t nvnDeviceGetTimestampInNanoseconds(NVNdevice* _device, NVNcounterData* _counterData) {
+    std::cout << "nvnDeviceGetTimestampInNanoseconds(counterData=" << std::hex << reinterpret_cast<uint64_t>(_counterData) << std::dec << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
+    auto counterData = UNWRAP(_counterData);
     return 0;
 }
 
-void nvnDeviceApplyDeferredFinalizes(NVNdevice* device, int i) {
+void nvnDeviceApplyDeferredFinalizes(NVNdevice* _device, int i) {
     std::cout << "nvnDeviceApplyDeferredFinalizes(i=" << i << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-void nvnDeviceFinalizeCommandHandle(NVNdevice* device, NVNcommandHandle handles) {
+void nvnDeviceFinalizeCommandHandle(NVNdevice* _device, NVNcommandHandle handles) {
     std::cout << "nvnDeviceFinalizeCommandHandle(handles=" << std::hex << handles << std::dec << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-void nvnDeviceWalkDebugDatabase(const NVNdevice* device, NVNdebugObjectType debugObjectType, PFNNVNWALKDEBUGDATABASECALLBACKPROC callback, void* callbackData) {
+void nvnDeviceWalkDebugDatabase(NVNdevice* _device, NVNdebugObjectType debugObjectType, PFNNVNWALKDEBUGDATABASECALLBACKPROC callback, void* callbackData) {
     std::cout << "nvnDeviceWalkDebugDatabase(debugObjectType=" << debugObjectType << ", callback=" << std::hex << reinterpret_cast<uint64_t>(callback) << std::dec << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
 }
 
-NVNseparateTextureHandle nvnDeviceGetSeparateTextureHandle(const NVNdevice* device, int textureID) {
+NVNseparateTextureHandle nvnDeviceGetSeparateTextureHandle(NVNdevice* _device, int textureID) {
     std::cout << "nvnDeviceGetSeparateTextureHandle(textureID=" << textureID << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-NVNseparateSamplerHandle nvnDeviceGetSeparateSamplerHandle(const NVNdevice* device, int textureID) {
+NVNseparateSamplerHandle nvnDeviceGetSeparateSamplerHandle(NVNdevice* _device, int textureID) {
     std::cout << "nvnDeviceGetSeparateSamplerHandle(textureID=" << textureID << ") called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-NVNboolean nvnDeviceIsExternalDebuggerAttached(const NVNdevice* device) {
+NVNboolean nvnDeviceIsExternalDebuggerAttached(NVNdevice* _device) {
     std::cout << "nvnDeviceIsExternalDebuggerAttached() called!" << std::endl;
+    auto device = UNWRAP(_device);
     return 0;
 }
 
-void nvnDeviceWaitForError(NVNdevice* device) {
+void nvnDeviceWaitForError(NVNdevice* _device) {
     std::cout << "nvnDeviceWaitForError called!" << std::endl;
+    auto device = UNWRAP(_device);
 }

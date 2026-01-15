@@ -1,106 +1,129 @@
 #include <iostream>
 #include "nv.h"
 
-void nvnMultisampleStateSetDefaults(NVNmultisampleState* multisample) {
+void nvnMultisampleStateSetDefaults(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateSetDefaults called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-void nvnMultisampleStateSetMultisampleEnable(NVNmultisampleState* multisample, NVNboolean enable) {
+void nvnMultisampleStateSetMultisampleEnable(NVNmultisampleState* _multisample, NVNboolean enable) {
     std::cout << "nvnMultisampleStateSetMultisampleEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-void nvnMultisampleStateSetSamples(NVNmultisampleState* multisample, int samples) {
+void nvnMultisampleStateSetSamples(NVNmultisampleState* _multisample, int samples) {
     std::cout << "nvnMultisampleStateSetSamples called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-void nvnMultisampleStateSetAlphaToCoverageEnable(NVNmultisampleState* multisample, NVNboolean enable) {
+void nvnMultisampleStateSetAlphaToCoverageEnable(NVNmultisampleState* _multisample, NVNboolean enable) {
     std::cout << "nvnMultisampleStateSetAlphaToCoverageEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-void nvnMultisampleStateSetAlphaToCoverageDither(NVNmultisampleState* multisample, NVNboolean enable) {
+void nvnMultisampleStateSetAlphaToCoverageDither(NVNmultisampleState* _multisample, NVNboolean enable) {
     std::cout << "nvnMultisampleStateSetAlphaToCoverageDither called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-NVNboolean nvnMultisampleStateGetMultisampleEnable(const NVNmultisampleState* multisample) {
+NVNboolean nvnMultisampleStateGetMultisampleEnable(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetMultisampleEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-int nvnMultisampleStateGetSamples(const NVNmultisampleState* multisample) {
+int nvnMultisampleStateGetSamples(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetSamples called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-NVNboolean nvnMultisampleStateGetAlphaToCoverageEnable(const NVNmultisampleState* multisample) {
+NVNboolean nvnMultisampleStateGetAlphaToCoverageEnable(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetAlphaToCoverageEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-NVNboolean nvnMultisampleStateGetAlphaToCoverageDither(const NVNmultisampleState* multisample) {
+NVNboolean nvnMultisampleStateGetAlphaToCoverageDither(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetAlphaToCoverageDither called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateSetRasterSamples(NVNmultisampleState* multisample, int samples) {
+void nvnMultisampleStateSetRasterSamples(NVNmultisampleState* _multisample, int samples) {
     std::cout << "nvnMultisampleStateSetRasterSamples called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-int nvnMultisampleStateGetRasterSamples(NVNmultisampleState* multisample) {
+int nvnMultisampleStateGetRasterSamples(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetRasterSamples called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateSetCoverageModulationMode(NVNmultisampleState* multisample, NVNcoverageModulationMode mode) {
+void nvnMultisampleStateSetCoverageModulationMode(NVNmultisampleState* _multisample, NVNcoverageModulationMode mode) {
     std::cout << "nvnMultisampleStateSetCoverageModulationMode called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-NVNcoverageModulationMode nvnMultisampleStateGetCoverageModulationMode(const NVNmultisampleState* multisample) {
+NVNcoverageModulationMode nvnMultisampleStateGetCoverageModulationMode(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetCoverageModulationMode called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateSetCoverageToColorEnable(NVNmultisampleState* multisample, NVNboolean enable) {
+void nvnMultisampleStateSetCoverageToColorEnable(NVNmultisampleState* _multisample, NVNboolean enable) {
     std::cout << "nvnMultisampleStateSetCoverageToColorEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-NVNboolean nvnMultisampleStateGetCoverageToColorEnable(const NVNmultisampleState* multisample) {
+NVNboolean nvnMultisampleStateGetCoverageToColorEnable(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetCoverageToColorEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateSetCoverageToColorOutput(NVNmultisampleState* multisample, int i) {
+void nvnMultisampleStateSetCoverageToColorOutput(NVNmultisampleState* _multisample, int i) {
     std::cout << "nvnMultisampleStateSetCoverageToColorOutput called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-int nvnMultisampleStateGetCoverageToColorOutput(const NVNmultisampleState* multisample) {
+int nvnMultisampleStateGetCoverageToColorOutput(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetCoverageToColorOutput called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateSetSampleLocationsEnable(NVNmultisampleState* multisample, NVNboolean enable) {
+void nvnMultisampleStateSetSampleLocationsEnable(NVNmultisampleState* _multisample, NVNboolean enable) {
     std::cout << "nvnMultisampleStateSetSampleLocationsEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-NVNboolean nvnMultisampleStateGetSampleLocationsEnable(const NVNmultisampleState* multisample) {
+NVNboolean nvnMultisampleStateGetSampleLocationsEnable(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetSampleLocationsEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateGetSampleLocationsGrid(NVNmultisampleState* multisample, int* w, int* h) {
+void nvnMultisampleStateGetSampleLocationsGrid(NVNmultisampleState* _multisample, int* w, int* h) {
     std::cout << "nvnMultisampleStateGetSampleLocationsGrid called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     if (w) *w = 0;
     if (h) *h = 0;
 }
 
-void nvnMultisampleStateSetSampleLocationsGridEnable(NVNmultisampleState* multisample, NVNboolean enable) {
+void nvnMultisampleStateSetSampleLocationsGridEnable(NVNmultisampleState* _multisample, NVNboolean enable) {
     std::cout << "nvnMultisampleStateSetSampleLocationsGridEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }
 
-NVNboolean nvnMultisampleStateGetSampleLocationsGridEnable(const NVNmultisampleState* multisample) {
+NVNboolean nvnMultisampleStateGetSampleLocationsGridEnable(NVNmultisampleState* _multisample) {
     std::cout << "nvnMultisampleStateGetSampleLocationsGridEnable called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
     return 0;
 }
 
-void nvnMultisampleStateSetSampleLocations(NVNmultisampleState* multisample, int i1, int i2, const float* f) {
+void nvnMultisampleStateSetSampleLocations(NVNmultisampleState* _multisample, int i1, int i2, const float* f) {
     std::cout << "nvnMultisampleStateSetSampleLocations called!" << std::endl;
+    auto multisample = UNWRAP(_multisample);
 }

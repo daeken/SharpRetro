@@ -2,64 +2,230 @@
 #define NATIVELIB_NVN_H
 #include <cstddef>
 
-// Forward declarations for NVN types (opaque types)
-struct NVNdeviceBuilder {};
-struct NVNdevice {};
-struct NVNqueue {};
-struct NVNqueueBuilder {};
-struct NVNwindow {};
-struct NVNwindowBuilder {};
-struct NVNprogram {};
-struct NVNmemoryPool {
+#define WRAP_MAGIC 0xCAFEBABEDEADBEEF
+#define WRAPPED_DECL(nvnName, realName) struct nvnName { uint64_t magic; realName* wrapped; }
+#define UNWRAP(arg) \
+    (arg)->magic != WRAP_MAGIC \
+        ? ((arg)->magic = WRAP_MAGIC, \
+        (arg)->wrapped = new std::remove_pointer_t<std::remove_reference_t<decltype((arg)->wrapped)>>) \
+        : (arg)->wrapped \
+
+class HIDeviceBuilder {
+public:
+};
+
+WRAPPED_DECL(NVNdeviceBuilder, HIDeviceBuilder);
+
+class HIDevice {
+public:
+};
+WRAPPED_DECL(NVNdevice, HIDevice);
+
+class HIQueue {
+public:
+};
+WRAPPED_DECL(NVNqueue, HIQueue);
+
+class HIQueueBuilder {
+public:
+};
+WRAPPED_DECL(NVNqueueBuilder, HIQueueBuilder);
+
+class HIWindow {
+public:
+};
+WRAPPED_DECL(NVNwindow, HIWindow);
+
+class HIWindowBuilder {
+public:
+};
+WRAPPED_DECL(NVNwindowBuilder, HIWindowBuilder);
+
+class HIProgram {
+public:
+};
+WRAPPED_DECL(NVNprogram, HIProgram);
+
+class HIMemoryPool {
+public:
     void* pool;
     uint64_t size;
 };
-struct NVNmemoryPoolBuilder {
+WRAPPED_DECL(NVNmemoryPool, HIMemoryPool);
+
+class HIMemoryPoolBuilder {
+public:
     void* pool;
     uint64_t size;
 };
-struct NVNtexturePool {};
-struct NVNsamplerPool {};
-struct NVNbuffer {
+WRAPPED_DECL(NVNmemoryPoolBuilder, HIMemoryPoolBuilder);
+
+class HITexturePool {
+public:
+};
+WRAPPED_DECL(NVNtexturePool, HITexturePool);
+
+class HISamplerPool {
+public:
+};
+WRAPPED_DECL(NVNsamplerPool, HISamplerPool);
+
+class HIBuffer {
+public:
     NVNmemoryPool* pool;
     ptrdiff_t offset;
     uint64_t size;
 };
-struct NVNbufferBuilder {
+WRAPPED_DECL(NVNbuffer, HIBuffer);
+
+class HIBufferBuilder {
+public:
     NVNmemoryPool* pool;
     ptrdiff_t offset;
     uint64_t size;
 };
-struct NVNtexture {};
-struct NVNtextureBuilder {
+WRAPPED_DECL(NVNbufferBuilder, HIBufferBuilder);
+
+class HITexture {
+public:
+};
+WRAPPED_DECL(NVNtexture, HITexture);
+
+class HITextureBuilder {
+public:
     int width, height;
 };
-struct NVNtextureView {};
-struct NVNsampler {};
-struct NVNsamplerBuilder {};
-struct NVNblendState {};
-struct NVNcolorState {};
-struct NVNchannelMaskState {};
-struct NVNmultisampleState {};
-struct NVNpolygonState {};
-struct NVNdepthStencilState {};
-struct NVNvertexAttribState {};
-struct NVNvertexStreamState {};
-struct NVNcommandBuffer {};
-struct NVNsync {};
-struct NVNevent {};
-struct NVNeventBuilder {};
-struct NVNshaderData {};
-struct NVNmappingRequest {};
-struct NVNcopyRegion {};
-struct NVNpackagedTextureLayout {};
-struct NVNtextureSparseTileLayout {};
-struct NVNbufferRange {};
-struct NVNrectangle {};
-struct NVNcounterData {};
-struct NVNqueueErrorInfo {};
-struct NVNsubroutineLinkageMapPtr {};
-struct NVNdrawTextureRegion {};
+WRAPPED_DECL(NVNtextureBuilder, HITextureBuilder);
+
+class HITextureView {
+public:
+};
+WRAPPED_DECL(NVNtextureView, HITextureView);
+
+class HISampler {
+public:
+};
+WRAPPED_DECL(NVNsampler, HISampler);
+
+class HISamplerBuilder {
+public:
+};
+WRAPPED_DECL(NVNsamplerBuilder, HISamplerBuilder);
+
+class HIBlendState {
+public:
+};
+WRAPPED_DECL(NVNblendState, HIBlendState);
+
+class HIColorState {
+public:
+};
+WRAPPED_DECL(NVNcolorState, HIColorState);
+
+class HIChannelMaskState {
+public:
+};
+WRAPPED_DECL(NVNchannelMaskState, HIChannelMaskState);
+
+class HIMultisampleState {
+public:
+};
+WRAPPED_DECL(NVNmultisampleState, HIMultisampleState);
+
+class HIPolygonState {
+public:
+};
+WRAPPED_DECL(NVNpolygonState, HIPolygonState);
+
+class HIDepthStencilState {
+public:
+};
+WRAPPED_DECL(NVNdepthStencilState, HIDepthStencilState);
+
+class HIVertexAttribState {
+public:
+};
+WRAPPED_DECL(NVNvertexAttribState, HIVertexAttribState);
+
+class HIVertexStreamState {
+public:
+};
+WRAPPED_DECL(NVNvertexStreamState, HIVertexStreamState);
+
+class HICommandBuffer {
+public:
+};
+WRAPPED_DECL(NVNcommandBuffer, HICommandBuffer);
+
+class HISync {
+public:
+};
+WRAPPED_DECL(NVNsync, HISync);
+
+class HIEvent {
+public:
+};
+WRAPPED_DECL(NVNevent, HIEvent);
+
+class HIEventBuilder {
+public:
+};
+WRAPPED_DECL(NVNeventBuilder, HIEventBuilder);
+
+class HIShaderData {
+public:
+};
+WRAPPED_DECL(NVNshaderData, HIShaderData);
+
+class HIMappingRequest {
+public:
+};
+WRAPPED_DECL(NVNmappingRequest, HIMappingRequest);
+
+class HICopyRegion {
+public:
+};
+WRAPPED_DECL(NVNcopyRegion, HICopyRegion);
+
+class HIPackagedTextureLayout {
+public:
+};
+WRAPPED_DECL(NVNpackagedTextureLayout, HIPackagedTextureLayout);
+
+class HITextureSparseTileLayout {
+public:
+};
+WRAPPED_DECL(NVNtextureSparseTileLayout, HITextureSparseTileLayout);
+
+class HIBufferRange {
+public:
+};
+WRAPPED_DECL(NVNbufferRange, HIBufferRange);
+
+class HIRectangle {
+public:
+};
+WRAPPED_DECL(NVNrectangle, HIRectangle);
+
+class HICounterData {
+public:
+};
+WRAPPED_DECL(NVNcounterData, HICounterData);
+
+class HIQueueErrorInfo {
+public:
+};
+WRAPPED_DECL(NVNqueueErrorInfo, HIQueueErrorInfo);
+
+class HISubroutineLinkageMapPtr {
+public:
+};
+WRAPPED_DECL(NVNsubroutineLinkageMapPtr, HISubroutineLinkageMapPtr);
+
+class HIDrawTextureRegion {
+public:
+};
+WRAPPED_DECL(NVNdrawTextureRegion, HIDrawTextureRegion);
 
 // Enum types
 typedef int NVNboolean;
@@ -240,33 +406,33 @@ enum class NVNdeviceInfo : int {
 void nvnDeviceBuilderSetDefaults(NVNdeviceBuilder* builder);
 int nvnDeviceBuilderGetFlags(NVNdeviceBuilder* builder);
 void nvnDeviceBuilderSetFlags(NVNdeviceBuilder* builder, int flags);
-NVNboolean nvnDeviceInitialize(NVNdevice* device, const NVNdeviceBuilder* builder);
+NVNboolean nvnDeviceInitialize(NVNdevice* device, NVNdeviceBuilder* builder);
 void nvnDeviceFinalize(NVNdevice* device);
 void nvnDeviceSetDebugLabel(NVNdevice* device, const char* label);
-PFNNVNGENERICFUNCPTRPROC nvnDeviceGetProcAddress(const NVNdevice* device, const char* s);
-void nvnDeviceGetInteger(const NVNdevice* device, NVNdeviceInfo pname, int* v);
-uint64_t nvnDeviceGetCurrentTimestampInNanoseconds(const NVNdevice* device);
+PFNNVNGENERICFUNCPTRPROC nvnDeviceGetProcAddress(NVNdevice* device, const char* s);
+void nvnDeviceGetInteger(NVNdevice* device, NVNdeviceInfo pname, int* v);
+uint64_t nvnDeviceGetCurrentTimestampInNanoseconds(NVNdevice* device);
 void nvnDeviceSetIntermediateShaderCache(NVNdevice* device, int i);
-NVNtextureHandle nvnDeviceGetTextureHandle(const NVNdevice* device, int textureID, int samplerID);
-NVNtextureHandle nvnDeviceGetTexelFetchHandle(const NVNdevice* device, int textureID);
-NVNimageHandle nvnDeviceGetImageHandle(const NVNdevice* device, int textureID);
+NVNtextureHandle nvnDeviceGetTextureHandle(NVNdevice* device, int textureID, int samplerID);
+NVNtextureHandle nvnDeviceGetTexelFetchHandle(NVNdevice* device, int textureID);
+NVNimageHandle nvnDeviceGetImageHandle(NVNdevice* device, int textureID);
 void nvnDeviceInstallDebugCallback(NVNdevice* device, const PFNNVNDEBUGCALLBACKPROC callback, void* callbackData, NVNboolean enable);
-NVNdebugDomainId nvnDeviceGenerateDebugDomainId(const NVNdevice* device, const char* s);
+NVNdebugDomainId nvnDeviceGenerateDebugDomainId(NVNdevice* device, const char* s);
 void nvnDeviceSetWindowOriginMode(NVNdevice* device, NVNwindowOriginMode windowOriginMode);
 void nvnDeviceSetDepthMode(NVNdevice* device, NVNdepthMode depthMode);
 NVNboolean nvnDeviceRegisterFastClearColor(NVNdevice* device, const float* color, NVNformat format);
 NVNboolean nvnDeviceRegisterFastClearColori(NVNdevice* device, const int* color, NVNformat format);
 NVNboolean nvnDeviceRegisterFastClearColorui(NVNdevice* device, const uint32_t* color, NVNformat format);
 NVNboolean nvnDeviceRegisterFastClearDepth(NVNdevice* device, float f);
-NVNwindowOriginMode nvnDeviceGetWindowOriginMode(const NVNdevice* device);
-NVNdepthMode nvnDeviceGetDepthMode(const NVNdevice* device);
-uint64_t nvnDeviceGetTimestampInNanoseconds(const NVNdevice* device, const NVNcounterData* counterData);
+NVNwindowOriginMode nvnDeviceGetWindowOriginMode(NVNdevice* device);
+NVNdepthMode nvnDeviceGetDepthMode(NVNdevice* device);
+uint64_t nvnDeviceGetTimestampInNanoseconds(NVNdevice* device, NVNcounterData* counterData);
 void nvnDeviceApplyDeferredFinalizes(NVNdevice* device, int i);
 void nvnDeviceFinalizeCommandHandle(NVNdevice* device, NVNcommandHandle handles);
-void nvnDeviceWalkDebugDatabase(const NVNdevice* device, NVNdebugObjectType debugObjectType, PFNNVNWALKDEBUGDATABASECALLBACKPROC callback, void* callbackData);
-NVNseparateTextureHandle nvnDeviceGetSeparateTextureHandle(const NVNdevice* device, int textureID);
-NVNseparateSamplerHandle nvnDeviceGetSeparateSamplerHandle(const NVNdevice* device, int textureID);
-NVNboolean nvnDeviceIsExternalDebuggerAttached(const NVNdevice* device);
+void nvnDeviceWalkDebugDatabase(NVNdevice* device, NVNdebugObjectType debugObjectType, PFNNVNWALKDEBUGDATABASECALLBACKPROC callback, void* callbackData);
+NVNseparateTextureHandle nvnDeviceGetSeparateTextureHandle(NVNdevice* device, int textureID);
+NVNseparateSamplerHandle nvnDeviceGetSeparateSamplerHandle(NVNdevice* device, int textureID);
+NVNboolean nvnDeviceIsExternalDebuggerAttached(NVNdevice* device);
 void nvnDeviceWaitForError(NVNdevice* device);
 NVNqueueGetErrorResult nvnQueueGetError(NVNqueue* queue, NVNqueueErrorInfo* info);
 size_t nvnQueueGetTotalCommandMemoryUsed(NVNqueue* queue);
@@ -285,9 +451,9 @@ size_t nvnQueueBuilderGetComputeMemorySize(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetComputeMemorySize(NVNqueueBuilder* builder, size_t size);
 size_t nvnQueueBuilderGetControlMemorySize(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetControlMemorySize(NVNqueueBuilder* builder, size_t size);
-size_t nvnQueueBuilderGetQueueMemorySize(const NVNqueueBuilder* builder);
+size_t nvnQueueBuilderGetQueueMemorySize(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetQueueMemory(NVNqueueBuilder* builder, void* memory, size_t size);
-size_t nvnQueueBuilderGetMemorySize(const NVNqueueBuilder* builder);
+size_t nvnQueueBuilderGetMemorySize(NVNqueueBuilder* builder);
 
 // guess
 int nvnQueueBuilderGetQueuePriority(NVNqueueBuilder* builder);
@@ -295,7 +461,7 @@ void nvnQueueBuilderSetQueuePriority(NVNqueueBuilder* builder, int priority);
 
 size_t nvnQueueBuilderGetCommandFlushThreshold(NVNqueueBuilder* builder);
 void nvnQueueBuilderSetCommandFlushThreshold(NVNqueueBuilder* builder, size_t size);
-NVNboolean nvnQueueInitialize(NVNqueue* queue, const NVNqueueBuilder* builder);
+NVNboolean nvnQueueInitialize(NVNqueue* queue, NVNqueueBuilder* builder);
 void nvnQueueFinalize(NVNqueue* queue);
 void nvnQueueSetDebugLabel(NVNqueue* queue, const char* label);
 void nvnQueueSubmitCommands(NVNqueue* queue, int numCommands, const NVNcommandHandle* handles);
@@ -313,17 +479,17 @@ void nvnWindowBuilderSetTextures(NVNwindowBuilder* builder, int numTextures, NVN
 int nvnWindowBuilderGetNumActiveTextures(NVNwindowBuilder* builder); // guess
 void nvnWindowBuilderSetNumActiveTextures(NVNwindowBuilder* builder, int numActiveTextures); // guess
 void nvnWindowBuilderSetPresentInterval(NVNwindowBuilder* builder, int presentInterval);
-NVNnativeWindow nvnWindowBuilderGetNativeWindow(const NVNwindowBuilder* builder);
-int nvnWindowBuilderGetPresentInterval(const NVNwindowBuilder* builder);
-NVNboolean nvnWindowInitialize(NVNwindow* window, const NVNwindowBuilder* builder);
+NVNnativeWindow nvnWindowBuilderGetNativeWindow(NVNwindowBuilder* builder);
+int nvnWindowBuilderGetPresentInterval(NVNwindowBuilder* builder);
+NVNboolean nvnWindowInitialize(NVNwindow* window, NVNwindowBuilder* builder);
 void nvnWindowFinalize(NVNwindow* window);
 void nvnWindowSetDebugLabel(NVNwindow* window, const char* label);
 NVNwindowAcquireTextureResult nvnWindowAcquireTexture(NVNwindow* window, NVNsync* textureAvailableSync, int* textureIndex);
-NVNnativeWindow nvnWindowGetNativeWindow(const NVNwindow* window);
-int nvnWindowGetPresentInterval(const NVNwindow* window);
+NVNnativeWindow nvnWindowGetNativeWindow(NVNwindow* window);
+int nvnWindowGetPresentInterval(NVNwindow* window);
 void nvnWindowSetPresentInterval(NVNwindow* window, int presentInterval);
 void nvnWindowSetCrop(NVNwindow* window, int x, int y, int w, int h);
-void nvnWindowGetCrop(const NVNwindow* window, NVNrectangle* rectangle);
+void nvnWindowGetCrop(NVNwindow* window, NVNrectangle* rectangle);
 int nvnWindowGetNumTextures(NVNwindow* builder);
 int nvnWindowGetNumActiveTextures(NVNwindow* builder); // guess
 void nvnWindowSetNumActiveTextures(NVNwindow* builder, int numActiveTextures); // guess
@@ -331,60 +497,60 @@ NVNboolean nvnProgramInitialize(NVNprogram* program, NVNdevice* device);
 void nvnProgramFinalize(NVNprogram* program);
 void nvnProgramSetDebugLabel(NVNprogram* program, const char* label);
 void nvnProgramSetSampleShading(NVNprogram* program); // absolutely no idea
-NVNboolean nvnProgramSetShaders(NVNprogram* program, int count, const NVNshaderData* stageData);
-NVNboolean nvnProgramSetShadersExt(NVNprogram* program, int count, const NVNshaderData* stageData); // guess -- why is this different
+NVNboolean nvnProgramSetShaders(NVNprogram* program, int count, NVNshaderData* stageData);
+NVNboolean nvnProgramSetShadersExt(NVNprogram* program, int count, NVNshaderData* stageData); // guess -- why is this different
 NVNdevice* nvnMemoryPoolBuilderGetDevice(NVNmemoryPoolBuilder* builder);
 void nvnMemoryPoolBuilderSetDevice(NVNmemoryPoolBuilder* builder, NVNdevice* device);
 void nvnMemoryPoolBuilderSetDefaults(NVNmemoryPoolBuilder* builder);
 void nvnMemoryPoolBuilderSetStorage(NVNmemoryPoolBuilder* builder, void* memory, size_t size);
 void nvnMemoryPoolBuilderSetFlags(NVNmemoryPoolBuilder* builder, int flags);
-void nvnMemoryPoolBuilderGetMemory(const NVNmemoryPoolBuilder* builder);
-size_t nvnMemoryPoolBuilderGetSize(const NVNmemoryPoolBuilder* builder);
-NVNmemoryPoolFlags nvnMemoryPoolBuilderGetFlags(const NVNmemoryPoolBuilder* builder);
-NVNboolean nvnMemoryPoolInitialize(NVNmemoryPool* pool, const NVNmemoryPoolBuilder* builder);
+void nvnMemoryPoolBuilderGetMemory(NVNmemoryPoolBuilder* builder);
+size_t nvnMemoryPoolBuilderGetSize(NVNmemoryPoolBuilder* builder);
+NVNmemoryPoolFlags nvnMemoryPoolBuilderGetFlags(NVNmemoryPoolBuilder* builder);
+NVNboolean nvnMemoryPoolInitialize(NVNmemoryPool* pool, NVNmemoryPoolBuilder* builder);
 void nvnMemoryPoolSetDebugLabel(NVNmemoryPool* pool, const char* label);
 void nvnMemoryPoolFinalize(NVNmemoryPool* pool);
-void* nvnMemoryPoolMap(const NVNmemoryPool* pool);
-void nvnMemoryPoolFlushMappedRange(const NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
-void nvnMemoryPoolInvalidateMappedRange(const NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
-NVNbufferAddress nvnMemoryPoolGetBufferAddress(const NVNmemoryPool* pool);
-NVNboolean nvnMemoryPoolMapVirtual(NVNmemoryPool* pool, int numRequests, const NVNmappingRequest* requests);
-size_t nvnMemoryPoolGetSize(const NVNmemoryPool* pool);
-NVNmemoryPoolFlags nvnMemoryPoolGetFlags(const NVNmemoryPool* pool);
-NVNboolean nvnTexturePoolInitialize(NVNtexturePool* texturePool, const NVNmemoryPool* memoryPool, ptrdiff_t offset, int numDescriptors);
+void* nvnMemoryPoolMap(NVNmemoryPool* pool);
+void nvnMemoryPoolFlushMappedRange(NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
+void nvnMemoryPoolInvalidateMappedRange(NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
+NVNbufferAddress nvnMemoryPoolGetBufferAddress(NVNmemoryPool* pool);
+NVNboolean nvnMemoryPoolMapVirtual(NVNmemoryPool* pool, int numRequests, NVNmappingRequest* requests);
+size_t nvnMemoryPoolGetSize(NVNmemoryPool* pool);
+NVNmemoryPoolFlags nvnMemoryPoolGetFlags(NVNmemoryPool* pool);
+NVNboolean nvnTexturePoolInitialize(NVNtexturePool* texturePool, NVNmemoryPool* memoryPool, ptrdiff_t offset, int numDescriptors);
 void nvnTexturePoolSetDebugLabel(NVNtexturePool* pool, const char* label);
 void nvnTexturePoolFinalize(NVNtexturePool* pool);
-void nvnTexturePoolRegisterTexture(const NVNtexturePool* pool, int id, const NVNtexture* texture, const NVNtextureView* view);
-void nvnTexturePoolRegisterImage(const NVNtexturePool* pool, int id, const NVNtexture* texture, const NVNtextureView* view);
-const NVNmemoryPool* nvnTexturePoolGetMemoryPool(const NVNtexturePool* pool);
-ptrdiff_t nvnTexturePoolGetMemoryOffset(const NVNtexturePool* pool);
-int nvnTexturePoolGetSize(const NVNtexturePool* pool);
-NVNboolean nvnSamplerPoolInitialize(NVNsamplerPool* samplerPool, const NVNmemoryPool* memoryPool, ptrdiff_t offset, int numDescriptors);
+void nvnTexturePoolRegisterTexture(NVNtexturePool* pool, int id, NVNtexture* texture, NVNtextureView* view);
+void nvnTexturePoolRegisterImage(NVNtexturePool* pool, int id, NVNtexture* texture, NVNtextureView* view);
+NVNmemoryPool* nvnTexturePoolGetMemoryPool(NVNtexturePool* pool);
+ptrdiff_t nvnTexturePoolGetMemoryOffset(NVNtexturePool* pool);
+int nvnTexturePoolGetSize(NVNtexturePool* pool);
+NVNboolean nvnSamplerPoolInitialize(NVNsamplerPool* samplerPool, NVNmemoryPool* memoryPool, ptrdiff_t offset, int numDescriptors);
 void nvnSamplerPoolSetDebugLabel(NVNsamplerPool* pool, const char* label);
 void nvnSamplerPoolFinalize(NVNsamplerPool* pool);
-void nvnSamplerPoolRegisterSampler(const NVNsamplerPool* pool, int id, const NVNsampler* sampler);
-void nvnSamplerPoolRegisterSamplerBuilder(const NVNsamplerPool* pool, int id, const NVNsamplerBuilder* builder);
-const NVNmemoryPool* nvnSamplerPoolGetMemoryPool(const NVNsamplerPool* pool);
-ptrdiff_t nvnSamplerPoolGetMemoryOffset(const NVNsamplerPool* pool);
-int nvnSamplerPoolGetSize(const NVNsamplerPool* pool);
+void nvnSamplerPoolRegisterSampler(NVNsamplerPool* pool, int id, NVNsampler* sampler);
+void nvnSamplerPoolRegisterSamplerBuilder(NVNsamplerPool* pool, int id, NVNsamplerBuilder* builder);
+NVNmemoryPool* nvnSamplerPoolGetMemoryPool(NVNsamplerPool* pool);
+ptrdiff_t nvnSamplerPoolGetMemoryOffset(NVNsamplerPool* pool);
+int nvnSamplerPoolGetSize(NVNsamplerPool* pool);
 NVNdevice* nvnBufferBuilderGetDevice(NVNbufferBuilder* builder);
 void nvnBufferBuilderSetDevice(NVNbufferBuilder* builder, NVNdevice* device);
 void nvnBufferBuilderSetDefaults(NVNbufferBuilder* builder);
 void nvnBufferBuilderSetStorage(NVNbufferBuilder* builder, NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
-NVNmemoryPool nvnBufferBuilderGetMemoryPool(const NVNbufferBuilder* builder);
-ptrdiff_t nvnBufferBuilderGetMemoryOffset(const NVNbufferBuilder* builder);
-size_t nvnBufferBuilderGetSize(const NVNbufferBuilder* builder);
-NVNboolean nvnBufferInitialize(NVNbuffer* buffer, const NVNbufferBuilder* builder);
+NVNmemoryPool nvnBufferBuilderGetMemoryPool(NVNbufferBuilder* builder);
+ptrdiff_t nvnBufferBuilderGetMemoryOffset(NVNbufferBuilder* builder);
+size_t nvnBufferBuilderGetSize(NVNbufferBuilder* builder);
+NVNboolean nvnBufferInitialize(NVNbuffer* buffer, NVNbufferBuilder* builder);
 void nvnBufferSetDebugLabel(NVNbuffer* buffer, const char* label);
 void nvnBufferFinalize(NVNbuffer* buffer);
-void* nvnBufferMap(const NVNbuffer* buffer);
-NVNbufferAddress nvnBufferGetAddress(const NVNbuffer* buffer);
-void nvnBufferFlushMappedRange(const NVNbuffer* buffer, ptrdiff_t offset, size_t size);
-void nvnBufferInvalidateMappedRange(const NVNbuffer* buffer, ptrdiff_t offset, size_t size);
-NVNmemoryPool* nvnBufferGetMemoryPool(const NVNbuffer* buffer);
-ptrdiff_t nvnBufferGetMemoryOffset(const NVNbuffer* buffer);
-size_t nvnBufferGetSize(const NVNbuffer* buffer);
-uint64_t nvnBufferGetDebugID(const NVNbuffer* buffer);
+void* nvnBufferMap(NVNbuffer* buffer);
+NVNbufferAddress nvnBufferGetAddress(NVNbuffer* buffer);
+void nvnBufferFlushMappedRange(NVNbuffer* buffer, ptrdiff_t offset, size_t size);
+void nvnBufferInvalidateMappedRange(NVNbuffer* buffer, ptrdiff_t offset, size_t size);
+NVNmemoryPool* nvnBufferGetMemoryPool(NVNbuffer* buffer);
+ptrdiff_t nvnBufferGetMemoryOffset(NVNbuffer* buffer);
+size_t nvnBufferGetSize(NVNbuffer* buffer);
+uint64_t nvnBufferGetDebugID(NVNbuffer* buffer);
 NVNdevice* nvnTextureBuilderGetDevice(NVNtextureBuilder* builder);
 void nvnTextureBuilderSetDevice(NVNtextureBuilder* builder, NVNdevice* device);
 void nvnTextureBuilderSetDefaults(NVNtextureBuilder* builder);
@@ -401,33 +567,33 @@ void nvnTextureBuilderSetFormat(NVNtextureBuilder* builder, NVNformat format);
 void nvnTextureBuilderSetSamples(NVNtextureBuilder* builder, int samples);
 void nvnTextureBuilderSetSwizzle(NVNtextureBuilder* builder, NVNtextureSwizzle r, NVNtextureSwizzle g, NVNtextureSwizzle b, NVNtextureSwizzle a);
 void nvnTextureBuilderSetDepthStencilMode(NVNtextureBuilder* builder, NVNtextureDepthStencilMode mode);
-size_t nvnTextureBuilderGetStorageSize(const NVNtextureBuilder* builder);
-size_t nvnTextureBuilderGetStorageAlignment(const NVNtextureBuilder* builder);
+size_t nvnTextureBuilderGetStorageSize(NVNtextureBuilder* builder);
+size_t nvnTextureBuilderGetStorageAlignment(NVNtextureBuilder* builder);
 void nvnTextureBuilderSetStorage(NVNtextureBuilder* builder, NVNmemoryPool* pool, ptrdiff_t offset);
 void nvnTextureBuilderSetPackagedTextureData(NVNtextureBuilder* builder, const void* data);
-void nvnTextureBuilderSetPackagedTextureLayout(NVNtextureBuilder* builder, const NVNpackagedTextureLayout* layout);
+void nvnTextureBuilderSetPackagedTextureLayout(NVNtextureBuilder* builder, NVNpackagedTextureLayout* layout);
 void nvnTextureBuilderSetStride(NVNtextureBuilder* builder, ptrdiff_t stride);
 void nvnTextureBuilderSetGLTextureName(NVNtextureBuilder* builder, uint32_t name);
-NVNstorageClass nvnTextureBuilderGetStorageClass(const NVNtextureBuilder* builder);
-NVNtextureFlags nvnTextureBuilderGetFlags(const NVNtextureBuilder* builder);
-NVNtextureTarget nvnTextureBuilderGetTarget(const NVNtextureBuilder* builder);
-int nvnTextureBuilderGetWidth(const NVNtextureBuilder* builder);
-int nvnTextureBuilderGetHeight(const NVNtextureBuilder* builder);
-int nvnTextureBuilderGetDepth(const NVNtextureBuilder* builder);
-int nvnTextureBuilderGetLevels(const NVNtextureBuilder* builder);
-NVNformat nvnTextureBuilderGetFormat(const NVNtextureBuilder* builder);
-int nvnTextureBuilderGetSamples(const NVNtextureBuilder* builder);
-void nvnTextureBuilderGetSwizzle(const NVNtextureBuilder* builder, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
-NVNtextureDepthStencilMode nvnTextureBuilderGetDepthStencilMode(const NVNtextureBuilder* builder);
-const void* nvnTextureBuilderGetPackagedTextureData(const NVNtextureBuilder* builder);
-const void* nvnTextureBuilderGetPackagedTextureLayout(const NVNtextureBuilder* builder); // Literally no idea
-ptrdiff_t nvnTextureBuilderGetStride(const NVNtextureBuilder* builder);
-void nvnTextureBuilderGetSparseTileLayout(const NVNtextureBuilder* builder, NVNtextureSparseTileLayout* layout);
-uint32_t nvnTextureBuilderGetGLTextureName(const NVNtextureBuilder* builder);
-size_t nvnTextureBuilderGetZCullStorageSize(const NVNtextureBuilder* builder);
-NVNmemoryPool nvnTextureBuilderGetMemoryPool(const NVNtextureBuilder* builder);
-ptrdiff_t nvnTextureBuilderGetMemoryOffset(const NVNtextureBuilder* builder);
-int nvnTextureBuilderGetRawStorageClass(const NVNtextureBuilder* builder); // guess
+NVNstorageClass nvnTextureBuilderGetStorageClass(NVNtextureBuilder* builder);
+NVNtextureFlags nvnTextureBuilderGetFlags(NVNtextureBuilder* builder);
+NVNtextureTarget nvnTextureBuilderGetTarget(NVNtextureBuilder* builder);
+int nvnTextureBuilderGetWidth(NVNtextureBuilder* builder);
+int nvnTextureBuilderGetHeight(NVNtextureBuilder* builder);
+int nvnTextureBuilderGetDepth(NVNtextureBuilder* builder);
+int nvnTextureBuilderGetLevels(NVNtextureBuilder* builder);
+NVNformat nvnTextureBuilderGetFormat(NVNtextureBuilder* builder);
+int nvnTextureBuilderGetSamples(NVNtextureBuilder* builder);
+void nvnTextureBuilderGetSwizzle(NVNtextureBuilder* builder, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
+NVNtextureDepthStencilMode nvnTextureBuilderGetDepthStencilMode(NVNtextureBuilder* builder);
+const void* nvnTextureBuilderGetPackagedTextureData(NVNtextureBuilder* builder);
+const void* nvnTextureBuilderGetPackagedTextureLayout(NVNtextureBuilder* builder); // Literally no idea
+ptrdiff_t nvnTextureBuilderGetStride(NVNtextureBuilder* builder);
+void nvnTextureBuilderGetSparseTileLayout(NVNtextureBuilder* builder, NVNtextureSparseTileLayout* layout);
+uint32_t nvnTextureBuilderGetGLTextureName(NVNtextureBuilder* builder);
+size_t nvnTextureBuilderGetZCullStorageSize(NVNtextureBuilder* builder);
+NVNmemoryPool nvnTextureBuilderGetMemoryPool(NVNtextureBuilder* builder);
+ptrdiff_t nvnTextureBuilderGetMemoryOffset(NVNtextureBuilder* builder);
+int nvnTextureBuilderGetRawStorageClass(NVNtextureBuilder* builder); // guess
 void nvnTextureViewSetDefaults(NVNtextureView* view);
 void nvnTextureViewSetLevels(NVNtextureView* view, int baseLevel, int numLevels);
 void nvnTextureViewSetLayers(NVNtextureView* view, int minLayer, int numLayers);
@@ -435,44 +601,44 @@ void nvnTextureViewSetFormat(NVNtextureView* view, NVNformat format);
 void nvnTextureViewSetSwizzle(NVNtextureView* view, NVNtextureSwizzle r, NVNtextureSwizzle g, NVNtextureSwizzle b, NVNtextureSwizzle a);
 void nvnTextureViewSetDepthStencilMode(NVNtextureView* view, NVNtextureDepthStencilMode mode);
 void nvnTextureViewSetTarget(NVNtextureView* view, NVNtextureTarget target);
-NVNboolean nvnTextureViewGetLevels(const NVNtextureView* view, int* baseLevel, int* numLevels);
-NVNboolean nvnTextureViewGetLayers(const NVNtextureView* view, int* minLayer, int* numLayers);
-NVNboolean nvnTextureViewGetFormat(const NVNtextureView* view, NVNformat* format);
-NVNboolean nvnTextureViewGetSwizzle(const NVNtextureView* view, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
-NVNboolean nvnTextureViewGetDepthStencilMode(const NVNtextureView* view, NVNtextureDepthStencilMode* mode);
-NVNboolean nvnTextureViewGetTarget(const NVNtextureView* view, NVNtextureTarget* target);
-NVNboolean nvnTextureViewCompare(const NVNtextureView* view1, const NVNtextureView* view2);
-NVNboolean nvnTextureInitialize(NVNtexture* texture, const NVNtextureBuilder* builder);
-size_t nvnTextureGetZCullStorageSize(const NVNtexture* texture);
+NVNboolean nvnTextureViewGetLevels(NVNtextureView* view, int* baseLevel, int* numLevels);
+NVNboolean nvnTextureViewGetLayers(NVNtextureView* view, int* minLayer, int* numLayers);
+NVNboolean nvnTextureViewGetFormat(NVNtextureView* view, NVNformat* format);
+NVNboolean nvnTextureViewGetSwizzle(NVNtextureView* view, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
+NVNboolean nvnTextureViewGetDepthStencilMode(NVNtextureView* view, NVNtextureDepthStencilMode* mode);
+NVNboolean nvnTextureViewGetTarget(NVNtextureView* view, NVNtextureTarget* target);
+NVNboolean nvnTextureViewCompare(NVNtextureView* view1, NVNtextureView* view2);
+NVNboolean nvnTextureInitialize(NVNtexture* texture, NVNtextureBuilder* builder);
+size_t nvnTextureGetZCullStorageSize(NVNtexture* texture);
 void nvnTextureFinalize(NVNtexture* texture);
 void nvnTextureSetDebugLabel(NVNtexture* texture, const char* label);
-NVNstorageClass nvnTextureGetStorageClass(const NVNtexture* texture);
-ptrdiff_t nvnTextureGetViewOffset(const NVNtexture* texture, const NVNtextureView* view);
-NVNtextureFlags nvnTextureGetFlags(const NVNtexture* texture);
-NVNtextureTarget nvnTextureGetTarget(const NVNtexture* texture);
-int nvnTextureGetWidth(const NVNtexture* texture);
-int nvnTextureGetHeight(const NVNtexture* texture);
-int nvnTextureGetDepth(const NVNtexture* texture);
-int nvnTextureGetLevels(const NVNtexture* texture);
-NVNformat nvnTextureGetFormat(const NVNtexture* texture);
-int nvnTextureGetSamples(const NVNtexture* texture);
-void nvnTextureGetSwizzle(const NVNtexture* texture, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
-NVNtextureDepthStencilMode nvnTextureGetDepthStencilMode(const NVNtexture* texture);
-ptrdiff_t nvnTextureGetStride(const NVNtexture* texture);
-NVNtextureAddress nvnTextureGetTextureAddress(const NVNtexture* texture);
-void nvnTextureGetSparseTileLayout(const NVNtexture* texture, NVNtextureSparseTileLayout* layout);
-void nvnTextureWriteTexels(const NVNtexture* texture, const NVNtextureView* view, const NVNcopyRegion* region, const void* p);
-void nvnTextureWriteTexelsStrided(const NVNtexture* texture, const NVNtextureView* view, const NVNcopyRegion* region, const void* p, ptrdiff_t o1, ptrdiff_t o2);
-void nvnTextureReadTexels(const NVNtexture* texture, const NVNtextureView* view, const NVNcopyRegion* region, void* p);
-void nvnTextureReadTexelsStrided(const NVNtexture* texture, const NVNtextureView* view, const NVNcopyRegion* region, void* p, ptrdiff_t o1, ptrdiff_t o2);
-void nvnTextureFlushTexels(const NVNtexture* texture, const NVNtextureView* view, const NVNcopyRegion* region);
-void nvnTextureInvalidateTexels(const NVNtexture* texture, const NVNtextureView* view, const NVNcopyRegion* region);
-NVNmemoryPool nvnTextureGetMemoryPool(const NVNtexture* texture);
-ptrdiff_t nvnTextureGetMemoryOffset(const NVNtexture* texture);
-int nvnTextureGetStorageSize(const NVNtexture* texture);
-int nvnTextureGetRawStorageClass(const NVNtexture* texture); // guess
-NVNboolean nvnTextureCompare(const NVNtexture* texture1, const NVNtexture* texture2);
-uint64_t nvnTextureGetDebugID(const NVNtexture* texture);
+NVNstorageClass nvnTextureGetStorageClass(NVNtexture* texture);
+ptrdiff_t nvnTextureGetViewOffset(NVNtexture* texture, NVNtextureView* view);
+NVNtextureFlags nvnTextureGetFlags(NVNtexture* texture);
+NVNtextureTarget nvnTextureGetTarget(NVNtexture* texture);
+int nvnTextureGetWidth(NVNtexture* texture);
+int nvnTextureGetHeight(NVNtexture* texture);
+int nvnTextureGetDepth(NVNtexture* texture);
+int nvnTextureGetLevels(NVNtexture* texture);
+NVNformat nvnTextureGetFormat(NVNtexture* texture);
+int nvnTextureGetSamples(NVNtexture* texture);
+void nvnTextureGetSwizzle(NVNtexture* texture, NVNtextureSwizzle* r, NVNtextureSwizzle* g, NVNtextureSwizzle* b, NVNtextureSwizzle* a);
+NVNtextureDepthStencilMode nvnTextureGetDepthStencilMode(NVNtexture* texture);
+ptrdiff_t nvnTextureGetStride(NVNtexture* texture);
+NVNtextureAddress nvnTextureGetTextureAddress(NVNtexture* texture);
+void nvnTextureGetSparseTileLayout(NVNtexture* texture, NVNtextureSparseTileLayout* layout);
+void nvnTextureWriteTexels(NVNtexture* texture, NVNtextureView* view, NVNcopyRegion* region, const void* p);
+void nvnTextureWriteTexelsStrided(NVNtexture* texture, NVNtextureView* view, NVNcopyRegion* region, const void* p, ptrdiff_t o1, ptrdiff_t o2);
+void nvnTextureReadTexels(NVNtexture* texture, NVNtextureView* view, NVNcopyRegion* region, void* p);
+void nvnTextureReadTexelsStrided(NVNtexture* texture, NVNtextureView* view, NVNcopyRegion* region, void* p, ptrdiff_t o1, ptrdiff_t o2);
+void nvnTextureFlushTexels(NVNtexture* texture, NVNtextureView* view, NVNcopyRegion* region);
+void nvnTextureInvalidateTexels(NVNtexture* texture, NVNtextureView* view, NVNcopyRegion* region);
+NVNmemoryPool nvnTextureGetMemoryPool(NVNtexture* texture);
+ptrdiff_t nvnTextureGetMemoryOffset(NVNtexture* texture);
+int nvnTextureGetStorageSize(NVNtexture* texture);
+int nvnTextureGetRawStorageClass(NVNtexture* texture); // guess
+NVNboolean nvnTextureCompare(NVNtexture* texture1, NVNtexture* texture2);
+uint64_t nvnTextureGetDebugID(NVNtexture* texture);
 NVNdevice* nvnSamplerBuilderGetDevice(NVNsamplerBuilder* builder);
 void nvnSamplerBuilderSetDevice(NVNsamplerBuilder* builder, NVNdevice* device);
 void nvnSamplerBuilderSetDefaults(NVNsamplerBuilder* builder);
@@ -487,32 +653,32 @@ void nvnSamplerBuilderSetBorderColorui(NVNsamplerBuilder* builder, const uint32_
 void nvnSamplerBuilderSetMaxAnisotropy(NVNsamplerBuilder* builder, float maxAniso);
 void nvnSamplerBuilderSetReductionFilter(NVNsamplerBuilder* builder, NVNsamplerReduction filter);
 void nvnSamplerBuilderSetLodSnap(NVNsamplerBuilder* builder, float f);
-void nvnSamplerBuilderGetMinMagFilter(const NVNsamplerBuilder* builder, NVNminFilter* min, NVNmagFilter* mag);
-void nvnSamplerBuilderGetWrapMode(const NVNsamplerBuilder* builder, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r);
-void nvnSamplerBuilderGetLodClamp(const NVNsamplerBuilder* builder, float* min, float* max);
-float nvnSamplerBuilderGetLodBias(const NVNsamplerBuilder* builder);
-void nvnSamplerBuilderGetCompare(const NVNsamplerBuilder* builder, NVNcompareMode* mode, NVNcompareFunc* func);
-void nvnSamplerBuilderGetBorderColor(const NVNsamplerBuilder* builder, float* borderColor);
-void nvnSamplerBuilderGetBorderColori(const NVNsamplerBuilder* builder, int* borderColor);
-void nvnSamplerBuilderGetBorderColorui(const NVNsamplerBuilder* builder, uint32_t* borderColor);
-float nvnSamplerBuilderGetMaxAnisotropy(const NVNsamplerBuilder* builder);
-NVNsamplerReduction nvnSamplerBuilderGetReductionFilter(const NVNsamplerBuilder* builder);
-float nvnSamplerBuilderGetLodSnap(const NVNsamplerBuilder* builder);
-NVNboolean nvnSamplerInitialize(NVNsampler* sampler, const NVNsamplerBuilder* builder);
+void nvnSamplerBuilderGetMinMagFilter(NVNsamplerBuilder* builder, NVNminFilter* min, NVNmagFilter* mag);
+void nvnSamplerBuilderGetWrapMode(NVNsamplerBuilder* builder, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r);
+void nvnSamplerBuilderGetLodClamp(NVNsamplerBuilder* builder, float* min, float* max);
+float nvnSamplerBuilderGetLodBias(NVNsamplerBuilder* builder);
+void nvnSamplerBuilderGetCompare(NVNsamplerBuilder* builder, NVNcompareMode* mode, NVNcompareFunc* func);
+void nvnSamplerBuilderGetBorderColor(NVNsamplerBuilder* builder, float* borderColor);
+void nvnSamplerBuilderGetBorderColori(NVNsamplerBuilder* builder, int* borderColor);
+void nvnSamplerBuilderGetBorderColorui(NVNsamplerBuilder* builder, uint32_t* borderColor);
+float nvnSamplerBuilderGetMaxAnisotropy(NVNsamplerBuilder* builder);
+NVNsamplerReduction nvnSamplerBuilderGetReductionFilter(NVNsamplerBuilder* builder);
+float nvnSamplerBuilderGetLodSnap(NVNsamplerBuilder* builder);
+NVNboolean nvnSamplerInitialize(NVNsampler* sampler, NVNsamplerBuilder* builder);
 void nvnSamplerFinalize(NVNsampler* sampler);
 void nvnSamplerSetDebugLabel(NVNsampler* sampler, const char* label);
-void nvnSamplerGetMinMagFilter(const NVNsampler* sampler, NVNminFilter* min, NVNmagFilter* mag);
-void nvnSamplerGetWrapMode(const NVNsampler* sampler, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r);
-void nvnSamplerGetLodClamp(const NVNsampler* sampler, float* min, float* max);
-float nvnSamplerGetLodBias(const NVNsampler* sampler);
-void nvnSamplerGetCompare(const NVNsampler* sampler, NVNcompareMode* mode, NVNcompareFunc* func);
-void nvnSamplerGetBorderColor(const NVNsampler* sampler, float* borderColor);
-void nvnSamplerGetBorderColori(const NVNsampler* sampler, int* borderColor);
-void nvnSamplerGetBorderColorui(const NVNsampler* sampler, uint32_t* borderColor);
-float nvnSamplerGetMaxAnisotropy(const NVNsampler* sampler);
-NVNsamplerReduction nvnSamplerGetReductionFilter(const NVNsampler* sampler);
-NVNboolean nvnSamplerCompare(const NVNsampler* sampler1, const NVNsampler* sampler2);
-uint64_t nvnSamplerGetDebugID(const NVNsampler* sampler);
+void nvnSamplerGetMinMagFilter(NVNsampler* sampler, NVNminFilter* min, NVNmagFilter* mag);
+void nvnSamplerGetWrapMode(NVNsampler* sampler, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r);
+void nvnSamplerGetLodClamp(NVNsampler* sampler, float* min, float* max);
+float nvnSamplerGetLodBias(NVNsampler* sampler);
+void nvnSamplerGetCompare(NVNsampler* sampler, NVNcompareMode* mode, NVNcompareFunc* func);
+void nvnSamplerGetBorderColor(NVNsampler* sampler, float* borderColor);
+void nvnSamplerGetBorderColori(NVNsampler* sampler, int* borderColor);
+void nvnSamplerGetBorderColorui(NVNsampler* sampler, uint32_t* borderColor);
+float nvnSamplerGetMaxAnisotropy(NVNsampler* sampler);
+NVNsamplerReduction nvnSamplerGetReductionFilter(NVNsampler* sampler);
+NVNboolean nvnSamplerCompare(NVNsampler* sampler1, NVNsampler* sampler2);
+uint64_t nvnSamplerGetDebugID(NVNsampler* sampler);
 void nvnBlendStateSetDefaults(NVNblendState* blend);
 void nvnBlendStateSetBlendTarget(NVNblendState* blend, int target);
 void nvnBlendStateSetBlendFunc(NVNblendState* blend, NVNblendFunc srcFunc, NVNblendFunc dstFunc, NVNblendFunc srcFuncAlpha, NVNblendFunc dstFuncAlpha);
@@ -521,55 +687,55 @@ void nvnBlendStateSetAdvancedMode(NVNblendState* blend, NVNblendAdvancedMode mod
 void nvnBlendStateSetAdvancedOverlap(NVNblendState* blend, NVNblendAdvancedOverlap overlap);
 void nvnBlendStateSetAdvancedPremultipliedSrc(NVNblendState* blend, NVNboolean b);
 void nvnBlendStateSetAdvancedNormalizedDst(NVNblendState* blend, NVNboolean b);
-int nvnBlendStateGetBlendTarget(const NVNblendState* blend);
-void nvnBlendStateGetBlendFunc(const NVNblendState* blend, NVNblendFunc* srcFunc, NVNblendFunc* dstFunc, NVNblendFunc* srcFuncAlpha, NVNblendFunc* dstFuncAlpha);
-void nvnBlendStateGetBlendEquation(const NVNblendState* blend, NVNblendEquation* modeRGB, NVNblendEquation* modeAlpha);
-NVNblendAdvancedMode nvnBlendStateGetAdvancedMode(const NVNblendState* blend);
-NVNblendAdvancedOverlap nvnBlendStateGetAdvancedOverlap(const NVNblendState* blend);
-NVNboolean nvnBlendStateGetAdvancedPremultipliedSrc(const NVNblendState* blend);
-NVNboolean nvnBlendStateGetAdvancedNormalizedDst(const NVNblendState* blend);
+int nvnBlendStateGetBlendTarget(NVNblendState* blend);
+void nvnBlendStateGetBlendFunc(NVNblendState* blend, NVNblendFunc* srcFunc, NVNblendFunc* dstFunc, NVNblendFunc* srcFuncAlpha, NVNblendFunc* dstFuncAlpha);
+void nvnBlendStateGetBlendEquation(NVNblendState* blend, NVNblendEquation* modeRGB, NVNblendEquation* modeAlpha);
+NVNblendAdvancedMode nvnBlendStateGetAdvancedMode(NVNblendState* blend);
+NVNblendAdvancedOverlap nvnBlendStateGetAdvancedOverlap(NVNblendState* blend);
+NVNboolean nvnBlendStateGetAdvancedPremultipliedSrc(NVNblendState* blend);
+NVNboolean nvnBlendStateGetAdvancedNormalizedDst(NVNblendState* blend);
 void nvnColorStateSetDefaults(NVNcolorState* color);
 void nvnColorStateSetBlendEnable(NVNcolorState* color, int index, NVNboolean enable);
 void nvnColorStateSetLogicOp(NVNcolorState* color, NVNlogicOp logicOp);
 void nvnColorStateSetAlphaTest(NVNcolorState* color, NVNalphaFunc alphaFunc);
-NVNboolean nvnColorStateGetBlendEnable(const NVNcolorState* color, int index);
-NVNlogicOp nvnColorStateGetLogicOp(const NVNcolorState* color);
-NVNalphaFunc nvnColorStateGetAlphaTest(const NVNcolorState* color);
+NVNboolean nvnColorStateGetBlendEnable(NVNcolorState* color, int index);
+NVNlogicOp nvnColorStateGetLogicOp(NVNcolorState* color);
+NVNalphaFunc nvnColorStateGetAlphaTest(NVNcolorState* color);
 void nvnChannelMaskStateSetDefaults(NVNchannelMaskState* channelMask);
 void nvnChannelMaskStateSetChannelMask(NVNchannelMaskState* channelMask, int index, NVNboolean r, NVNboolean g, NVNboolean b, NVNboolean a);
-void nvnChannelMaskStateGetChannelMask(const NVNchannelMaskState* channelMask, int index, NVNboolean* r, NVNboolean* g, NVNboolean* b, NVNboolean* a);
+void nvnChannelMaskStateGetChannelMask(NVNchannelMaskState* channelMask, int index, NVNboolean* r, NVNboolean* g, NVNboolean* b, NVNboolean* a);
 void nvnMultisampleStateSetDefaults(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetMultisampleEnable(NVNmultisampleState* multisample, NVNboolean enable);
 void nvnMultisampleStateSetSamples(NVNmultisampleState* multisample, int samples);
 void nvnMultisampleStateSetAlphaToCoverageEnable(NVNmultisampleState* multisample, NVNboolean enable);
 void nvnMultisampleStateSetAlphaToCoverageDither(NVNmultisampleState* multisample, NVNboolean enable);
-NVNboolean nvnMultisampleStateGetMultisampleEnable(const NVNmultisampleState* multisample);
-int nvnMultisampleStateGetSamples(const NVNmultisampleState* multisample);
-NVNboolean nvnMultisampleStateGetAlphaToCoverageEnable(const NVNmultisampleState* multisample);
-NVNboolean nvnMultisampleStateGetAlphaToCoverageDither(const NVNmultisampleState* multisample);
+NVNboolean nvnMultisampleStateGetMultisampleEnable(NVNmultisampleState* multisample);
+int nvnMultisampleStateGetSamples(NVNmultisampleState* multisample);
+NVNboolean nvnMultisampleStateGetAlphaToCoverageEnable(NVNmultisampleState* multisample);
+NVNboolean nvnMultisampleStateGetAlphaToCoverageDither(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetRasterSamples(NVNmultisampleState* multisample, int samples);
 int nvnMultisampleStateGetRasterSamples(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetCoverageModulationMode(NVNmultisampleState* multisample, NVNcoverageModulationMode mode);
-NVNcoverageModulationMode nvnMultisampleStateGetCoverageModulationMode(const NVNmultisampleState* multisample);
+NVNcoverageModulationMode nvnMultisampleStateGetCoverageModulationMode(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetCoverageToColorEnable(NVNmultisampleState* multisample, NVNboolean enable);
-NVNboolean nvnMultisampleStateGetCoverageToColorEnable(const NVNmultisampleState* multisample);
+NVNboolean nvnMultisampleStateGetCoverageToColorEnable(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetCoverageToColorOutput(NVNmultisampleState* multisample, int i);
-int nvnMultisampleStateGetCoverageToColorOutput(const NVNmultisampleState* multisample);
+int nvnMultisampleStateGetCoverageToColorOutput(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetSampleLocationsEnable(NVNmultisampleState* multisample, NVNboolean enable);
-NVNboolean nvnMultisampleStateGetSampleLocationsEnable(const NVNmultisampleState* multisample);
+NVNboolean nvnMultisampleStateGetSampleLocationsEnable(NVNmultisampleState* multisample);
 void nvnMultisampleStateGetSampleLocationsGrid(NVNmultisampleState* multisample, int* w, int* h);
 void nvnMultisampleStateSetSampleLocationsGridEnable(NVNmultisampleState* multisample, NVNboolean enable);
-NVNboolean nvnMultisampleStateGetSampleLocationsGridEnable(const NVNmultisampleState* multisample);
+NVNboolean nvnMultisampleStateGetSampleLocationsGridEnable(NVNmultisampleState* multisample);
 void nvnMultisampleStateSetSampleLocations(NVNmultisampleState* multisample, int i1, int i2, const float* f);
 void nvnPolygonStateSetDefaults(NVNpolygonState* polygon);
 void nvnPolygonStateSetCullFace(NVNpolygonState* polygon, NVNface face);
 void nvnPolygonStateSetFrontFace(NVNpolygonState* polygon, NVNfrontFace face);
 void nvnPolygonStateSetPolygonMode(NVNpolygonState* polygon, NVNpolygonMode polygonMode);
 void nvnPolygonStateSetPolygonOffsetEnables(NVNpolygonState* polygon, int enables);
-NVNface nvnPolygonStateGetCullFace(const NVNpolygonState* polygon);
-NVNfrontFace nvnPolygonStateGetFrontFace(const NVNpolygonState* polygon);
-NVNpolygonMode nvnPolygonStateGetPolygonMode(const NVNpolygonState* polygon);
-NVNpolygonOffsetEnable nvnPolygonStateGetPolygonOffsetEnables(const NVNpolygonState* polygon);
+NVNface nvnPolygonStateGetCullFace(NVNpolygonState* polygon);
+NVNfrontFace nvnPolygonStateGetFrontFace(NVNpolygonState* polygon);
+NVNpolygonMode nvnPolygonStateGetPolygonMode(NVNpolygonState* polygon);
+NVNpolygonOffsetEnable nvnPolygonStateGetPolygonOffsetEnables(NVNpolygonState* polygon);
 void nvnDepthStencilStateSetDefaults(NVNdepthStencilState* depthStencil);
 void nvnDepthStencilStateSetDepthTestEnable(NVNdepthStencilState* depthStencil, NVNboolean enable);
 void nvnDepthStencilStateSetDepthWriteEnable(NVNdepthStencilState* depthStencil, NVNboolean enable);
@@ -577,48 +743,48 @@ void nvnDepthStencilStateSetDepthFunc(NVNdepthStencilState* depthStencil, NVNdep
 void nvnDepthStencilStateSetStencilTestEnable(NVNdepthStencilState* depthStencil, NVNboolean enable);
 void nvnDepthStencilStateSetStencilFunc(NVNdepthStencilState* depthStencil, NVNface faces, NVNstencilFunc func);
 void nvnDepthStencilStateSetStencilOp(NVNdepthStencilState* depthStencil, NVNface faces, NVNstencilOp fail, NVNstencilOp depthFail, NVNstencilOp depthPass);
-NVNboolean nvnDepthStencilStateGetDepthTestEnable(const NVNdepthStencilState* depthStencil);
-NVNboolean nvnDepthStencilStateGetDepthWriteEnable(const NVNdepthStencilState* depthStencil);
-NVNdepthFunc nvnDepthStencilStateGetDepthFunc(const NVNdepthStencilState* depthStencil);
-NVNboolean nvnDepthStencilStateGetStencilTestEnable(const NVNdepthStencilState* depthStencil);
-NVNstencilFunc nvnDepthStencilStateGetStencilFunc(const NVNdepthStencilState* depthStencil, NVNface faces);
-void nvnDepthStencilStateGetStencilOp(const NVNdepthStencilState* depthStencil, NVNface faces, NVNstencilOp* fail, NVNstencilOp* depthFail, NVNstencilOp* depthPass);
+NVNboolean nvnDepthStencilStateGetDepthTestEnable(NVNdepthStencilState* depthStencil);
+NVNboolean nvnDepthStencilStateGetDepthWriteEnable(NVNdepthStencilState* depthStencil);
+NVNdepthFunc nvnDepthStencilStateGetDepthFunc(NVNdepthStencilState* depthStencil);
+NVNboolean nvnDepthStencilStateGetStencilTestEnable(NVNdepthStencilState* depthStencil);
+NVNstencilFunc nvnDepthStencilStateGetStencilFunc(NVNdepthStencilState* depthStencil, NVNface faces);
+void nvnDepthStencilStateGetStencilOp(NVNdepthStencilState* depthStencil, NVNface faces, NVNstencilOp* fail, NVNstencilOp* depthFail, NVNstencilOp* depthPass);
 void nvnVertexAttribStateSetDefaults(NVNvertexAttribState* attrib);
 void nvnVertexAttribStateSetFormat(NVNvertexAttribState* attrib, NVNformat format, ptrdiff_t relativeOffset);
 void nvnVertexAttribStateSetStreamIndex(NVNvertexAttribState* attrib, int streamIndex);
-void nvnVertexAttribStateGetFormat(const NVNvertexAttribState* attrib, NVNformat* format, ptrdiff_t* relativeOffset);
-int nvnVertexAttribStateGetStreamIndex(const NVNvertexAttribState* attrib);
+void nvnVertexAttribStateGetFormat(NVNvertexAttribState* attrib, NVNformat* format, ptrdiff_t* relativeOffset);
+int nvnVertexAttribStateGetStreamIndex(NVNvertexAttribState* attrib);
 void nvnVertexStreamStateSetDefaults(NVNvertexStreamState* stream);
 void nvnVertexStreamStateSetStride(NVNvertexStreamState* stream, ptrdiff_t stride);
 void nvnVertexStreamStateSetDivisor(NVNvertexStreamState* stream, int divisor);
-ptrdiff_t nvnVertexStreamStateGetStride(const NVNvertexStreamState* stream);
-int nvnVertexStreamStateGetDivisor(const NVNvertexStreamState* stream);
+ptrdiff_t nvnVertexStreamStateGetStride(NVNvertexStreamState* stream);
+int nvnVertexStreamStateGetDivisor(NVNvertexStreamState* stream);
 NVNboolean nvnCommandBufferInitialize(NVNcommandBuffer* cmdBuf, NVNdevice* device);
 void nvnCommandBufferFinalize(NVNcommandBuffer* cmdBuf);
 void nvnCommandBufferSetDebugLabel(NVNcommandBuffer* cmdBuf, const char* label);
 void nvnCommandBufferSetMemoryCallback(NVNcommandBuffer* cmdBuf, PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC callback);
 void nvnCommandBufferSetMemoryCallbackData(NVNcommandBuffer* cmdBuf, void* callbackData);
-void nvnCommandBufferAddCommandMemory(NVNcommandBuffer* cmdBuf, const NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
+void nvnCommandBufferAddCommandMemory(NVNcommandBuffer* cmdBuf, NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
 void nvnCommandBufferAddControlMemory(NVNcommandBuffer* cmdBuf, void* memory, size_t size);
-size_t nvnCommandBufferGetCommandMemorySize(const NVNcommandBuffer* cmdBuf);
-size_t nvnCommandBufferGetCommandMemoryUsed(const NVNcommandBuffer* cmdBuf);
-size_t nvnCommandBufferGetCommandMemoryFree(const NVNcommandBuffer* cmdBuf);
-size_t nvnCommandBufferGetControlMemorySize(const NVNcommandBuffer* cmdBuf);
-size_t nvnCommandBufferGetControlMemoryUsed(const NVNcommandBuffer* cmdBuf);
-size_t nvnCommandBufferGetControlMemoryFree(const NVNcommandBuffer* cmdBuf);
+size_t nvnCommandBufferGetCommandMemorySize(NVNcommandBuffer* cmdBuf);
+size_t nvnCommandBufferGetCommandMemoryUsed(NVNcommandBuffer* cmdBuf);
+size_t nvnCommandBufferGetCommandMemoryFree(NVNcommandBuffer* cmdBuf);
+size_t nvnCommandBufferGetControlMemorySize(NVNcommandBuffer* cmdBuf);
+size_t nvnCommandBufferGetControlMemoryUsed(NVNcommandBuffer* cmdBuf);
+size_t nvnCommandBufferGetControlMemoryFree(NVNcommandBuffer* cmdBuf);
 void nvnCommandBufferBeginRecording(NVNcommandBuffer* cmdBuf);
 NVNcommandHandle nvnCommandBufferEndRecording(NVNcommandBuffer* cmdBuf);
 void nvnCommandBufferCallCommands(NVNcommandBuffer* cmdBuf, int numCommands, const NVNcommandHandle* handles);
 void nvnCommandBufferCopyCommands(NVNcommandBuffer* cmdBuf, int numCommands, const NVNcommandHandle* handles);
-void nvnCommandBufferBindBlendState(NVNcommandBuffer* cmdBuf, const NVNblendState* blend);
-void nvnCommandBufferBindChannelMaskState(NVNcommandBuffer* cmdBuf, const NVNchannelMaskState* channelMask);
-void nvnCommandBufferBindColorState(NVNcommandBuffer* cmdBuf, const NVNcolorState* color);
-void nvnCommandBufferBindMultisampleState(NVNcommandBuffer* cmdBuf, const NVNmultisampleState* multisample);
-void nvnCommandBufferBindPolygonState(NVNcommandBuffer* cmdBuf, const NVNpolygonState* polygon);
-void nvnCommandBufferBindDepthStencilState(NVNcommandBuffer* cmdBuf, const NVNdepthStencilState* depthStencil);
-void nvnCommandBufferBindVertexAttribState(NVNcommandBuffer* cmdBuf, int numAttribs, const NVNvertexAttribState* attribs);
-void nvnCommandBufferBindVertexStreamState(NVNcommandBuffer* cmdBuf, int numStreams, const NVNvertexStreamState* streams);
-void nvnCommandBufferBindProgram(NVNcommandBuffer* cmdBuf, const NVNprogram* program, int stages);
+void nvnCommandBufferBindBlendState(NVNcommandBuffer* cmdBuf, NVNblendState* blend);
+void nvnCommandBufferBindChannelMaskState(NVNcommandBuffer* cmdBuf, NVNchannelMaskState* channelMask);
+void nvnCommandBufferBindColorState(NVNcommandBuffer* cmdBuf, NVNcolorState* color);
+void nvnCommandBufferBindMultisampleState(NVNcommandBuffer* cmdBuf, NVNmultisampleState* multisample);
+void nvnCommandBufferBindPolygonState(NVNcommandBuffer* cmdBuf, NVNpolygonState* polygon);
+void nvnCommandBufferBindDepthStencilState(NVNcommandBuffer* cmdBuf, NVNdepthStencilState* depthStencil);
+void nvnCommandBufferBindVertexAttribState(NVNcommandBuffer* cmdBuf, int numAttribs, NVNvertexAttribState* attribs);
+void nvnCommandBufferBindVertexStreamState(NVNcommandBuffer* cmdBuf, int numStreams, NVNvertexStreamState* streams);
+void nvnCommandBufferBindProgram(NVNcommandBuffer* cmdBuf, NVNprogram* program, int stages);
 void nvnCommandBufferBindVertexBuffer(NVNcommandBuffer* cmdBuf, int index, NVNbufferAddress buffer, size_t size);
 void nvnCommandBufferBindVertexBuffers(NVNcommandBuffer* cmdBuf, int first, int count, const NVNbufferRange* buffers);
 void nvnCommandBufferBindUniformBuffer(NVNcommandBuffer* cmdBuf, NVNshaderStage stage, int index, NVNbufferAddress buffer, size_t size);
@@ -648,7 +814,7 @@ void nvnCommandBufferDrawElementsInstanced(NVNcommandBuffer* cmdBuf, NVNdrawPrim
 void nvnCommandBufferDrawArraysIndirect(NVNcommandBuffer* cmdBuf, NVNdrawPrimitive mode, NVNbufferAddress buffer);
 void nvnCommandBufferDrawElementsIndirect(NVNcommandBuffer* cmdBuf, NVNdrawPrimitive mode, NVNindexType type, NVNbufferAddress buffer1, NVNbufferAddress buffer2);
 void nvnCommandBufferMultiDrawArraysIndirectCount(NVNcommandBuffer* cmdBuf, NVNdrawPrimitive mode, NVNbufferAddress buffer1, NVNbufferAddress buffer2, int i, ptrdiff_t o);
-void nvnCommandBufferMultiDrawElementsIndirectCount( NVNcommandBuffer* cmdBuf, NVNdrawPrimitive mode, NVNindexType type, NVNbufferAddress buffer1, NVNbufferAddress buffer2, NVNbufferAddress buffer3, int i, ptrdiff_t o);
+void nvnCommandBufferMultiDrawElementsIndirectCount(NVNcommandBuffer* cmdBuf, NVNdrawPrimitive mode, NVNindexType type, NVNbufferAddress buffer1, NVNbufferAddress buffer2, NVNbufferAddress buffer3, int i, ptrdiff_t o);
 void nvnCommandBufferClearColor(NVNcommandBuffer* cmdBuf, int index, const float* color, int mask);
 void nvnCommandBufferClearColori(NVNcommandBuffer* cmdBuf, int index, const int* color, int mask);
 void nvnCommandBufferClearColorui(NVNcommandBuffer* cmdBuf, int index, const uint32_t* color, int mask);
@@ -687,39 +853,39 @@ void nvnCommandBufferSetConservativeRasterEnable(NVNcommandBuffer* cmdBuf, NVNbo
 void nvnCommandBufferSetConservativeRasterDilate(NVNcommandBuffer* cmdBuf, float f);
 void nvnCommandBufferSetSubpixelPrecisionBias(NVNcommandBuffer* cmdBuf, int i1, int i2);
 void nvnCommandBufferSetCommandMemoryCallbackEnabled(NVNcommandBuffer* cmdBuf, NVNboolean enable); // guess
-void nvnCommandBufferCopyBufferToTexture(NVNcommandBuffer* cmdBuf, NVNbufferAddress buffer, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, int flags);
-void nvnCommandBufferCopyTextureToBuffer(NVNcommandBuffer* cmdBuf, const NVNtexture* srcTexture, const NVNtextureView* srcView, const NVNcopyRegion* srcRegion, NVNbufferAddress buffer, int flags);
-void nvnCommandBufferCopyTextureToTexture(NVNcommandBuffer* cmdBuf, const NVNtexture* srcTexture, const NVNtextureView* srcView, const NVNcopyRegion* srcRegion, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, int flags);
+void nvnCommandBufferCopyBufferToTexture(NVNcommandBuffer* cmdBuf, NVNbufferAddress buffer, NVNtexture* dstTexture, NVNtextureView* dstView, NVNcopyRegion* dstRegion, int flags);
+void nvnCommandBufferCopyTextureToBuffer(NVNcommandBuffer* cmdBuf, NVNtexture* srcTexture, NVNtextureView* srcView, NVNcopyRegion* srcRegion, NVNbufferAddress buffer, int flags);
+void nvnCommandBufferCopyTextureToTexture(NVNcommandBuffer* cmdBuf, NVNtexture* srcTexture, NVNtextureView* srcView, NVNcopyRegion* srcRegion, NVNtexture* dstTexture, NVNtextureView* dstView, NVNcopyRegion* dstRegion, int flags);
 void nvnCommandBufferCopyBufferToBuffer(NVNcommandBuffer* cmdBuf, NVNbufferAddress src, NVNbufferAddress dst, size_t size, int flags);
 void nvnCommandBufferClearBuffer(NVNcommandBuffer* cmdBuf, NVNbufferAddress buffer, size_t size, uint32_t i);
-void nvnCommandBufferClearTexture(NVNcommandBuffer* cmdBuf, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, const float* color, int mask);
-void nvnCommandBufferClearTexturei(NVNcommandBuffer* cmdBuf, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, const int* color, int mask);
-void nvnCommandBufferClearTextureui(NVNcommandBuffer* cmdBuf, const NVNtexture* dstTexture, const NVNtextureView* dstView, const NVNcopyRegion* dstRegion, const uint32_t* color, int mask);
+void nvnCommandBufferClearTexture(NVNcommandBuffer* cmdBuf, NVNtexture* dstTexture, NVNtextureView* dstView, NVNcopyRegion* dstRegion, const float* color, int mask);
+void nvnCommandBufferClearTexturei(NVNcommandBuffer* cmdBuf, NVNtexture* dstTexture, NVNtextureView* dstView, NVNcopyRegion* dstRegion, const int* color, int mask);
+void nvnCommandBufferClearTextureui(NVNcommandBuffer* cmdBuf, NVNtexture* dstTexture, NVNtextureView* dstView, NVNcopyRegion* dstRegion, const uint32_t* color, int mask);
 void nvnCommandBufferUpdateUniformBuffer(NVNcommandBuffer* cmdBuf, NVNbufferAddress buffer, size_t size, ptrdiff_t o, size_t s, const void* p);
 void nvnCommandBufferReportCounter(NVNcommandBuffer* cmdBuf, NVNcounterType counter, NVNbufferAddress buffer);
 void nvnCommandBufferResetCounter(NVNcommandBuffer* cmdBuf, NVNcounterType counter);
 void nvnCommandBufferReportValue(NVNcommandBuffer* cmdBuf, uint32_t value, NVNbufferAddress buffer);
 void nvnCommandBufferSetRenderEnable(NVNcommandBuffer* cmdBuf, NVNboolean enable);
 void nvnCommandBufferSetRenderEnableConditional(NVNcommandBuffer* cmdBuf, NVNconditionalRenderMode mode, NVNbufferAddress addr);
-void nvnCommandBufferSetRenderTargets(NVNcommandBuffer* cmdBuf, int numColors, const NVNtexture* const* colors, const NVNtextureView* const* colorViews, const NVNtexture* depthStencil, const NVNtextureView* depthStencilView);
+void nvnCommandBufferSetRenderTargets(NVNcommandBuffer* cmdBuf, int numColors, NVNtexture* const* colors, NVNtextureView* const* colorViews, NVNtexture* depthStencil, NVNtextureView* depthStencilView);
 void nvnCommandBufferDiscardColor(NVNcommandBuffer* cmdBuf, int i);
 void nvnCommandBufferDiscardDepthStencil(NVNcommandBuffer* cmdBuf);
-void nvnCommandBufferDownsample(NVNcommandBuffer* cmdBuf, const NVNtexture* src, const NVNtexture* dst);
-void nvnCommandBufferTiledDownsample(NVNcommandBuffer* cmdBuf, const NVNtexture* texture1, const NVNtexture* texture2);
-void nvnCommandBufferDownsampleTextureView(NVNcommandBuffer* cmdBuf, const NVNtexture* texture1, const NVNtextureView* view1, const NVNtexture* texture2, const NVNtextureView* view2);
-void nvnCommandBufferTiledDownsampleTextureView(NVNcommandBuffer* cmdBuf, const NVNtexture* texture1, const NVNtextureView* view1, const NVNtexture* texture2, const NVNtextureView* view2);
+void nvnCommandBufferDownsample(NVNcommandBuffer* cmdBuf, NVNtexture* src, NVNtexture* dst);
+void nvnCommandBufferTiledDownsample(NVNcommandBuffer* cmdBuf, NVNtexture* texture1, NVNtexture* texture2);
+void nvnCommandBufferDownsampleTextureView(NVNcommandBuffer* cmdBuf, NVNtexture* texture1, NVNtextureView* view1, NVNtexture* texture2, NVNtextureView* view2);
+void nvnCommandBufferTiledDownsampleTextureView(NVNcommandBuffer* cmdBuf, NVNtexture* texture1, NVNtextureView* view1, NVNtexture* texture2, NVNtextureView* view2);
 void nvnCommandBufferBarrier(NVNcommandBuffer* cmdBuf, int barrier);
-void nvnCommandBufferWaitSync(NVNcommandBuffer* cmdBuf, const NVNsync* sync);
+void nvnCommandBufferWaitSync(NVNcommandBuffer* cmdBuf, NVNsync* sync);
 void nvnCommandBufferFenceSync(NVNcommandBuffer* cmdBuf, NVNsync* sync, NVNsyncCondition condition, int fence);
-void nvnCommandBufferSetTexturePool(NVNcommandBuffer* cmdBuf, const NVNtexturePool* pool);
-void nvnCommandBufferSetSamplerPool(NVNcommandBuffer* cmdBuf, const NVNsamplerPool* pool);
-void nvnCommandBufferSetShaderScratchMemory(NVNcommandBuffer* cmdBuf, const NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
+void nvnCommandBufferSetTexturePool(NVNcommandBuffer* cmdBuf, NVNtexturePool* pool);
+void nvnCommandBufferSetSamplerPool(NVNcommandBuffer* cmdBuf, NVNsamplerPool* pool);
+void nvnCommandBufferSetShaderScratchMemory(NVNcommandBuffer* cmdBuf, NVNmemoryPool* pool, ptrdiff_t offset, size_t size);
 void nvnCommandBufferSaveZCullData(NVNcommandBuffer* cmdBuf, NVNbufferAddress addr, size_t size);
 void nvnCommandBufferRestoreZCullData(NVNcommandBuffer* cmdBuf, NVNbufferAddress addr, size_t size);
 void nvnCommandBufferSetCopyRowStride(NVNcommandBuffer* cmdBuf, ptrdiff_t stride);
 void nvnCommandBufferSetCopyImageStride(NVNcommandBuffer* cmdBuf, ptrdiff_t stride);
-ptrdiff_t nvnCommandBufferGetCopyRowStride(const NVNcommandBuffer* cmdBuf);
-ptrdiff_t nvnCommandBufferGetCopyImageStride(const NVNcommandBuffer* cmdBuf);
+ptrdiff_t nvnCommandBufferGetCopyRowStride(NVNcommandBuffer* cmdBuf);
+ptrdiff_t nvnCommandBufferGetCopyImageStride(NVNcommandBuffer* cmdBuf);
 void nvnCommandBufferDrawTexture(NVNcommandBuffer* cmdBuf, NVNtextureHandle handle, const NVNdrawTextureRegion* region1, const NVNdrawTextureRegion* region2);
 NVNboolean nvnProgramSetSubroutineLinkage(NVNprogram* program, int i, const NVNsubroutineLinkageMapPtr* ptr);
 void nvnCommandBufferSetProgramSubroutines(NVNcommandBuffer* cmdBuf, NVNprogram* program, NVNshaderStage stage, const int i1, const int i2, const int* i3);
@@ -733,30 +899,30 @@ void nvnCommandBufferPopDebugGroupId(NVNcommandBuffer* cmdBuf, uint32_t i);
 void nvnCommandBufferInsertDebugMarkerStatic(NVNcommandBuffer* cmdBuf, uint32_t i, const char* description);
 void nvnCommandBufferInsertDebugMarkerDynamic(NVNcommandBuffer* cmdBuf, uint32_t i, const char* description);
 void nvnCommandBufferInsertDebugMarker(NVNcommandBuffer* cmdBuf, const char* description);
-PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC nvnCommandBufferGetMemoryCallback(const NVNcommandBuffer* cmdBuf);
-void nvnCommandBufferGetMemoryCallbackData(const NVNcommandBuffer* cmdBuf);
-NVNboolean nvnCommandBufferIsRecording(const NVNcommandBuffer* cmdBuf);
+PFNNVNCOMMANDBUFFERMEMORYCALLBACKPROC nvnCommandBufferGetMemoryCallback(NVNcommandBuffer* cmdBuf);
+void nvnCommandBufferGetMemoryCallbackData(NVNcommandBuffer* cmdBuf);
+NVNboolean nvnCommandBufferIsRecording(NVNcommandBuffer* cmdBuf);
 NVNboolean nvnSyncInitialize(NVNsync* sync, NVNdevice* device);
 NVNboolean nvnSyncInitializeFromFencedGLSync(NVNsync* sync); // pure guess
 void* nvnSyncCreateGLSync(NVNsync* sync); // pure guess
 void nvnSyncFinalize(NVNsync* sync);
 void nvnSyncSetDebugLabel(NVNsync* sync, const char* label);
 void nvnQueueFenceSync(NVNqueue* queue, NVNsync* sync, NVNsyncCondition condition, int flags);
-NVNsyncWaitResult nvnSyncWait(const NVNsync* sync, uint64_t timeoutNs);
-NVNboolean nvnQueueWaitSync(NVNqueue* queue, const NVNsync* sync);
+NVNsyncWaitResult nvnSyncWait(NVNsync* sync, uint64_t timeoutNs);
+NVNboolean nvnQueueWaitSync(NVNqueue* queue, NVNsync* sync);
 void nvnEventBuilderSetDefaults(NVNeventBuilder* builder);
 NVNmemoryPool* nvnEventBuilderGetMemoryPool(NVNeventBuilder* builder); // guess
 int nvnEventBuilderGetMemoryOffset(NVNeventBuilder* builder); // guess
 NVNmemoryPool* nvnEventBuilderGetStorage(NVNeventBuilder* builder); // guess
-void nvnEventBuilderSetStorage(NVNeventBuilder* builder, const NVNmemoryPool* pool, int64_t size);
-NVNboolean nvnEventInitialize(NVNevent* event, const NVNeventBuilder* builder);
+void nvnEventBuilderSetStorage(NVNeventBuilder* builder, NVNmemoryPool* pool, int64_t size);
+NVNboolean nvnEventInitialize(NVNevent* event, NVNeventBuilder* builder);
 void nvnEventFinalize(NVNevent* event);
-uint32_t nvnEventGetValue(const NVNevent* event);
+uint32_t nvnEventGetValue(NVNevent* event);
 NVNmemoryPool* nvnEventGetMemoryPool(NVNevent* builder); // guess
 int nvnEventGetMemoryOffset(NVNevent* builder); // guess
 void nvnEventSignal(NVNevent* event, NVNeventSignalMode mode, uint32_t i);
-void nvnCommandBufferWaitEvent(NVNcommandBuffer* cmdBuf, const NVNevent* event, NVNeventWaitMode mode, uint32_t i);
-void nvnCommandBufferSignalEvent(NVNcommandBuffer* cmdBuf, const NVNevent* event, NVNeventSignalMode mode, NVNeventSignalLocation location, int flags, uint32_t i);
+void nvnCommandBufferWaitEvent(NVNcommandBuffer* cmdBuf, NVNevent* event, NVNeventWaitMode mode, uint32_t i);
+void nvnCommandBufferSignalEvent(NVNcommandBuffer* cmdBuf, NVNevent* event, NVNeventSignalMode mode, NVNeventSignalLocation location, int flags, uint32_t i);
 
 #define NVN_ALL(with) \
 with(nvnBlendStateGetAdvancedMode) \

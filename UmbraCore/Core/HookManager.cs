@@ -19,11 +19,11 @@ public unsafe partial class HookManager {
 
     [StructLayout(LayoutKind.Sequential)]
     struct NativeLibCallbacks {
-        public RegisterHookDelegate RegisterHook;
-        public GetSdlWindowDelegate GetSdlWindow;
-        public GetSdlRendererDelegate GetSdlRenderer;
-        public RecompileShaderDelegate RecompileShader;
-        public FreeShaderDelegate FreeShader;
+        public IntPtr RegisterHook;
+        public IntPtr GetSdlWindow;
+        public IntPtr GetSdlRenderer;
+        public IntPtr RecompileShader;
+        public IntPtr FreeShader;
     }
 
     readonly NativeLibCallbacks* Callbacks;
@@ -34,11 +34,11 @@ public unsafe partial class HookManager {
         InitializeWrappers();
         var lib = NativeLibrary.Load("../UmbraCore/NativeLib/cmake-build-debug/libNativeLib.dylib");
         Callbacks = (NativeLibCallbacks*) Marshal.AllocHGlobal(sizeof(NativeLibCallbacks));
-        Callbacks->RegisterHook = NativeRegister;
-        Callbacks->GetSdlWindow = GetSdlWindow;
-        Callbacks->GetSdlRenderer = GetSdlRenderer;
-        Callbacks->RecompileShader = RecompileShader;
-        Callbacks->FreeShader = FreeShader;
+        Callbacks->RegisterHook = Marshal.GetFunctionPointerForDelegate<RegisterHookDelegate>(NativeRegister);
+        Callbacks->GetSdlWindow = Marshal.GetFunctionPointerForDelegate<GetSdlWindowDelegate>(GetSdlWindow);
+        Callbacks->GetSdlRenderer = Marshal.GetFunctionPointerForDelegate<GetSdlRendererDelegate>(GetSdlRenderer);
+        Callbacks->RecompileShader = Marshal.GetFunctionPointerForDelegate<RecompileShaderDelegate>(RecompileShader);
+        Callbacks->FreeShader = Marshal.GetFunctionPointerForDelegate<FreeShaderDelegate>(FreeShader);
         var setup = Marshal.GetDelegateForFunctionPointer<SetupDelegate>(NativeLibrary.GetExport(lib, "setup"));
         setup(Callbacks);
     }

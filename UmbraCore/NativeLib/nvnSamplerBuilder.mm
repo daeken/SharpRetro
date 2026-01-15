@@ -1,90 +1,110 @@
 #include <iostream>
 #include "nv.h"
 
-void nvnSamplerBuilderSetDevice(NVNsamplerBuilder* builder, NVNdevice* device) {
+void nvnSamplerBuilderSetDevice(NVNsamplerBuilder* _builder, NVNdevice* _device) {
     std::cout << "nvnSamplerBuilderSetDevice called!" << std::endl;
+    auto builder = UNWRAP(_builder);
+    auto device = UNWRAP(_device);
 }
 
-void nvnSamplerBuilderSetDefaults(NVNsamplerBuilder* builder) {
+void nvnSamplerBuilderSetDefaults(NVNsamplerBuilder* _builder) {
     std::cout << "nvnSamplerBuilderSetDefaults called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetMinMagFilter(NVNsamplerBuilder* builder, NVNminFilter min, NVNmagFilter mag) {
+void nvnSamplerBuilderSetMinMagFilter(NVNsamplerBuilder* _builder, NVNminFilter min, NVNmagFilter mag) {
     std::cout << "nvnSamplerBuilderSetMinMagFilter called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetWrapMode(NVNsamplerBuilder* builder, NVNwrapMode s, NVNwrapMode t, NVNwrapMode r) {
+void nvnSamplerBuilderSetWrapMode(NVNsamplerBuilder* _builder, NVNwrapMode s, NVNwrapMode t, NVNwrapMode r) {
     std::cout << "nvnSamplerBuilderSetWrapMode called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetLodClamp(NVNsamplerBuilder* builder, float min, float max) {
+void nvnSamplerBuilderSetLodClamp(NVNsamplerBuilder* _builder, float min, float max) {
     std::cout << "nvnSamplerBuilderSetLodClamp called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetLodBias(NVNsamplerBuilder* builder, float bias) {
+void nvnSamplerBuilderSetLodBias(NVNsamplerBuilder* _builder, float bias) {
     std::cout << "nvnSamplerBuilderSetLodBias called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetCompare(NVNsamplerBuilder* builder, NVNcompareMode mode, NVNcompareFunc func) {
+void nvnSamplerBuilderSetCompare(NVNsamplerBuilder* _builder, NVNcompareMode mode, NVNcompareFunc func) {
     std::cout << "nvnSamplerBuilderSetCompare called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetBorderColor(NVNsamplerBuilder* builder, const float* borderColor) {
+void nvnSamplerBuilderSetBorderColor(NVNsamplerBuilder* _builder, const float* borderColor) {
     std::cout << "nvnSamplerBuilderSetBorderColor called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetBorderColori(NVNsamplerBuilder* builder, const int* borderColor) {
+void nvnSamplerBuilderSetBorderColori(NVNsamplerBuilder* _builder, const int* borderColor) {
     std::cout << "nvnSamplerBuilderSetBorderColori called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetBorderColorui(NVNsamplerBuilder* builder, const uint32_t* borderColor) {
+void nvnSamplerBuilderSetBorderColorui(NVNsamplerBuilder* _builder, const uint32_t* borderColor) {
     std::cout << "nvnSamplerBuilderSetBorderColorui called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetMaxAnisotropy(NVNsamplerBuilder* builder, float maxAniso) {
+void nvnSamplerBuilderSetMaxAnisotropy(NVNsamplerBuilder* _builder, float maxAniso) {
     std::cout << "nvnSamplerBuilderSetMaxAnisotropy called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetReductionFilter(NVNsamplerBuilder* builder, NVNsamplerReduction filter) {
+void nvnSamplerBuilderSetReductionFilter(NVNsamplerBuilder* _builder, NVNsamplerReduction filter) {
     std::cout << "nvnSamplerBuilderSetReductionFilter called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderSetLodSnap(NVNsamplerBuilder* builder, float f) {
+void nvnSamplerBuilderSetLodSnap(NVNsamplerBuilder* _builder, float f) {
     std::cout << "nvnSamplerBuilderSetLodSnap called!" << std::endl;
+    auto builder = UNWRAP(_builder);
 }
 
-void nvnSamplerBuilderGetMinMagFilter(const NVNsamplerBuilder* builder, NVNminFilter* min, NVNmagFilter* mag) {
+void nvnSamplerBuilderGetMinMagFilter(NVNsamplerBuilder* _builder, NVNminFilter* min, NVNmagFilter* mag) {
     std::cout << "nvnSamplerBuilderGetMinMagFilter called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (min) *min = 0;
     if (mag) *mag = 0;
 }
 
-void nvnSamplerBuilderGetWrapMode(const NVNsamplerBuilder* builder, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r) {
+void nvnSamplerBuilderGetWrapMode(NVNsamplerBuilder* _builder, NVNwrapMode* s, NVNwrapMode* t, NVNwrapMode* r) {
     std::cout << "nvnSamplerBuilderGetWrapMode called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (s) *s = 0;
     if (t) *t = 0;
     if (r) *r = 0;
 }
 
-void nvnSamplerBuilderGetLodClamp(const NVNsamplerBuilder* builder, float* min, float* max) {
+void nvnSamplerBuilderGetLodClamp(NVNsamplerBuilder* _builder, float* min, float* max) {
     std::cout << "nvnSamplerBuilderGetLodClamp called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (min) *min = 0.0f;
     if (max) *max = 0.0f;
 }
 
-float nvnSamplerBuilderGetLodBias(const NVNsamplerBuilder* builder) {
+float nvnSamplerBuilderGetLodBias(NVNsamplerBuilder* _builder) {
     std::cout << "nvnSamplerBuilderGetLodBias called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     return 0.0f;
 }
 
-void nvnSamplerBuilderGetCompare(const NVNsamplerBuilder* builder, NVNcompareMode* mode, NVNcompareFunc* func) {
+void nvnSamplerBuilderGetCompare(NVNsamplerBuilder* _builder, NVNcompareMode* mode, NVNcompareFunc* func) {
     std::cout << "nvnSamplerBuilderGetCompare called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (mode) *mode = 0;
     if (func) *func = 0;
 }
 
-void nvnSamplerBuilderGetBorderColor(const NVNsamplerBuilder* builder, float* borderColor) {
+void nvnSamplerBuilderGetBorderColor(NVNsamplerBuilder* _builder, float* borderColor) {
     std::cout << "nvnSamplerBuilderGetBorderColor called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (borderColor) {
         borderColor[0] = 0.0f;
         borderColor[1] = 0.0f;
@@ -93,8 +113,9 @@ void nvnSamplerBuilderGetBorderColor(const NVNsamplerBuilder* builder, float* bo
     }
 }
 
-void nvnSamplerBuilderGetBorderColori(const NVNsamplerBuilder* builder, int* borderColor) {
+void nvnSamplerBuilderGetBorderColori(NVNsamplerBuilder* _builder, int* borderColor) {
     std::cout << "nvnSamplerBuilderGetBorderColori called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (borderColor) {
         borderColor[0] = 0;
         borderColor[1] = 0;
@@ -103,8 +124,9 @@ void nvnSamplerBuilderGetBorderColori(const NVNsamplerBuilder* builder, int* bor
     }
 }
 
-void nvnSamplerBuilderGetBorderColorui(const NVNsamplerBuilder* builder, uint32_t* borderColor) {
+void nvnSamplerBuilderGetBorderColorui(NVNsamplerBuilder* _builder, uint32_t* borderColor) {
     std::cout << "nvnSamplerBuilderGetBorderColorui called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     if (borderColor) {
         borderColor[0] = 0;
         borderColor[1] = 0;
@@ -113,17 +135,20 @@ void nvnSamplerBuilderGetBorderColorui(const NVNsamplerBuilder* builder, uint32_
     }
 }
 
-float nvnSamplerBuilderGetMaxAnisotropy(const NVNsamplerBuilder* builder) {
+float nvnSamplerBuilderGetMaxAnisotropy(NVNsamplerBuilder* _builder) {
     std::cout << "nvnSamplerBuilderGetMaxAnisotropy called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     return 0.0f;
 }
 
-NVNsamplerReduction nvnSamplerBuilderGetReductionFilter(const NVNsamplerBuilder* builder) {
+NVNsamplerReduction nvnSamplerBuilderGetReductionFilter(NVNsamplerBuilder* _builder) {
     std::cout << "nvnSamplerBuilderGetReductionFilter called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     return 0;
 }
 
-float nvnSamplerBuilderGetLodSnap(const NVNsamplerBuilder* builder) {
+float nvnSamplerBuilderGetLodSnap(NVNsamplerBuilder* _builder) {
     std::cout << "nvnSamplerBuilderGetLodSnap called!" << std::endl;
+    auto builder = UNWRAP(_builder);
     return 0.0f;
 }
