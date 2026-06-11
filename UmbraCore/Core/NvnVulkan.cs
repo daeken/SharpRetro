@@ -675,9 +675,10 @@ public static unsafe class NvnVulkan {
         var ia = new VkPipelineInputAssemblyStateCreateInfo {
             sType = ST_PIPELINE_INPUT_ASM_CI, topology = 3,  // TRIANGLE_LIST
         };
-        // Y-flip via negative-height viewport (NVN y-up → Vulkan
-        // y-down). y=H + height=-H → flipped.
-        var vp = new VkViewport { x = 0, y = H, width = W, height = -H, minDepth = 0, maxDepth = 1 };
+        // T2 viewport = unflipped (its fixed-shader does -p.y).
+        // T3 gets a separate flipped viewport (NVN y-up → Vulkan
+        // y-down) at t3gpci-build time below.
+        var vp = new VkViewport { x = 0, y = 0, width = W, height = H, minDepth = 0, maxDepth = 1 };
         var sc = new VkRect2D { x = 0, y = 0, width = W, height = H };
         var vps = new VkPipelineViewportStateCreateInfo {
             sType = ST_PIPELINE_VIEWPORT_CI,
@@ -815,9 +816,20 @@ public static unsafe class NvnVulkan {
                     stage = 0x1, module = t3vs, pName = entryName };
                 t3stages[1] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI,
                     stage = 0x10, module = t3fs, pName = entryName };
+                // T3 gets a y-flipped viewport (NVN game shaders
+                // emit y-up; Vulkan rasterizes y-down). T2's
+                // fixed shader handles this itself, so T2 keeps
+                // the unflipped vp.
+                var t3vp = new VkViewport {
+                    x = 0, y = H, width = W, height = -H,
+                    minDepth = 0, maxDepth = 1,
+                };
+                var t3vps = vps;
+                t3vps.pViewports = &t3vp;
                 var t3gpci = gpci;
                 t3gpci.pStages = t3stages;
                 t3gpci.layout = t3pl;
+                t3gpci.pViewportState = &t3vps;
                 ulong t3pipe;
                 if(Chk(vkCreateGraphicsPipelines(_dev, 0, 1, &t3gpci, null, &t3pipe),
                        "vkCreateGraphicsPipelines(t3)") == 0) {
@@ -1288,6 +1300,12 @@ public static unsafe class NvnVulkan {
     // (recorded by NvnLinux at nvnCommandBufferClearColor) → readback.
     public static void Present(ulong window, int texIdx) {
         var n = ++_frameN;
+        // Per-frame HID pump (writes Npad ring entries into the
+        // shared-memory the game's nn::hid SDK reads). Driven by
+        // UMBRA_HID env script. Tick before Ready-check so the
+        // controller is connected from frame 1 (some games gate
+        // on connected-controller before first draw).
+        HidPump.Tick(n);
         if(!Ready) {
             if(n <= 3) $"[vk] Present #{n} (not ready, log-only)".Log();
             return;

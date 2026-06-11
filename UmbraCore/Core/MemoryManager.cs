@@ -9,7 +9,7 @@ public class KSharedMemory : KObject {
     public readonly int Size;
     public byte[] InitialBackingMemory;
     ulong _Address;
-    public ulong Address { set => SetAddress(value); }
+    public ulong Address { get => _Address; set => SetAddress(value); }
 
     unsafe void SetAddress(ulong value) {
         var data = _Address != 0 ? new Span<byte>((byte*) _Address, Size).ToArray() : InitialBackingMemory;
