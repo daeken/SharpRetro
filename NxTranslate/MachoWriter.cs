@@ -11,7 +11,7 @@ public enum MemoryProtection {
     Execute = 4,
 }
 
-public unsafe class MachoWriter {
+public unsafe class MachoWriter : IBinaryWriter {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct MachHeader {
         public uint Magic, CpuType, CpuSubtype, FileType, NumLcmds, SizeLcmds, Flags, Reserved;

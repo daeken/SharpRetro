@@ -13,6 +13,54 @@ public unsafe class IncomingMessage {
 	public readonly bool HasC, HasPid;
 	public readonly uint DomainHandle, DomainCommand;
 	readonly uint WLen, RawOffset, SfciOffset, DescOffset, CopyOffset, MoveOffset;
+	// HIPC buffer descriptors encode ≤39-bit addresses (real Switch userspace
+	// fits). Here dlopen maps the game wherever (e.g. 0xFFF5_xxxx_xxxx) and
+	// NativeMemory.AlignedAlloc puts the heap at e.g. 0xFFF4_1000_0000 — the
+	// SDK's encoder truncates high bits. Reconstruct by searching the kernel's
+	// known game-memory regions (heap + modules + thread stacks) for one whose
+	// low-`width` bits match. Verified at-bytes: A-desc 0x74_cf7611f0 →
+	// heap@0xFFF4_1000_0000 + offset → 0xFFF4_cf76_11f0, low-39 = 0x74_cf7611f0
+	// exactly. ,
+	// Cache of (start,end) for ALL process mappings (stacks, .NET heap,
+	// dlopen'd .so, game heap, …). The HIPC buffer can point at any of them
+	// — game stack-allocates ioctl structs, heap-allocates path strings, etc.
+	// Refreshed on cache-miss (new threads → new stacks → new mappings).
+	static (ulong, ulong)[] _addrRegions;
+	static readonly object _arLock = new();
+
+	static (ulong, ulong)[] AddrRegions(bool refresh) {
+		lock(_arLock) {
+			if(_addrRegions != null && !refresh) return _addrRegions;
+			return _addrRegions = LibSharpRetro.MemoryHelpers.GetAllRegions()
+				.Where(r => r.Exists)
+				.Select(r => (r.Start, r.Start + r.Size))
+				.ToArray();
+		}
+	}
+
+	static ulong FixAddr(ulong a, int width) {
+		if(a == 0) return 0;
+		var mask = width >= 64 ? ~0ul : (1ul << width) - 1;
+		ulong Search((ulong, ulong)[] regions) {
+			foreach(var (start, end) in regions) {
+				var cand = (start & ~mask) | a;
+				if(cand >= start && cand < end) return cand;
+			}
+			return 0;
+		}
+		// Game-tracked regions first (cheap, usually right for heap buffers).
+		var hit = Search(Kernel.MemoryManager.GameRegions());
+		if(hit != 0) return hit;
+		// Then full process map (stacks, dlopen mappings).
+		hit = Search(AddrRegions(refresh: false));
+		if(hit != 0) return hit;
+		// Miss → maybe new mapping since last refresh (new thread stack).
+		hit = Search(AddrRegions(refresh: true));
+		if(hit != 0) return hit;
+		$"[ipc] FixAddr: 0x{a:x} (w={width}) matched no mapping ‡".Log();
+		return a;
+	}
+
 	public IncomingMessage(byte* buffer, bool isDomainObject = false) {
 		IsDomainObject = isDomainObject;
 		Buffer = buffer;
@@ -81,34 +129,40 @@ public unsafe class IncomingMessage {
 		
 		switch((ax << 1) | cx) {
 			case 0: { // B
+				if(BCount <= num) goto case 1;
 				var t = (uint*) (Buffer + DescOffset + XCount * 8 + ACount * 12 + num * 12);
 				ulong a = t[0], b = t[1], c = t[2];
 				Debug.Assert((c & 0x3U) == flags);
-				var buffer = new Buffer<T>(b | (((((c >> 2) << 4) & 0x70) | ((c >> 28) & 0xFU)) << 32),
+				var buffer = new Buffer<T>(
+					FixAddr(b | (((((c >> 2) << 4) & 0x70) | ((c >> 28) & 0xFU)) << 32), 39),
 					a | (((c >> 24) & 0xFU) << 32));
-				if(BCount <= num || buffer.Size == 0)
-					goto case 1; //  C buffer
+				if(buffer.Size == 0) goto case 1;
 				return buffer;
 			}
 			case 1: { // C
+				if(!HasC) return Span<T>.Empty;
 				var t = (uint*) (Buffer + RawOffset + WLen * 4);
 				ulong a = t[0], b = t[1];
-				return new Buffer<T>(a | ((b & 0xFFFFU) << 32), b >> 16);
+				return new Buffer<T>(FixAddr(a | ((b & 0xFFFFU) << 32), 48), b >> 16);
 			}
 			case 2: { // A
+				if(ACount <= num) goto case 3;
 				var t = (uint*) (Buffer + DescOffset + XCount * 8 + num * 12);
 				ulong a = t[0], b = t[1], c = t[2];
 				Debug.Assert((c & 0x3) == flags);
-				var buffer = new Buffer<T>(b | (((((c >> 2) << 4) & 0x70) | ((c >> 28) & 0xFU)) << 32),
+				var buffer = new Buffer<T>(
+					FixAddr(b | (((((c >> 2) << 4) & 0x70) | ((c >> 28) & 0xFU)) << 32), 39),
 					a | (((c >> 24) & 0xFU) << 32));
-				if(ACount <= num || buffer.Size == 0)
-					goto case 3; // X buffer
+				if(buffer.Size == 0) goto case 3;
 				return buffer;
 			}
 			case 3: { // X
+				if(XCount <= num) return Span<T>.Empty;
 				var t = (uint*) (Buffer + DescOffset + num * 8);
 				ulong a = t[0], b = t[1];
-				return new Buffer<T>(b | ((((a >> 12) & 0xFU) | ((a >> 2) & 0x70U)) << 32), a >> 16);
+				return new Buffer<T>(
+					FixAddr(b | ((((a >> 12) & 0xFU) | ((a >> 2) & 0x70U)) << 32), 39),
+					a >> 16);
 			}
 		}
 		return backupType != uint.MaxValue ? GetSpan<T>(backupType, num) : null;
@@ -228,7 +282,7 @@ public abstract class IpcInterface : KObject {
 
 	public unsafe uint SyncMessage(ulong bufferAddr, uint bufferSize, out bool closeHandle) {
 		var buffer = (byte*) bufferAddr;
-		//new Span<byte>(buffer, (int) bufferSize).Hexdump();
+		//new Span<byte>(buffer, (int) bufferSize).Hexdump;
 		var incoming = new IncomingMessage(buffer, IsDomainObject);
 		var outgoing = new OutgoingMessage(buffer, IsDomainObject, incoming);
 		var ret = 0xF601U;
@@ -294,7 +348,7 @@ public abstract class IpcInterface : KObject {
 			}
 		if(ret == 0)
 			outgoing.Bake();
-		//new Span<byte>(buffer, (int) bufferSize).Hexdump();
+		//new Span<byte>(buffer, (int) bufferSize).Hexdump;
 		return ret;
 	}
 }

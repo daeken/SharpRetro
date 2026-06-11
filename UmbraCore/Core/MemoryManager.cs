@@ -138,12 +138,27 @@ public class MemoryManager {
                 Regions[dest] = (size, 1);
             return 0;
         };
+        game.Callbacks.SetMemoryAttribute = (addr, size, mask, value) => {
+            // SVC 0x3: lock/unlock memory for DMA (UNCACHED bit). No-op here
+            // (no real GPU).
+            $"SetMemoryAttribute(0x{addr:X}, 0x{size:X}, mask=0x{mask:X}, val=0x{value:X}) ‡ no-op".Log();
+            return 0;
+        };
         game.Callbacks.UnmapMemory = (dest, src, size) => {
             $"Unmapping memory from 0x{src:X} to 0x{dest:X} (size 0x{size:X})".Log();
             return 0;
         };
     }
     
+    // Enumerate game-visible regions for HIPC FixAddr (IpcManager). Heap +
+    // modules + thread stacks all land in Regions via SetHeapSize/LoadModule/
+    // MapMemory handlers. Snapshot under lock (yield-inside-lock = deadlock
+    // hazard if the consumer re-enters).
+    public (ulong Start, ulong End)[] GameRegions() {
+        lock(Regions)
+            return Regions.Select(kv => (kv.Key, kv.Key + kv.Value.Size)).ToArray();
+    }
+
     void MapAt(ulong addr, ulong size) => throw new NotImplementedException();
     ulong Alloc(ulong size) => throw new NotImplementedException();
     void Free(ulong addr) => throw new NotImplementedException();

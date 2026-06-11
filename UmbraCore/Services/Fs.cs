@@ -254,13 +254,38 @@ class RomFSIStorageVfsBacked : IStorage {
         HeaderData.AsSpan((int) offset, Math.Min((int) length, HeaderData.Length - (int) offset)).CopyTo(data);
     }}
 
+// : IDirectory that reports 0 entries.
+// SaveJobThread enumerates savedata dir on boot; v0 = empty (= fresh save).
+public class EmptyDirectory : IDirectory {
+    protected override ulong GetEntryCount() => 0;
+    protected override void Read(out ulong nEntries, Span<byte> buf) => nEntries = 0;
+}
+
 public class SaveDataFileSystem : IFileSystem {
+    static string PathOf(Span<byte> path) {
+        var n = path.IndexOf((byte) 0);
+        return Encoding.ASCII.GetString(n >= 0 ? path[..n] : path);
+    }
     protected override IFile OpenFile(uint mode, Span<byte> path) {
-        $"Attempting to open save data file '{Encoding.ASCII.GetString(path)}' with mode {mode}!".Log();
+        $"[savefs] OpenFile '{PathOf(path)}' mode={mode}".Log();
         if(mode == (uint) FileAccessMode.Read)
             throw new IpcException(0x80070002); // File not found
         return new IFile();
     }
+    protected override IDirectory OpenDirectory(uint flags, Span<byte> path) {
+        $"[savefs] OpenDirectory '{PathOf(path)}' flags={flags} → empty".Log();
+        return new EmptyDirectory();
+    }
+    // GetEntryType: report root-as-dir, else not-found (savedata empty).
+    protected override DirectoryEntryType GetEntryType(Span<byte> path) {
+        var p = PathOf(path);
+        $"[savefs] GetEntryType '{p}'".Log();
+        if(p == "/" || p == "") return DirectoryEntryType.Directory;
+        throw new IpcException(0x80070002);  // not found
+    }
+    protected override void Commit() => "[savefs] Commit (no-op)".Log();
+    protected override ulong GetFreeSpaceSize(Span<byte> path) => 64ul << 20;  // 64MB free
+    protected override ulong GetTotalSpaceSize(Span<byte> path) => 64ul << 20;
 }
 
 public partial class IFileSystemProxy {

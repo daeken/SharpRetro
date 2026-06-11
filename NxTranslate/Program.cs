@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aarch64Cpu;
 using LibSharpRetro;
@@ -430,8 +430,16 @@ var nopList = new List<string> {
     // "_ZN2al11AudioSystem21updateHWOutputSettingEv",
 };
 
+// Linux: X18 is a free GPR (Apple reserves it; Horizon uses it as platform reg
+// → on macOS every X18 read/write needed virtualizing via LoadX18/StoreX18
+// trampolines). On Linux the game's X18 usage just runs natively, so x18Usage
+// stays empty and ~400L of Sub() trampoline machinery goes dormant. Only the
+// "problematic" insns (SVC/BRK/MRS/MSR) still need trampolining for HLE.
+var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+var symPrefix = isLinux ? "" : "_";
+
 var exeLoader = new ExeLoader(args[0], includeRtld: false, doRelocate: false);
-var macho = new MachoWriter();
+IBinaryWriter macho = isLinux ? new ElfWriter() : new MachoWriter();
 var loadBase = 0UL;
 var modules = new List<(ulong TrampRW, ulong TrampX, ulong Start, ulong Size)>();
 foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
@@ -443,12 +451,14 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     }
 
     var x18Usage = new List<(ulong Addr, uint Insn)>();
-    for(var j = mod.TextStart; j < mod.TextEnd; j += 4) {
-        var insn = mod.Load<uint>(j);
-        var usesX18 = Disassembler.GetGprMasks(insn)
-            .Select(x => x.Shift)
-            .Any(shift => ((insn >> shift) & 0b11111) == 18);
-        if(usesX18) x18Usage.Add((j - mod.TextStart, insn));
+    if(!isLinux) {
+        for(var j = mod.TextStart; j < mod.TextEnd; j += 4) {
+            var insn = mod.Load<uint>(j);
+            var usesX18 = Disassembler.GetGprMasks(insn)
+                .Select(x => x.Shift)
+                .Any(shift => ((insn >> shift) & 0b11111) == 18);
+            if(usesX18) x18Usage.Add((j - mod.TextStart, insn));
+        }
     }
 
     var textStart = mod.TextStart - mod.LoadBase;
@@ -512,7 +522,11 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
     var textData = mod.Binary[(int) textStart..(int) textEnd].ToArray();
     foreach(var symbol in mod.Symbols)
         if(symbol.Value != 0 && symbol.Name != "") {
-            macho.AddSymbol("_" + symbol.Name, loadBase + symbol.Value);
+            // Linux v0: skip game symbols in .dynsym (171K of them in legoworlds;
+            // ElfWriter's header segment is 64K). Only setup/runFrom matter for
+            // GameWrapper.dlsym. Debug symbols → non-loaded .symtab later. ‡
+            if(!isLinux)
+                macho.AddSymbol("_" + symbol.Name, loadBase + symbol.Value);
             if(nopList.Contains(symbol.Name)) {
                 Console.WriteLine($"Attempting to nop out {symbol.Name}");
                 var off = (int) (textStart + symbol.Value);
@@ -539,7 +553,7 @@ foreach(var (i, mod) in exeLoader.ExeModules.Index()) {
 }
 
 var glue = new Assembler(0x4000);
-macho.AddSymbol("_setup", loadBase + glue.PC);
+macho.AddSymbol(symPrefix + "setup", loadBase + glue.PC);
 glue.StpPreindex(R.X29, R.X30, R.SP, -16);
 glue.Mov(R.X29, R.SP);
 glue.BlSelf();
@@ -560,7 +574,7 @@ foreach(var (tramprw, trampx, start, size) in modules) {
 
 glue.LdpPostindex(R.X29, R.X30, R.SP, 16);
 glue.Ret();
-macho.AddSymbol("_runFrom", loadBase + glue.PC);
+macho.AddSymbol(symPrefix + "runFrom", loadBase + glue.PC);
 SaveLoadAll(glue, asm => {
     asm.Mov(R.X30, R.X0);
     asm.Mov(R.X8, R.X1);
@@ -585,7 +599,8 @@ glue.Ret();
 macho.AddSegment(".glue", loadBase, glue.Size, glue.AsBytes, MemoryProtection.Read | MemoryProtection.Execute);
 
 macho.Write(args[1]);
-Sh.Run("ldid", "-S", args[1]);
+if(!isLinux)
+    Sh.Run("ldid", "-S", args[1]);
 
 abstract record Instruction {
     public static Instruction Decode(uint insn) => insn switch {

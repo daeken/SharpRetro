@@ -32,6 +32,15 @@ public unsafe partial class HookManager {
 
     public HookManager() {
         InitializeWrappers();
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+            // LoadX18/StoreX18 stay 0 (NxTranslate Linux arm doesn't emit x18
+            // trampolines). Managed hooks (Route A) registered below mirror
+            // NativeLib/library.mm:103-117 — nv::InitializeGraphics no-op +
+            // nvnBootstrapLoader → managed GetProcAddress + nn::vi::* stubs.
+            // Route A v0
+            RegisterLinuxHooks();
+            return;
+        }
         var lib = NativeLibrary.Load("../UmbraCore/NativeLib/cmake-build-debug/libNativeLib.dylib");
         Callbacks = (NativeLibCallbacks*) Marshal.AllocHGlobal(sizeof(NativeLibCallbacks));
         Callbacks->RegisterHook = Marshal.GetFunctionPointerForDelegate<RegisterHookDelegate>(NativeRegister);
@@ -77,4 +86,14 @@ public unsafe partial class HookManager {
 
     public void Register(string symbol, HookDelegate hook) =>
         Hooks[symbol] = (hook, (ulong) Marshal.GetFunctionPointerForDelegate(hook));
+
+    // Raw C-ABI hook: the game calls `funcPtr` directly with the C signature
+    // (PLT-patched via Rtld:54 SymbolAddrs overlay). For [UnmanagedCallersOnly]
+    // statics — pass `(nint)(delegate* unmanaged<...>)&Method`. Route A
+    public void RegisterRaw(string symbol, nint funcPtr) {
+        $"Registering managed hook for {symbol} -- 0x{funcPtr:X}".Log();
+        Hooks[symbol] = (null, (ulong) funcPtr);
+    }
+
+    partial void RegisterLinuxHooks();
 }

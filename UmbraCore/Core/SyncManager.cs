@@ -69,7 +69,20 @@ public unsafe class Semaphore : Waitable {
     }
 
     public Semaphore(ulong addr) => Addr = (uint*) addr;
-    protected override bool Presignalable => false;
+
+    // : was `protected override bool Presignalable => false;`
+    // — removed. With Presignalable=false, Signal with Waiters.Count==0 is a
+    // PURE NO-OP. WaitProcessWideKeyAtomic does `if(sema.Value>0) early-bailout`
+    // → unlock mutex → `sema.Wait`; if Increment+Signal land in that window,
+    // signal is LOST and Wait blocks forever. Timing-dependent (= sera's
+    // "occasional hang that's existed for 3 switch emulator generations").
+    // Spurious wakeups are legal for condvars (game re-checks predicate); lost
+    // wakeups are the bug. Letting it presignal closes the race.
+    // Note: this race was found via Lego Worlds chase but turned out
+    // NOT to be the deterministic block there (that was a SIGSEGV downstream,
+    // masked by ~4GB coredump writes looking like a hang). The race is real
+    // at-source regardless; the at-data verify it fixes the macOS occasional
+    // = sera's call.
 
     public void Increment() {
         lock(this)
@@ -121,13 +134,21 @@ public class SyncManager {
             ? new TimeSpan((long) (timeout / 100))
             : new TimeSpan(0, 0, 0, 0, -1);
 
-    Semaphore EnsureSemaphore(ulong addr) => Semaphores.TryGetValue(addr, out var sema)
-        ? sema
-        : Semaphores[addr] = new Semaphore(addr);
-
-    Mutex EnsureMutex(ulong addr) => Mutexes.TryGetValue(addr, out var mutex)
-        ? mutex
-        : Mutexes[addr] = new Mutex();
+    // : Semaphores/Mutexes dicts had no lock; concurrent
+    // EnsureX from multiple threads corrupted them ("Operations that change
+    // non-concurrent collections must have exclusive access" — observed at
+    // Lego Worlds once timing shifted via instrumentation). Same
+    // 3-generation-occasional family as the cv lost-wakeup.
+    Semaphore EnsureSemaphore(ulong addr) {
+        lock(Semaphores)
+            return Semaphores.TryGetValue(addr, out var s) ? s
+                : Semaphores[addr] = new Semaphore(addr);
+    }
+    Mutex EnsureMutex(ulong addr) {
+        lock(Mutexes)
+            return Mutexes.TryGetValue(addr, out var m) ? m
+                : Mutexes[addr] = new Mutex();
+    }
     
     public unsafe void Setup(GameWrapper game) {
         game.Callbacks.ClearEvent = handle => {
@@ -199,9 +220,9 @@ public class SyncManager {
             return 0;
         };
         game.Callbacks.ArbitrateLock = (curThread, mutexAddr, reqThread) => {
-            //$"LockMutex(0x{curThread:X}, 0x{mutexAddr:X}, 0x{reqThread:X})".Log();
+            //$"LockMutex(0x{curThread:X}, 0x{mutexAddr:X}, 0x{reqThread:X})".Log;
             EnsureMutex(mutexAddr).WaitOne();
-            //"Locked mutex".Log();
+            //"Locked mutex".Log;
             *(uint*) mutexAddr = (*(uint*) mutexAddr & 0x40000000) | (uint) reqThread;
             return 0;
         };
@@ -213,5 +234,26 @@ public class SyncManager {
             }
             return 0;
         };
+
+        // condvar-fix : overwrite the four mutex+condvar
+        // SVCs with CondVarKernel.cs (Atmosphere-shape protocol; see that
+        // file's header for the full read). UMBRA_LEGACY_SYNC=1 keeps the
+        // originals above for A/B. The originals are wrong-shape vs the
+        // real Horizon protocol (per Atmosphere kern_k_condition_variable.cpp
+        // Atmosphere-protocol read) but mostly-work on macOS
+        // timing; this is sera's "3-gen occasional hang" likely root.
+        // ClearEvent/ResetSignal/WaitSynchronization/CancelSynchronization
+        // = KEvent/handle SVCs, separate, kept above unconditionally.
+        if(Environment.GetEnvironmentVariable("UMBRA_LEGACY_SYNC") != "1") {
+            game.Callbacks.ArbitrateLock = (cur, addr, req) =>
+                CondVarKernel.ArbitrateLock(cur, addr, req);
+            game.Callbacks.ArbitrateUnlock = addr =>
+                CondVarKernel.ArbitrateUnlock(addr);
+            game.Callbacks.WaitProcessWideKeyAtomic = (addr, cv, h, t) =>
+                CondVarKernel.Wait(addr, cv, h, t);
+            game.Callbacks.SignalProcessWideKey = (cv, count) =>
+                CondVarKernel.Signal(cv, count);
+            "[CondVarKernel] CondVarKernel installed (Atmosphere-shape protocol)".Log();
+        }
     }
 }

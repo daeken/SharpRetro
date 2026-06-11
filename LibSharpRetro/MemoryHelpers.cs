@@ -33,10 +33,24 @@ public static class MemoryHelpers {
                 throw new Exception($"Couldn't allocate memory at 0x{addr:X}-0x{addr + size - 1:X}");
             return maddr;
         }
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+            // PROT_READ|WRITE = 3; MAP_PRIVATE|MAP_ANONYMOUS = 0x22;
+            // MAP_FIXED_NOREPLACE (4.17+) = 0x100000 — fail if range overlaps
+            // an existing mapping instead of clobbering it (MAP_FIXED would).
+            var flags = 0x22 | (requirePosition ? 0x100000 : 0);
+            var maddr = mmapLinux(addr, size, 3, flags, -1, 0);
+            if(maddr == unchecked((ulong) -1L))
+                throw new Exception($"mmap failed for 0x{addr:X}+0x{size:X}: errno={Marshal.GetLastPInvokeError()}");
+            if(requirePosition && addr != maddr)
+                throw new Exception($"Couldn't allocate memory at 0x{addr:X}-0x{addr + size - 1:X} (got 0x{maddr:X})");
+            return maddr;
+        }
         throw new NotImplementedException();
     }
     [DllImport("libSystem.dylib", EntryPoint = "mmap")]
     static extern ulong mmapMac(ulong addr, ulong len, int prot, int flags, int fd, ulong offset);
+    [DllImport("libc", EntryPoint = "mmap", SetLastError = true)]
+    static extern ulong mmapLinux(ulong addr, ulong len, int prot, int flags, int fd, ulong offset);
     
     [StructLayout(LayoutKind.Sequential)]
     struct vm_region_basic_info_data_64_t {
@@ -69,6 +83,36 @@ public static class MemoryHelpers {
     }
 
     public static IEnumerable<(ulong Start, ulong Size, bool Exists, bool Mapped, int Protection)> GetAllRegions() {
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return GetAllRegionsLinux();
+        return GetAllRegionsMacOS();
+    }
+
+    static IEnumerable<(ulong Start, ulong Size, bool Exists, bool Mapped, int Protection)> GetAllRegionsLinux() {
+        // /proc/self/maps:  start-end perms offset dev inode pathname
+        // perms: rwxp / r-xp / ---p etc. Fourth char p=private, s=shared.
+        // Match the macOS contract: Protection bits are 1=R, 2=X, 4=W
+        // (the bit-shuffle in the macOS arm above), and gaps emitted as
+        // Exists=false rows so callers can find unmapped space.
+        var addr = 0UL;
+        foreach(var line in File.ReadLines("/proc/self/maps")) {
+            var sp = line.IndexOf(' ');
+            if(sp < 0) continue;
+            var dash = line.IndexOf('-');
+            var start = Convert.ToUInt64(line[..dash], 16);
+            var end = Convert.ToUInt64(line[(dash+1)..sp], 16);
+            var perms = line.AsSpan(sp + 1, 4);
+            var mprot = (perms[0] == 'r' ? 1 : 0)
+                      | (perms[1] == 'w' ? 4 : 0)
+                      | (perms[2] == 'x' ? 2 : 0);
+            if(start > addr) yield return (addr, start - addr, false, false, 0);
+            yield return (start, end - start, true, true, mprot);
+            addr = end;
+        }
+        yield return (addr, 0xFFFF_FFFF_FFFF_FFFFUL - addr + 1, false, false, 0);
+    }
+
+    static IEnumerable<(ulong Start, ulong Size, bool Exists, bool Mapped, int Protection)> GetAllRegionsMacOS() {
         var lib = NativeLibrary.Load("libSystem.B.dylib");
         uint mach_task_self;
         unsafe { mach_task_self = *(uint*) NativeLibrary.GetExport(lib, "mach_task_self_"); }
