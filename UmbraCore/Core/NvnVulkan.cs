@@ -411,7 +411,8 @@ public static unsafe class NvnVulkan {
     const uint ST_DESCRIPTOR_SET_LAYOUT_CI = 32, ST_DESCRIPTOR_POOL_CI = 33,
         ST_DESCRIPTOR_SET_AI = 34, ST_WRITE_DESCRIPTOR_SET = 35,
         ST_SAMPLER_CI = 31;
-    const uint DESC_TYPE_COMBINED_IMAGE_SAMPLER = 1, DESC_TYPE_UNIFORM_BUFFER = 6;
+    const uint DESC_TYPE_COMBINED_IMAGE_SAMPLER = 1, DESC_TYPE_UNIFORM_BUFFER = 6,
+               DESC_TYPE_UNIFORM_BUFFER_DYNAMIC = 8;
 
     [DllImport(Lib)] static extern int vkCreateDescriptorSetLayout(
         ulong dev, VkDescriptorSetLayoutCreateInfo* ci, void* alloc, ulong* dsl);
@@ -437,7 +438,7 @@ public static unsafe class NvnVulkan {
     static ulong _t3DsVs, _t3DsTex, _t3DsFs;   // sets 0/1/2
     static ulong[] _t3CbufBuf;        // [1..24] = stage*12 + binding
     static byte*[] _t3CbufPtr;        // mapped ptrs
-    static int _t3CbufDumped;
+    const int T3CbufStride = 4096, T3MaxDraws = 32;
 
     // Allocate + write t3 descriptor sets. Lazy (after _atlasView
     // exists). Set0=VS-cbufs (12 UBO → _t3CbufBuf[1..12]), set1=tex,
@@ -455,28 +456,33 @@ public static unsafe class NvnVulkan {
                "vkAllocateDescriptorSets(t3)") != 0) return;
         _t3DsVs = sets[0]; _t3DsTex = sets[1]; _t3DsFs = sets[2];
 
-        // Write set0+set2: 12× UNIFORM_BUFFER each.
-        // _t3CbufBuf[stage*12 + binding] for binding 1..12, stage 0/1.
+        // Write set0+set2: 12× UNIFORM_BUFFER_DYNAMIC each.
+        // range=T3CbufStride (the per-draw WINDOW; the buffer is
+        // T3CbufStride×T3MaxDraws total). dynamicOffsets supplied
+        // per-draw at vkCmdBindDescriptorSets time = recN*T3CbufStride.
         var bufInfos = stackalloc VkDescriptorBufferInfo[24];
         var writes = stackalloc VkWriteDescriptorSet[25];
         for(uint stage = 0; stage < 2; stage++)
             for(uint b = 1; b <= 12; b++) {
                 var idx = stage * 12 + (b - 1);   // 0..23
                 bufInfos[idx] = new() {
-                    buffer = _t3CbufBuf[stage*12 + b], offset = 0, range = 4096,
+                    buffer = _t3CbufBuf[stage*12 + b], offset = 0,
+                    range = T3CbufStride,
                 };
                 writes[idx] = new() {
                     sType = ST_WRITE_DESCRIPTOR_SET,
                     dstSet = stage == 0 ? _t3DsVs : _t3DsFs,
                     dstBinding = b, descriptorCount = 1,
-                    descriptorType = DESC_TYPE_UNIFORM_BUFFER,
+                    descriptorType = DESC_TYPE_UNIFORM_BUFFER_DYNAMIC,
                     pBufferInfo = &bufInfos[idx],
                 };
             }
         // Write set1: 1× COMBINED_IMAGE_SAMPLER, binding 8 → atlas.
         var imgInfo = new VkDescriptorImageInfo {
             sampler = _sampler, imageView = _atlasView,
-            imageLayout = 5,  // SHADER_READ_ONLY_OPTIMAL
+            imageLayout = 1,  // GENERAL (= matches actual; the atlas
+                              // is HOST_VISIBLE LINEAR, never
+                              // transitioned past GENERAL.)
         };
         writes[24] = new() {
             sType = ST_WRITE_DESCRIPTOR_SET, dstSet = _t3DsTex,
@@ -669,7 +675,9 @@ public static unsafe class NvnVulkan {
         var ia = new VkPipelineInputAssemblyStateCreateInfo {
             sType = ST_PIPELINE_INPUT_ASM_CI, topology = 3,  // TRIANGLE_LIST
         };
-        var vp = new VkViewport { x = 0, y = 0, width = W, height = H, minDepth = 0, maxDepth = 1 };
+        // Y-flip via negative-height viewport (NVN y-up → Vulkan
+        // y-down). y=H + height=-H → flipped.
+        var vp = new VkViewport { x = 0, y = H, width = W, height = -H, minDepth = 0, maxDepth = 1 };
         var sc = new VkRect2D { x = 0, y = 0, width = W, height = H };
         var vps = new VkPipelineViewportStateCreateInfo {
             sType = ST_PIPELINE_VIEWPORT_CI,
@@ -725,18 +733,21 @@ public static unsafe class NvnVulkan {
         // tex: set=1 binding=8 ← the atlas (existing _atlasView).
         // FS out: Loc 0 oColor.
         // ════════════════════════════════════════════════════════════
+        // T3 = use the game's actual compiled Maxwell shaders,
+        // recompiled to SPIR-V by an external Maxwell→SPIR-V
+        // compiler. Contract: NvnLinux dumps each game shader to
+        // {UMBRA_SHADER_DIR}/sh{N:04}-t{stage}.bin; the external
+        // compiler writes {same}.spv; T3 loads the .spv. v0:
+        // hardcoded to the menu's VS+FS pair (sh0349/sh0346); the
+        // generalization (per-draw shader-pair lookup) follows
+        // once more pairs are exercised.
         var t3mode = Environment.GetEnvironmentVariable("UMBRA_T3");
-        if(t3mode is "1" or "bisect") {
+        var shDir = Environment.GetEnvironmentVariable("UMBRA_SHADER_DIR")
+                    ?? "/tmp/umbra-shaders";
+        if(t3mode == "1") {
             $"[vk] T3: building game-shader pipeline".Log();
-            var t3vs = LoadShader("/tmp/umbra-shaders/sh0349-t1.bin.spv");
-            // bisect: hand-written FS at sh0349's out_0/out_8
-            // interface, just outputs in_color directly. If
-            // pixels appear → VS correct end-to-end, =
-            // FS-side. If still 0 → = VS-input-side
-            // (Component decoration / vertex format mismatch).
-            var t3fs = LoadShader(t3mode == "bisect"
-                ? "/tmp/bisect-fs.spv"
-                : "/tmp/umbra-shaders/sh0346-t2.bin.spv");
+            var t3vs = LoadShader($"{shDir}/sh0349-t1.bin.spv");
+            var t3fs = LoadShader($"{shDir}/sh0346-t2.bin.spv");
             if(t3vs == 0 || t3fs == 0) {
                 $"[vk] T3: shader load failed; falling back to T2".Log();
             } else {
@@ -746,11 +757,21 @@ public static unsafe class NvnVulkan {
                 // (CONFIRMED at umbra72). SpirvEmit puts VS cbufs at
                 // set=0, FS cbufs at set=2. Both layouts identical
                 // (binding 1..12 = uniform-buffer); same DSL reused.
+                // UNIFORM_BUFFER_DYNAMIC for all 12 cbuf bindings:
+                // each underlying buffer holds N draws' worth of
+                // data (4096-aligned per draw; 4096 = max draws ×
+                // cbuf-size, but really nb≤256 typical). Per-draw,
+                // vkCmdBindDescriptorSets passes pDynamicOffsets[12]
+                // = recN*4096 for each binding. = the per-draw
+                // cbuf isolation fix (last-write-wins). (All 12
+                // dynamic even though only c[5] varies, since the
+                // dynamic-offset count must match the layout's
+                // dynamic-binding count exactly.)
                 var t3dslCbufB = stackalloc VkDescriptorSetLayoutBinding[12];
                 for(uint k = 0; k < 12; k++)
                     t3dslCbufB[k] = new() {
-                        binding = k + 1, descriptorType = DESC_TYPE_UNIFORM_BUFFER,
-                        descriptorCount = 1, stageFlags = 0x11,  // VS|FS (layout-side; data differs by set)
+                        binding = k + 1, descriptorType = DESC_TYPE_UNIFORM_BUFFER_DYNAMIC,
+                        descriptorCount = 1, stageFlags = 0x11,
                     };
                 var t3dslCbufCi = new VkDescriptorSetLayoutCreateInfo {
                     sType = ST_DESCRIPTOR_SET_LAYOUT_CI,
@@ -804,14 +825,21 @@ public static unsafe class NvnVulkan {
                     $"[vk] T3 pipeline created: {t3pipe:x}".Log();
                 }
 
-                // ── 24× host-mapped cbuf VkBuffers (4KB each).
-                // Index = stage*12 + binding (binding 1..12).
-                // [0..12]=VS set0, [12..24]=FS set2. ──
+                // ── 24× host-mapped cbuf VkBuffers, each
+                // T3CbufStride × T3MaxDraws bytes. Per-draw, data
+                // for draw#k goes at byte k*T3CbufStride in EVERY
+                // buffer; vkCmdBindDescriptorSets passes
+                // pDynamicOffsets[12]={k*T3CbufStride,…} so each
+                // draw sees its own slice (= per-draw cbuf
+                // isolation; was last-write-wins). Index =
+                // stage*12 + binding. [1..12]=VS set0, [13..24]=FS
+                // set2. ──
                 _t3CbufBuf = new ulong[25];
                 _t3CbufPtr = new byte*[25];
                 for(var n = 1; n <= 24; n++) {
+                    var sz = (ulong)(T3CbufStride * T3MaxDraws);
                     var cbci = new VkBufferCreateInfo {
-                        sType = ST_BUFFER_CI, size = 4096,
+                        sType = ST_BUFFER_CI, size = sz,
                         usage = 0x10,  // UNIFORM_BUFFER_BIT
                     };
                     ulong cb; Chk(vkCreateBuffer(_dev, &cbci, null, &cb), $"vkCreateBuffer(cbuf{n})");
@@ -822,19 +850,14 @@ public static unsafe class NvnVulkan {
                     };
                     ulong cm; Chk(vkAllocateMemory(_dev, &cmai, null, &cm), $"vkAlloc(cbuf{n})");
                     Chk(vkBindBufferMemory(_dev, cb, cm, 0), $"vkBind(cbuf{n})");
-                    void* cp; Chk(vkMapMemory(_dev, cm, 0, 4096, 0, &cp), $"vkMap(cbuf{n})");
+                    void* cp; Chk(vkMapMemory(_dev, cm, 0, sz, 0, &cp), $"vkMap(cbuf{n})");
                     _t3CbufBuf[n] = cb; _t3CbufPtr[n] = (byte*) cp;
-                    // Zero-fill (c[1] driver-managed defaults to 0 = ok).
-                    new Span<byte>(cp, 4096).Clear();
+                    new Span<byte>(cp, (int)sz).Clear();
                 }
 
-                // ── Descriptor pool: 24 UBO (set0+set2) + 1 sampler ──
-                // ‡ v0: single set per layout, cbuf contents memcpy'd
-                // per-draw into mapped buffers (last-write-wins on
-                // VS c[5] = all 21 rows at last position; v0.5b =
-                // dynamic-offset descriptor fixes that).
+                // ── Descriptor pool: 24 UBO_DYNAMIC + 1 sampler ──
                 var t3ps = stackalloc VkDescriptorPoolSize[2];
-                t3ps[0] = new() { type = DESC_TYPE_UNIFORM_BUFFER, descriptorCount = 24 };
+                t3ps[0] = new() { type = DESC_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorCount = 24 };
                 t3ps[1] = new() { type = DESC_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount = 1 };
                 var t3dpci = new VkDescriptorPoolCreateInfo {
                     sType = ST_DESCRIPTOR_POOL_CI, maxSets = 3,
@@ -1016,8 +1039,12 @@ public static unsafe class NvnVulkan {
             vkCmdBindPipeline(_cmdBuf, 0, _t3Pipeline);
             var t3sets = stackalloc ulong[3];
             t3sets[0] = _t3DsVs; t3sets[1] = _t3DsTex; t3sets[2] = _t3DsFs;
-            vkCmdBindDescriptorSets(_cmdBuf, 0, _t3PipelineLayout, 0, 3,
-                t3sets, 0, null);
+            // 24 dynamic offsets (12 per cbuf-set × 2 sets;
+            // ordering = set-major then binding-ascending per
+            // Vulkan spec). All same value per draw (= recN*
+            // T3CbufStride) since every cbuf has its draw#k slot
+            // at the same offset.
+            var t3dyn = stackalloc uint[24];
             ulong vbo = 0;
             ulong vb = _vbuf;
             int recN = 0;
@@ -1033,6 +1060,9 @@ public static unsafe class NvnVulkan {
                 // managed; v0 zero-filled. ⚠️ Last-write-wins on VS
                 // c[5] (model mat4) — all 21 rows at last position;
                 // v0.5b = dynamic-offset descriptor.
+                // Per-draw cbuf data → recN's slice in each buffer.
+                // (per-draw cbuf isolation; was last-write-wins.)
+                var slot = recN < T3MaxDraws ? recN : T3MaxDraws - 1;
                 if(d.Ubos != null)
                     for(var st = 0; st < 2; st++)
                         for(var sl = 0; sl < 8; sl++) {
@@ -1040,23 +1070,17 @@ public static unsafe class NvnVulkan {
                             if(snap == null) continue;
                             var hw = sl + 3;
                             if(hw > 12) continue;
-                            var cb = _t3CbufPtr[st*12 + hw];
-                            var nb = Math.Min(snap.Length, 4096);
+                            var cb = _t3CbufPtr[st*12 + hw]
+                                   + slot * T3CbufStride;
+                            var nb = Math.Min(snap.Length, T3CbufStride);
                             new ReadOnlySpan<byte>(snap, 0, nb)
-                                .CopyTo(new Span<byte>(cb, 4096));
-                            // cbuf-instrument (1× per (st,hw) per
-                            // run): dump first 16 floats of c[hw] for
-                            // draw#0 → compare to the IL-eval verify's c[3..6].
-                            // If c[3] differs → wall named. If same →
-                            // wall ≠ cbuf-data, board for sera.
-                            if(recN == 0 && _frameN >= 60 && _t3CbufDumped < 8) {
-                                _t3CbufDumped++;
-                                var fp = (float*) cb;
-                                var s = string.Join(",",
-                                    Enumerable.Range(0, 16).Select(k => $"{fp[k]:F4}"));
-                                $"[vk] T3-cbuf st={st} sl={sl} hw=c[{hw}] [{s}]".Log();
-                            }
+                                .CopyTo(new Span<byte>(cb, T3CbufStride));
                         }
+                // Bind sets WITH this draw's dynamic offsets.
+                for(var k = 0; k < 24; k++)
+                    t3dyn[k] = (uint)(slot * T3CbufStride);
+                vkCmdBindDescriptorSets(_cmdBuf, 0, _t3PipelineLayout,
+                    0, 3, t3sets, 24, t3dyn);
                 vkCmdDraw(_cmdBuf, (uint) d.Count, 1, (uint) d.First, 0);
                 vbo += (bytes + 255) & ~255ul;
                 recN++;
