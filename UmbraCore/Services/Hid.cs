@@ -21,6 +21,10 @@ public partial class IHidServer {
     protected override long GetNpadJoyHoldType(ulong _0, ulong _1) => 0;
     protected override uint GetSupportedNpadStyleSet(ulong _0, ulong _1) => 0b11111;
     protected override IActiveVibrationDeviceList CreateActiveVibrationDeviceList() => new();
+    // SendVibrationValue: game sends rumble to assigned pads
+    // every frame once the player↔port map is populated. No-op.
+    protected override void SendVibrationValue(uint h, ulong _0, ulong _1) { }
+    protected override void SendVibrationValues(ulong _0, Span<uint> _1, Span<byte> _2) { }
 }
 
 public partial class IAppletResource {

@@ -62,8 +62,78 @@ public static unsafe class HidPump {
     record struct Press(ulong Mask, int Lo, int Hi);
     static List<Press> _script = [];
     static long _samp = 1;
-    static bool _init;
+    static bool _init, _dumped, _shimmed;
     static byte* _base;
+
+    // Look up a runtime address by mangled name (Kernel.Symbols
+    // is range→name; linear scan, one-shot).
+    static ulong SymAddr(string mangled) =>
+        Kernel.Symbols.FirstOrDefault(kv => kv.Value == mangled).Key.Start;
+
+    // "0xADDR" or "*(0xADDR)" or "*(*(0xADDR)+OFF)" — chained
+    // deref for following GOT/ptr-table indirections from the
+    // outside.
+    static ulong Deref(string s) {
+        s = s.Trim();
+        if(s.StartsWith("*(") && s.EndsWith(")")) {
+            var inner = s[2..^1];
+            // Allow "+0xOFF" suffix on the inner expr.
+            var pi = inner.LastIndexOf('+');
+            ulong off = 0;
+            if(pi > 0 && inner.IndexOf('(', pi) < 0) {
+                off = Convert.ToUInt64(inner[(pi+1)..].Trim(), 16);
+                inner = inner[..pi];
+            }
+            var ia = Deref(inner) + off;
+            return *(ulong*)ia;
+        }
+        return Convert.ToUInt64(s, 16);
+    }
+
+    // Full runtime image dump: contiguous code regions (per
+    // Kernel.Symbols spans, gap >1MB = module boundary) → one
+    // .bin per region + .regions index + .syms. = the input for
+    // offline disasm/xrefs against the EXACT bytes the game has
+    // loaded (post-reloc, post-PLT/GOT-resolve), without running
+    // umbra per-query.
+    static void DumpRuntimeImage(string baseP) {
+        // Use MemoryManager.Regions (= actual mapped ranges, incl
+        // PLT/GOT/data past where symbols end). Filter to regions
+        // that contain at least one game symbol (= the loaded
+        // modules; skips host-side heap allocations).
+        var symLo = Kernel.Symbols.Keys.Min(k => k.Start);
+        var symHi = Kernel.Symbols.Keys.Max(k => k.End);
+        var runs = Kernel.MemoryManager.Regions
+            .Where(r => r.Key + r.Value.Size > symLo && r.Key < symHi)
+            .OrderBy(r => r.Key)
+            .Select(r => (lo: r.Key, hi: r.Key + r.Value.Size))
+            .ToList();
+        // Merge adjacent (≤4KB gap).
+        for(var i = runs.Count - 1; i > 0; i--)
+            if(runs[i].lo - runs[i-1].hi <= 0x1000) {
+                runs[i-1] = (runs[i-1].lo, runs[i].hi);
+                runs.RemoveAt(i);
+            }
+        using var rw = new StreamWriter($"{baseP}.regions");
+        long total = 0;
+        foreach(var (lo, hi0) in runs) {
+            var hi = (hi0 + 0xfff) & ~0xffful;
+            var sz = (int)(hi - lo);
+            try {
+                var b = new byte[sz];
+                new ReadOnlySpan<byte>((void*) lo, sz).CopyTo(b);
+                File.WriteAllBytes($"{baseP}.{lo:x}.bin", b);
+                rw.WriteLine($"{lo:x} {hi:x} {sz}");
+                total += sz;
+            } catch(Exception e) {
+                $"[hid] image-dump {lo:x}..{hi:x} FAILED: {e.Message}".Log();
+            }
+        }
+        using(var sw = new StreamWriter($"{baseP}.syms"))
+            foreach(var ((lo, hi), nm) in Kernel.Symbols.OrderBy(kv => kv.Key.Start))
+                sw.WriteLine($"{lo:x16} {hi-lo,6:x} {nm}");
+        $"[hid] runtime-image: {runs.Count} regions, {total/1e6:F1}MB → {baseP}.*".Log();
+    }
 
     public static void Tick(int frameN) {
         if(!_init) {
@@ -102,16 +172,66 @@ public static unsafe class HidPump {
             // a runtime address (= the mapped game code; for
             // disasm-via-objdump when the .so's offset mapping
             // is awkward).
-            if(Environment.GetEnvironmentVariable("UMBRA_DUMP_FN") is {} dfp) {
-                var parts = dfp.Split(',');
-                var fa = Convert.ToUInt64(parts[0], 16);
+            // Handled per-frame below (so @N syntax can defer
+            // the dump to a later frame).
+        }
+        // UMBRA_DUMP_FN="ADDR,SIZE,/path[@N];ADDR2,SIZE2,/path2[@N2];…"
+        // — addr may be hex (0x…) OR a deref "*(0x…)+OFF" (chained;
+        // for following GOT/ptr-table indirections). @N = dump at
+        // frame N (default 1). One-shot per spec.
+        // UMBRA_DUMP_FN="image,/path" — full runtime-image dump:
+        // walks Kernel.Symbols, finds contiguous runs (gap >1MB =
+        // new module), dumps each to /path.{lo:x}.bin + writes
+        // /path.regions (lo,hi per line) + /path.syms.
+        if(!_dumped && Environment.GetEnvironmentVariable("UMBRA_DUMP_FN") is {} dfp0) {
+            if(dfp0.StartsWith("image,")) {
+                _dumped = true;
+                DumpRuntimeImage(dfp0[6..]);
+            } else
+            foreach(var spec0 in dfp0.Split(';')) {
+                var atI = spec0.LastIndexOf('@');
+                var dfN = atI > 0 ? int.Parse(spec0[(atI+1)..]) : 1;
+                if(frameN < dfN) continue;
+                var spec = atI > 0 ? spec0[..atI] : spec0;
+                var parts = spec.Split(',');
+                var fa = Deref(parts[0]);
                 var fs = (int) Convert.ToUInt64(parts[1], 16);
                 var fb = new byte[fs];
                 new ReadOnlySpan<byte>((void*) fa, fs).CopyTo(fb);
                 File.WriteAllBytes(parts[2], fb);
-                $"[hid] dumped {fs}B @ 0x{fa:X} → {parts[2]}".Log();
+                $"[hid] dumped {fs}B @ 0x{fa:X} → {parts[2]} (frame {frameN})".Log();
+            }
+            if(!dfp0.Split(';').Any(s => {
+                var i = s.LastIndexOf('@');
+                return i > 0 && int.Parse(s[(i+1)..]) > frameN;
+            })) _dumped = true;
+        }
+        // ── SHIM: force player↔pad assignment ────────────────
+        // The game's GUI2Manager::ProcessInput2_ForStage gates on
+        // IsValidControllerForPlayer / GetRawJPad, which read
+        // NuPads's player→port map. Normally the controller-applet
+        // populates that; our applet stubs no-op. Calling
+        // NuPadMapPlayerToPort(player=0, port=0) directly forces
+        // it. One-shot at frame 30 (= NuPads is init'd by then;
+        // verified via NuPad output dump @f80 having btn data).
+        // ‡ Hypothesis test — if A works after this, the wall =
+        // controller-applet stubs; reverse out the natural path
+        // once unblocked.
+        if(!_shimmed && frameN >= 30
+           && Environment.GetEnvironmentVariable("UMBRA_SHIM_PAD") != null) {
+            _shimmed = true;
+            var fa = SymAddr("_Z20NuPadMapPlayerToPortii");
+            if(fa != 0) {
+                $"[hid] SHIM: NuPadMapPlayerToPort(0,0) @ 0x{fa:X}".Log();
+                ((delegate* unmanaged<int, int, void>) fa)(0, 0);
+                // Also player 1 → port 1 (some menus check player>=1).
+                ((delegate* unmanaged<int, int, void>) fa)(1, 1);
+                $"[hid] SHIM done".Log();
+            } else {
+                $"[hid] SHIM: _Z20NuPadMapPlayerToPortii not found".Log();
             }
         }
+
         var addr = IHidServer.Memory.Address;
         if(addr == 0) return;   // not yet mapped by game
         _base = (byte*) addr;

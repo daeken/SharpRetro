@@ -1100,7 +1100,13 @@ public static unsafe class NvnVulkan {
             vkCmdEndRenderPass(_cmdBuf);
             _lastDrawN = draws.Length;
             if(_frameN <= 5 || (recN > 0 && _frameN % 10 == 0))
-                $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} vbufUsed={vbo}".Log();
+                {
+                    var pairs = string.Join(" ", draws
+                        .Select(d => (d.VsShIdx, d.FsShIdx, d.TexHandle))
+                        .Distinct()
+                        .Select(p => $"vs{p.VsShIdx}/fs{p.FsShIdx}/tx{p.TexHandle:x}"));
+                    $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} vbufUsed={vbo} [{pairs}]".Log();
+                }
             return;
         }
 
@@ -1163,6 +1169,17 @@ public static unsafe class NvnVulkan {
     }
     static int _lastDrawN;
     static int _dumpedWithDraws;
+    static Func<int, bool>? _dumpFrames;
+    static Func<int, bool> ParseDumpFrames() {
+        var env = Environment.GetEnvironmentVariable("UMBRA_DUMP_FRAMES");
+        if(env == null) return _ => false;
+        if(env.StartsWith("every:")) {
+            var k = int.Parse(env[6..]);
+            return n => n % k == 0;
+        }
+        var set = env.Split(',').Select(int.Parse).ToHashSet();
+        return n => set.Contains(n);
+    }
 
     static void TransitionAndClear(int idx, float r, float g, float b, float a) {
         var range = new VkImageSubresourceRange { aspectMask = 1, levelCount = 1, layerCount = 1 };
@@ -1333,11 +1350,14 @@ public static unsafe class NvnVulkan {
         var r = vkQueueSubmit(_queue, 1, &si, _fence);
         if(r == 0) {
             vkWaitForFences(_dev, 1, &fence, 1, 1_000_000_000);  // 1s
-            // Dump: first 2 frames (clear-only baseline) + first 3 frames
-            // that actually had draws (= the language menu, ~frame 76+).
+            // Dump: first 2 frames (clear-only baseline) + first 3
+            // frames-with-draws + any in UMBRA_DUMP_FRAMES env
+            // (comma-sep frame numbers OR "every:N").
+            _dumpFrames ??= ParseDumpFrames();
             var hasDraws = PipelineReady && _lastDrawN > 0;
             if(_swapPtr[idx] != null &&
-               (n <= 2 || (hasDraws && _dumpedWithDraws++ < 3)))
+               (n <= 2 || (hasDraws && _dumpedWithDraws++ < 3)
+                       || _dumpFrames(n)))
                 DumpPpm((int) idx, n);
             if(n <= 5 || n % 30 == 0)
                 $"[vk] Present #{n} tex={texIdx} → submit+wait OK".Log();
