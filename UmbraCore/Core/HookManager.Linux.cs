@@ -84,6 +84,36 @@ public unsafe partial class HookManager {
         RegisterRaw("nvnBootstrapLoader",
             (nint)(delegate* unmanaged<byte*, nint>)&NvnBootstrapLoader);
 
+        // — (q-fix-d″) nn::nifm gate fns: log + force-false.
+        //   Discriminator-only (UMBRA_NIFM_HOOK=1): which of
+        //   these does the game actually call, and does
+        //   forcing them to "no network" make TTNetwork::
+        //   Update's per-slot gate skip → no ReceiveAll →
+        //   no (q) ABBA?  NOT a fix; an instrument.
+        if(Environment.GetEnvironmentVariable(
+                "UMBRA_NIFM_HOOK") == "1") {
+            RegisterRaw("_ZN2nn4nifm18IsNetworkAvailableEv",
+                (nint)(delegate* unmanaged<int>)
+                    &Nifm_IsNetworkAvailable);
+            RegisterRaw("_ZN2nn4nifm22IsNetworkRequestOnHoldEv",
+                (nint)(delegate* unmanaged<int>)
+                    &Nifm_IsNetworkRequestOnHold);
+            RegisterRaw(
+                "_ZN2nn4nifm28IsAnyInternetRequestAcceptedENS0_8ClientIdE",
+                (nint)(delegate* unmanaged<ulong, ulong, int>)
+                    &Nifm_IsAnyInternetRequestAccepted);
+            // GetInternetConnectionStatus(out s) → return
+            // nn::Result fail (= nonzero), don't write *s.
+            RegisterRaw(
+                "_ZN2nn4nifm27GetInternetConnectionStatusEPNS0_24InternetConnectionStatusE",
+                (nint)(delegate* unmanaged<void*, uint>)
+                    &Nifm_GetInternetConnectionStatus);
+            RegisterRaw(
+                "_ZN2nn4nifm17NetworkConnection11IsAvailableEv",
+                (nint)(delegate* unmanaged<void*, int>)
+                    &Nifm_NC_IsAvailable);
+        }
+
         // — nn::vi::* (display layer)
         RegisterRaw("_ZN2nn2vi10InitializeEv",
             (nint)(delegate* unmanaged<void>)&Vi_Initialize);
@@ -112,6 +142,45 @@ public unsafe partial class HookManager {
     }
 
     // ───────── nv:: ─────────
+    // — (q-fix-d″) nifm gate stubs. (b-nifm-impl): COUNT calls
+    //   (log first + every 1000th) — discriminates "called
+    //   once at init" (= nifm-correct-already, (q) is h1f-
+    //   side structural) vs "called per-frame" (= IPC-
+    //   roundtrip cost is the (d″) +680f mechanism).
+    static int _nifmIsNA, _nifmIsOH, _nifmIsAIRA, _nifmGICS, _nifmNCIA;
+    [UnmanagedCallersOnly]
+    static int Nifm_IsNetworkAvailable() {
+        var n = Interlocked.Increment(ref _nifmIsNA);
+        if(n == 1 || n % 1000 == 0)
+            $"[nifm-hook] IsNetworkAvailable ×{n} → false".Log();
+        return 0;
+    }
+    [UnmanagedCallersOnly]
+    static int Nifm_IsNetworkRequestOnHold() {
+        var n = Interlocked.Increment(ref _nifmIsOH);
+        if(n == 1 || n % 1000 == 0)
+            $"[nifm-hook] IsNetworkRequestOnHold ×{n} → false".Log();
+        return 0;
+    }
+    [UnmanagedCallersOnly]
+    static int Nifm_IsAnyInternetRequestAccepted(ulong cid0, ulong cid1) {
+        if(Interlocked.Exchange(ref _nifmIsAIRA, 1) == 0)
+            $"[nifm-hook] IsAnyInternetRequestAccepted(cid={cid0:x}{cid1:x}) → false".Log();
+        return 0;
+    }
+    [UnmanagedCallersOnly]
+    static uint Nifm_GetInternetConnectionStatus(void* outS) {
+        if(Interlocked.Exchange(ref _nifmGICS, 1) == 0)
+            "[nifm-hook] GetInternetConnectionStatus → Result-fail".Log();
+        return (110 | (300 << 9));  // nifm ResultErrorIpAddressNotObtained
+    }
+    [UnmanagedCallersOnly]
+    static int Nifm_NC_IsAvailable(void* self) {
+        if(Interlocked.Exchange(ref _nifmNCIA, 1) == 0)
+            "[nifm-hook] NetworkConnection::IsAvailable → false".Log();
+        return 0;
+    }
+
     [UnmanagedCallersOnly]
     static void Nv_InitializeGraphics(void* mem, ulong size) {
         $"[hook] nv::InitializeGraphics(mem={(ulong)mem:x}, size=0x{size:x}) → no-op".Log();
