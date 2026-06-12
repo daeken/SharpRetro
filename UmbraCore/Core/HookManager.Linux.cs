@@ -34,9 +34,41 @@ public unsafe partial class HookManager {
     // post-CoreCLR-PAL + post-game-signal-setup, in game-thread context.
     // Build: gcc -shared -fPIC -O2 -o /tmp/libsegvtrap.so UmbraCore/Native/segvtrap.c
     [DllImport("/tmp/libsegvtrap.so")] static extern void segvtrap_install();
+    [DllImport("/tmp/libsegvtrap.so")] static extern void segvtrap_set_game_range(ulong lo, ulong hi);
 
     public static void InstallSegvHandler() {
-        try { segvtrap_install(); }
+        try {
+            segvtrap_install();
+            // (ε') tell segvtrap which pc-range is game code, so it
+            // can CHAIN to CoreCLR's handler (→ NRE) for managed
+            // faults instead of dump+exit. Use the symbol span (=
+            // game .text+.data; same bound HidPump.DumpRuntimeImage
+            // uses). Done here because RegisterLinuxHooks() fires
+            // from nv::InitializeGraphics → post-Image.Load, so
+            // Kernel.Symbols is populated.
+            if(Kernel.Symbols.Count > 0) {
+                var lo = Kernel.Symbols.Keys.Min(k => k.Start);
+                var hi = Kernel.Symbols.Keys.Max(k => k.End);
+                segvtrap_set_game_range(lo, hi);
+                // (ε') §7-test: deliberate managed-pc null-deref
+                // RIGHT AFTER range-set. If chain works, CoreCLR
+                // converts to NRE → caught here → run continues.
+                // If not, segvtrap dumps+exits (rc=139) and the
+                // log shows pc=0xfffff0… (managed JIT) = ✗.
+                if(Environment.GetEnvironmentVariable(
+                        "UMBRA_TEST_NRE") == "1") {
+                    $"[segv] (ε') §7: deliberate *(ulong*)0x10…".Log();
+                    try {
+                        unsafe {
+                            var x = *(ulong*)0x10;
+                            $"  (read 0x{x:x} — shouldn't reach)".Log();
+                        }
+                    } catch(Exception e) {
+                        $"[segv] (ε') §7 ✓ caught: {e.GetType().Name}: {e.Message}".Log();
+                    }
+                }
+            }
+        }
         catch(Exception e) { $"[segv] native trap not available: {e.Message}".Log(); }
     }
 
