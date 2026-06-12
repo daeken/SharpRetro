@@ -157,8 +157,8 @@ public unsafe partial class HookManager {
         if(NvnResolved.TryGetValue(name, out var p)) return p;
         if(name == "nvnDeviceGetProcAddress")
             p = (nint)(delegate* unmanaged<void*, byte*, nint>)&NvnDeviceGetProcAddress;
-        else if(NvnLinux.Table.TryGetValue(name, out var impl))
-            p = impl;
+        else if(NvnLinux.Table.TryGetValue(name, out var impl) && impl != 0)
+            p = impl;  // 0 = "use the named-stub" (gated hooks)
         else
             p = MakeNamedStub(name);
         NvnResolved[name] = p;

@@ -50,8 +50,42 @@ public class ThreadManager {
     readonly ThreadLocal<KThread> _CurrentThread = new();
     public KThread CurrentThread => _CurrentThread.Value;
 
+    // per-core serialization. On real hw, threads on the
+    // same core run mutually-exclusive (per-core scheduler;
+    // strict-prio + 10ms-RR same-prio). Umbra's 1 host-Thread
+    // per game-thread = ALL run concurrently. The 10 core-1
+    // threads' cv-Wait/Signal worker-loop runs at host-speed
+    // (= 10× cv-ops/sec vs hw) = more (q)-deadlock windows.
+    // = each game-thread holds CoreLock[idealCore]
+    // while in native; releases at SVC-entry, reacquires at
+    // SVC-exit. ⟹ ≤1 thread per game-core in native at a time.
+    // Approximates Atmos "reschedule on SVC-exit" (= the SVC
+    // is where preemption fires). NOT priority-aware (v0); the
+    // 10ms-RR via DPC = ‡not modeled (would need a side-thread
+    // that flags preemption).
+    // UMBRA_CORE_LOCK enables. core=-2 (= "any core"; SDK uses
+    // for system threads) → core 3 (= reserved for system on hw).
+    public static readonly bool CoreLockEnabled =
+        Environment.GetEnvironmentVariable("UMBRA_CORE_LOCK") != null;
+    public static readonly SemaphoreSlim[] CoreLock = CoreLockEnabled
+        ? [new(1,1), new(1,1), new(1,1), new(1,1)] : null!;
+    public static int CoreFor(int idealCore)
+        => idealCore < 0 ? 3 : (idealCore & 3);
+    public static void CoreEnter(KThread t) {
+        if(CoreLockEnabled) CoreLock[CoreFor(t.IdealCore)].Wait();
+    }
+    public static void CoreExit(KThread t) {
+        if(CoreLockEnabled) CoreLock[CoreFor(t.IdealCore)].Release();
+    }
+
     public ThreadManager() {
-        Threads.Add(_CurrentThread.Value = new());
+        var main = new KThread();
+        main.IdealCore = 0;  // nnMain = NPDM default core 0
+        Threads.Add(_CurrentThread.Value = main);
+        // nnMain enters native via Rtld.RunFrom (NOT
+        // StartThread); acquire its core-lock here so the
+        // SVC dispatch's CoreExit/CoreEnter are balanced.
+        CoreEnter(main);
     }
 
     public unsafe void Setup(GameWrapper game) {
@@ -95,11 +129,14 @@ public class ThreadManager {
                 "New thread started!".Log();
                 _CurrentThread.Value = spawned;
                 spawned.CpuState->X30 = 0xCAFEBABEDEADBEEF;
+                CoreEnter(spawned);  // hold core-lock in native
                 try {
                     spawned.RunFrom(spawned.Entrypoint, 0xCAFEBABEDEADBEEF);
                 } catch(Exception e) {
                     e.Log();
                     Environment.Exit(-1);
+                } finally {
+                    CoreExit(spawned);
                 }
             }).Start();
             return 0;

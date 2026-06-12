@@ -41,6 +41,10 @@ public unsafe class GameWrapper {
                 // NativeState's first field = X29; the existing
                 // StackTrace((ulong*)state) reads it as chain root.
                 CondVarKernel.LastFp.Value = (ulong) state;
+                // snapshot for the watchpoint thread (which
+                // can't read ThreadLocal across threads):
+                CondVarKernel.ThreadSnap[Environment.CurrentManagedThreadId]
+                    = ((ulong)state, a, System.Diagnostics.Stopwatch.GetTimestamp());
                 // discriminator: log [TLS+504]→ThreadType*
                 // → [ThreadType+440]=handle once per thread, on
                 // first lock-SVC. ‡-cand(iii) = if two host-threads
@@ -65,6 +69,13 @@ public unsafe class GameWrapper {
                         // This is going to bite us in the ass at some point debugging-wise
                         if(a is not 0x1A and not 0x1B && !(quiet && IsHotSvc(a)))
                             $"Svc 0x{a:X}".Log();
+                        // Release core-lock for the SVC duration =
+                        // the cooperative-yield point. Atmos reschedules
+                        // on SVC-exit; this approximates by letting
+                        // another same-core thread run during our SVC.
+                        var ct = Kernel.ThreadManager.CurrentThread;
+                        ThreadManager.CoreExit(ct);
+                        try {
                         switch(a) {
                             case 0x01:
                                 state->X0 = Callbacks.SetHeapSize(state->X1, ref state->X1);
@@ -449,6 +460,12 @@ public unsafe class GameWrapper {
                                 break;
                             default:
                                 throw new NotImplementedException($"Unsupported SVC: 0x{a:X02}");
+                        }
+                        } finally {
+                            // Reacquire core-lock before
+                            // returning to native. = "rescheduled
+                            // back onto core."
+                            ThreadManager.CoreEnter(ct);
                         }
                         break;
                     case 2: {

@@ -58,6 +58,9 @@ public static unsafe class NvnLinux {
     static H S(ulong h) => St.GetOrAdd(h, _ => new());
 
     // ─── per-name table ───
+    static readonly bool _vattrHook =
+        Environment.GetEnvironmentVariable("UMBRA_VATTR_HOOK") != null;
+
     public static readonly Dictionary<string, nint> Table = new() {
         // — Device / DeviceBuilder — most return void or NVNboolean; 1 is fine
         // except DeviceGetInteger writes an out-param the game reads.
@@ -103,6 +106,20 @@ public static unsafe class NvnLinux {
         // BindTexture(cb, NVNshaderStage stage, int slot, NVNtextureHandle h)
         // GetTextureHandle(dev, int texId, int samplerId) → NVNtextureHandle
         ["nvnCommandBufferBindVertexBuffer"] = (nint)(delegate* unmanaged<ulong, int, ulong, ulong, void>)&CbBindVertexBuffer,
+        ["nvnCommandBufferBindVertexAttribState"] = (nint)(delegate* unmanaged<ulong, int, void*, void>)&CbBindVertexAttribState,
+        ["nvnCommandBufferBindVertexStreamState"] = (nint)(delegate* unmanaged<ulong, int, void*, void>)&CbBindVertexStreamState,
+        // state-builder fns. NVN struct = 4B (CONFIRMED via
+        // a test run raw-dump). v2 packs {off:16,fmt:8,streamIdx:8} into
+        // p[0]. Gated under UMBRA_VATTR_HOOK while testing whether
+        // writing into the game's struct (vs no-op stub) changes
+        // splash→load behavior (= a test run/a test run stuck-at-1-draw vs
+        // pre-a test run/a test run reached title).
+        ["nvnVertexAttribStateSetDefaults"]   = _vattrHook ? (nint)(delegate* unmanaged<int*, void>)&VasSetDefaults : 0,
+        ["nvnVertexAttribStateSetFormat"]     = _vattrHook ? (nint)(delegate* unmanaged<int*, int, long, void>)&VasSetFormat : 0,
+        ["nvnVertexAttribStateSetStreamIndex"]= _vattrHook ? (nint)(delegate* unmanaged<int*, int, void>)&VasSetStreamIndex : 0,
+        ["nvnVertexStreamStateSetDefaults"]   = _vattrHook ? (nint)(delegate* unmanaged<int*, void>)&VssSetDefaults : 0,
+        ["nvnVertexStreamStateSetStride"]     = _vattrHook ? (nint)(delegate* unmanaged<int*, int, void>)&VssSetStride : 0,
+        ["nvnVertexStreamStateSetDivisor"]    = _vattrHook ? (nint)(delegate* unmanaged<int*, int, void>)&VssSetDivisor : 0,
         ["nvnCommandBufferBindUniformBuffer"]= (nint)(delegate* unmanaged<ulong, int, int, ulong, ulong, void>)&CbBindUniformBuffer,
         ["nvnCommandBufferSetViewport"]      = (nint)(delegate* unmanaged<ulong, int, int, int, int, void>)&CbSetViewport,
         ["nvnCommandBufferSetScissor"]       = (nint)(delegate* unmanaged<ulong, int, int, int, int, void>)&CbSetScissor,
@@ -448,12 +465,32 @@ public static unsafe class NvnLinux {
         public int VsShIdx, FsShIdx;
         public int VpX, VpY, VpW, VpH;   // viewport at draw time
         public int ScX, ScY, ScW, ScH;   // scissor at draw time
+        // per-draw vertex layout. Snapshot of the game's
+        // NvnVertexAttribState[] / NvnVertexStreamState[] at
+        // DrawArrays time (= the format/stride/offset per-attr
+        // that T3Pipe needs to build VkVertexInputState).
+        public NvnAttrib[] Attribs;
+        public NvnStream[] Streams;
     }
+
+    // NVN VertexAttribState: built by game via SetDefaults/
+    // SetFormat(p,fmt,off)/SetStreamIndex(p,idx). Layout per
+    // observed call args (SetFormat x1=fmt x2=offset; SetStream
+    // Index x1=idx) + NVN convention = packed {fmt:u32,off:u32,
+    // streamIdx:u32} or similar. ‡ Reading the struct DIRECTLY
+    // at BindVertexAttribState time (= game has already filled
+    // it via the Set* fns we don't hook).
+    // ‡‡ Layout is INFERRED from arg-positions; verify by dumping
+    // raw bytes at first BindVertexAttribState (drop-to-bytes).
+    public record struct NvnAttrib(int StreamIdx, int Format, int Offset);
+    public record struct NvnStream(int Stride, int Divisor);
     public static readonly List<DrawRecord> Draws = new();
     static int _drawN;
 
     // Current bind state per cmdbuf (flat for v0 — only one cmdbuf in use).
     static ulong _curVbGpu, _curVbSize; static int _curVbIdx;
+    static NvnAttrib[] _curAttribs = [];
+    static NvnStream[] _curStreams = [];
     static ulong _curProgram, _curTexHandle; static int _curTexStage, _curTexSlot;
     // UBO per (stage, slot). umbra64: stage=0 slot=2 (64B = one mat4) is
     // the per-draw model matrix (rebinds 300+× — once per draw, ty steps
@@ -503,6 +540,87 @@ public static unsafe class NvnLinux {
     [UnmanagedCallersOnly]
     static void CbBindVertexBuffer(ulong cb, int index, ulong gpuAddr, ulong size) {
         _curVbGpu = gpuAddr; _curVbSize = size; _curVbIdx = index;
+    }
+
+    // NvnVertex*State setters. The struct is opaque-sized;
+    // my v0 wrote 12B/8B and CORRUPTED HEAP (a test run SEGV in
+    // BinUnlink, a test run 0-draws). v1 = TRACK in side-dict keyed
+    // by ptr (= no writes into game memory). BindVertexAttrib
+    // State reads from _attribByPtr instead of the array.
+    // ⚠️ This means BindVertexAttribState's array-walk needs
+    // the stride to compute &attribs[i] — STILL UNKNOWN.
+    // ⟹ v1.5 = stride-from-Δ: at SetDefaults, if the prev
+    // SetDefaults ptr was within ±64B and the delta divides
+    // count, that's the stride. Recorded per-base.
+    // ⟹ ACTUALLY: write SAFELY (≤4B = single u32). Pack
+    // {fmt:8, off:16, streamIdx:4} into ONE u32 at p[0]. The
+    // game's struct is ≥4B (= NVN's smallest opaque type).
+    // ‡‡ If game's struct stride ≠ 4 (likely 8 per NVN convention),
+    // BindVertexAttribState reads p[i*2] = every-other u32.
+    // ⟹ Try BOTH 4B and 8B stride at Bind-time, log which has
+    // sane fmt values.
+    [UnmanagedCallersOnly] static void VasSetDefaults(int* p)
+        { *p = 0; }
+    [UnmanagedCallersOnly] static void VasSetFormat(int* p, int fmt, long off)
+        { *p = (*p & ~0x00ffffff) | ((fmt & 0xff) << 16) | ((int)off & 0xffff); }
+    [UnmanagedCallersOnly] static void VasSetStreamIndex(int* p, int idx)
+        { *p = (*p & 0x00ffffff) | ((idx & 0xff) << 24); }
+    [UnmanagedCallersOnly] static void VssSetDefaults(int* p)
+        { *p = 0; }
+    [UnmanagedCallersOnly] static void VssSetStride(int* p, int s)
+        { *p = (*p & ~0xffff) | (s & 0xffff); }
+    [UnmanagedCallersOnly] static void VssSetDivisor(int* p, int d)
+        { *p = (*p & 0xffff) | (d << 16); }
+
+    [UnmanagedCallersOnly]
+    static void CbBindVertexAttribState(ulong cb, int count, void* states) {
+        // v1.5: setters write a packed u32 at *p.
+        // Stride UNKNOWN (= NVN opaque). Try 4B AND 8B; log
+        // both interpretations. The one with non-zero fmt
+        // values for >1 attrib = correct stride.
+        // v2: NVN VertexAttribState struct = 4 BYTES.
+        // CONFIRMED at-bytes via raw-dump (a test run): 4 packed
+        // u32s contiguous, all 4 attribs populated. My v0
+        // 12B-stride writes were stomping 8B/call → heap
+        // corruption (a test run/a test run BinUnlink segv). v1.5 8B-
+        // stride read skipped every other. v2 = stride 4.
+        var p = (uint*) states;
+        var arr = new NvnAttrib[count];
+        for(var i = 0; i < count; i++) {
+            var v = p[i];  // stride=4B = NVN's actual size
+            arr[i] = new((int)(v >> 24), (int)((v >> 16) & 0xff), (int)(v & 0xffff));
+        }
+        _curAttribs = arr;
+        if(_attribLogN++ < 3) {
+            $"[nvn] BindVertexAttribState count={count}".Log();
+            // Drop-to-bytes: dump raw first 64B + interpreted.
+            var b = (byte*) states;
+            $"[nvn]   raw: {string.Join(" ", Enumerable.Range(0, Math.Min(count*16,64)).Select(j => $"{b[j]:x2}"))}".Log();
+            for(var i = 0; i < Math.Min(count, 8); i++)
+                $"[nvn]   [{i}] streamIdx={arr[i].StreamIdx} fmt=0x{arr[i].Format:x} off={arr[i].Offset}".Log();
+        }
+    }
+    static int _attribLogN, _streamLogN;
+
+    [UnmanagedCallersOnly]
+    static void CbBindVertexStreamState(ulong cb, int count, void* states) {
+        // v2: NVN VertexStreamState = 4B packed (‡ count
+        // always 1 in observed runs so stride untested; using
+        // 4B per AttribState's confirmed-4B convention).
+        var p = (uint*) states;
+        var arr = new NvnStream[count];
+        for(var i = 0; i < count; i++) {
+            var v = p[i];
+            arr[i] = new((int)(v & 0xffff), (int)(v >> 16));
+        }
+        _curStreams = arr;
+        if(_streamLogN++ < 3) {
+            $"[nvn] BindVertexStreamState count={count}".Log();
+            var b = (byte*) states;
+            $"[nvn]   raw: {string.Join(" ", Enumerable.Range(0, Math.Min(count*16,32)).Select(j => $"{b[j]:x2}"))}".Log();
+            for(var i = 0; i < Math.Min(count, 4); i++)
+                $"[nvn]   [{i}] stride={arr[i].Stride} divisor={arr[i].Divisor}".Log();
+        }
     }
     // T3 instrument: track per-stage bound program. NVN
     // BindProgram's `stages` arg = bitmask of NVN_SHADER_STAGE_*
@@ -683,6 +801,7 @@ public static unsafe class NvnLinux {
             FsShIdx = St.TryGetValue(_stagePr[1], out var pfs) ? pfs.ShIdx : 0,
             VpX = _vpX, VpY = _vpY, VpW = _vpW, VpH = _vpH,
             ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
+            Attribs = _curAttribs, Streams = _curStreams,
         };
         lock(Draws) Draws.Add(dr);
         if(n <= 25 || n % 100 == 0) {

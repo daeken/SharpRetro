@@ -245,6 +245,71 @@ public static unsafe class NvnVulkan {
         public uint stage; public ulong module; public byte* pName;
         public void* pSpecializationInfo;
     }
+    // ── (x) NVNformat → VkFormat (vertex-attrib formats) ────────────
+    // NVN's format enum is undocumented; values inferred per-observed
+    // (= known stride+offset of menu's 4-attr layout → which
+    // VkFormat fits the slot). The texture-format space (0x25/0x42/
+    // 0x44) is in NvnLinux.Fmt(); vertex formats are a different sub-
+    // range (0x2N = 32-bit-component family per spacing).
+    //
+    // GROUND TRUTH (menu, stride=36, renders 90788nz correct):
+    //   loc0 @0  pos     12B → R32G32B32_SFLOAT  (= NVN ‡0x2f? not seen)
+    //   loc1 @12 color    4B → R8G8B8A8_UNORM    (= NVN ‡0x25? = RGBA8)
+    //   loc2 @20 uv       8B → R32G32_SFLOAT     (= NVN 0x2e CONFIRMED)
+    //   loc3 @28 extra    8B → R32G32_SFLOAT     (= NVN ‡)
+    //
+    // ⟹ 0x2e = R32G32_SFLOAT (8B). Inferred adjacents:
+    //   0x2d = R32_SFLOAT? (4B)
+    //   0x2f = R32G32B32_SFLOAT? (12B)
+    //   0x30 = R32G32B32A32_SFLOAT? (16B)
+    // ‡ Pattern matches NVN's "components-grow-by-1 = enum+1" convention
+    // observed in tex formats (0x42-0x47 = BC1-BC6).
+    //
+    // 0x22 (seen in SetFormat#1, NOT in menu's bound array) — ‡‡.
+    // 0x29 (21 instances) — adjacent to 0x25=RGBA8, ‡ = RGBA8_SRGB
+    // (texture fmt; not vertex). 0x11/0x12 = R8/RG8.
+    //
+    // ⚠️ THROW on unknown (silent-fallthrough hides type-misses
+    // as wrong-render not error). The exception-text IS the format
+    // discriminator for the next iteration.
+    // Values verified via menu's 4-attr ground-truth (a test run raw-
+    // dump; stride=36, render 90788nz correct with hardcoded
+    // VkFormats below = the same fmts now derived from this
+    // table = §5-self-check):
+    //   0x22 @0  =12B → R32G32B32_SFLOAT (pos)        ✓
+    //   0x25 @12 = 4B → R8G8B8A8_UNORM   (color)       ✓
+    //   0x25 @16 = 4B → R8G8B8A8_UNORM   (color2)      ✓
+    //   0x2e @20 = 8B → R32G32_SFLOAT    (uv)          ✓
+    static (uint VkFmt, int Bytes) NvnVtxFmt(int nvn) => nvn switch {
+        // ── R8 family (single-byte components) ────────────────
+        0x11 => (  9,  1),  // R8_UNORM                       ‡
+        0x12 => ( 16,  2),  // R8G8_UNORM                     ‡
+        // ── float×N (R32) family ───────────────────────────────
+        // 0x22 = float×3 CONFIRMED (menu pos@0, 12B). Adjacents
+        // ‡-inferred by enum±1 = component±1 pattern.
+        0x20 => (100,  4),  // R32_SFLOAT                     ‡
+        0x21 => (103,  8),  // R32G32_SFLOAT                  ‡
+        0x22 => (106, 12),  // R32G32B32_SFLOAT       ✓ menu pos
+        0x23 => (109, 16),  // R32G32B32A32_SFLOAT            ‡
+        // ── RGBA8 family ───────────────────────────────────────
+        0x25 => ( 37,  4),  // R8G8B8A8_UNORM         ✓ menu color
+        0x29 => ( 43,  4),  // R8G8B8A8_SRGB                  ‡ (tex)
+        // ── R32G32 (= 8B; 0x2e was the SAME as 0x21? — no:
+        // both seen distinctly; 0x2e@off=20 is the menu's uv,
+        // 8B confirmed. ⟹ NVN may have 0x21=R32G32_UINT and
+        // 0x2e=R32G32_SFLOAT, OR a stride-N gap in the enum.
+        // Treating both as RG32_SFLOAT until disambiguated.) ──
+        0x2e => (103,  8),  // R32G32_SFLOAT          ✓ menu uv
+        // ── R16 half-float family ──────────────────────────────
+        0x34 => ( 97,  8),  // R16G16B16A16_SFLOAT            ‡‡
+        // 0 = unset (no SetFormat called for this slot). Caller
+        // SKIPS — fmt 0 isn't a real attr.
+        0x00 => (  0,  0),
+        _ => throw new NotSupportedException(
+            $"NvnVtxFmt: unknown NVN vertex format 0x{nvn:x} — add to table " +
+            $"(method: known stride+offsets → byte-size → infer VkFormat)"),
+    };
+
     [StructLayout(LayoutKind.Sequential)] struct VkVertexInputBindingDescription {
         public uint binding, stride, inputRate;
     }
@@ -435,7 +500,17 @@ public static unsafe class NvnVulkan {
     // ── T3 T3 state ──
     static ulong _t3Pipeline, _t3PipelineLayout;
     static string _t3ShDir;
-    static readonly Dictionary<(int vs, int fs), ulong> _t3Pipes = new();
+    // -2: cache key = (vs, fs, attrib-layout-hash).
+    // Same vs/fs pair with different vertex-layout = different
+    // pipeline (= the format/offset is baked into VkPipeline).
+    static readonly Dictionary<(int vs, int fs, int vh), ulong> _t3Pipes = new();
+    static int VtxHash(NvnLinux.NvnAttrib[] a, NvnLinux.NvnStream[] s) {
+        // Cheap structural hash. Order matters (= location N).
+        int h = (a?.Length ?? 0) | ((s?.Length ?? 0) << 8);
+        if(a != null) foreach(var x in a) h = h*31 + (x.Format << 16 | x.Offset);
+        if(s != null) foreach(var x in s) h = h*31 + (x.Stride | x.Divisor << 16);
+        return h;
+    }
 
     static ulong LoadShader(string path) {
         if(!File.Exists(path)) return 0;
@@ -457,35 +532,70 @@ public static unsafe class NvnVulkan {
     // + fixed-state differ. ‡ v1: vertex-layout = the menu's
     // 36B 4-attr (most title-screen draws use different stride
     // → wrong vbuf decode → garbage geometry; per-pair vertex-
-    // layout = (k2)). Returns 0 if .spv missing.
-    static ulong T3Pipe(int vsIdx, int fsIdx) {
-        if(_t3Pipes.TryGetValue((vsIdx, fsIdx), out var p)) return p;
+    // layout = ). Returns 0 if .spv missing.
+    static ulong T3Pipe(int vsIdx, int fsIdx,
+                        NvnLinux.NvnAttrib[] nA, NvnLinux.NvnStream[] nS) {
+        var vh = VtxHash(nA, nS);
+        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh), out var p)) return p;
         var vsm = LoadShader($"{_t3ShDir}/sh{vsIdx:d4}-t1.bin.spv");
         var fsm = LoadShader($"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
         if(vsm == 0 || fsm == 0) {
-            if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx}): .spv missing → skip".Log();
-            _t3Pipes[(vsIdx, fsIdx)] = 0;
+            if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
+            _t3Pipes[(vsIdx, fsIdx, vh)] = 0;
             return 0;
         }
         var entryName = stackalloc byte[8]; "main\0"u8.CopyTo(new Span<byte>(entryName, 8));
         var stages = stackalloc VkPipelineShaderStageCreateInfo[2];
         stages[0] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI, stage = 0x1, module = vsm, pName = entryName };
         stages[1] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI, stage = 0x10, module = fsm, pName = entryName };
-        // ‡ v1: hardcoded 36B 4-attr layout (= the menu's). Most
-        // title-screen pairs use different stride → wrong vbuf
-        // decode. Per-pair = (k2). The shaders themselves declare
-        // their inputs at fixed Locations 0-3 so the FORMATS at
-        // least match (SpirvEmit puts attr@N at Loc N consistently).
-        var binding = new VkVertexInputBindingDescription { binding = 0, stride = 36, inputRate = 0 };
-        var attrs = stackalloc VkVertexInputAttributeDescription[4];
-        attrs[0] = new() { location = 0, binding = 0, format = 106, offset = 0 };
-        attrs[1] = new() { location = 1, binding = 0, format = 37,  offset = 12 };
-        attrs[2] = new() { location = 2, binding = 0, format = 37,  offset = 16 };
-        attrs[3] = new() { location = 3, binding = 0, format = 103, offset = 20 };
+        // -2: build VkVertexInputState from the per-draw
+        // captured Attribs/Streams. Falls back to v1's hardcoded
+        // 36B/4-attr if nA/nS empty (= UMBRA_VATTR_HOOK off OR
+        // game hasn't bound vertex state yet).
+        // SpirvEmit puts attr-space[0x80+N*0x10] → in_N (Loc N),
+        // so location = NVN attrib index = array position. ‡
+        // Multi-stream (binding>0) untested (game uses 1 stream
+        // for menu; title may differ).
+        var nAttr = nA?.Count(a => a.Format != 0) ?? 0;
+        var nStr  = nS?.Length ?? 0;
+        VkVertexInputBindingDescription* bindP;
+        VkVertexInputAttributeDescription* attrP;
+        int bindN, attrN;
+        if(nAttr > 0 && nStr > 0) {
+            var binds = stackalloc VkVertexInputBindingDescription[nStr];
+            for(var i = 0; i < nStr; i++)
+                binds[i] = new() {
+                    binding = (uint)i, stride = (uint)nS[i].Stride,
+                    inputRate = nS[i].Divisor > 0 ? 1u : 0u,
+                };
+            var attrs = stackalloc VkVertexInputAttributeDescription[nA.Length];
+            int j = 0;
+            for(var i = 0; i < nA.Length; i++) {
+                var (vf, _) = NvnVtxFmt(nA[i].Format);
+                if(vf == 0) continue;  // unset slot
+                attrs[j++] = new() {
+                    location = (uint)i, binding = (uint)nA[i].StreamIdx,
+                    format = vf, offset = (uint)nA[i].Offset,
+                };
+            }
+            bindP = binds; bindN = nStr;
+            attrP = attrs; attrN = j;
+            $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): {attrN}attr/{bindN}bind str={nS[0].Stride} [{string.Join(",", nA.Take(attrN).Select(a => $"L{Array.IndexOf(nA,a)}:0x{a.Format:x}@{a.Offset}"))}]".Log();
+        } else {
+            // v1 fallback: hardcoded menu layout.
+            var binding = stackalloc VkVertexInputBindingDescription[1];
+            binding[0] = new() { binding = 0, stride = 36, inputRate = 0 };
+            var attrs = stackalloc VkVertexInputAttributeDescription[4];
+            attrs[0] = new() { location = 0, binding = 0, format = 106, offset = 0 };
+            attrs[1] = new() { location = 1, binding = 0, format = 37,  offset = 12 };
+            attrs[2] = new() { location = 2, binding = 0, format = 37,  offset = 16 };
+            attrs[3] = new() { location = 3, binding = 0, format = 103, offset = 20 };
+            bindP = binding; bindN = 1; attrP = attrs; attrN = 4;
+        }
         var vi = new VkPipelineVertexInputStateCreateInfo {
             sType = ST_PIPELINE_VERTEX_INPUT_CI,
-            bindingCount = 1, pBindings = &binding,
-            attributeCount = 4, pAttributes = attrs,
+            bindingCount = (uint)bindN, pBindings = bindP,
+            attributeCount = (uint)attrN, pAttributes = attrP,
         };
         var ia = new VkPipelineInputAssemblyStateCreateInfo {
             sType = ST_PIPELINE_INPUT_ASM_CI, topology = 3,
@@ -531,7 +641,7 @@ public static unsafe class NvnVulkan {
         } else {
             $"[vk] T3Pipe({vsIdx},{fsIdx}) built → 0x{pipe:x}".Log();
         }
-        _t3Pipes[(vsIdx, fsIdx)] = pipe;
+        _t3Pipes[(vsIdx, fsIdx, vh)] = pipe;
         return pipe;
     }
     static ulong _t3DslCbuf, _t3DslTex, _t3DsPool;
@@ -976,6 +1086,7 @@ public static unsafe class NvnVulkan {
         // about it from outside, dump from inside).
         if(Environment.GetEnvironmentVariable("UMBRA_WATCHDOG") != null)
             new Thread(Watchdog) { IsBackground = true, Name = "umbra-wd" }.Start();
+        CondVarKernel.StartWatchpoint();  // UMBRA_WATCHPOINT_M1
         return true;
     }
 
@@ -1140,7 +1251,7 @@ public static unsafe class NvnVulkan {
                 // v1.0: per-draw pipeline lookup (build-on-miss).
                 // Returns 0 if .spv missing → skip this draw
                 // (rather than render through wrong shaders).
-                var pipe = T3Pipe(d.VsShIdx, d.FsShIdx);
+                var pipe = T3Pipe(d.VsShIdx, d.FsShIdx, d.Attribs, d.Streams);
                 if(pipe == 0) continue;
                 if(pipe != curPipe) {
                     vkCmdBindPipeline(_cmdBuf, 0, pipe);
@@ -1254,6 +1365,19 @@ public static unsafe class NvnVulkan {
     static int _lastDrawN, _drawFrameN;
     static int _dumpedWithDraws;
 
+    // (r) Present-rate throttle. UMBRA_QUIET removed the per-SVC
+    // backtrace cost → Present-spin at ~1500fps → bg-load thread
+    // (NuBgProcManager, h1f) starves → splash never finishes load
+    // (a test run: 201/573 GAME.DAT reads vs a test run @335fps). UMBRA_FPS_CAP
+    // = N → spin-wait until ≥1000/N ms since last Present. Spin
+    // (not Sleep) so wall-clock-gated game logic still sees real
+    // time pass; the spin yields CPU via Thread.Yield() so bg-
+    // threads run.
+    static readonly int _fpsCapUs = int.TryParse(
+        Environment.GetEnvironmentVariable("UMBRA_FPS_CAP"), out var fc) && fc > 0
+            ? 1_000_000 / fc : 0;
+    static long _lastPresentTick;
+
     // Present-watchdog: polls every 1s; if _frameN hasn't moved
     // for >5s, dump CondVarKernel state. = the instrument
     // for the cv-race hang (A/B runs/A/B runs all-threads-futex_wait).
@@ -1262,6 +1386,10 @@ public static unsafe class NvnVulkan {
         while(true) {
             Thread.Sleep(1000);
             if(_frameN == last) {
+                if(stuck == 4 && CondVarKernel.ForceBreak()) {
+                    $"[wd] force-broke @ frame {_frameN}; resuming".Log();
+                    stuck = 0; continue;
+                }
                 if(++stuck == 5 || (stuck > 5 && stuck % 30 == 0)) {
                     $"[wd] STALL: Present stuck {stuck}s @ frame {_frameN}".Log();
                     CondVarKernel.DumpState($"wd-{stuck}s");
@@ -1430,6 +1558,22 @@ public static unsafe class NvnVulkan {
     // lavapipe. v0.5 = vkCmdClearColorImage with the game's clear color
     // (recorded by NvnLinux at nvnCommandBufferClearColor) → readback.
     public static void Present(ulong window, int texIdx) {
+        // (r) fps-cap: yield-spin until min frame interval. The
+        // yield is the load-bearing part (= bg-load thread runs
+        // while nnMain idles here, instead of nnMain spinning
+        // Present at 1500fps and starving the loader). See the
+        // _fpsCapUs comment for the a test run-vs-a test run mechanism.
+        if(_fpsCapUs > 0) {
+            // v1 spin+Yield was too expensive (a test run=7fps; ~3300
+            // Yield()s/frame × 10+ runnable threads = 3300 ctx
+            // switches). v2 = compute ms-to-sleep, Sleep once.
+            var freq = System.Diagnostics.Stopwatch.Frequency;
+            var now = System.Diagnostics.Stopwatch.GetTimestamp();
+            var elapsedUs = (now - _lastPresentTick) * 1_000_000 / freq;
+            var waitUs = _fpsCapUs - elapsedUs;
+            if(waitUs > 0) Thread.Sleep((int)(waitUs / 1000));
+            _lastPresentTick = System.Diagnostics.Stopwatch.GetTimestamp();
+        }
         var n = ++_frameN;
         // Per-frame HID pump (writes Npad ring entries into the
         // shared-memory the game's nn::hid SDK reads). Driven by

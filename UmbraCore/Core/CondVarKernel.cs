@@ -47,6 +47,63 @@ public static unsafe class CondVarKernel {
     // blocked Waiters' .Fp → Kernel.StackTrace → which game fns
     // are on stack at deadlock-time. = instrument.
     public static readonly ThreadLocal<ulong> LastFp = new();
+
+    // per-thread last-SVC-entry snapshot, readable from
+    // watchpoint thread. mtid → (fp at SVC entry, svc#, ts).
+    public static readonly System.Collections.Concurrent
+        .ConcurrentDictionary<int, (ulong Fp, ulong Svc, long Ts)>
+        ThreadSnap = new();
+
+    // watchpoint: poll *M1/*M2 at ~50μs; log every value-
+    // CHANGE with timestamp + ALL threads' last-SVC snapshot.
+    // Answers: "WHO wrote h1f's handle into M1.tag, WHEN, what
+    // was each thread doing." Started by NvnVulkan watchdog
+    // when UMBRA_WATCHPOINT_M1 set. M1/M2 addrs are run-stable
+    // (.bss/heap deterministic with setarch -R).
+    static volatile bool _wpRunning;
+    public static void StartWatchpoint() {
+        if(_wpRunning || Environment.GetEnvironmentVariable("UMBRA_WATCHPOINT_M1") == null)
+            return;
+        _wpRunning = true;
+        new Thread(() => {
+            // M1 = NuMemoryPool::m_globalCriticalSectionBuff +0x?
+            // M2 = heap LCM cs. Both deterministic addrs (-R).
+            var m1 = (uint*)0xfff5b44815b8UL;
+            var m2 = (uint*)0xfff563b23058UL;
+            uint p1 = 0, p2 = 0;
+            int n = 0;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            // Wait until the game's done init (= M1/M2 addrs are
+            // mapped). M1 is in .bss (mapped at module-load), M2 is
+            // heap-alloc'd later. Trigger = first ArbitrateLock SVC
+            // (= 0x1A) on M1 → both addrs are valid.
+            while(ThreadSnap.IsEmpty) Thread.Sleep(50);
+            // …then probe-deref via mincore-style: try-catch the
+            // first read; if SEGV, we're too early. Actually: M2
+            // is heap; spin until first cv-Wait fires (= _cv non-
+            // empty) which guarantees both addrs alive.
+            while(_mtx.Count == 0) Thread.Sleep(10);
+            Thread.Sleep(100);  // let heap-allocs settle
+            $"[wp] watchpoint armed; m1={(ulong)m1:x} m2={(ulong)m2:x}".Log();
+            while(_wpRunning) {
+                var v1 = *m1; var v2 = *m2;
+                if(v1 != p1 || v2 != p2) {
+                    var ts = sw.ElapsedTicks;
+                    // Compact: which threads were in-SVC ≤1ms ago
+                    // (= candidates for who-just-wrote). Show the
+                    // game-fp for each so we can symbolicate.
+                    var snaps = ThreadSnap
+                        .Select(kv => $"t{kv.Key}@svc{kv.Value.Svc:x}:fp={kv.Value.Fp:x}({ts-kv.Value.Ts}t-ago)")
+                        .Take(20);
+                    $"[wp] #{n++} {ts}t M1={v1:x}{(v1!=p1?"*":"")} M2={v2:x}{(v2!=p2?"*":"")} | {string.Join(" ",snaps)}".Log();
+                    p1 = v1; p2 = v2;
+                }
+                // ~50μs poll. SpinWait gives ~ns-resolution but
+                // burns a core; Sleep(0) yields. Mix:
+                Thread.SpinWait(100);
+            }
+        }) { IsBackground = true, Name = "wp" }.Start();
+    }
     public static readonly ThreadLocal<int> _tlsLogged = new();
 
     // ── Trace ring (UMBRA_WATCHDOG): last N lock/unlock/wait/
@@ -168,14 +225,47 @@ public static unsafe class CondVarKernel {
     // Caller holds _schedLock. Hands the mutex at addr to the next waiter
     // (writes their handle to *addr, sets WaitMask if more remain, wakes
     // them) or writes 0 if no waiters.
+    // ⚠️ The *addr write here is OK to be non-atomic — the caller
+    // (ArbitrateUnlock or Wait's release) is the OWNER releasing; no other
+    // userland thread can fast-path-acquire while *addr still has owner's
+    // handle (their CAS(0→…) fails). This write transitions owner→next
+    // atomically wrt userland's CAS-loop (single 32-bit store IS atomic
+    // on aarch64; the race was the load+test+write SEQUENCE in Signal).
     static void ReleaseMutexLocked(ulong addr) {
         if(_mtx.TryGetValue(addr, out var list) && list.First is { } node) {
             list.RemoveFirst();
             var next = node.Value;
-            *(uint*) addr = next.Handle | (list.Count > 0 ? WaitMask : 0);
+            Volatile.Write(ref *(uint*) addr,
+                next.Handle | (list.Count > 0 ? WaitMask : 0));
             next.Ev.Set();
         } else {
-            *(uint*) addr = 0;
+            Volatile.Write(ref *(uint*) addr, 0);
+        }
+    }
+
+    // (q-bypass) Watchdog-only deadlock force-break. The (q)
+    // CONTRADICTION (h1f M1.nest=1+owner=h1f BUT no M1-frame on
+    // stack) says h1f doesn't actually hold M1 → safe to break.
+    // If wrong (= h1f genuinely holds M1), this corrupts shared
+    // state and the game crashes shortly after = a STRONGER
+    // discriminator than the stack-walk. UMBRA_BREAK_DEADLOCK env.
+    public static bool ForceBreak() {
+        if(Environment.GetEnvironmentVariable("UMBRA_BREAK_DEADLOCK") == null)
+            return false;
+        lock(_schedLock) {
+            var any = false;
+            foreach(var (a, l) in _mtx.ToList())
+                while(l.First is { } node) {
+                    l.RemoveFirst();
+                    var w = node.Value;
+                    $"[cvk] FORCE-BREAK mtx@{a:x}: handing to h{w.Handle:x} (was *={*(uint*)a:x})".Log();
+                    Volatile.Write(ref *(uint*) a,
+                        w.Handle | (l.Count > 0 ? WaitMask : 0));
+                    w.Ev.Set();
+                    any = true;
+                    break;  // hand to ONE waiter per mutex (= ReleaseMutexLocked semantics)
+                }
+            return any;
         }
     }
 
@@ -240,21 +330,39 @@ public static unsafe class CondVarKernel {
                 list.RemoveFirst();
                 var w = node.Value;
                 n++;
-                // Try to hand the mutex at w.MutexAddr to w. Atmosphere does
-                // UpdateLockAtomic (CAS 0→handle, else OR-in WaitMask).
-                var prev = *(uint*) w.MutexAddr;
-                if((prev & ~WaitMask) == 0) {
-                    // Mutex free → w owns it now.
-                    *(uint*) w.MutexAddr = w.Handle | (prev & WaitMask)
-                        | (Mtx(w.MutexAddr).Count > 0 ? WaitMask : 0);
-                    w.Ev.Set();
+                // Try to hand the mutex at w.MutexAddr to w. Atmosphere
+                // KCV::Signal does UpdateLockAtomic = CAS(0→handle); on
+                // CAS-fail (= someone else fast-path-acquired between
+                // signaller's load and this CAS), retry-loop OR-in
+                // WaitMask (also CAS) and add w to owner's waiter list.
+                // v0 was non-atomic load+test+write; the then-
+                // branch race = userland CAS(0→theirHandle) between
+                // my load and write → my write OVERWRITES their handle
+                // → both threads' nn::os layer thinks they own it →
+                // EXACTLY the (q) CONTRADICTION signature (h1f's
+                // M1.nest=1+owner=h1f with no M1-frame on stack).
+                ref var tag = ref *(uint*) w.MutexAddr;
+                var more = Mtx(w.MutexAddr).Count > 0 ? WaitMask : 0;
+                // CAS-loop: try 0→w.Handle|more; on fail, OR-in WaitMask
+                // (also CAS-loop) and enqueue. = Atmosphere's exact loop.
+                var prev = Interlocked.CompareExchange(
+                    ref tag, w.Handle | more, 0);
+                if(prev == 0) {
+                    w.Ev.Set();  // mutex was free; w owns it.
+                } else if((prev & ~WaitMask) == 0) {
+                    // prev=WaitMask only (= just-released-with-waiters,
+                    // shouldn't happen since release writes next.Handle
+                    // OR 0). Retry once with WaitMask|w.Handle.
+                    if(Interlocked.CompareExchange(
+                        ref tag, w.Handle | WaitMask, prev) == prev) {
+                        w.Ev.Set();
+                    } else {
+                        Interlocked.Or(ref tag, WaitMask);
+                        Mtx(w.MutexAddr).AddLast(w);
+                    }
                 } else {
-                    // Mutex held → w joins that mutex's waiter list.
-                    // Atmosphere does CAS-OR for the WaitMask write
-                    // (UpdateLockAtomic); a plain RMW races the owner's
-                    // native stlxr-0 in ICS::Leave (= same race as
-                    // ArbitrateLock above). Use Interlocked.Or = atomic.
-                    Interlocked.Or(ref *(uint*) w.MutexAddr, WaitMask);
+                    // Held by someone. OR-WaitMask (atomic) + enqueue.
+                    Interlocked.Or(ref tag, WaitMask);
                     Mtx(w.MutexAddr).AddLast(w);
                 }
             }
