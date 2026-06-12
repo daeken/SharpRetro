@@ -34,18 +34,20 @@ public struct UpdateDataHeader {
 public partial class IAudioRenderer {
     protected override KObject QuerySystemEvent() => new Event(alwaysTriggered: true);
     protected override void RequestUpdateAudioRenderer(Span<byte> input, Span<byte> output, Span<byte> performance) {
-        "IAudioRenderer.RequestUpdateAudioRenderer hit".Log();
         ref var iheader = ref MemoryMarshal.Cast<byte, UpdateDataHeader>(input)[0];
-        $"IAudioRenderer using revision {iheader.Revision}!".Log();
-        $"BehaviourSize: 0x{iheader.BehaviourSize:X}".Log();
-        $"MemoryPoolsSize: 0x{iheader.MemoryPoolsSize:X}".Log();
-        $"VoicesSize: 0x{iheader.VoicesSize:X}".Log();
-        $"VoiceResourcesSize: 0x{iheader.VoiceResourcesSize:X}".Log();
-        $"EffectsSize: 0x{iheader.EffectsSize:X}".Log();
-        $"MixesSize: 0x{iheader.MixesSize:X}".Log();
-        $"SinksSize: 0x{iheader.SinksSize:X}".Log();
-        $"PerformanceBufferSize: 0x{iheader.PerformanceBufferSize:X}".Log();
-        $"RenderInfoSize: 0x{iheader.RenderInfoSize:X}".Log();
+        if(!L.Quiet) {
+            "IAudioRenderer.RequestUpdateAudioRenderer hit".Log();
+            $"IAudioRenderer using revision {iheader.Revision}!".Log();
+            $"BehaviourSize: 0x{iheader.BehaviourSize:X}".Log();
+            $"MemoryPoolsSize: 0x{iheader.MemoryPoolsSize:X}".Log();
+            $"VoicesSize: 0x{iheader.VoicesSize:X}".Log();
+            $"VoiceResourcesSize: 0x{iheader.VoiceResourcesSize:X}".Log();
+            $"EffectsSize: 0x{iheader.EffectsSize:X}".Log();
+            $"MixesSize: 0x{iheader.MixesSize:X}".Log();
+            $"SinksSize: 0x{iheader.SinksSize:X}".Log();
+            $"PerformanceBufferSize: 0x{iheader.PerformanceBufferSize:X}".Log();
+            $"RenderInfoSize: 0x{iheader.RenderInfoSize:X}".Log();
+        }
         ref var oheader = ref MemoryMarshal.Cast<byte, UpdateDataHeader>(output)[0];
         oheader.RevisionFourCC = iheader.RevisionFourCC;
         oheader.BehaviourSize =

@@ -21,12 +21,41 @@ public unsafe class GameWrapper {
 		_Setup = Marshal.GetDelegateForFunctionPointer<SetupDelegate>(NativeLibrary.GetExport(lib, "setup"));
 		_RunFrom = Marshal.GetDelegateForFunctionPointer<RunFromDelegate>(NativeLibrary.GetExport(lib, "runFrom"));
 
+        // UMBRA_QUIET: suppress per-SVC reentry log + backtrace for
+        // the high-frequency SVCs (~13K/run; backtrace walks 188K
+        // syms each = the perf killer). Under quiet, also suppress
+        // 0x21 reentry-log (IpcManager logs the IPC details itself
+        // when not-quiet; the reentry+Svc lines are redundant).
+        var quiet = L.Quiet;
+        bool IsHotSvc(ulong sv) =>
+            sv is 0x0B or 0x0C or 0x0D or 0x0E   // SleepThread + thread prio/core
+              or 0x18 or 0x19 or 0x1A or 0x1B    // WaitSync/CancelSync/Lock/Unlock
+              or 0x1C or 0x1D                    // WaitProcessWideKey/Signal
+              or 0x1E or 0x32 or 0x34            // GetSystemTick/threadctx/wait-addr
+              or 0x21 or 0x16 or 0x17 or 0x12    // SendSyncRequest/Close/Reset/ClearEvent
+              or 0x44;                           // ReplyAndReceive (IPC server side)
         Callbacks.NativeReentry = (state, op, a, b, replAddr) => {
             try {
-                if(op != 3 && !(op == 1 && a is 0x1A or 0x1B)) {
+                // capture X29 at SVC entry so blocked-
+                // Waiters' game-stacks can be dumped from watchdog.
+                // NativeState's first field = X29; the existing
+                // StackTrace((ulong*)state) reads it as chain root.
+                CondVarKernel.LastFp.Value = (ulong) state;
+                // discriminator: log [TLS+504]→ThreadType*
+                // → [ThreadType+440]=handle once per thread, on
+                // first lock-SVC. ‡-cand(iii) = if two host-threads
+                // see the SAME ThreadType*, that's the bug.
+                if(op == 1 && a == 0x1A && CondVarKernel._tlsLogged.Value == 0) {
+                    CondVarKernel._tlsLogged.Value = 1;
+                    var tls = (ulong) Kernel.ThreadManager.CurrentThread.TlsBase;
+                    var tt = *(ulong*)(tls + 504);
+                    var hdl = tt != 0 ? *(uint*)(tt + 440) : 0;
+                    $"[q3] mtid={Environment.CurrentManagedThreadId} tls={tls:x} *(tls+504)={tt:x} *(.+440)={hdl:x}".Log();
+                }
+                if(op != 3 && !(op == 1 && (a is 0x1A or 0x1B || (quiet && IsHotSvc(a))))) {
                     Log(() => {
                         $"Native reentry (thread {Kernel.ThreadManager.CurrentThread.Handle:X}) from {0x71_00000000 + replAddr:X} ({op})".Log();
-                        Kernel.StackTrace((ulong*) state);
+                        if(!quiet) Kernel.StackTrace((ulong*) state);
                     });
                 }
                 switch(op) {
@@ -34,7 +63,7 @@ public unsafe class GameWrapper {
                         throw new NotImplementedException($"Brk? 0x{a:X}");
                     case 1:
                         // This is going to bite us in the ass at some point debugging-wise
-                        if(a is not 0x1A and not 0x1B)
+                        if(a is not 0x1A and not 0x1B && !(quiet && IsHotSvc(a)))
                             $"Svc 0x{a:X}".Log();
                         switch(a) {
                             case 0x01:

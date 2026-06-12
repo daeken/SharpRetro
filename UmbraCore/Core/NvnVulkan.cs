@@ -434,11 +434,111 @@ public static unsafe class NvnVulkan {
     static ulong _atlasImg, _atlasMem, _atlasView;
     // ── T3 T3 state ──
     static ulong _t3Pipeline, _t3PipelineLayout;
+    static string _t3ShDir;
+    static readonly Dictionary<(int vs, int fs), ulong> _t3Pipes = new();
+
+    static ulong LoadShader(string path) {
+        if(!File.Exists(path)) return 0;
+        var bytes = File.ReadAllBytes(path);
+        fixed(byte* p = bytes) {
+            var ci = new VkShaderModuleCreateInfo {
+                sType = ST_SHADER_MODULE_CI,
+                codeSize = (nuint) bytes.Length, pCode = (uint*) p,
+            };
+            ulong sm; Chk(vkCreateShaderModule(_dev, &ci, null, &sm), $"vkCreateShaderModule({path})");
+            return sm;
+        }
+    }
+
+    // T3 v1.0: build (or fetch cached) pipeline for a (vs#, fs#)
+    // pair. The DSLs/layout/cbuf-buffers/desc-sets are SHARED
+    // (built once in InitPipeline; SpirvEmit's interface contract
+    // is identical across all shaders). Only the shader modules
+    // + fixed-state differ. ‡ v1: vertex-layout = the menu's
+    // 36B 4-attr (most title-screen draws use different stride
+    // → wrong vbuf decode → garbage geometry; per-pair vertex-
+    // layout = (k2)). Returns 0 if .spv missing.
+    static ulong T3Pipe(int vsIdx, int fsIdx) {
+        if(_t3Pipes.TryGetValue((vsIdx, fsIdx), out var p)) return p;
+        var vsm = LoadShader($"{_t3ShDir}/sh{vsIdx:d4}-t1.bin.spv");
+        var fsm = LoadShader($"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
+        if(vsm == 0 || fsm == 0) {
+            if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx}): .spv missing → skip".Log();
+            _t3Pipes[(vsIdx, fsIdx)] = 0;
+            return 0;
+        }
+        var entryName = stackalloc byte[8]; "main\0"u8.CopyTo(new Span<byte>(entryName, 8));
+        var stages = stackalloc VkPipelineShaderStageCreateInfo[2];
+        stages[0] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI, stage = 0x1, module = vsm, pName = entryName };
+        stages[1] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI, stage = 0x10, module = fsm, pName = entryName };
+        // ‡ v1: hardcoded 36B 4-attr layout (= the menu's). Most
+        // title-screen pairs use different stride → wrong vbuf
+        // decode. Per-pair = (k2). The shaders themselves declare
+        // their inputs at fixed Locations 0-3 so the FORMATS at
+        // least match (SpirvEmit puts attr@N at Loc N consistently).
+        var binding = new VkVertexInputBindingDescription { binding = 0, stride = 36, inputRate = 0 };
+        var attrs = stackalloc VkVertexInputAttributeDescription[4];
+        attrs[0] = new() { location = 0, binding = 0, format = 106, offset = 0 };
+        attrs[1] = new() { location = 1, binding = 0, format = 37,  offset = 12 };
+        attrs[2] = new() { location = 2, binding = 0, format = 37,  offset = 16 };
+        attrs[3] = new() { location = 3, binding = 0, format = 103, offset = 20 };
+        var vi = new VkPipelineVertexInputStateCreateInfo {
+            sType = ST_PIPELINE_VERTEX_INPUT_CI,
+            bindingCount = 1, pBindings = &binding,
+            attributeCount = 4, pAttributes = attrs,
+        };
+        var ia = new VkPipelineInputAssemblyStateCreateInfo {
+            sType = ST_PIPELINE_INPUT_ASM_CI, topology = 3,
+        };
+        // y-flipped (NVN y-up → Vulkan y-down).
+        var vp = new VkViewport { x = 0, y = H, width = W, height = -H, minDepth = 0, maxDepth = 1 };
+        var sc = new VkRect2D { x = 0, y = 0, width = W, height = H };
+        var vps = new VkPipelineViewportStateCreateInfo {
+            sType = ST_PIPELINE_VIEWPORT_CI,
+            viewportCount = 1, pViewports = &vp,
+            scissorCount = 1, pScissors = &sc,
+        };
+        var rs = new VkPipelineRasterizationStateCreateInfo {
+            sType = ST_PIPELINE_RASTER_CI,
+            polygonMode = 0, cullMode = 0, frontFace = 0, lineWidth = 1.0f,
+        };
+        var ms = new VkPipelineMultisampleStateCreateInfo {
+            sType = ST_PIPELINE_MULTISAMPLE_CI, rasterizationSamples = 1,
+        };
+        var cbAtt = new VkPipelineColorBlendAttachmentState {
+            blendEnable = 1, colorWriteMask = 0xf,
+            srcColorBF = 6, dstColorBF = 7, colorBlendOp = 0,
+            srcAlphaBF = 1, dstAlphaBF = 7, alphaBlendOp = 0,
+        };
+        var cbs = new VkPipelineColorBlendStateCreateInfo {
+            sType = ST_PIPELINE_COLOR_BLEND_CI,
+            attachmentCount = 1, pAttachments = &cbAtt,
+        };
+        var gpci = new VkGraphicsPipelineCreateInfo {
+            sType = ST_GRAPHICS_PIPELINE_CI,
+            stageCount = 2, pStages = stages,
+            pVertexInputState = &vi, pInputAssemblyState = &ia,
+            pViewportState = &vps, pRasterizationState = &rs,
+            pMultisampleState = &ms, pColorBlendState = &cbs,
+            layout = _t3PipelineLayout, renderPass = _renderPass,
+            subpass = 0, basePipelineIndex = -1,
+        };
+        ulong pipe = 0;
+        var rc = vkCreateGraphicsPipelines(_dev, 0, 1, &gpci, null, &pipe);
+        if(rc != 0) {
+            $"[vk] T3Pipe({vsIdx},{fsIdx}): vkCreateGraphicsPipelines={rc} → 0".Log();
+            pipe = 0;
+        } else {
+            $"[vk] T3Pipe({vsIdx},{fsIdx}) built → 0x{pipe:x}".Log();
+        }
+        _t3Pipes[(vsIdx, fsIdx)] = pipe;
+        return pipe;
+    }
     static ulong _t3DslCbuf, _t3DslTex, _t3DsPool;
     static ulong _t3DsVs, _t3DsTex, _t3DsFs;   // sets 0/1/2
     static ulong[] _t3CbufBuf;        // [1..24] = stage*12 + binding
     static byte*[] _t3CbufPtr;        // mapped ptrs
-    const int T3CbufStride = 4096, T3MaxDraws = 32;
+    const int T3CbufStride = 4096, T3MaxDraws = 64;
 
     // Allocate + write t3 descriptor sets. Lazy (after _atlasView
     // exists). Set0=VS-cbufs (12 UBO → _t3CbufBuf[1..12]), set1=tex,
@@ -600,17 +700,6 @@ public static unsafe class NvnVulkan {
         }
 
         // ── shader modules ──
-        ulong LoadShader(string path) {
-            var bytes = File.ReadAllBytes(path);
-            fixed(byte* p = bytes) {
-                var ci = new VkShaderModuleCreateInfo {
-                    sType = ST_SHADER_MODULE_CI,
-                    codeSize = (nuint) bytes.Length, pCode = (uint*) p,
-                };
-                ulong sm; Chk(vkCreateShaderModule(_dev, &ci, null, &sm), $"vkCreateShaderModule({path})");
-                return sm;
-            }
-        }
         var vsm = LoadShader("/tmp/fixed.vert.spv");
         var fsm = LoadShader("/tmp/fixed.frag.spv");
         if(vsm == 0 || fsm == 0) return false;
@@ -746,12 +835,15 @@ public static unsafe class NvnVulkan {
         var shDir = Environment.GetEnvironmentVariable("UMBRA_SHADER_DIR")
                     ?? "/tmp/umbra-shaders";
         if(t3mode == "1") {
-            $"[vk] T3: building game-shader pipeline".Log();
-            var t3vs = LoadShader($"{shDir}/sh0349-t1.bin.spv");
-            var t3fs = LoadShader($"{shDir}/sh0346-t2.bin.spv");
-            if(t3vs == 0 || t3fs == 0) {
-                $"[vk] T3: shader load failed; falling back to T2".Log();
-            } else {
+            $"[vk] T3: building shared layouts (pipeline-per-pair built lazily)".Log();
+            _t3ShDir = shDir;
+            // v1.0: DSLs + layout + cbuf-buffers + pool built ONCE
+            // (shader-independent: SpirvEmit's interface contract
+            // is identical across all shaders — set0/2 = 12 cbuf
+            // bindings each, set1 = tex binding-8). The PIPELINE
+            // (= shader modules + fixed state) is built lazily
+            // per (vs#,fs#) pair on first use in RecordDrawPass.
+            {
                 // ── Desc set layouts: 0=VS-cbufs, 1=tex, 2=FS-cbufs ──
                 // NVN cbufs are per-(stage, slot) — VS c[5] (model mat4)
                 // and FS c[5] (α-threshold) are DIFFERENT data
@@ -808,34 +900,8 @@ public static unsafe class NvnVulkan {
                 _t3PipelineLayout = t3pl;
                 _t3DslCbuf = t3dslCbuf; _t3DslTex = t3dsl1;
 
-                // ── Pipeline: same vi/ia/vps/rs/ms/cbs as T2 (the
-                // fixed-state is identical), only stages + layout
-                // differ. Reuse the structs above (still in scope). ──
-                var t3stages = stackalloc VkPipelineShaderStageCreateInfo[2];
-                t3stages[0] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI,
-                    stage = 0x1, module = t3vs, pName = entryName };
-                t3stages[1] = new() { sType = ST_PIPELINE_SHADER_STAGE_CI,
-                    stage = 0x10, module = t3fs, pName = entryName };
-                // T3 gets a y-flipped viewport (NVN game shaders
-                // emit y-up; Vulkan rasterizes y-down). T2's
-                // fixed shader handles this itself, so T2 keeps
-                // the unflipped vp.
-                var t3vp = new VkViewport {
-                    x = 0, y = H, width = W, height = -H,
-                    minDepth = 0, maxDepth = 1,
-                };
-                var t3vps = vps;
-                t3vps.pViewports = &t3vp;
-                var t3gpci = gpci;
-                t3gpci.pStages = t3stages;
-                t3gpci.layout = t3pl;
-                t3gpci.pViewportState = &t3vps;
-                ulong t3pipe;
-                if(Chk(vkCreateGraphicsPipelines(_dev, 0, 1, &t3gpci, null, &t3pipe),
-                       "vkCreateGraphicsPipelines(t3)") == 0) {
-                    _t3Pipeline = t3pipe;
-                    $"[vk] T3 pipeline created: {t3pipe:x}".Log();
-                }
+                // (Pipeline built lazily per-pair; see T3Pipe().)
+                _t3Pipeline = 1;  // = "T3 enabled" sentinel
 
                 // ── 24× host-mapped cbuf VkBuffers, each
                 // T3CbufStride × T3MaxDraws bytes. Per-draw, data
@@ -901,6 +967,15 @@ public static unsafe class NvnVulkan {
 
         $"[vk] InitPipeline OK — rp={_renderPass:x} pipeline={_pipeline:x} vbuf={_vbuf:x} ({VbufSize>>10}KB host-mapped) dsl={_dsLayout:x} sampler={_sampler:x}".Log();
         PipelineReady = true;
+
+        // ── Present-watchdog ──────────────────────────────────
+        // Polls every 1s; if _frameN (= Present count) hasn't
+        // moved for >5s, dump CondVarKernel state + per-thread
+        // managed stacks. = the instrument for the cv-race
+        // hang (A/B runs/A/B runs all-threads-futex_wait; can't reason
+        // about it from outside, dump from inside).
+        if(Environment.GetEnvironmentVariable("UMBRA_WATCHDOG") != null)
+            new Thread(Watchdog) { IsBackground = true, Name = "umbra-wd" }.Start();
         return true;
     }
 
@@ -1048,7 +1123,7 @@ public static unsafe class NvnVulkan {
         // correctly + produce ANY pixels with game's shaders. The
         // pixel-correctness is the v0.5 follow.
         if(_t3Pipeline != 0 && _t3DsVs != 0) {
-            vkCmdBindPipeline(_cmdBuf, 0, _t3Pipeline);
+            ulong curPipe = 0;
             var t3sets = stackalloc ulong[3];
             t3sets[0] = _t3DsVs; t3sets[1] = _t3DsTex; t3sets[2] = _t3DsFs;
             // 24 dynamic offsets (12 per cbuf-set × 2 sets;
@@ -1062,6 +1137,15 @@ public static unsafe class NvnVulkan {
             int recN = 0;
             foreach(var d in draws) {
                 if(d.VbCpu == 0 || d.Count <= 0) continue;
+                // v1.0: per-draw pipeline lookup (build-on-miss).
+                // Returns 0 if .spv missing → skip this draw
+                // (rather than render through wrong shaders).
+                var pipe = T3Pipe(d.VsShIdx, d.FsShIdx);
+                if(pipe == 0) continue;
+                if(pipe != curPipe) {
+                    vkCmdBindPipeline(_cmdBuf, 0, pipe);
+                    curPipe = pipe;
+                }
                 var bytes = (ulong) d.Count * 36;
                 if(vbo + bytes > VbufSize) break;
                 Buffer.MemoryCopy((void*) d.VbCpu, _vbufPtr + vbo, bytes, bytes);
@@ -1167,12 +1251,42 @@ public static unsafe class NvnVulkan {
         if(_frameN <= 5 || (draws.Length > 0 && _frameN % 10 == 0))
             $"[vk] RecordDrawPass frame={_frameN} idx={idx} draws={draws.Length} vbufUsed={off}".Log();
     }
-    static int _lastDrawN;
+    static int _lastDrawN, _drawFrameN;
     static int _dumpedWithDraws;
+
+    // Present-watchdog: polls every 1s; if _frameN hasn't moved
+    // for >5s, dump CondVarKernel state. = the instrument
+    // for the cv-race hang (A/B runs/A/B runs all-threads-futex_wait).
+    static void Watchdog() {
+        int last = -1, stuck = 0;
+        while(true) {
+            Thread.Sleep(1000);
+            if(_frameN == last) {
+                if(++stuck == 5 || (stuck > 5 && stuck % 30 == 0)) {
+                    $"[wd] STALL: Present stuck {stuck}s @ frame {_frameN}".Log();
+                    CondVarKernel.DumpState($"wd-{stuck}s");
+                    foreach(var t in Kernel.ThreadManager.Threads)
+                        $"[wd]   kthread h=0x{t.Handle:X} core={t.IdealCore}".Log();
+                }
+            } else { last = _frameN; stuck = 0; }
+        }
+    }
     static Func<int, bool>? _dumpFrames;
     static Func<int, bool> ParseDumpFrames() {
         var env = Environment.GetEnvironmentVariable("UMBRA_DUMP_FRAMES");
         if(env == null) return _ => false;
+        // "onchange" — capture whenever _lastDrawN differs from
+        // prior frame (= state transitions; the title appears at
+        // wall-clock-relative load-completion, so frame# varies
+        // 5K-30K depending on Present-spin-rate during load).
+        // + 5 frames after each change (= settle).
+        if(env == "onchange") {
+            int prev = -1, since = 0;
+            return _ => {
+                if(_lastDrawN != prev) { prev = _lastDrawN; since = 0; return true; }
+                return since++ < 5;
+            };
+        }
         if(env.StartsWith("every:")) {
             var k = int.Parse(env[6..]);
             return n => n % k == 0;
@@ -1321,8 +1435,13 @@ public static unsafe class NvnVulkan {
         // shared-memory the game's nn::hid SDK reads). Driven by
         // UMBRA_HID env script. Tick before Ready-check so the
         // controller is connected from frame 1 (some games gate
-        // on connected-controller before first draw).
-        HidPump.Tick(n);
+        // on connected-controller before first draw). drawFrameN
+        // = frames-since-first-draw (= "menu is up" clock; the
+        // menu's appearance is wall-clock gated by async load,
+        // so absolute frameN varies by host speed — drawFrameN
+        // is the stable reference for the input script).
+        if(_lastDrawN > 0) _drawFrameN++;
+        HidPump.Tick(n, _drawFrameN);
         if(!Ready) {
             if(n <= 3) $"[vk] Present #{n} (not ready, log-only)".Log();
             return;

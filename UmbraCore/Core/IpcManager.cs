@@ -299,7 +299,7 @@ public abstract class IpcInterface : KObject {
 					break;
 				case 4:
 				case 6:
-					$"IPC command {incoming.CommandId} for {target}".Log();
+					if(!L.Quiet) $"IPC command {incoming.CommandId} for {target}".Log();
 					target.Dispatch(incoming, outgoing);
 					ret = 0;
 					break;
@@ -365,9 +365,9 @@ public partial class IpcManager {
             return 0;
         };
         game.Callbacks.SendSyncRequest = handle => {
-	        $"Handle for SendSyncRequest: 0x{handle:X}".Log();
+	        if(!L.Quiet) $"Handle for SendSyncRequest: 0x{handle:X}".Log();
 	        var service = Kernel.Get<IpcInterface>(handle);
-	        $"SendSyncRequest({handle:X}, {service?.ToString() ?? "null"}, domain: {service?.IsDomainObject})".Log();
+	        if(!L.Quiet) $"SendSyncRequest({handle:X}, {service?.ToString() ?? "null"}, domain: {service?.IsDomainObject})".Log();
 	        if(service == null)
 		        throw new Exception();
 	        var ret = service.SyncMessage((ulong) Kernel.ThreadManager.CurrentThread.TlsBase, 0x100, out var closeHandle);

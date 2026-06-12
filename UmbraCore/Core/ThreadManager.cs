@@ -6,6 +6,10 @@ namespace UmbraCore.Core;
 
 public unsafe class KThread : KObject {
     public CpuState* CpuState;
+    // svcCreateThread X5 / SetThreadCoreMask X1. nnMain (= the
+    // base KThread, not a SpawnedThread) defaults to 0 (= NPDM
+    // default for apps). SpawnedThreads get it set in CreateThread.
+    public int IdealCore;
     public readonly IntPtr State, Stack;
     public IntPtr TlsBase;
     public ulong Tpidr;
@@ -60,13 +64,28 @@ public class ThreadManager {
             id = 0xDEADBEE1;
             return 0;
         };
-        game.Callbacks.SetThreadCoreMask = (handle, in1, in2) => 0;
+        game.Callbacks.SetThreadCoreMask = (handle, coreId, mask) => {
+            $"[thr] SetThreadCoreMask h=0x{handle:X} core={(int)coreId} mask=0x{mask:X}".Log();
+            var t = Kernel.Get<KThread>((uint)handle) ?? CurrentThread;
+            if(t != null && (int)coreId >= 0) t.IdealCore = (int)coreId;
+            return 0;
+        };
+        // tested 7/8-stall same-sig REFUTED; reverted to →0.
+        // The deadlock isn't per-core-resource collision.
         game.Callbacks.GetCurrentProcessorNumber = () => 0;
         game.Callbacks.CreateThread = (entrypoint, threadContext, stackTop, priority, coreId, ref handle) => {
-            $"Creating thread with entrypoint 0x{entrypoint:X}".Log();
+            // coreId: per Switch SVC, s32; -2 = "use default core
+            // from NPDM" (= core 0 for apps), 0-3 = pin to that
+            // core. deadlock discriminator: real hw pins
+            // threads → same-core threads can't be concurrently
+            // in critical sections → no ABBA window. Umbra runs
+            // every spawned thread on its own host Thread = true
+            // concurrency = the window opens.
             var spawned = new SpawnedThread(entrypoint, threadContext, stackTop);
+            spawned.IdealCore = (int) coreId;
             Threads.Add(spawned);
             handle = spawned.Handle;
+            $"[thr] CreateThread h=0x{handle:X} ep=0x{entrypoint:X} prio={priority} core={(int)coreId} sp=0x{stackTop:X}".Log();
             return 0;
         };
         game.Callbacks.StartThread = handle => {

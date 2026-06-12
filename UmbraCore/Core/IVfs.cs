@@ -44,7 +44,13 @@ public class DirectoryBackedVfsFile : IVfsFile, IAsyncDisposable {
     public DirectoryBackedVfsFile(string path, bool isWrite) {
         Path = path;
         IsWritable = isWrite;
-        Fp = File.Open(path, isWrite ? FileMode.Create : FileMode.Open);
+        // FileShare.Read so concurrent runs (and the game's own
+        // multi-threaded reads of the same archive) don't lock-
+        // contend. Was FileShare.None default → bg-run holding
+        // GAME.DAT exclusive blocked any 2nd run at f1.
+        Fp = isWrite
+            ? File.Open(path, FileMode.Create)
+            : File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
     }
 
     public void Dispose() => Fp?.Dispose();

@@ -59,9 +59,10 @@ public static unsafe class HidPump {
         ("DLeft", 1ul<<12), ("DUp", 1ul<<13), ("DRight", 1ul<<14), ("DDown", 1ul<<15),
     ];
 
-    record struct Press(ulong Mask, int Lo, int Hi);
+    record struct Press(ulong Mask, int Lo, int Hi, bool DrawRel);
     static List<Press> _script = [];
     static long _samp = 1;
+    static ulong _lastBtn;
     static bool _init, _dumped, _shimmed;
     static byte* _base;
 
@@ -135,7 +136,11 @@ public static unsafe class HidPump {
         $"[hid] runtime-image: {runs.Count} regions, {total/1e6:F1}MB → {baseP}.*".Log();
     }
 
-    public static void Tick(int frameN) {
+    // drawFrameN = frames since first draw (= "menu is up" clock).
+    // UMBRA_HID frames may be absolute (e.g. "A@60") OR draw-
+    // relative ("A@d50" = 50 frames after first draw); the latter
+    // is host-speed-stable.
+    public static void Tick(int frameN, int drawFrameN) {
         if(!_init) {
             _init = true;
             var env = Environment.GetEnvironmentVariable("UMBRA_HID") ?? "";
@@ -148,14 +153,18 @@ public static unsafe class HidPump {
                 var bit = BtnMap.FirstOrDefault(b =>
                     b.name.Equals(bn, StringComparison.OrdinalIgnoreCase)).bit;
                 if(bit == 0) { $"[hid] unknown button '{bn}'".Log(); continue; }
-                int lo, hi;
+                // "60-65" = absolute frameN. "d50-d60" = relative
+                // to first-draw frame (host-speed-stable; menu
+                // appearance is wall-clock-gated by async load,
+                // so absolute frameN varies wildly with QUIET).
+                static (int n, bool d) Pf(string s) =>
+                    s.StartsWith('d') ? (int.Parse(s[1..]), true)
+                                      : (int.Parse(s), false);
+                (int n, bool d) lo, hi;
                 var dash = rng.IndexOf('-');
-                if(dash < 0) lo = hi = int.Parse(rng, CultureInfo.InvariantCulture);
-                else {
-                    lo = int.Parse(rng[..dash], CultureInfo.InvariantCulture);
-                    hi = int.Parse(rng[(dash+1)..], CultureInfo.InvariantCulture);
-                }
-                _script.Add(new(bit, lo, hi));
+                if(dash < 0) lo = hi = Pf(rng);
+                else { lo = Pf(rng[..dash]); hi = Pf(rng[(dash+1)..]); }
+                _script.Add(new(bit, lo.n, hi.n, lo.d));
             }
             $"[hid] script: {_script.Count} presses; mem @0x{IHidServer.Memory.Address:X}".Log();
             // One-shot symbol-table dump (from Rtld-loaded modules,
@@ -217,7 +226,10 @@ public static unsafe class HidPump {
         // ‡ Hypothesis test — if A works after this, the wall =
         // controller-applet stubs; reverse out the natural path
         // once unblocked.
-        if(!_shimmed && frameN >= 30
+        // Fire shim at first-draw + 5 (= NuPads definitely init'd;
+        // host-speed-stable). Was frameN>=30 which fires too early
+        // under QUIET (~283fps → menu appears @f300 not @f50).
+        if(!_shimmed && drawFrameN >= 5
            && Environment.GetEnvironmentVariable("UMBRA_SHIM_PAD") != null) {
             _shimmed = true;
             var fa = SymAddr("_Z20NuPadMapPlayerToPortii");
@@ -238,8 +250,10 @@ public static unsafe class HidPump {
 
         // Compute current button mask from script.
         ulong btn = 0;
-        foreach(var p in _script)
-            if(frameN >= p.Lo && frameN <= p.Hi) btn |= p.Mask;
+        foreach(var p in _script) {
+            var fn = p.DrawRel ? drawFrameN : frameN;
+            if(fn >= p.Lo && fn <= p.Hi) btn |= p.Mask;
+        }
 
         var samp = ++_samp;
         // Per disasm of the game's nn::hid::detail::GetNpadStates
@@ -271,8 +285,12 @@ public static unsafe class HidPump {
             WriteSlot(slot, sb, samp, btn);
         }
 
-        if(btn != 0 && frameN % 5 == 0)
-            $"[hid] f{frameN} btn=0x{btn:X} samp={samp}".Log();
+        // Log on btn EDGE only (press/release) — under QUIET
+        // there are ~17K frames; per-5-frame log was the spam.
+        if(btn != _lastBtn) {
+            $"[hid] f{frameN} d{drawFrameN} btn=0x{btn:X} samp={samp}".Log();
+            _lastBtn = btn;
+        }
     }
 
     static void WriteSlot(int slot, int styleBit, long samp, ulong btn) {

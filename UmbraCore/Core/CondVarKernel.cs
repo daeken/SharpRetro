@@ -4,7 +4,7 @@ namespace UmbraCore.Core;
 // Atmosphere's kern_k_condition_variable.cpp + kern_k_address_arbiter mutex
 // path. Replaces SyncManager's WaitProcessWideKeyAtomic / SignalProcessWideKey
 // / ArbitrateLock / ArbitrateUnlock callbacks.
-// Sera's original HLE (SyncManager.cs) treats the cv_key as a per-address
+// cs) treats the cv_key as a per-address
 // counted Semaphore (Increment writing *cv_key) + a separate System.
 // Threading.Mutex per mutex-addr. That's wrong-shape vs the real protocol:
 // - *cv_key is a 0/1 FLAG (HasWaiterFlag), written by KERNEL only. Userland
@@ -40,6 +40,77 @@ public static unsafe class CondVarKernel {
         public ulong MutexAddr;      // saved addr; Signal writes Handle here
         public readonly ManualResetEventSlim Ev = new(false);
         public uint Result;          // 0 = success; nonzero = svc result code
+        public ulong Fp;             // X29 at SVC entry (for watchdog game-stack)
+    }
+
+    // Set per-SVC-entry from NativeReentry (X29). Watchdog reads
+    // blocked Waiters' .Fp → Kernel.StackTrace → which game fns
+    // are on stack at deadlock-time. = instrument.
+    public static readonly ThreadLocal<ulong> LastFp = new();
+    public static readonly ThreadLocal<int> _tlsLogged = new();
+
+    // ── Trace ring (UMBRA_WATCHDOG): last N lock/unlock/wait/
+    // signal calls. Dumped on stall. = the SEQUENCE that the
+    // state-snapshot doesn't give.
+    static readonly string[] _trace = new string[256];
+    static int _traceIdx;
+    static readonly bool _tracing = Environment.GetEnvironmentVariable("UMBRA_WATCHDOG") != null;
+    static void Trc(string s) {
+        if(!_tracing) return;
+        _trace[Interlocked.Increment(ref _traceIdx) & 255] =
+            $"[t{Environment.CurrentManagedThreadId}] {s}";
+    }
+
+    // Watchdog dump: who's waiting on what. Called from outside
+    // (Present-watchdog when main thread stalls) so takes
+    // _schedLock. Output = which mutex addrs have waiters with
+    // no path to wake (= the deadlock signature).
+    public static void DumpState(string tag) {
+        lock(_schedLock) {
+            $"[cvk] {tag}: cv={_cv.Count} mtx={_mtx.Count}".Log();
+            if(_tracing) {
+                $"[cvk]   ── trace (last 256, oldest→newest) ──".Log();
+                for(var i = 1; i <= 256; i++) {
+                    var s = _trace[(_traceIdx + i) & 255];
+                    if(s != null) $"[cvk]   {s}".Log();
+                }
+            }
+            foreach(var (k, l) in _cv)
+                if(l.Count > 0)
+                    $"[cvk]   cv@{k:x}: {l.Count} waiters [{string.Join(",", l.Select(w => $"h{w.Handle:x}→m{w.MutexAddr:x}"))}] *cv={*(uint*)k:x}".Log();
+            foreach(var (a, l) in _mtx)
+                if(l.Count > 0) {
+                    $"[cvk]   mtx@{a:x}: {l.Count} waiters [{string.Join(",", l.Select(w => $"h{w.Handle:x}"))}] *addr={*(uint*)a:x}".Log();
+                    foreach(var w in l) {
+                        $"[cvk]     ↳ h{w.Handle:x} game-stack (fp=0x{w.Fp:x}):".Log();
+                        try { Kernel.StackTrace((ulong*)w.Fp); }
+                        catch(Exception e) { $"[cvk]       (threw: {e.Message})".Log(); }
+                        // raw stack scan: every 8B word in
+                        // [fp..fp+0x800] that lands in a code region
+                        // = candidate LR. Catches frames the FP-walk
+                        // misses (= leaf fns that don't push fp, OR
+                        // the M1-holding frame the CONTRADICTION says
+                        // must exist).
+                        try {
+                            // w.Fp = (ulong)state (host NativeState*);
+                            // *state = X29 = game-fp. Walk from there.
+                            var gfp = *(ulong*)w.Fp;
+                            $"[cvk]     ↳ h{w.Handle:x} RAW [0x{gfp:x}..+0x800]:".Log();
+                            for(var o = 0; o < 0x800; o += 8) {
+                                var v = *(ulong*)(gfp + (ulong)o);
+                                if(v < 0xfff5_b000_0000 || v >= 0xfff5_c000_0000) continue;
+                                var s = Kernel.Symbols.FirstOrDefault(x => x.Key.Start <= v && v < x.Key.End);
+                                if(s.Value == null) continue;
+                                $"[cvk]       [+0x{o:x}] 0x{v:x}  {s.Value}+0x{v - s.Key.Start:x}".Log();
+                            }
+                        } catch(Exception e) { $"[cvk]       (raw threw: {e.Message})".Log(); }
+                    }
+                    // + raw bytes around the mutex (what object
+                    // is M2 inside? — vtable/type ptr/canary).
+                    var b = (ulong*)(a & ~0xFul);
+                    $"[cvk]     mem[{(ulong)b:x}..]: {b[-2]:x16} {b[-1]:x16} | {b[0]:x16} {b[1]:x16} {b[2]:x16} {b[3]:x16}".Log();
+                }
+        }
     }
 
     static LinkedList<Waiter> Cv(ulong k) =>
@@ -53,7 +124,11 @@ public static unsafe class CondVarKernel {
     // where *addr was nonzero (lock) or had WaitMask set (unlock).
 
     public static ulong ArbitrateLock(ulong ownerHandle, ulong addr, ulong reqHandle) {
-        var w = new Waiter { Handle = (uint) reqHandle, MutexAddr = addr };
+        var w = new Waiter {
+            Handle = (uint) reqHandle, MutexAddr = addr,
+            Fp = LastFp.Value,  // = NativeState->X29 at SVC entry
+        };
+        Trc($"L  m={addr:x} own={ownerHandle:x} req={reqHandle:x} *={*(uint*)addr:x}");
         lock(_schedLock) {
             var tag = *(uint*) addr;
             // Re-check: userland saw an owner, but it may have unlocked since.
@@ -61,9 +136,23 @@ public static unsafe class CondVarKernel {
                 *(uint*) addr = (uint) reqHandle;
                 return 0;
             }
-            // ‡ Atmosphere also re-checks tag == ownerHandle|WaitMask exactly;
-            // if not, returns immediately (userland retries). v0 = enqueue.
-            *(uint*) addr = tag | WaitMask;
+            // Atmosphere KCV WaitForAddress (): kernel does NOT
+            // write *addr — userland already OR'd WaitMask via its
+            // own ldaxr/stlxr CAS at ICS::Enter+0x60. Kernel just
+            // verifies tag == owner|WaitMask (else return — userland
+            // re-loops). My prior `*addr = tag|WaitMask` was a non-
+            // atomic RMW that races the owner's native `stlxr 0` in
+            // ICS::Leave: if owner clears between my read-tag and
+            // write-tag|WM, I write a STALE owner-tag back; owner's
+            // already gone (nn::os owner=null nest=0); next time
+            // ex-owner Enters, the +0x3c early-return fires (tag&~WM
+            // == myHandle) and it "acquires" without owning.             // raw-stack confirmed h1f's M1.nest=1+owner=h1f with NO
+            // M1-frame on stack = exactly this signature.
+            if(tag != ((uint)ownerHandle | WaitMask)) {
+                Trc($"L! m={addr:x} tag={tag:x}≠own|W → retry");
+                return 0;  // userland re-loops fast-path
+            }
+            // DON'T write *addr. Userland set WaitMask. Just enqueue.
             Mtx(addr).AddLast(w);
         }
         w.Ev.Wait();
@@ -71,6 +160,7 @@ public static unsafe class CondVarKernel {
     }
 
     public static ulong ArbitrateUnlock(ulong addr) {
+        Trc($"U  m={addr:x} *={*(uint*)addr:x}");
         lock(_schedLock) ReleaseMutexLocked(addr);
         return 0;
     }
@@ -93,6 +183,7 @@ public static unsafe class CondVarKernel {
 
     public static ulong Wait(ulong addr, ulong cvKey, ulong handle, ulong timeoutNs) {
         var w = new Waiter { Handle = (uint) handle, MutexAddr = addr };
+        Trc($"W  cv={cvKey:x} m={addr:x} h={handle:x} t={(long)timeoutNs}");
         lock(_schedLock) {
             // Atomically: release mutex + mark cv has-waiters + insert into cv tree.
             // This IS the "Atomic" in the SVC name — the signaler can't run
@@ -138,6 +229,7 @@ public static unsafe class CondVarKernel {
 
     public static ulong Signal(ulong cvKey, ulong count) {
         var c = (int) count;  // s32; ≤0 = broadcast
+        Trc($"S  cv={cvKey:x} n={c}");
         lock(_schedLock) {
             if(!_cv.TryGetValue(cvKey, out var list)) {
                 *(uint*) cvKey = 0;
@@ -157,10 +249,12 @@ public static unsafe class CondVarKernel {
                         | (Mtx(w.MutexAddr).Count > 0 ? WaitMask : 0);
                     w.Ev.Set();
                 } else {
-                    // Mutex held → w joins that mutex's waiter list. It'll
-                    // wake when the holder ArbitrateUnlock's (or cv-Wait's,
-                    // which calls ReleaseMutexLocked).
-                    *(uint*) w.MutexAddr = prev | WaitMask;
+                    // Mutex held → w joins that mutex's waiter list.
+                    // Atmosphere does CAS-OR for the WaitMask write
+                    // (UpdateLockAtomic); a plain RMW races the owner's
+                    // native stlxr-0 in ICS::Leave (= same race as
+                    // ArbitrateLock above). Use Interlocked.Or = atomic.
+                    Interlocked.Or(ref *(uint*) w.MutexAddr, WaitMask);
                     Mtx(w.MutexAddr).AddLast(w);
                 }
             }
