@@ -44,6 +44,92 @@ public static unsafe class NvnLinux {
         public ulong Device;                // back-ref
         public int Width, Height, Format;   // Texture
         public int ShIdx, SphType;          // Program: which sh{idx}-t{sph}.bin
+        //  decoded RGBA8 bytes (lazy; populated by
+        // DecodeForUpload on first EnsureTexBound). null = not
+        // decoded (or undecodable format).
+        public byte[]? Rgba;
+    }
+    //  decode this texture's CpuPtr data → RGBA8 bytes.
+    // Lazy; called from EnsureTexBound on first draw using this
+    // texId. Caches in H.Rgba. Returns null if Format unhandled
+    // or CpuPtr=0. ⚠️ CpuPtr is set at TextureInitialize from
+    // (pool.CpuPtr + builder.Offset); the texture data may not
+    // be PRESENT yet (= game WriteTexels/CopyBufferToTexture
+    // happens later). v2 = decode-at-first-draw assumes data
+    // is there by then (= true for menu's atlas; ‡ for streamed
+    // textures may capture stale/partial). v3 = re-decode on
+    // CopyBufferToTexture targeting this tex.
+    public static byte[]? DecodeForUpload(H ts) {
+        if(ts.Rgba != null) return ts.Rgba;
+        if(ts.CpuPtr == 0 || ts.Width == 0 || ts.Height == 0)
+            return null;
+        var src = (byte*)ts.CpuPtr;
+        var w = ts.Width; var h = ts.Height;
+        var fi = Fmt(ts.Format);
+        byte[]? rgba = null;
+        if(fi.IsBc) {
+            rgba = fi.FourCC switch {
+                "DXT5" => DecodeBc3(src, w, h),
+                "DXT1" => DecodeBc1(src, w, h),
+                // BC2/4/5 = ‡ not seen in title yet; add when hit.
+                _      => null,
+            };
+        } else if(fi.Bpp == 4) {
+            // RGBA8 (or SRGB) — passthrough copy. ‡ Block-linear
+            // tiling NOT handled (= would need swizzle); v2 reads
+            // linear. Lavapipe samples LINEAR fine; visually-wrong
+            // if game uploaded block-linear. Defer to v3.
+            rgba = new byte[w * h * 4];
+            new ReadOnlySpan<byte>(src, w*h*4).CopyTo(rgba);
+        } else {
+            // R8/RG8/depth etc — broadcast to RGBA so the bind at
+            // least doesn't crash. ‡ Visually wrong.
+            rgba = new byte[w * h * 4];
+            for(int i = 0; i < w*h; i++) {
+                byte v = src[i * Math.Max(fi.Bpp, 1)];
+                rgba[i*4+0]=v; rgba[i*4+1]=v; rgba[i*4+2]=v; rgba[i*4+3]=255;
+            }
+        }
+        ts.Rgba = rgba;
+        if(rgba != null && _decN++ < 30)
+            $"[nvn] DecodeForUpload {w}×{h} fmt=0x{ts.Format:x}({fi.FourCC ?? $"{fi.Bpp}Bpp"}) cpu=0x{ts.CpuPtr:x} → {rgba.Length}B".Log();
+        return rgba;
+    }
+    static int _decN;
+    // BC1 decode (8B/4×4 block: 2× RGB565 endpoints + 16× 2-bit
+    // index). When c0>c1: idx 2,3 = 1/3,2/3 lerp; else idx 2 =
+    // 1/2 lerp, idx 3 = transparent black.
+    static byte[] DecodeBc1(byte* src, int w, int h) {
+        var rgba = new byte[w * h * 4];
+        var bw = (w + 3) / 4; var bh = (h + 3) / 4;
+        Span<(byte r,byte g,byte b,byte a)> c = stackalloc (byte,byte,byte,byte)[4];
+        for(var by = 0; by < bh; by++)
+        for(var bx = 0; bx < bw; bx++) {
+            var blk = src + (by * bw + bx) * 8;
+            ushort c0 = (ushort)(blk[0] | blk[1]<<8);
+            ushort c1 = (ushort)(blk[2] | blk[3]<<8);
+            static (byte,byte,byte) Rgb565(ushort v) => (
+                (byte)(((v>>11)&31)*255/31),
+                (byte)(((v>>5)&63)*255/63),
+                (byte)((v&31)*255/31));
+            var (r0,g0,b0)=Rgb565(c0); var (r1,g1,b1)=Rgb565(c1);
+            c[0]=(r0,g0,b0,255); c[1]=(r1,g1,b1,255);
+            if(c0>c1) {
+                c[2]=((byte)((2*r0+r1)/3),(byte)((2*g0+g1)/3),(byte)((2*b0+b1)/3),255);
+                c[3]=((byte)((r0+2*r1)/3),(byte)((g0+2*g1)/3),(byte)((b0+2*b1)/3),255);
+            } else {
+                c[2]=((byte)((r0+r1)/2),(byte)((g0+g1)/2),(byte)((b0+b1)/2),255);
+                c[3]=(0,0,0,0);
+            }
+            uint idx = blk[4] | (uint)blk[5]<<8 | (uint)blk[6]<<16 | (uint)blk[7]<<24;
+            for(var py=0; py<4 && by*4+py<h; py++)
+            for(var px=0; px<4 && bx*4+px<w; px++) {
+                var ci=c[(int)((idx>>((py*4+px)*2))&3)];
+                var o=((by*4+py)*w + bx*4+px)*4;
+                rgba[o]=ci.r; rgba[o+1]=ci.g; rgba[o+2]=ci.b; rgba[o+3]=ci.a;
+            }
+        }
+        return rgba;
     }
     // GPU-addr → CPU-ptr reverse map (per pool). v0 = linear search; one
     // pool currently. Returns CPU ptr or 0 if no pool contains gpuAddr.
@@ -360,6 +446,35 @@ public static unsafe class NvnLinux {
         var h = rh > 0 ? rh : (dst?.Height ?? 0);
         var fmt = dst?.Format ?? 0;
         $"[nvn] CopyBufferToTexture #{n} srcGpu=0x{srcGpuAddr:x} srcCpu=0x{srcCpu:x} → tex=0x{dstTex:x} ({w}×{h} fmt=0x{fmt:x}) region=({(region!=null?$"{((uint*)region)[0]},{((uint*)region)[1]},{((uint*)region)[2]} {rw}×{rh}×{((uint*)region)[5]}":"null")})".Log();
+
+        //  decode SRC → S(dstTex).Rgba NOW. The texture's
+        // own CpuPtr (= pool storage) is the DEST and never
+        // written (= we're the stub); src is the staging buffer
+        // the game just filled. Decode while src is fresh; stash
+        // in the dest-texture's H so EnsureTexBound finds it.
+        // ⚠️ region.{x,y,z}off ≠ 0 = partial update (= mip levels:
+        // CopyBufferToTexture #3-#10 all → SAME tex 0xfff557aaafa8
+        // with shrinking w/h = mip chain). v2 keeps mip 0 only
+        // (= region full-size at xoff=0). Also: same-tex re-copy
+        // = REPLACE Rgba (= streaming).
+        if(srcCpu != 0 && dst != null && w == dst.Width && h == dst.Height
+           && (region == null || (((uint*)region)[0]|((uint*)region)[1]|((uint*)region)[2]) == 0)) {
+            var fi = Fmt(fmt);
+            try {
+                dst.Rgba = fi.IsBc
+                    ? fi.FourCC switch {
+                        "DXT5" => DecodeBc3((byte*)srcCpu, w, h),
+                        "DXT1" => DecodeBc1((byte*)srcCpu, w, h),
+                        _      => null }
+                    : fi.Bpp == 4
+                        ? new ReadOnlySpan<byte>((byte*)srcCpu, w*h*4).ToArray()
+                        : null;
+                if(dst.Rgba != null && n <= 30)
+                    $"[nvn]   → S(tex).Rgba stashed {w}×{h} {(fi.IsBc?fi.FourCC:$"{fi.Bpp}Bpp")} ({dst.Rgba.Length}B)".Log();
+            } catch(Exception e) {
+                $"[nvn]   ‡ per-tex stash failed: {e.Message}".Log();
+            }
+        }
 
         // T1 dump: write the raw source buffer so sera can SEE it.
         // BC-compressed → .dds (any viewer) + BC3-decode → .ppm here.

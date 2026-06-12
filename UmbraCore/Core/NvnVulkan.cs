@@ -1199,10 +1199,15 @@ public static unsafe class NvnVulkan {
         // ‡ v1: hardwire texId 0x101 → AtlasRgba. v2 = generic.
         byte[]? rgba;
         int w, h;
-        if(texId == 0x101 && NvnLinux.AtlasRgba != null) {
+        // v2 generic: decode-on-demand from tex.CpuPtr. Falls
+        // back to AtlasRgba for 0x101 if decode fails (= keeps
+        // §5 stable while v2's decode is shaken out).
+        if(tex != null
+           && NvnLinux.DecodeForUpload(tex) is { } dec) {
+            rgba = dec; w = tex.Width; h = tex.Height;
+        } else if(texId == 0x101 && NvnLinux.AtlasRgba != null) {
             rgba = NvnLinux.AtlasRgba;
             w = NvnLinux.AtlasW; h = NvnLinux.AtlasH;
-        // v2: } else if(tex?.Rgba != null) { decode done per-tex }
         } else {
             // No decode available → cache as 0 (= caller falls
             // back to atlas DS or skips texture bind).
