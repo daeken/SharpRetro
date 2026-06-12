@@ -149,6 +149,17 @@ public static unsafe class CondVarKernel {
                     $"[cvk]   mtx@{a:x}: {l.Count} waiters [{string.Join(",", l.Select(w => $"h{w.Handle:x}"))}] *addr={*(uint*)a:x}".Log();
                     foreach(var w in l) {
                         $"[cvk]     ↳ h{w.Handle:x} game-stack (fp=0x{w.Fp:x}):".Log();
+                        // ‡(σ2) u500: w.Fp=0 (= waiter enqueued
+                        // before LastFp.Value set, OR thread
+                        // never hit NativeReentry — the TLS=15
+                        // mode where one thread doesn't spawn).
+                        // segvtrap.c intercepts SIGSEGV before
+                        // CoreCLR converts to NRE → process
+                        // dies despite the try-catch. Guard.
+                        if(w.Fp == 0) {
+                            $"[cvk]       (fp=0, skip walk)".Log();
+                            continue;
+                        }
                         try { Kernel.StackTrace((ulong*)w.Fp); }
                         catch(Exception e) { $"[cvk]       (threw: {e.Message})".Log(); }
                         // raw stack scan: every 8B word in
