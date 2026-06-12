@@ -133,6 +133,18 @@ public static unsafe class HidPump {
         using(var sw = new StreamWriter($"{baseP}.syms"))
             foreach(var ((lo, hi), nm) in Kernel.Symbols.OrderBy(kv => kv.Key.Start))
                 sw.WriteLine($"{lo:x16} {hi-lo,6:x} {nm}");
+        // (η) M4-v2: hook addresses (= our own UCO stubs that
+        // game pfnc_* slots point at). NOT a contiguous region
+        // (= CoreCLR JIT/exec-heap, scattered) — instead emit
+        // addr→name so Pagentry's RuntimeImage can resolve
+        // pfnc-deref past `?unmapped`. Same .syms format
+        // (size=0 = synthetic).
+        using(var hw = new StreamWriter($"{baseP}.hooks")) {
+            foreach(var (nm, (_, fp)) in Kernel.HookManager.Hooks)
+                hw.WriteLine($"{fp:x16} {0,6:x} [hook] {nm}");
+            foreach(var (nm, fp) in NvnLinux.Table)
+                hw.WriteLine($"{(ulong)fp:x16} {0,6:x} [nvn-stub] {nm}");
+        }
         $"[hid] runtime-image: {runs.Count} regions, {total/1e6:F1}MB → {baseP}.*".Log();
     }
 
