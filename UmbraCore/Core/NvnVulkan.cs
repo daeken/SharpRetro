@@ -497,6 +497,15 @@ public static unsafe class NvnVulkan {
     static ulong _renderPass, _pipelineLayout, _pipeline;
     static ulong _dsLayout, _dsPool, _dsAtlas, _sampler;
     static ulong _atlasImg, _atlasMem, _atlasView;
+
+    //  per-texId Vk state. Lazy: first draw with this
+    // texId triggers upload+DS-alloc. Keyed by texId (= the
+    // pool-idx, NOT TexHandle — same texture w/ different
+    // sampler shares the upload).
+    record TexVk(ulong Img, ulong Mem, ulong View, ulong Ds,
+                 int W, int H, bool BarrierDone);
+    static readonly Dictionary<int, TexVk> _texVk = new();
+    static readonly List<int> _texPendingBarrier = new();
     // ── T3 T3 state ──
     static ulong _t3Pipeline, _t3PipelineLayout;
     static string _t3ShDir;
@@ -1043,12 +1052,15 @@ public static unsafe class NvnVulkan {
                     new Span<byte>(cp, (int)sz).Clear();
                 }
 
-                // ── Descriptor pool: 24 UBO_DYNAMIC + 1 sampler ──
+                // ── Descriptor pool: 24 UBO_DYNAMIC + 64 samplers ──
+                // (1 sampler for the shared atlas DS + up to 63
+                // per-texId DSs from EnsureTexBound. maxSets =
+                // 3 (vs/tex/fs shared) + 64 (per-tex).)
                 var t3ps = stackalloc VkDescriptorPoolSize[2];
                 t3ps[0] = new() { type = DESC_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorCount = 24 };
-                t3ps[1] = new() { type = DESC_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount = 1 };
+                t3ps[1] = new() { type = DESC_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount = 64 };
                 var t3dpci = new VkDescriptorPoolCreateInfo {
-                    sType = ST_DESCRIPTOR_POOL_CI, maxSets = 3,
+                    sType = ST_DESCRIPTOR_POOL_CI, maxSets = 3 + 64,
                     poolSizeCount = 2, pPoolSizes = t3ps,
                 };
                 ulong t3dp; Chk(vkCreateDescriptorPool(_dev, &t3dpci, null, &t3dp),
@@ -1167,6 +1179,116 @@ public static unsafe class NvnVulkan {
         $"[vk] EnsureAtlasBound OK — atlas {aw}×{ah} img={img:x} view={v:x} ds={ds:x}".Log();
     }
 
+    //  ensure texId has a VkImage+View+DS. Lazy upload
+    // on first draw. v1 = RGBA8 LINEAR HOST_VISIBLE only (= the
+    // atlas path, generalized). Decode (BC3 etc) is the caller's
+    // job — pass already-decoded RGBA8 bytes. Returns the DS for
+    // per-draw bind, or 0 if upload failed/pending.
+    // ⚠️ Must be called BEFORE vkCmdBeginRenderPass (= barriers
+    // can't go inside a render pass). The barrier for newly-
+    // uploaded images is queued in _texPendingBarrier and emitted
+    // by FlushTexBarriers().
+    static ulong EnsureTexBound(int texId, NvnLinux.H tex) {
+        if(_texVk.TryGetValue(texId, out var t)) return t.Ds;
+        // v1: only handle textures that already have decoded
+        // RGBA8 available. The atlas (= texId 0x101) does (via
+        // NvnLinux.AtlasRgba). Other textures need per-tex
+        // decode (= v2). Fall back to atlas DS (= _dsAtlas)
+        // for textures without decode yet — wrong-image but
+        // doesn't crash.
+        // ‡ v1: hardwire texId 0x101 → AtlasRgba. v2 = generic.
+        byte[]? rgba;
+        int w, h;
+        if(texId == 0x101 && NvnLinux.AtlasRgba != null) {
+            rgba = NvnLinux.AtlasRgba;
+            w = NvnLinux.AtlasW; h = NvnLinux.AtlasH;
+        // v2: } else if(tex?.Rgba != null) { decode done per-tex }
+        } else {
+            // No decode available → cache as 0 (= caller falls
+            // back to atlas DS or skips texture bind).
+            _texVk[texId] = new(0, 0, 0, 0, 0, 0, true);
+            return 0;
+        }
+
+        var ici = new VkImageCreateInfo {
+            sType = ST_IMAGE_CI, imageType = 1, format = 37,
+            width = (uint)w, height = (uint)h, depth = 1,
+            mipLevels = 1, arrayLayers = 1, samples = 1,
+            tiling = 1, usage = 0x4 | 0x2, initialLayout = 0,
+        };
+        ulong img; if(Chk(vkCreateImage(_dev, &ici, null, &img),
+                $"vkCreateImage(tex{texId:x})") != 0) return 0;
+        VkMemoryRequirements req;
+        vkGetImageMemoryRequirements(_dev, img, &req);
+        var mai = new VkMemoryAllocateInfo {
+            sType = ST_MEM_AI, allocationSize = req.size,
+            memoryTypeIndex = _hostMemType,
+        };
+        ulong mem; if(Chk(vkAllocateMemory(_dev, &mai, null, &mem),
+                $"vkAllocMem(tex{texId:x})") != 0) return 0;
+        Chk(vkBindImageMemory(_dev, img, mem, 0), "vkBindImageMem");
+        void* p; Chk(vkMapMemory(_dev, mem, 0, req.size, 0, &p),
+                "vkMapMem");
+        rgba.AsSpan().CopyTo(new Span<byte>(p, (int)(w*h*4)));
+
+        var ivci = new VkImageViewCreateInfo {
+            sType = ST_IMAGE_VIEW_CI, image = img, viewType = 1,
+            format = 37,
+            subresourceRange = new() { aspectMask=1, levelCount=1, layerCount=1 },
+        };
+        ulong vw; Chk(vkCreateImageView(_dev, &ivci, null, &vw),
+                "vkCreateImageView");
+
+        // 5: alloc against _t3DslTex (= set=1's layout:
+        // binding=8 COMBINED_IMAGE_SAMPLER) + _t3DsPool, so the
+        // resulting DS is binding-compatible with _t3PipelineLayout
+        // and can be swapped into t3sets[1] per-draw.
+        ulong dsl = _t3DslTex;
+        var dsai = new VkDescriptorSetAllocateInfo {
+            sType = ST_DESCRIPTOR_SET_AI, descriptorPool = _t3DsPool,
+            descriptorSetCount = 1, pSetLayouts = &dsl,
+        };
+        ulong ds; if(Chk(vkAllocateDescriptorSets(_dev, &dsai, &ds),
+                $"vkAllocDS(tex{texId:x})") != 0) return 0;
+        var dii = new VkDescriptorImageInfo {
+            sampler = _sampler, imageView = vw, imageLayout = 1,
+        };
+        var wds = new VkWriteDescriptorSet {
+            sType = ST_WRITE_DESCRIPTOR_SET, dstSet = ds, dstBinding = 8,
+            descriptorCount = 1,
+            descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
+            pImageInfo = &dii,
+        };
+        vkUpdateDescriptorSets(_dev, 1, &wds, 0, null);
+
+        _texVk[texId] = new(img, mem, vw, ds, w, h, false);
+        _texPendingBarrier.Add(texId);
+        $"[vk] EnsureTexBound texId=0x{texId:x} {w}×{h} img={img:x} view={vw:x} ds={ds:x}".Log();
+        return ds;
+    }
+
+    // Emit UNDEFINED→GENERAL barriers for newly-uploaded textures.
+    // Called from RecordDrawPass BEFORE vkCmdBeginRenderPass.
+    static void FlushTexBarriers() {
+        if(_texPendingBarrier.Count == 0) return;
+        var range = new VkImageSubresourceRange {
+            aspectMask = 1, levelCount = 1, layerCount = 1 };
+        foreach(var texId in _texPendingBarrier) {
+            var t = _texVk[texId];
+            var bar = new VkImageMemoryBarrier {
+                sType = ST_IMG_BARRIER, image = t.Img,
+                srcAccessMask = 0, dstAccessMask = 0x20,
+                oldLayout = 0, newLayout = 1,
+                srcQueueFamilyIndex = ~0u, dstQueueFamilyIndex = ~0u,
+                subresourceRange = range,
+            };
+            vkCmdPipelineBarrier(_cmdBuf, 0x1, 0x80, 0,
+                0, null, 0, null, 1, &bar);
+            _texVk[texId] = t with { BarrierDone = true };
+        }
+        _texPendingBarrier.Clear();
+    }
+
     // T1 v0: copy game's CopyBufferToTexture source directly into our
     // host-mapped swap image. Bypasses Vulkan entirely for the COPY (the
     // image is HOST_VISIBLE LINEAR so memcpy works); the next Present's
@@ -1222,6 +1344,10 @@ public static unsafe class NvnVulkan {
             renderArea = new() { width = W, height = H },
             clearValueCount = 1, pClearValues = &clear,
         };
+        //  emit barriers for textures uploaded LAST frame
+        // (= EnsureTexBound queued them; barriers must be outside
+        // render-pass). 1-frame delay before texture is sampleable.
+        FlushTexBarriers();
         vkCmdBeginRenderPass(_cmdBuf, &rpbi, 0);  // INLINE
 
         // ── T3 PATH: game's compiled shaders ──
@@ -1257,6 +1383,19 @@ public static unsafe class NvnVulkan {
                     vkCmdBindPipeline(_cmdBuf, 0, pipe);
                     curPipe = pipe;
                 }
+                // 5: per-texId DS bind. EnsureTexBound returns
+                // a DS (alloc'd against _t3DslTex = binding-compatible
+                // with set=1) for textures with decoded RGBA8, or 0
+                // for not-yet-decoded → fall back to _t3DsTex (= the
+                // atlas; wrong-image but doesn't crash). ‡ Barriers
+                // queue inside-RP → emit NEXT frame's pre-RP (1-frame
+                // delay; the first frame using a new texId samples
+                // UNDEFINED layout = lavapipe tolerates).
+                var texId = (int)(d.TexHandle >> 32);
+                ulong txDs = texId == 0 ? _t3DsTex
+                    : _texVk.TryGetValue(texId, out var tv) ? tv.Ds
+                    : EnsureTexBound(texId, d.Tex);
+                t3sets[1] = txDs != 0 ? txDs : _t3DsTex;
                 var bytes = (ulong) d.Count * 36;
                 if(vbo + bytes > VbufSize) break;
                 Buffer.MemoryCopy((void*) d.VbCpu, _vbufPtr + vbo, bytes, bytes);
@@ -1300,7 +1439,15 @@ public static unsafe class NvnVulkan {
                         .Select(d => (d.VsShIdx, d.FsShIdx, d.TexHandle))
                         .Distinct()
                         .Select(p => $"vs{p.VsShIdx}/fs{p.FsShIdx}/tx{p.TexHandle:x}"));
-                    $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} vbufUsed={vbo} [{pairs}]".Log();
+                    {
+                        // instrument: per-distinct-tex resolve log.
+                        var txs = string.Join(",", draws.Take(recN)
+                            .GroupBy(d => d.TexHandle).Select(g => {
+                                var t = g.First().Tex;
+                                return $"tx{g.Key:x}→{(t==null?"∅":$"{t.Width}×{t.Height}f{t.Format:x}")}";
+                            }));
+                        $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} vbufUsed={vbo} [{pairs}] tex:[{txs}]".Log();
+                    }
                 }
             return;
         }

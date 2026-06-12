@@ -48,10 +48,13 @@ public static unsafe class CondVarKernel {
     // are on stack at deadlock-time. = instrument.
     public static readonly ThreadLocal<ulong> LastFp = new();
 
-    // per-thread last-SVC-entry snapshot, readable from
-    // watchpoint thread. mtid → (fp at SVC entry, svc#, ts).
+    // per-thread last-reentry snapshot, readable from
+    // watchpoint thread. mtid → (game-fp X29, game-LR X30,
+    // op<<16|a, monotonic reentry-count N, ts). N-delta
+    // between two wp events = how many reentries in that
+    // window (= the "1.2s pure-native" verifier).
     public static readonly System.Collections.Concurrent
-        .ConcurrentDictionary<int, (ulong Fp, ulong Svc, long Ts)>
+        .ConcurrentDictionary<int, (ulong Fp, ulong Lr, ulong OpA, ulong N, long Ts)>
         ThreadSnap = new();
 
     // watchpoint: poll *M1/*M2 at ~50μs; log every value-
@@ -88,14 +91,14 @@ public static unsafe class CondVarKernel {
             while(_wpRunning) {
                 var v1 = *m1; var v2 = *m2;
                 if(v1 != p1 || v2 != p2) {
-                    var ts = sw.ElapsedTicks;
-                    // Compact: which threads were in-SVC ≤1ms ago
-                    // (= candidates for who-just-wrote). Show the
-                    // game-fp for each so we can symbolicate.
-                    var snaps = ThreadSnap
-                        .Select(kv => $"t{kv.Key}@svc{kv.Value.Svc:x}:fp={kv.Value.Fp:x}({ts-kv.Value.Ts}t-ago)")
-                        .Take(20);
-                    $"[wp] #{n++} {ts}t M1={v1:x}{(v1!=p1?"*":"")} M2={v2:x}{(v2!=p2?"*":"")} | {string.Join(" ",snaps)}".Log();
+                    //  log only t1+t6 (= nnMain+h1f) snaps
+                    // — game-fp + LR (symbolicatable) + reentry-N
+                    // (delta = "how many reentries since last wp").
+                    // sw.ElapsedTicks → microseconds for readability.
+                    var us = sw.ElapsedTicks * 1_000_000 / System.Diagnostics.Stopwatch.Frequency;
+                    var s1 = ThreadSnap.GetValueOrDefault(1);
+                    var s6 = ThreadSnap.GetValueOrDefault(6);
+                    $"[wp] #{n++} {us}μs M1={v1:x}{(v1!=p1?"*":"")} M2={v2:x}{(v2!=p2?"*":"")} | t1:N={s1.N},op={s1.OpA:x},lr={s1.Lr:x},fp={s1.Fp:x} t6:N={s6.N},op={s6.OpA:x},lr={s6.Lr:x},fp={s6.Fp:x}".Log();
                     p1 = v1; p2 = v2;
                 }
                 // ~50μs poll. SpinWait gives ~ns-resolution but
@@ -112,10 +115,16 @@ public static unsafe class CondVarKernel {
     static readonly string[] _trace = new string[256];
     static int _traceIdx;
     static readonly bool _tracing = Environment.GetEnvironmentVariable("UMBRA_WATCHDOG") != null;
+    static readonly long _trcT0 = System.Diagnostics.Stopwatch.GetTimestamp();
     static void Trc(string s) {
         if(!_tracing) return;
+        //  timestamp each event so we can place trace-
+        // ring entries relative to wp events (= "was this M3
+        // unlock during the 1.2s window?").
+        var us = (System.Diagnostics.Stopwatch.GetTimestamp() - _trcT0)
+            * 1_000_000 / System.Diagnostics.Stopwatch.Frequency;
         _trace[Interlocked.Increment(ref _traceIdx) & 255] =
-            $"[t{Environment.CurrentManagedThreadId}] {s}";
+            $"[t{Environment.CurrentManagedThreadId}] {us}μs {s}";
     }
 
     // Watchdog dump: who's waiting on what. Called from outside

@@ -36,7 +36,7 @@ public static unsafe class NvnLinux {
 
     // ─── per-handle state ───
     // One bag per opaque handle (builder OR object — Initialize copies).
-    class H {
+    public class H {
         public ulong CpuPtr, Size;          // MemoryPool: SetStorage ptr/size
         public ulong PoolPtr, Offset;       // Buffer: SetStorage(pool,off,size)
         public ulong GpuAddr;               // Buffer/Pool: assigned at Initialize
@@ -148,6 +148,7 @@ public static unsafe class NvnLinux {
         // actual NVN block-linear gob math = future wall; not blocking
         // T1 dump.
         ["nvnTextureInitialize"]           = (nint)(delegate* unmanaged<ulong, ulong, int>)&TexInitialize,
+        ["nvnTexturePoolRegisterTexture"]  = (nint)(delegate* unmanaged<ulong, int, ulong, ulong, void>)&TpRegTexture,
         ["nvnTextureGetFormat"]            = (nint)(delegate* unmanaged<ulong, int>)&TexGetFormat,
         ["nvnTextureGetWidth"]             = (nint)(delegate* unmanaged<ulong, int>)&TexGetWidth,
         ["nvnTextureGetHeight"]            = (nint)(delegate* unmanaged<ulong, int>)&TexGetHeight,
@@ -299,6 +300,44 @@ public static unsafe class NvnLinux {
     // RecordDrawPass that has draws (= after the atlas upload happened).
     // ‡ v0.5 = ONE atlas (the font); v1 = per-texture-handle map.
     public static byte[]? AtlasRgba; public static int AtlasW, AtlasH;
+
+    // TexturePool index → NVN texture handle. nvnCommandBuffer
+    // BindTexture passes a packed handle = (samplerId<<32)|texId;
+    // texId is the index passed to nvnTexturePoolRegisterTexture.
+    // This map resolves DrawRecord.TexHandle's texId → the actual
+    // NVN texture handle whose St[tex] has W/H/Fmt/CpuPtr.
+    // ⚠️ Game re-registers same idx with different tex handles
+    // (= virtual texturing / streaming); latest-wins. Snapshot
+    // resolved tex-handle at draw-time, not idx.
+    public static readonly System.Collections.Concurrent
+        .ConcurrentDictionary<int, ulong> TexByPoolIdx = new();
+    [UnmanagedCallersOnly]
+    static void TpRegTexture(ulong pool, int idx, ulong tex, ulong view) {
+        var first = !TexByPoolIdx.ContainsKey(idx);
+        TexByPoolIdx[idx] = tex;
+        if(first) {  // log first registration per-idx (= the game
+                     // re-registers 0x100 every frame; we want the
+                     // ONCE-each map for the title's ~30 textures)
+            var ts = St.GetValueOrDefault(tex);
+            $"[nvn] TexturePoolRegister idx=0x{idx:x} tex=0x{tex:x} view=0x{view:x} → {ts?.Width ?? 0}×{ts?.Height ?? 0} fmt=0x{ts?.Format ?? 0:x} cpu=0x{ts?.CpuPtr ?? 0:x}".Log();
+        }
+    }
+    // Resolve a TexHandle (= packed (samplerId<<32)|texId per
+    // nvnDeviceGetTextureHandle convention) to the texture's state
+    // for upload. Returns null if texId not registered or tex not
+    // in St (= TextureInitialize never fired for it).
+    public static H? ResolveTex(ulong texHandle) {
+        // TexHandle = (texId << 32) | samplerId. Verified at-data:
+        // menu's tx10100000120 → texId=0x101 = the 2048×2048 BC3
+        // atlas (= what AtlasRgba already holds + renders 90788nz
+        // correctly). Title's tx118-11a…185 = texId 0x118-11a all
+        // sampler 0x185 (= different textures, same sampler ✓).
+        // ‡ nvnDeviceGetTextureHandle isn't hooked; this layout is
+        // inferred from the registered-pool-idx ↔ draw-tx match.
+        var texId = (int)(texHandle >> 32);
+        if(!TexByPoolIdx.TryGetValue(texId, out var tex)) return null;
+        return St.GetValueOrDefault(tex);
+    }
 
     static int _copyBufN;
     [UnmanagedCallersOnly]
@@ -471,6 +510,9 @@ public static unsafe class NvnLinux {
         // that T3Pipe needs to build VkVertexInputState).
         public NvnAttrib[] Attribs;
         public NvnStream[] Streams;
+        // resolved texture state (W/H/Fmt/CpuPtr) at draw
+        // time. Null if TexHandle's texId not registered.
+        public H? Tex;
     }
 
     // NVN VertexAttribState: built by game via SetDefaults/
@@ -799,6 +841,9 @@ public static unsafe class NvnLinux {
             // _stagePr[0]=VS, [1]=FS per umbra71 (stages bit 0/1).
             VsShIdx = St.TryGetValue(_stagePr[0], out var pvs) ? pvs.ShIdx : 0,
             FsShIdx = St.TryGetValue(_stagePr[1], out var pfs) ? pfs.ShIdx : 0,
+            // resolve TexHandle → tex state at DRAW time (=
+            // re-registration-safe; latest pool-idx mapping wins).
+            Tex = ResolveTex(_curTexHandle),
             VpX = _vpX, VpY = _vpY, VpW = _vpW, VpH = _vpH,
             ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
             Attribs = _curAttribs, Streams = _curStreams,

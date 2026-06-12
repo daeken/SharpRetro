@@ -34,17 +34,71 @@ public unsafe class GameWrapper {
               or 0x1E or 0x32 or 0x34            // GetSystemTick/threadctx/wait-addr
               or 0x21 or 0x16 or 0x17 or 0x12    // SendSyncRequest/Close/Reset/ClearEvent
               or 0x44;                           // ReplyAndReceive (IPC server side)
+        // Cache TLS-base per host-thread. The MRS TPIDRRO
+        // path (op=3, a=0x5e83) is the hot reentry: 65K calls
+        // in 50ms while h1f holds the allocator lock = the
+        // (q) ABBA window. Fast-pathing it BEFORE the try-block
+        // + instruments + delegate-dispatch shrinks ~0.77μs
+        // → ~0.1μs. Won't get hw's ~ns (still crosses native→
+        // managed), but ~7×.
+        var tlsBaseTL = new ThreadLocal<ulong>(() =>
+            (ulong) Kernel.ThreadManager.CurrentThread.TlsBase);
         Callbacks.NativeReentry = (state, op, a, b, replAddr) => {
+            // ── HOT PATH: MRS TPIDRRO_EL0 (op=3 a=0x5e83) ──
+            // {op0=1+2,op1=3,crn=13,crm=0,op2=3} packed:
+            //   op2|crm<<3|crn<<7|op1<<11|op0<<14 = 3|0|13<<7|3<<11|1<<14 = 0x5e83
+            // (op0 in `a` is the bit ABOVE the implicit-1, i.e.
+            //  the o-field; ReadSr lambda reconstructs op0=2|o.)
+            // b = dest reg index. Write directly into NativeState.
+            if(op == 3) {
+                // MRS fast-paths: skip the try/instrument/lambda
+                // chain for the hot sysregs. Each is ~789× of t6's
+                // total reentries (test-runs N: 15.2M→19.3K).
+                // NOT a (q) fix — window is cv-Wait/Sleep blocking,
+                // not reentry-count — but real general speedup.
+                switch(a) {
+                    case 0x5e83:  // TPIDRRO_EL0 (TLS base)
+                        *GetRegisterPointer(state, (int)b) = tlsBaseTL.Value;
+                        return;
+                    case 0x5f01:  // CNTPCT_EL0 (system counter)
+                        // 19.2MHz tick. ReadSr did ElapsedMs*19200
+                        // = ms-resolution; do ticks/freq*19.2M for
+                        // sub-ms (some games spin on this).
+                        *GetRegisterPointer(state, (int)b) = (ulong)
+                            (System.Diagnostics.Stopwatch.GetTimestamp()
+                             * 19_200_000L
+                             / System.Diagnostics.Stopwatch.Frequency);
+                        return;
+                    case 0x5f00:  // CNTFRQ_EL0
+                        *GetRegisterPointer(state, (int)b) = 19_200_000;
+                        return;
+                    case 0x5e82:  // TPIDR_EL0
+                        *GetRegisterPointer(state, (int)b) =
+                            Kernel.ThreadManager.CurrentThread.Tpidr;
+                        return;
+                }
+            }
             try {
                 // capture X29 at SVC entry so blocked-
                 // Waiters' game-stacks can be dumped from watchdog.
                 // NativeState's first field = X29; the existing
                 // StackTrace((ulong*)state) reads it as chain root.
                 CondVarKernel.LastFp.Value = (ulong) state;
-                // snapshot for the watchpoint thread (which
-                // can't read ThreadLocal across threads):
-                CondVarKernel.ThreadSnap[Environment.CurrentManagedThreadId]
-                    = ((ulong)state, a, System.Diagnostics.Stopwatch.GetTimestamp());
+                // Snapshot for the watchpoint thread. Capture
+                // GAME-fp (= *state = X29), game-LR (= state[30]
+                // = X30), op<<16|a, monotonic reentry-count N
+                // (delta between wp events = how many reentries
+                // in that window), ts. 
+                {
+                    var mtid = Environment.CurrentManagedThreadId;
+                    var prev = CondVarKernel.ThreadSnap.GetValueOrDefault(mtid);
+                    CondVarKernel.ThreadSnap[mtid] = (
+                        Fp: *(ulong*)state,
+                        Lr: ((ulong*)state)[30],
+                        OpA: ((ulong)op << 16) | a,
+                        N: prev.N + 1,
+                        Ts: System.Diagnostics.Stopwatch.GetTimestamp());
+                }
                 // discriminator: log [TLS+504]→ThreadType*
                 // → [ThreadType+440]=handle once per thread, on
                 // first lock-SVC. ‡-cand(iii) = if two host-threads
