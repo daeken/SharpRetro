@@ -1534,23 +1534,58 @@ public static unsafe class NvnVulkan {
     // for >5s, dump CondVarKernel state. = the instrument
     // for the cv-race hang (A/B runs/A/B runs all-threads-futex_wait).
     static void Watchdog() {
+        // UMBRA_WD_TIMEOUT = seconds before force-break (default 4).
+        // Lower = faster recovery from re-deadlocking runs; too low
+        // risks force-breaking a slow-but-progressing load (the 16MB
+        // BC3 decode at copy-time can take >1s on first hit).
+        var fbAt = int.TryParse(
+            Environment.GetEnvironmentVariable("UMBRA_WD_TIMEOUT"),
+            out var fbT) ? Math.Max(1, fbT) : 4;
         int last = -1, stuck = 0;
         while(true) {
             Thread.Sleep(1000);
             if(_frameN == last) {
-                if(stuck == 4 && CondVarKernel.ForceBreak()) {
+                if(stuck == fbAt && CondVarKernel.ForceBreak()) {
                     $"[wd] force-broke @ frame {_frameN}; resuming".Log();
                     stuck = 0; continue;
                 }
-                if(++stuck == 5 || (stuck > 5 && stuck % 30 == 0)) {
+                if(++stuck == fbAt + 1 || (stuck > fbAt && stuck % 30 == 0)) {
                     $"[wd] STALL: Present stuck {stuck}s @ frame {_frameN}".Log();
                     CondVarKernel.DumpState($"wd-{stuck}s");
                     foreach(var t in Kernel.ThreadManager.Threads)
                         $"[wd]   kthread h=0x{t.Handle:X} core={t.IdealCore}".Log();
                 }
-            } else { last = _frameN; stuck = 0; }
+            } else {
+                last = _frameN; stuck = 0;
+                // ── bg-watchdog: when Present IS moving, check each
+                //    game-thread's reentry-N for staleness. A thread
+                //    whose N hasn't changed in >5s while Present
+                //    advances = blocked at SVC-level invisible to the
+                //    Present-stall watchdog above. Dump CondVarKernel
+                //    state ONCE per stalled tid.
+                if(Environment.GetEnvironmentVariable("UMBRA_BG_WD") != null) {
+                    var now = System.Diagnostics.Stopwatch.GetTimestamp();
+                    foreach(var (tid, s) in CondVarKernel.ThreadSnap) {
+                        if(_bgLastN.TryGetValue(tid, out var prev)) {
+                            if(s.N == prev.N) {
+                                var stuckS = (now - prev.Ts) / (double)System.Diagnostics.Stopwatch.Frequency;
+                                if(stuckS > 5 && !_bgDumped.Contains(tid)) {
+                                    _bgDumped.Add(tid);
+                                    $"[wd-bg] tid={tid} stuck {stuckS:F1}s @ N={s.N} op={s.OpA:x} lr={s.Lr:x} fp={s.Fp:x} (Present @{_frameN})".Log();
+                                    CondVarKernel.DumpState($"bg-stall-t{tid}");
+                                }
+                            } else {
+                                _bgLastN[tid] = (s.N, now);
+                                _bgDumped.Remove(tid);
+                            }
+                        } else _bgLastN[tid] = (s.N, now);
+                    }
+                }
+            }
         }
     }
+    static readonly Dictionary<int,(ulong N,long Ts)> _bgLastN = new();
+    static readonly HashSet<int> _bgDumped = new();
     static Func<int, bool>? _dumpFrames;
     static Func<int, bool> ParseDumpFrames() {
         var env = Environment.GetEnvironmentVariable("UMBRA_DUMP_FRAMES");
