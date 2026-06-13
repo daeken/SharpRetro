@@ -109,9 +109,12 @@ public static unsafe class HidPump {
             .OrderBy(r => r.Key)
             .Select(r => (lo: r.Key, hi: r.Key + r.Value.Size))
             .ToList();
-        // Merge adjacent (≤4KB gap).
+        // Merge adjacent (≤64KB gap — covers the patch-trampoline
+        // region UmbraCore inserts between modules, which has no
+        // game symbols and would otherwise be skipped; ICS::Leave
+        // +0x0 etc. branch into it, so disasm/xref needs it).
         for(var i = runs.Count - 1; i > 0; i--)
-            if(runs[i].lo - runs[i-1].hi <= 0x1000) {
+            if(runs[i].lo - runs[i-1].hi <= 0x10000) {
                 runs[i-1] = (runs[i-1].lo, runs[i].hi);
                 runs.RemoveAt(i);
             }
