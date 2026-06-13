@@ -88,9 +88,16 @@ public static unsafe class CondVarKernel {
             while(_mtx.Count == 0) Thread.Sleep(10);
             Thread.Sleep(100);  // let heap-allocs settle
             $"[wp] watchpoint armed; m1={(ulong)m1:x} m2={(ulong)m2:x}".Log();
+            // (c⁸) MutexType base for M1 = futex−0x18.
+            // nest@+8 (u32), owner@+0x10 (ThreadType*).
+            var m1n = (uint*)((ulong)m1 - 0x10);   // nest
+            var m1o = (ulong*)((ulong)m1 - 0x8);   // owner
+            uint pn = 0; ulong po = 0;
             while(_wpRunning) {
                 var v1 = *m1; var v2 = *m2;
-                if(v1 != p1 || v2 != p2) {
+                var vn = *m1n; var vo = *m1o;
+                if(v1 != p1 || v2 != p2
+                        || vn != pn || vo != po) {
                     //  log only t1+t6 (= nnMain+h1f) snaps
                     // — game-fp + LR (symbolicatable) + reentry-N
                     // (delta = "how many reentries since last wp").
@@ -98,8 +105,9 @@ public static unsafe class CondVarKernel {
                     var us = sw.ElapsedTicks * 1_000_000 / System.Diagnostics.Stopwatch.Frequency;
                     var s1 = ThreadSnap.GetValueOrDefault(1);
                     var s6 = ThreadSnap.GetValueOrDefault(6);
-                    $"[wp] #{n++} {us}μs M1={v1:x}{(v1!=p1?"*":"")} M2={v2:x}{(v2!=p2?"*":"")} | t1:N={s1.N},op={s1.OpA:x},lr={s1.Lr:x},fp={s1.Fp:x} t6:N={s6.N},op={s6.OpA:x},lr={s6.Lr:x},fp={s6.Fp:x}".Log();
+                    $"[wp] #{n++} {us}μs M1={v1:x}{(v1!=p1?"*":"")} n={vn}{(vn!=pn?"*":"")} o={vo:x}{(vo!=po?"*":"")} M2={v2:x}{(v2!=p2?"*":"")} | t1:N={s1.N},op={s1.OpA:x},lr={s1.Lr:x},fp={s1.Fp:x} t6:N={s6.N},op={s6.OpA:x},lr={s6.Lr:x},fp={s6.Fp:x}".Log();
                     p1 = v1; p2 = v2;
+                    pn = vn; po = vo;
                 }
                 // ~50μs poll. SpinWait gives ~ns-resolution but
                 // burns a core; Sleep(0) yields. Mix:
@@ -200,11 +208,59 @@ public static unsafe class CondVarKernel {
     // if no WaitMask). SVC is the contended/slow path. So we only see calls
     // where *addr was nonzero (lock) or had WaitMask set (unlock).
 
+    // (c⁹) Diagnostic: dump FP-chain when ArbitrateLock fires
+    // for a specific futex addr (= the contended path; the
+    // requester's SVC-entry FP walks back through ICS::Enter
+    // → LockMutex → [Begin →] CALLER). Dedupe by (reqHandle,
+    // frame-3-LR) so each distinct caller logs once. Set
+    // UMBRA_M1_TRACE=<hex addr> to enable (e.g. fff5b44815b8
+    // for LEGO Worlds' NuMemoryManager allocator futex; addr
+    // is run-stable under setarch -R / ASLR-off).
+    static readonly ulong _m1TraceAddr = ulong.TryParse(
+        Environment.GetEnvironmentVariable("UMBRA_M1_TRACE"),
+        System.Globalization.NumberStyles.HexNumber, null,
+        out var a) ? a : 0;
+    static readonly System.Collections.Generic.HashSet<ulong>
+        _m1Seen = new();
+    static void DumpM1Caller(ulong addr, ulong reqHandle, ulong fp) {
+        if(_m1TraceAddr == 0 || addr != _m1TraceAddr
+                || fp == 0) return;
+        // Walk FP-chain: each frame = [fp→prev_fp, fp+8→saved_lr]
+        var lrs = new ulong[8]; int n = 0;
+        var p = fp;
+        try {
+            while(n < 8 && p > 0x1000 && p < 0x0001_0000_0000_0000UL) {
+                var lr = *(ulong*)(p + 8);
+                lrs[n++] = lr;
+                var nx = *(ulong*)p;
+                if(nx <= p || nx > p + 0x100000) break;
+                p = nx;
+            }
+        } catch { }
+        // Dedupe key: req | frame[3] (= past Enter/LockMutex/Begin)
+        var key = (reqHandle << 48) | (n > 3 ? lrs[3] : lrs[n-1]);
+        lock(_m1Seen) {
+            if(!_m1Seen.Add(key)) return;
+        }
+        // nest@(addr−0x10) — assumes nn::os::MutexType layout
+        // (futex word at +0x18; nest at +0x8). Reads as 0 if
+        // the addr isn't actually a MutexType+0x18 futex.
+        var nest = *(uint*)(addr - 0x10);
+        var s = $"[c9] L(M1) req={reqHandle:x} nest={nest} fp0={fp:x} chain:";
+        for(var i = 0; i < n; i++)
+            s += $" {lrs[i]:x}";
+        s.Log();
+        // Symbolize via Kernel.StackTrace too (= readable)
+        $"[c9]   ↳ symbolized:".Log();
+        try { Kernel.StackTrace((ulong*)fp); } catch { }
+    }
+
     public static ulong ArbitrateLock(ulong ownerHandle, ulong addr, ulong reqHandle) {
         var w = new Waiter {
             Handle = (uint) reqHandle, MutexAddr = addr,
             Fp = LastFp.Value,  // = NativeState->X29 at SVC entry
         };
+        DumpM1Caller(addr, reqHandle, w.Fp);
         Trc($"L  m={addr:x} own={ownerHandle:x} req={reqHandle:x} *={*(uint*)addr:x}");
         lock(_schedLock) {
             var tag = *(uint*) addr;
