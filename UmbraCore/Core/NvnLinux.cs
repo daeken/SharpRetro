@@ -215,6 +215,9 @@ public static unsafe class NvnLinux {
         ["nvnCommandBufferSetViewport"]      = (nint)(delegate* unmanaged<ulong, int, int, int, int, void>)&CbSetViewport,
         ["nvnCommandBufferSetScissor"]       = (nint)(delegate* unmanaged<ulong, int, int, int, int, void>)&CbSetScissor,
         ["nvnCommandBufferDrawArrays"]       = (nint)(delegate* unmanaged<ulong, int, int, int, void>)&CbDrawArrays,
+        // (c²⁷) DrawElementsBaseVertex(cb, prim, idxType, count,
+        // idxGpuAddr, baseVtx). NVN idxType 0=u8 1=u16 2=u32.
+        ["nvnCommandBufferDrawElementsBaseVertex"] = (nint)(delegate* unmanaged<ulong, int, int, int, ulong, int, void>)&CbDrawElementsBaseVertex,
         ["nvnCommandBufferBindTexture"]      = (nint)(delegate* unmanaged<ulong, int, int, ulong, void>)&CbBindTexture,
         ["nvnCommandBufferBindProgram"]      = (nint)(delegate* unmanaged<ulong, ulong, int, void>)&CbBindProgram,
         ["nvnDeviceGetTextureHandle"]        = (nint)(delegate* unmanaged<ulong, int, int, ulong>)&DeviceGetTextureHandle,
@@ -625,6 +628,12 @@ public static unsafe class NvnLinux {
         // Which sh{idx}-t{sph} the bound VS+FS programs map to (via
         // _stagePr[0/1] → S(prog).ShIdx). For per-program pipelines.
         public int VsShIdx, FsShIdx;
+        // (c²⁷) Indexed draw (DrawElementsBaseVertex). When
+        // IdxCount>0: use vkCmdDrawIndexed with IdxCpu/IdxType/
+        // BaseVtx; Count/First unused. NVN idxType 0=u8 1=u16
+        // 2=u32. The game's 3D-cutscene geometry is ALL indexed
+        // (~36K calls/cutscene, prim=4 idxType=1 count~810-2280).
+        public ulong IdxCpu; public int IdxType, IdxCount, BaseVtx;
         public int VpX, VpY, VpW, VpH;   // viewport at draw time
         public int ScX, ScY, ScW, ScH;   // scissor at draw time
         // per-draw vertex layout. Snapshot of the game's
@@ -923,6 +932,49 @@ public static unsafe class NvnLinux {
         // hardware reads. We just need it to round-trip through BindTexture
         // → recorded → reverse-mapped to the texture. v0 = pack hi/lo.
         return ((ulong)(uint) texId << 32) | (uint) samplerId;
+    }
+
+    // (c²⁷) Shared state-snapshot for both DrawArrays and
+    // DrawElementsBaseVertex. Returns the populated DrawRecord
+    // with all current pipeline/UBO/tex/viewport state captured.
+    static DrawRecord SnapDraw(int prim) {
+        var vbCpu = GpuToCpu(_curVbGpu);
+        var ubos = new byte[16][];
+        for(var st = 0; st < 2; st++)
+            for(var sl = 0; sl < 8; sl++) {
+                var (cpu, sz) = _ubo[st, sl];
+                if(cpu == 0) continue;
+                var cap = (int) Math.Min(sz, 4096);
+                ubos[st*8 + sl] = new ReadOnlySpan<byte>((void*)cpu, cap).ToArray();
+            }
+        return new DrawRecord {
+            Prim = prim,
+            VbGpu = _curVbGpu, VbCpu = vbCpu, VbSize = _curVbSize, VbIndex = _curVbIdx,
+            Program = _curProgram,
+            TexHandle = _curTexHandle, TexStage = _curTexStage, TexSlot = _curTexSlot,
+            Ubo = ubos[2], Ubos = ubos,
+            VsShIdx = St.TryGetValue(_stagePr[0], out var pvs) ? pvs.ShIdx : 0,
+            FsShIdx = St.TryGetValue(_stagePr[1], out var pfs) ? pfs.ShIdx : 0,
+            Tex = ResolveTex(_curTexHandle),
+            VpX = _vpX, VpY = _vpY, VpW = _vpW, VpH = _vpH,
+            ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
+            Attribs = _curAttribs, Streams = _curStreams,
+        };
+    }
+
+    static int _drawElN;
+    [UnmanagedCallersOnly]
+    static void CbDrawElementsBaseVertex(ulong cb, int prim,
+            int idxType, int count, ulong idxGpuAddr, int baseVtx) {
+        var n = ++_drawElN;
+        var idxCpu = GpuToCpu(idxGpuAddr);
+        var dr = SnapDraw(prim);
+        dr.N = -n;  // negative = indexed (visual disc in logs)
+        dr.IdxCpu = idxCpu; dr.IdxType = idxType;
+        dr.IdxCount = count; dr.BaseVtx = baseVtx;
+        lock(Draws) Draws.Add(dr);
+        if(n <= 25 || n % 1000 == 0)
+            $"[nvn] DrawElementsBV #{n} prim={prim} idxT={idxType} count={count} idx=gpu:0x{idxGpuAddr:x}/cpu:0x{idxCpu:x} baseVtx={baseVtx} vb=gpu:0x{_curVbGpu:x}/sz=0x{_curVbSize:x} sh{dr.VsShIdx}/{dr.FsShIdx} tex=0x{_curTexHandle:x} vp=({_vpX},{_vpY},{_vpW},{_vpH}) str={(_curStreams.Length>0?_curStreams[0].Stride:0)} attr=[{string.Join(",",_curAttribs.Select(a=>$"0x{a.Format:x}@{a.Offset}"))}]".Log();
     }
 
     [UnmanagedCallersOnly]
