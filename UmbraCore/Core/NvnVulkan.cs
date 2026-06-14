@@ -382,6 +382,21 @@ public static unsafe class NvnVulkan {
         public uint attachmentCount; public VkPipelineColorBlendAttachmentState* pAttachments;
         public float blendConst0, blendConst1, blendConst2, blendConst3;
     }
+    // (c³⁷)(G) Depth-stencil state. depthCompareOp 1=LESS.
+    // Without depth, draw-order = visibility ⟹ 100+ indexed
+    // meshes painting over each other in submission order =
+    // unintelligible. With depth-test, foreground occludes
+    // background regardless of draw-order = visible structure
+    // even with wrong textures.
+    [StructLayout(LayoutKind.Sequential)] struct VkPipelineDepthStencilStateCreateInfo {
+        public uint sType; public void* pNext; public uint flags;
+        public uint depthTestEnable, depthWriteEnable, depthCompareOp;
+        public uint depthBoundsTestEnable, stencilTestEnable;
+        // VkStencilOpState front, back (7×u32 each) — zeroed.
+        public fixed uint stencilFront[7], stencilBack[7];
+        public float minDepthBounds, maxDepthBounds;
+    }
+    const uint ST_PIPELINE_DEPTH_STENCIL_CI = 25;
     [StructLayout(LayoutKind.Sequential)] struct VkGraphicsPipelineCreateInfo {
         public uint sType; public void* pNext; public uint flags;
         public uint stageCount; public VkPipelineShaderStageCreateInfo* pStages;
@@ -571,7 +586,21 @@ public static unsafe class NvnVulkan {
         var vh = VtxHash(nA, nS);
         if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh), out var p)) return p;
         var vsm = LoadShader($"{_t3ShDir}/sh{vsIdx:d4}-t1.bin.spv");
-        var fsm = LoadShader($"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
+        // (c²⁸)×4 UMBRA_T3_WHITE_FS=1 → substitute const-white
+        // FS for ALL pipelines. The kt[33]-correct discriminator
+        // for "rasterizing-vs-not" (wireframe was wrong instrument
+        // — FS still runs on line-frags, black-on-black). White
+        // silhouettes visible ⟹ rasterizing, gap is FS-side (tex/
+        // lighting/blend). Still 0px ⟹ VS-side (off-screen/MVP).
+        // (c³⁷)×4 UMBRA_T3_DEPTHVIS_FS=1 → gl_FragCoord.z as
+        // grayscale (near=bright, far=dark). Proof-of-depth +
+        // shows scene structure without per-slot-tex/lighting.
+        var fsOverride = Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null
+                ? "/tmp/depthvis.frag.spv"
+            : Environment.GetEnvironmentVariable("UMBRA_T3_WHITE_FS") != null
+                ? "/tmp/white.frag.spv"
+            : null;
+        var fsm = LoadShader(fsOverride ?? $"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
         if(vsm == 0 || fsm == 0) {
             if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
             _t3Pipes[(vsIdx, fsIdx, vh)] = 0;
@@ -657,12 +686,25 @@ public static unsafe class NvnVulkan {
             sType = ST_PIPELINE_COLOR_BLEND_CI,
             attachmentCount = 1, pAttachments = &cbAtt,
         };
+        // (c³⁷)(G) depth-stencil state: test+write enabled,
+        // compareOp=LESS. ‡ NVN convention may be GREATER
+        // (reversed-Z); start with LESS, flip if everything
+        // depth-fails. UMBRA_T3_DEPTH=0 disables (= revert to
+        // pre-(G) painters-order behavior).
+        var ds = new VkPipelineDepthStencilStateCreateInfo {
+            sType = ST_PIPELINE_DEPTH_STENCIL_CI,
+            depthTestEnable = _t3DepthEnable ? 1u : 0u,
+            depthWriteEnable = _t3DepthEnable ? 1u : 0u,
+            depthCompareOp = _t3DepthOp,
+            maxDepthBounds = 1.0f,
+        };
         var gpci = new VkGraphicsPipelineCreateInfo {
             sType = ST_GRAPHICS_PIPELINE_CI,
             stageCount = 2, pStages = stages,
             pVertexInputState = &vi, pInputAssemblyState = &ia,
             pViewportState = &vps, pRasterizationState = &rs,
-            pMultisampleState = &ms, pColorBlendState = &cbs,
+            pMultisampleState = &ms, pDepthStencilState = &ds,
+            pColorBlendState = &cbs,
             layout = _t3PipelineLayout, renderPass = _renderPass,
             subpass = 0, basePipelineIndex = -1,
         };
@@ -681,6 +723,64 @@ public static unsafe class NvnVulkan {
     // (c²⁶) set=1 binding count (max FS-corpus binding=38)
     // + per-texId DS budget. Each DS = T3TexBindN samplers.
     const int T3TexBindN = 40, T3TexDsMax = 128;
+    // (c²⁹)-(c³⁶) master gate — see comment at the sh813
+    // block in RecordDrawPass.
+    static readonly bool _legoDiag =
+        Environment.GetEnvironmentVariable("UMBRA_LEGO_DIAG") != null;
+    static bool _c28Dumped;
+    static int _c29LastBucket = -1, _c29First;
+    static uint _c29PrevC3, _c29PrevC6;
+    static int _c30PrevFC, _c30PrevF;
+    static float[]? _c32PrevBand;
+    static readonly bool _whiteFs =
+        Environment.GetEnvironmentVariable("UMBRA_T3_WHITE_FS") != null;
+    static readonly bool _depthvisFs =
+        Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null;
+    static readonly HashSet<int>? _skipVs =
+        Environment.GetEnvironmentVariable("UMBRA_T3_SKIP_VS") is {} sv
+            ? sv.Split(',').Select(int.Parse).ToHashSet() : null;
+    static readonly bool _dump3d =
+        Environment.GetEnvironmentVariable("UMBRA_DUMP_3D") != null;
+    static int _dump3dFirst, _dump3dWant;
+    // (c³⁷)(G) depth: default ON; UMBRA_T3_DEPTH=0 reverts to
+    // pre-(G) painters-order. UMBRA_T3_DEPTH_OP=N overrides
+    // compareOp (1=LESS default; 4=GREATER for reversed-Z).
+    static readonly bool _t3DepthEnable =
+        Environment.GetEnvironmentVariable("UMBRA_T3_DEPTH") != "0";
+    static readonly uint _t3DepthOp =
+        uint.TryParse(Environment.GetEnvironmentVariable(
+            "UMBRA_T3_DEPTH_OP"), out var dop) ? dop : 1u;
+    static readonly bool _c33ForceSpeed =
+        Environment.GetEnvironmentVariable("UMBRA_C33_FORCE_SPEED") != null;
+    static int _c33ForceN;
+    // (c³³)×4 patch-test: NOP the +0x348 `cbnz w21` gate
+    // (and +0x260 sibling). If c[3] unfreezes ⟹ w21 (=
+    // arg-w1 = mpd+40 via Sys::Update) IS the gate; trace
+    // mpd+40 source. If still frozen ⟹ another gate.
+    static readonly bool _c33Patch =
+        Environment.GetEnvironmentVariable("UMBRA_C33_PATCH_W21") != null;
+    static readonly bool _c35PatchBit1 =
+        Environment.GetEnvironmentVariable("UMBRA_C35_PATCH_BIT1") != null;
+    static readonly bool _c36ForceDev =
+        Environment.GetEnvironmentVariable("UMBRA_C36_FORCE_DEV") != null;
+    static int _c36ForceN;
+    static bool _c33Patched;
+    [DllImport("libc", SetLastError=true)]
+    static extern int mprotect(nint addr, nuint len, int prot);
+    [DllImport("libgcc_s.so.1", EntryPoint="__clear_cache")]
+    static extern void __clear_cache(nint begin, nint end);
+    static uint Hash16(byte[] b) {
+        // FNV-1a over first 256B (= the matrix region).
+        uint h = 2166136261;
+        var n = Math.Min(b.Length, 256);
+        for(var i=0;i<n;i++) { h ^= b[i]; h *= 16777619; }
+        return h;
+    }
+    static string FloatHex(byte[] b, int off, int n) {
+        var s=""; for(var i=0;i<n && off+i*4+4<=b.Length;i++){
+            var f=BitConverter.ToSingle(b,off+i*4);
+            s+=$"{f:g6} "; } return s;
+    }
     static ulong _t3DsVs, _t3DsTex, _t3DsFs;   // sets 0/1/2
     static ulong[] _t3CbufBuf;        // [1..24] = stage*12 + binding
     static byte*[] _t3CbufPtr;        // mapped ptrs
@@ -818,22 +918,65 @@ public static unsafe class NvnVulkan {
     // images (lavapipe doesn't care about tiling for color attachments;
     // ‡ verified-by-trying — if vkCreateFramebuffer or the draw fails,
     // fallback = OPTIMAL render target + blit, wall-N).
+    // (c³⁷)(G) depth image (1× shared across swap-fbs; clears
+    // each frame via loadOp). D32_SFLOAT=126, OPTIMAL tiling,
+    // usage=DEPTH_STENCIL_ATTACHMENT.
+    static ulong _depthImg, _depthMem, _depthView;
     static bool InitPipeline() {
-        // ── render pass: one color attachment, LOAD_CLEAR → STORE ──
-        var att = new VkAttachmentDescription {
-            format = 37, samples = 1,           // R8G8B8A8_UNORM, 1×MSAA
+        // ── (c³⁷)(G) depth image: D32_SFLOAT W×H OPTIMAL ──
+        {
+            var dci = new VkImageCreateInfo {
+                sType = ST_IMAGE_CI, imageType = 1, format = 126,  // D32_SFLOAT
+                width = W, height = H, depth = 1,
+                mipLevels = 1, arrayLayers = 1, samples = 1,
+                tiling = 0,      // OPTIMAL (depth needs it)
+                usage = 0x20,    // DEPTH_STENCIL_ATTACHMENT_BIT
+            };
+            ulong di; Chk(vkCreateImage(_dev, &dci, null, &di), "vkCreateImage(depth)");
+            _depthImg = di;
+            VkMemoryRequirements dr; vkGetImageMemoryRequirements(_dev, di, &dr);
+            var dai = new VkMemoryAllocateInfo {
+                sType = ST_MEM_AI, allocationSize = dr.size,
+                memoryTypeIndex = _hostMemType,
+            };
+            ulong dm; Chk(vkAllocateMemory(_dev, &dai, null, &dm), "vkAllocateMemory(depth)");
+            _depthMem = dm;
+            Chk(vkBindImageMemory(_dev, di, dm, 0), "vkBindImageMemory(depth)");
+            var dvci = new VkImageViewCreateInfo {
+                sType = ST_IMAGE_VIEW_CI, image = di,
+                viewType = 1, format = 126,
+                subresourceRange = new() {
+                    aspectMask = 2,  // DEPTH_BIT
+                    levelCount = 1, layerCount = 1,
+                },
+            };
+            ulong dv; Chk(vkCreateImageView(_dev, &dvci, null, &dv), "vkCreateImageView(depth)");
+            _depthView = dv;
+        }
+        // ── render pass: color + depth, both LOAD_CLEAR ──
+        var atts = stackalloc VkAttachmentDescription[2];
+        atts[0] = new() {
+            format = 37, samples = 1,           // R8G8B8A8_UNORM
             loadOp = 1, storeOp = 0,            // CLEAR, STORE
-            stencilLoadOp = 2, stencilStoreOp = 1,  // DONT_CARE both
+            stencilLoadOp = 2, stencilStoreOp = 1,
             initialLayout = 0, finalLayout = 1, // UNDEFINED → GENERAL
         };
+        atts[1] = new() {                       // (c³⁷)(G) depth
+            format = 126, samples = 1,          // D32_SFLOAT
+            loadOp = 1, storeOp = 1,            // CLEAR, DONT_CARE
+            stencilLoadOp = 2, stencilStoreOp = 1,
+            initialLayout = 0, finalLayout = 3, // → DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        };
         var colorRef = new VkAttachmentReference { attachment = 0, layout = 2 };  // COLOR_ATTACHMENT_OPTIMAL
+        var depthRef = new VkAttachmentReference { attachment = 1, layout = 3 };  // DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         var subpass = new VkSubpassDescription {
             pipelineBindPoint = 0,              // GRAPHICS
             colorCount = 1, pColors = &colorRef,
+            pDepthStencil = &depthRef,
         };
         var rpci = new VkRenderPassCreateInfo {
             sType = ST_RENDER_PASS_CI,
-            attachmentCount = 1, pAttachments = &att,
+            attachmentCount = 2, pAttachments = atts,
             subpassCount = 1, pSubpasses = &subpass,
         };
         ulong rp;
@@ -842,6 +985,10 @@ public static unsafe class NvnVulkan {
         _renderPass = rp;
 
         // ── image views + framebuffers over the 3 swap images ──
+        // (c³⁷)(G) framebuffers now 2-att: [swapView[i], depthView].
+        // Single shared depth image (= all 3 fbs share one depth;
+        // OK because we render+wait synchronously per-frame, no
+        // overlap).
         for(var i = 0; i < 3; i++) {
             var ivci = new VkImageViewCreateInfo {
                 sType = ST_IMAGE_VIEW_CI, image = _swapImg[i],
@@ -850,9 +997,10 @@ public static unsafe class NvnVulkan {
             };
             ulong v; Chk(vkCreateImageView(_dev, &ivci, null, &v), $"vkCreateImageView[{i}]");
             _swapView[i] = v;
+            var fbAtts = stackalloc ulong[2] { v, _depthView };
             var fbci = new VkFramebufferCreateInfo {
                 sType = ST_FRAMEBUFFER_CI, renderPass = _renderPass,
-                attachmentCount = 1, pAttachments = &v,
+                attachmentCount = 2, pAttachments = fbAtts,
                 width = W, height = H, layers = 1,
             };
             ulong fb; Chk(vkCreateFramebuffer(_dev, &fbci, null, &fb), $"vkCreateFramebuffer[{i}]");
@@ -961,12 +1109,22 @@ public static unsafe class NvnVulkan {
             sType = ST_PIPELINE_COLOR_BLEND_CI,
             attachmentCount = 1, pAttachments = &cbAtt,
         };
+        // (c³⁷)(G) legacy fixed-pipeline = 2D blit (menu-atlas
+        // path); no depth wanted. But renderpass now has depth
+        // attachment ⟹ MUST supply pDepthStencilState (vk1.0
+        // §9.2: required when subpass has depth attachment).
+        // depthTestEnable=0 = pass-through.
+        var ds0 = new VkPipelineDepthStencilStateCreateInfo {
+            sType = ST_PIPELINE_DEPTH_STENCIL_CI,
+            maxDepthBounds = 1.0f,
+        };
         var gpci = new VkGraphicsPipelineCreateInfo {
             sType = ST_GRAPHICS_PIPELINE_CI,
             stageCount = 2, pStages = stages,
             pVertexInputState = &vi, pInputAssemblyState = &ia,
             pViewportState = &vps, pRasterizationState = &rs,
-            pMultisampleState = &ms, pColorBlendState = &cbs,
+            pMultisampleState = &ms, pDepthStencilState = &ds0,
+            pColorBlendState = &cbs,
             layout = _pipelineLayout, renderPass = _renderPass, subpass = 0,
             basePipelineIndex = -1,
         };
@@ -1449,13 +1607,19 @@ public static unsafe class NvnVulkan {
         if(_t3Pipeline != 0 && _atlasReady) EnsureT3Sets();
 
         // Begin render pass — clears to game's clear color via loadOp.
+        // (c³⁷)(G) 2 clear values: [0]=color, [1]=depth (1.0).
+        // VkClearValue is a union {VkClearColorValue color;
+        // VkClearDepthStencilValue {float depth; u32 stencil}};
+        // setting .r=1.0 on the depth slot puts the right bytes.
         var c = NvnLinux.LastClearColor;
-        var clear = new VkClearColorValue { r = c[0], g = c[1], b = c[2], a = c[3] };
+        var clears = stackalloc VkClearColorValue[2];
+        clears[0] = new() { r = c[0], g = c[1], b = c[2], a = c[3] };
+        clears[1] = new() { r = 1.0f };  // depth=1.0, stencil=0
         var rpbi = new VkRenderPassBeginInfo {
             sType = ST_RENDER_PASS_BI,
             renderPass = _renderPass, framebuffer = _swapFb[idx],
             renderArea = new() { width = W, height = H },
-            clearValueCount = 1, pClearValues = &clear,
+            clearValueCount = 2, pClearValues = clears,
         };
         //  emit barriers for textures uploaded LAST frame
         // (= EnsureTexBound queued them; barriers must be outside
@@ -1510,6 +1674,28 @@ public static unsafe class NvnVulkan {
                         && d.IdxCount == 0
                         && d.VsShIdx != 343 && d.VsShIdx != 345
                         && d.VsShIdx != 349) {
+                    nPostSkip++; continue;
+                }
+                // (c³⁴)×4(e') skybox-skip: when FS-override
+                // active AND 3D, skip the sh794 skybox draw
+                // (= screen-covering quad). With WHITE_FS it
+                // paints over geometry; with DEPTHVIS_FS at
+                // z≈far it'd be near-black anyway, but skip
+                // for consistent comparison. (c³⁷)×4: also
+                // skip when SKIP_VS contains 794 regardless.
+                if((_whiteFs || _depthvisFs) && hasIndexed
+                        && d.VsShIdx == 794) {
+                    nPostSkip++; continue;
+                }
+                // (c³⁷)×1(H) generic per-VS skip: UMBRA_T3
+                // _SKIP_VS=45,287,… skips draws with VsShIdx
+                // in the set. Iterative discriminator for
+                // "which indexed mesh screen-fills under
+                // WHITE_FS?". sh794 already handled above
+                // (skybox); next candidates: sh45 (idxN=
+                // 2280, ‡skydome/depth-prepass), sh813
+                // (idxN=34944, the big mesh).
+                if(_skipVs != null && _skipVs.Contains(d.VsShIdx)) {
                     nPostSkip++; continue;
                 }
                 // v1.0: per-draw pipeline lookup (build-on-miss).
@@ -1649,6 +1835,427 @@ public static unsafe class NvnVulkan {
                 // Bind sets WITH this draw's dynamic offsets.
                 for(var k = 0; k < 24; k++)
                     t3dyn[k] = (uint)(slot * T3CbufStride);
+                // (c²⁸) one-shot dump: c[3]+c[4]+first-3-verts
+                // for FIRST sh813 (or sh45) indexed draw. The
+                // kt[22] §7-eval-with-real-data settler. sh794
+                // (stars, WORKS) reads c[3] only; sh45/800/813
+                // (0px) read c[3]+c[4]. ⟹ c[4] is the disc.
+                // (c²⁹)×4 multi-frame dump, RELATIVE to first
+                // sh813 (3D-onset moves with timeline; was
+                // gated f≥32000 absolute = missed when Report
+                // Counter compressed loading→3D@f~12000).
+                // (c²⁹)-(c³⁶) diagnostics — LEGO Worlds-specific
+                // (hardcoded game-image addrs at 0xfff5b…, valid
+                // ONLY under setarch -R with this .so). All gated
+                // on UMBRA_LEGO_DIAG; without it, none of this
+                // fires and the file is generic NVN→Vulkan. The
+                // PATCH/FORCE bypasses (UMBRA_C33_*) are also
+                // sub-gated on this. Removable post-(N)-audio-fix.
+                if(_legoDiag && isIndexed && d.VsShIdx == 813) {
+                    if(_c29First == 0) _c29First = _frameN;
+                    // (c³³)×4 one-shot patch: NOP cbnz w21
+                    // gates at Inst::Update +0x260/+0x348.
+                    // (c³⁵)×3(J) PATCH CI::OnProcess+0x34
+                    // `tbz w9,#1 → +0x80` → NOP. Forces the
+                    // bit-1=1 path = Timer::Update(LegoGet
+                    // FrameTime()) at +0x7c regardless of
+                    // SeedInfo bit-1. CLEAN discriminator: if
+                    // cutscene plays WITHOUT +0x26c-NOP or
+                    // FORCE, bit-1 IS the lever (Timer gets
+                    // real dt → target advances → vel≠0 →
+                    // playhead advances). If still frozen ⟹
+                    // bit-1 wasn't it; +0x1a4 path's Timer::
+                    // Update(0,…,w3=1) overrides regardless.
+                    // Env: UMBRA_C35_PATCH_BIT1.
+                    // (c³⁴)'s +0x26c-NOP kept under separate
+                    // env (UMBRA_C33_PATCH_W21) for A/B.
+                    if(_c35PatchBit1 && !_c33Patched) {
+                        _c33Patched = true;
+                        var ci = 0xfff5b195eb2cUL;
+                        var pg = (nint)(ci & ~0xfffUL);
+                        var rc = mprotect(pg, 0x2000, 7);
+                        $"[c35] mprotect({pg:x},0x2000,RWX) rc={rc}".Log();
+                        if(rc == 0) {
+                            var p34 = (uint*)(ci+0x34);
+                            $"[c35]   pre: CI+0x34=0x{*p34:x8}".Log();
+                            *p34 = 0xd503201f; // NOP
+                            __clear_cache((nint)(ci+0x34),
+                                          (nint)(ci+0x38));
+                            $"[c35]   PATCHED CI::OnProcess+0x34 (tbz bit-1) → NOP + icache".Log();
+                        }
+                    } else if(_c33Patch && !_c33Patched) {
+                        _c33Patched = true;
+                        var ci = 0xfff5b195eb2cUL;
+                        var pg = (nint)(ci & ~0xfffUL);
+                        var rc = mprotect(pg, 0x2000, 7);
+                        $"[c34] mprotect({pg:x},0x2000,RWX) rc={rc}".Log();
+                        if(rc == 0) {
+                            var p26c = (uint*)(ci+0x26c);
+                            $"[c34]   pre: CI+0x26c=0x{*p26c:x8}".Log();
+                            *p26c = 0xd503201f; // NOP
+                            __clear_cache((nint)(ci+0x26c),
+                                          (nint)(ci+0x270));
+                            $"[c34]   PATCHED CI::OnProcess+0x26c (vel←target−playhead) → NOP + icache".Log();
+                        }
+                    }
+                    // (c³³)×2 (v) per-PRESENT FORCE (was per-
+                    // 1500f inside c29 bucket-gate; +0x98 was
+                    // back to 0 by next sample ⟹ something
+                    // re-zeros it within ~225 Inst::Update
+                    // calls). If THIS unfreezes c[3] ⟹ re-
+                    // zero is per-call; trace it. If still
+                    // frozen ⟹ +0x388 gate-side. Constant
+                    // 1.0 (= 1 EDL-frame/Inst::Update-call ≈
+                    // 30fps at sysFC≈225/1500f rate).
+                    if(_c33ForceSpeed) {
+                        var ih = *(ulong*)0xfff5b4c180f8UL;
+                        if(ih != 0) {
+                            *(float*)(ih+0x98) = 1.0f;
+                            if(_c33ForceN++ < 3 || _c33ForceN%500==0)
+                                $"[c33] f={_frameN} FORCE inst@{ih:x}+0x98 ← 1.0 (#{_c33ForceN})".Log();
+                        }
+                    }
+                    // (c³⁶)×2 (P): FORCE NuSound device-count
+                    // global ≥1. GetNumAvailableOutputDevices()
+                    // = *[*[b444d000+2072]]; <1 → Timer::Update
+                    // bypasses to +0xdc (no-advance). NuSound
+                    // init left it 0 (‡ which IPC-stub?). Write
+                    // 1 → see if gate-2 (TrackManager::IsEnabled)
+                    // OR streamer-null is the next wall. Cheap
+                    // operational test, NOT clean-fix.
+                    // (c³⁶)×3 (R) discriminator: which arm
+                    // freezes Timer::Update? devCount=1 ✓
+                    // (gate-1 passes). Read: gate-2 byte +
+                    // walk instHead→data→sequence→handles
+                    // (= the timer's *[timer+0]+848/864).
+                    // NuGCutSceneInst likely holds a NuCut
+                    // Scene* (= the data, per UpdateCameras
+                    // sig). instHead+0x70 = ‡ that ptr (per
+                    // (c³²)×2 +0x90 ldr x23,[+0x108] was
+                    // PARENT-inst; data is elsewhere).
+                    if(_c29First != 0 && _c36ForceN++ < 8) {
+                        var devGp = *(ulong*)(0xfff5b444d000UL+2072);
+                        var devC = *(int*)devGp;
+                        var tmByte = *(byte*)(*(ulong*)(0xfff5b4458000UL+3960));
+                        var ih = *(ulong*)0xfff5b4c180f8UL;
+                        // Walk inst+0x10..0x78 for ptrs (= find
+                        // NuCutScene* data; it'll have +848/864
+                        // SoundEventHandle slots).
+                        var ptrs = "";
+                        if(ih != 0) {
+                            for(var po=0x10; po<=0x78; po+=8) {
+                                var pv = *(ulong*)(ih+(ulong)po);
+                                if(pv>0xfff500000000UL && pv<0xfff600000000UL)
+                                    ptrs += $" +{po:x2}=0x{pv:x}";
+                            }
+                        }
+                        $"[c36] f={_frameN} devC={devC} tmByte=0x{tmByte:x2}(gate-2 {(tmByte==0?"PASS":"FIRES")})  inst-ptrs:[{ptrs}]".Log();
+                        // For each candidate ptr, probe +848/
+                        // +864 (= SoundEventHandle slots if it's
+                        // the sequence-data the Timer derefs).
+                        if(ih != 0) {
+                            for(var po=0x10; po<=0x78; po+=8) {
+                                var pv = *(ulong*)(ih+(ulong)po);
+                                if(pv<0xfff500000000UL || pv>=0xfff600000000UL) continue;
+                                try {
+                                    var h848 = *(ulong*)(pv+848);
+                                    var h864 = *(ulong*)(pv+864);
+                                    if(h848!=0 || h864!=0)
+                                        $"[c36]   inst+{po:x2}→0x{pv:x}: [+848]=0x{h848:x} [+864]=0x{h864:x}  ◀━━ SoundEventHandle cand".Log();
+                                } catch {}
+                            }
+                        }
+                    }
+                }
+                if(_legoDiag && isIndexed && d.VsShIdx == 813
+                        && (_frameN-_c29First) / 200 != _c29LastBucket) {
+                    _c29LastBucket = (_frameN-_c29First) / 200;
+                    var c3 = d.Ubos?[0]; var c6 = d.Ubos?[3];
+                    var c3h = c3==null?0u:Hash16(c3);
+                    var c6h = c6==null?0u:Hash16(c6);
+                    var c3d = c3h != _c29PrevC3 ? "🔥CHANGED" : "frozen";
+                    var c6d = c6h != _c29PrevC6 ? "🔥CHANGED" : "frozen";
+                    $"[c29] f={_frameN} sh{d.VsShIdx} c[3]({c3d} h={c3h:x8}): {(c3==null?"NULL":FloatHex(c3,0,4))} cam@d0={(c3==null||c3.Length<0xdc?"—":FloatHex(c3,0xd0,3))} | c[6]({c6d} h={c6h:x8}): {(c6==null?"NULL":FloatHex(c6,0,4))}".Log();
+                    _c29PrevC3 = c3h; _c29PrevC6 = c6h;
+                    // (c³⁰)×4 3-way disc: read game-globals
+                    // directly (same addr-space; setarch -R ⟹
+                    // .so always at fff5b…). Settles:
+                    //  (g) sysFC low ⟹ Sys::Update NOT called
+                    //      (= LegoCutscenesManager::OnProcess
+                    //      not dispatched OR early-outs before
+                    //      Sys::Update bl).
+                    //  (h) sysFC≈frameN, flags bit31|bit8 set ⟹
+                    //      Inst::Update early-outs to +0xb20.
+                    //  (i) sysFC≈frameN, flags clean ⟹ dt=0
+                    //      (= mpd+36=0; trace LCM::Process's
+                    //      caller).
+                    try {
+                        var instHead = *(ulong*)0xfff5b4c180f8UL;
+                        var sysFC    = *(int*) (*(ulong*)(0xfff5b4463000UL+1544));
+                        var x24flag  = *(sbyte*)(*(ulong*)(0xfff5b4456000UL+3368));
+                        // (c³¹) NuFrameEnd's dt-global @ container
+                        // (= *[0xfff5b442ff98] = 0xfff5b4accbb0)
+                        // +1200/+1204. If THIS is nonzero ⟹
+                        // NuFrameEnd computes dt fine; gap is in
+                        // GameFramework::Process's mpd-build.
+                        // If 0 ⟹ NuTime/AsSeconds path broken
+                        // (= our CNTPCT/CNTFRQ).
+                        var ctnr = *(ulong*)0xfff5b442ff98UL;
+                        var dt1200 = *(float*)(ctnr+1200);
+                        var dt1204 = *(float*)(ctnr+1204);
+                        // + container+1208..1216 (= ‡ neighbors;
+                        // GFP might read a DIFFERENT field).
+                        var dt1208 = *(float*)(ctnr+1208);
+                        var dt1212 = *(float*)(ctnr+1212);
+                        // (c³⁴)(C) inst-list walk: instHead is
+                        // a linked-list head (Sys::Update walks
+                        // *[inst+0x0] per +0xd4/+0xd8). If >1
+                        // inst, FORCE+c30 only touch head; the
+                        // RENDERED inst (= feeds c[3]/c[6]) may
+                        // be a different one.
+                        var ilist = ""; var icnt = 0;
+                        var cur = instHead;
+                        while(cur != 0 && icnt < 8) {
+                            var ph = *(float*)(cur+0x84);
+                            var vl = *(float*)(cur+0x98);
+                            var fl2 = *(uint*)(cur+0x7c);
+                            ilist += $" [{icnt}]@{cur:x}:ph={ph:g4},vel={vl:g4},fl={fl2:x}";
+                            cur = *(ulong*)cur; icnt++;
+                        }
+                        $"[c30] f={_frameN}  sysFC={sysFC} (Δf={sysFC-_c30PrevFC};{_frameN-_c30PrevF}f)  instHead=0x{instHead:x}  x24flag={x24flag}".Log();
+                        $"[c34]   inst-list (n={icnt}):{ilist}".Log();
+                        // (c³⁵)×3 (K): read CutsceneSeedInfo+904
+                        // flags directly. Path: LegoCutscenes
+                        // singleton = *[*[b443b000+1832]] (per
+                        // CI+0x1a8). [LC+336] = ‡ active CI.
+                        // Then SeedInfo = *[*[CI+0xe0]+104]
+                        // (per GetSeedInfo body). [+904] = the
+                        // bit-flags word. ALSO read the ctor-
+                        // config global *[*[b4431000+1480]]
+                        // (= cutscene_start's bit-{0,4} source).
+                        try {
+                            var lc = *(ulong*)(*(ulong*)(0xfff5b443b000UL+1832));
+                            var ciP = *(ulong*)(lc+336);
+                            var cfg = *(byte*)(*(ulong*)(0xfff5b4431000UL+1480));
+                            // (c³⁵)×4 (K-fix): [LC+336] isn't
+                            // the active CI (it's the master-
+                            // ref per +0x180). Try BOTH: dump
+                            // ciP's struct + ALSO scan for
+                            // which heap obj has [+0x58]==
+                            // instHead (= the CI that owns
+                            // our NuGCutSceneInst). For now:
+                            // just probe ciP deeper + dump
+                            // raw [+0xe0]/[+0x58] to see what
+                            // it actually is.
+                            string seedS = "";
+                            ulong realCI = 0;
+                            if(ciP != 0) {
+                                var ci58 = *(ulong*)(ciP+0x58);
+                                var cie0 = *(ulong*)(ciP+0xe0);
+                                var civt = *(ulong*)ciP;
+                                seedS += $" ciP[vt=0x{civt:x},+58=0x{ci58:x},+e0=0x{cie0:x}]";
+                                // Is ciP the active CI? check
+                                // [+0x58]==instHead.
+                                if(ci58 == instHead) realCI = ciP;
+                            }
+                            // Also: instHead has back-ref?
+                            // Try common offsets for owner-ptr.
+                            if(realCI == 0 && instHead != 0) {
+                                // ‡ guess: NuGCutSceneInst may
+                                // have owner-CI ptr somewhere
+                                // in 0x100..0x140 (per (c³²)
+                                // band — +0x108=parent-cutscene
+                                // =0; check +0x118/+0x120).
+                                for(var po=0x100; po<=0x148; po+=8) {
+                                    var pv = *(ulong*)(instHead+(ulong)po);
+                                    if(pv>0xfff500000000UL && pv<0xfff600000000UL) {
+                                        var pv58 = *(ulong*)(pv+0x58);
+                                        if(pv58 == instHead) {
+                                            realCI = pv;
+                                            seedS += $" [back-ref@inst+{po:#x}]";
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if(realCI != 0) {
+                                var pkt = *(ulong*)(realCI+0xe0);
+                                var seed = pkt!=0 ? *(ulong*)(pkt+104) : 0;
+                                var tmr  = pkt!=0 ? *(ulong*)(pkt+0x60) : 0;
+                                seedS += $" CI=0x{realCI:x} pkt=0x{pkt:x}";
+                                if(seed != 0) {
+                                    var f904 = *(uint*)(seed+904);
+                                    var f908 = *(byte*)(seed+908);
+                                    var bits = "";
+                                    for(var b=0;b<40;b++) {
+                                        var bv = b<32 ? (f904>>b&1) : (uint)(f908>>(b-32)&1);
+                                        if(bv!=0) bits+=$"{b},";
+                                    }
+                                    seedS += $" 🔥seed[+904]=0x{f904:x8}[+908]=0x{f908:x2} bits=[{bits}]";
+                                }
+                                if(tmr != 0) {
+                                    var t8 = *(float*)(tmr+8);
+                                    var t12 = *(float*)(tmr+12);
+                                    var t0 = *(uint*)(tmr+0);
+                                    var t4 = *(uint*)(tmr+4);
+                                    var t16 = *(float*)(tmr+16);
+                                    var t20 = *(float*)(tmr+20);
+                                    seedS += $" tmr=0x{tmr:x}[0]=0x{t0:x}[4]=0x{t4:x}[8]={t8:g6}[12]={t12:g6}[16]={t16:g6}[20]={t20:g6}";
+                                }
+                            } else {
+                                seedS += " [no CI found]";
+                            }
+                            $"[c35]   LC=0x{lc:x} cfg=0x{cfg:x2}{seedS}".Log();
+                        } catch(Exception ex) {
+                            $"[c35]   ✗ seedInfo-read fault: {ex.Message}".Log();
+                        }
+                        $"[c31]   NuFrameEnd dt-global ctnr=0x{ctnr:x}: [+1200]={dt1200:g6} [+1204]={dt1204:g6} [+1208]={dt1208:g6} [+1212]={dt1212:g6}".Log();
+                        // (c³¹)×4 GF_this fields directly (=
+                        // the kt[34](a) verify-not-infer step).
+                        // GF_this = **[0xfff5b44571f8] per
+                        // GameFrameworkAPI::GetFrameTime().
+                        // [+13900]=raw s0×s1; [+13904]=smoothed
+                        // dt-cache; [+14812]=mpd+36-source;
+                        // [+13912]=accum; [+13920]=tickN(int).
+                        // + [ctnr+1236] (= the if-zero gate at
+                        // GFP+0x8f0). + [+13924] (= w8 read at
+                        // +0x8c8, ‡ paused-flag?).
+                        var gfP = *(ulong*)(*(ulong*)0xfff5b44571f8UL);
+                        var raw  = *(float*)(gfP+13900);
+                        var sm   = *(float*)(gfP+13904);
+                        var src  = *(float*)(gfP+14812);
+                        var acc  = *(float*)(gfP+13912);
+                        var tkN  = *(int*)  (gfP+13920);
+                        var w8c8 = *(int*)  (gfP+13924);
+                        var c1236= *(float*)(ctnr+1236);
+                        // (c³³)×5 [GF+13944] = mpd+40 source
+                        // (= Inst::Update's w21 gate). If ≠0
+                        // ⟹ w21-gate IS the freeze. + ctor
+                        // confirmed +0x98←1.0; if zeroed,
+                        // sysFC≈225/1500 says ~225 calls ran
+                        // — read +0x98's neighbor +0xa0 (=
+                        // CreateFixPtrs also writes, ‡ same
+                        // fate?) for cross-check.
+                        var m40 = *(int*)(gfP+13944);
+                        var ihh = *(ulong*)0xfff5b4c180f8UL;
+                        var fa0 = ihh!=0 ? *(float*)(ihh+0xa0) : -1f;
+                        $"[c31]   GF_this=0x{gfP:x}: raw[+13900]={raw:g6} sm[+13904]={sm:g6} 🔥src[+14812]={src:g6} acc={acc:g6} tkN={tkN} w8={w8c8} ctnr+1236={c1236:g6}".Log();
+                        $"[c33]   🔥 GF[+13944](=mpd+40=w21)={m40}  inst+0xa0(ctor-sibling)={fa0:g6}".Log();
+                        var v31 =
+                            src != 0 ? "🔥 src≠0 ⟹ mpd+36 NONZERO ⟹ (d')-dt=0 inference WRONG; freeze is DOWNSTREAM (Inst::Update has 2nd gate, OR LegoCutscenesManager::OnProcess early-outs before bl Sys::Update)"
+                          : sm  != 0 ? "sm≠0 src=0 ⟹ +0x988 not reached (gate +0x95c/+0x960?)"
+                          : raw != 0 ? "raw≠0 sm=0 ⟹ smoothing zeroes (lerp const @b3733f3c=0?)"
+                          : "raw=0 ⟹ s0×s1=0 at +0x8cc (s0 or s1 = 0; need +0x8b8..+0x8cc disasm)";
+                        $"[c31]   ⟹ {v31}".Log();
+                        if(instHead != 0) {
+                            var fl  = *(uint*)(instHead+0x7c);
+                            var b81 = *(byte*)(instHead+0x81);
+                            var f84 = *(float*)(instHead+0x84);
+                            var f98 = *(float*)(instHead+0x98);
+                            // ‡ inst+0x88..0x94 region — what's
+                            // the cutscene's own time/frame?
+                            var f88 = *(float*)(instHead+0x88);
+                            var f8c = *(float*)(instHead+0x8c);
+                            var f90 = *(float*)(instHead+0x90);
+                            var f94 = *(float*)(instHead+0x94);
+                            $"[c30]   inst+0x7c flags=0x{fl:x8} b31={(fl>>31)&1} b8={(fl>>8)&1}  +0x81={b81}(vs sysFC%256={sysFC&0xff})  +0x84(rate)={f84:g6} +0x98={f98:g6}".Log();
+                            $"[c30]   inst+0x88..94: {f88:g6} {f8c:g6} {f90:g6} {f94:g6}".Log();
+                            // (c³²)×2 wide-band: read inst+
+                            // {0xa0..0x12c} as float[36] +
+                            // diff against prev. Per (n)
+                            // census, accumulators at {0xac,
+                            // 0x110, 0x11c}; +0x90=MayaFrame.
+                            // CHANGED-set = the live fields;
+                            // STUCK-set ∩ {accumulators} =
+                            // the freeze.
+                            var band = new float[36];
+                            for(var k=0;k<36;k++)
+                                band[k] = *(float*)(instHead+(ulong)(0xa0+k*4));
+                            var chg = "";
+                            if(_c32PrevBand != null)
+                                for(var k=0;k<36;k++)
+                                    if(band[k] != _c32PrevBand[k])
+                                        chg += $" +{0xa0+k*4:x}={_c32PrevBand[k]:g4}→{band[k]:g4}";
+                            $"[c32]   inst+0xa0..0x12c CHANGED:{(chg==""?" (none — all 36 fields stuck)":chg)}".Log();
+                            $"[c32]   key: +0xac={band[3]:g6} +0x108={band[26]:g6} +0x110={band[28]:g6} +0x11c={band[31]:g6} +0x90(MayaFrame)={f90:g4}".Log();
+                            // + deref candidate ptr fields
+                            // (= x23 source? inst+0x?? →
+                            // NuCutScene* data). Try the
+                            // ptr-looking ones (8-aligned,
+                            // value in 0xfff5… range).
+                            for(var po=0x10; po<=0x70; po+=8) {
+                                var pv = *(ulong*)(instHead+(ulong)po);
+                                if(pv>=0xfff500000000UL && pv<0xfff600000000UL) {
+                                    var p152 = *(float*)(pv+152);
+                                    $"[c32]   inst+{po:#x}=0x{pv:x} → [+152]={p152:g6}  (= x23 cand; if 0 ⟹ +0x110 stuck-source)".Log();
+                                }
+                            }
+                            _c32PrevBand = band;
+                            // (c³²)×3 OPERATIONAL TEST: force
+                            // inst+0x98 (playback-velocity) =
+                            // src[+14812] × 30 (= dt×30fps).
+                            // Per +0x388: playhead += [+0x98]
+                            // × d9(=1.0). With +0x98=0 ⟹
+                            // frozen. d8(=dt) NOT used for
+                            // playhead (only sub-frame interp
+                            // to UpdateCameras). If THIS makes
+                            // c[3] change ⟹ +0x98 IS the
+                            // lever; ×4 = trace who should
+                            // set it (Start? external Play?).
+                            // Env-gated; write-once-per-
+                            // sample (Inst::Update only fneg's
+                            // it, never zeros, so persists).
+                            if(Environment.GetEnvironmentVariable(
+                                    "UMBRA_C32_FORCE_SPEED") != null) {
+                                var spd = src * 30f;
+                                *(float*)(instHead+0x98) = spd;
+                                $"[c32]   FORCE inst+0x98 ← {spd:g6} (= src×30)".Log();
+                            }
+                            var verdict =
+                                sysFC <= 1 ? "🔥(g) Sys::Update NOT CALLED — LegoCutscenesManager::OnProcess not dispatched/early-outs"
+                              : ((fl>>31)&1)!=0 || ((fl>>8)&1)!=0 ? $"🔥(h) Inst::Update EARLY-OUTS on flags bit{(((fl>>31)&1)!=0?31:8)} → +0xb20 (Start/End state-machine)"
+                              : "🔥(i) Sys::Update called + flags clean ⟹ dt path. Check inst+0x88..94 for time-not-advancing.";
+                            $"[c30]   ⟹ {verdict}".Log();
+                        } else {
+                            $"[c30]   ⟹ instHead=0 — no cutscene inst registered (= Sys::Update list empty)".Log();
+                        }
+                        _c30PrevFC = sysFC; _c30PrevF = _frameN;
+                    } catch(Exception ex) {
+                        $"[c30]   ✗ global-read fault: {ex.Message}".Log();
+                    }
+                }
+                // (c²⁸)×4 one-shot full dump (kept):
+                if(isIndexed && !_c28Dumped
+                        && _frameN >= 35000
+                        && d.VsShIdx == 813) {
+                    _c28Dumped = true;
+                    var c3 = d.Ubos?[0]; var c4 = d.Ubos?[1];
+                    var c5 = d.Ubos?[2]; var c6 = d.Ubos?[3];
+                    var c7 = d.Ubos?[4];
+                    $"[c28] f={_frameN} sh{d.VsShIdx}/{d.FsShIdx} idxN={d.IdxCount} baseVtx={d.BaseVtx} str={stride} vbSz=0x{d.VbSize:x}".Log();
+                    $"[c28]   c[3] (slot0, {c3?.Length ?? -1}B): {(c3==null?"NULL":FloatHex(c3,0,16))}".Log();
+                    $"[c28]   c[3] @0xd0..: {(c3==null||c3.Length<0xdc?"—":FloatHex(c3,0xd0,3))}".Log();
+                    $"[c28]   c[4] (slot1, {c4?.Length ?? -1}B): {(c4==null?"NULL":FloatHex(c4,0,16))}".Log();
+                    $"[c28]   c[5] (slot2, {c5?.Length ?? -1}B): {(c5==null?"NULL":FloatHex(c5,0,8))}".Log();
+                    $"[c28]   c[6] (slot3, {c6?.Length ?? -1}B): {(c6==null?"NULL":FloatHex(c6,0,8))}".Log();
+                    $"[c28]   c[7] (slot4, {c7?.Length ?? -1}B): {(c7==null?"NULL":FloatHex(c7,0,4))}".Log();
+                    // first 3 verts at baseVtx (raw + as f32)
+                    var vp = (byte*)d.VbCpu + (long)d.BaseVtx*stride;
+                    for(var v=0; v<3; v++) {
+                        var s = $"[c28]   vtx[{d.BaseVtx+v}] raw=";
+                        for(var k=0;k<stride;k++) s+=$"{vp[v*stride+k]:x2}";
+                        if(stride>=12) {
+                            var f=(float*)(vp+v*stride);
+                            s+=$"  asF32=({f[0]:g6},{f[1]:g6},{f[2]:g6})";
+                        }
+                        s.Log();
+                    }
+                    // first 3 indices
+                    if(d.IdxCpu!=0 && d.IdxType==1) {
+                        var ip=(ushort*)d.IdxCpu;
+                        $"[c28]   idx[0..2]={ip[0]},{ip[1]},{ip[2]}".Log();
+                    }
+                }
                 vkCmdBindDescriptorSets(_cmdBuf, 0, _t3PipelineLayout,
                     0, 3, t3sets, 24, t3dyn);
                 if(isIndexed)
@@ -1675,6 +2282,22 @@ public static unsafe class NvnVulkan {
                                 return $"tx{g.Key:x}→{(t==null?"∅":$"{t.Width}×{t.Height}f{t.Format:x}")}";
                             }));
                         $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} idx={nIdx}/{nIdx+nIdxSkip} skipPP={nPostSkip} vbufUsed={vbo} ibufUsed={ibo} [{pairs}] tex:[{txs}]".Log();
+                    // (c³⁴)×4-redo: 3D-onset-RELATIVE auto-
+                    // dump (kt[32]-shape: onset varies ~1200f
+                    // run-to-run; absolute-frame-N capture
+                    // structurally wrong). When idx>50 first
+                    // appears, dump every 40f for 12 frames.
+                    // Robust to onset-variance + doesn't slow
+                    // loading-phase with pre-3D readbacks.
+                    if(_dump3d && nIdx > 50) {
+                        if(_dump3dFirst == 0) {
+                            _dump3dFirst = _frameN;
+                            $"[c34] 3D-onset @ f{_frameN} (idx={nIdx}) — auto-dump every 40f ×12".Log();
+                        }
+                        var rel = _frameN - _dump3dFirst;
+                        if(rel % 40 == 0 && rel/40 < 12)
+                            _dump3dWant = _frameN;  // Present reads this
+                    }
                     }
                 }
             return;
@@ -2030,8 +2653,11 @@ public static unsafe class NvnVulkan {
             var hasDraws = PipelineReady && _lastDrawN > 0;
             if(_swapPtr[idx] != null &&
                (n <= 2 || (hasDraws && _dumpedWithDraws++ < 3)
-                       || _dumpFrames(n)))
+                       || _dumpFrames(n)
+                       || (_dump3dWant != 0 && n >= _dump3dWant))) {
                 DumpPpm((int) idx, n);
+                _dump3dWant = 0;
+            }
             if(n <= 5 || n % 30 == 0)
                 $"[vk] Present #{n} tex={texIdx} → submit+wait OK".Log();
         } else {
