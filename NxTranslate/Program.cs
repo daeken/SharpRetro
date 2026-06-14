@@ -12,7 +12,7 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.Stp(R.X23, R.X24, R.SP, 16 * 3);
     asm.Stp(R.X21, R.X22, R.SP, 16 * 4);
     asm.Stp(R.X19, R.X20, R.SP, 16 * 5);
-    asm.Stp(R.X17, R.XZR, R.SP, 16 * 6);
+    asm.Stp(R.X17, R.X18, R.SP, 16 * 6);
     asm.Stp(R.X15, R.X16, R.SP, 16 * 7);
     asm.Stp(R.X13, R.X14, R.SP, 16 * 8);
     asm.Stp(R.X11, R.X12, R.SP, 16 * 9);
@@ -35,7 +35,7 @@ void SaveLoadAll(Assembler asm, Action<Assembler> func) {
     asm.Ldp(R.X11, R.X12, R.SP, 16 * 9);
     asm.Ldp(R.X13, R.X14, R.SP, 16 * 8);
     asm.Ldp(R.X15, R.X16, R.SP, 16 * 7);
-    asm.Ldp(R.X17, R.XZR, R.SP, 16 * 6);
+    asm.Ldp(R.X17, R.X18, R.SP, 16 * 6);
     asm.Ldp(R.X19, R.X20, R.SP, 16 * 5);
     asm.Ldp(R.X21, R.X22, R.SP, 16 * 4);
     asm.Ldp(R.X23, R.X24, R.SP, 16 * 3);
@@ -166,7 +166,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                 Stp(E(R.X23), E(R.X24), R.SP, 16 * 3);
                 Stp(E(R.X21), E(R.X22), R.SP, 16 * 4);
                 Stp(E(R.X19), E(R.X20), R.SP, 16 * 5);
-                Stp(E(R.X17), E(R.XZR), R.SP, 16 * 6);
+                Stp(E(R.X17), E(R.X18), R.SP, 16 * 6);
                 Stp(E(R.X15), E(R.X16), R.SP, 16 * 7);
                 Stp(E(R.X13), E(R.X14), R.SP, 16 * 8);
                 Stp(E(R.X11), E(R.X12), R.SP, 16 * 9);
@@ -193,7 +193,7 @@ byte[] BuildTrampolines(ulong textBase, ulong trampBase, ulong trampRwBase, List
                 Ldp(E(R.X11), E(R.X12), R.SP, 16 * 9);
                 Ldp(E(R.X13), E(R.X14), R.SP, 16 * 8);
                 Ldp(E(R.X15), E(R.X16), R.SP, 16 * 7);
-                Ldp(E(R.X17), E(R.XZR), R.SP, 16 * 6);
+                Ldp(E(R.X17), E(R.X18), R.SP, 16 * 6);
                 Ldp(E(R.X19), E(R.X20), R.SP, 16 * 5);
                 Ldp(E(R.X21), E(R.X22), R.SP, 16 * 4);
                 Ldp(E(R.X23), E(R.X24), R.SP, 16 * 3);
