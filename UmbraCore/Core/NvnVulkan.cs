@@ -503,7 +503,11 @@ public static unsafe class NvnVulkan {
     // pool-idx, NOT TexHandle — same texture w/ different
     // sampler shares the upload).
     record TexVk(ulong Img, ulong Mem, ulong View, ulong Ds,
-                 int W, int H, bool BarrierDone);
+                 int W, int H, bool BarrierDone,
+                 // (c²³)(a) source H + its Gen at upload
+                 // time. EnsureTexBound rebuilds if either
+                 // changed (= re-register or re-init/upload).
+                 NvnLinux.H? Src = null, int Gen = 0);
     static readonly Dictionary<int, TexVk> _texVk = new();
     static readonly List<int> _texPendingBarrier = new();
     // ── T3 T3 state ──
@@ -1189,7 +1193,22 @@ public static unsafe class NvnVulkan {
     // uploaded images is queued in _texPendingBarrier and emitted
     // by FlushTexBarriers().
     static ulong EnsureTexBound(int texId, NvnLinux.H tex) {
-        if(_texVk.TryGetValue(texId, out var t)) return t.Ds;
+        if(_texVk.TryGetValue(texId, out var t)) {
+            // (c²³)(a) Gen-check: game may re-register the
+            // same texId with a different NVN tex (= different
+            // H instance), OR re-init/re-upload the same one
+            // (= H.Gen bumped). Either ⟹ stale vk-image.
+            // u702: idx 0x101 re-registered with new 2048² f42
+            // (BC1) tex post-menu; cache returned the f44 atlas
+            // → font-glyph-wedge instead of title screen.
+            if(ReferenceEquals(t.Src, tex)
+                    && t.Gen == (tex?.Gen ?? 0))
+                return t.Ds;
+            // ‡ v1: leak old vk resources (few textures total;
+            // v2 = vkDestroyImage/View + vkFreeMemory + free DS).
+            $"[vk] EnsureTexBound texId=0x{texId:x} STALE (gen {t.Gen}→{tex?.Gen ?? 0}, src{(ReferenceEquals(t.Src,tex)?"=":"≠")}) — rebuild".Log();
+            _texVk.Remove(texId);
+        }
         // v1: only handle textures that already have decoded
         // RGBA8 available. The atlas (= texId 0x101) does (via
         // NvnLinux.AtlasRgba). Other textures need per-tex
@@ -1266,7 +1285,8 @@ public static unsafe class NvnVulkan {
         };
         vkUpdateDescriptorSets(_dev, 1, &wds, 0, null);
 
-        _texVk[texId] = new(img, mem, vw, ds, w, h, false);
+        _texVk[texId] = new(img, mem, vw, ds, w, h, false,
+                            tex, tex?.Gen ?? 0);
         _texPendingBarrier.Add(texId);
         $"[vk] EnsureTexBound texId=0x{texId:x} {w}×{h} img={img:x} view={vw:x} ds={ds:x}".Log();
         return ds;
@@ -1397,8 +1417,11 @@ public static unsafe class NvnVulkan {
                 // delay; the first frame using a new texId samples
                 // UNDEFINED layout = lavapipe tolerates).
                 var texId = (int)(d.TexHandle >> 32);
+                // (c²³)(a) Always go through EnsureTexBound
+                // (it Gen-checks + returns t.Ds fast on hit).
+                // The prior _texVk.TryGetValue short-circuit
+                // bypassed the Gen-check ⟹ stale forever.
                 ulong txDs = texId == 0 ? _t3DsTex
-                    : _texVk.TryGetValue(texId, out var tv) ? tv.Ds
                     : EnsureTexBound(texId, d.Tex);
                 t3sets[1] = txDs != 0 ? txDs : _t3DsTex;
                 var bytes = (ulong) d.Count * 36;
