@@ -658,6 +658,9 @@ public static unsafe class NvnVulkan {
         return pipe;
     }
     static ulong _t3DslCbuf, _t3DslTex, _t3DsPool;
+    // (c²⁶) set=1 binding count (max FS-corpus binding=38)
+    // + per-texId DS budget. Each DS = T3TexBindN samplers.
+    const int T3TexBindN = 40, T3TexDsMax = 128;
     static ulong _t3DsVs, _t3DsTex, _t3DsFs;   // sets 0/1/2
     static ulong[] _t3CbufBuf;        // [1..24] = stage*12 + binding
     static byte*[] _t3CbufPtr;        // mapped ptrs
@@ -700,20 +703,25 @@ public static unsafe class NvnVulkan {
                     pBufferInfo = &bufInfos[idx],
                 };
             }
-        // Write set1: 1× COMBINED_IMAGE_SAMPLER, binding 8 → atlas.
+        // Write set1: T3TexBindN× COMBINED_IMAGE_SAMPLER →
+        // atlas. (c²⁶) was binding=8 only; layout now has
+        // 0..39, all must be written.
         var imgInfo = new VkDescriptorImageInfo {
             sampler = _sampler, imageView = _atlasView,
             imageLayout = 1,  // GENERAL (= matches actual; the atlas
                               // is HOST_VISIBLE LINEAR, never
                               // transitioned past GENERAL.)
         };
-        writes[24] = new() {
-            sType = ST_WRITE_DESCRIPTOR_SET, dstSet = _t3DsTex,
-            dstBinding = 8, descriptorCount = 1,
-            descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
-            pImageInfo = &imgInfo,
-        };
-        vkUpdateDescriptorSets(_dev, 25, writes, 0, null);
+        var twrites = stackalloc VkWriteDescriptorSet[T3TexBindN];
+        for(var b = 0; b < T3TexBindN; b++)
+            twrites[b] = new() {
+                sType = ST_WRITE_DESCRIPTOR_SET, dstSet = _t3DsTex,
+                dstBinding = (uint)b, descriptorCount = 1,
+                descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
+                pImageInfo = &imgInfo,
+            };
+        vkUpdateDescriptorSets(_dev, 24, writes, 0, null);
+        vkUpdateDescriptorSets(_dev, T3TexBindN, twrites, 0, null);
         $"[vk] EnsureT3Sets OK — vs={_t3DsVs:x} tex={_t3DsTex:x} fs={_t3DsFs:x}".Log();
     }
     static readonly ulong[] _swapView = new ulong[3];
@@ -997,15 +1005,30 @@ public static unsafe class NvnVulkan {
                 Chk(vkCreateDescriptorSetLayout(_dev, &t3dslCbufCi, null, &t3dslCbuf),
                     "vkCreateDescriptorSetLayout(t3 cbuf)");
 
-                // set=1: tex_8 combined sampler (sh0346 TidB=8). ‡ v0
-                // = single binding=8; other tex handles → M2.5.
-                var t3dsl1b = new VkDescriptorSetLayoutBinding {
-                    binding = 8, descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
-                    descriptorCount = 1, stageFlags = 0x10,
-                };
+                // set=1: combined samplers. (c²⁶) was single
+                // binding=8 (sh0346's only tex). sh0140 (first
+                // 3D shader) declares 7 set=1 bindings {8,12,
+                // 14,18,20,22,30}; max across full 1036-FS
+                // corpus = 38 (sh0357). vkCreateGraphicsPipelines
+                // validates shader-interface against layout ⟹
+                // missing bindings → lavapipe walks unbound
+                // descriptors → segv/hang at T3Pipe(63,140).
+                // v1: declare 0..39 (T3TexBindN), all FRAGMENT
+                // combined-image-sampler. EnsureTexBound writes
+                // the SAME image to all 40 (= won't crash; non-8
+                // slots sample wrong texture; per-slot resolution
+                // = (c²⁷) when DrawRecord captures the full
+                // texHandle table per-draw, not just slot-0).
+                var t3dsl1b = stackalloc VkDescriptorSetLayoutBinding[T3TexBindN];
+                for(var b = 0; b < T3TexBindN; b++)
+                    t3dsl1b[b] = new() {
+                        binding = (uint)b,
+                        descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
+                        descriptorCount = 1, stageFlags = 0x10,
+                    };
                 var t3dsl1ci = new VkDescriptorSetLayoutCreateInfo {
                     sType = ST_DESCRIPTOR_SET_LAYOUT_CI,
-                    bindingCount = 1, pBindings = &t3dsl1b,
+                    bindingCount = T3TexBindN, pBindings = t3dsl1b,
                 };
                 ulong t3dsl1;
                 Chk(vkCreateDescriptorSetLayout(_dev, &t3dsl1ci, null, &t3dsl1),
@@ -1056,15 +1079,18 @@ public static unsafe class NvnVulkan {
                     new Span<byte>(cp, (int)sz).Clear();
                 }
 
-                // ── Descriptor pool: 24 UBO_DYNAMIC + 64 samplers ──
-                // (1 sampler for the shared atlas DS + up to 63
-                // per-texId DSs from EnsureTexBound. maxSets =
-                // 3 (vs/tex/fs shared) + 64 (per-tex).)
+                // ── Descriptor pool: 24 UBO_DYNAMIC + samplers ──
+                // (c²⁶) Each set=1 DS now has T3TexBindN bindings
+                // (was 1). 1 shared atlas DS + up to T3TexDsMax
+                // per-texId DSs from EnsureTexBound, each
+                // consuming T3TexBindN sampler descriptors.
                 var t3ps = stackalloc VkDescriptorPoolSize[2];
                 t3ps[0] = new() { type = DESC_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorCount = 24 };
-                t3ps[1] = new() { type = DESC_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount = 64 };
+                t3ps[1] = new() { type = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
+                                  descriptorCount = (uint)((1 + T3TexDsMax) * T3TexBindN) };
                 var t3dpci = new VkDescriptorPoolCreateInfo {
-                    sType = ST_DESCRIPTOR_POOL_CI, maxSets = 3 + 64,
+                    sType = ST_DESCRIPTOR_POOL_CI,
+                    maxSets = (uint)(3 + T3TexDsMax),
                     poolSizeCount = 2, pPoolSizes = t3ps,
                 };
                 ulong t3dp; Chk(vkCreateDescriptorPool(_dev, &t3dpci, null, &t3dp),
@@ -1274,16 +1300,24 @@ public static unsafe class NvnVulkan {
         };
         ulong ds; if(Chk(vkAllocateDescriptorSets(_dev, &dsai, &ds),
                 $"vkAllocDS(tex{texId:x})") != 0) return 0;
+        // (c²⁶) Write the SAME image to all T3TexBindN
+        // bindings. v1 = wrong-texture-but-doesn't-crash for
+        // bindings ≠8; per-slot resolution = (c²⁷). Vulkan
+        // requires ALL bindings written before bind (can't
+        // leave 1..39 dangling — that's the segv we just hit
+        // from the layout side).
         var dii = new VkDescriptorImageInfo {
             sampler = _sampler, imageView = vw, imageLayout = 1,
         };
-        var wds = new VkWriteDescriptorSet {
-            sType = ST_WRITE_DESCRIPTOR_SET, dstSet = ds, dstBinding = 8,
-            descriptorCount = 1,
-            descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
-            pImageInfo = &dii,
-        };
-        vkUpdateDescriptorSets(_dev, 1, &wds, 0, null);
+        var wds = stackalloc VkWriteDescriptorSet[T3TexBindN];
+        for(var b = 0; b < T3TexBindN; b++)
+            wds[b] = new() {
+                sType = ST_WRITE_DESCRIPTOR_SET, dstSet = ds,
+                dstBinding = (uint)b, descriptorCount = 1,
+                descriptorType = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
+                pImageInfo = &dii,
+            };
+        vkUpdateDescriptorSets(_dev, T3TexBindN, wds, 0, null);
 
         _texVk[texId] = new(img, mem, vw, ds, w, h, false,
                             tex, tex?.Gen ?? 0);
