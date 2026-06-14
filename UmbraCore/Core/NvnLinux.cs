@@ -48,6 +48,11 @@ public static unsafe class NvnLinux {
         // DecodeForUpload on first EnsureTexBound). null = not
         // decoded (or undecodable format).
         public byte[]? Rgba;
+        // (c²³)(a) Gen: bumped on TexInitialize + Copy
+        // BufferToTexture's Rgba-stash. NvnVulkan
+        // EnsureTexBound caches by texId; Gen-mismatch
+        // ⟹ rebuild (game re-init'd / re-uploaded).
+        public int Gen;
     }
     //  decode this texture's CpuPtr data → RGBA8 bytes.
     // Lazy; called from EnsureTexBound on first draw using this
@@ -374,6 +379,8 @@ public static unsafe class NvnLinux {
         var pool = St.TryGetValue(bs.PoolPtr, out var ps) ? ps : null;
         ts.CpuPtr = pool != null ? pool.CpuPtr + bs.Offset : 0;
         ts.GpuAddr = pool != null ? pool.GpuAddr + bs.Offset : 0;
+        ts.Rgba = null;  // (c²³)(a) re-init ⟹ stale decode
+        ts.Gen++;
         $"[nvn] TextureInitialize tex=0x{tex:x} {ts.Width}×{ts.Height} fmt=0x{ts.Format:x} pool=0x{ts.PoolPtr:x}+0x{ts.Offset:x} cpu=0x{ts.CpuPtr:x}".Log();
         return 1;
     }
@@ -469,6 +476,7 @@ public static unsafe class NvnLinux {
                     : fi.Bpp == 4
                         ? new ReadOnlySpan<byte>((byte*)srcCpu, w*h*4).ToArray()
                         : null;
+                if(dst.Rgba != null) dst.Gen++;  // (c²³)(a)
                 if(dst.Rgba != null && n <= 30)
                     $"[nvn]   → S(tex).Rgba stashed {w}×{h} {(fi.IsBc?fi.FourCC:$"{fi.Bpp}Bpp")} ({dst.Rgba.Length}B)".Log();
             } catch(Exception e) {
