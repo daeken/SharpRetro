@@ -264,11 +264,20 @@ public static unsafe class CondVarKernel {
         Trc($"L  m={addr:x} own={ownerHandle:x} req={reqHandle:x} *={*(uint*)addr:x}");
         lock(_schedLock) {
             var tag = *(uint*) addr;
-            // Re-check: userland saw an owner, but it may have unlocked since.
-            if((tag & ~WaitMask) == 0) {
-                *(uint*) addr = (uint) reqHandle;
-                return 0;
-            }
+            // (c²¹) Atmosphere KConditionVariable::WaitForAddress has
+            // NO "tag==0 → grab it" arm. Our prior `(tag&~WM)==0 →
+            // *addr=reqHandle` was a plain-store racing userland's
+            // Enter LDAXR/STLXR CAS (which doesn't take _schedLock):
+            // if thread C does CAS(0→C) between our read-tag=0 and
+            // write-reqHandle, BOTH C and reqHandle-thread believe
+            // they own the mutex. The non-atomic nest++/-- then races
+            // → nest=1-stuck (Δ+=1) OR nest=-1 underflow OR freelist
+            // corruption (u525 BinUnlink SIGSEGV). The (c⁹) fix below
+            // removed the `*addr=tag|WM` non-atomic-RMW; same bug-
+            // class lived 4 lines higher. Fix: remove the arm; the
+            // `tag != owner|WM` check below catches tag==0 too →
+            // return 0 → Enter re-loops @+0x30 → CAS's race-free.
+            //
             // Atmosphere KCV WaitForAddress (): kernel does NOT
             // write *addr — userland already OR'd WaitMask via its
             // own ldaxr/stlxr CAS at ICS::Enter+0x60. Kernel just
