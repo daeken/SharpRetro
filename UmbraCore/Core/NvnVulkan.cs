@@ -281,9 +281,16 @@ public static unsafe class NvnVulkan {
     //   0x25 @16 = 4B → R8G8B8A8_UNORM   (color2)      ✓
     //   0x2e @20 = 8B → R32G32_SFLOAT    (uv)          ✓
     static (uint VkFmt, int Bytes) NvnVtxFmt(int nvn) => nvn switch {
-        // ── R8 family (single-byte components) ────────────────
-        0x11 => (  9,  1),  // R8_UNORM                       ‡
+        // ── (c²⁷) byte-arithmetic CORRECTED from sh800/813
+        // attr layouts (gap-to-next-attr = true byte-size).
+        // sh800 str=16 [0x29@0,0x25@8,0x11@12]: 0x29=8B 0x11=4B.
+        // sh813 str=20 [0x22@0,0x25@12,0x11@16]: 0x11=4B again.
+        // sh794 str=36 […,0x29@20,0x16@28]: 0x29=8B 0x16=8B.
+        // Semantics ‡‡ — size from arithmetic, type guessed
+        // (kt[19]: bytes-first, reference-check pending).
+        0x11 => ( 89,  4),  // R16G16_SNORM        ‡‡ (was R8 1B, WRONG by stride-math)
         0x12 => ( 16,  2),  // R8G8_UNORM                     ‡
+        0x16 => ( 91,  8),  // R16G16B16A16_SNORM  ‡‡ (sh794 tangent? 8B by gap)
         // ── float×N (R32) family ───────────────────────────────
         // 0x22 = float×3 CONFIRMED (menu pos@0, 12B). Adjacents
         // ‡-inferred by enum±1 = component±1 pattern.
@@ -293,7 +300,12 @@ public static unsafe class NvnVulkan {
         0x23 => (109, 16),  // R32G32B32A32_SFLOAT            ‡
         // ── RGBA8 family ───────────────────────────────────────
         0x25 => ( 37,  4),  // R8G8B8A8_UNORM         ✓ menu color
-        0x29 => ( 43,  4),  // R8G8B8A8_SRGB                  ‡ (tex)
+        // (c²⁷) 0x29 in VERTEX context = 8B (sh800 @0, gap-to
+        // -next=8). Was R8G8B8A8_SRGB (4B, tex-format guess).
+        // sh800 reads 3 floats → quantized pos. ‡‡ SNORM vs
+        // SFLOAT undetermined; SFLOAT first (positions can
+        // exceed [-1,1]).
+        0x29 => ( 97,  8),  // R16G16B16A16_SFLOAT ‡‡ (was RGBA8_SRGB 4B, WRONG by stride-math)
         // ── R32G32 (= 8B; 0x2e was the SAME as 0x21? — no:
         // both seen distinctly; 0x2e@off=20 is the menu's uv,
         // 8B confirmed. ⟹ NVN may have 0x21=R32G32_UINT and
@@ -305,10 +317,18 @@ public static unsafe class NvnVulkan {
         // 0 = unset (no SetFormat called for this slot). Caller
         // SKIPS — fmt 0 isn't a real attr.
         0x00 => (  0,  0),
-        _ => throw new NotSupportedException(
-            $"NvnVtxFmt: unknown NVN vertex format 0x{nvn:x} — add to table " +
-            $"(method: known stride+offsets → byte-size → infer VkFormat)"),
+        // (c²⁷) collect-mode: log unknown + default RGBA8_UNORM
+        // (= renders wrong-but-doesn't-crash). The set of distinct
+        // unknowns from one run = the fill-table input. kt[2]
+        // tradeoff: throw stops at first; this collects all.
+        _ => NvnVtxFmtUnknown(nvn),
     };
+    static readonly HashSet<int> _unkVtxFmt = new();
+    static (uint, int) NvnVtxFmtUnknown(int nvn) {
+        if(_unkVtxFmt.Add(nvn))
+            $"[vk] ‡ NvnVtxFmt UNKNOWN 0x{nvn:x} — defaulting RGBA8_UNORM(4B); add to table".Log();
+        return (37, 4);
+    }
 
     [StructLayout(LayoutKind.Sequential)] struct VkVertexInputBindingDescription {
         public uint binding, stride, inputRate;
@@ -729,7 +749,16 @@ public static unsafe class NvnVulkan {
     // One big HOST_VISIBLE vertex buffer; per-draw data memcpy'd in at
     // an advancing offset. ‡ v0 = 4MB fixed, no overflow check.
     static ulong _vbuf, _vbufMem; static byte* _vbufPtr;
-    const ulong VbufSize = 4 << 20;
+    // (c²⁷) bumped 4MB→32MB: indexed draws copy whole bound
+    // vbuf chunks (deduped per-frame by VbGpu).
+    const ulong VbufSize = 32 << 20;
+    static ulong _ibuf, _ibufMem; static byte* _ibufPtr;
+    const ulong IbufSize = 16 << 20;
+    [DllImport(Lib)] static extern void vkCmdBindIndexBuffer(
+        ulong cb, ulong buf, ulong off, uint indexType);
+    [DllImport(Lib)] static extern void vkCmdDrawIndexed(
+        ulong cb, uint idxCount, uint instCount,
+        uint firstIdx, int vtxOff, uint firstInst);
     public static bool PipelineReady;
 
     // 3 swap images, HOST_VISIBLE-mapped for direct readback.
@@ -907,7 +936,15 @@ public static unsafe class NvnVulkan {
         };
         var rs = new VkPipelineRasterizationStateCreateInfo {
             sType = ST_PIPELINE_RASTER_CI,
-            polygonMode = 0, cullMode = 0, frontFace = 0,  // FILL, NONE, CCW
+            // (c²⁷)×6 UMBRA_T3_WIREFRAME=1 → polygonMode=LINE.
+            // Discriminator: do the big indexed meshes (sh800/
+            // 813) RASTERIZE (= edges visible ⟹ FS-side issue:
+            // tex/lighting/blend) or NOT (= VS-side: vtx-fmt/
+            // cbuf/transform)? ‡ Needs fillModeNonSolid feature;
+            // lavapipe has it.
+            polygonMode = Environment.GetEnvironmentVariable(
+                "UMBRA_T3_WIREFRAME") != null ? 1u : 0u,
+            cullMode = 0, frontFace = 0,  // NONE, CCW
             lineWidth = 1.0f,
         };
         var ms = new VkPipelineMultisampleStateCreateInfo {
@@ -1116,6 +1153,23 @@ public static unsafe class NvnVulkan {
         Chk(vkBindBufferMemory(_dev, buf, mem, 0), "vkBindBufferMemory(vbuf)");
         void* p; Chk(vkMapMemory(_dev, mem, 0, req.size, 0, &p), "vkMapMemory(vbuf)");
         _vbufPtr = (byte*) p;
+
+        // ── (c²⁷) one big host-visible index buffer ──
+        var ibci = new VkBufferCreateInfo {
+            sType = ST_BUFFER_CI, size = IbufSize,
+            usage = 0x40,  // INDEX_BUFFER_BIT
+        };
+        ulong ibuf; Chk(vkCreateBuffer(_dev, &ibci, null, &ibuf), "vkCreateBuffer(ibuf)");
+        _ibuf = ibuf;
+        VkMemoryRequirements ireq; vkGetBufferMemoryRequirements(_dev, ibuf, &ireq);
+        var imai = new VkMemoryAllocateInfo {
+            sType = ST_MEM_AI, allocationSize = ireq.size, memoryTypeIndex = _hostMemType,
+        };
+        ulong imem; Chk(vkAllocateMemory(_dev, &imai, null, &imem), "vkAllocateMemory(ibuf)");
+        _ibufMem = imem;
+        Chk(vkBindBufferMemory(_dev, ibuf, imem, 0), "vkBindBufferMemory(ibuf)");
+        void* ip; Chk(vkMapMemory(_dev, imem, 0, ireq.size, 0, &ip), "vkMapMemory(ibuf)");
+        _ibufPtr = (byte*) ip;
 
         $"[vk] InitPipeline OK — rp={_renderPass:x} pipeline={_pipeline:x} vbuf={_vbuf:x} ({VbufSize>>10}KB host-mapped) dsl={_dsLayout:x} sampler={_sampler:x}".Log();
         PipelineReady = true;
@@ -1428,11 +1482,36 @@ public static unsafe class NvnVulkan {
             // T3CbufStride) since every cbuf has its draw#k slot
             // at the same offset.
             var t3dyn = stackalloc uint[24];
-            ulong vbo = 0;
+            ulong vbo = 0, ibo = 0;
             ulong vb = _vbuf;
-            int recN = 0;
+            int recN = 0, nIdx = 0, nIdxSkip = 0, nPostSkip = 0;
+            // (c²⁷) Per-frame vbuf-dedup: many indexed draws
+            // share one big mesh vbuf. Copy each (VbGpu,VbSize)
+            // once, record its vbo-offset, reuse.
+            var vbCache = new Dictionary<(ulong,ulong), ulong>(64);
+            // (c²⁷)(A) filter v2: when 3D scene is active
+            // (= ANY indexed draws this frame), keep ONLY
+            // indexed + UI (vs343/345/349 = the 2D overlay
+            // path). All other non-indexed = post-proc chain
+            // (bloom downsample vs31/32, upsample vs33/34,
+            // composite vs1/2, tonemap vs42/198) which sample
+            // RTs we don't write to ⟹ output black ⟹ over-
+            // write the geometry. v1's Count==3 filter missed
+            // the strip-quad ones (count=4 → expanded 6).
+            // When NO indexed draws (= 2D screens), keep all
+            // (= existing menu/legal/title behavior).
+            var skipPostproc = Environment.GetEnvironmentVariable(
+                "UMBRA_T3_SKIP_POSTPROC") != null;
+            var hasIndexed = draws.Any(x => x.IdxCount > 0);
             foreach(var d in draws) {
-                if(d.VbCpu == 0 || d.Count <= 0) continue;
+                if(d.VbCpu == 0) continue;
+                if(d.IdxCount == 0 && d.Count <= 0) continue;
+                if(skipPostproc && hasIndexed
+                        && d.IdxCount == 0
+                        && d.VsShIdx != 343 && d.VsShIdx != 345
+                        && d.VsShIdx != 349) {
+                    nPostSkip++; continue;
+                }
                 // v1.0: per-draw pipeline lookup (build-on-miss).
                 // Returns 0 if .spv missing → skip this draw
                 // (rather than render through wrong shaders).
@@ -1470,12 +1549,59 @@ public static unsafe class NvnVulkan {
                 // use it for sh349/346). NVN prim 6 (TRI_FAN) /
                 // 9 (QUADS) / 10 (QUAD_STRIP) not seen in u705;
                 // when they show, same expansion approach.
+                // (c²⁷) Actual stride from captured Streams
+                // (was hardcoded 36 — wrong for str=28/40/etc;
+                // worked-by-luck on count=3 reads past 84B buf).
+                var stride = d.Streams?.Length > 0
+                    ? d.Streams[0].Stride : 36;
                 int drawCount, drawFirst;
-                ulong bytes;
-                if(d.Prim == 5 && d.Count >= 3) {
+                ulong bytes, voff;
+                bool isIndexed = d.IdxCount > 0;
+                if(isIndexed) {
+                    // ── (c²⁷) Indexed draw ──────────────────
+                    // vbuf: copy whole bound buffer ONCE per
+                    // (VbGpu,VbSize) per-frame; reuse offset.
+                    // Indices reference into it via baseVtx +
+                    // idx[i], so we need it whole.
+                    var vk2 = (d.VbGpu, d.VbSize);
+                    if(!vbCache.TryGetValue(vk2, out voff)) {
+                        var vbBytes = Math.Min(d.VbSize,
+                            VbufSize - vbo);
+                        if(vbBytes < d.VbSize) {
+                            nIdxSkip++; continue;  // out of vbuf
+                        }
+                        Buffer.MemoryCopy((void*)d.VbCpu,
+                            _vbufPtr + vbo, vbBytes, vbBytes);
+                        voff = vbo;
+                        vbCache[vk2] = voff;
+                        vbo += (vbBytes + 255) & ~255ul;
+                    }
+                    // ibuf: copy idx data (count × idxSz).
+                    var idxSz = d.IdxType switch
+                        { 0 => 1, 1 => 2, 2 => 4, _ => 2 };
+                    var iBytes = (ulong)d.IdxCount * (ulong)idxSz;
+                    if(d.IdxCpu == 0 || ibo + iBytes > IbufSize) {
+                        nIdxSkip++; continue;
+                    }
+                    Buffer.MemoryCopy((void*)d.IdxCpu,
+                        _ibufPtr + ibo, iBytes, iBytes);
+                    var ioff = ibo;
+                    ibo += (iBytes + 3) & ~3ul;
+                    // VK_INDEX_TYPE: 0=u16 1=u32 1000265000=u8.
+                    // ‡ u8 (NVN idxType=0) needs EXT_index_type
+                    // _uint8; game uses idxType=1 throughout.
+                    var vkIdxT = d.IdxType switch
+                        { 1 => 0u, 2 => 1u, _ => 0u };
+                    vkCmdBindIndexBuffer(_cmdBuf, _ibuf, ioff, vkIdxT);
+                    vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
+                    drawCount = d.IdxCount;
+                    drawFirst = 0;  // baked into ibuf offset
+                    bytes = 0;      // vbo already advanced
+                    nIdx++;
+                } else if(d.Prim == 5 && d.Count >= 3) {
                     drawCount = (d.Count - 2) * 3;
                     drawFirst = 0;  // First baked into copy.
-                    bytes = (ulong) drawCount * 36;
+                    bytes = (ulong) drawCount * (ulong) stride;
                     if(vbo + bytes > VbufSize) break;
                     var src = (byte*) d.VbCpu;
                     var dst = (byte*)(_vbufPtr + vbo);
@@ -1484,19 +1610,21 @@ public static unsafe class NvnVulkan {
                         // (i-2,i-1,i) to preserve winding.
                         var a = (i & 1) == 0 ? i-2 : i-1;
                         var b = (i & 1) == 0 ? i-1 : i-2;
-                        Buffer.MemoryCopy(src + (d.First+a)*36, dst, 36, 36); dst += 36;
-                        Buffer.MemoryCopy(src + (d.First+b)*36, dst, 36, 36); dst += 36;
-                        Buffer.MemoryCopy(src + (d.First+i)*36, dst, 36, 36); dst += 36;
+                        Buffer.MemoryCopy(src + (d.First+a)*stride, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(src + (d.First+b)*stride, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(src + (d.First+i)*stride, dst, stride, stride); dst += stride;
                     }
+                    voff = vbo;
+                    vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
                 } else {
                     drawCount = d.Count;
                     drawFirst = d.First;
-                    bytes = (ulong) drawCount * 36;
+                    bytes = (ulong) drawCount * (ulong) stride;
                     if(vbo + bytes > VbufSize) break;
                     Buffer.MemoryCopy((void*) d.VbCpu, _vbufPtr + vbo, bytes, bytes);
+                    voff = vbo;
+                    vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
                 }
-                ulong voff = vbo;
-                vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
                 // Cbuf: NVN(stage,slot K) → c[K+3] at set=stage.
                 // _t3CbufPtr[stage*12 + (K+3)]. c[1]/c[2] driver-
                 // managed; v0 zero-filled. ⚠️ Last-write-wins on VS
@@ -1523,7 +1651,11 @@ public static unsafe class NvnVulkan {
                     t3dyn[k] = (uint)(slot * T3CbufStride);
                 vkCmdBindDescriptorSets(_cmdBuf, 0, _t3PipelineLayout,
                     0, 3, t3sets, 24, t3dyn);
-                vkCmdDraw(_cmdBuf, (uint) drawCount, 1, (uint) drawFirst, 0);
+                if(isIndexed)
+                    vkCmdDrawIndexed(_cmdBuf, (uint)drawCount, 1,
+                        0, d.BaseVtx, 0);
+                else
+                    vkCmdDraw(_cmdBuf, (uint) drawCount, 1, (uint) drawFirst, 0);
                 vbo += (bytes + 255) & ~255ul;
                 recN++;
             }
@@ -1542,7 +1674,7 @@ public static unsafe class NvnVulkan {
                                 var t = g.First().Tex;
                                 return $"tx{g.Key:x}→{(t==null?"∅":$"{t.Width}×{t.Height}f{t.Format:x}")}";
                             }));
-                        $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} vbufUsed={vbo} [{pairs}] tex:[{txs}]".Log();
+                        $"[vk] RecordDrawPass(T3) frame={_frameN} draws={recN} idx={nIdx}/{nIdx+nIdxSkip} skipPP={nPostSkip} vbufUsed={vbo} ibufUsed={ibo} [{pairs}] tex:[{txs}]".Log();
                     }
                 }
             return;
