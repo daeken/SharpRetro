@@ -1424,9 +1424,43 @@ public static unsafe class NvnVulkan {
                 ulong txDs = texId == 0 ? _t3DsTex
                     : EnsureTexBound(texId, d.Tex);
                 t3sets[1] = txDs != 0 ? txDs : _t3DsTex;
-                var bytes = (ulong) d.Count * 36;
-                if(vbo + bytes > VbufSize) break;
-                Buffer.MemoryCopy((void*) d.VbCpu, _vbufPtr + vbo, bytes, bytes);
+                // (c²⁴) NVN prim 5 = TRIANGLE_STRIP. T3Pipe is
+                // hardcoded topology=TRIANGLE_LIST (@888). Game
+                // uses prim=5 count=4 for fullscreen quads (legal
+                // splash, title key-art) → only verts {0,1,2}
+                // drew = bottom-left triangle = the half-quad.
+                // Expand strip → list at copy time: strip vert i
+                // (i≥2) emits triangle (i-2,i-1,i) with winding
+                // flip on odd i. Count N → 3(N-2) list verts.
+                // ‡ Doesn't honor primitive-restart (game doesn't
+                // use it for sh349/346). NVN prim 6 (TRI_FAN) /
+                // 9 (QUADS) / 10 (QUAD_STRIP) not seen in u705;
+                // when they show, same expansion approach.
+                int drawCount, drawFirst;
+                ulong bytes;
+                if(d.Prim == 5 && d.Count >= 3) {
+                    drawCount = (d.Count - 2) * 3;
+                    drawFirst = 0;  // First baked into copy.
+                    bytes = (ulong) drawCount * 36;
+                    if(vbo + bytes > VbufSize) break;
+                    var src = (byte*) d.VbCpu;
+                    var dst = (byte*)(_vbufPtr + vbo);
+                    for(var i = 2; i < d.Count; i++) {
+                        // odd-i flip: (i-1,i-2,i) instead of
+                        // (i-2,i-1,i) to preserve winding.
+                        var a = (i & 1) == 0 ? i-2 : i-1;
+                        var b = (i & 1) == 0 ? i-1 : i-2;
+                        Buffer.MemoryCopy(src + (d.First+a)*36, dst, 36, 36); dst += 36;
+                        Buffer.MemoryCopy(src + (d.First+b)*36, dst, 36, 36); dst += 36;
+                        Buffer.MemoryCopy(src + (d.First+i)*36, dst, 36, 36); dst += 36;
+                    }
+                } else {
+                    drawCount = d.Count;
+                    drawFirst = d.First;
+                    bytes = (ulong) drawCount * 36;
+                    if(vbo + bytes > VbufSize) break;
+                    Buffer.MemoryCopy((void*) d.VbCpu, _vbufPtr + vbo, bytes, bytes);
+                }
                 ulong voff = vbo;
                 vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
                 // Cbuf: NVN(stage,slot K) → c[K+3] at set=stage.
@@ -1455,7 +1489,7 @@ public static unsafe class NvnVulkan {
                     t3dyn[k] = (uint)(slot * T3CbufStride);
                 vkCmdBindDescriptorSets(_cmdBuf, 0, _t3PipelineLayout,
                     0, 3, t3sets, 24, t3dyn);
-                vkCmdDraw(_cmdBuf, (uint) d.Count, 1, (uint) d.First, 0);
+                vkCmdDraw(_cmdBuf, (uint) drawCount, 1, (uint) drawFirst, 0);
                 vbo += (bytes + 255) & ~255ul;
                 recN++;
             }
