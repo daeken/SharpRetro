@@ -215,6 +215,14 @@ public static unsafe class NvnLinux {
         ["nvnCommandBufferSetViewport"]      = (nint)(delegate* unmanaged<ulong, int, int, int, int, void>)&CbSetViewport,
         ["nvnCommandBufferSetScissor"]       = (nint)(delegate* unmanaged<ulong, int, int, int, int, void>)&CbSetScissor,
         ["nvnCommandBufferDrawArrays"]       = (nint)(delegate* unmanaged<ulong, int, int, int, void>)&CbDrawArrays,
+        // (c²⁹) ReportCounter(cb, NVNcounterType, bufGpuAddr).
+        // Type 0 = TIMESTAMP. Game does ~50/frame to a ring-of-9
+        // bufs; stub'd ⟹ bufs stay 0 ⟹ Δt=0 ⟹ cutscene frozen
+        // (c[3] camera + c[6] model both byte-identical across
+        // ~3200 frames per c29 dump). Game reads back via
+        // DeviceGetTimestampInNanoseconds (derefs buf+8) AND/OR
+        // direct CPU-side deref (the bufs are CPU-mappable).
+        ["nvnCommandBufferReportCounter"] = (nint)(delegate* unmanaged<ulong, int, ulong, void>)&CbReportCounter,
         // (c²⁷) DrawElementsBaseVertex(cb, prim, idxType, count,
         // idxGpuAddr, baseVtx). NVN idxType 0=u8 1=u16 2=u32.
         ["nvnCommandBufferDrawElementsBaseVertex"] = (nint)(delegate* unmanaged<ulong, int, int, int, ulong, int, void>)&CbDrawElementsBaseVertex,
@@ -1105,16 +1113,56 @@ public static unsafe class NvnLinux {
     }
 
     static readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+    static ulong NowNs() =>
+        (ulong) (_clock.ElapsedTicks * (1_000_000_000.0
+                 / System.Diagnostics.Stopwatch.Frequency));
     [UnmanagedCallersOnly]
-    static ulong DeviceGetCurrentTimestampNs(ulong dev) =>
-        (ulong) (_clock.ElapsedTicks * (1_000_000_000.0 / System.Diagnostics.Stopwatch.Frequency));
+    static ulong DeviceGetCurrentTimestampNs(ulong dev) => NowNs();
+    static long _getTsN;
     [UnmanagedCallersOnly]
-    static ulong DeviceGetTimestampNs(ulong dev, ulong* counter) =>
-        // ‡ Real impl converts a NVNcounterData (GPU timestamp counter from a
-        // ReportCounter cmd) to ns. Game uses this for frame timing / profiling.
-        // For poll-loop unblocking, return monotonic wall time; the counter
-        // arg is a GPU-side value we never wrote, so deref carefully.
-        counter != null ? *counter : (ulong) _clock.ElapsedTicks;
+    static ulong DeviceGetTimestampNs(ulong dev, ulong* counterData) {
+        // (c²⁹) NVNcounterData = { u64 counter; u64 timestamp }.
+        // Real impl converts timestamp (raw GPU ticks) → ns.
+        // CbReportCounter writes ns directly at pool-buf+8.
+        // u720: 9.5M calls, cd=fff34e7ebe50 fixed (stack-local,
+        // NOT pool), cd[0]=cd[1]=0 always ⟹ game's local copy
+        // never gets the ReportCounter data (‡ via stub'd nvn
+        // SyncWait?). Game spin-polls → throughput halved. v1
+        // hack: if cd reads all-0, return NowNs() (= unblock
+        // the spin; the value is monotone-ns which is what the
+        // conversion would yield anyway). Honest path = find
+        // what writes cd (·7827 the call site).
+        var n = ++_getTsN;
+        if(counterData == null) return NowNs();
+        var c0 = counterData[0]; var c1 = counterData[1];
+        if(n <= 3 || n % 50000 == 0)
+            $"[nvn] DeviceGetTimestampNs #{n} cd=0x{(ulong)counterData:x} [0]={c0} [1]={c1}".Log();
+        // Layout uncertainty (kt[19]): try +8, then +0, then
+        // fall back to wall-clock. Whichever is nonzero is
+        // probably the timestamp.
+        return c1 != 0 ? c1 : c0 != 0 ? c0 : NowNs();
+    }
+    static long _rcN;
+    [UnmanagedCallersOnly]
+    static void CbReportCounter(ulong cb, int counterType, ulong bufGpuAddr) {
+        // (c²⁹) Write NVNcounterData { counter, timestamp } at
+        // bufGpuAddr. counterType 0 = TIMESTAMP (the only type
+        // legoworlds uses, ~50/frame). Real GPU writes raw GPU
+        // ticks; we write wall-ns directly (= what GetTimestampNs
+        // would convert TO). counterType≥1 (SAMPLES_PASSED etc.)
+        // ⟹ counter field would carry the query value; ‡ stub 0.
+        var cpu = GpuToCpu(bufGpuAddr);
+        var n = ++_rcN;
+        if(cpu == 0) {
+            if(n <= 3) $"[nvn] ReportCounter #{n} type={counterType} buf=gpu:0x{bufGpuAddr:x} → cpu=0 (unmapped, skip)".Log();
+            return;
+        }
+        var ts = NowNs();
+        *(ulong*) cpu       = 0;   // counter value (unused for TIMESTAMP)
+        *(ulong*)(cpu + 8)  = ts;
+        if(n <= 5 || n % 50000 == 0)
+            $"[nvn] ReportCounter #{n} type={counterType} buf=gpu:0x{bufGpuAddr:x}/cpu:0x{cpu:x} → ts={ts}".Log();
+    }
 
     // ─── MemoryPool ───
     [UnmanagedCallersOnly]
