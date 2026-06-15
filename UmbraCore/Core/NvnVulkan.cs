@@ -1972,7 +1972,33 @@ public static unsafe class NvnVulkan {
                     var vkIdxT = d.IdxType switch
                         { 1 => 0u, 2 => 1u, _ => 0u };
                     vkCmdBindIndexBuffer(_cmdBuf, _ibuf, ioff, vkIdxT);
-                    vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
+                    // (T6)×17 multi-stream: bind binding-1
+                    // too. If d.VbCpu1==0 (single-stream draw
+                    // OR pre-(T6)×17 capture), alias b1=b0 so
+                    // T3Pipe's 2-binding pipeline still has a
+                    // valid buffer (closes vbuf-b1-NULL ×36K
+                    // VUID-04008 regardless; reads garbage but
+                    // doesn't crash). With recaptured data,
+                    // d.VbCpu1 = stream-1's actual storage.
+                    var voff1 = voff;
+                    if(d.VbCpu1 != 0 && d.VbSize1 > 0) {
+                        var vk1 = (d.VbGpu1, d.VbSize1);
+                        if(!vbCache.TryGetValue(vk1, out voff1)) {
+                            var b1 = Math.Min(d.VbSize1,
+                                VbufSize - vbo);
+                            if(b1 >= d.VbSize1) {
+                                Buffer.MemoryCopy(
+                                    (void*)d.VbCpu1,
+                                    _vbufPtr + vbo, b1, b1);
+                                voff1 = vbo;
+                                vbCache[vk1] = voff1;
+                                vbo += (b1 + 255) & ~255ul;
+                            } else voff1 = voff;
+                        }
+                    }
+                    var vbA = stackalloc ulong[2] { vb, vb };
+                    var voA = stackalloc ulong[2] { voff, voff1 };
+                    vkCmdBindVertexBuffers(_cmdBuf, 0, 2, vbA, voA);
                     drawCount = d.IdxCount;
                     drawFirst = 0;  // baked into ibuf offset
                     bytes = 0;      // vbo already advanced

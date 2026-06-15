@@ -124,17 +124,25 @@ public static unsafe class NvnCapture {
         using var vbuf = File.Create(
             Path.Combine(fdir, "vbuf.bin"));
         var vbufRegions = new List<object>();
-        foreach(var d in draws) {
-            if(d.VbCpu == 0 || vbMap.ContainsKey(d.VbCpu))
-                continue;
-            var len = (int)Math.Min(d.VbSize, 4<<20);
+        // (T6)×17: include stream-1 buffers in the region
+        // pool. Same dedup-by-VbCpu key; stream-0/1 may
+        // alias the same storage (= one entry) or be
+        // separate (= two). The per-draw record stores
+        // both region-indices @36/@40.
+        void AddVb(ulong cpu, ulong size) {
+            if(cpu == 0 || vbMap.ContainsKey(cpu)) return;
+            var len = (int)Math.Min(size, 4<<20);
             var off = (int)vbuf.Position;
             vbuf.Write(new ReadOnlySpan<byte>(
-                (void*)d.VbCpu, len));
-            vbMap[d.VbCpu] = (vbufRegions.Count, off, len);
+                (void*)cpu, len));
+            vbMap[cpu] = (vbufRegions.Count, off, len);
             vbufRegions.Add(new {
-                key = $"0x{d.VbCpu:x}", off, len,
+                key = $"0x{cpu:x}", off, len,
             });
+        }
+        foreach(var d in draws) {
+            AddVb(d.VbCpu,  d.VbSize);
+            AddVb(d.VbCpu1, d.VbSize1);
         }
 
         // ── 4. per-draw: ibuf snapshot + ubos concat +
@@ -177,7 +185,14 @@ public static unsafe class NvnCapture {
             var vbIdx = vbMap.TryGetValue(d.VbCpu, out var vb)
                 ? vb.idx : -1;
             W32(rec, 36, vbIdx);
-            W32(rec, 40, 0);  // vbufOff within region (=0 v1)
+            // (T6)×17: @40 was reserved=0; now vbR1 (= stream
+            // -1's vbufRegion index, -1 if single-stream).
+            // Old captures read @40=0 ⟹ NvnReplay treats 0
+            // as "region 0" — gated by manifest.version≥2.
+            var vbIdx1 = d.VbCpu1 != 0
+                && vbMap.TryGetValue(d.VbCpu1, out var vb1)
+                ? vb1.idx : -1;
+            W32(rec, 40, vbIdx1);
             W32(rec, 44, d.VsShIdx);
             W32(rec, 48, d.FsShIdx);
             // viewport+scissor (8× int16)
@@ -226,7 +241,10 @@ public static unsafe class NvnCapture {
         // ── 5. manifest.json ──
         var c = NvnLinux.LastClearColor;
         var manifest = new {
-            version = 1, frameN,
+            // version 2 = (T6)×17 multi-stream vbuf:
+            // DrawRec @40 = vbR1 (stream-1 region idx;
+            // was reserved=0 in v1).
+            version = 2, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),
