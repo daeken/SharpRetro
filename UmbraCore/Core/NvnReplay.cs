@@ -101,11 +101,54 @@ public static unsafe class NvnReplay {
                 len: r.GetProperty("len").GetInt32()))
             .ToArray();
 
+        // (T6)×34 capVer≥3: manifest.renderTargets[] →
+        // NvnLinux.RtSigs (= the same static the live
+        // path builds, so NvnVulkan ×35 reads it the
+        // same way regardless of live-vs-replay).
+        // .Handle=0 in replay (live NVNtexture* doesn't
+        // exist); only {W,H,Fmt,TexId} are load-bearing
+        // for FB-alloc + RT-as-sampler match.
+        if(capVer >= 3
+           && m.TryGetProperty("renderTargets", out var rtj)) {
+            lock(NvnLinux.RtSigs) {
+                NvnLinux.RtSigs.Clear();
+                foreach(var s in rtj.EnumerateArray()) {
+                    NvnLinux.RtAttach pa(JsonElement a) => new() {
+                        W = a.GetProperty("w").GetInt32(),
+                        H = a.GetProperty("h").GetInt32(),
+                        Fmt = a.GetProperty("fmt").GetInt32(),
+                        TexId = a.GetProperty("texId").GetInt32(),
+                        Handle = 0,
+                    };
+                    NvnLinux.RtSigs.Add(new() {
+                        Id = (byte)s.GetProperty("id").GetInt32(),
+                        NC = s.GetProperty("nC").GetInt32(),
+                        Colors = s.GetProperty("colors")
+                            .EnumerateArray().Select(pa).ToArray(),
+                        Depth = s.TryGetProperty("depth", out var dj)
+                             && dj.ValueKind != JsonValueKind.Null
+                            ? pa(dj) : null,
+                    });
+                }
+            }
+            $"[replay] renderTargets: {NvnLinux.RtSigs.Count} sigs loaded".Log();
+        }
+
         // ── 4. draws.bin → DrawRecord[] ──
         var dbin = File.ReadAllBytes(
             Path.Combine(frameDir, "draws.bin"));
         var ext = hasExt ? File.ReadAllBytes(
             Path.Combine(frameDir, "draws-ext.bin")) : null;
+        // (T6)×34 capVer≥3: per-draw RT-set id sidecar
+        // (1B/draw, parallel to draws.bin). Index into
+        // manifest.renderTargets[]. capVer<3 ⟹ all
+        // rtId=0 (= the swap/composite [F], = pre-RTT
+        // single-FB behavior).
+        var rtsPath = Path.Combine(frameDir, "rts.bin");
+        var rtsBin = capVer >= 3 && File.Exists(rtsPath)
+            ? File.ReadAllBytes(rtsPath) : null;
+        if(rtsBin != null && rtsBin.Length != drawCount)
+            $"[replay] ⚠ rts.bin len={rtsBin.Length} ≠ drawCount={drawCount}".Log();
         var draws = new NvnLinux.DrawRecord[drawCount];
         for(var i = 0; i < drawCount; i++) {
             var r = dbin.AsSpan(i*256, 256);
@@ -124,6 +167,8 @@ public static unsafe class NvnReplay {
                 ScX = R16(r,60), ScY = R16(r,62),
                 ScW = R16(r,64), ScH = R16(r,66),
                 Ubos = new byte[16][],
+                RtId = rtsBin != null && i < rtsBin.Length
+                     ? rtsBin[i] : (byte)0,
             };
             // ibuf
             var ibOff = R32(r, 28);
