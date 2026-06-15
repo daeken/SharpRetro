@@ -46,6 +46,8 @@ public static unsafe class NvnReplay {
         var m = JsonSerializer.Deserialize<JsonElement>(
             File.ReadAllText(
                 Path.Combine(frameDir, "manifest.json")));
+        var capVer = m.TryGetProperty("version", out var cv)
+                   ? cv.GetInt32() : 1;
         var frameN = m.GetProperty("frameN").GetInt32();
         var drawCount = m.GetProperty("drawCount").GetInt32();
         var hasExt = m.TryGetProperty("hasExtTex", out var he)
@@ -127,7 +129,7 @@ public static unsafe class NvnReplay {
             var ibOff = R32(r, 28);
             var ibLen = R32(r, 32);
             d.IdxCpu = ibLen > 0 ? ibufP + (ulong)ibOff : 0;
-            // vbuf region
+            // vbuf region (stream-0)
             var vbR = R32(r, 36);
             if(vbR >= 0 && vbR < vbRegions.Length) {
                 var (off, len) = vbRegions[vbR];
@@ -137,6 +139,21 @@ public static unsafe class NvnReplay {
                 // (= same VbGpu ⟹ skip re-memcpy). Reuse the
                 // region's base addr so dedup still works.
                 d.VbGpu = d.VbCpu;
+            }
+            // (T6)×17 stream-1 vbuf region. manifest.version
+            // ≥2 only (v1 captures have @40=0=region-0 which
+            // would be wrong). When absent, NvnVulkan aliases
+            // b1=b0 (closes vbuf-b1-NULL VUID regardless;
+            // attr1-4 read constant-but-nonzero ⟹ r63b 91%
+            // vs r44 49.6% even without real stream-1 data).
+            if(capVer >= 2) {
+                var vbR1 = R32(r, 40);
+                if(vbR1 >= 0 && vbR1 < vbRegions.Length) {
+                    var (off, len) = vbRegions[vbR1];
+                    d.VbCpu1 = vbufP + (ulong)off;
+                    d.VbSize1 = (ulong)len;
+                    d.VbGpu1 = d.VbCpu1;
+                }
             }
             // ubos[16]
             for(var k = 0; k < 16; k++) {

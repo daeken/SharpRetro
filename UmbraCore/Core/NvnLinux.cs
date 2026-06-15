@@ -630,6 +630,11 @@ public static unsafe class NvnLinux {
         public int N;                    // draw#
         public int Prim, First, Count;
         public ulong VbGpu, VbCpu, VbSize;
+        // (T6)×17 stream-1 vbuf (binding=1). 0 if single-
+        // stream. NvnVulkan binds both to _t3Vbuf at
+        // separate offsets; T3Pipe declares 2 bindings
+        // when d.Streams.Length>1.
+        public ulong VbGpu1, VbCpu1, VbSize1;
         public int VbIndex;
         public ulong Program;
         public ulong TexHandle; public int TexStage, TexSlot;
@@ -686,6 +691,18 @@ public static unsafe class NvnLinux {
 
     // Current bind state per cmdbuf (flat for v0 — only one cmdbuf in use).
     static ulong _curVbGpu, _curVbSize; static int _curVbIdx;
+    // (T6)×17 multi-stream vbuf: ~83/165 cutscene draws use
+    // 2 vertex streams (binding 0 = positions f16×4 stride
+    // 8; binding 1 = normals/colors/UV stride 16). Game
+    // calls BindVB(1,…) then BindVB(0,…); the scalar above
+    // kept only stream-0 ⟹ stream-1 never captured ⟹
+    // vs417 reads attr1-4=0 ⟹ constant out_attr (r61
+    // verified: every pixel of a 21K-vtx mesh = same
+    // (0,255,147)) ⟹ fs418 lighting=0 = the 50% black in
+    // r44. = the vbuf-binding-1-NULL ×36K validation
+    // finding traced to root. v0 tracks index 0+1; >1
+    // unobserved (NVN supports 16).
+    static ulong _curVbGpu1, _curVbSize1;
     static NvnAttrib[] _curAttribs = [];
     static NvnStream[] _curStreams = [];
     static ulong _curProgram, _curTexHandle; static int _curTexStage, _curTexSlot;
@@ -744,8 +761,18 @@ public static unsafe class NvnLinux {
 
     [UnmanagedCallersOnly]
     static void CbBindVertexBuffer(ulong cb, int index, ulong gpuAddr, ulong size) {
-        _curVbGpu = gpuAddr; _curVbSize = size; _curVbIdx = index;
+        // (T6)×17: per-index. Was last-call-only scalar.
+        if(index == 0) { _curVbGpu  = gpuAddr; _curVbSize  = size; }
+        else           { _curVbGpu1 = gpuAddr; _curVbSize1 = size; }
+        _curVbIdx = index;
+        // Bounded log: first 20 of any + first 20 of idx>0
+        // (= settles "do streams 0/1 alias same buffer?"
+        // — if gpuAddr matches across indices, NvnReplay's
+        // bind-b1=b0 fallback would work without recapture).
+        if(_vbBindLogN++ < 20 || (index > 0 && _vbBind1LogN++ < 20))
+            $"[nvn] BindVB[{index}] gpu=0x{gpuAddr:x} sz=0x{size:x}".Log();
     }
+    static long _vbBindLogN, _vbBind1LogN;
 
     // NvnVertex*State setters. The struct is opaque-sized;
     // my v0 wrote 12B/8B and CORRUPTED HEAP (a test run SEGV in
@@ -805,7 +832,7 @@ public static unsafe class NvnLinux {
                 $"[nvn]   [{i}] streamIdx={arr[i].StreamIdx} fmt=0x{arr[i].Format:x} off={arr[i].Offset}".Log();
         }
     }
-    static int _attribLogN, _streamLogN;
+    static int _attribLogN, _streamLogN, _streamLog2N;
 
     [UnmanagedCallersOnly]
     static void CbBindVertexStreamState(ulong cb, int count, void* states) {
@@ -818,8 +845,28 @@ public static unsafe class NvnLinux {
             var v = p[i];
             arr[i] = new((int)(v & 0xffff), (int)(v >> 16));
         }
+        // (T6)×17 struct-stride auto-detect: NVN's opaque
+        // VertexStreamState may be 8B not 4B (the comment
+        // above guessed 4B from AttribState, but count>1
+        // was never observed at the time). Census shows
+        // 83/165 draws have stride[1]=0 with max_streamIdx
+        // =1 ⟹ p[1] read junk. If 4B-stride gave [1]=0 for
+        // count>1, retry p[2] (= bytes 8-11 = struct[1] at
+        // 8B). The recapture's raw-bytes log settles it
+        // definitively; this is the safe-both-ways read.
+        if(count > 1 && arr[1].Stride == 0) {
+            var v8 = p[2];
+            if((v8 & 0xffff) != 0) {
+                for(var i = 1; i < count; i++) {
+                    var v = p[i*2];
+                    arr[i] = new((int)(v & 0xffff), (int)(v >> 16));
+                }
+            }
+        }
         _curStreams = arr;
-        if(_streamLogN++ < 3) {
+        // Log first-3-of-any + first-5 count>1 (= the
+        // discriminator: raw bytes show real struct size).
+        if(_streamLogN++ < 3 || (count > 1 && _streamLog2N++ < 5)) {
             $"[nvn] BindVertexStreamState count={count}".Log();
             var b = (byte*) states;
             $"[nvn]   raw: {string.Join(" ", Enumerable.Range(0, Math.Min(count*16,32)).Select(j => $"{b[j]:x2}"))}".Log();
@@ -999,6 +1046,14 @@ public static unsafe class NvnLinux {
         return new DrawRecord {
             Prim = prim,
             VbGpu = _curVbGpu, VbCpu = vbCpu, VbSize = _curVbSize, VbIndex = _curVbIdx,
+            VbGpu1 = _curVbGpu1,
+            // (T6)×17×4: GpuToCpu(0) per-draw cost suspect
+            // (u762 hit ~1.1fps vs u761 ~52fps; menu phase
+            // never calls BindVB(1,…) so _curVbGpu1 stays 0).
+            // Guard regardless of whether GpuToCpu(0) is the
+            // actual cost — semantically correct either way.
+            VbCpu1 = _curVbGpu1 != 0 ? GpuToCpu(_curVbGpu1) : 0,
+            VbSize1 = _curVbSize1,
             Program = _curProgram,
             TexHandle = _curTexHandle, TexStage = _curTexStage, TexSlot = _curTexSlot,
             // (c⁴⁰)(F) FS per-slot tex snapshot. 40×8B = 320B
@@ -1063,6 +1118,14 @@ public static unsafe class NvnLinux {
         var dr = new DrawRecord {
             N = n, Prim = prim, First = first, Count = count,
             VbGpu = _curVbGpu, VbCpu = vbCpu, VbSize = _curVbSize, VbIndex = _curVbIdx,
+            VbGpu1 = _curVbGpu1,
+            // (T6)×17×4: GpuToCpu(0) per-draw cost suspect
+            // (u762 hit ~1.1fps vs u761 ~52fps; menu phase
+            // never calls BindVB(1,…) so _curVbGpu1 stays 0).
+            // Guard regardless of whether GpuToCpu(0) is the
+            // actual cost — semantically correct either way.
+            VbCpu1 = _curVbGpu1 != 0 ? GpuToCpu(_curVbGpu1) : 0,
+            VbSize1 = _curVbSize1,
             Program = _curProgram,
             TexHandle = _curTexHandle, TexStage = _curTexStage, TexSlot = _curTexSlot,
             Ubo = ubo, Ubos = ubos,
