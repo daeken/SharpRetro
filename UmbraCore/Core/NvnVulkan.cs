@@ -311,6 +311,13 @@ public static unsafe class NvnVulkan {
         0x23 => (109, 16),  // R32G32B32A32_SFLOAT            ‡
         // ── RGBA8 family ───────────────────────────────────────
         0x25 => ( 37,  4),  // R8G8B8A8_UNORM         ✓ menu color
+        // (T6)×33 sera ·10966 botw nvn.h: 0x27=RGBA8UI.
+        // vs1023 bone-idx attr: shader does int(floor(
+        // in_attr.x)) ⟹ wants float-with-integer-VALUE
+        // ⟹ VK_FORMAT_R8G8B8A8_USCALED (33; uint8→float
+        // 0..255 verbatim). UINT (41) would need ivec
+        // input + the .x-as-float wouldn't work.
+        0x27 => ( 33,  4),  // R8G8B8A8_USCALED (NVN: RGBA8UI; bone-idx)
         // (c²⁷) 0x29 in VERTEX context = 8B (sh800 @0, gap-to
         // -next=8). Was R8G8B8A8_SRGB (4B, tex-format guess).
         // sh800 reads 3 floats → quantized pos. ‡‡ SNORM vs

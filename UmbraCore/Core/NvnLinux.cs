@@ -735,6 +735,11 @@ public static unsafe class NvnLinux {
         // that T3Pipe needs to build VkVertexInputState).
         public NvnAttrib[] Attribs;
         public NvnStream[] Streams;
+        // (T6)×33: which RtSigs[] entry was bound at
+        // draw-time. 0 = the first SetRenderTargets sig
+        // (typically the swap/composite [F]). NvnReplay
+        // switches renderpass when this changes.
+        public byte RtId;
         // resolved texture state (W/H/Fmt/CpuPtr) at draw
         // time. Null if TexHandle's texId not registered.
         public H? Tex;
@@ -1173,6 +1178,7 @@ public static unsafe class NvnLinux {
             VpX = _vpX, VpY = _vpY, VpW = _vpW, VpH = _vpH,
             ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
             Attribs = _curAttribs, Streams = _curStreams,
+            RtId = CurRtId,
         };
     }
 
@@ -1275,6 +1281,7 @@ public static unsafe class NvnLinux {
             VpX = _vpX, VpY = _vpY, VpW = _vpW, VpH = _vpH,
             ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
             Attribs = _curAttribs, Streams = _curStreams,
+            RtId = CurRtId,
         };
         lock(Draws) Draws.Add(dr);
         if(n <= 25 || n % 100 == 0) {
@@ -1318,13 +1325,152 @@ public static unsafe class NvnLinux {
         } catch(Exception e) { $"[nvn]   ‡ vbuf dump failed: {e.Message}".Log(); }
     }
 
+    // (T6)×33 RTT chapter per sera ·10942 kt[12]×12.
+    // Per-cb current RT-set state. colors[i] / depth =
+    // NVNtexture* handles (resolve via S(h) → H with
+    // Width/Height/Format). Stored on the cb's H bag
+    // so multiple cbs don't clobber.
+    public class RtState {
+        public int NumColors;
+        public ulong[] Colors = new ulong[8];
+        public ulong Depth;
+        public int ChangeN;  // monotone per-cb RT-switch counter
+        public byte Id;      // index into RtSigs
+    }
+    static readonly Dictionary<ulong, RtState> _rtState = new();
+    public static RtState Rt(ulong cb) =>
+        _rtState.TryGetValue(cb, out var r)
+            ? r : (_rtState[cb] = new());
+
+    // (T6)×33 ×4: RT-signature table. Each distinct
+    // (nC, c[i].{W,H,fmt}, depth.{W,H,fmt}) tuple gets
+    // a stable byte id. u774 census = exactly 9 distinct
+    // across 1.9M calls (G-buffer/HDR/½/bloom-mips/comp).
+    // Sig stores resolved {W,H,Fmt,TexId} per attachment
+    // so NvnReplay can alloc + later RT-as-sampler can
+    // bind via texId match against TexHandles[].
+    public class RtAttach {
+        public int W, H, Fmt, TexId;
+        public ulong Handle;
+    }
+    public class RtSig {
+        public byte Id;
+        public int NC;
+        public RtAttach[] Colors = Array.Empty<RtAttach>();
+        public RtAttach? Depth;
+        public ulong Key;
+    }
+    public static readonly List<RtSig> RtSigs = new();
+    static readonly Dictionary<ulong, byte> _rtSigTable = new();
+    // Global current-RT-id for SnapDraw (which uses the
+    // _cur* global model, not per-cb). Set in
+    // CbSetRenderTargets after sig-resolve.
+    public static byte CurRtId;
+
+    static RtAttach ResolveRtAttach(ulong h) {
+        var s = S(h);
+        // .TexId left 0 here — at sig-CREATION (= first
+        // SetRenderTargets with this W×H×fmt) the game
+        // hasn't pool-registered the RT yet (verified
+        // u775: all 9 sigs @tid0x0). NvnCapture re-
+        // resolves via HandleToTexId(.Handle) at
+        // manifest-write time (= late, after game has
+        // registered RTs it intends to sample).
+        return new() { W = s.Width, H = s.Height,
+            Fmt = s.Format, TexId = 0, Handle = h };
+    }
+    // Reverse TexByPoolIdx (texId→NVNtexture* handle).
+    // 0 if not registered (= depth-only/final-swap, or
+    // not-yet). ⚠ texIds are RE-REGISTERED across game
+    // phases (verified u773 0x105=2048²BC5 vs u775
+    // 0x105=1920×1080 RGBA8-RT) ⟹ result is at-call-
+    // time, not run-stable. Multiple texIds may point
+    // at same handle (2D+cube views); returns first.
+    public static int HandleToTexId(ulong handle) {
+        foreach(var kv in TexByPoolIdx)
+            if(kv.Value == handle) return kv.Key;
+        return 0;
+    }
+
+    static long _rtLogN;
+    static readonly bool _rtLog =
+        Environment.GetEnvironmentVariable("UMBRA_RTT_LOG") != null;
+
     [UnmanagedCallersOnly]
     static void CbSetRenderTargets(ulong cb, int numColors, ulong* colors,
             ulong* colorViews, ulong depthStencil, ulong depthView) {
-        // ‡ v0.5: just log; v1 records which textures are bound so Present
-        // knows which VkImage to clear (currently using texIdx from Acquire).
+        var rt = Rt(cb);
+        rt.NumColors = numColors;
+        for(var i = 0; i < 8; i++)
+            rt.Colors[i] = (i < numColors && colors != null)
+                ? colors[i] : 0;
+        rt.Depth = depthStencil;
+        rt.ChangeN++;
+        // (T6)×33 ×4: sig-key + table-insert. Key = FNV
+        // over (nC, c[i].{W,H,fmt}, d.{W,H,fmt}). 9
+        // distinct in u774 ⟹ byte id sufficient.
+        ulong key = 0xcbf29ce484222325UL ^ (uint)numColors;
+        for(var i = 0; i < numColors && colors != null; i++) {
+            var s = S(colors[i]);
+            key = (key * 0x100000001b3) ^ (uint)s.Width;
+            key = (key * 0x100000001b3) ^ (uint)s.Height;
+            key = (key * 0x100000001b3) ^ (uint)s.Format;
+        }
+        if(depthStencil != 0) {
+            var ds = S(depthStencil);
+            key = (key * 0x100000001b3) ^ (uint)ds.Width;
+            key = (key * 0x100000001b3) ^ (uint)ds.Height;
+            key = (key * 0x100000001b3) ^ (uint)ds.Format;
+        }
+        if(!_rtSigTable.TryGetValue(key, out var id)) {
+            // New sig — resolve attachments + texIds.
+            // O(|TexByPoolIdx|) reverse-lookup but only
+            // ×9 total, not per-call.
+            var sig = new RtSig {
+                Id = (byte)RtSigs.Count, Key = key,
+                NC = numColors,
+                Colors = Enumerable.Range(0, numColors)
+                    .Select(i => ResolveRtAttach(colors[i]))
+                    .ToArray(),
+                Depth = depthStencil != 0
+                    ? ResolveRtAttach(depthStencil) : null,
+            };
+            lock(RtSigs) RtSigs.Add(sig);
+            _rtSigTable[key] = id = sig.Id;
+            ($"[rt] NEW sig id={id} key=0x{key:x} nC={numColors} "
+                + string.Join(" ", sig.Colors.Select((c,i) =>
+                    $"c[{i}]={c.W}×{c.H}f0x{c.Fmt:x}@tid0x{c.TexId:x}"))
+                + (sig.Depth is {} dd
+                    ? $" d={dd.W}×{dd.H}f0x{dd.Fmt:x}@tid0x{dd.TexId:x}"
+                    : "")).Log();
+        }
+        rt.Id = id;
+        CurRtId = id;
+        // (T6)×33 ×2: census instrument. UMBRA_RTT_LOG=1
+        // → per-call log resolving each color/depth tex
+        // → W×H fmt. First-N unbounded (RT-changes are
+        // ~5-30/frame, not the M/frame BindUBO rate).
+        if(_rtLog || _rtLogN < 50) {
+            _rtLogN++;
+            var sb = new System.Text.StringBuilder(
+                $"[rt] SetRenderTargets cb=0x{cb:x} #{rt.ChangeN} nC={numColors}");
+            for(var i = 0; i < numColors && colors != null; i++) {
+                var h = colors[i];
+                if(h == 0) { sb.Append($" c[{i}]=0"); continue; }
+                var s = S(h);
+                sb.Append($" c[{i}]=0x{h:x}({s.Width}×{s.Height} f0x{s.Format:x})");
+            }
+            if(depthStencil != 0) {
+                var ds = S(depthStencil);
+                sb.Append($" d=0x{depthStencil:x}({ds.Width}×{ds.Height} f0x{ds.Format:x})");
+            }
+            sb.ToString().Log();
+        }
+        // v0.5 legacy borrow kept for now (NvnVulkan may
+        // read S(cb).PoolPtr as "current RT" somewhere;
+        // ‡ verify + remove once Rt(cb) is consumed).
         if(numColors > 0 && colors != null)
-            S(cb).PoolPtr = colors[0];  // borrow PoolPtr field as "current RT"
+            S(cb).PoolPtr = colors[0];
     }
 
     // ─── Window / Queue — v0 Vulkan present path ───

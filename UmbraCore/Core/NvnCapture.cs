@@ -184,6 +184,13 @@ public static unsafe class NvnCapture {
             Path.Combine(fdir, "ubos.bin"));
         using var dbin = File.Create(
             Path.Combine(fdir, "draws.bin"));
+        // (T6)×33: per-draw RT-set id (1B/draw, parallel
+        // to draws.bin). Index into manifest.renderTargets.
+        // 256B record is fully packed; rts.bin sidecar
+        // keeps capVer=3 backward-readable (v2 readers
+        // ignore the file).
+        using var rts = File.Create(
+            Path.Combine(fdir, "rts.bin"));
         // ext-tex (slots 8..39) only if any draw uses ≥8
         var needExt = draws.Any(d => d.TexHandles != null
             && d.TexHandles.Skip(8).Any(h => h != 0));
@@ -259,6 +266,7 @@ public static unsafe class NvnCapture {
                     d.Streams?.Length ?? 0, 2); i++)
                 W16(rec, 252+i*2, d.Streams![i].Stride);
             dbin.Write(rec);
+            rts.WriteByte(d.RtId);
             // ext-tex slots 8..39
             if(dext != null) {
                 Span<byte> ext = stackalloc byte[256];
@@ -272,10 +280,12 @@ public static unsafe class NvnCapture {
         // ── 5. manifest.json ──
         var c = NvnLinux.LastClearColor;
         var manifest = new {
+            // version 3 = (T6)×33 RTT: rts.bin sidecar
+            // (1B RtId/draw) + renderTargets[] table.
             // version 2 = (T6)×17 multi-stream vbuf:
             // DrawRec @40 = vbR1 (stream-1 region idx;
             // was reserved=0 in v1).
-            version = 2, frameN,
+            version = 3, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),
@@ -290,6 +300,28 @@ public static unsafe class NvnCapture {
                 }).ToList(),
             texPool,
             vbufRegions,
+            // (T6)×33: RT-set table. Each draw's rts.bin
+            // byte indexes this. texId=0 ⟹ game never
+            // registered the RT in the texture pool (=
+            // not sampled later, e.g. final-swap).
+            renderTargets = NvnLinux.RtSigs
+                .Select(s => new {
+                    id = (int)s.Id, nC = s.NC,
+                    colors = s.Colors.Select(a => new {
+                        w = a.W, h = a.H, fmt = a.Fmt,
+                        // texId resolved AT CAPTURE TIME
+                        // (not sig-creation; game pool-
+                        // registers RTs after first
+                        // SetRenderTargets per u775).
+                        texId = NvnLinux.HandleToTexId(a.Handle),
+                    }).ToList(),
+                    depth = s.Depth == null ? null : new {
+                        w = s.Depth.W, h = s.Depth.H,
+                        fmt = s.Depth.Fmt,
+                        texId = NvnLinux.HandleToTexId(
+                            s.Depth.Handle),
+                    },
+                }).ToList(),
         };
         File.WriteAllText(Path.Combine(fdir, "manifest.json"),
             JsonSerializer.Serialize(manifest,
