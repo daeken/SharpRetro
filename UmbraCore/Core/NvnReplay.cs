@@ -232,12 +232,51 @@ public static unsafe class NvnReplay {
             : draws;
         if(idxOnly)
             $"[replay] IDX_ONLY: {use.Length}/{draws.Length} draws (indexed-only)".Log();
+        // (T6)×8 (T5) UMBRA_REPLAY_SWEEP=1: per-draw isolate.
+        // Each iter K renders ONLY use[K] → replay-fNNNNN-iK.
+        // ppm. One process, ~50ms/draw warm. + writes sweep-
+        // index.csv {K, vsIdx, fsIdx, idxCount} so the post-
+        // read can join nz% to shader. The (c⁴⁶) discriminator:
+        // depthvis-sweep (which draws fill foreground?) ×
+        // native-FS-sweep (which compute 0?) → the gap set.
+        // (T6)×8×4 UMBRA_REPLAY_RANGE=A,B → render only
+        // use[A..B] (inclusive). The prefix-bisect tool:
+        // sweep showed k=110(fs801) outputs 278-color in
+        // isolation; composite r25/r29 = 0% even with
+        // DEPTH=0+NOBLEND ⟹ something STATEFUL in draws
+        // 0-109 breaks fs801. RANGE bisects which prefix.
+        if(Environment.GetEnvironmentVariable(
+                "UMBRA_REPLAY_RANGE") is {} rg) {
+            var ab = rg.Split(',').Select(int.Parse).ToArray();
+            var a = ab[0]; var b = ab.Length>1 ? ab[1] : a;
+            use = use.Skip(a).Take(b - a + 1).ToArray();
+            $"[replay] RANGE=[{a},{b}]: {use.Length} draws".Log();
+        }
+        var sweep = Environment.GetEnvironmentVariable(
+                "UMBRA_REPLAY_SWEEP") != null;
+        if(sweep) {
+            repeat = use.Length;
+            using var sw = File.CreateText(
+                $"/tmp/replay-f{frameN}-sweep.csv");
+            sw.WriteLine("k,vs,fs,idxN,prim");
+            for(var k = 0; k < use.Length; k++)
+                sw.WriteLine($"{k},{use[k].VsShIdx},"
+                    + $"{use[k].FsShIdx},{use[k].IdxCount},"
+                    + $"{use[k].Prim}");
+            $"[replay] SWEEP: {repeat} iters (1 draw each)".Log();
+            // Re-set DUMP_FRAMES to cover all iters.
+            Environment.SetEnvironmentVariable("UMBRA_DUMP_FRAMES",
+                string.Join(",", Enumerable.Range(1, repeat)));
+        }
 
         for(var iter = 0; iter < repeat; iter++) {
             // Re-fill Draws (Present clears it).
             lock(NvnLinux.Draws) {
                 NvnLinux.Draws.Clear();
-                NvnLinux.Draws.AddRange(use);
+                if(sweep)
+                    NvnLinux.Draws.Add(use[iter]);
+                else
+                    NvnLinux.Draws.AddRange(use);
             }
             var ti = DateTime.UtcNow;
             NvnVulkan.Present(0, iter % 3);

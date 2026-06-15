@@ -288,7 +288,18 @@ public static unsafe class NvnVulkan {
         // sh794 str=36 […,0x29@20,0x16@28]: 0x29=8B 0x16=8B.
         // Semantics ‡‡ — size from arithmetic, type guessed
         // (kt[19]: bytes-first, reference-check pending).
-        0x11 => ( 89,  4),  // R16G16_SNORM        ‡‡ (was R8 1B, WRONG by stride-math)
+        // (T6)×9 sera-steer: k=164 LEGO-logo quad's UV
+        // attr (fmt 0x11 @12) raw bytes = 0x3c00 0x3c00 =
+        // f16(1.0,1.0) — perfect quad corners. But 89 =
+        // VK_FORMAT_R16G16B16_SINT (3-comp signed-INT, the
+        // comment "SNORM" was wrong too). Vertex-fetch read
+        // f16 UVs as ints → VS got garbage → fs880's
+        // diffuse-UV in_attr4 = garbage → flat-blue square
+        // instead of LEGO logo. = the VUID-08733 ×49 from
+        // (F') validation (which I'd mis-attributed to 0x16
+        // = (H2); 89 IS R16G16B16_SINT, exactly what
+        // validation named). 83 = R16G16_SFLOAT.
+        0x11 => ( 83,  4),  // R16G16_SFLOAT
         0x12 => ( 16,  2),  // R8G8_UNORM                     ‡
         0x16 => ( 91,  8),  // R16G16B16A16_SNORM  ‡‡ (sh794 tangent? 8B by gap)
         // ── float×N (R32) family ───────────────────────────────
@@ -781,6 +792,10 @@ public static unsafe class NvnVulkan {
     static int _dump3dFirst, _dump3dWant;
     // (c³⁷)(G) depth: default ON; UMBRA_T3_DEPTH=0 reverts to
     // pre-(G) painters-order. UMBRA_T3_DEPTH_OP=N overrides
+    // — N is VkCompareOp DIRECTLY: 0=NEVER 1=LESS 2=EQUAL
+    // 3=LESS_OR_EQUAL 4=GREATER 5=NOT_EQUAL 6=GREATER_OR_
+    // EQUAL 7=ALWAYS. ⚠ kt[36]: 2≠LEQUAL (cost ~25 cycles
+    // u744-u760 attributing depth-EQUAL-fail to FS-abort).
     // compareOp (1=LESS default; 4=GREATER for reversed-Z).
     static readonly bool _t3DepthEnable =
         Environment.GetEnvironmentVariable("UMBRA_T3_DEPTH") != "0";
@@ -825,7 +840,15 @@ public static unsafe class NvnVulkan {
     static ulong _t3DsVs, _t3DsTex, _t3DsFs;   // sets 0/1/2
     static ulong[] _t3CbufBuf;        // [1..24] = stage*12 + binding
     static byte*[] _t3CbufPtr;        // mapped ptrs
-    const int T3CbufStride = 4096, T3MaxDraws = 64;
+    // (T6)×7(b) T3MaxDraws 64→256: 796ca500 cold-read HM
+    // found the @1988 clamp `slot = recN<64?recN:63` ⟹
+    // with 118 idx draws/frame, draws 64-117 ALL write+
+    // read slot-63's cbufs (= last-write-wins reintro'd
+    // for the back half). Depthvis (no cbuf reads) was
+    // unaffected = why r5 looked fine. 256 covers the
+    // 198/445-draw cutscene frames. Alloc scales @1304
+    // (T3CbufStride × T3MaxDraws × 24 buffers = 24MB).
+    const int T3CbufStride = 4096, T3MaxDraws = 256;
 
     // Allocate + write t3 descriptor sets. Lazy (after _atlasView
     // exists). Set0=VS-cbufs (12 UBO → _t3CbufBuf[1..12]), set1=tex,
@@ -1816,8 +1839,15 @@ public static unsafe class NvnVulkan {
                         var nonBlk = t.Rgba != null
                                   && t.Rgba.Length >= 3
                                   && (t.Rgba[0]|t.Rgba[1]|t.Rgba[2]) != 0;
+                        // (T6)×9 sera-steer: tid146 LEGO-logo
+                        // has rgba[0]=(0,0,0) (black border) ⟹
+                        // nonBlk=0 ⟹ score=6; tid106 normal-
+                        // map at slot[5] rgba[0]=(0,123,255) ⟹
+                        // score=10 ⟹ picks normal-map over
+                        // diffuse. slot[4]-weight > nonBlk so
+                        // slot[4] always wins when present.
                         var score = (isBC ? 2 : isRT ? 0 : 1)
-                                  + (sl == 4 ? 4 : 0)
+                                  + (sl == 4 ? 16 : 0)
                                   + (nonBlk ? 8 : 0);
                         if(score > bestScore) {
                             bestScore = score; bestSl = sl;
