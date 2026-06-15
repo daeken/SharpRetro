@@ -623,6 +623,11 @@ public static unsafe class NvnLinux {
         public int VbIndex;
         public ulong Program;
         public ulong TexHandle; public int TexStage, TexSlot;
+        // (c⁴⁰)(F) FS-stage per-slot tex handles snapshot at
+        // draw-time. [40] = NVN tex slots 0..39 for stage=1
+        // (FRAGMENT). Null for non-indexed draws (= 2D-screen
+        // path doesn't need it; menu binds 1 atlas).
+        public ulong[]? TexHandles;
         // v1 disc: per-draw UBO snapshot (game may CPU-write the same
         // bound buffer between draws via mapped ptr; snapshotting AT
         // DrawArrays catches the value the game intended for THIS draw).
@@ -674,6 +679,14 @@ public static unsafe class NvnLinux {
     static NvnAttrib[] _curAttribs = [];
     static NvnStream[] _curStreams = [];
     static ulong _curProgram, _curTexHandle; static int _curTexStage, _curTexSlot;
+    // (c⁴⁰)(F) per-slot tex tracking. _curTexHandle (scalar)
+    // = last-bound-wins; for sh813 the LAST bind before draw
+    // is an aux slot (16/30/32) with texId=0x100 (= 4×4 black
+    // default), so EnsureTexBound writes black to all 40 ⟹
+    // any tex-sample → 0 ⟹ RGB=0. _curTexHandles[stage,slot]
+    // captures the full table; SnapDraw snapshots FS-row.
+    static readonly ulong[,] _curTexHandles = new ulong[2, 40];
+    static long _bindTexN;
     // UBO per (stage, slot). umbra64: stage=0 slot=2 (64B = one mat4) is
     // the per-draw model matrix (rebinds 300+× — once per draw, ty steps
     // -0.05/row). slot=0 (224B) = ‡ projection+. slot=1/3 + stage=1 slot=0
@@ -829,6 +842,19 @@ public static unsafe class NvnLinux {
     [UnmanagedCallersOnly]
     static void CbBindTexture(ulong cb, int stage, int slot, ulong handle) {
         _curTexHandle = handle; _curTexStage = stage; _curTexSlot = slot;
+        // (c⁴⁰)(F) per-slot capture. NVN binds tex per
+        // (stage, slot); shader reads tex_<2*slot+8> (=
+        // SpirvEmit binding=2*slot+8 at set=1; sh0814 reads
+        // bindings 16,30,32 = slots 4,11,12). Game's pattern
+        // for sh813: bind diffuse→slot N (real BC1/3 tex),
+        // then normal/shadow/etc → slots 4/11/12 with 0x100
+        // defaults. Last-bound captured in _curTexHandle =
+        // 0x100 (= black). Per-slot table fixes that.
+        if((uint)stage < 2 && (uint)slot < 40)
+            _curTexHandles[stage, slot] = handle;
+        var n = ++_bindTexN;
+        if(n <= 20 || n % 2000 == 0)
+            $"[nvn] BindTexture #{n} stage={stage} slot={slot} handle=0x{handle:x} (texId=0x{handle>>32:x})".Log();
     }
     // ─── T3: shader bytecode capture ───
     // Wide capture: dedupe by data-binary hash, dump only distinct ones,
@@ -942,6 +968,11 @@ public static unsafe class NvnLinux {
         return ((ulong)(uint) texId << 32) | (uint) samplerId;
     }
 
+    static ulong[] SnapTexRow(int stage) {
+        var r = new ulong[40];
+        for(var i = 0; i < 40; i++) r[i] = _curTexHandles[stage, i];
+        return r;
+    }
     // (c²⁷) Shared state-snapshot for both DrawArrays and
     // DrawElementsBaseVertex. Returns the populated DrawRecord
     // with all current pipeline/UBO/tex/viewport state captured.
@@ -960,6 +991,11 @@ public static unsafe class NvnLinux {
             VbGpu = _curVbGpu, VbCpu = vbCpu, VbSize = _curVbSize, VbIndex = _curVbIdx,
             Program = _curProgram,
             TexHandle = _curTexHandle, TexStage = _curTexStage, TexSlot = _curTexSlot,
+            // (c⁴⁰)(F) FS per-slot tex snapshot. 40×8B = 320B
+            // /draw — at ~200 idx-draws/frame ≈ 64KB/frame,
+            // acceptable. Only FS row (stage=1); VS textures
+            // are rare (vertex-fetch, none in this game).
+            TexHandles = SnapTexRow(1),
             Ubo = ubos[2], Ubos = ubos,
             VsShIdx = St.TryGetValue(_stagePr[0], out var pvs) ? pvs.ShIdx : 0,
             FsShIdx = St.TryGetValue(_stagePr[1], out var pfs) ? pfs.ShIdx : 0,
