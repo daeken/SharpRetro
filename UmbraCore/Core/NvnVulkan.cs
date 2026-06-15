@@ -782,6 +782,28 @@ public static unsafe class NvnVulkan {
         Environment.GetEnvironmentVariable("UMBRA_T3_NOBLEND") != null;
     static readonly bool _t3C1Ones =
         Environment.GetEnvironmentVariable("UMBRA_T3_C1_ONES") != null;
+    // (T6)×24 VS-stage c[1][0] = normal-decode scale.
+    // vs417 @306/320/324: temp_15/22/24 = fma(in_attr1
+    // .{y,x,z}, vp_c1[0].x, −1.0) = the [0,1]→[−1,1]
+    // UNORM-normal unpack; K should be 2.0. VS c[1]
+    // zero-filled ⟹ all normals = (−1,−1,−1) const ⟹
+    // out_attr1 (= SH-lit normal via vp_c5[0-6]) const
+    // ≈0.008 (verified r72ip1) ⟹ fs418 lighting≈0.
+    // (c⁴⁰) scoped C1_ONES to FS-only bc VS c[1]=all-
+    // 1.0 broke menu position; this sets ONLY c1[0].
+    // UMBRA_T3_VS_C1_0=V → VS c1[0]=(V,V,V,V).
+    static readonly float? _t3VsC10 =
+        float.TryParse(Environment.GetEnvironmentVariable(
+            "UMBRA_T3_VS_C1_0"), out var v10) ? v10 : null;
+    // (T6)×28 fp_c1 heuristic: comma-separated floats
+    // → fp_c1[0].x,y,z,w,c1[1].x,y,z. Default per-slot
+    // = 1.0 (= C1_ONES). For back-solving the t280
+    // auto-normalize divisor (c1[0].w / c1[1].x).
+    static readonly float[]? _t3FsC1 =
+        Environment.GetEnvironmentVariable("UMBRA_T3_FS_C1")
+            is {} fc1
+            ? fc1.Split(',').Select(float.Parse).ToArray()
+            : null;
     static readonly bool _depthvisFs =
         Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null;
     static readonly HashSet<int>? _skipVs =
@@ -2074,6 +2096,27 @@ public static unsafe class NvnVulkan {
                                         + slot * T3CbufStride);
                         for(var k=0; k<64; k++) cb[k] = 1.0f;
                     }
+                // (T6)×28: FS c[1] heuristic override
+                // (applied AFTER C1_ONES so it wins).
+                if(_t3FsC1 != null) {
+                    var cb = (float*)(_t3CbufPtr[1*12 + 1]
+                                    + slot * T3CbufStride);
+                    for(var k=0; k<_t3FsC1.Length && k<64; k++)
+                        cb[k] = _t3FsC1[k];
+                }
+                // (T6)×24: VS c1[0].x = normal-decode K.
+                // (T6)×25 ×2: .x-only (was .xyzw=2.0 ⟹
+                // r73rich floor regressed primary→b/w;
+                // vs45 may use c1[0].{y|z|w} differently).
+                if(_t3VsC10 is {} vc10) {
+                    var cb = (float*)(_t3CbufPtr[0*12 + 1]
+                                    + slot * T3CbufStride);
+                    cb[0] = vc10;
+                    // cb[1..3] left at 0 (zero-filled
+                    // default). ‡ If vs45 needs c1[0].y
+                    // etc, this still breaks it; ×2(i)
+                    // decompile settles at-source.
+                }
                 // Bind sets WITH this draw's dynamic offsets.
                 for(var k = 0; k < 24; k++)
                     t3dyn[k] = (uint)(slot * T3CbufStride);
