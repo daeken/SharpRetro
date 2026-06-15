@@ -260,6 +260,12 @@ public static unsafe class NvnLinux {
         // dump the source buffer of CopyBufferToTexture + record texture
         // builder state so we know the dest format/dims.
         ["nvnCommandBufferCopyBufferToTexture"] = (nint)(delegate* unmanaged<ulong, ulong, ulong, ulong, ulong*, int, void>)&CbCopyBufferToTexture,
+        // (T6)×22: the asset-streaming compactor primitive.
+        // sig: (cb, srcGpu, dstGpu, size, flags) per stub
+        // log x0-x4. ‡ flags semantics unverified (always 0
+        // in observed calls except #1 x5=0x2517b — but x5
+        // is past the 5-arg sig, likely caller-leftover).
+        ["nvnCommandBufferCopyBufferToBuffer"] = (nint)(delegate* unmanaged<ulong, ulong, ulong, ulong, int, void>)&CbCopyBufferToBuffer,
         // T2 (sera "fucked up geometry"): capture the draw chain.
         // BindVertexBuffer(cb, index, NVNbufferAddress addr, size_t size)
         // DrawArrays(cb, NVNdrawPrimitive prim, int first, int count)
@@ -833,6 +839,46 @@ public static unsafe class NvnLinux {
     }
     static long _vbBindLogN, _vbBind1LogN;
 
+    // (T6)×22 — THE garbage-indices root. Game's asset-
+    // streamer compacts the heap via ~8K small GPU-side
+    // copies (4-32KB each, src/dst adjacent, walking the
+    // pool). With this stubbed, the relocated locations
+    // hold STALE bytes (= whatever previously-resident
+    // asset was there). Verified at-bytes (T6)×22×3:
+    // f37579 (onset, pre-compact) k=23 vs417 indices =
+    // (0,1,2,…,14) sane = IDXDUMP #254 byte-identical;
+    // f37779 (post-compact, +0x11c000) same draw =
+    // (54655,31775,…) garbage = a previously-resident
+    // asset's f16-vertex bytes. The kt[37] +0x11c000
+    // phantom WAS the compactor's relocation distance.
+    //
+    // CPU-side memmove via GpuToCpu mirrors the GPU-side
+    // DMA. Span.CopyTo handles overlap (forward-compact
+    // has src+size==dst adjacency per #1000). ‡ NVN
+    // semantics are deferred (recorded into cmdbuf,
+    // executed at QueueSubmitCommands); we execute
+    // immediately. Game's sync model tolerates this for
+    // compaction (no read-before-submit observed) but
+    // ‡‡ out-of-order vs other recorded ops if the game
+    // ever depends on submit-order between Copy and Draw.
+    static long _cbB2bN;
+    [UnmanagedCallersOnly]
+    static void CbCopyBufferToBuffer(ulong cb,
+            ulong srcGpu, ulong dstGpu, ulong size,
+            int flags) {
+        var n = ++_cbB2bN;
+        var srcCpu = GpuToCpu(srcGpu);
+        var dstCpu = GpuToCpu(dstGpu);
+        if(srcCpu != 0 && dstCpu != 0 && size > 0
+           && size < int.MaxValue) {
+            new ReadOnlySpan<byte>((void*)srcCpu, (int)size)
+                .CopyTo(new Span<byte>(
+                    (void*)dstCpu, (int)size));
+        }
+        if(n <= 20 || n % 1000 == 0)
+            $"[nvn] CopyB2B #{n} src=0x{srcGpu:x}→cpu=0x{srcCpu:x} dst=0x{dstGpu:x}→cpu=0x{dstCpu:x} sz=0x{size:x} flags={flags}".Log();
+    }
+
     // NvnVertex*State setters. The struct is opaque-sized;
     // my v0 wrote 12B/8B and CORRUPTED HEAP (a test run SEGV in
     // BinUnlink, a test run 0-draws). v1 = TRACK in side-dict keyed
@@ -1131,6 +1177,7 @@ public static unsafe class NvnLinux {
     }
 
     static int _drawElN;
+    static readonly Dictionary<int,int> _idxDumpPerVs = new();
     [UnmanagedCallersOnly]
     static void CbDrawElementsBaseVertex(ulong cb, int prim,
             int idxType, int count, ulong idxGpuAddr, int baseVtx) {
@@ -1141,6 +1188,36 @@ public static unsafe class NvnLinux {
         dr.IdxCpu = idxCpu; dr.IdxType = idxType;
         dr.IdxCount = count; dr.BaseVtx = baseVtx;
         lock(Draws) Draws.Add(dr);
+        // (T6)×22 IDXDUMP: bytes at idxCpu AT MOMENT OF
+        // DRAW, for first-80 vs417/419/422 (= GAP-FS
+        // mesh draws; garbage indices in capture) +
+        // vs800/813 (= controls; LEGO logo + sky, known
+        // -good per r41/r60sky). + idxGpu logged so
+        // consecutive-draw Δ settles real idxSize
+        // independently of our idxType decode (Δ=count
+        // ×2 ⟹ u16; ×4 ⟹ u32; ×1 ⟹ u8). PREDICT:
+        // bytes match capture (GpuToCpu correct ⟹
+        // capture faithful) ⟹ (R) game never wrote
+        // indices to that storage (silent-no-op'd
+        // CopyBufferToBuffer / compute-gen / etc).
+        // Per-VS quota (= kt[37]-adjacent: shared
+        // counter let vs800 burn the budget before
+        // vs417 ever fired). Unconditional (any vs),
+        // 8 dumps each — covers controls + the 3D-
+        // phase mesh draws regardless of which
+        // vs-id they actually use this run.
+        if(idxCpu != 0
+           && (_idxDumpPerVs.TryGetValue(dr.VsShIdx,
+                   out var dn) ? dn : 0) < 8) {
+            lock(_idxDumpPerVs)
+                _idxDumpPerVs[dr.VsShIdx] = dn + 1;
+            var isz = idxType == 2 ? 4 : idxType == 1 ? 2 : 1;
+            var nb = Math.Min(32, count * isz);
+            var b = new byte[nb];
+            System.Runtime.InteropServices.Marshal.Copy(
+                (nint)idxCpu, b, 0, nb);
+            $"[nvn] IDXDUMP #{n} vs{dr.VsShIdx}/fs{dr.FsShIdx} idxGpu=0x{idxGpuAddr:x} count={count} idxT={idxType} baseV={baseVtx} vb0=0x{_curVbGpu:x} vb1=0x{_curVbGpu1:x} bytes={Convert.ToHexString(b)}".Log();
+        }
         if(n <= 25 || n % 1000 == 0)
             $"[nvn] DrawElementsBV #{n} prim={prim} idxT={idxType} count={count} idx=gpu:0x{idxGpuAddr:x}/cpu:0x{idxCpu:x} baseVtx={baseVtx} vb=gpu:0x{_curVbGpu:x}/sz=0x{_curVbSize:x} sh{dr.VsShIdx}/{dr.FsShIdx} tex=0x{_curTexHandle:x} vp=({_vpX},{_vpY},{_vpW},{_vpH}) str={(_curStreams.Length>0?_curStreams[0].Stride:0)} attr=[{string.Join(",",_curAttribs.Select(a=>$"0x{a.Format:x}@{a.Offset}"))}]".Log();
     }
