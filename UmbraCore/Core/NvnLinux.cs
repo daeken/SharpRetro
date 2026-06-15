@@ -147,6 +147,16 @@ public static unsafe class NvnLinux {
     }
     static readonly System.Collections.Concurrent.ConcurrentDictionary<ulong, H> St = new();
     static H S(ulong h) => St.GetOrAdd(h, _ => new());
+    // (T1')×3 NvnReplay inject: populate St + TexByPoolIdx
+    // from a captured frame's manifest.texPool, so ResolveTex
+    // works without a running game. Synthetic ulong-handle =
+    // 0xCAFE0000_0000_0000 | texId (won't collide with real
+    // game ptrs which are 0xfff5_…).
+    public static void InjectTex(int texId, H h) {
+        var key = 0xCAFE_0000_0000_0000UL | (uint)texId;
+        St[key] = h;
+        TexByPoolIdx[texId] = key;
+    }
 
     // ─── per-name table ───
     static readonly bool _vattrHook =
