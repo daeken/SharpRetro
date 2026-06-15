@@ -415,6 +415,16 @@ public static unsafe class NvnVulkan {
         public float minDepthBounds, maxDepthBounds;
     }
     const uint ST_PIPELINE_DEPTH_STENCIL_CI = 25;
+    // (T6)×35: dynamic viewport+scissor (RT-targets
+    // range 30×16..1920×1080; static vp baked at
+    // pipe-build won't work). VK_DYNAMIC_STATE_VIEWPORT
+    // =0, _SCISSOR=1.
+    [StructLayout(LayoutKind.Sequential)]
+    struct VkPipelineDynamicStateCreateInfo {
+        public uint sType; public void* pNext; public uint flags;
+        public uint dynamicStateCount; public uint* pDynamicStates;
+    }
+    const uint ST_PIPELINE_DYNAMIC_STATE_CI = 27;
     [StructLayout(LayoutKind.Sequential)] struct VkGraphicsPipelineCreateInfo {
         public uint sType; public void* pNext; public uint flags;
         public uint stageCount; public VkPipelineShaderStageCreateInfo* pStages;
@@ -472,6 +482,10 @@ public static unsafe class NvnVulkan {
     [DllImport(Lib)] static extern void vkCmdBeginRenderPass(
         ulong cb, VkRenderPassBeginInfo* bi, uint contents);
     [DllImport(Lib)] static extern void vkCmdEndRenderPass(ulong cb);
+    [DllImport(Lib)] static extern void vkCmdSetViewport(
+        ulong cb, uint first, uint count, VkViewport* vp);
+    [DllImport(Lib)] static extern void vkCmdSetScissor(
+        ulong cb, uint first, uint count, VkRect2D* sc);
     [DllImport(Lib)] static extern void vkCmdBindPipeline(
         ulong cb, uint bindPoint, ulong pipeline);
     [DllImport(Lib)] static extern void vkCmdBindVertexBuffers(
@@ -569,7 +583,18 @@ public static unsafe class NvnVulkan {
     // -2: cache key = (vs, fs, attrib-layout-hash).
     // Same vs/fs pair with different vertex-layout = different
     // pipeline (= the format/offset is baked into VkPipeline).
-    static readonly Dictionary<(int vs, int fs, int vh), ulong> _t3Pipes = new();
+    // (T6)×35 ×3: key += rtId. rtId=255 = pre-RTT
+    // sentinel (renderPass=_renderPass, nC=1, static
+    // viewport — = the !_t3Rtt path, identical to
+    // pre-×35). rtId∈[0,15) = use _rtFb[rtId].{Rp,NC}
+    // + dynamic viewport+scissor (RT dims vary 30×16
+    // ..1920×1080). Including rtId in the key means
+    // a (vs,fs) pair drawing to both [A]nC=3 and [SHADOW]
+    // nC=0 (e.g. vs45/fs287 per nvncap5 census: rt1×55
+    // + rt9×423) gets two distinct pipelines, each
+    // RP-compatible with its target.
+    static readonly Dictionary<(int vs, int fs, int vh, byte rt),
+        ulong> _t3Pipes = new();
     static int VtxHash(NvnLinux.NvnAttrib[] a, NvnLinux.NvnStream[] s) {
         // Cheap structural hash. Order matters (= location N).
         int h = (a?.Length ?? 0) | ((s?.Length ?? 0) << 8);
@@ -600,9 +625,18 @@ public static unsafe class NvnVulkan {
     // → wrong vbuf decode → garbage geometry; per-pair vertex-
     // layout = ). Returns 0 if .spv missing.
     static ulong T3Pipe(int vsIdx, int fsIdx,
-                        NvnLinux.NvnAttrib[] nA, NvnLinux.NvnStream[] nS) {
+                        NvnLinux.NvnAttrib[] nA, NvnLinux.NvnStream[] nS,
+                        byte rtId = 255) {
         var vh = VtxHash(nA, nS);
-        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh), out var p)) return p;
+        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh, rtId), out var p))
+            return p;
+        // (T6)×35 ×3: rtId=255 ⟹ pre-RTT (swap RP, 1
+        // color, static vp). Else resolve rf for (rp,
+        // nC, dyn-vp). EnsureRtFb is idempotent (cached);
+        // calling it here AND at RP-switch is fine.
+        var rf = rtId == 255 ? null : EnsureRtFb(rtId);
+        var rp_ = rf?.Rp ?? _renderPass;
+        var nCb = rf?.NC ?? 1;
         var vsm = LoadShader($"{_t3ShDir}/sh{vsIdx:d4}-t1.bin.spv");
         // (c²⁸)×4 UMBRA_T3_WHITE_FS=1 → substitute const-white
         // FS for ALL pipelines. The kt[33]-correct discriminator
@@ -638,7 +672,7 @@ public static unsafe class NvnVulkan {
         var fsm = LoadShader(fsOverride ?? $"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
         if(vsm == 0 || fsm == 0) {
             if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
-            _t3Pipes[(vsIdx, fsIdx, vh)] = 0;
+            _t3Pipes[(vsIdx, fsIdx, vh, rtId)] = 0;
             return 0;
         }
         var entryName = stackalloc byte[8]; "main\0"u8.CopyTo(new Span<byte>(entryName, 8));
@@ -718,15 +752,31 @@ public static unsafe class NvnVulkan {
         // and v0-zero-filled ⟹ α=0 for ALL geometry FS that
         // multiply by a c[1] component. NOBLEND surfaces RGB
         // directly (= settles α-vs-RGB).
-        var cbAtt = new VkPipelineColorBlendAttachmentState {
-            blendEnable = _t3NoBlend ? 0u : 1u,
-            colorWriteMask = 0xf,
-            srcColorBF = 6, dstColorBF = 7, colorBlendOp = 0,
-            srcAlphaBF = 1, dstAlphaBF = 7, alphaBlendOp = 0,
-        };
+        // (T6)×35 ×3: nCb attachments (1 pre-RTT; 0 for
+        // shadow nC=0; 3 for [A]G-buf). All identical
+        // blend-state for now (‡ per-attachment blend
+        // from game's nvnBlendState = ×37+).
+        var cbAtt = stackalloc
+            VkPipelineColorBlendAttachmentState[Math.Max(nCb, 1)];
+        for(var ci = 0; ci < Math.Max(nCb, 1); ci++)
+            cbAtt[ci] = new() {
+                blendEnable = _t3NoBlend ? 0u : 1u,
+                colorWriteMask = 0xf,
+                srcColorBF = 6, dstColorBF = 7, colorBlendOp = 0,
+                srcAlphaBF = 1, dstAlphaBF = 7, alphaBlendOp = 0,
+            };
         var cbs = new VkPipelineColorBlendStateCreateInfo {
             sType = ST_PIPELINE_COLOR_BLEND_CI,
-            attachmentCount = 1, pAttachments = &cbAtt,
+            attachmentCount = (uint)nCb, pAttachments = cbAtt,
+        };
+        // (T6)×35 ×3: dynamic viewport+scissor when RTT
+        // (RT dims vary 30×16..1920×1080..1024×4096; the
+        // static @vp/sc above are ignored, count must
+        // still =1). vkCmdSetViewport/Scissor at RP-switch.
+        var dynStates = stackalloc uint[2] { 0, 1 };  // VIEWPORT, SCISSOR
+        var dynS = new VkPipelineDynamicStateCreateInfo {
+            sType = ST_PIPELINE_DYNAMIC_STATE_CI,
+            dynamicStateCount = 2, pDynamicStates = dynStates,
         };
         // (c³⁷)(G) depth-stencil state: test+write enabled,
         // compareOp=LESS. ‡ NVN convention may be GREATER
@@ -747,18 +797,25 @@ public static unsafe class NvnVulkan {
             pViewportState = &vps, pRasterizationState = &rs,
             pMultisampleState = &ms, pDepthStencilState = &ds,
             pColorBlendState = &cbs,
-            layout = _t3PipelineLayout, renderPass = _renderPass,
+            // (T6)×35: rp_ = _rtFb[rtId].Rp under RTT,
+            // else _renderPass (= pre-RTT). pDynamicState
+            // only when RTT (= rtId!=255); pre-RTT keeps
+            // static vp ⟹ behavior identical to ×34.
+            pDynamicState = rtId == 255 ? null : &dynS,
+            layout = _t3PipelineLayout, renderPass = rp_,
             subpass = 0, basePipelineIndex = -1,
         };
         ulong pipe = 0;
         var rc = vkCreateGraphicsPipelines(_dev, 0, 1, &gpci, null, &pipe);
         if(rc != 0) {
-            $"[vk] T3Pipe({vsIdx},{fsIdx}): vkCreateGraphicsPipelines={rc} → 0".Log();
+            $"[vk] T3Pipe({vsIdx},{fsIdx},rt{rtId}): vkCreateGraphicsPipelines={rc} → 0".Log();
             pipe = 0;
+        } else if(rtId != 255) {
+            $"[vk] T3Pipe({vsIdx},{fsIdx},rt{rtId}) nC={nCb} rp=0x{rp_:x} dyn-vp → 0x{pipe:x}".Log();
         } else {
             $"[vk] T3Pipe({vsIdx},{fsIdx}) built → 0x{pipe:x}".Log();
         }
-        _t3Pipes[(vsIdx, fsIdx, vh)] = pipe;
+        _t3Pipes[(vsIdx, fsIdx, vh, rtId)] = pipe;
         return pipe;
     }
     static ulong _t3DslCbuf, _t3DslTex, _t3DsPool;
@@ -811,6 +868,14 @@ public static unsafe class NvnVulkan {
             is {} fc1
             ? fc1.Split(',').Select(float.Parse).ToArray()
             : null;
+    // (T6)×35 RTT render-side master gate. When ON:
+    // per-draw d.RtId routes to _rtFb[rtId] (lazy-
+    // alloc'd from NvnLinux.RtSigs); RP-switch in
+    // per-draw loop; T3Pipe gets per-rtId renderPass
+    // + nC colorBlend attachments; viewport dynamic.
+    // OFF = pre-RTT single-_renderPass-to-swap.
+    static readonly bool _t3Rtt =
+        Environment.GetEnvironmentVariable("UMBRA_T3_RTT") != null;
     static readonly bool _depthvisFs =
         Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null;
     static readonly HashSet<int>? _skipVs =
@@ -1748,6 +1813,170 @@ public static unsafe class NvnVulkan {
         _texPendingBarrier.Clear();
     }
 
+    // ════════════════════════════════════════════════
+    // (T6)×35 RTT render-side: per-RtSig framebuffer.
+    // ════════════════════════════════════════════════
+    // EnsureRtFb(rtId): lazy-alloc {nC color VkImage +
+    // optional depth + VkRenderPass + VkFramebuffer}
+    // from NvnLinux.RtSigs[rtId]. Cached _rtFb[rtId].
+    // u778/nvncap5 census = 15 distinct sigs:
+    //   id=0  [F]    1920×1080 RGBA8  +D24S8  composite
+    //   id=1  [A]    1920×1080 RGBA8×3+D24S8  G-buffer (3-MRT)
+    //   id=2  [B]    1920×1080 RGBA16F+D24S8  HDR-light
+    //   id=3  [C]     960×540  RGBA16F        half-res
+    //   id=4-8        480..30  RGBA8          bloom mips
+    //   id=9  SHADOW   nC=0    1024×4096 D32F cascaded
+    //   id=10/11      480/240  RGBA16F        HDR bloom-down
+    //   id=12-14     1024×512/64²/256² misc
+    // All images usage=ATTACH|SAMPLED so ×36 RT-as-
+    // sampler can bind same view. ‡ device-local would
+    // be correct; lavapipe doesn't care, _hostMemType
+    // works. ‡ loadOp=CLEAR every RP-begin (= wrong for
+    // [B]×9 accumulate; v1 = LOAD after first; ×36).
+    // ‡ no readback yet (OPTIMAL needs vkCmdCopyImage
+    // ToBuffer; ×35×4 verifies via RP-switch-count +
+    // log only).
+    public class RtFb {
+        public ulong[] Img = [], View = [], Mem = [];
+        public ulong DepthImg, DepthView, DepthMem;
+        public ulong Rp, Fb;
+        public int W, H, NC;
+        public bool HasDepth;
+    }
+    static readonly RtFb?[] _rtFb = new RtFb?[32];
+
+    // NVN RT format → (VkFormat, aspectMask, usage).
+    // Per botw nvn.h (sera ·10966).
+    static (uint vf, uint asp, uint usg) NvnRtFmt(int nvnFmt)
+        => nvnFmt switch {
+        0x25 => ( 37, 1, 0x10|0x4|0x1), // RGBA8       COLOR_ATTACH|SAMPLED|TRANSFER_SRC
+        0x29 => ( 97, 1, 0x10|0x4|0x1), // RGBA16F
+        0x12 => ( 77, 1, 0x10|0x4|0x1), // RG16_UNORM (velocity)
+        0x34 => (126, 2, 0x20|0x4),     // D32_SFLOAT  DEPTH_STENCIL_ATTACH|SAMPLED
+        0x35 => (129, 6, 0x20|0x4),     // D24_UNORM_S8 DEPTH|STENCIL
+        0x33 => (125, 2, 0x20|0x4),     // D24X8 → X8_D24_UNORM_PACK32 ‡
+        _    => ( 37, 1, 0x10|0x4|0x1), // ‡ default RGBA8
+    };
+
+    static RtFb EnsureRtFb(byte rtId) {
+        if(_rtFb[rtId] is {} cached) return cached;
+        if(rtId >= NvnLinux.RtSigs.Count) {
+            // ‡ rtId out-of-range (capVer<3 d.RtId=0
+            // with no RtSigs). Synthesize swap-equiv.
+            $"[vk] ⚠ EnsureRtFb({rtId}) no sig; using swap".Log();
+            return _rtFb[rtId] = new() {
+                Rp = _renderPass, Fb = _swapFb[0],
+                W = (int)W, H = (int)H, NC = 1, HasDepth = true,
+            };
+        }
+        var sig = NvnLinux.RtSigs[rtId];
+        var nC = sig.NC;
+        var w = nC > 0 ? sig.Colors[0].W : sig.Depth!.W;
+        var h = nC > 0 ? sig.Colors[0].H : sig.Depth!.H;
+        var hasD = sig.Depth != null;
+        var rf = new RtFb {
+            Img = new ulong[nC], View = new ulong[nC],
+            Mem = new ulong[nC],
+            W = w, H = h, NC = nC, HasDepth = hasD,
+        };
+        // Local: alloc one image+mem+view per attachment.
+        (ulong, ulong, ulong) MkImg(int aw, int ah, int nf,
+                                    string tag) {
+            var (vf, asp, usg) = NvnRtFmt(nf);
+            var ici = new VkImageCreateInfo {
+                sType = ST_IMAGE_CI, imageType = 1, format = vf,
+                width = (uint)aw, height = (uint)ah, depth = 1,
+                mipLevels = 1, arrayLayers = 1, samples = 1,
+                tiling = 0, usage = usg,
+            };
+            ulong im; Chk(vkCreateImage(_dev, &ici, null, &im),
+                $"vkCreateImage({tag})");
+            VkMemoryRequirements mr;
+            vkGetImageMemoryRequirements(_dev, im, &mr);
+            var mai = new VkMemoryAllocateInfo {
+                sType = ST_MEM_AI, allocationSize = mr.size,
+                memoryTypeIndex = _hostMemType,
+            };
+            ulong mm; Chk(vkAllocateMemory(_dev, &mai, null, &mm),
+                $"vkAllocateMemory({tag})");
+            Chk(vkBindImageMemory(_dev, im, mm, 0),
+                $"vkBindImageMemory({tag})");
+            var vci = new VkImageViewCreateInfo {
+                sType = ST_IMAGE_VIEW_CI, image = im,
+                viewType = 1, format = vf,
+                subresourceRange = new() {
+                    aspectMask = asp, levelCount = 1, layerCount = 1,
+                },
+            };
+            ulong vw; Chk(vkCreateImageView(_dev, &vci, null, &vw),
+                $"vkCreateImageView({tag})");
+            return (im, mm, vw);
+        }
+        for(var i = 0; i < nC; i++)
+            (rf.Img[i], rf.Mem[i], rf.View[i]) =
+                MkImg(w, h, sig.Colors[i].Fmt, $"rt{rtId}.c[{i}]");
+        if(hasD)
+            (rf.DepthImg, rf.DepthMem, rf.DepthView) =
+                MkImg(sig.Depth!.W, sig.Depth.H, sig.Depth.Fmt,
+                      $"rt{rtId}.d");
+        // RenderPass: nC color + optional depth.
+        var nAtt = nC + (hasD ? 1 : 0);
+        var atts = stackalloc VkAttachmentDescription[Math.Max(nAtt, 1)];
+        var crefs = stackalloc VkAttachmentReference[Math.Max(nC, 1)];
+        for(var i = 0; i < nC; i++) {
+            var (vf, _, _) = NvnRtFmt(sig.Colors[i].Fmt);
+            atts[i] = new() {
+                format = vf, samples = 1,
+                loadOp = 1, storeOp = 0,        // CLEAR, STORE
+                stencilLoadOp = 2, stencilStoreOp = 1,
+                initialLayout = 0, finalLayout = 1,  // → GENERAL
+            };
+            crefs[i] = new() { attachment = (uint)i, layout = 2 };
+        }
+        VkAttachmentReference dref = default;
+        if(hasD) {
+            var (vf, _, _) = NvnRtFmt(sig.Depth!.Fmt);
+            atts[nC] = new() {
+                format = vf, samples = 1,
+                // STORE depth (shadow-map = the depth IS
+                // the output; G-buf depth read by [B]).
+                loadOp = 1, storeOp = 0,
+                stencilLoadOp = 2, stencilStoreOp = 1,
+                initialLayout = 0, finalLayout = 1,
+            };
+            dref = new() { attachment = (uint)nC, layout = 3 };
+        }
+        var sub = new VkSubpassDescription {
+            pipelineBindPoint = 0,
+            colorCount = (uint)nC,
+            pColors = nC > 0 ? crefs : null,
+            pDepthStencil = hasD ? &dref : null,
+        };
+        var rpci = new VkRenderPassCreateInfo {
+            sType = ST_RENDER_PASS_CI,
+            attachmentCount = (uint)nAtt, pAttachments = atts,
+            subpassCount = 1, pSubpasses = &sub,
+        };
+        ulong rp; Chk(vkCreateRenderPass(_dev, &rpci, null, &rp),
+            $"vkCreateRenderPass(rt{rtId})");
+        rf.Rp = rp;
+        // Framebuffer
+        var fbAtts = stackalloc ulong[Math.Max(nAtt, 1)];
+        for(var i = 0; i < nC; i++) fbAtts[i] = rf.View[i];
+        if(hasD) fbAtts[nC] = rf.DepthView;
+        var fbci = new VkFramebufferCreateInfo {
+            sType = ST_FRAMEBUFFER_CI, renderPass = rp,
+            attachmentCount = (uint)nAtt, pAttachments = fbAtts,
+            width = (uint)w, height = (uint)h, layers = 1,
+        };
+        ulong fb; Chk(vkCreateFramebuffer(_dev, &fbci, null, &fb),
+            $"vkCreateFramebuffer(rt{rtId})");
+        rf.Fb = fb;
+        _rtFb[rtId] = rf;
+        $"[vk] EnsureRtFb id={rtId} {w}×{h} nC={nC} d={hasD} rp=0x{rp:x} fb=0x{fb:x}".Log();
+        return rf;
+    }
+
     // T1 v0: copy game's CopyBufferToTexture source directly into our
     // host-mapped swap image. Bypasses Vulkan entirely for the COPY (the
     // image is HOST_VISIBLE LINEAR so memcpy works); the next Present's
@@ -1861,6 +2090,9 @@ public static unsafe class NvnVulkan {
             var skipPostproc = Environment.GetEnvironmentVariable(
                 "UMBRA_T3_SKIP_POSTPROC") != null;
             var hasIndexed = draws.Any(x => x.IdxCount > 0);
+            // (T6)×35 ×3: per-rtId draw routing instrument.
+            int curRtId = -1, nRpSwitch = 0, rtDrawNAt = 0;
+            var rtDrawN = new int[32];
             foreach(var d in draws) {
                 if(d.VbCpu == 0) continue;
                 if(d.IdxCount == 0 && d.Count <= 0) continue;
@@ -1892,10 +2124,51 @@ public static unsafe class NvnVulkan {
                 if(_skipVs != null && _skipVs.Contains(d.VsShIdx)) {
                     nPostSkip++; continue;
                 }
+                // (T6)×35 ×3: RP-switch on rtId-change. The
+                // swap-RP (@1822→FlushTexBarriers→BeginRP)
+                // is already open at loop-entry; first
+                // switch ends it + begins _rtFb[d.RtId].
+                // @2701's vkCmdEndRenderPass closes the
+                // last RT-RP. ‡ No barrier yet (= [B]
+                // sampling [A]'s color before transition;
+                // lavapipe sequential ⟹ tolerates per ×14;
+                // proper barrier = ×36). curPipe=0 forces
+                // rebind (pipe is per-rtId via cache-key).
+                var rtKey = _t3Rtt ? d.RtId : (byte)255;
+                if(_t3Rtt && d.RtId != curRtId) {
+                    vkCmdEndRenderPass(_cmdBuf);
+                    var rf = EnsureRtFb(d.RtId);
+                    var clr = stackalloc VkClearColorValue[rf.NC + 1];
+                    for(var ci = 0; ci <= rf.NC; ci++)
+                        clr[ci] = new() { r = ci == rf.NC ? 1.0f : 0 };
+                    var rb = new VkRenderPassBeginInfo {
+                        sType = ST_RENDER_PASS_BI,
+                        renderPass = rf.Rp, framebuffer = rf.Fb,
+                        renderArea = new() {
+                            width = (uint)rf.W, height = (uint)rf.H },
+                        clearValueCount = (uint)(rf.NC
+                            + (rf.HasDepth ? 1 : 0)),
+                        pClearValues = clr,
+                    };
+                    vkCmdBeginRenderPass(_cmdBuf, &rb, 0);
+                    // y-flipped (NVN y-up → Vk y-down), per-RT dims.
+                    var rvp = new VkViewport {
+                        x = 0, y = rf.H, width = rf.W, height = -rf.H,
+                        minDepth = 0, maxDepth = 1 };
+                    var rsc = new VkRect2D {
+                        width = (uint)rf.W, height = (uint)rf.H };
+                    vkCmdSetViewport(_cmdBuf, 0, 1, &rvp);
+                    vkCmdSetScissor(_cmdBuf, 0, 1, &rsc);
+                    rtDrawN[curRtId >= 0 ? curRtId : 31]
+                        += recN - rtDrawNAt;
+                    rtDrawNAt = recN; nRpSwitch++;
+                    curRtId = d.RtId; curPipe = 0;
+                }
                 // v1.0: per-draw pipeline lookup (build-on-miss).
                 // Returns 0 if .spv missing → skip this draw
                 // (rather than render through wrong shaders).
-                var pipe = T3Pipe(d.VsShIdx, d.FsShIdx, d.Attribs, d.Streams);
+                var pipe = T3Pipe(d.VsShIdx, d.FsShIdx,
+                                  d.Attribs, d.Streams, rtKey);
                 if(pipe == 0) continue;
                 if(pipe != curPipe) {
                     vkCmdBindPipeline(_cmdBuf, 0, pipe);
@@ -2698,7 +2971,15 @@ public static unsafe class NvnVulkan {
                 vbo += (bytes + 255) & ~255ul;
                 recN++;
             }
+            if(_t3Rtt && curRtId >= 0)
+                rtDrawN[curRtId] += recN - rtDrawNAt;
             vkCmdEndRenderPass(_cmdBuf);
+            if(_t3Rtt && nRpSwitch > 0) {
+                var hist = string.Join(" ", rtDrawN
+                    .Select((n,i) => (n,i)).Where(x => x.n > 0)
+                    .Select(x => $"rt{x.i}×{x.n}"));
+                $"[vk] RTT frame={_frameN}: {nRpSwitch} RP-switches, {recN} drawn → {hist}".Log();
+            }
             _lastDrawN = draws.Length;
             if(_frameN <= 5 || (recN > 0 && _frameN % 10 == 0))
                 {
