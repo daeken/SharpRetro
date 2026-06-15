@@ -146,7 +146,17 @@ public static unsafe class NvnReplay {
             // b1=b0 (closes vbuf-b1-NULL VUID regardless;
             // attr1-4 read constant-but-nonzero ⟹ r63b 91%
             // vs r44 49.6% even without real stream-1 data).
-            if(capVer >= 2) {
+            // (T6)×19 UMBRA_REPLAY_VB1_ALIAS=1: skip vbR1
+            // read even on v2 captures ⟹ NvnVulkan falls
+            // back to b1=b0-alias. Discriminator: on v2-cap
+            // k=41, alias→WHITE (= r63c-shape, positions-as
+            // -normals saturate fs418) vs real-stream-1→0%
+            // (= r68nat) ⟹ settles "f15600 cbufs differ"
+            // (alias=0% too) vs "real-normals zero fs418's
+            // lighting" (alias=WHITE = the data specifically).
+            if(capVer >= 2 && Environment
+                .GetEnvironmentVariable(
+                    "UMBRA_REPLAY_VB1_ALIAS") == null) {
                 var vbR1 = R32(r, 40);
                 if(vbR1 >= 0 && vbR1 < vbRegions.Length) {
                     var (off, len) = vbRegions[vbR1];

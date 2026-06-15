@@ -138,7 +138,66 @@ public static unsafe class NvnLinux {
     }
     // GPU-addr → CPU-ptr reverse map (per pool). v0 = linear search; one
     // pool currently. Returns CPU ptr or 0 if no pool contains gpuAddr.
+    // (T6)×21 pool-only deterministic map. The old
+    // St-scan (foreach over ConcurrentDictionary of
+    // EVERY NVN handle — pools, buffers, textures,
+    // builders, programs) returned the FIRST entry
+    // whose [GpuAddr,+Size) covered the input. Some
+    // non-pool entry covering gpu∈[~0x6480e,~0x6484a)
+    // had (CpuPtr−GpuAddr) = pool's + 0x11c000 ⟹ all
+    // captured ibuf/vbuf/ubo for the main-scene-mesh
+    // draws were reading 1,163,264 bytes PAST the
+    // real data. Verified at-bytes (T6)×20×4: 3
+    // BindVB[1] addrs all Δ=+0x11c000; controls
+    // (DrawEBV#86000/#105000, just outside the range)
+    // = pool-correct. r50/r63b/r65dv geometry was
+    // +0x11c000-shifted bytes the whole time.
+    //
+    // Pools are ground truth: game gave us cpu via
+    // MpbSetStorage; we assigned gpu via AllocGpu;
+    // every buffer/texture's GpuAddr/CpuPtr derives
+    // from pool+offset (= same delta). With 1 pool
+    // of 1.5GB this is O(1) and deterministic.
+    //
+    // UMBRA_G2C_VERIFY=1: cross-check old St-scan on
+    // every call; logs first-20 entries that DISAGREE
+    // with pool-result (= identifies the culprit
+    // handle: its key + GpuAddr/CpuPtr/Size + W/H/Fmt
+    // distinguishes texture-vs-buffer + PoolPtr/Offset
+    // shows what it derived from). Slow (= the old
+    // O(N) per call); off by default.
+    static readonly List<(ulong gpu, ulong cpu, ulong sz)>
+        _poolMap = new();
+    static readonly bool _g2cVerify = Environment
+        .GetEnvironmentVariable("UMBRA_G2C_VERIFY") != null;
+    static long _g2cMismatchN;
     static ulong GpuToCpu(ulong gpuAddr) {
+        if(gpuAddr == 0) return 0;
+        ulong r = 0;
+        lock(_poolMap)
+            foreach(var (g, c, sz) in _poolMap)
+                if(gpuAddr >= g && gpuAddr < g + sz)
+                    { r = c + (gpuAddr - g); break; }
+        if(_g2cVerify && r != 0 && _g2cMismatchN < 20) {
+            foreach(var (hk, h) in St) {
+                if(h.GpuAddr == 0 || h.CpuPtr == 0
+                   || gpuAddr < h.GpuAddr
+                   || gpuAddr >= h.GpuAddr + h.Size)
+                    continue;
+                var stR = h.CpuPtr + (gpuAddr - h.GpuAddr);
+                if(stR == r) continue;
+                var d = (long)stR - (long)r;
+                System.Threading.Interlocked
+                    .Increment(ref _g2cMismatchN);
+                $"[nvn] ⚠ GpuToCpu(0x{gpuAddr:x}): pool→0x{r:x} but St[0x{hk:x}]→0x{stR:x} Δ={d:+0;-0}=0x{Math.Abs(d):x} (h: gpu=0x{h.GpuAddr:x} cpu=0x{h.CpuPtr:x} sz=0x{h.Size:x} pool=0x{h.PoolPtr:x}+0x{h.Offset:x} W={h.Width} H={h.Height} fmt=0x{h.Format:x})".Log();
+                break;
+            }
+        }
+        if(r != 0) return r;
+        // Fallback (= gpuAddr outside every pool —
+        // BufInitialize's pool=null path gives
+        // GpuAddr=AllocGpu independent of any pool;
+        // shouldn't happen with the 1.5GB pool but ‡).
         foreach(var (_, h) in St)
             if(h.GpuAddr != 0 && h.CpuPtr != 0 &&
                gpuAddr >= h.GpuAddr && gpuAddr < h.GpuAddr + h.Size)
@@ -1285,6 +1344,9 @@ public static unsafe class NvnLinux {
         var bs = S(builder); var ps = S(pool);
         ps.CpuPtr = bs.CpuPtr; ps.Size = bs.Size; ps.Flags = bs.Flags;
         ps.GpuAddr = AllocGpu(bs.Size);
+        // (T6)×21: GpuToCpu's deterministic map.
+        lock(_poolMap)
+            _poolMap.Add((ps.GpuAddr, ps.CpuPtr, ps.Size));
         $"[nvn] MemoryPoolInitialize pool=0x{pool:x} cpu=0x{ps.CpuPtr:x} size=0x{ps.Size:x} flags=0x{ps.Flags:x} gpu=0x{ps.GpuAddr:x}".Log();
         return 1;
     }

@@ -32,12 +32,43 @@ public static unsafe class NvnCapture {
     static readonly HashSet<string> _texWritten = new();
     static readonly HashSet<int> _shWritten = new();
 
+    // (T6)×21 UMBRA_NVNCAP_ON3D=count[,interval[,thresh]]:
+    // capture `count` frames starting from the first frame
+    // with ≥`thresh` indexed draws (= 3D-onset), every
+    // `interval` frames. 3D-onset frame# varies wildly
+    // with fps (u761~f14140@52fps, u766~f15300@42fps,
+    // u769~f37600@106fps — cutscene is wall-clock-paced)
+    // ⟹ absolute UMBRA_NVNCAP_FRAMES is fragile. Defaults:
+    // interval=200, thresh=50.
+    static readonly int[]? _on3d =
+        Environment.GetEnvironmentVariable("UMBRA_NVNCAP_ON3D")
+            is {} ov
+            ? ov.Split(',').Select(int.Parse).ToArray()
+            : null;
+    static int _on3dFirst = -1, _on3dDone;
+
     public static bool Want(int frameN) =>
         _dir != null && (_frames?.Contains(frameN) ?? false);
 
     public static void Maybe(int frameN,
             NvnLinux.DrawRecord[] draws) {
-        if(!Want(frameN)) return;
+        if(_dir == null) return;
+        // ON3D: detect onset by indexed-draw count, then
+        // capture relative to that frame.
+        if(_on3d != null) {
+            var cnt = _on3d[0];
+            var ival = _on3d.Length > 1 ? _on3d[1] : 200;
+            var thr  = _on3d.Length > 2 ? _on3d[2] : 50;
+            if(_on3dFirst < 0) {
+                var nIdx = draws.Count(d => d.IdxCount > 0);
+                if(nIdx < thr) return;
+                _on3dFirst = frameN;
+                $"[nvncap] ON3D onset @ f{frameN} (nIdx={nIdx} ≥ {thr}); capturing {cnt}× every {ival}f".Log();
+            }
+            var rel = frameN - _on3dFirst;
+            if(_on3dDone >= cnt || rel % ival != 0) return;
+            _on3dDone++;
+        } else if(!Want(frameN)) return;
         try { Capture(frameN, draws); }
         catch(Exception ex) {
             $"[nvncap] f{frameN} ✗ {ex.GetType().Name}: {ex.Message}".Log();
