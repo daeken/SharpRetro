@@ -1632,6 +1632,93 @@ public static unsafe class NvnVulkan {
         return ds;
     }
 
+    // (T6)×31 (α)-fix v2-PROPER — per-slot texture bind.
+    // The (c⁴⁰)(F)/(c²⁶)/(c²⁷) deferred-‡ at ~30-chapter
+    // scale (kt[26]). Per own (c⁴⁰) docstring @NvnLinux
+    // CbBindTexture: shader binding = 2×slot+8 (sh0814
+    // bindings 16,30,32 = slots 4,11,12). fs442 reads
+    // tcb_10 (b16=sl4 albedo) + tcb_12 (b18=sl5 normal-
+    // map) + tcb_E (b14=sl3 env-cube). With (c⁴⁰)(F)'s
+    // one-tex-for-all-40, tcb_12 reads the slot[4]-pick
+    // (= white albedo-atlas) → t3-5≈(0.98,0.98,0.98) →
+    // lighting-on-color-values → G-bias (verified r79p7
+    // = trees BRIGHT-GREEN; r80tex b16=b18 at-pixel).
+    //
+    // DS keyed on hash(TexHandles[0..7]) — distinct per-
+    // material tuples ≈ 50-100 across 669 draws ⟹ fits
+    // T3TexDsMax=128. For each binding b: if b∈[8,22]
+    // even ⟹ slot=(b−8)/2 ⟹ that slot's texId's view;
+    // else fallback (= the (c⁴⁰)(F)-pick's view, keeps
+    // non-load-bearing bindings non-dangling per (c²⁶)).
+    // ‡ slots 8-15 (= bindings 24-38) need needExt path
+    // (capture stores [0..7] only); ‡ slot 3 = cube
+    // (writing 2D view; lavapipe tolerates per (T6)×14).
+    static readonly bool _t3TexPerSlot = Environment
+        .GetEnvironmentVariable("UMBRA_T3_TEX_PERSLOT")
+            != null;
+    static readonly Dictionary<ulong, ulong> _t3SlotDs
+        = new();
+    static long _slotDsLogN;
+
+    static ulong EnsureSlotDs(NvnLinux.DrawRecord d,
+            ulong fbView) {
+        ulong key = 0xcbf29ce484222325;
+        for(var sl = 0; sl < 8; sl++)
+            key = (key ^ d.TexHandles[sl]) * 0x100000001b3;
+        if(_t3SlotDs.TryGetValue(key, out var ds))
+            return ds;
+        // Ensure each slot's texId is uploaded; collect
+        // views. EnsureTexBound also creates a redundant
+        // per-texId DS (= pool-waste, ‡ tolerable v1).
+        var views = stackalloc ulong[8];
+        var nReal = 0;
+        for(var sl = 0; sl < 8; sl++) {
+            var h = d.TexHandles[sl];
+            var ti = (int)(h >> 32);
+            if(ti == 0) { views[sl] = fbView; continue; }
+            var tx = NvnLinux.ResolveTex(h);
+            EnsureTexBound(ti, tx);
+            views[sl] = _texVk.TryGetValue(ti, out var tv)
+                && tv.View != 0 ? tv.View : fbView;
+            if(views[sl] != fbView) nReal++;
+        }
+        ulong dsl = _t3DslTex;
+        var dsai = new VkDescriptorSetAllocateInfo {
+            sType = ST_DESCRIPTOR_SET_AI,
+            descriptorPool = _t3DsPool,
+            descriptorSetCount = 1, pSetLayouts = &dsl,
+        };
+        if(Chk(vkAllocateDescriptorSets(_dev, &dsai, &ds),
+                "vkAllocDS(slotDs)") != 0) {
+            // Pool exhausted ⟹ cache 0 (= caller falls
+            // back to per-texId DS = old behavior).
+            _t3SlotDs[key] = 0; return 0;
+        }
+        var dii = stackalloc VkDescriptorImageInfo[T3TexBindN];
+        var wds = stackalloc VkWriteDescriptorSet[T3TexBindN];
+        for(var b = 0; b < T3TexBindN; b++) {
+            var sl = (b - 8) >> 1;
+            var vw = (b >= 8 && b < 24 && (b & 1) == 0
+                      && views[sl] != 0)
+                ? views[sl] : fbView;
+            dii[b] = new() { sampler = _sampler,
+                imageView = vw, imageLayout = 1 };
+            wds[b] = new() {
+                sType = ST_WRITE_DESCRIPTOR_SET,
+                dstSet = ds, dstBinding = (uint)b,
+                descriptorCount = 1,
+                descriptorType
+                    = DESC_TYPE_COMBINED_IMAGE_SAMPLER,
+                pImageInfo = &dii[b],
+            };
+        }
+        vkUpdateDescriptorSets(_dev, T3TexBindN, wds, 0, null);
+        _t3SlotDs[key] = ds;
+        if(_slotDsLogN++ < 20)
+            $"[vk] EnsureSlotDs key=0x{key:x} ds={ds:x} nReal={nReal}/8 sl4=0x{d.TexHandles[4]>>32:x} sl5=0x{d.TexHandles[5]>>32:x}".Log();
+        return ds;
+    }
+
     // Emit UNDEFINED→GENERAL barriers for newly-uploaded textures.
     // Called from RecordDrawPass BEFORE vkCmdBeginRenderPass.
     static void FlushTexBarriers() {
@@ -1930,6 +2017,16 @@ public static unsafe class NvnVulkan {
                 // bypassed the Gen-check ⟹ stale forever.
                 ulong txDs = texId == 0 ? _t3DsTex
                     : EnsureTexBound(texId, tex);
+                // (T6)×31 (α)-fix: replace per-texId DS
+                // with per-slot-tuple DS. Falls back to
+                // txDs on pool-exhaust / no-TexHandles.
+                if(_t3TexPerSlot && d.TexHandles != null
+                   && d.IdxCount > 0 && txDs != 0
+                   && _texVk.TryGetValue(texId, out var ptv)
+                   && ptv.View != 0) {
+                    var sds = EnsureSlotDs(d, ptv.View);
+                    if(sds != 0) txDs = sds;
+                }
                 // (c⁴¹)×3(S2) log txDs=0 (= cached-as-0 ⟹
                 // atlas fallback). If picked BC texIds show
                 // txDs=0 ⟹ THAT's the gap (DecodeForUpload
