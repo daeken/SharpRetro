@@ -595,11 +595,28 @@ public static unsafe class NvnVulkan {
         // (c³⁷)×4 UMBRA_T3_DEPTHVIS_FS=1 → gl_FragCoord.z as
         // grayscale (near=bright, far=dark). Proof-of-depth +
         // shows scene structure without per-slot-tex/lighting.
-        var fsOverride = Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null
+        // (c⁴⁵)(M') UMBRA_T3_FS_OVERRIDE=<path> → use that
+        // .spv as FS for ALL pipelines. Generic; precedes
+        // the named overrides. The (M') bisect: sh0346 is
+        // KNOWN-WORKING-for-menu (executed-sample, 3.21%
+        // u742) — if it ALSO 0% for 3D draws ⟹ ALL executed
+        // -sample-FS fail for 3D = DS-state-side (per-tex
+        // image not sampleable). If >0% ⟹ glslang-SPIR-V-
+        // specific (= very strange given (I') identical
+        // OpTypeImage/OpImageSample).
+        // (c⁴⁰)×4 UMBRA_T3_TEXFETCH_FS=1 → output texelFetch
+        // (tex_8, (2,2), 0) directly. Settles tex-path-vs-FS-
+        // compute: color ⟹ tex bound+uploaded OK; black ⟹
+        // upload/binding broken (ResolveTex/DecodeForUpload/
+        // EnsureTexBound).
+        var fsOverride = Environment.GetEnvironmentVariable("UMBRA_T3_FS_OVERRIDE")
+            ?? (Environment.GetEnvironmentVariable("UMBRA_T3_TEXFETCH_FS") != null
+                ? "/tmp/texfetch.frag.spv"
+            : Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null
                 ? "/tmp/depthvis.frag.spv"
             : Environment.GetEnvironmentVariable("UMBRA_T3_WHITE_FS") != null
                 ? "/tmp/white.frag.spv"
-            : null;
+            : null);
         var fsm = LoadShader(fsOverride ?? $"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
         if(vsm == 0 || fsm == 0) {
             if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
@@ -677,8 +694,15 @@ public static unsafe class NvnVulkan {
         var ms = new VkPipelineMultisampleStateCreateInfo {
             sType = ST_PIPELINE_MULTISAMPLE_CI, rasterizationSamples = 1,
         };
+        // (c³⁹)(M) blendEnable env-gated. With blend on
+        // (SRC_ALPHA), FS α=0 ⟹ invisible. sh0442 outputs
+        // α = (…)×cbuf1[0][1].y — cbuf1 is driver-managed
+        // and v0-zero-filled ⟹ α=0 for ALL geometry FS that
+        // multiply by a c[1] component. NOBLEND surfaces RGB
+        // directly (= settles α-vs-RGB).
         var cbAtt = new VkPipelineColorBlendAttachmentState {
-            blendEnable = 1, colorWriteMask = 0xf,
+            blendEnable = _t3NoBlend ? 0u : 1u,
+            colorWriteMask = 0xf,
             srcColorBF = 6, dstColorBF = 7, colorBlendOp = 0,
             srcAlphaBF = 1, dstAlphaBF = 7, alphaBlendOp = 0,
         };
@@ -734,6 +758,19 @@ public static unsafe class NvnVulkan {
     static float[]? _c32PrevBand;
     static readonly bool _whiteFs =
         Environment.GetEnvironmentVariable("UMBRA_T3_WHITE_FS") != null;
+    // (c³⁹)(M) UMBRA_T3_NOBLEND=1 → blendEnable=0 in T3Pipe.
+    // Discriminator: real-FS outputs α=0 (⟹ invisible under
+    // SRC_ALPHA blend) vs RGB=0 (⟹ black regardless). With
+    // blend off, FS RGB writes directly: if color appears,
+    // α was the gate; if still black, RGB=0 = (F) per-slot
+    // tex (sh0814 samples bindings 16/30/32; current code
+    // writes d.TexHandle's image to all 40 ⟹ 16/30/32 get
+    // whatever was last-bound, ‡ a 4×4 placeholder or
+    // wrong-format → samples 0).
+    static readonly bool _t3NoBlend =
+        Environment.GetEnvironmentVariable("UMBRA_T3_NOBLEND") != null;
+    static readonly bool _t3C1Ones =
+        Environment.GetEnvironmentVariable("UMBRA_T3_C1_ONES") != null;
     static readonly bool _depthvisFs =
         Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null;
     static readonly HashSet<int>? _skipVs =
@@ -752,7 +789,11 @@ public static unsafe class NvnVulkan {
             "UMBRA_T3_DEPTH_OP"), out var dop) ? dop : 1u;
     static readonly bool _c33ForceSpeed =
         Environment.GetEnvironmentVariable("UMBRA_C33_FORCE_SPEED") != null;
-    static int _c33ForceN;
+    static int _c33ForceN, _c40LogN, _etbLogN, _txDs0LogN;
+    static readonly HashSet<int> _c42SeenVs = new();
+    static readonly HashSet<int> _c43Dumped = new();
+    static readonly bool _dumpTex =
+        Environment.GetEnvironmentVariable("UMBRA_DUMP_TEX") != null;
     // (c³³)×4 patch-test: NOP the +0x348 `cbnz w21` gate
     // (and +0x260 sibling). If c[3] unfreezes ⟹ w21 (=
     // arg-w1 = mpd+40 via Sys::Update) IS the gate; trace
@@ -1492,6 +1533,14 @@ public static unsafe class NvnVulkan {
         void* p; Chk(vkMapMemory(_dev, mem, 0, req.size, 0, &p),
                 "vkMapMem");
         rgba.AsSpan().CopyTo(new Span<byte>(p, (int)(w*h*4)));
+        // (c⁴¹)×3(S) verify-log: post-memcpy first-4-bytes at
+        // mapped *p (= what the GPU will sample at texel(0,0)).
+        // If ≠ rgba[0..3] ⟹ memcpy/mapping broken. Plus the
+        // returned DS handle (= 0 ⟹ caller falls to atlas).
+        if(_etbLogN++ < 30 || _etbLogN % 200 == 0) {
+            var bp = (byte*)p;
+            $"[c41] EnsureTexBound texId=0x{texId:x} {w}×{h}: rgba[0]={rgba[0]:x2}{rgba[1]:x2}{rgba[2]:x2}{rgba[3]:x2} → *p[0]={bp[0]:x2}{bp[1]:x2}{bp[2]:x2}{bp[3]:x2} req.size={req.size} (vs w*h*4={w*h*4})".Log();
+        }
 
         var ivci = new VkImageViewCreateInfo {
             sType = ST_IMAGE_VIEW_CI, image = img, viewType = 1,
@@ -1598,6 +1647,12 @@ public static unsafe class NvnVulkan {
         lock(NvnLinux.Draws) {
             draws = NvnLinux.Draws.ToArray();
             NvnLinux.Draws.Clear();
+        }
+        // (T1') NVN-boundary frame capture. After Draws
+        // snapshot, before any Vulkan recording — pure
+        // NVN-state at this point. See Pagentry/NVNCAP.md.
+        NvnCapture.Maybe(_frameN, draws);
+        {  // (re-open the brace the str_replace closed)
         }
 
         // Lazy atlas upload — must be BEFORE BeginRenderPass (the layout
@@ -1715,13 +1770,121 @@ public static unsafe class NvnVulkan {
                 // queue inside-RP → emit NEXT frame's pre-RP (1-frame
                 // delay; the first frame using a new texId samples
                 // UNDEFINED layout = lavapipe tolerates).
+                // (c⁴⁰)(F)v1 pick-first-real: d.TexHandle (=
+                // last-bound-wins) is texId=0x100 (4×4 black
+                // default) for most 3D draws — game binds
+                // diffuse→slot-N then aux→slots-K with 0x100
+                // last. Scan d.TexHandles[] for first slot
+                // with a NON-0x100, NON-zero texId; bind THAT
+                // to all 40 (= still wrong-per-slot but a real
+                // texture instead of black). v2-PROPER (per-
+                // binding image from full TexHandles[]) =
+                // (c⁴⁰)×4 once v1 confirms color.
                 var texId = (int)(d.TexHandle >> 32);
+                var tex = d.Tex;
+                // (c⁴²)×2 (F)v1-v3 UNCONDITIONAL: u752 showed
+                // ×21 draws have d.TexHandle=0x12d (RT, black)
+                // and ×17=0x128, ×8=0x12a — all bypass the
+                // texId∈{0,0x100} gate ⟹ bind RT directly ⟹
+                // texfetch→black for the FOREGROUND draws.
+                // Always scan; prefer BC. If d.TexHandle was
+                // already a good BC tex, the scan re-picks it
+                // (= no regression). isIndexed-only (= 2D
+                // legacy unaffected).
+                // (c⁴²)×3 (F)v1-v4: u753 [c42] showed slot[0]
+                // = 0x103/0x105 (256² BC AO/shadow-receiver,
+                // rgba[0]=000000ff BLACK) for ~30/43 VS — the
+                // first-BC-break heuristic picks BLACK. Per
+                // the 43-VS table, **slot[4] = diffuse**
+                // consistently (fcfbfcff/f9c70aff/e6e6eeff
+                // etc). Score: BC=2, +slot[4]=4, +non-black-
+                // rgba[0]=8. Scan-all (no early-break).
+                if(d.TexHandles != null && d.IdxCount > 0) {
+                    int bestSl = -1, bestScore = 0;
+                    NvnLinux.H? bestTex = null; int bestTi = 0;
+                    for(var sl = 0; sl < 40; sl++) {
+                        var h = d.TexHandles[sl];
+                        var ti = (int)(h >> 32);
+                        if(ti == 0 || ti == 0x100) continue;
+                        var t = NvnLinux.ResolveTex(h);
+                        if(t == null) continue;
+                        var isRT = t.Width == 1920
+                                || t.Format == 0x29
+                                || t.Format == 0x35;
+                        var isBC = t.Format >= 0x42
+                                && t.Format <= 0x49;
+                        var nonBlk = t.Rgba != null
+                                  && t.Rgba.Length >= 3
+                                  && (t.Rgba[0]|t.Rgba[1]|t.Rgba[2]) != 0;
+                        var score = (isBC ? 2 : isRT ? 0 : 1)
+                                  + (sl == 4 ? 4 : 0)
+                                  + (nonBlk ? 8 : 0);
+                        if(score > bestScore) {
+                            bestScore = score; bestSl = sl;
+                            bestTex = t; bestTi = ti;
+                        }
+                    }
+                    if(bestSl >= 0) {
+                        texId = bestTi; tex = bestTex;
+                    }
+                    // (c⁴³)×2 (Z') one-shot dump: write the
+                    // picked tex's full Rgba to /tmp/texdump-
+                    // {texId}.ppm for the first 6 distinct
+                    // texIds. = LOOK at what we're binding.
+                    // ·7827 at the texture-content layer.
+                    if(_dumpTex && bestTex?.Rgba != null
+                            && _c43Dumped.Add(bestTi)
+                            && _c43Dumped.Count <= 6) {
+                        var path = $"/tmp/texdump-{bestTi:x3}.ppm";
+                        try {
+                            using var fs = File.Create(path);
+                            var hdr = System.Text.Encoding.ASCII
+                                .GetBytes($"P6\n{bestTex.Width} {bestTex.Height}\n255\n");
+                            fs.Write(hdr);
+                            // RGBA→RGB strip
+                            var rb = bestTex.Rgba;
+                            var rgb = new byte[bestTex.Width*bestTex.Height*3];
+                            for(int i=0,j=0; i<rb.Length; i+=4,j+=3) {
+                                rgb[j]=rb[i]; rgb[j+1]=rb[i+1]; rgb[j+2]=rb[i+2];
+                            }
+                            fs.Write(rgb);
+                            $"[c43] dumped texId=0x{bestTi:x} {bestTex.Width}×{bestTex.Height} → {path}".Log();
+                        } catch(Exception ex) {
+                            $"[c43] dump fail 0x{bestTi:x}: {ex.Message}".Log();
+                        }
+                    }
+                    // (c⁴²)×2 per-VS-first-occurrence: dump
+                    // full slot-table for first draw of each
+                    // distinct VsShIdx (= settles whether
+                    // sh33/sh31/sh1/sh390/sh1096 — the f17590
+                    // dominant draws — even HAVE a BC slot,
+                    // OR are pure-RT-sampling overlays).
+                    if(_c42SeenVs.Add(d.VsShIdx)) {
+                        var slots = "";
+                        for(var sl=0; sl<40; sl++) {
+                            var h = d.TexHandles[sl];
+                            if(h == 0) continue;
+                            var ti = (int)(h>>32);
+                            var t = NvnLinux.ResolveTex(h);
+                            slots += $" [{sl}]=0x{ti:x}"
+                                + (t==null?"":$"({t.Width}×{t.Height},f{t.Format:x}{(t.Format>=0x42&&t.Format<=0x49?",BC":"")}{(t.Width==1920||t.Width==1024?",RT":"")},{(t.Rgba==null?"null":$"{t.Rgba[0]:x2}{t.Rgba[1]:x2}{t.Rgba[2]:x2}{t.Rgba[3]:x2}")})");
+                        }
+                        $"[c42] sh{d.VsShIdx}/{d.FsShIdx} d.TexH=0x{d.TexHandle>>32:x}→pick[{bestSl}]=0x{(bestSl>=0?bestTi:texId):x}(sc{bestScore}) slots:{slots}".Log();
+                    }
+                }
                 // (c²³)(a) Always go through EnsureTexBound
                 // (it Gen-checks + returns t.Ds fast on hit).
                 // The prior _texVk.TryGetValue short-circuit
                 // bypassed the Gen-check ⟹ stale forever.
                 ulong txDs = texId == 0 ? _t3DsTex
-                    : EnsureTexBound(texId, d.Tex);
+                    : EnsureTexBound(texId, tex);
+                // (c⁴¹)×3(S2) log txDs=0 (= cached-as-0 ⟹
+                // atlas fallback). If picked BC texIds show
+                // txDs=0 ⟹ THAT's the gap (DecodeForUpload
+                // failed at first encounter, cached forever).
+                if(txDs == 0 && texId != 0
+                        && (_txDs0LogN++ < 10 || _txDs0LogN%200==0))
+                    $"[c41] ‡ txDs=0 for texId=0x{texId:x} (cached-as-0; sh{d.VsShIdx}/{d.FsShIdx}) → atlas fallback".Log();
                 t3sets[1] = txDs != 0 ? txDs : _t3DsTex;
                 // (c²⁴) NVN prim 5 = TRIANGLE_STRIP. T3Pipe is
                 // hardcoded topology=TRIANGLE_LIST (@888). Game
@@ -1832,6 +1995,29 @@ public static unsafe class NvnVulkan {
                             new ReadOnlySpan<byte>(snap, 0, nb)
                                 .CopyTo(new Span<byte>(cb, T3CbufStride));
                         }
+                // (c³⁹)×4(R') c[1]/c[2] driver-managed: real
+                // NVN driver fills these (RT-dims/Y-flip/
+                // viewport-scale/exposure-ish per Maxwell
+                // convention). v0 zero-fills ⟹ any FS that
+                // multiplies by a c[1]/c[2] component → 0.
+                // UMBRA_T3_C1_ONES = fill with 1.0 (= neutral
+                // for multiplies). ‡‡ Wrong values for
+                // anything that ADDs c[1] components, but
+                // most uses are scale-mults. Discriminator:
+                // if color appears ⟹ c[1]/c[2]-zero was the
+                // gate; then trace what real values should be
+                // (kt[14] reference: ryujinx GpuAccessor
+                // ConstantBuffer1 / ScreenScale).
+                // (c⁴⁰)(R'-fix) scope to FS-stage only (st=1).
+                // u747 showed VS c[1] is position-relevant
+                // (menu→0% with C1_ONES on both stages); FS
+                // c[1] is the scale-mult target.
+                if(_t3C1Ones)
+                    for(var hw = 1; hw <= 2; hw++) {
+                        var cb = (float*)(_t3CbufPtr[1*12 + hw]
+                                        + slot * T3CbufStride);
+                        for(var k=0; k<64; k++) cb[k] = 1.0f;
+                    }
                 // Bind sets WITH this draw's dynamic offsets.
                 for(var k = 0; k < 24; k++)
                     t3dyn[k] = (uint)(slot * T3CbufStride);
@@ -2225,8 +2411,13 @@ public static unsafe class NvnVulkan {
                     }
                 }
                 // (c²⁸)×4 one-shot full dump (kept):
-                if(isIndexed && !_c28Dumped
-                        && _frameN >= 35000
+                // (c³⁹)×3 gate-fix: relative to _c29First
+                // (was _frameN>=35000, stale from pre-Report
+                // Counter timeline). Fire ~100f after first
+                // sh813 (= cutscene running, c[3] settled).
+                if(_legoDiag && isIndexed && !_c28Dumped
+                        && _c29First > 0
+                        && _frameN >= _c29First + 100
                         && d.VsShIdx == 813) {
                     _c28Dumped = true;
                     var c3 = d.Ubos?[0]; var c4 = d.Ubos?[1];
@@ -2239,6 +2430,44 @@ public static unsafe class NvnVulkan {
                     $"[c28]   c[5] (slot2, {c5?.Length ?? -1}B): {(c5==null?"NULL":FloatHex(c5,0,8))}".Log();
                     $"[c28]   c[6] (slot3, {c6?.Length ?? -1}B): {(c6==null?"NULL":FloatHex(c6,0,8))}".Log();
                     $"[c28]   c[7] (slot4, {c7?.Length ?? -1}B): {(c7==null?"NULL":FloatHex(c7,0,4))}".Log();
+                    // (c³⁹)×3 (P') FS-stage cbufs: sh0814 RGB
+                    // = (…tex-derived…) × cbuf4[5].y; α =
+                    // (…) × cbuf3[0].w. cbuf4 = FS c[4] = NVN
+                    // FS slot 1 = d.Ubos[8+1]. If [5].y = 0
+                    // ⟹ RGB=0 regardless of tex. sh0442 RGB
+                    // × %875 (untraced); α × cbuf1[1].y (=
+                    // driver-managed, KNOWN-zero-by-us).
+                    var fc3 = d.Ubos?[8+0]; var fc4 = d.Ubos?[8+1];
+                    var fc5 = d.Ubos?[8+2]; var fc1 = (byte[]?)null;
+                    $"[c39]   FS c[3] (FSslot0,{fc3?.Length??-1}B) [0]={(fc3==null?"NULL":FloatHex(fc3,0,8))}".Log();
+                    $"[c39]   FS c[4] (FSslot1,{fc4?.Length??-1}B) [0..7]={(fc4==null?"NULL":FloatHex(fc4,0,8))}".Log();
+                    $"[c39]   🔥 FS c[4][5].y (= sh0814 RGB-mult @off 84): {(fc4==null||fc4.Length<88?"—":FloatHex(fc4,80,4))}".Log();
+                    $"[c39]   FS c[5] (FSslot2,{fc5?.Length??-1}B) [0..3]={(fc5==null?"NULL":FloatHex(fc5,0,4))}".Log();
+                    // + d.Tex resolved (= what texture is
+                    // bound to all 40 slots for THIS draw?)
+                    var tx = d.Tex;
+                    $"[c39]   d.TexHandle=0x{d.TexHandle:x} → tex={(tx==null?"NULL":$"{tx.Width}×{tx.Height} fmt=0x{tx.Format:x} rgba={(tx.Rgba==null?"null":$"{tx.Rgba.Length}B")}")}".Log();
+                    // (c⁴⁰)×5: dump full FS TexHandles[] WITH
+                    // per-slot fmt+dims (= which slots have
+                    // content textures vs RTs?). The c28-trigger
+                    // sh813 draw at ph≈100.
+                    if(d.TexHandles != null) {
+                        var ts = "";
+                        for(var sl=0; sl<40; sl++) {
+                            var h = d.TexHandles[sl];
+                            if(h == 0) continue;
+                            var ti = (int)(h>>32);
+                            var t = NvnLinux.ResolveTex(h);
+                            ts += $"\n[c40]     [{sl}]=0x{ti:x}"
+                               + (t==null ? " NULL"
+                                 : $" {t.Width}×{t.Height} fmt=0x{t.Format:x}"
+                                 + (t.Format>=0x42&&t.Format<=0x49?" BC":"")
+                                 + (t.Width==1920?" RT":"")
+                                 + (t.Rgba==null?" rgba=null"
+                                   :$" rgba[0..3]={t.Rgba[0]:x2}{t.Rgba[1]:x2}{t.Rgba[2]:x2}{t.Rgba[3]:x2}"));
+                        }
+                        $"[c40]   FS TexHandles per-slot for sh{d.VsShIdx}/{d.FsShIdx}:{ts}".Log();
+                    }
                     // first 3 verts at baseVtx (raw + as f32)
                     var vp = (byte*)d.VbCpu + (long)d.BaseVtx*stride;
                     for(var v=0; v<3; v++) {
