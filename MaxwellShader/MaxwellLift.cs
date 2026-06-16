@@ -339,9 +339,16 @@ public class MaxwellLift {
                     "FMNMX-I" => Fimm20(), _ => throw new() };
                 b = Fsrc(b, B(45,1), B(49,1));
                 var sp = SrcPred(B(39,3), B(42,1));
-                body.Add(SetGpr(rd, new IlIfV(F32, sp,
-                    new IlBin(F32, BinOp.FMin, a, b),
-                    new IlBin(F32, BinOp.FMax, a, b))));
+                var fmin = new IlBin(F32, BinOp.FMin, a, b);
+                var fmax = new IlBin(F32, BinOp.FMax, a, b);
+                // (T6)×44 vane ·11136 const-fold: SrcPred(7,inv)
+                // → IlConst(U1,c) via Pred(7); fold the IlIfV at
+                // lift-time so we emit only the chosen arm (drops
+                // ~654 FMin + ~108 FMax from the §7-oracle diff;
+                // STYLE only — OpSelect-on-const was correct).
+                body.Add(SetGpr(rd, sp is IlConst(_, var spc)
+                    ? (spc != 0 ? fmin : fmax)
+                    : new IlIfV(F32, sp, fmin, fmax)));
                 break;
             }
 
@@ -1340,9 +1347,13 @@ public class MaxwellLift {
         // (= their HPack call's sat arg) — NOT covered here. Imm32
         // forms (FADD32I/FMUL32I) have sat at bit 55 — also NOT here
         // (those don't have a names-sat capture either; ‡ if surface).
+        // (T6)×44 (Δ-1') fix: FMNMX has NO .SAT (verified
+        // ryujinx InstFmnmxR — no Sat field; bit50 unused/
+        // other). Was over-firing: 18 shaders × +3 FClamp
+        // each = the entire +53 aggregate over-count.
         var satBit = d.Fields.ContainsKey("sat") ? F("sat")
             : d.Name.Split('-')[0] is "FFMA" or "FMUL" or "FADD"
-                or "FMNMX" or "F2F" or "F2I" or "I2F"
+                or "F2F" or "F2I" or "I2F"
               ? B(50, 1) : 0;
         if(satBit == 1)
             for(var bi = 0; bi < body.Count; bi++)
