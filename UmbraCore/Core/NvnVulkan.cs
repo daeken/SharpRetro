@@ -1102,7 +1102,19 @@ public static unsafe class NvnVulkan {
     // unaffected = why r5 looked fine. 256 covers the
     // 198/445-draw cutscene frames. Alloc scales @1304
     // (T3CbufStride × T3MaxDraws × 24 buffers = 24MB).
-    const int T3CbufStride = 4096, T3MaxDraws = 256;
+    // (T6)×48 ×3: 256→1024. RTT (1764d37 onwards) made
+    // frames 669 draws (rt9 shadow alone = 465). With
+    // T3MaxDraws=256, draws 256-668 all clamped to slot
+    // 255 ⟹ last-write-wins on cbufs ⟹ #631 (fs111
+    // deferred-light) read #632/668's cbuf data instead
+    // of its own. Verified r127b: R16=MOV-C c[3][0x24]
+    // returned 0; #631's captured c[3][0x24]=2.0. = the
+    // (a-2-ii) wall(a) layer-2 root. The "256 covers the
+    // 198/445-draw cutscene frames" bound above was sized
+    // pre-RTT; own work at ×33-×40 broke it. 1024 covers
+    // 669; ‡ structural = dynamic from len(draws). Alloc
+    // 4096×1024×24 buffers ≈ 96MB (was 24MB).
+    const int T3CbufStride = 4096, T3MaxDraws = 1024;
 
     // Allocate + write t3 descriptor sets. Lazy (after _atlasView
     // exists). Set0=VS-cbufs (12 UBO → _t3CbufBuf[1..12]), set1=tex,
