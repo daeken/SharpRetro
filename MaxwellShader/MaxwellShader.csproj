@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The copied sources have nullable annotations but
+         weren't authored under enable; warnings-only. -->
+    <Nullable>annotations</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CoreArchCompiler\CoreArchCompiler.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- maxwell.isa as embedded resource — compile-time-bound
+         to the .dll, so the def-set can't drift relative to
+         the lift code (= the structural staleness fix per
+         sera ·11090). -->
+    <EmbeddedResource Include="maxwell.isa" />
+    <None Remove="maxwell.isa" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,934 @@
+;; maxwell.isa — Maxwell SM5x (Tegra X1 / GM20B) shader ISA.
+;;
+;; Per sera ~05:00Z day-28: "define the isa format you wanna use, then
+;; write a few examples, then go through them all." This file is
+;; FORMAT-FIRST: it expresses Maxwell the way I want it to read; the
+;; MaxwellDef parser + builtins bend to fit it, not the other way.
+;;
+;; Clean-room per kt[14]: encodings/bitfields are hardware facts learned
+;; by reading ryujinx-ref Decoders/{InstTable,InstDecoders}.cs for
+;; UNDERSTANDING + verified at-bytes against captured shaders
+;; (Pagentry/umbra-shader-0{1..5}-0.bin from Lego Worlds). Semantics
+;; written in our own words. ZERO code reuse.
+;;
+;; ── Architecture shape ──
+;; 64-bit LE instruction words. In the binary stream every 4th word
+;; (positions 0,4,8,…) is a SCHEDULING word, not an instruction — that's
+;; a decode-loop concern (the disasm stub skips them), NOT per-(def).
+;;
+;; 255 GPRs (R0-R254, 32-bit each); R255 = RZ (read-zero / write-discard).
+;; 8 predicate regs (P0-P6, 1-bit); P7 = PT (always-true).
+;; EVERY instruction has Pred@[18:16] + PredInv@19 — handled by the
+;; (when-pred …) wrapper macro so each (def) doesn't repeat the gate.
+;;
+;; ── Bitpattern convention ──
+;; 64 chars, MSB-first (bit 63 leftmost), spaces ignored. Letters = fields
+;; mapped via (names …). `#` = don't-care. Field-letter convention:
+;;   d = dest GPR        a = srcA GPR       b = srcB GPR    c = srcC GPR
+;;   p = pred[3]         v = predInv[1]
+;;   i = immediate       S = cbuf slot[5]   O = cbuf offset[14]
+;;   s/z/o/P/n/q/f/… = per-insn flags (named in (names …))
+;;
+;; ── Builtins this .isa WANTS (= what MaxwellGenerator/Builtins.cs
+;;    needs to provide; written here as the spec, implemented after) ──
+;;   (gpr n)           — read GPR n as f32; n==255 → 0.0
+;;   (gpr-u n)         — read GPR n as u32; n==255 → 0
+;;   (= (gpr n) v)     — write GPR n; n==255 → discard
+;;   (cbuf slot off)   — read constant buffer slot[off] as f32
+;;                       (off is a BYTE offset; /4 for word index)
+;;   (attr-in  off)    — Ald target: read input attribute at byte-offset
+;;   (= (attr-out off) v) — Ast target: write output attribute
+;;   (interp off mode mul) — Ipa: interpolate FS input attribute
+;;   (tex2d handle u v) → vec4 — sample (Texs simplified-form)
+;;   (mufu op v)       — multifunction unit: rcp/rsq/sin/cos/lg2/ex2/…
+;;   (exit) (branch-rel off)
+;;   (pred n)          — read predicate n; n==7 → true
+;;
+;; Disasm helpers:
+;;   (R n)  → "RZ" if 255 else "R{n}"
+;;   (P n)  → "PT" if 7 else "P{n}"
+;;   (@p p v) → "@!P3 " / "@P0 " / "" (empty if PT && !inv)
+
+;; ════════════════════════════════════════════════════════════════════
+;; Macros — operand-form abstraction + helpers.
+;; ════════════════════════════════════════════════════════════════════
+
+(defm u32 (x) (cast x u32))
+(defm f32 (x) (cast x f32))
+(defm i32 (x) (cast x i32))
+
+;; Predication wrapper. EVERY eval-expr goes inside this. For M0 disasm
+;; this is irrelevant (fields are extracted regardless); for M1 lift it
+;; gates the whole insn body. PT (p==7) && !v = unconditional.
+(defm when-pred (p v body)
+    (if (^ (pred p) (== v 1)) body (block)))
+
+;; Disasm: predicate prefix. Empty for the common case (PT, not inverted).
+(defm @p (p v)
+    (if (& (== p 7) (== v 0)) ""
+        (string-concat "@" (if (== v 1) "!" "") (P p) " ")))
+
+;; GPR name for disasm.
+(defm R (n) (if (== n 255) "RZ" (string-concat "R" (string n))))
+(defm P (n) (if (== n 7) "PT" (string-concat "P" (string n))))
+
+;; Optional neg/abs modifier on a float source. Common across F-ops.
+(defm fsrc (val neg abs)
+    (let $v (if (== abs 1) (fabs val) val)
+        (if (== neg 1) (fneg $v) $v)))
+
+;; Float imm20: low 19 bits @[38:20], sign bit hoisted from @56 by the
+;; bitpattern using the same letter `i` non-contiguously — but
+;; CoreArchCompiler's field extractor assumes CONTIGUOUS fields. So for
+;; I-form float ops, encode imm as 19 bits + a separate 1-bit `n` (sign),
+;; and reconstruct here. The value is the TOP 20 bits of an f32 (low 12
+;; bits = 0). ‡ verified vs InstFaddI.Imm20 shape.
+(defm fimm20 (i19 sgn)
+    (bitcast (| (<< (u32 sgn) 31) (<< (u32 i19) 12)) f32))
+
+;; ════════════════════════════════════════════════════════════════════
+;; Priority set — the 13 mnemonics that appear in captured shaders
+;; (umbra-shader-01..05). These are the WORKED EXAMPLES that establish
+;; the idioms; the ~164 remaining follow this pattern.
+;; ════════════════════════════════════════════════════════════════════
+
+;; ── NOP ──  pad/sched-yield. No semantic effect.
+;; Verified: 50b0000000070f00 → all fields don't-care.
+(def NOP
+    "0101000010110 ### iiiiiiiiiiiiiiii ############ vppp ######## ########"
+    "$(@p p v)nop"
+    (names (imm i) (pinv v) (pred p))
+    (block)
+    (block))   ;; eval = nothing
+
+;; ── EXIT ──  end shader thread. Predicated (a not-taken EXIT falls
+;; through — used for early-out). Ccc@[4:0] = condition-code test
+;; (rare; PT-equiv when 0xf). KeepRefCnt@5 ‡ ignored for v0.
+;; Verified: e30000000007000f → pred=7 v=0 ccc=0xf.
+(def EXIT
+    "111000110000 ######################## ######## vppp ########## k ccccc"
+    "$(@p p v)exit"
+    (names (pinv v) (pred p) (krc k) (ccc c))
+    (block)
+    (when-pred p v (exit)))
+
+;; ── BRA ──  PC-relative branch. Imm24@[43:20] = signed byte offset
+;; from NEXT insn. The post-Exit `bra -8` self-loop is the standard
+;; "shouldn't reach here" terminator.
+;; Verified: e2400fffff87000f → imm24=0xfffff8 (= -8), pred=PT.
+(def BRA
+    "111000100100 ######## iiiiiiiiiiiiiiiiiiiiiiii vppp ### ulk##### ccccc"
+    "$(@p p v)bra #$(hex (signext imm i32))"
+    (names (imm i) (pinv v) (pred p) (u u) (lmt l) (ca k) (ccc c))
+    (block (let off (signext imm i32)))
+    (when-pred p v (branch-rel off)))
+
+;; ── MOV32I ──  Rd ← imm32. The full 32-bit immediate occupies [51:20].
+;; QuadMask@[15:12] = which threads in the quad write (0xf=all; ‡ M1).
+;; Verified: 0103f0000007f002 → rd=2 imm=0x3f000000 (=0.5f) qmask=0xf.
+(def MOV32I
+    "000000010000 iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii vppp qqqq #### dddddddd"
+    "$(@p p v)mov32i $(R rd), #$(hex imm)"
+    (names (imm i) (pinv v) (pred p) (qmask q) (rd d))
+    (block)
+    (when-pred p v (= (gpr rd) (bitcast (u32 imm) f32))))
+
+;; ── MOV (C-form) ──  Rd ← cbuf[slot][off]. The "load constant" in
+;; practice (LDC exists but games use MOV.C for scalar UBO reads).
+;; CbufSlot@[38:34], CbufOffset@[33:20] (14-bit, units = ‡ 4-byte words?
+;; ryujinx treats it as word-index; verify vs slot-2 mat4 reads).
+;; QuadMask@[42:39].
+;; Verified: 4c98078c00a70007 → rd=7 slot=3 off=0x00a qmask=0xf.
+(def MOV-C
+    "0100110010011 ######## qqqq SSSSS OOOOOOOOOOOOOO vppp ######## dddddddd"
+    "$(@p p v)mov $(R rd), c[$slot][$(hex off)]"
+    (names (qmask q) (slot S) (off O) (pinv v) (pred p) (rd d))
+    (block)
+    (when-pred p v (= (gpr rd) (cbuf slot off))))
+
+;; ── ALD ──  Attribute load (vertex input / inter-stage varying read).
+;; Rd ← attr[Imm11 + Ra*4]  (Ra=RZ → direct; Ra≠RZ → indexed).
+;; AlSize@[48:47]: 0=_32 1=_64 2=_96 3=_128 → loads 1..4 consecutive
+;; regs Rd..Rd+N. P@31 = "Imm11 is the address" (vs phys-mode). O@32,
+;; SrcB@[46:39] ‡ patch/output-array indexing for tess/geom; ignored v0.
+;; Verified: efd87f800807ff04 → rd=4 ra=RZ imm11=0x080 (=in_pos.x)
+;;           sz=0 P=1. (Maxwell attr space: 0x80=pos, 0x70=layer, …)
+(def ALD
+    "1110111111011 ## ss bbbbbbbb ###### o P iiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)ald $(R rd)$(if (> sz 0) (string-concat '..' (R (+ rd sz))) ''), a[$(hex imm)]$(if (!= ra 255) (string-concat '+' (R ra)) '')"
+    (names (sz s) (rb b) (oflag o) (pflag P) (imm i) (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v
+        (for (k (+ sz 1))
+            (= (gpr (+ rd k)) (attr-in (+ imm (* k 4)))))))
+        ;; ‡ ra-indexed mode (ra≠RZ) NOT handled v0; captured shaders
+        ;; all use ra=RZ direct.
+
+;; ── AST ──  Attribute store (vertex output / inter-stage varying write).
+;; attr[Imm11] ← Rb  (note: SOURCE reg is in the d-position bits[7:0]
+;; per InstAst.SrcB; Ra@[15:8] = index reg). Same AlSize multi-reg.
+;; Verified: eff07f800707ff04 → rb=4 ra=RZ imm11=0x070 sz=0 P=1.
+(def AST
+    "1110111111110 ## ss cccccccc ####### P iiiiiiiiiii vppp aaaaaaaa bbbbbbbb"
+    "$(@p p v)ast a[$(hex imm)], $(R rb)$(if (> sz 0) (string-concat '..' (R (+ rb sz))) '')"
+    (names (sz s) (rc c) (pflag P) (imm i) (pinv v) (pred p) (ra a) (rb b))
+    (block)
+    (when-pred p v
+        (for (k (+ sz 1))
+            (= (attr-out (+ imm (* k 4))) (gpr (+ rb k))))))
+
+;; ── MUFU ──  Multifunction unit: Rd ← op(±|Ra|). Op@[23:20]:
+;; 0=cos 1=sin 2=ex2 3=lg2 4=rcp 5=rsq 6=rcp64h 7=rsq64h 8=sqrt.
+;; Used in FS for the perspective divide (rcp(w)) before Ipa multiply.
+;; Verified: 5080000000470605 → rd=5 ra=6 op=4 (=rcp).
+(def MUFU
+    "0101000010000 T # n # A ###################### ffff vppp aaaaaaaa dddddddd"
+    "$(@p p v)mufu.$(mufu-name op) $(R rd), $(R ra)"
+    (names (sat T) (nega n) (absa A) (op f) (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v
+        (= (gpr rd) (mufu op (fsrc (gpr ra) nega absa)))))
+
+;; ── IPA ──  Interpolate pixel attribute (FS-only). Reads the
+;; rasterizer's per-pixel interpolated value of a VS output.
+;; Rd ← interp(attr[Imm10], mode) × Rb  (Rb typically holds rcp(w)
+;; from MUFU for perspective-correct; Rb=RZ → no multiply).
+;; IpaOp@[55:54]: 0=pass 1=multiply 2=constant 3=sc. Sat@51.
+;; Verified: e003ff87cff7ff06 → rd=6 ra=RZ rb=RZ imm10=0x07c (=pos.w)
+;;           mode=0; then 5c68… fmul × rcp result.
+(def IPA
+    "11100000 mm ## T N ss # cccccccc x iiiiiiiiii bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)ipa$(ipa-suffix mode) $(R rd), a[$(hex imm)], $(R rb)"
+    (names (mode m) (sat T) (spinv N) (spred s) (rc c) (idx x) (imm i)
+           (rb b) (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v
+        (= (gpr rd) (interp imm mode (gpr rb)))))
+        ;; ‡ sat/idx/spred not applied v0.
+
+;; ════════════════════════════════════════════════════════════════════
+;; Float arithmetic — the R/I/C operand-form pattern.
+;;
+;; Most ALU ops have 3-4 encodings differing ONLY in where operand B
+;; (and sometimes C) comes from:
+;;   R-form:  B = gpr[Rb@27:20]              (top bits 0101110…)
+;;   I-form:  B = fimm20(Imm19@38:20, sgn@56) (top bits 0011100… / 0011…)
+;;   C-form:  B = cbuf[Slot@38:34][Off@33:20] (top bits 0100110…)
+;;   Rc-form: B = cbuf[…], C = gpr[Rc]        (top bits 0101…, FFMA-only)
+;;
+;; The eval-expr is IDENTICAL across forms; only the (let srcb …) differs.
+;; Expressed here as separate (def)s with a shared macro for the body —
+;; the macro IS the semantics-spec, the (def)s are encoding rows.
+;; ════════════════════════════════════════════════════════════════════
+
+;; FMUL: Rd ← (±Ra) × (±B), optional FTZ/sat/rounding.
+(defm fmul-body (rd ra srcb nega negb)
+    (= (gpr rd) (* (fsrc (gpr ra) nega 0) (fsrc srcb negb 0))))
+
+(def FMUL-R
+    "0101110001101 ## n ###### rrr ########### bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmul $(R rd), $(R ra), $(R rb)"
+    (names (negb n) (rnd r) (rb b) (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v (fmul-body rd ra (gpr rb) 0 negb)))
+
+(def FMUL-C
+    "0100110001101 ## n ### rrr ### SSSSS OOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmul $(R rd), $(R ra), c[$slot][$(hex off)]"
+    (names (negb n) (rnd r) (slot S) (off O) (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v (fmul-body rd ra (cbuf slot off) 0 negb)))
+
+;; FADD: Rd ← (±|Ra|) + (±|B|).
+(defm fadd-body (rd ra srcb na aa nb ab)
+    (= (gpr rd) (+ (fsrc (gpr ra) na aa) (fsrc srcb nb ab))))
+
+(def FADD-C
+    "0100110001011 # # T # n # A # B m ## SSSSS OOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)fadd $(R rd), $(R ra), c[$slot][$(hex off)]"
+    (names (sat T) (nega n) (absa A) (absb B) (negb m) (slot S) (off O)
+           (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v (fadd-body rd ra (cbuf slot off) nega absa negb absb)))
+
+;; FFMA: Rd ← (±Ra) × B + (±C). The mat×vec workhorse. Four forms:
+;;   R:  B=gpr[Rb@27:20], C=gpr[Rc@46:39]
+;;   I:  B=fimm20,        C=gpr[Rc@46:39]
+;;   C:  B=cbuf[S][O],    C=gpr[Rc@46:39]
+;;   Rc: B=gpr[Rb@46:39], C=cbuf[S][O]    (B/C positions swapped!)
+(defm ffma-body (rd ra srcb srcc na nc)
+    (= (gpr rd) (+ (* (fsrc (gpr ra) na 0) srcb) (fsrc srcc nc 0))))
+
+(def FFMA-R
+    "010110011 ## rr T m n # cccccccc ########### bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)ffma $(R rd), $(R ra), $(R rb), $(R rc)"
+    (names (rnd r) (sat T) (negc m) (nega n) (rc c) (rb b) (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v (ffma-body rd ra (gpr rb) (gpr rc) nega negc)))
+
+(def FFMA-I
+    "0011001 g # ## rr T m n # cccccccc iiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)ffma $(R rd), $(R ra), #$(hex imm), $(R rc)"
+    (names (sgn g) (rnd r) (sat T) (negc m) (nega n) (rc c) (imm i)
+           (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v (ffma-body rd ra (fimm20 imm sgn) (gpr rc) nega negc)))
+
+(def FFMA-Rc
+    "010100011 ## rr T m n # bbbbbbbb SSSSS OOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)ffma $(R rd), $(R ra), $(R rb), c[$slot][$(hex off)]"
+    (names (rnd r) (sat T) (negc m) (nega n) (rb b) (slot S) (off O)
+           (pinv v) (pred p) (ra a) (rd d))
+    (block)
+    (when-pred p v (ffma-body rd ra (gpr rb) (cbuf slot off) nega negc)))
+
+;; ── TEXS ──  Texture sample, simplified encoding (FS-only). Packs the
+;; common 2D-sample case into one insn: sample handle at (Ra,Rb), write
+;; up to 4 components split across two dest-pairs (Rd0,Rd0+1,Rd1,Rd1+1).
+;; This one's COMPLEX (component mask + dest-split + LOD-mode + array
+;; flag all packed into bits [55:49]); v0 = the 2D RGBA case only.
+;; Verified: d832008020570400 → rd0=0 ra=4 rb=5 handle=0x20 (=tex/samp
+;; pool index 32) rd1=2.
+(def TEXS
+    "1101100 LLLLLLL # eeeeeeee hhhhhhhhhhhhh bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)texs $(R rd0), $(R rd1), [$(R ra), $(R rb)], #$(hex handle)"
+    (names (lmode L) (rd1 e) (handle h) (rb b) (pinv v) (pred p) (ra a) (rd0 d))
+    (block)
+    ;; ‡ v0: assume 2D, RGBA, both dest-pairs used. lmode decodes target/
+    ;; lod/comp-mask — see maxwell-isa-doc.md §TEXS for the full table
+    ;; once derived. The (tex2d) builtin returns vec4; component routing
+    ;; to rd0/rd0+1/rd1/rd1+1 per the mask = M1 work.
+    (when-pred p v
+        (let $t (tex2d handle (gpr ra) (gpr rb))
+            (= (gpr rd0)       (vec-elem $t 0))
+            (= (gpr (+ rd0 1)) (vec-elem $t 1))
+            (= (gpr rd1)       (vec-elem $t 2))
+            (= (gpr (+ rd1 1)) (vec-elem $t 3)))))
+
+;; ════════════════════════════════════════════════════════════════════
+;; ‡ TODO — remaining ~164 mnemonics. Each follows the pattern above:
+;;   1. Bitpattern from InstTable.cs (encoding fact, transcribed).
+;;   2. Field positions from InstDecoders.cs Inst<Name> struct, expressed
+;;      as letter-positions in the bitpattern (UNDERSTANDING, not copy:
+;;      `(_opcode >> 39) & 0xFF` means "8 chars at bit 39-46").
+;;   3. Semantics from reading InstEmit<Name>() body → eval-expr in
+;;      our DSL idioms (the *-body macros above).
+;;   4. Verify against captured bytes where available; else (unimplemented)
+;;      until a game surfaces it (= the lifter-‡ per spec §4).
+;;
+;; Subagent-shaped per sera: each insn = one bounded translation task
+;; given (this file's idioms + the InstTable/InstDecoders/InstEmit
+;; source for that ONE insn) → one (def …) block.
+;; ════════════════════════════════════════════════════════════════════
+
+;; ════════════════════════════════════════════════════════════════════
+;; Census-ranked skeletons (gen-skeleton.py from InstTable+InstDecoders).
+;; Bitpatterns + field positions = encoding facts derived from reference.
+;; Semantics = (unimplemented) until filled per kt[14] (read InstEmit*.cs
+;; for understanding, write eval-expr in our idioms). M0 verify (mask/
+;; match only) works regardless; M1 type-check will surface each
+;; (unimplemented) one at a time when MaxwellDef:Def is enabled.
+;; ════════════════════════════════════════════════════════════════════
+;; ── FFMA-C ──  Ffma (FfmaC form). Fields from InstFfmaC.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Ffma) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FFMA-C
+    "010010011 ffrrTgnWccccccccSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)ffma"
+    (names (rd d) (ra a) (slot S) (off O) (rc c) (pred p) (pinv v) (wcc W) (nega n) (negc g) (sat T) (roundmode r) (fmz f))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FADD-R ──  Fadd (FaddR form). Fields from InstFaddR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fadd) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FADD-R
+    "0101110001011 TBnWAmF###rr###########bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)fadd"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (sat T) (absb B) (nega n) (absa A) (negb m) (ftz F) (roundmode r))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── XMAD-R ──  Xmad (XmadR form). Fields from InstXmadR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Xmad) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def XMAD-R
+    "0101101100 hxxxefWccccccccjmkl#######bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)xmad"
+    (names (rd d) (ra a) (rb b) (rc c) (pred p) (pinv v) (wcc W) (hiloa h) (xmadcop x) (bsigned e) (asigned f) (x j) (mrg m) (psl k) (hilob l))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FMNMX-R ──  Fmnmx (FmnmxR form). Fields from InstFmnmxR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fmnmx) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FMNMX-R
+    "0101110001100 #BnWAmF#Nsss###########bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmnmx"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (absb B) (nega n) (absa A) (negb m) (ftz F) (spred s) (spinv N))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FADD-I ──  Fadd (FaddI form). Fields from InstFaddI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fadd) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FADD-I
+    "0011100 #01011TBnWAmF###rriiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)fadd"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (wcc W) (sat T) (absb B) (nega n) (absa A) (negb m) (ftz F) (roundmode r))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── MOV-R ──  Mov (MovR form). Fields from InstMovR.
+;; Semantics: read ryujinx Instructions/InstEmitMove.cs → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def MOV-R
+    "0101110010011 ########qqqq###########aaaaaaaa vppp ######## dddddddd"
+    "$(@p p v)mov"
+    (names (rd d) (ra a) (pred p) (pinv v) (quadmask q))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── SEL-C ──  Sel (SelC form). Fields from InstSelC.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Sel) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def SEL-C
+    "0100110010100 ########NsssSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)sel"
+    (names (rd d) (ra a) (slot S) (off O) (pred p) (pinv v) (spred s) (spinv N))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FSET-I ──  Fset (FsetI form). Fields from InstFsetI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fset) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FSET-I
+    "0011000 #FAmeffffWbbBnNsssiiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)fset"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (wcc W) (nega n) (negb m) (absa A) (absb B) (fcomp f) (spred s) (spinv N) (bop b) (ftz F) (bval e))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── I2I-R ──  I2i (I2iR form). Fields from InstI2iR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for I2i) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def I2I-R
+    "0101110011100 TB#W#m##ee#############bbbbbbbb vppp ####ffii dddddddd"
+    "$(@p p v)i2i"
+    (names (rd d) (rb b) (pred p) (pinv v) (wcc W) (sat T) (absb B) (negb m) (bytesel e) (idstfmt i) (isrcfmt f))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── F2F-R ──  F2f (F2fR form). Fields from InstF2fR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for F2f) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def F2F-R
+    "0101110010101 TB#W#mF##frr###########bbbbbbbb vppp ####ssee dddddddd"
+    "$(@p p v)f2f"
+    (names (rd d) (rb b) (pred p) (pinv v) (wcc W) (absb B) (negb m) (ftz F) (dstfmt e) (srcfmt s) (roundmode r) (sh f) (sat T))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FMUL-I ──  Fmul (FmulI form). Fields from InstFmulI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fmul) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FMUL-I
+    "0011100 #01101T#nW#ffsssrriiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmul"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (wcc W) (roundmode r) (fmz f) (scale s) (nega n) (sat T))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FSETP-R ──  Fsetp (FsetpR form). Fields from InstFsetpR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fsetp) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FSETP-R
+    "010110111011 ffffFeeBnNsss###########bbbbbbbb vppp aaaaaaaa AmPPPVVV"
+    "$(@p p v)fsetp"
+    (names (dpred P) (dpinv V) (ra a) (rb b) (pred p) (pinv v) (wcc W) (nega n) (negb m) (absa A) (absb B) (fcomp f) (spred s) (spinv N) (bop e) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FSETP-I ──  Fsetp (FsetpI form). Fields from InstFsetpI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fsetp) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FSETP-I
+    "0011011 #1011ffffFbbBnNsssiiiiiiiiiiiiiiiiiii vppp aaaaaaaa AmPPPVVV"
+    "$(@p p v)fsetp"
+    (names (dpred P) (dpinv V) (ra a) (imm i) (pred p) (pinv v) (wcc W) (nega n) (negb m) (absa A) (absb B) (fcomp f) (spred s) (spinv N) (bop b) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── ISETP-R ──  Isetp (IsetpR form). Fields from InstIsetpR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Isetp) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def ISETP-R
+    "010110110110 iiie#ff#xNsss###########bbbbbbbb vppp aaaaaaaa ##PPPVVV"
+    "$(@p p v)isetp"
+    (names (ra a) (rb b) (pred p) (pinv v) (icomp i) (signed e) (bop f) (x x) (spred s) (spinv N) (dpred P) (dpinv V))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── LDC ──  Ldc (Ldc form). Fields from InstLdc.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Ldc) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def LDC
+    "1110111110010 lll##ee###SSSSSOOOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)ldc"
+    (names (rd d) (ra a) (pred p) (pinv v) (lssize l) (addressmode e) (slot S) (off O))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FSETP-C ──  Fsetp (FsetpC form). Fields from InstFsetpC.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fsetp) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FSETP-C
+    "010010111011 ffffFbbBnNsssSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa AmPPPVVV"
+    "$(@p p v)fsetp"
+    (names (dpred P) (dpinv V) (ra a) (slot S) (off O) (pred p) (pinv v) (wcc W) (nega n) (negb m) (absa A) (absb B) (fcomp f) (spred s) (spinv N) (bop b) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FMUL32I ──  Fmul32i (Fmul32i form). Fields from InstFmul32i.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fmul32i) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FMUL32I
+    "00011110 TffW################################ vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmul32i"
+    (names (rd d) (ra a) (pred p) (pinv v) (sat T) (fmz f) (wcc W))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FSET-C ──  Fset (FsetC form). Fields from InstFsetC.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fset) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FSET-C
+    "01001000 FAmeffffWbbBnNsssSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)fset"
+    (names (rd d) (ra a) (slot S) (off O) (pred p) (pinv v) (wcc W) (nega n) (negb m) (absa A) (absb B) (fcomp f) (spred s) (spinv N) (bop b) (ftz F) (bval e))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FMNMX-C ──  Fmnmx (FmnmxC form). Fields from InstFmnmxC.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fmnmx) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FMNMX-C
+    "0100110001100 #BnWAmF#NsssSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmnmx"
+    (names (rd d) (ra a) (slot S) (off O) (pred p) (pinv v) (wcc W) (absb B) (nega n) (absa A) (negb m) (ftz F) (spred s) (spinv N))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── DEPBAR ──  Depbar (Depbar form). Fields from InstDepbar.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Depbar) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def DEPBAR
+    "1111000011110 #####################lssseeeeee vppp ######## ##iiiiii"
+    "$(@p p v)depbar"
+    (names (pred p) (pinv v) (le l) (sbid s) (pendcnt e) (imm6 i))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── I2F-R ──  I2f (I2fR form). Fields from InstI2fR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for I2f) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def I2F-R
+    "0101110010111 #B#W#m##eerr###########bbbbbbbb vppp ####iiff dddddddd"
+    "$(@p p v)i2f"
+    (names (rd d) (rb b) (pred p) (pinv v) (wcc W) (absb B) (negb m) (bytesel e) (roundmode r) (isrcfmt i) (dstfmt f))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── KIL ──  Kil (Kil form). Fields from InstKil.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Kil) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def KIL
+    "111000110011 ################################ vppp ######## ###ccccc"
+    "$(@p p v)kil"
+    (names (pred p) (pinv v) (ccc c))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FSET-R ──  Fset (FsetR form). Fields from InstFsetR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fset) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FSET-R
+    "01011000 FAmhffffWeeBnNsss###########bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)fset"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (nega n) (negb m) (absa A) (absb B) (fcomp f) (spred s) (spinv N) (bop e) (ftz F) (bval h))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── RRO-R ──  Rro (RroR form). Fields from InstRroR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Rro) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def RRO-R
+    "0101110010010 #B###m#####r###########bbbbbbbb vppp ######## dddddddd"
+    "$(@p p v)rro"
+    (names (rd d) (rb b) (pred p) (pinv v) (absb B) (negb m) (rroop r))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── XMAD-I ──  Xmad (XmadI form). Fields from InstXmadI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Xmad) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def XMAD-I
+    "0011011 #00hxxxbeWccccccccfmjiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)xmad"
+    (names (rd d) (ra a) (rc c) (pred p) (pinv v) (wcc W) (imm i) (hiloa h) (xmadcop x) (bsigned b) (asigned e) (x f) (mrg m) (psl j))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── F2I-R ──  F2i (F2iR form). Fields from InstF2iR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for F2i) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def F2I-R
+    "0101110010110 #B#W#mF##srr###########bbbbbbbb vppp ####eeii dddddddd"
+    "$(@p p v)f2i"
+    (names (rd d) (rb b) (pred p) (pinv v) (wcc W) (absb B) (negb m) (ftz F) (sh s) (idstfmt i) (srcfmt e) (roundmode r))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FADD32I ──  Fadd32i (Fadd32i form). Fields from InstFadd32i.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fadd32i) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FADD32I
+    "000010 BnFAmW################################ vppp aaaaaaaa dddddddd"
+    "$(@p p v)fadd32i"
+    (names (rd d) (ra a) (pred p) (pinv v) (wcc W) (absb B) (nega n) (ftz F) (absa A) (negb m))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── FMNMX-I ──  Fmnmx (FmnmxI form). Fields from InstFmnmxI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Fmnmx) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def FMNMX-I
+    "0011100 #01100#BnWAmF#Nsssiiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)fmnmx"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (wcc W) (absb B) (nega n) (absa A) (negb m) (ftz F) (spred s) (spinv N))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── IADD-R ──  Iadd (IaddR form). Fields from InstIaddR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Iadd) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def IADD-R
+    "0101110000010 TeeW###x###############bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)iadd"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (sat T) (avgmode e) (x x))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── SYNC ──  Sync (Sync form). Fields from InstSync.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Sync) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def SYNC
+    "1111000011111 ############################### vppp ######## ###ccccc"
+    "$(@p p v)sync"
+    (names (pred p) (pinv v) (ccc c))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── TEX ──  Tex (Tex form). Fields from InstTex.
+;; Semantics: read ryujinx Instructions/InstEmitTexture.cs → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def TEX
+    "11000 leeefPPPhktttttttttttttnwwwwjjjbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)tex"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (lc l) (dpred P) (tidb t) (lod e) (aoffi f) (dc h) (ndv n) (dim j) (wmask w) (nodep k))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── PSETP ──  Psetp (Psetp form). Fields from InstPsetp.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Psetp) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def PSETP
+    "0101000010010 ####kk##Nsss######jhhh###bb#### vppp feee#### ##PPPVVV"
+    "$(@p p v)psetp"
+    (names (dpred P) (pred p) (pinv v) (dpinv V) (src2pred e) (src2predinv f) (src1pred h) (src1predinv j) (spred s) (spinv N) (boolopab b) (boolopc k))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── ISET-R ──  Iset (IsetR form). Fields from InstIsetR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Iset) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def ISET-R
+    "010110110101 iiieWhhfxNsss###########bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)iset"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (icomp i) (signed e) (spred s) (spinv N) (bval f) (bop h) (x x))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── IADD32I ──  Iadd32i (Iadd32i form). Fields from InstIadd32i.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Iadd32i) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def IADD32I
+    "0001110 eeTxW################################ vppp aaaaaaaa dddddddd"
+    "$(@p p v)iadd32i"
+    (names (rd d) (ra a) (pred p) (pinv v) (avgmode e) (sat T) (wcc W) (x x))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── LOP3-I ──  Lop3 (Lop3I form). Fields from InstLop3I.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Lop3) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def LOP3-I
+    "001111 x#eeeeeeeeWcccccccciiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)lop3"
+    (names (rd d) (ra a) (imm i) (rc c) (pred p) (pinv v) (wcc W) (x x) (imm e))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── SSY ──  Ssy (Ssy form). Fields from InstSsy.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Ssy) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def SSY
+    "111000101001 ########iiiiiiiiiiiiiiiiiiiiiiii #### ######## ##c#####"
+    "$(@p p v)ssy"
+    (names (imm24 i) (ca c))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── SHL-I ──  Shl (ShlI form). Fields from InstShlI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Shl) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def SHL-I
+    "0011100 #01001###W###x###miiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)shl"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (wcc W) (x x) (m m))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── ISETP-I ──  Isetp (IsetpI form). Fields from InstIsetpI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Isetp) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def ISETP-I
+    "0011011 #0110eeef#bb#xNsssiiiiiiiiiiiiiiiiiii vppp aaaaaaaa ##PPPVVV"
+    "$(@p p v)isetp"
+    (names (ra a) (imm i) (pred p) (pinv v) (icomp e) (signed f) (bop b) (x x) (spred s) (spinv N) (dpred P) (dpinv V))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── F2I-C ──  F2i (F2iC form). Fields from InstF2iC.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for F2i) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def F2I-C
+    "0100110010110 #B#W#mF##srrSSSSSOOOOOOOOOOOOOO vppp ####eeii dddddddd"
+    "$(@p p v)f2i"
+    (names (rd d) (slot S) (off O) (pred p) (pinv v) (wcc W) (absb B) (negb m) (ftz F) (sh s) (idstfmt i) (srcfmt e) (roundmode r))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── ST ──  St (St form). Fields from InstSt.
+;; Semantics: read ryujinx Instructions/InstEmit.cs → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def ST
+    "101 sssccllle################################ vppp aaaaaaaa dddddddd"
+    "$(@p p v)st"
+    (names (rd d) (ra a) (pred p) (pinv v) (spred s) (cacheop c) (lssize l) (e e))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── ISET-I ──  Iset (IsetI form). Fields from InstIsetI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Iset) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def ISET-I
+    "0011011 #0101eeefWhhbxNsssiiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)iset"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (wcc W) (icomp e) (signed f) (spred s) (spinv N) (bval b) (bop h) (x x))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── LOP-R ──  Lop (LopR form). Fields from InstLopR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Lop) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def LOP-R
+    "0101110001000 PPPW#eexllmn###########bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)lop"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (dpred P) (predicateop e) (x x) (lop l) (nega n) (negb m))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── SEL-I ──  Sel (SelI form). Fields from InstSelI.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Sel) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def SEL-I
+    "0011100 #10100########Nsssiiiiiiiiiiiiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)sel"
+    (names (rd d) (ra a) (imm i) (pred p) (pinv v) (spred s) (spinv N))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── VMNMX ──  Vmnmx (Vmnmx form). Fields from InstVmnmx.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Vmnmx) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def VMNMX
+    "0011101 mTejjjk##Wccccccccfffiiiiihhhiiiiiiii vppp aaaaaaaa dddddddd"
+    "$(@p p v)vmnmx"
+    (names (rd d) (ra a) (rb b) (rc c) (pred p) (pinv v) (imm i) (wcc W) (dformat e) (aselect f) (bselect h) (sat T) (videoop j) (mn m) (bvideo k))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── IMNMX-R ──  Imnmx (ImnmxR form). Fields from InstImnmxR.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Imnmx) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def IMNMX-R
+    "0101110000100 ##eW##xxNsss###########bbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)imnmx"
+    (names (rd d) (ra a) (rb b) (pred p) (pinv v) (wcc W) (signed e) (xmode x) (spred s) (spinv N))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HMUL2-R ──  Hmul2 (Hmul2R form). Fields from InstHmul2R.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hmul2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HMUL2-R
+    "0101110100001 ooee##A###hh######TnBffbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hmul2"
+    (names (rd d) (ra a) (rb b) (ofmt o) (aswizzle e) (bswizzle f) (pred p) (pinv v) (nega n) (absa A) (absb B) (sat T) (fmz h))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HFMA2-R ──  Hfma2 (Hfma2R form). Fields from InstHfma2R.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hfma2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HFMA2-R
+    "0101110100000 ooeeccccccccjjhh##Tngffbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hfma2"
+    (names (rd d) (ra a) (rb b) (rc c) (ofmt o) (aswizzle e) (bswizzle f) (cswizzle h) (pred p) (pinv v) (nega n) (negc g) (sat T) (fmz j))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HADD2-I ──  Hadd2 (Hadd2I form). Fields from InstHadd2I.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hadd2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HADD2-I
+    "0111101 #0##T#ooff##An###Feeeeeeeeebbbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hadd2"
+    (names (rd d) (ra a) (bimmh0 b) (bimmh1 e) (ofmt o) (aswizzle f) (pred p) (pinv v) (nega n) (absa A) (sat T) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HMUL2-C ──  Hmul2 (Hmul2C form). Fields from InstHmul2C.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hmul2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HMUL2-C
+    "0111100 #1B#T#ooee##An##ffSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)hmul2"
+    (names (rd d) (ra a) (slot S) (off O) (ofmt o) (aswizzle e) (pred p) (pinv v) (nega n) (absa A) (absb B) (sat T) (fmz f))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── TEXSF16 ──  TexsF16 (TexsF16 form). Fields from InstTexsF16.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for TexsF16) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def TEXSF16
+    "1101000 ##################################### #### ######## ########"
+    "$(@p p v)texsf16"
+    (names )
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HFMA2-I ──  Hfma2 (Hfma2I form). Fields from InstHfma2I.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hfma2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HFMA2-I
+    "01110 jj#0hhTgooffcccccccceeeeeeeeebbbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hfma2"
+    (names (rd d) (ra a) (bimmh0 b) (bimmh1 e) (rc c) (ofmt o) (aswizzle f) (cswizzle h) (pred p) (pinv v) (negc g) (sat T) (fmz j))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HADD2-R ──  Hadd2 (Hadd2R form). Fields from InstHadd2R.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hadd2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HADD2-R
+    "0101110100010 ooee##An###F######TmBffbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hadd2"
+    (names (rd d) (ra a) (rb b) (ofmt o) (aswizzle e) (bswizzle f) (pred p) (pinv v) (nega n) (negb m) (absa A) (absb B) (sat T) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HSET2-I ──  Hset2 (Hset2I form). Fields from InstHset2I.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hset2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HSET2-I
+    "0111110 #0FhccccffjjAnNssseeeeeeeeebbbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hset2"
+    (names (rd d) (ra a) (bimmh0 b) (bimmh1 e) (aswizzle f) (pred p) (pinv v) (nega n) (absa A) (bval h) (cmp c) (bop j) (spred s) (spinv N) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HMUL2-I ──  Hmul2 (Hmul2I form). Fields from InstHmul2I.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hmul2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HMUL2-I
+    "0111100 #0##T#ooff##An##hheeeeeeeeebbbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hmul2"
+    (names (rd d) (ra a) (bimmh0 b) (bimmh1 e) (ofmt o) (aswizzle f) (pred p) (pinv v) (nega n) (absa A) (sat T) (fmz h))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HFMA2-C ──  Hfma2 (Hfma2C form). Fields from InstHfma2C.
+;; Identical field layout to HFMA2-RC (only top-5 differs:
+;; 01110 vs 01100). cbuf form: a = SrcA reg, b = c[slot][off],
+;; c = SrcC reg. (vs RC: a = reg, b = SrcC reg, c = cbuf.)
+(def HFMA2-C
+    "01110 hhn1ffTgooeeccccccccSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)hfma2"
+    (names (rd d) (ra a) (slot S) (off O) (rc c) (ofmt o) (aswizzle e) (cswizzle f) (pred p) (pinv v) (nega n) (negc g) (sat T) (fmz h))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HFMA2-RC ──  Hfma2 (Hfma2Rc form). Fields from InstHfma2Rc.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hfma2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HFMA2-RC
+    "01100 hhn1ffTgooeeccccccccSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)hfma2"
+    (names (rd d) (ra a) (slot S) (off O) (rc c) (ofmt o) (aswizzle e) (cswizzle f) (pred p) (pinv v) (nega n) (negc g) (sat T) (fmz h))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HSET2-R ──  Hset2 (Hset2R form). Fields from InstHset2R.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hset2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HSET2-R
+    "0101110100011 FheejjAnNssscccc###mBffbbbbbbbb vppp aaaaaaaa dddddddd"
+    "$(@p p v)hset2"
+    (names (rd d) (ra a) (rb b) (aswizzle e) (bswizzle f) (pred p) (pinv v) (nega n) (absa A) (negb m) (absb B) (bval h) (cmp c) (bop j) (spred s) (spinv N) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HSETP2-R ──  Hsetp2 (Hsetp2R form). Fields from InstHsetp2R.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hsetp2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HSETP2-R
+    "0101110100100 #hjjeeAnNsssffff###mBkkbbbbbbbb vppp aaaaaaaa #FPPPVVV"
+    "$(@p p v)hsetp2"
+    (names (dpred P) (dpinv V) (ra a) (rb b) (pred p) (pinv v) (nega n) (negb m) (absa A) (absb B) (fcomp2 f) (spred s) (spinv N) (bop e) (ftz F) (hand h) (aswizzle j) (bswizzle k))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HSETP2-I ──  Hsetp2 (Hsetp2I form). Fields from InstHsetp2I.
+;; B operand = 2× 9-or-10-bit half-immediates packed across
+;; bits 20:10 and 30:9+sign@56 (not contiguous; the .isa pattern
+;; can't express the BimmH1 split, so v0 = capture lo10 and
+;; let MaxwellLift's HSETP2-I case read the raw word for hi.
+(def HSETP2-I
+    "0111111z0 #hffffjjeeAnNsssIIIIIIIIIiiiiiiiiii vppp aaaaaaaa #FPPPVVV"
+    "$(@p p v)hsetp2-i"
+    (names (dpred P) (dpinv V) (ra a) (immlo i) (immhi I) (immhz z) (pred p) (pinv v) (nega n) (absa A) (fcomp2 f) (spred s) (spinv N) (bop e) (ftz F) (hand h) (aswizzle j))
+    (block)
+    (when-pred p v (unimplemented)))
+
+;; ── HADD2-C ──  Hadd2 (Hadd2C form). Fields from InstHadd2C.
+;; Semantics: read ryujinx Instructions/(grep InstEmit*.cs for Hadd2) → write eval-expr
+;; in our idioms (see FFMA-* / FADD-C above for the pattern).
+(def HADD2-C
+    "0111101 m1B#T#ooee##An###FSSSSSOOOOOOOOOOOOOO vppp aaaaaaaa dddddddd"
+    "$(@p p v)hadd2"
+    (names (rd d) (ra a) (slot S) (off O) (ofmt o) (aswizzle e) (pred p) (pinv v) (nega n) (negb m) (absa A) (absb B) (sat T) (ftz F))
+    (block)
+    (when-pred p v (unimplemented)))
+
