@@ -1237,6 +1237,7 @@ public static unsafe class NvnLinux {
     //   ONE,ZERO,ONE,ZERO = pure-replace for one state.
     [UnmanagedCallersOnly]
     static void BsSetDefaults(byte* s) {
+        if(_blendHooks < 2) return;
         s[0]=0; s[1]=2; s[2]=1; s[3]=2; s[4]=1; s[5]=1; s[6]=1; s[7]=0;
     }
     [UnmanagedCallersOnly]
@@ -1283,8 +1284,18 @@ public static unsafe class NvnLinux {
     static readonly ulong[] _curBlend = new ulong[8];
     static uint _curBlendEnable;
     static int _bindBlendN, _bindColorN;
+    // (T6)×62 ×3-cont: u780/u781 hung @ BindColorState #11
+    // (process exited, NLWP=1 cpu=0:00; u779 w/ no-op stubs
+    // had ~7K lines after that point). Gate behind env so
+    // A/B isolates which hook-group breaks it without
+    // rebuild-cycles. UMBRA_BLEND_HOOKS=0 ⟹ all no-op (=
+    // u779-equiv); =1 ⟹ Bind* read-only; =2 ⟹ + Set* writes.
+    static readonly int _blendHooks =
+        int.TryParse(Environment.GetEnvironmentVariable(
+            "UMBRA_BLEND_HOOKS"), out var bh) ? bh : 2;
     [UnmanagedCallersOnly]
     static void CbBindBlendState(ulong cb, byte* s) {
+        if(_blendHooks < 1) return;
         var t = s[0];
         if(t < 8) _curBlend[t] = *(ulong*)s;
         if(++_bindBlendN <= 20 || (_bindBlendN & 0x3ff) == 0)
@@ -1292,6 +1303,7 @@ public static unsafe class NvnLinux {
     }
     [UnmanagedCallersOnly]
     static void CbBindColorState(ulong cb, uint* s) {
+        if(_blendHooks < 1) return;
         _curBlendEnable = *s;
         if(++_bindColorN <= 20 || (_bindColorN & 0xff) == 0)
             $"[nvn] BindColorState #{_bindColorN} cb=0x{cb:x} enable=0b{Convert.ToString(*s, 2).PadLeft(8,'0')}".Log();
