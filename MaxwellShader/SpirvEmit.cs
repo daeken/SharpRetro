@@ -348,6 +348,19 @@ public class SpirvEmit {
     // 2 kinds → throw (= surfaces the case).
     readonly Dictionary<(int, int), uint> _texVar = new();
     readonly Dictionary<int, uint> _tySampImg = new();   // sampKind → ty
+    // (T6)×66: surface (binding → SampKind type-bits) so the
+    // host can bind a TYPE-MATCHED imageView (Cube vs 2D vs
+    // 2DArray vs Depth). Otherwise the descriptor's view-type
+    // mismatches the shader's OpTypeImage Dim ⟹ UB. Verified
+    // ×66×1: fs949's tcb_E (b14) = OpTypeImage Cube (correct
+    // here), but NvnVulkan binds a viewType=2D image at b14
+    // (own ‡v0 ×9th) ⟹ env_refl reads garbage = the (γ-3)
+    // green-wavy floor-stripes. ‡ If a shader uses the same
+    // handle with TWO type-bits (= same binding, 2D AND Cube),
+    // last-write-wins here; the throw-on-conflict is at TexVar.
+    public Dictionary<int, int> TexKinds =>
+        _texVar.Keys.GroupBy(k => k.Item1)
+               .ToDictionary(g => g.Key, g => g.First().Item2);
 
     uint TySampImg(int sk) {
         // Key by TYPE-affecting bits only (dim+depth+arrayed). HasLod/
