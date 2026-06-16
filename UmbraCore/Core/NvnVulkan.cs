@@ -1115,6 +1115,7 @@ public static unsafe class NvnVulkan {
     // 669; ‡ structural = dynamic from len(draws). Alloc
     // 4096×1024×24 buffers ≈ 96MB (was 24MB).
     const int T3CbufStride = 4096, T3MaxDraws = 1024;
+    static bool _t3MaxDrawsWarned;
 
     // Allocate + write t3 descriptor sets. Lazy (after _atlasView
     // exists). Set0=VS-cbufs (12 UBO → _t3CbufBuf[1..12]), set1=tex,
@@ -2761,6 +2762,13 @@ public static unsafe class NvnVulkan {
                 // v0.5b = dynamic-offset descriptor.
                 // Per-draw cbuf data → recN's slice in each buffer.
                 // (per-draw cbuf isolation; was last-write-wins.)
+                // (T6)×48 fail-fast: log when clamping (= the
+                // T3MaxDraws-too-small class of bug, ×3rd at
+                // (T6)×7(b)→×48). One log per frame, not per-draw.
+                if(recN == T3MaxDraws && !_t3MaxDrawsWarned) {
+                    $"[vk] ⚠ T3MaxDraws={T3MaxDraws} clamping (frame has ≥{T3MaxDraws+1} draws) — per-draw cbuf isolation lost for draws {T3MaxDraws}+".Log();
+                    _t3MaxDrawsWarned = true;
+                }
                 var slot = recN < T3MaxDraws ? recN : T3MaxDraws - 1;
                 if(d.Ubos != null)
                     for(var st = 0; st < 2; st++)
@@ -2797,6 +2805,27 @@ public static unsafe class NvnVulkan {
                         var cb = (float*)(_t3CbufPtr[1*12 + hw]
                                         + slot * T3CbufStride);
                         for(var k=0; k<64; k++) cb[k] = 1.0f;
+                        // (T6)×49 ×3 (a-2-i) bake: c1[0].z =
+                        // FLT_MAX. The fs111 P0-threshold
+                        // (×47×2 r122/r125: P0 11.3%→90.1%
+                        // with z=1e30). NVN-driver fills c1
+                        // with values we don't have; this is
+                        // the ONE override verified to help
+                        // (fs111) without hurting (fs442 G-buf
+                        // = r114 byte-identical when only .z
+                        // changed; ×49×3 r130d). Everything
+                        // else stays at the all-1.0 fill.
+                        // ⚠ ×49×2 baked .x/.y=0 + .w=FLT_MAX
+                        // + [1].y=−1 too — broke fs442 G-buf
+                        // (r130c distinct 4776→7). own kt[36]
+                        // (a): one-var-only. c1[1].y=−1 helps
+                        // wall(b) at fs50-decode level (r113)
+                        // but G-buf-encode impact untested in
+                        // isolation; deferred to FS_C1 knob.
+                        // ‡ Structural = kt[11] Atmosphere
+                        // GPU-driver source for real values.
+                        if(hw == 1)
+                            cb[2] = float.MaxValue;  // c1[0].z
                     }
                 // (T6)×28: FS c[1] heuristic override
                 // (applied AFTER C1_ONES so it wins).
