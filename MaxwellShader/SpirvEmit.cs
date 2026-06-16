@@ -109,10 +109,15 @@ public class SpirvEmit {
     // (T6)×44 ×3: omapTargets = SPH OmapTarget (32 bits, 8 RTs ×
     // 4-bit component-mask). FS-only; 0 ⟹ default RT0.rgba.
     readonly uint _omap;
+    // (T6)×47 in-shader-printf: when set, FS-exit writes
+    // (R252,R253,R254,R251) to oColor[0] instead of omap-driven
+    // R0-3. R251-254 are populated by Compiler.cs's splice.
+    readonly bool _dumpMode;
     public SpirvEmit(SpvStage stage = SpvStage.Vertex,
-                     uint omapTargets = 0) {
+                     uint omapTargets = 0, bool dumpMode = false) {
         _stage = stage;
         _omap = omapTargets != 0 ? omapTargets : 0xfu;
+        _dumpMode = dumpMode;
     }
     uint Id() => _nextId++;
 
@@ -1127,6 +1132,20 @@ public class SpirvEmit {
                     //   (rg += popcount(mask), not +=4). Surface
                     //   as ‡note if seen.
                     var v4 = TyVec(TyF32(), 4);
+                    if(_dumpMode) {
+                        // (T6)×47: write the spliced R252-254 + R251
+                        // (predicate-marker) to oColor[0]. The Gpr()
+                        // values here are post-flatten Select-results
+                        // (= what the GPR holds at the splice-pc under
+                        // OUR ACTUAL emit, not a recreation).
+                        var c = new[] { Gpr(252), Gpr(253), Gpr(254), Gpr(251) };
+                        var col = Id();
+                        Emit(_func, OpCompositeConstruct, v4, col,
+                            c[0], c[1], c[2], c[3]);
+                        Emit(_func, OpStore, FragOut(0), col);
+                        Emit(_func, OpReturn);
+                        break;
+                    }
                     var rg = 0;
                     for(var n = 0; n < 8; n++) {
                         var msk = (_omap >> (4*n)) & 0xf;

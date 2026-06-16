@@ -91,11 +91,55 @@ public static class Compiler {
     // SpirvEmit; that exception surfaces here, NOT swallowed).
     // notes[] = the IlNote ‡-markers + unimpl-census this shader
     // produced (also written to stderr by SpirvEmit @862).
+    // (T6)×47 in-shader-printf knob: UMBRA_LIFT_DUMP="shIdx:pcOff:rA,rB,rC"
+    // — splice R252←R[A], R253←R[B], R254←R[C], R251←1.0 into lifted[]
+    // just BEFORE the insn at file-offset (0x80 + pcOff). Structurize
+    // wraps the splice in whatever IlIf governs that pc ⟹ at FS-exit
+    // _gpr[252-254] = Select(governingP, R[A,B,C]-at-that-point, 0).
+    // R251 = Select(governingP, 1.0, 0) = the predicate-marker. SpirvEmit
+    // FS-exit (when _dumpRs != null) writes (R252,R253,R254,R251) to
+    // oColor[0] instead of the omap-driven R0-3. = read OUR ACTUAL emit's
+    // intermediate GPR values, not a hand-recreated GLSL approximation.
+    // pcOff is hex, matches the +XXX shown in MaxwellTool .il output.
+    static readonly (int sh, ulong pc, int[] rs)? _dump =
+        Environment.GetEnvironmentVariable("UMBRA_LIFT_DUMP")
+            ?.Split(':') is [var s, var p, var r]
+        ? (int.Parse(s),
+           0x80 + Convert.ToUInt64(p, 16),
+           r.Split(',').Select(int.Parse).ToArray())
+        : null;
+
     public static byte[] Compile(byte[] bin, out string[] notes,
                                   string tag = "") {
         var stage = StageFromSph(bin);
         var lift = new MaxwellLift(Defs);
         var lifted = lift.LiftShader(bin);
+
+        int[]? dumpRs = null;
+        if(_dump is var (dsh, dpc, drs)
+                && tag.Contains($"{dsh:d4}")) {
+            var ix = lifted.FindIndex(e => e.pc == dpc);
+            if(ix < 0) {
+                Console.Error.WriteLine(
+                    $"[maxwell {tag}] ⚠ LIFT_DUMP pc=+{dpc-0x80:x} not in lifted[] "
+                    + $"(nearest: +{lifted.MinBy(e => Math.Abs((long)e.pc-(long)dpc)).pc-0x80:x})");
+            } else {
+                var F32 = new IlType.F(32);
+                // R251 ← 1.0 (predicate-marker; Select(P,1,0) at exit)
+                lifted.Insert(ix, (dpc, null!,
+                    new IlWriteReg(RegKind.Gpr, 251,
+                        new IlConst(F32, 0x3f800000ul))));
+                // R252+k ← R[drs[k]] (up to 3)
+                for(var k = 0; k < Math.Min(drs.Length, 3); k++)
+                    lifted.Insert(ix + 1 + k, (dpc, null!,
+                        new IlWriteReg(RegKind.Gpr, 252 + k,
+                            new IlReadReg(F32, RegKind.Gpr, drs[k]))));
+                dumpRs = drs;
+                Console.Error.WriteLine(
+                    $"[maxwell {tag}] LIFT_DUMP @+{dpc-0x80:x} "
+                    + $"R[{string.Join(",", drs)}]→R252+ (P-marker→R251)");
+            }
+        }
 
         // ‡unimpl census (= per-shader fail-fast surfacing).
         // The .isa's `(unimplemented)` marker → IlUnimpl in
@@ -117,7 +161,7 @@ public static class Compiler {
         // = leave them on stderr (they reach the r-log); the
         // structured notes[] return is for MaxwellTool --notes.
         var omap = OmapTargetsFromSph(bin);
-        var em = new SpirvEmit(stage, omap);
+        var em = new SpirvEmit(stage, omap, dumpRs != null);
         var spv = em.Compile(stage, lifted);
         // (T6)×44 fail-fast for ‡v0-deferrals: surface MRT-count
         // so multi-RT shaders are visible in r-log even before
