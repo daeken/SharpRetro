@@ -105,10 +105,13 @@ public static unsafe class NvnCapture {
                 var dst = Path.Combine(shDir,
                     $"sh{idx:d4}-{t}.bin");
                 if(!File.Exists(dst)) File.Copy(src, dst);
-                // + cached .spv if present
-                if(File.Exists(src+".spv")
-                        && !File.Exists(dst+".spv"))
-                    File.Copy(src+".spv", dst+".spv");
+                // (T6)×42 per sera ·11090 #3: NO .spv copy.
+                // NvnVulkan lifts on-the-fly from .bin via
+                // MaxwellShader.Compiler.Compile(). The old
+                // .spv-copy here propagated stale builds
+                // forward through every recapture (verified:
+                // Jun-14 .spv survived u773→u778→u779 while
+                // the lifter source had two fixes Jun-15).
                 break;
             }
         }
