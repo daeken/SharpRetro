@@ -149,6 +149,25 @@ public static unsafe class NvnReplay {
             ? File.ReadAllBytes(rtsPath) : null;
         if(rtsBin != null && rtsBin.Length != drawCount)
             $"[replay] ⚠ rts.bin len={rtsBin.Length} ≠ drawCount={drawCount}".Log();
+        // (T6)×62 capVer≥4: per-draw blend-state sidecar
+        // (8B/draw, parallel). capVer<4 ⟹ BlendKey=0 ⟹
+        // T3Pipe falls back to per-rtId heuristic (×61's
+        // 5dadb84). Forward-compatible: capVer-4 captures
+        // replay correctly on capVer-3-era replayers (they
+        // ignore blend.bin entirely).
+        var bldPath = Path.Combine(frameDir, "blend.bin");
+        var bldBin = capVer >= 4 && File.Exists(bldPath)
+            ? File.ReadAllBytes(bldPath) : null;
+        if(bldBin != null && bldBin.Length != drawCount * 8)
+            $"[replay] ⚠ blend.bin len={bldBin.Length} ≠ drawCount×8={drawCount*8}".Log();
+        if(bldBin != null) {
+            // Quick distinct-blend-key census for the log
+            // (= sera fail-fast: see what game actually set).
+            var bk = new HashSet<ulong>();
+            for(var i=0; i<drawCount; i++)
+                bk.Add(BitConverter.ToUInt64(bldBin, i*8));
+            $"[replay] blend.bin: {bk.Count} distinct keys across {drawCount} draws".Log();
+        }
         var draws = new NvnLinux.DrawRecord[drawCount];
         for(var i = 0; i < drawCount; i++) {
             var r = dbin.AsSpan(i*256, 256);
@@ -169,6 +188,8 @@ public static unsafe class NvnReplay {
                 Ubos = new byte[16][],
                 RtId = rtsBin != null && i < rtsBin.Length
                      ? rtsBin[i] : (byte)0,
+                BlendKey = bldBin != null && (i+1)*8 <= bldBin.Length
+                     ? BitConverter.ToUInt64(bldBin, i*8) : 0,
             };
             // ibuf
             var ibOff = R32(r, 28);

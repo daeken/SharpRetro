@@ -194,6 +194,15 @@ public static unsafe class NvnCapture {
         // ignore the file).
         using var rts = File.Create(
             Path.Combine(fdir, "rts.bin"));
+        // (T6)×62: per-draw blend-state (8B/draw, parallel
+        // to draws.bin). DrawRecord.BlendKey: byte 0 =
+        // ColorState enable mask (target-i = bit i);
+        // bytes 1-6 = BlendState target-0's {srcRGB,
+        // dstRGB, srcA, dstA, eqRGB, eqA} (NVN values).
+        // capVer 4. capVer<4 readers ignore the file
+        // (NvnReplay falls back to per-rtId heuristic).
+        using var bld = File.Create(
+            Path.Combine(fdir, "blend.bin"));
         // ext-tex (slots 8..39) only if any draw uses ≥8
         var needExt = draws.Any(d => d.TexHandles != null
             && d.TexHandles.Skip(8).Any(h => h != 0));
@@ -270,6 +279,8 @@ public static unsafe class NvnCapture {
                 W16(rec, 252+i*2, d.Streams![i].Stride);
             dbin.Write(rec);
             rts.WriteByte(d.RtId);
+            // (T6)×62: 8B BlendKey per-draw → blend.bin
+            bld.Write(BitConverter.GetBytes(d.BlendKey));
             // ext-tex slots 8..39
             if(dext != null) {
                 Span<byte> ext = stackalloc byte[256];
@@ -288,7 +299,11 @@ public static unsafe class NvnCapture {
             // version 2 = (T6)×17 multi-stream vbuf:
             // DrawRec @40 = vbR1 (stream-1 region idx;
             // was reserved=0 in v1).
-            version = 3, frameN,
+            // version 4 = (T6)×62: blend.bin sidecar
+            // (8B/draw NVN blend-state). v3 readers
+            // ignore it; NvnVulkan falls back to per-
+            // rtId heuristic when BlendKey=0.
+            version = 4, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),
