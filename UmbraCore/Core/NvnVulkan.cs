@@ -670,10 +670,30 @@ public static unsafe class NvnVulkan {
     // that class of bug.
     static readonly Dictionary<int, ulong> _t3ShMod = new();
 
+    // (T6)×43 ×1(i): per-shIdx FS_OVERRIDE knob.
+    // UMBRA_T3_FS_OVERRIDE="N:path[,M:path2,…]" — load
+    // <path> .spv for sh{N} instead of lifting. The
+    // .spv-swap probe method (r107a-style: replace one
+    // FS to inspect intermediate values) died under
+    // lift-on-demand (×42); this restores it cleanly.
+    // The bare-path form (no "N:") still means "all
+    // pipelines" (handled at the T3Pipe call-site, kept
+    // for whole-frame depthvis/white-FS probes).
+    static readonly Dictionary<int, string> _t3ShOverride
+        = (Environment.GetEnvironmentVariable("UMBRA_T3_FS_OVERRIDE")
+                ?.Split(',') ?? [])
+            .Select(s => s.Split(':', 2))
+            .Where(p => p.Length == 2 && int.TryParse(p[0], out _))
+            .ToDictionary(p => int.Parse(p[0]), p => p[1]);
+
     static ulong EnsureShaderModule(int shIdx, int sphType) {
         // Key on shIdx alone (sphType is determined by
         // the .bin's SPH; passed for the path).
         if(_t3ShMod.TryGetValue(shIdx, out var sm)) return sm;
+        if(_t3ShOverride.TryGetValue(shIdx, out var ovp)) {
+            $"[vk] sh{shIdx:d4}: per-shIdx override → {ovp}".Log();
+            return _t3ShMod[shIdx] = LoadShader(ovp);
+        }
         var binPath = $"{_t3ShDir}/sh{shIdx:d4}-t{sphType}.bin";
         if(!File.Exists(binPath)) {
             $"[vk] ⚠ EnsureShaderModule: {binPath} not found".Log();
@@ -766,7 +786,21 @@ public static unsafe class NvnVulkan {
         // compute: color ⟹ tex bound+uploaded OK; black ⟹
         // upload/binding broken (ResolveTex/DecodeForUpload/
         // EnsureTexBound).
-        var fsOverride = Environment.GetEnvironmentVariable("UMBRA_T3_FS_OVERRIDE")
+        // (T6)×43 ×1-cont: UMBRA_T3_FS_OVERRIDE has two
+        // forms — bare path (= ALL pipelines, the (c⁴⁵)
+        // (M') generic probe) and "N:path[,M:path2…]"
+        // (= per-shIdx, handled in EnsureShaderModule via
+        // _t3ShOverride). Only treat as bare-path here if
+        // it's NOT the per-shIdx form. Was: this read the
+        // env unconditionally ⟹ "50:/tmp/…" went to
+        // LoadShader as a path ⟹ 0 ⟹ all draws skipped
+        // (verified r110b: 100% black, override-log never
+        // fired). own brass/C6 (added per-shIdx parser
+        // without checking the existing reader).
+        var _fsovRaw = Environment.GetEnvironmentVariable("UMBRA_T3_FS_OVERRIDE");
+        if(_fsovRaw != null && _t3ShOverride.Count > 0)
+            _fsovRaw = null;  // per-shIdx form ⟹ handled in EnsureShaderModule
+        var fsOverride = _fsovRaw
             ?? (Environment.GetEnvironmentVariable("UMBRA_T3_TEXFETCH_FS") != null
                 ? "/tmp/texfetch.frag.spv"
             : Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null
