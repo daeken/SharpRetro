@@ -500,6 +500,22 @@ public static unsafe class NvnVulkan {
     [DllImport(Lib)] static extern void vkCmdFillBuffer(
         ulong cb, ulong dstBuffer, ulong dstOffset,
         ulong size, uint data);
+    // (T6)×37 ×3: explicit per-attachment clear (loadOp
+    // is baked at RP-create; this fires on first-visit
+    // -this-frame only).
+    [StructLayout(LayoutKind.Sequential)]
+    struct VkClearAttachment {
+        public uint aspectMask, colorAttachment;
+        public VkClearColorValue clearValue;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    struct VkClearRect {
+        public VkRect2D rect;
+        public uint baseArrayLayer, layerCount;
+    }
+    [DllImport(Lib)] static extern void vkCmdClearAttachments(
+        ulong cb, uint attachmentCount, VkClearAttachment* a,
+        uint rectCount, VkClearRect* r);
     [DllImport(Lib)] static extern void vkCmdSetViewport(
         ulong cb, uint first, uint count, VkViewport* vp);
     [DllImport(Lib)] static extern void vkCmdSetScissor(
@@ -1777,10 +1793,22 @@ public static unsafe class NvnVulkan {
         // per-texId DS (= pool-waste, ‡ tolerable v1).
         var views = stackalloc ulong[8];
         var nReal = 0;
+        var nRt = 0;
         for(var sl = 0; sl < 8; sl++) {
             var h = d.TexHandles[sl];
             var ti = (int)(h >> 32);
             if(ti == 0) { views[sl] = fbView; continue; }
+            // (T6)×37 ×2 RT-as-sampler: if this texId is
+            // a render-target, bind the rendered view.
+            // Producing RT's EnsureRtFb must have fired
+            // first (= RT was drawn-to before being
+            // sampled, which the game's render-graph
+            // guarantees: rt1[A] drawn before rt2[B]
+            // samples 0x134 etc per ×33×3(b) sequence).
+            if(_t3Rtt && _rtTexView.TryGetValue(ti, out var rv)
+               && rv != 0) {
+                views[sl] = rv; nReal++; nRt++; continue;
+            }
             var tx = NvnLinux.ResolveTex(h);
             EnsureTexBound(ti, tx);
             views[sl] = _texVk.TryGetValue(ti, out var tv)
@@ -1819,8 +1847,8 @@ public static unsafe class NvnVulkan {
         }
         vkUpdateDescriptorSets(_dev, T3TexBindN, wds, 0, null);
         _t3SlotDs[key] = ds;
-        if(_slotDsLogN++ < 20)
-            $"[vk] EnsureSlotDs key=0x{key:x} ds={ds:x} nReal={nReal}/8 sl4=0x{d.TexHandles[4]>>32:x} sl5=0x{d.TexHandles[5]>>32:x}".Log();
+        if(_slotDsLogN++ < 20 || nRt > 0)
+            $"[vk] EnsureSlotDs key=0x{key:x} ds={ds:x} nReal={nReal}/8 nRt={nRt} sl4=0x{d.TexHandles[4]>>32:x} sl5=0x{d.TexHandles[5]>>32:x}".Log();
         return ds;
     }
 
@@ -1875,8 +1903,31 @@ public static unsafe class NvnVulkan {
         public ulong Rp, Fb;
         public int W, H, NC;
         public bool HasDepth;
+        // (T6)×37 ×3: loadOp=LOAD-after-first. RP-begin
+        // uses CLEAR on first visit this frame, LOAD
+        // thereafter (via vkCmdClear* inside the pass
+        // — RP loadOp is baked at create-time, so we
+        // build the RP with loadOp=LOAD and explicitly
+        // vkCmdClearAttachments on first-visit). Verified
+        // (T6)×37×2(a): rt2[B] visited ×2 (×3 lit-passes
+        // sampling shadow temporally + ×5 post-shadow);
+        // CLEAR on revisit wiped the ×3.
+        public int SeenThisFrame;
     }
     static readonly RtFb?[] _rtFb = new RtFb?[32];
+    // (T6)×37 ×2 RT-as-sampler: texId → the RT-view that
+    // produces it. Populated by EnsureRtFb as RTs alloc.
+    // EnsureSlotDs checks this BEFORE _texVk so a draw
+    // sampling texId=0x134 (= rt1.c[0] G-buffer per
+    // nvncap5 manifest) gets the rendered _rtFb[1].View
+    // [0] instead of an asset-texture upload. Verified
+    // (T6)×37×1(b): rt2[B] deferred-light draws sample
+    // slot[1]=0x134 slot[2]=0x136 slot[6]=0x139 slot[4]
+    // =0x138(shadow-D32F) = the G-buf+shadow read-set.
+    // ‡ depth-as-sampler: D24S8 view has aspectMask=
+    // DEPTH|STENCIL (=6) which some drivers reject for
+    // combined-sampler; D32F (=2) is fine. ×38 if hit.
+    static readonly Dictionary<int, ulong> _rtTexView = new();
 
     // NVN RT format → (VkFormat, aspectMask, usage).
     // Per botw nvn.h (sera ·10966).
@@ -1956,13 +2007,19 @@ public static unsafe class NvnVulkan {
         var nAtt = nC + (hasD ? 1 : 0);
         var atts = stackalloc VkAttachmentDescription[Math.Max(nAtt, 1)];
         var crefs = stackalloc VkAttachmentReference[Math.Max(nC, 1)];
+        // (T6)×37 ×3: loadOp=LOAD (=0); explicit clear via
+        // vkCmdClearAttachments on first-visit-this-frame
+        // (rt2 visited ×2 per rts.bin seq; CLEAR-on-revisit
+        // wiped first-3 lit-passes). initialLayout=GENERAL
+        // so LOAD on first-ever-visit reads alloc-garbage —
+        // ‡ harmless (first-visit always clears explicitly).
         for(var i = 0; i < nC; i++) {
             var (vf, _, _) = NvnRtFmt(sig.Colors[i].Fmt);
             atts[i] = new() {
                 format = vf, samples = 1,
-                loadOp = 1, storeOp = 0,        // CLEAR, STORE
+                loadOp = 0, storeOp = 0,        // LOAD, STORE
                 stencilLoadOp = 2, stencilStoreOp = 1,
-                initialLayout = 0, finalLayout = 1,  // → GENERAL
+                initialLayout = 1, finalLayout = 1,  // GENERAL → GENERAL
             };
             crefs[i] = new() { attachment = (uint)i, layout = 2 };
         }
@@ -1971,11 +2028,9 @@ public static unsafe class NvnVulkan {
             var (vf, _, _) = NvnRtFmt(sig.Depth!.Fmt);
             atts[nC] = new() {
                 format = vf, samples = 1,
-                // STORE depth (shadow-map = the depth IS
-                // the output; G-buf depth read by [B]).
-                loadOp = 1, storeOp = 0,
+                loadOp = 0, storeOp = 0,
                 stencilLoadOp = 2, stencilStoreOp = 1,
-                initialLayout = 0, finalLayout = 1,
+                initialLayout = 1, finalLayout = 1,
             };
             dref = new() { attachment = (uint)nC, layout = 3 };
         }
@@ -2006,7 +2061,15 @@ public static unsafe class NvnVulkan {
             $"vkCreateFramebuffer(rt{rtId})");
         rf.Fb = fb;
         _rtFb[rtId] = rf;
-        $"[vk] EnsureRtFb id={rtId} {w}×{h} nC={nC} d={hasD} rp=0x{rp:x} fb=0x{fb:x}".Log();
+        // (T6)×37 ×2: register this RT's texIds → views
+        // for RT-as-sampler. texId=0 ⟹ never sampled
+        // (e.g. final-swap, or game didn't pool-register).
+        for(var i = 0; i < nC; i++)
+            if(sig.Colors[i].TexId is var tid && tid != 0)
+                _rtTexView[tid] = rf.View[i];
+        if(hasD && sig.Depth!.TexId is var dtid && dtid != 0)
+            _rtTexView[dtid] = rf.DepthView;
+        $"[vk] EnsureRtFb id={rtId} {w}×{h} nC={nC} d={hasD} rp=0x{rp:x} fb=0x{fb:x} rtTexView+={nC+(hasD?1:0)}".Log();
         return rf;
     }
 
@@ -2126,6 +2189,9 @@ public static unsafe class NvnVulkan {
             // (T6)×35 ×3: per-rtId draw routing instrument.
             int curRtId = -1, nRpSwitch = 0, rtDrawNAt = 0;
             var rtDrawN = new int[32];
+            // (T6)×37 ×3: reset SeenThisFrame at frame-start.
+            if(_t3Rtt) foreach(var rf_ in _rtFb)
+                if(rf_ != null) rf_.SeenThisFrame = 0;
             foreach(var d in draws) {
                 if(d.VbCpu == 0) continue;
                 if(d.IdxCount == 0 && d.Count <= 0) continue;
@@ -2184,6 +2250,31 @@ public static unsafe class NvnVulkan {
                         pClearValues = clr,
                     };
                     vkCmdBeginRenderPass(_cmdBuf, &rb, 0);
+                    // (T6)×37 ×3: explicit clear on FIRST
+                    // visit this frame only. Subsequent
+                    // visits LOAD (= rt2's ×3+×5 both keep).
+                    // ‡ Real engine clears via game's
+                    // nvnCommandBufferClearColor/Depth
+                    // calls (stubbed); this approximates
+                    // "clear at frame-start per RT" until
+                    // those are hooked + captured.
+                    if(rf.SeenThisFrame++ == 0) {
+                        var nClr = rf.NC + (rf.HasDepth ? 1 : 0);
+                        var ca = stackalloc VkClearAttachment[nClr];
+                        for(var ci = 0; ci < rf.NC; ci++)
+                            ca[ci] = new() { aspectMask = 1,
+                                colorAttachment = (uint)ci };
+                        if(rf.HasDepth)
+                            ca[rf.NC] = new() { aspectMask = 6,
+                                clearValue = new() { r = 1.0f } };
+                        var cr = new VkClearRect {
+                            rect = new() { width = (uint)rf.W,
+                                height = (uint)rf.H },
+                            layerCount = 1,
+                        };
+                        vkCmdClearAttachments(_cmdBuf,
+                            (uint)nClr, ca, 1, &cr);
+                    }
                     // y-flipped (NVN y-up → Vk y-down), per-RT dims.
                     var rvp = new VkViewport {
                         x = 0, y = rf.H, width = rf.W, height = -rf.H,
