@@ -648,6 +648,65 @@ public static unsafe class NvnVulkan {
         return h;
     }
 
+    // (T6)×42 ×2(c) per sera ·11090 #3: lift-on-demand.
+    // Read the raw Maxwell .bin (as written by NvnLinux
+    // @1117) → MaxwellShader.Compiler.Compile() → SPIR-V
+    // → vkCreateShaderModule. NO on-disk .spv at all
+    // (= staleness structurally impossible). The lift's
+    // ‡notes (IlNote markers, ‡unimpl census) go to
+    // stderr ⟹ surface in the r-log per fail-fast.
+    //
+    // In-process cache by shIdx (NOT on-disk; just don't
+    // re-lift the same shader for every (vs,fs,vh,rtId,
+    // noDepth) pipeline-key permutation). 1451 shaders
+    // × ~few-ms cold ≈ a few seconds first replay-iter.
+    //
+    // Background: previously this read pre-built .bin.spv
+    // from disk. Those went stale (Jun-14, predating the
+    // (T6)×16 Hmul2-C bit43 fix + TEXSF16 fix); NvnCapture
+    // copied them forward through every recapture. The
+    // ·663-·11083 cascade was at-source-current-vs-at-
+    // data-stale contradictions. Lift-on-the-fly closes
+    // that class of bug.
+    static readonly Dictionary<int, ulong> _t3ShMod = new();
+
+    static ulong EnsureShaderModule(int shIdx, int sphType) {
+        // Key on shIdx alone (sphType is determined by
+        // the .bin's SPH; passed for the path).
+        if(_t3ShMod.TryGetValue(shIdx, out var sm)) return sm;
+        var binPath = $"{_t3ShDir}/sh{shIdx:d4}-t{sphType}.bin";
+        if(!File.Exists(binPath)) {
+            $"[vk] ⚠ EnsureShaderModule: {binPath} not found".Log();
+            return _t3ShMod[shIdx] = 0;
+        }
+        try {
+            var bin = File.ReadAllBytes(binPath);
+            var spv = MaxwellShader.Compiler.Compile(bin,
+                out var notes, $"sh{shIdx:d4}");
+            if(notes.Length > 0)
+                $"[vk] sh{shIdx:d4}: {notes.Length} ‡notes — {string.Join("; ", notes)}".Log();
+            fixed(byte* p = spv) {
+                var ci = new VkShaderModuleCreateInfo {
+                    sType = ST_SHADER_MODULE_CI,
+                    codeSize = (nuint)spv.Length, pCode = (uint*)p,
+                };
+                ulong m; Chk(vkCreateShaderModule(_dev, &ci,
+                    null, &m), $"vkCreateShaderModule(sh{shIdx:d4})");
+                return _t3ShMod[shIdx] = m;
+            }
+        } catch(Exception e) {
+            // Fail-fast surfaces here: a lift/emit throw
+            // (unhandled IL node, etc.) becomes a visible
+            // r-log line + the pipeline returns 0 (= draw
+            // skipped, not silently-wrong).
+            $"[vk] ⚠ EnsureShaderModule sh{shIdx:d4}: lift FAILED — {e.Message}".Log();
+            return _t3ShMod[shIdx] = 0;
+        }
+    }
+
+    // Kept for explicit-.spv paths (FS_OVERRIDE probe
+    // shaders, T2's fixed.{vert,frag}.spv). NOT used for
+    // game shaders post-(T6)×42.
     static ulong LoadShader(string path) {
         if(!File.Exists(path)) return 0;
         var bytes = File.ReadAllBytes(path);
@@ -683,7 +742,7 @@ public static unsafe class NvnVulkan {
         var rf = rtId == 255 ? null : EnsureRtFb(rtId);
         var rp_ = rf?.Rp ?? _renderPass;
         var nCb = rf?.NC ?? 1;
-        var vsm = LoadShader($"{_t3ShDir}/sh{vsIdx:d4}-t1.bin.spv");
+        var vsm = EnsureShaderModule(vsIdx, 1);
         // (c²⁸)×4 UMBRA_T3_WHITE_FS=1 → substitute const-white
         // FS for ALL pipelines. The kt[33]-correct discriminator
         // for "rasterizing-vs-not" (wireframe was wrong instrument
@@ -715,7 +774,9 @@ public static unsafe class NvnVulkan {
             : Environment.GetEnvironmentVariable("UMBRA_T3_WHITE_FS") != null
                 ? "/tmp/white.frag.spv"
             : null);
-        var fsm = LoadShader(fsOverride ?? $"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
+        var fsm = fsOverride != null
+            ? LoadShader(fsOverride)
+            : EnsureShaderModule(fsIdx, 2);
         if(vsm == 0 || fsm == 0) {
             if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
             _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth)] = 0;

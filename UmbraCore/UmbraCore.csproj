@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -13,6 +13,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Aarch64Cpu\Aarch64Cpu.csproj" />
       <ProjectReference Include="..\NxCommon\NxCommon.csproj" />
+    <ProjectReference Include="..\MaxwellShader\MaxwellShader.csproj" />
     </ItemGroup>
 
     <ItemGroup>
