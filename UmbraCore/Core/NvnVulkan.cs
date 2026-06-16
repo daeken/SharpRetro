@@ -2236,6 +2236,26 @@ public static unsafe class NvnVulkan {
                 var rtKey = _t3Rtt ? d.RtId : (byte)255;
                 if(_t3Rtt && d.RtId != curRtId) {
                     vkCmdEndRenderPass(_cmdBuf);
+                    // (T6)×39 ×1(c) disc: barrier between
+                    // prev-RT-write and next-RT-samples-it.
+                    // ×35's "‡ lavapipe sequential tolerates"
+                    // may be wrong (lavapipe IS multi-thread
+                    // tile-raster). r96/r98 diagonal-stripe
+                    // signature = wrong-stride read = tiles
+                    // not flushed at sample-time. Full memory
+                    // barrier (srcStage=COLOR_ATTACH_OUT|LATE_
+                    // FRAG=0x400|0x200, dstStage=FRAG_SHADER=
+                    // 0x80; srcAccess=COLOR_ATTACH_WRITE|DS_
+                    // WRITE=0x100|0x400, dstAccess=SHADER_READ
+                    // =0x20). Coarse — per-image barrier =
+                    // ×39+ once root confirmed.
+                    // Execution-only barrier (0 mem-barriers
+                    // = valid; src→dst stage dependency
+                    // forces COLOR_ATTACH_OUTPUT|LATE_FRAG
+                    // complete before FRAG_SHADER starts).
+                    vkCmdPipelineBarrier(_cmdBuf,
+                        0x400 | 0x200, 0x80, 0,
+                        0, null, 0, null, 0, null);
                     var rf = EnsureRtFb(d.RtId);
                     var clr = stackalloc VkClearColorValue[rf.NC + 1];
                     for(var ci = 0; ci <= rf.NC; ci++)
@@ -2424,11 +2444,25 @@ public static unsafe class NvnVulkan {
                 // (T6)×31 (α)-fix: replace per-texId DS
                 // with per-slot-tuple DS. Falls back to
                 // txDs on pool-exhaust / no-TexHandles.
-                if(_t3TexPerSlot && d.TexHandles != null
-                   && d.IdxCount > 0 && txDs != 0
-                   && _texVk.TryGetValue(texId, out var ptv)
-                   && ptv.View != 0) {
-                    var sds = EnsureSlotDs(d, ptv.View);
+                // (T6)×39 ×3 ROOT: was gated on d.IdxCount
+                // >0 — added at ×31 because non-indexed
+                // draws had TexHandles=null (= the (δ)
+                // CbDrawArrays gap fixed at ×38 d2c731a).
+                // With (δ) fixed, the gate excluded ALL
+                // postproc draws (#163 fs50, #631 fs111,
+                // #663 fs244, bloom) ⟹ they fell through
+                // to (c⁴⁰) single-tex heuristic (verified
+                // r102: textureSize.x=1024 ≠ rt1.c[0]'s
+                // 1920). Also dropped: txDs!=0 + _texVk
+                // [texId] precondition (texId may be an
+                // RT-texId not in _texVk; the fbView
+                // fallback for empty slots can be any
+                // valid view — _atlasView always exists).
+                if(_t3TexPerSlot && d.TexHandles != null) {
+                    var fbV = (_texVk.TryGetValue(texId,
+                            out var ptv) && ptv.View != 0)
+                        ? ptv.View : _atlasView;
+                    var sds = EnsureSlotDs(d, fbV);
                     if(sds != 0) txDs = sds;
                 }
                 // (c⁴¹)×3(S2) log txDs=0 (= cached-as-0 ⟹
