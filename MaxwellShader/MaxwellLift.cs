@@ -501,11 +501,19 @@ public class MaxwellLift {
                     "F2F-R" => Gpr(B(20,8)), "F2F-C" => Cbuf(),
                     "F2F-I" => Fimm20(), _ => throw new() },
                     B(45,1), B(49,1));
-                // 0=Pass-through, 4=Floor, 5=Ceil, 6=Trunc, 1-3=Round.
-                if(rmode == 4) b = new IlUn(F32, UnOp.Floor, b);
-                else if(rmode == 5) b = new IlUn(F32, UnOp.Ceil, b);
-                else if(rmode == 6) b = new IlUn(F32, UnOp.Round, b);
-                // ‡ Sat@50 → clamp to [0,1] — ‡v0 ignored.
+                // IntegerRound: 1=Pass, 4=Round, 5=Floor, 6=Ceil,
+                // 7=Trunc (per ryujinx InstDecoders.cs:252-258).
+                // (T6)×43 mcb (Δ-3+Δ-4): was off-by-one (4=Floor
+                // 5=Ceil 6=Round 7=unmapped) — own-comment had
+                // IEEE rm/rp/rz names at wrong indices. Verified
+                // at-data via histogram conservation: ours pre-fix
+                // Ceil=37+Floor=32=69 = ryujinx Floor=69+Ceil=0.
+                if(rmode == 4) b = new IlUn(F32, UnOp.Round, b);
+                else if(rmode == 5) b = new IlUn(F32, UnOp.Floor, b);
+                else if(rmode == 6) b = new IlUn(F32, UnOp.Ceil, b);
+                else if(rmode == 7) b = new IlUn(F32, UnOp.Trunc, b);
+                // .SAT@50 handled at wrapper-site below (F2F is
+                // in the bit-50 allowlist).
                 body.Add(SetGpr(rd, b));
                 break;
             }
@@ -1319,6 +1327,28 @@ public class MaxwellLift {
                 body.Add(new IlUnimpl(d.Name, "M1 v0 hardcoded-lift"));
                 break;
         }
+
+        // (T6)×43 .SAT modifier: bit 50 on float-arith ops → clamp
+        // every Gpr-write in this insn's body to [0,1]. 526 instances
+        // missing across the LEGO corpus per sweep-diff vs ryujinx
+        // (= the #1 semantic Δ). Reads F("sat") where the .isa def
+        // captures it (FFMA-{R,I,Rc}, FADD-C, FMUL-I, …); falls back
+        // to direct B(50,1) for the float-op forms whose .isa def
+        // doesn't yet have (sat T) in (names …) — adding those is
+        // the ‡ structural follow-up (one-char bitpattern edits per
+        // form). Half-prec ops (HFMA2/HMUL2/HADD2) have sat at bit 32
+        // (= their HPack call's sat arg) — NOT covered here. Imm32
+        // forms (FADD32I/FMUL32I) have sat at bit 55 — also NOT here
+        // (those don't have a names-sat capture either; ‡ if surface).
+        var satBit = d.Fields.ContainsKey("sat") ? F("sat")
+            : d.Name.Split('-')[0] is "FFMA" or "FMUL" or "FADD"
+                or "FMNMX" or "F2F" or "F2I" or "I2F"
+              ? B(50, 1) : 0;
+        if(satBit == 1)
+            for(var bi = 0; bi < body.Count; bi++)
+                if(body[bi] is IlWriteReg(RegKind.Gpr, var ix, var v))
+                    body[bi] = new IlWriteReg(RegKind.Gpr, ix,
+                        new IlUn(F32, UnOp.Sat, v));
 
         // Predication wrapper. PT && !inv = unconditional; else IlIf.
         Il wrapped;

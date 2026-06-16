@@ -550,6 +550,19 @@ public class SpirvEmit {
                 // GLSL.std.450 RoundEven=2. ‡ Maxwell may be nearest-
                 // or-zero; v0=RoundEven.
                 return R(TyF32(), OpExtInst, Glsl450(), 2, EmitExpr(x));
+            case IlUn(_, UnOp.Trunc, var x):
+                // GLSL.std.450 Trunc=3. (T6)×43 mcb Δ-3: F2F
+                // IntegerRound rmode=7 (was unmapped → pass-through).
+                return R(TyF32(), OpExtInst, Glsl450(), 3, EmitExpr(x));
+            case IlUn(_, UnOp.Sat, var x):
+                // GLSL.std.450 FClamp=43. (T6)×43: the .SAT modifier
+                // (bit 50 on float-arith ops → clamp result to [0,1]).
+                // 526 instances missing across the LEGO corpus per
+                // sweep-diff vs ryujinx. Emitting as FClamp (not the
+                // FMin(FMax(x,0),1) pair) so the §7-oracle histogram
+                // closes directly.
+                return R(TyF32(), OpExtInst, Glsl450(), 43,
+                    EmitExpr(x), ConstF(0f), ConstF(1f));
             case IlBin(var ty, var op, var a, var b): {
                 var oa = EmitExpr(a); var ob = EmitExpr(b);
                 // Result type discriminates: U1 = bool (compare or
