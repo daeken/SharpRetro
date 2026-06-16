@@ -627,8 +627,19 @@ public static unsafe class NvnVulkan {
     // nC=0 (e.g. vs45/fs287 per nvncap5 census: rt1×55
     // + rt9×423) gets two distinct pipelines, each
     // RP-compatible with its target.
-    static readonly Dictionary<(int vs, int fs, int vh, byte rt),
-        ulong> _t3Pipes = new();
+    // (T6)×40 ×1: + noDepth flag. Non-indexed draws
+    // under RTT (= all fullscreen postproc: #163 fs50,
+    // #164-165, #631 fs111, #636-668 bloom/composite)
+    // never depth-test on the real engine (game sets
+    // nvnCommandBufferSetDepthStencilState with test=
+    // off before each — uncaptured). Verified r105≡
+    // r104: #631 (vs63 fullscreen) wrote 0 pixels with
+    // depthTest=LEQUAL. Indexed draws (geometry, light-
+    // volumes #633-635) DO depth-test. The idxN>0 split
+    // that bit me at ×38+×39 is the CORRECT discriminator
+    // here (engine convention, not own-code-gap).
+    static readonly Dictionary<(int vs, int fs, int vh, byte rt,
+        bool nd), ulong> _t3Pipes = new();
     static int VtxHash(NvnLinux.NvnAttrib[] a, NvnLinux.NvnStream[] s) {
         // Cheap structural hash. Order matters (= location N).
         int h = (a?.Length ?? 0) | ((s?.Length ?? 0) << 8);
@@ -660,9 +671,10 @@ public static unsafe class NvnVulkan {
     // layout = ). Returns 0 if .spv missing.
     static ulong T3Pipe(int vsIdx, int fsIdx,
                         NvnLinux.NvnAttrib[] nA, NvnLinux.NvnStream[] nS,
-                        byte rtId = 255) {
+                        byte rtId = 255, bool noDepth = false) {
         var vh = VtxHash(nA, nS);
-        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh, rtId), out var p))
+        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh, rtId, noDepth),
+                out var p))
             return p;
         // (T6)×35 ×3: rtId=255 ⟹ pre-RTT (swap RP, 1
         // color, static vp). Else resolve rf for (rp,
@@ -706,7 +718,7 @@ public static unsafe class NvnVulkan {
         var fsm = LoadShader(fsOverride ?? $"{_t3ShDir}/sh{fsIdx:d4}-t2.bin.spv");
         if(vsm == 0 || fsm == 0) {
             if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
-            _t3Pipes[(vsIdx, fsIdx, vh, rtId)] = 0;
+            _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth)] = 0;
             return 0;
         }
         var entryName = stackalloc byte[8]; "main\0"u8.CopyTo(new Span<byte>(entryName, 8));
@@ -817,9 +829,13 @@ public static unsafe class NvnVulkan {
         // (reversed-Z); start with LESS, flip if everything
         // depth-fails. UMBRA_T3_DEPTH=0 disables (= revert to
         // pre-(G) painters-order behavior).
+        // (T6)×40 ×1(ii): noDepth ⟹ disable test+write
+        // (fullscreen postproc draws under RTT). Pre-RTT
+        // path (rtId=255) never sets noDepth ⟹ unchanged.
+        var depthEn = _t3DepthEnable && !noDepth;
         var ds = new VkPipelineDepthStencilStateCreateInfo {
             sType = ST_PIPELINE_DEPTH_STENCIL_CI,
-            depthTestEnable = _t3DepthEnable ? 1u : 0u,
+            depthTestEnable = depthEn ? 1u : 0u,
             depthWriteEnable = _t3DepthEnable ? 1u : 0u,
             depthCompareOp = _t3DepthOp,
             maxDepthBounds = 1.0f,
@@ -849,7 +865,7 @@ public static unsafe class NvnVulkan {
         } else {
             $"[vk] T3Pipe({vsIdx},{fsIdx}) built → 0x{pipe:x}".Log();
         }
-        _t3Pipes[(vsIdx, fsIdx, vh, rtId)] = pipe;
+        _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth)] = pipe;
         return pipe;
     }
     static ulong _t3DslCbuf, _t3DslTex, _t3DsPool;
@@ -2062,13 +2078,39 @@ public static unsafe class NvnVulkan {
         rf.Fb = fb;
         _rtFb[rtId] = rf;
         // (T6)×37 ×2: register this RT's texIds → views
-        // for RT-as-sampler. texId=0 ⟹ never sampled
-        // (e.g. final-swap, or game didn't pool-register).
+        // for RT-as-sampler. texId=0 ⟹ never sampled.
+        // (T6)×40 ×1: TryAdd — rt0/1/2 SHARE depth texId
+        // 0x135 (game binds same NVNtexture as depth for
+        // all three). First-RT-to-alloc wins = rt1 (the
+        // G-buffer scene-depth, which is what samplers
+        // want). Was: rt2.DepthView overwrote rt1's ⟹
+        // fs111 sl0=0x135 read rt2's depth (only #163's
+        // fullscreen-z) instead of scene depth.
+        // Depth: D24S8 (asp=6) can't be combined-image-
+        // sampler (VUID-01976) ⟹ make a SEPARATE asp=2
+        // (depth-only) view for sampling. D32F (asp=2)
+        // is fine as-is.
         for(var i = 0; i < nC; i++)
             if(sig.Colors[i].TexId is var tid && tid != 0)
-                _rtTexView[tid] = rf.View[i];
-        if(hasD && sig.Depth!.TexId is var dtid && dtid != 0)
-            _rtTexView[dtid] = rf.DepthView;
+                _rtTexView.TryAdd(tid, rf.View[i]);
+        if(hasD && sig.Depth!.TexId is var dtid && dtid != 0) {
+            var dv = rf.DepthView;
+            var (dvf, dasp, _) = NvnRtFmt(sig.Depth.Fmt);
+            if(dasp == 6) {
+                // D24S8: separate depth-only sample-view.
+                var vci = new VkImageViewCreateInfo {
+                    sType = ST_IMAGE_VIEW_CI, image = rf.DepthImg,
+                    viewType = 1, format = dvf,
+                    subresourceRange = new() {
+                        aspectMask = 2, levelCount = 1,
+                        layerCount = 1,
+                    },
+                };
+                Chk(vkCreateImageView(_dev, &vci, null, &dv),
+                    $"vkCreateImageView(rt{rtId}.d-sample)");
+            }
+            _rtTexView.TryAdd(dtid, dv);
+        }
         $"[vk] EnsureRtFb id={rtId} {w}×{h} nC={nC} d={hasD} rp=0x{rp:x} fb=0x{fb:x} rtTexView+={nC+(hasD?1:0)}".Log();
         return rf;
     }
@@ -2311,8 +2353,16 @@ public static unsafe class NvnVulkan {
                 // v1.0: per-draw pipeline lookup (build-on-miss).
                 // Returns 0 if .spv missing → skip this draw
                 // (rather than render through wrong shaders).
+                // (T6)×40 ×1(ii): non-indexed under RTT =
+                // fullscreen postproc ⟹ no depth-test.
+                // ‡ Real fix = capture per-draw depth-
+                // state from nvnCommandBufferSetDepth
+                // StencilState; this is the engine-
+                // convention approximation.
+                var noDepth = _t3Rtt && d.IdxCount == 0;
                 var pipe = T3Pipe(d.VsShIdx, d.FsShIdx,
-                                  d.Attribs, d.Streams, rtKey);
+                                  d.Attribs, d.Streams,
+                                  rtKey, noDepth);
                 if(pipe == 0) continue;
                 if(pipe != curPipe) {
                     vkCmdBindPipeline(_cmdBuf, 0, pipe);
