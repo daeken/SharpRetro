@@ -106,7 +106,14 @@ public class SpirvEmit {
     uint _nextId = 1;
     uint _glsl450;       // GLSL.std.450 import id (lazy)
 
-    public SpirvEmit(SpvStage stage = SpvStage.Vertex) { _stage = stage; }
+    // (T6)×44 ×3: omapTargets = SPH OmapTarget (32 bits, 8 RTs ×
+    // 4-bit component-mask). FS-only; 0 ⟹ default RT0.rgba.
+    readonly uint _omap;
+    public SpirvEmit(SpvStage stage = SpvStage.Vertex,
+                     uint omapTargets = 0) {
+        _stage = stage;
+        _omap = omapTargets != 0 ? omapTargets : 0xfu;
+    }
     uint Id() => _nextId++;
 
     // Interning: types and constants are unique'd by structural key so
@@ -386,19 +393,29 @@ public class SpirvEmit {
         return _fragCoord;
     }
 
-    // FS output: vec4 oColor at Location 0. ‡ v0 = single RT only;
-    // multi-RT (per SPH output mask) = M2.5.
-    uint _fragOut;
-    uint FragOut() {
-        if(_fragOut != 0) return _fragOut;
-        _fragOut = Id();
+    // FS output: vec4 oColor{N} at Location N, one per RT with
+    // a nonzero nibble in _omap. (T6)×44 ×3 (was: single RT0-only
+    // ⟹ rt1.c[1]+c[2] never written ⟹ fs111 read N=0 ⟹ lit=0 =
+    // wall(a) root). Maxwell convention: at FS-exit, R[4N..4N+3]
+    // → output N's .rgba, but the GPR base is COMPACTED over
+    // active RTs (omap=0x0f0f → RT0=R0-R3, RT2=R4-R7), and per-RT
+    // the component-mask determines which Rk are consumed. v0 =
+    // assume mask-per-RT is 0 or 0xf (verified: sh0442 omap=0xfff,
+    // sh0287 omap=0xf, sh0050 omap=0xf — all whole-vec4); ‡ partial
+    // masks (e.g. 0x7 = rgb-only) need per-component compaction.
+    readonly uint[] _fragOut = new uint[8];
+    uint FragOut(int rt) {
+        if(_fragOut[rt] != 0) return _fragOut[rt];
+        var fo = _fragOut[rt] = Id();
         var v4 = TyVec(TyF32(), 4);
-        Emit(_types, OpVariable, TyPtr(ScOutput, v4), _fragOut, ScOutput);
-        Emit(_decor, OpDecorate, _fragOut, DecLocation, 0);
-        EmitS(_debug, OpName, new[]{_fragOut}, "oColor");
-        _interface.Add(_fragOut);
-        return _fragOut;
+        Emit(_types, OpVariable, TyPtr(ScOutput, v4), fo, ScOutput);
+        Emit(_decor, OpDecorate, fo, DecLocation, (uint)rt);
+        EmitS(_debug, OpName, new[]{fo},
+            rt == 0 ? "oColor" : $"oColor{rt}");
+        _interface.Add(fo);
+        return fo;
     }
+    uint FragOut() => FragOut(0);
 
     // IlLet/IlTmp tracking: tmpId → SSA result id of the bound expr.
     readonly Dictionary<int, uint> _tmp = new();
@@ -1096,17 +1113,38 @@ public class SpirvEmit {
                     break;
                 }
                 if(_stage == SpvStage.Fragment) {
-                    // FS: R0-R3 at exit → oColor.rgba. ‡ v0 = RT0 only;
-                    // SPH output mask + multi-RT = M2.5. Components
-                    // not written by the shader → 0 (rgb) / 1 (a).
+                    // FS: at EXIT, GPRs → MRT outputs per SPH
+                    // OmapTarget (_omap). Maxwell compacts the
+                    // GPR base over ACTIVE RTs: rg=0; for each
+                    // RT n with nonzero omap-nibble, oColor{n}
+                    // ← (R[rg],R[rg+1],R[rg+2],R[rg+3]), rg+=4.
+                    // (T6)×44 ×3 — was RT0-only (= the wall(a)
+                    // root: rt1.c[1]+c[2] never written ⟹ fs111
+                    // saw N=0 ⟹ lit=0). Components not written
+                    // by the shader → 0 (rgb) / 1 (a).
+                    // ‡ v1: assumes per-RT mask is 0 or 0xf;
+                    //   partial masks need component-compaction
+                    //   (rg += popcount(mask), not +=4). Surface
+                    //   as ‡note if seen.
                     var v4 = TyVec(TyF32(), 4);
-                    var c = new uint[4];
-                    for(var k = 0; k < 4; k++)
-                        c[k] = _gpr[k] != 0 ? _gpr[k]
-                             : (k == 3 ? ConstF(1) : ConstF(0));
-                    var col = Id();
-                    Emit(_func, OpCompositeConstruct, v4, col, c[0],c[1],c[2],c[3]);
-                    Emit(_func, OpStore, FragOut(), col);
+                    var rg = 0;
+                    for(var n = 0; n < 8; n++) {
+                        var msk = (_omap >> (4*n)) & 0xf;
+                        if(msk == 0) continue;
+                        if(msk != 0xf)
+                            Console.Error.WriteLine(
+                                $"  ‡note: omap RT{n} mask=0x{msk:x}"
+                                + " (partial; v1 treats as 0xf)");
+                        var c = new uint[4];
+                        for(var k = 0; k < 4; k++)
+                            c[k] = _gpr[rg+k] != 0 ? _gpr[rg+k]
+                                 : (k == 3 ? ConstF(1) : ConstF(0));
+                        var col = Id();
+                        Emit(_func, OpCompositeConstruct, v4, col,
+                            c[0], c[1], c[2], c[3]);
+                        Emit(_func, OpStore, FragOut(n), col);
+                        rg += 4;
+                    }
                     Emit(_func, OpReturn);
                     break;
                 }

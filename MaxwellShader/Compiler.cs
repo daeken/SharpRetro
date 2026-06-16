@@ -74,6 +74,18 @@ public static class Compiler {
         (bin[0x30] & 0xf) == 2
             ? SpvStage.Fragment : SpvStage.Vertex;
 
+    // (T6)×44 ×3: SPH OmapTarget — per-RT component write-mask
+    // for FS. SphType=2 (PS) places this at SPH+0x48 = file
+    // offset 0x78. 32 bits = 8 RTs × 4-bit per-RT (bit 4N+k =
+    // RT N writes component k). Verified at-bytes on sh0442:
+    // @0x78 = ff 0f 00 00 = 0x00000fff = RT0/1/2 all-rgba ⟹
+    // fs442 is 3-MRT. sh0050 (single-RT) = 0x0000000f. Used by
+    // SpirvEmit to declare N output vars + emit R[4N..4N+3]
+    // → oColor{N} per RT instead of RT0-only.
+    public static uint OmapTargetsFromSph(byte[] bin) =>
+        StageFromSph(bin) == SpvStage.Fragment
+            ? BitConverter.ToUInt32(bin, 0x78) : 0;
+
     // Maxwell binary → SPIR-V bytes. Throws on lift/emit failure
     // (= sera's fail-fast: an unhandled IL node throws inside
     // SpirvEmit; that exception surfaces here, NOT swallowed).
@@ -104,8 +116,17 @@ public static class Compiler {
         // by hooking Console.Error around the Compile call. ‡ v0
         // = leave them on stderr (they reach the r-log); the
         // structured notes[] return is for MaxwellTool --notes.
-        var em = new SpirvEmit(stage);
+        var omap = OmapTargetsFromSph(bin);
+        var em = new SpirvEmit(stage, omap);
         var spv = em.Compile(stage, lifted);
+        // (T6)×44 fail-fast for ‡v0-deferrals: surface MRT-count
+        // so multi-RT shaders are visible in r-log even before
+        // the MRT path is exercised.
+        var nMrt = 0;
+        for(var n = 0; n < 8; n++)
+            if((omap & (0xfu << (4*n))) != 0) nMrt++;
+        if(nMrt > 1)
+            noteList.Add($"MRT={nMrt} (omap=0x{omap:x})");
 
         if(noteList.Count > 0) {
             var pfx = tag.Length > 0 ? $"[maxwell {tag}] " : "[maxwell] ";
