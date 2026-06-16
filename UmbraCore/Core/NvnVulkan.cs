@@ -482,6 +482,24 @@ public static unsafe class NvnVulkan {
     [DllImport(Lib)] static extern void vkCmdBeginRenderPass(
         ulong cb, VkRenderPassBeginInfo* bi, uint contents);
     [DllImport(Lib)] static extern void vkCmdEndRenderPass(ulong cb);
+    // (T6)×36: RT-readback. RT images are tiling=OPTIMAL
+    // ⟹ vkCmdCopyImageToBuffer → host-mapped staging.
+    [StructLayout(LayoutKind.Sequential)]
+    struct VkBufferImageCopy {
+        public ulong bufferOffset;
+        public uint bufferRowLength, bufferImageHeight;
+        // VkImageSubresourceLayers (4× u32):
+        public uint aspectMask, mipLevel, baseArrayLayer, layerCount;
+        // VkOffset3D + VkExtent3D (3× i32 + 3× u32):
+        public int ox, oy, oz;
+        public uint ew, eh, ed;
+    }
+    [DllImport(Lib)] static extern void vkCmdCopyImageToBuffer(
+        ulong cb, ulong srcImage, uint srcLayout,
+        ulong dstBuffer, uint regionCount, VkBufferImageCopy* r);
+    [DllImport(Lib)] static extern void vkCmdFillBuffer(
+        ulong cb, ulong dstBuffer, ulong dstOffset,
+        ulong size, uint data);
     [DllImport(Lib)] static extern void vkCmdSetViewport(
         ulong cb, uint first, uint count, VkViewport* vp);
     [DllImport(Lib)] static extern void vkCmdSetScissor(
@@ -876,6 +894,21 @@ public static unsafe class NvnVulkan {
     // OFF = pre-RTT single-_renderPass-to-swap.
     static readonly bool _t3Rtt =
         Environment.GetEnvironmentVariable("UMBRA_T3_RTT") != null;
+    // (T6)×36 RT-readback: UMBRA_T3_RTT_DUMP=N → after
+    // the per-draw loop, vkCmdCopyImageToBuffer
+    // _rtFb[N].{Img[0] | DepthImg} → host-staging →
+    // DumpRtPpm decodes per-fmt (RGBA8 direct / RGBA16F
+    // Reinhard tonemap / D32F depth→gray / RG16 r,g,128)
+    // → /tmp/umbra-frame-{N}.ppm (= same path DumpPpm
+    // writes, so NvnReplay's rename → replay-f*-i*.ppm
+    // works unchanged). r87 DUMP=1 = G-buffer slot-0;
+    // r88 DUMP=9 = 1024×4096 cascaded shadow-map.
+    static readonly int _t3RttDump =
+        int.TryParse(Environment.GetEnvironmentVariable(
+            "UMBRA_T3_RTT_DUMP"), out var rd) ? rd : -1;
+    static ulong _rtDumpBuf, _rtDumpMem;
+    static byte* _rtDumpPtr;
+    const int RtDumpBufSz = 32 << 20;  // 32MB ≥ max(1920×1080×8, 1024×4096×4)
     static readonly bool _depthvisFs =
         Environment.GetEnvironmentVariable("UMBRA_T3_DEPTHVIS_FS") != null;
     static readonly HashSet<int>? _skipVs =
@@ -2974,6 +3007,62 @@ public static unsafe class NvnVulkan {
             if(_t3Rtt && curRtId >= 0)
                 rtDrawN[curRtId] += recN - rtDrawNAt;
             vkCmdEndRenderPass(_cmdBuf);
+            // (T6)×36: RT-readback. After all RPs closed,
+            // copy the requested RT → host-staging. RT
+            // finalLayout=GENERAL per EnsureRtFb ⟹ no
+            // barrier needed (srcLayout=GENERAL=1).
+            if(_t3Rtt && _t3RttDump >= 0
+               && _rtFb[_t3RttDump % 100] is {} drf
+               && drf.Rp != _renderPass) {  // = real RT, not swap-fallback
+                if(_rtDumpBuf == 0) {
+                    // Lazy-alloc staging (host-mapped,
+                    // usage=TRANSFER_DST=2).
+                    var bci = new VkBufferCreateInfo {
+                        sType = ST_BUFFER_CI, size = RtDumpBufSz,
+                        usage = 2,
+                    };
+                    ulong b; Chk(vkCreateBuffer(_dev, &bci, null, &b),
+                        "vkCreateBuffer(rtDump)");
+                    _rtDumpBuf = b;
+                    VkMemoryRequirements mr;
+                    vkGetBufferMemoryRequirements(_dev, b, &mr);
+                    var mai = new VkMemoryAllocateInfo {
+                        sType = ST_MEM_AI, allocationSize = mr.size,
+                        memoryTypeIndex = _hostMemType,
+                    };
+                    ulong mm; Chk(vkAllocateMemory(_dev, &mai, null,
+                        &mm), "vkAllocateMemory(rtDump)");
+                    _rtDumpMem = mm;
+                    Chk(vkBindBufferMemory(_dev, b, mm, 0),
+                        "vkBindBufferMemory(rtDump)");
+                    void* p; Chk(vkMapMemory(_dev, mm, 0,
+                        RtDumpBufSz, 0, &p), "vkMapMemory(rtDump)");
+                    _rtDumpPtr = (byte*)p;
+                    $"[vk] rtDump staging: 32MB host-mapped @0x{(ulong)p:x}".Log();
+                }
+                // (T6)×36 ×2-cont disc: prefill staging
+                // with 0xAB so DumpRtPpm can detect "copy
+                // didn't write" (= 0xAB survives) vs "RT
+                // genuinely clear-value" (= 0x00/0xFF).
+                for(var k = 0; k < RtDumpBufSz; k += 64)
+                    _rtDumpPtr[k] = 0xAB;
+                // DUMP=N+100 ⟹ rtId=N's DEPTH attachment
+                // (= kt[28] different-observable: if rt1
+                // color is empty but depth has geometry,
+                // it's FS-output not rasterization).
+                var dumpDepth = _t3RttDump >= 100;
+                var srcImg = (drf.NC > 0 && !dumpDepth)
+                    ? drf.Img[0] : drf.DepthImg;
+                var asp = (drf.NC > 0 && !dumpDepth)
+                    ? 1u : 2u;  // COLOR : DEPTH
+                var bic = new VkBufferImageCopy {
+                    aspectMask = asp, layerCount = 1,
+                    ew = (uint)drf.W, eh = (uint)drf.H, ed = 1,
+                };
+                vkCmdCopyImageToBuffer(_cmdBuf, srcImg, 1,
+                    _rtDumpBuf, 1, &bic);
+                $"[vk] rtDump record: srcImg=0x{srcImg:x} buf=0x{_rtDumpBuf:x} {drf.W}×{drf.H} asp={asp} cb=0x{_cmdBuf:x}".Log();
+            }
             if(_t3Rtt && nRpSwitch > 0) {
                 var hist = string.Join(" ", rtDrawN
                     .Select((n,i) => (n,i)).Where(x => x.n > 0)
@@ -3185,7 +3274,86 @@ public static unsafe class NvnVulkan {
         vkCmdClearColorImage(_cmdBuf, _swapImg[idx], 1, &col, 1, &range);  // layout=GENERAL
     }
 
+    // (T6)×36: per-fmt decode of _rtDumpPtr → ppm. Same
+    // output path as DumpPpm so NvnReplay's rename
+    // (umbra-frame-K → replay-fN-iK) works unchanged.
+    static void DumpRtPpm(int frameN) {
+        var rtId = _t3RttDump % 100;
+        var dumpDepth = _t3RttDump >= 100;
+        if(_rtDumpPtr == null || _rtFb[rtId] is not {} rf)
+            return;
+        // (T6)×36 ×2-cont disc: did the copy WRITE? Check
+        // 0xAB sentinel survival across first 64KB.
+        var nAB = 0;
+        for(var k = 0; k < (1<<16); k += 64)
+            if(_rtDumpPtr[k] == 0xAB) nAB++;
+        if(nAB > 512)
+            $"[vk] ⚠ DumpRtPpm: 0xAB-sentinel {nAB}/1024 — copy may not have executed (fence-timeout?)".Log();
+        var path = $"/tmp/umbra-frame-{frameN:d3}.ppm";
+        var sig = rtId < NvnLinux.RtSigs.Count
+            ? NvnLinux.RtSigs[rtId] : null;
+        var nf = (rf.NC > 0 && !dumpDepth)
+            ? (sig?.Colors[0].Fmt ?? 0x25)
+            : (sig?.Depth?.Fmt ?? 0x34);
+        var (vf, _, _) = NvnRtFmt(nf);
+        var w = rf.W; var h = rf.H;
+        try {
+            using var fs = File.Create(path);
+            fs.Write(System.Text.Encoding.ASCII
+                .GetBytes($"P6\n{w} {h}\n255\n"));
+            var s = _rtDumpPtr;
+            var row = new byte[w * 3];
+            for(var y = 0; y < h; y++) {
+                for(var x = 0; x < w; x++) {
+                    byte r, g, b;
+                    switch(vf) {
+                    case 37: {  // RGBA8: direct
+                        var p = s + (y*w+x)*4;
+                        r = p[0]; g = p[1]; b = p[2];
+                        break; }
+                    case 97: {  // RGBA16F: Reinhard tonemap
+                        var p = (ushort*)(s + (y*w+x)*8);
+                        static byte tm(ushort h) {
+                            var f = (float)BitConverter
+                                .UInt16BitsToHalf(h);
+                            f = MathF.Max(0, f);
+                            return (byte)(255 * f / (f + 1));
+                        }
+                        r = tm(p[0]); g = tm(p[1]); b = tm(p[2]);
+                        break; }
+                    case 126: { // D32F: depth→gray
+                        var d = *(float*)(s + (y*w+x)*4);
+                        // ‡ depth often clusters near 1.0;
+                        // invert+stretch for visibility:
+                        // gray = (1−d)^0.4 × 255.
+                        var v = (byte)(255 * MathF.Pow(
+                            MathF.Max(0, 1 - d), 0.4f));
+                        r = g = b = v;
+                        break; }
+                    case 77: {  // RG16_UNORM: r,g,128
+                        var p = (ushort*)(s + (y*w+x)*4);
+                        r = (byte)(p[0] >> 8);
+                        g = (byte)(p[1] >> 8);
+                        b = 128;
+                        break; }
+                    default: r = g = b = 0; break;
+                    }
+                    row[x*3] = r; row[x*3+1] = g; row[x*3+2] = b;
+                }
+                fs.Write(row);
+            }
+            $"[vk] DumpRtPpm rt{_t3RttDump} {w}×{h} nf=0x{nf:x}(vf{vf}) → {path}".Log();
+        } catch(Exception e) {
+            $"[vk] DumpRtPpm failed: {e.Message}".Log();
+        }
+    }
+
     static void DumpPpm(int idx, int frameN) {
+        // (T6)×36: when RT-dump active, write the RT
+        // staging instead of swap (same path).
+        if(_t3Rtt && _t3RttDump >= 0 && _rtDumpPtr != null) {
+            DumpRtPpm(frameN); return;
+        }
         var path = $"/tmp/umbra-frame-{frameN:d3}.ppm";
         // ‡ v0.5: assume row-pitch == W*4 (LINEAR + lavapipe usually does).
         // Proper = vkGetImageSubresourceLayout for rowPitch. wall-N if not.
@@ -3358,7 +3526,21 @@ public static unsafe class NvnVulkan {
         var si = new VkSubmitInfo { sType = ST_SUBMIT, cmdBufCount = 1, pCmdBufs = &cb };
         var r = vkQueueSubmit(_queue, 1, &si, _fence);
         if(r == 0) {
-            vkWaitForFences(_dev, 1, &fence, 1, 1_000_000_000);  // 1s
+            // (T6)×36 ×3 ROOT: was 1s. Pre-RTT (~140 draws
+            // post-SKIP_VS to 1280×720) <<1s on lavapipe.
+            // RTT = 669 draws incl 465→1024×4096 shadow +
+            // 163→1920×1080 nC=3 G-buf ⟹ ~3-5s software-
+            // raster. Wait timed out → DumpRtPpm read
+            // staging while GPU hadn't reached the copy
+            // (sentinel 0xAB survived = the disc); iter2's
+            // vkBeginCommandBuffer hit a PENDING buffer
+            // (VUID-00049) = the iter2-segv-flaky root.
+            // own kt[26]: the "// 1s" comment was the
+            // bound; RTT broke it. 60s + log VK_TIMEOUT.
+            var wr = vkWaitForFences(_dev, 1, &fence, 1,
+                60_000_000_000);
+            if(wr != 0)
+                $"[vk] ⚠ vkWaitForFences → {wr} (2=TIMEOUT) — GPU work >60s; readback STALE".Log();
             // Dump: first 2 frames (clear-only baseline) + first 3
             // frames-with-draws + any in UMBRA_DUMP_FRAMES env
             // (comma-sep frame numbers OR "every:N").
