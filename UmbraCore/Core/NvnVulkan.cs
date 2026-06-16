@@ -2835,9 +2835,26 @@ public static unsafe class NvnVulkan {
                         // FLT_MAX, NOT [1].y. ‡ r131a was rgb-
                         // only (ppm); c[0].α IS the intended
                         // change (= wall(b) close).
+                        // (T6)×59 ×2: condition c1[0].z bake on
+                        // rtId≠1. ×49's bake (for fs111's P0-
+                        // threshold @rt2#631) DAMAGED fs905/
+                        // fs1097's G-buf c[0] encode (verified
+                        // ×59×1 r137a: bake-revert → md5=r114
+                        // exact, nz 96.60→99.72%; (i-a) at-data:
+                        // r130d's black-px = 77.5% in fs905-
+                        // region [72.8% of fs905 → black] +
+                        // 22.2% fs1097 [100%], ZERO in fs949).
+                        // ⟹ G-buf draws (rtId=1) keep c1=all-1.0
+                        // (= r114 baseline); rt2+/postproc draws
+                        // get c1[0].z=FLT_MAX where fs111/etc
+                        // need it. c1[1].y=−1 stays for all
+                        // (verified r131a/b: safe on G-buf
+                        // c[0].rgb; needed for fs442 α @rt1
+                        // AND fs50 decode @rt2).
                         if(hw == 1) {
-                            cb[2] = float.MaxValue;  // c1[0].z
-                            cb[5] = -1f;             // c1[1].y
+                            if(d.RtId != 1)
+                                cb[2] = float.MaxValue;  // c1[0].z
+                            cb[5] = -1f;                 // c1[1].y
                         }
                     }
                 // (T6)×28: FS c[1] heuristic override
