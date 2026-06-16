@@ -61,16 +61,22 @@ public unsafe class GameWrapper {
                         *GetRegisterPointer(state, (int)b) = tlsBaseTL.Value;
                         return;
                     case 0x5f01:  // CNTPCT_EL0 (system counter)
-                        // 19.2MHz tick. ReadSr did ElapsedMs*19200
-                        // = ms-resolution; do ticks/freq*19.2M for
-                        // sub-ms (some games spin on this).
-                        *GetRegisterPointer(state, (int)b) = (ulong)
-                            (System.Diagnostics.Stopwatch.GetTimestamp()
-                             * 19_200_000L
-                             / System.Diagnostics.Stopwatch.Frequency);
+                    case 0x5f02:  // CNTVCT_EL0 (= same on Switch)
+                        // (T6)×69: was `Stopwatch.GetTimestamp()
+                        // × 19_200_000L / Frequency` (my 316ef3d
+                        // = own ‡v0 ×10th-PROPER) — host-uptime
+                        // epoch + overflowed i64 every 960.77s of
+                        // host-uptime ⟹ in negative-product
+                        // windows the game saw cntpct ≈ 2^64
+                        // (≈ 30Ky @ 19.2MHz). UmbraTime = process
+                        // -relative + Int128-safe + same epoch as
+                        // NowNs(). + 0x5f02 (CNTVCT) wasn't in
+                        // either path before (⟹ returned 0 via
+                        // ReadSr "Unknown SR").
+                        *GetRegisterPointer(state, (int)b) = UmbraTime.Ticks();
                         return;
                     case 0x5f00:  // CNTFRQ_EL0
-                        *GetRegisterPointer(state, (int)b) = 19_200_000;
+                        *GetRegisterPointer(state, (int)b) = UmbraTime.SwitchFreq;
                         return;
                     case 0x5e82:  // TPIDR_EL0
                         *GetRegisterPointer(state, (int)b) =
