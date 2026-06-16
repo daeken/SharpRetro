@@ -43,6 +43,21 @@ public static unsafe class NvnLinux {
         public int Flags;                   // MemoryPool flags
         public ulong Device;                // back-ref
         public int Width, Height, Format;   // Texture
+        // (T6)×67: NVNtextureTarget (1D=0 2D=1 3D=2
+        // 1D_ARRAY=3 2D_ARRAY=4 2D_MS=5 2D_MS_ARRAY=6
+        // RECTANGLE=7 CUBEMAP=8 CUBEMAP_ARRAY=9 BUFFER=A).
+        // Default 1 (= 2D; matches SetDefaults' implied
+        // value per u779 first-logged x1=1). + Depth for
+        // 3D/array (cube → game sets depth=1, layers
+        // implied by target=8 ⟹ 6 faces). Captured into
+        // texPool manifest.target so replay can create
+        // the right imageView type instead of always-2D
+        // (= the 39th's per-shader cubeMask infers from
+        // shader-side TexKinds; this is the data-side
+        // ground-truth that should AGREE with TexKinds
+        // for the bound texture — and lets DecodeFor
+        // Upload read all 6 faces once recapture works).
+        public int Target = 1, Depth = 1;
         public int ShIdx, SphType;          // Program: which sh{idx}-t{sph}.bin
         //  decoded RGBA8 bytes (lazy; populated by
         // DecodeForUpload on first EnsureTexBound). null = not
@@ -339,6 +354,14 @@ public static unsafe class NvnLinux {
         ["nvnTextureBuilderSetHeight"]     = (nint)(delegate* unmanaged<ulong, int, void>)&TbSetHeight,
         ["nvnTextureBuilderSetFormat"]     = (nint)(delegate* unmanaged<ulong, int, void>)&TbSetFormat,
         ["nvnTextureBuilderSetStorage"]    = (nint)(delegate* unmanaged<ulong, ulong, ulong, void>)&TbSetStorage,
+        // (T6)×67: target/depth/size3d for cube/3D/array
+        // capture. NVN_TEXTURE_TARGET_CUBEMAP=8 ⟹ 6-face;
+        // 39th's TexKinds infers from shader-side; this
+        // is the data-side ground-truth (should agree).
+        ["nvnTextureBuilderSetTarget"]     = (nint)(delegate* unmanaged<ulong, int, void>)&TbSetTarget,
+        ["nvnTextureBuilderGetTarget"]     = (nint)(delegate* unmanaged<ulong, int>)&TbGetTarget,
+        ["nvnTextureBuilderSetDepth"]      = (nint)(delegate* unmanaged<ulong, int, void>)&TbSetDepth,
+        ["nvnTextureBuilderSetSize3D"]     = (nint)(delegate* unmanaged<ulong, int, int, int, void>)&TbSetSize3D,
         // ‡ TbGetStorageSize/Alignment NOT in Table — return-1 stub WORKS
         // (umbra54: 501 game-loop ticks); my "real" w×h×bpp values made
         // the game's pool allocator BRK-assert in NuRenderTargets (
@@ -451,6 +474,20 @@ public static unsafe class NvnLinux {
     [UnmanagedCallersOnly] static void TbSetStorage(ulong b, ulong pool, ulong off) {
         var s = S(b); s.PoolPtr = pool; s.Offset = off;
     }
+    // (T6)×67: target/depth. Log first-N + every non-2D
+    // (= fail-fast: cube/3D/array textures visible in
+    // live-log as they're declared, BEFORE recapture).
+    static int _tbTargetN;
+    [UnmanagedCallersOnly] static void TbSetTarget(ulong b, int t) {
+        S(b).Target = t;
+        if(_tbTargetN++ < 10 || t != 1)
+            $"[nvn] TbSetTarget #{_tbTargetN} b=0x{b:x} target={t}{(t==8?" CUBEMAP":t==2?" 3D":t==4?" 2D_ARRAY":"")}".Log();
+    }
+    [UnmanagedCallersOnly] static int TbGetTarget(ulong b) => S(b).Target;
+    [UnmanagedCallersOnly] static void TbSetDepth(ulong b, int d) => S(b).Depth = d;
+    [UnmanagedCallersOnly] static void TbSetSize3D(ulong b, int w, int h, int d) {
+        var s = S(b); s.Width = w; s.Height = h; s.Depth = d;
+    }
     // ‡ NVNformat → (bytesPerPixel, isBC, FourCC). nvn.h doesn't have the
     // enum body (sera's is `typedef int NVNformat`). Values inferred from
     // observed game usage + pool-offset-delta arithmetic:
@@ -484,13 +521,18 @@ public static unsafe class NvnLinux {
     [UnmanagedCallersOnly] static int TexInitialize(ulong tex, ulong builder) {
         var bs = S(builder); var ts = S(tex);
         ts.Width = bs.Width; ts.Height = bs.Height; ts.Format = bs.Format;
+        // (T6)×67 ×3(c): builder→texture must carry
+        // Target/Depth too (texPool manifest reads from
+        // the TEXTURE H, not the builder H; without this
+        // every entry shows target=1).
+        ts.Target = bs.Target; ts.Depth = bs.Depth;
         ts.PoolPtr = bs.PoolPtr; ts.Offset = bs.Offset;
         var pool = St.TryGetValue(bs.PoolPtr, out var ps) ? ps : null;
         ts.CpuPtr = pool != null ? pool.CpuPtr + bs.Offset : 0;
         ts.GpuAddr = pool != null ? pool.GpuAddr + bs.Offset : 0;
         ts.Rgba = null;  // (c²³)(a) re-init ⟹ stale decode
         ts.Gen++;
-        $"[nvn] TextureInitialize tex=0x{tex:x} {ts.Width}×{ts.Height} fmt=0x{ts.Format:x} pool=0x{ts.PoolPtr:x}+0x{ts.Offset:x} cpu=0x{ts.CpuPtr:x}".Log();
+        $"[nvn] TextureInitialize tex=0x{tex:x} {ts.Width}×{ts.Height}{(ts.Depth>1?$"×{ts.Depth}":"")} fmt=0x{ts.Format:x}{(ts.Target!=1?$" target={ts.Target}":"")} pool=0x{ts.PoolPtr:x}+0x{ts.Offset:x} cpu=0x{ts.CpuPtr:x}".Log();
         return 1;
     }
     [UnmanagedCallersOnly] static int TexGetFormat(ulong t) => S(t).Format;
