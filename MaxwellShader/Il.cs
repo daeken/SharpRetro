@@ -31,7 +31,9 @@ public abstract record IlType {
 public enum BinOp { Add, Sub, Mul, UDiv, SDiv, URem, SRem, And, Or, Xor, Shl, Shr, Sar, Ror,
                     Eq, Ne, Ult, Ule, Ugt, Uge, Slt, Sle, Sgt, Sge,
                     FMin, FMax }   // float min/max (Maxwell FMNMX)
-public enum UnOp { Neg, Not, Clz, Rbit, Popcnt, Sqrt, Abs, Floor, Ceil, Round }
+public enum UnOp { Neg, Not, Clz, Rbit, Popcnt, Sqrt, Abs, Floor, Ceil, Round,
+                   Trunc,   // (T6)×43 mcb Δ-3: F2F rmode=7 (was missing)
+                   Sat }    // (T6)×43 .SAT modifier → FClamp(x,0,1)
 public enum CastKind { Zext, Sext, Trunc, Bitcast, IToF, FToI, FExt, FTrunc,
                        SToF, UToF, FToSI, FToUI }   // Maxwell I2F/F2I (sign-aware)
 public enum BranchKind { Jmp, Call, Ret, CondJmp, Fallthrough }
