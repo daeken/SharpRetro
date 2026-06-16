@@ -2824,8 +2824,21 @@ public static unsafe class NvnVulkan {
                         // isolation; deferred to FS_C1 knob.
                         // ‡ Structural = kt[11] Atmosphere
                         // GPU-driver source for real values.
-                        if(hw == 1)
+                        // (T6)×50 ×1(ii): c1[1].y=−1 also baked.
+                        // = the fs442 α-encode sign (×43×2(b):
+                        // r110b α=0 100% with +1; r113 [1].y=−1
+                        // → α≠0 trunks/foliage). Verified r131a
+                        // G-buf c[0].rgb BYTE-IDENTICAL to r130d
+                        // (md5=bea8e91bd75d) ⟹ doesn't break
+                        // fs442's rgb-encode. The ×49×2 5-bake
+                        // killers were [0].x/.y=0 OR [0].w=
+                        // FLT_MAX, NOT [1].y. ‡ r131a was rgb-
+                        // only (ppm); c[0].α IS the intended
+                        // change (= wall(b) close).
+                        if(hw == 1) {
                             cb[2] = float.MaxValue;  // c1[0].z
+                            cb[5] = -1f;             // c1[1].y
+                        }
                     }
                 // (T6)×28: FS c[1] heuristic override
                 // (applied AFTER C1_ONES so it wins).
