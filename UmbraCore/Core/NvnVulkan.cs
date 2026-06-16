@@ -836,7 +836,7 @@ public static unsafe class NvnVulkan {
         var ds = new VkPipelineDepthStencilStateCreateInfo {
             sType = ST_PIPELINE_DEPTH_STENCIL_CI,
             depthTestEnable = depthEn ? 1u : 0u,
-            depthWriteEnable = _t3DepthEnable ? 1u : 0u,
+            depthWriteEnable = depthEn ? 1u : 0u,
             depthCompareOp = _t3DepthOp,
             maxDepthBounds = 1.0f,
         };
@@ -1799,18 +1799,26 @@ public static unsafe class NvnVulkan {
 
     static ulong EnsureSlotDs(NvnLinux.DrawRecord d,
             ulong fbView) {
+        // (T6)×41 ×2: extend slots 0-15 (was 0-7). fs111
+        // (#631 deferred-light) reads sl11/sl12; fs1190
+        // (light-volume) reads sl11/15. sl15=0x138=rt9.d
+        // shadow (RT-as-sampler load-bearing for light-
+        // volumes). slots 8-15 come from draws-ext.bin
+        // (d.TexHandles[8..]). Bindings: sl0=b8, sl1=b10
+        // ... sl15=b38; T3TexBindN must be ≥40.
+        var nSlot = d.TexHandles?.Length >= 16 ? 16 : 8;
         ulong key = 0xcbf29ce484222325;
-        for(var sl = 0; sl < 8; sl++)
+        for(var sl = 0; sl < nSlot; sl++)
             key = (key ^ d.TexHandles[sl]) * 0x100000001b3;
         if(_t3SlotDs.TryGetValue(key, out var ds))
             return ds;
         // Ensure each slot's texId is uploaded; collect
         // views. EnsureTexBound also creates a redundant
         // per-texId DS (= pool-waste, ‡ tolerable v1).
-        var views = stackalloc ulong[8];
+        var views = stackalloc ulong[16];
         var nReal = 0;
         var nRt = 0;
-        for(var sl = 0; sl < 8; sl++) {
+        for(var sl = 0; sl < nSlot; sl++) {
             var h = d.TexHandles[sl];
             var ti = (int)(h >> 32);
             if(ti == 0) { views[sl] = fbView; continue; }
@@ -1847,8 +1855,10 @@ public static unsafe class NvnVulkan {
         var wds = stackalloc VkWriteDescriptorSet[T3TexBindN];
         for(var b = 0; b < T3TexBindN; b++) {
             var sl = (b - 8) >> 1;
-            var vw = (b >= 8 && b < 24 && (b & 1) == 0
-                      && views[sl] != 0)
+            // (T6)×41 ×2: b∈[8,40) even ⟹ sl∈[0,16).
+            // Was b<24 (sl<8); fs111's sl11/12 = b30/32.
+            var vw = (b >= 8 && b < 40 && (b & 1) == 0
+                      && sl < nSlot && views[sl] != 0)
                 ? views[sl] : fbView;
             dii[b] = new() { sampler = _sampler,
                 imageView = vw, imageLayout = 1 };
