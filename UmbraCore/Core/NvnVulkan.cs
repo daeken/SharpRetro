@@ -669,6 +669,66 @@ public static unsafe class NvnVulkan {
     // data-stale contradictions. Lift-on-the-fly closes
     // that class of bug.
     static readonly Dictionary<int, ulong> _t3ShMod = new();
+    // (T6)×66: per-shIdx (binding → SampKind type-bits) from
+    // Compiler.Compile out-param. EnsureSlotDs reads this for
+    // the bound FS to substitute a TYPE-MATCHED imageView at
+    // bindings the shader declares as Cube/3D/Array. Without
+    // this, all views are 2D ⟹ shader's samplerCube reads UB.
+    static readonly Dictionary<int, Dictionary<int,int>>
+        _t3ShTexKinds = new();
+    // (T6)×66 v0 placeholder cube: 1×1 RGBA8, 6 layers,
+    // CUBE_COMPATIBLE, viewType=CUBE. Content = mid-grey
+    // (0x80808080 ×6) so env_refl ≈ const(0.5,0.5,0.5) ⟹
+    // stable, no green-wavy. Real cube content needs
+    // TbSetTarget hook + 6-face capture (‡‡(W')-blocked).
+    // Lazy-created on first cube-binding draw.
+    static ulong _cubePhImg, _cubePhMem, _cubePhView;
+    static bool _cubePhPending;
+    static void EnsureCubePlaceholder() {
+        if(_cubePhView != 0) return;
+        // ‡ tiling=LINEAR + CUBE_COMPATIBLE: spec-VUID may
+        // forbid; lavapipe (sw rast) accepts in practice.
+        // If Chk fails ⟹ switch to OPTIMAL + staging.
+        var ici = new VkImageCreateInfo {
+            sType = ST_IMAGE_CI,
+            flags = 0x10,         // CUBE_COMPATIBLE_BIT
+            imageType = 1, format = 37,
+            width = 1, height = 1, depth = 1,
+            mipLevels = 1, arrayLayers = 6, samples = 1,
+            tiling = 1, usage = 0x4 | 0x2, initialLayout = 0,
+        };
+        ulong im; if(Chk(vkCreateImage(_dev, &ici, null, &im),
+                "vkCreateImage(cubePh)") != 0) return;
+        _cubePhImg = im;
+        VkMemoryRequirements rq;
+        vkGetImageMemoryRequirements(_dev, im, &rq);
+        var mai = new VkMemoryAllocateInfo {
+            sType = ST_MEM_AI, allocationSize = rq.size,
+            memoryTypeIndex = _hostMemType,
+        };
+        ulong mm; Chk(vkAllocateMemory(_dev, &mai, null, &mm),
+            "vkAllocMem(cubePh)");
+        _cubePhMem = mm;
+        Chk(vkBindImageMemory(_dev, im, mm, 0), "bind(cubePh)");
+        // Fill 6 faces × 1×1 = 6 px mid-grey. ‡ rowPitch may
+        // be > 4 per face on some drivers; rq.size covers it.
+        void* p; Chk(vkMapMemory(_dev, mm, 0, rq.size, 0, &p),
+            "map(cubePh)");
+        new Span<byte>(p, (int)rq.size).Fill(0x80);
+        var vci = new VkImageViewCreateInfo {
+            sType = ST_IMAGE_VIEW_CI, image = im,
+            viewType = 3,         // VK_IMAGE_VIEW_TYPE_CUBE
+            format = 37,
+            subresourceRange = new() {
+                aspectMask = 1, levelCount = 1, layerCount = 6,
+            },
+        };
+        ulong vw; Chk(vkCreateImageView(_dev, &vci, null, &vw),
+            "vkCreateImageView(cubePh)");
+        _cubePhView = vw;
+        _cubePhPending = true;   // FlushTexBarriers transitions
+        $"[vk] EnsureCubePlaceholder OK — img={im:x} view={vw:x} (1×1×6 grey)".Log();
+    }
 
     // (T6)×43 ×1(i): per-shIdx FS_OVERRIDE knob.
     // UMBRA_T3_FS_OVERRIDE="N:path[,M:path2,…]" — load
@@ -702,7 +762,11 @@ public static unsafe class NvnVulkan {
         try {
             var bin = File.ReadAllBytes(binPath);
             var spv = MaxwellShader.Compiler.Compile(bin,
-                out var notes, $"sh{shIdx:d4}");
+                out var notes, out var tk, $"sh{shIdx:d4}");
+            // (T6)×66: stash per-shIdx (binding → SampKind)
+            // so the per-draw tex DS-write can match view-type
+            // to what the shader declares (Cube vs 2D etc).
+            _t3ShTexKinds[shIdx] = tk;
             if(notes.Length > 0)
                 $"[vk] sh{shIdx:d4}: {notes.Length} ‡notes — {string.Join("; ", notes)}".Log();
             fixed(byte* p = spv) {
@@ -1990,9 +2054,31 @@ public static unsafe class NvnVulkan {
         // (d.TexHandles[8..]). Bindings: sl0=b8, sl1=b10
         // ... sl15=b38; T3TexBindN must be ≥40.
         var nSlot = d.TexHandles?.Length >= 16 ? 16 : 8;
+        // (T6)×66: cube-binding mask from the bound FS's
+        // TexKinds (binding → SampKind). For each sl where
+        // shader declares b=8+2*sl as Cube (sk&0xf==4),
+        // substitute _cubePhView (TYPE-correct) instead of
+        // the captured 2D tex. Without this, samplerCube +
+        // 2D-view = UB ⟹ env_refl garbage = (γ-3) green-wavy.
+        // Mask folded into DS-key so Cube-vs-2D-at-same-tex
+        // -handles produces distinct DS. ‡ v0 = Cube only;
+        // D3/Array also need type-matched views (none in
+        // this corpus per ×66×1; surface via the TexKinds
+        // note in r-log when they appear).
+        ulong cubeMask = 0;
+        if(_t3ShTexKinds.TryGetValue(d.FsShIdx, out var tk)) {
+            for(var sl = 0; sl < nSlot; sl++) {
+                var b = 8 + 2*sl;
+                if(tk.TryGetValue(b, out var sk)
+                   && (sk & 0xf) == 4)   // SampKind.Cube
+                    cubeMask |= 1ul << sl;
+            }
+            if(cubeMask != 0) EnsureCubePlaceholder();
+        }
         ulong key = 0xcbf29ce484222325;
         for(var sl = 0; sl < nSlot; sl++)
             key = (key ^ d.TexHandles[sl]) * 0x100000001b3;
+        key = (key ^ (cubeMask << 48)) * 0x100000001b3;
         if(_t3SlotDs.TryGetValue(key, out var ds))
             return ds;
         // Ensure each slot's texId is uploaded; collect
@@ -2043,6 +2129,17 @@ public static unsafe class NvnVulkan {
             var vw = (b >= 8 && b < 40 && (b & 1) == 0
                       && sl < nSlot && views[sl] != 0)
                 ? views[sl] : fbView;
+            // (T6)×66: substitute placeholder-cube at bindings
+            // the FS declares as samplerCube. v0 = grey 1×1
+            // ⟹ env_refl = const(0.5) ⟹ stable, no stripes.
+            // ‡ fbView (= the atlas, 2D) at non-slot bindings
+            // is also wrong-type if shader has Cube there —
+            // but those are unused-binding-placeholders, never
+            // actually sampled (= VUID-only concern).
+            if(sl >= 0 && sl < nSlot
+               && (cubeMask & (1ul << sl)) != 0
+               && _cubePhView != 0)
+                vw = _cubePhView;
             dii[b] = new() { sampler = _sampler,
                 imageView = vw, imageLayout = 1 };
             wds[b] = new() {
@@ -2064,6 +2161,21 @@ public static unsafe class NvnVulkan {
     // Emit UNDEFINED→GENERAL barriers for newly-uploaded textures.
     // Called from RecordDrawPass BEFORE vkCmdBeginRenderPass.
     static void FlushTexBarriers() {
+        // (T6)×66: cube placeholder needs layerCount=6 in
+        // its barrier (the loop below uses layerCount=1).
+        if(_cubePhPending && _cubePhImg != 0) {
+            var cr = new VkImageSubresourceRange {
+                aspectMask = 1, levelCount = 1, layerCount = 6 };
+            var cb = new VkImageMemoryBarrier {
+                sType = ST_IMG_BARRIER, image = _cubePhImg,
+                srcAccessMask = 0, dstAccessMask = 0x20,
+                oldLayout = 0, newLayout = 1,
+                subresourceRange = cr,
+            };
+            vkCmdPipelineBarrier(_cmdBuf, 0x1, 0x80, 0,
+                0, null, 0, null, 1, &cb);
+            _cubePhPending = false;
+        }
         if(_texPendingBarrier.Count == 0) return;
         var range = new VkImageSubresourceRange {
             aspectMask = 1, levelCount = 1, layerCount = 1 };

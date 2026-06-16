@@ -109,7 +109,12 @@ public static class Compiler {
            r.Split(',').Select(int.Parse).ToArray())
         : null;
 
+    // (T6)×66: out texKinds (binding → SampKind type-bits)
+    // so the host can match imageView type to the shader's
+    // declared OpTypeImage Dim. Empty for VS (no tex binds in
+    // this corpus) and for shaders with no texture ops.
     public static byte[] Compile(byte[] bin, out string[] notes,
+                                  out Dictionary<int,int> texKinds,
                                   string tag = "") {
         var stage = StageFromSph(bin);
         var lift = new MaxwellLift(Defs);
@@ -163,6 +168,15 @@ public static class Compiler {
         var omap = OmapTargetsFromSph(bin);
         var em = new SpirvEmit(stage, omap, dumpRs != null);
         var spv = em.Compile(stage, lifted);
+        texKinds = em.TexKinds;
+        // (T6)×66 fail-fast: surface non-2D tex bindings in
+        // notes[] (= visible in r-log; the host MUST match
+        // these or the descriptor-bind is UB).
+        var nonStd = texKinds.Where(kv => (kv.Value & 0xf) != SampKind.D2)
+                             .ToList();
+        if(nonStd.Count > 0)
+            noteList.Add("TexKinds: " + string.Join(",", nonStd
+                .Select(kv => $"b{kv.Key}=k{kv.Value:x}")));
         // (T6)×44 fail-fast for ‡v0-deferrals: surface MRT-count
         // so multi-RT shaders are visible in r-log even before
         // the MRT path is exercised.
@@ -181,6 +195,9 @@ public static class Compiler {
         return spv;
     }
 
+    public static byte[] Compile(byte[] bin, out string[] notes,
+                                  string tag = "")
+        => Compile(bin, out notes, out _, tag);
     public static byte[] Compile(byte[] bin, string tag = "")
-        => Compile(bin, out _, tag);
+        => Compile(bin, out _, out _, tag);
 }
