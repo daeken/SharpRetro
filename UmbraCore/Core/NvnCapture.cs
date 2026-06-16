@@ -143,10 +143,20 @@ public static unsafe class NvnCapture {
                 rgba = new byte[t.Width * t.Height * 4];
             }
             var hash = TexHash(t.Width, t.Height, rgba);
-            texPool.Add(new {
-                texId = ti, w = t.Width, h = t.Height,
-                fmt = t.Format, hash,
-            });
+            // (T6)×67: target+depth so replay can create
+            // the right imageView type (cube/3D/array vs
+            // 2D). target=1 (2D) is the overwhelming
+            // default; emit only when ≠1 to keep manifest
+            // diff-friendly with capVer-3 captures (where
+            // these fields don't exist ⟹ readers default
+            // to 2D, which is what they did anyway).
+            object entry = t.Target == 1 && t.Depth <= 1
+                ? new { texId = ti, w = t.Width, h = t.Height,
+                        fmt = t.Format, hash }
+                : new { texId = ti, w = t.Width, h = t.Height,
+                        fmt = t.Format, hash,
+                        target = t.Target, depth = t.Depth };
+            texPool.Add(entry);
             if(_texWritten.Add(hash))
                 WriteTex(Path.Combine(texDir, hash+".tex"),
                     t.Width, t.Height, t.Format, rgba);
