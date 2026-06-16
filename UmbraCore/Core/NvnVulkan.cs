@@ -1096,6 +1096,18 @@ public static unsafe class NvnVulkan {
     static readonly int _t3RttDump =
         int.TryParse(Environment.GetEnvironmentVariable(
             "UMBRA_T3_RTT_DUMP"), out var rd) ? rd : -1;
+    // (T6)×63 ×2: per-MRT-attachment dump. RTT_DUMP picks
+    // rtId; this picks WHICH color attachment within that
+    // RT (default 0 = backward-compat with ALL existing
+    // r-runs). RTT_DUMP_ATT=2 + RTT_DUMP=1 ⟹ rt1.c[2]
+    // direct, no sl6-probe-build. RTT_DUMP=N+100 (depth)
+    // ignores this. Built per ·11221 "work smarter": the
+    // (γ) cascade ×54-×58 needed c[1]/c[2] ~8× via sl2/sl6
+    // -probe-through-fs111 (= build-probe + assume-slot-
+    // mapping each time).
+    static readonly int _t3RttDumpAtt =
+        int.TryParse(Environment.GetEnvironmentVariable(
+            "UMBRA_T3_RTT_DUMP_ATT"), out var ra) ? ra : 0;
     static ulong _rtDumpBuf, _rtDumpMem;
     static byte* _rtDumpPtr;
     const int RtDumpBufSz = 32 << 20;  // 32MB ≥ max(1920×1080×8, 1024×4096×4)
@@ -3465,8 +3477,15 @@ public static unsafe class NvnVulkan {
                 // color is empty but depth has geometry,
                 // it's FS-output not rasterization).
                 var dumpDepth = _t3RttDump >= 100;
+                // (T6)×63: clamp+log if ATT > nCb (= the
+                // T3MaxDraws-class fail-fast).
+                var ai = _t3RttDumpAtt;
+                if(!dumpDepth && ai >= drf.NC) {
+                    $"[vk] ⚠ RTT_DUMP_ATT={ai} ≥ rt{_t3RttDump%100}.NC={drf.NC} — clamping to 0".Log();
+                    ai = 0;
+                }
                 var srcImg = (drf.NC > 0 && !dumpDepth)
-                    ? drf.Img[0] : drf.DepthImg;
+                    ? drf.Img[ai] : drf.DepthImg;
                 var asp = (drf.NC > 0 && !dumpDepth)
                     ? 1u : 2u;  // COLOR : DEPTH
                 var bic = new VkBufferImageCopy {
@@ -3706,8 +3725,13 @@ public static unsafe class NvnVulkan {
         var path = $"/tmp/umbra-frame-{frameN:d3}.ppm";
         var sig = rtId < NvnLinux.RtSigs.Count
             ? NvnLinux.RtSigs[rtId] : null;
+        // (T6)×63: per-attachment fmt (rt1.c[0/1/2] all
+        // 0x25 RGBA8 in this game per ×60-FINAL-2; but
+        // some games mix ⟹ read the actual sig.Colors[ai]).
+        var ai = !dumpDepth && _t3RttDumpAtt < rf.NC
+               ? _t3RttDumpAtt : 0;
         var nf = (rf.NC > 0 && !dumpDepth)
-            ? (sig?.Colors[0].Fmt ?? 0x25)
+            ? (sig?.Colors[ai].Fmt ?? 0x25)
             : (sig?.Depth?.Fmt ?? 0x34);
         var (vf, _, _) = NvnRtFmt(nf);
         var w = rf.W; var h = rf.H;
