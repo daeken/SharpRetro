@@ -360,11 +360,42 @@ public static unsafe class CondVarKernel {
         var w = new Waiter { Handle = (uint) handle, MutexAddr = addr };
         Trc($"W  cv={cvKey:x} m={addr:x} h={handle:x} t={(long)timeoutNs}");
         lock(_schedLock) {
-            // Atomically: release mutex + mark cv has-waiters + insert into cv tree.
-            // This IS the "Atomic" in the SVC name — the signaler can't run
-            // between these because it takes _schedLock too.
-            ReleaseMutexLocked(addr);
-            *(uint*) cvKey = 1;             // HasWaiterFlag
+            // Atomically: mark cv has-waiters + release mutex + insert into cv tree.
+            // This IS the "Atomic" in the SVC name. ⚠ The KERNEL signaler
+            // (CondVarKernel.Signal) can't interleave because it takes
+            // _schedLock too — but USERLAND nn::os Signal's fast-path
+            // doesn't take _schedLock: it CAS-acquires the mutex, then
+            // loads *cvKey, and skips the SVC if cvKey==0.
+            //
+            // (T6)×68: Atmosphere KCV::Wait (kern_k_condition_variable
+            // .cpp:255-263) writes cvKey=HasWaiterFlag → DMB ish →
+            // *addr=next_value (= mutex release), in THAT order. Our
+            // prior order (ReleaseMutexLocked FIRST, cvKey=1 SECOND)
+            // lets userland's fast-path interleave:
+            //   us:   Volatile.Write(*addr, 0)        [release-store]
+            //   them: CAS(addr, 0→theirHandle)        [acquire — sync's
+            //         with our release; sees everything BEFORE it]
+            //   them: load *cvKey → 0                 [our cvKey=1 is
+            //         AFTER the release ⟹ NOT in the acquire's
+            //         visibility guarantee]
+            //   them: skip SVC SignalProcessWideKey
+            //   us:   *cvKey = 1; AddLast(w)
+            //   us:   w.Ev.Wait()                     [forever]
+            // = lost-wakeup. The c²¹ fix (e536a21) was the ATOMICITY-
+            // class race (non-atomic-RMW in ArbitrateLock); this is the
+            // ORDERING-class sibling per kt[34](b), same file ~10L away.
+            // Atmosphere's real-kernel KScopedSchedulerLock STOPS
+            // userland (preempts all cores); our HLE _schedLock is a
+            // managed Monitor that doesn't, so we need the store ORDER
+            // correct where Atmosphere relies on preemption.
+            //
+            // Cv().AddLast can stay anywhere inside this lock block
+            // (the SVC Signal takes _schedLock → blocks until we exit
+            // → sees w in the list). The cvKey-vs-addr ORDER is what
+            // matters for the userland fast-path's lockless cvKey-load.
+            *(uint*) cvKey = 1;             // HasWaiterFlag — FIRST
+            Thread.MemoryBarrier();         // = Atmosphere's DMB ish
+            ReleaseMutexLocked(addr);       // *addr release — SECOND
             Cv(cvKey).AddLast(w);
         }
 
