@@ -897,11 +897,31 @@ public static unsafe class NvnVulkan {
         // shadow nC=0; 3 for [A]G-buf). All identical
         // blend-state for now (‡ per-attachment blend
         // from game's nvnBlendState = ×37+).
+        // (T6)×61 ×3: per-rtId blend heuristic. rt0 (post-
+        // process: tonemap/AA/FXAA/c[2]-copy/letterbox)
+        // = sequential OVERWRITES, blend=OFF. With the
+        // global SRC_ALPHA, each pass blended with prior
+        // via its packed-data-as-α (e.g. #666 fs2 copies
+        // c[2].rgba; c[2].α @flower=0 ⟹ contributed 0%;
+        // #664 fs206's α = edge-strength ⟹ dot-grid where
+        // c[0] has fine variation). Verified r128c@flower
+        // (NOBLEND) = clean studs; r138c (blend) = dots ON
+        // studs ⟹ blend-only artifact. r140b (fs2 α=1
+        // forced) still dotted ⟹ NOT c[2].α; r140c c[2].α
+        // @flower=0 flat ⟹ #666 contributes ~0% there.
+        // rt2 (deferred-light) KEEPS SRC_ALPHA (#163 fs50
+        // albedo + #164/165/631 lights need blend; r129c
+        // 0.41%→18.78% with blend). rt1 (G-buf) = OFF per
+        // NOBLEND-baseline (each draw owns its pixels via
+        // depth). ‡ Structural fix = capture NVN per-draw
+        // nvnBlendState (currently 0 hooks in NvnLinux);
+        // this is the heuristic per-rtId stand-in.
+        var blendOn = !_t3NoBlend && rtId != 0 && rtId != 1;
         var cbAtt = stackalloc
             VkPipelineColorBlendAttachmentState[Math.Max(nCb, 1)];
         for(var ci = 0; ci < Math.Max(nCb, 1); ci++)
             cbAtt[ci] = new() {
-                blendEnable = _t3NoBlend ? 0u : 1u,
+                blendEnable = blendOn ? 1u : 0u,
                 colorWriteMask = 0xf,
                 srcColorBF = 6, dstColorBF = 7, colorBlendOp = 0,
                 srcAlphaBF = 1, dstAlphaBF = 7, alphaBlendOp = 0,
