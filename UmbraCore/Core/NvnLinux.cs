@@ -1270,6 +1270,17 @@ public static unsafe class NvnLinux {
             VbSize1 = _curVbSize1,
             Program = _curProgram,
             TexHandle = _curTexHandle, TexStage = _curTexStage, TexSlot = _curTexSlot,
+            // (T6)×38 ×2 ROOT: (c⁴⁰) added per-slot
+            // TexHandles[] to SnapDraw (DrawElementsBV
+            // path) but this DrawArrays inline-init was
+            // never updated ⟹ all 38 non-indexed draws
+            // (= postproc fullscreen-tris + bloom + UI +
+            // composite) had TexHandles=null in capture
+            // (verified: 100% idxN=0 ⟺ all-0 in nvncap5).
+            // ‡ The duplication (this fn doesn't call
+            // SnapDraw) is the structural issue; ×39 =
+            // collapse to SnapDraw + per-path overrides.
+            TexHandles = SnapTexRow(1),
             Ubo = ubo, Ubos = ubos,
             // T3: which sh{idx} the bound VS/FS programs map to.
             // _stagePr[0]=VS, [1]=FS per umbra71 (stages bit 0/1).
