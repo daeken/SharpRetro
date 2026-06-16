@@ -303,6 +303,29 @@ public static unsafe class NvnLinux {
         ["nvnCommandBufferDrawElementsBaseVertex"] = (nint)(delegate* unmanaged<ulong, int, int, int, ulong, int, void>)&CbDrawElementsBaseVertex,
         ["nvnCommandBufferBindTexture"]      = (nint)(delegate* unmanaged<ulong, int, int, ulong, void>)&CbBindTexture,
         ["nvnCommandBufferBindProgram"]      = (nint)(delegate* unmanaged<ulong, ulong, int, void>)&CbBindProgram,
+        // (T6)×62: NVN blend-state capture. NVNblendState =
+        // 8B opaque, NVNcolorState = 4B opaque (per botw-nvn.h
+        // @167/@89). State-builders write into game's struct
+        // (we own the byte layout, same pattern as VasSet*).
+        // BindBlendState/BindColorState read the game's struct
+        // → latch into _curBlend* → SnapDraw emits BlendKey
+        // → blend.bin sidecar → NvnReplay → T3Pipe blend-eq.
+        // u779: 322× BindBlendState (~8/frame), 40× BindColor
+        // State (~1/frame), state-builders ×1-each (= first-
+        // logged-only). ColorState carries the per-target
+        // enable mask; BlendState carries func+eq per-target.
+        ["nvnBlendStateSetDefaults"]         = (nint)(delegate* unmanaged<byte*, void>)&BsSetDefaults,
+        ["nvnBlendStateSetBlendTarget"]      = (nint)(delegate* unmanaged<byte*, int, void>)&BsSetTarget,
+        ["nvnBlendStateSetBlendFunc"]        = (nint)(delegate* unmanaged<byte*, int, int, int, int, void>)&BsSetFunc,
+        ["nvnBlendStateSetBlendEquation"]    = (nint)(delegate* unmanaged<byte*, int, int, void>)&BsSetEq,
+        ["nvnBlendStateGetBlendTarget"]      = (nint)(delegate* unmanaged<byte*, int>)&BsGetTarget,
+        ["nvnBlendStateGetBlendFunc"]        = (nint)(delegate* unmanaged<byte*, int*, int*, int*, int*, void>)&BsGetFunc,
+        ["nvnBlendStateGetBlendEquation"]    = (nint)(delegate* unmanaged<byte*, int*, int*, void>)&BsGetEq,
+        ["nvnColorStateSetDefaults"]         = (nint)(delegate* unmanaged<uint*, void>)&CsSetDefaults,
+        ["nvnColorStateSetBlendEnable"]      = (nint)(delegate* unmanaged<uint*, int, int, void>)&CsSetBlendEnable,
+        ["nvnColorStateGetBlendEnable"]      = (nint)(delegate* unmanaged<uint*, int, int>)&CsGetBlendEnable,
+        ["nvnCommandBufferBindBlendState"]   = (nint)(delegate* unmanaged<ulong, byte*, void>)&CbBindBlendState,
+        ["nvnCommandBufferBindColorState"]   = (nint)(delegate* unmanaged<ulong, uint*, void>)&CbBindColorState,
         ["nvnDeviceGetTextureHandle"]        = (nint)(delegate* unmanaged<ulong, int, int, ulong>)&DeviceGetTextureHandle,
         // T3 ("real shader compilation 👀"): capture
         // what nvnProgramSetShaders actually receives. NVNshaderData
@@ -740,6 +763,15 @@ public static unsafe class NvnLinux {
         // (typically the swap/composite [F]). NvnReplay
         // switches renderpass when this changes.
         public byte RtId;
+        // (T6)×62: per-draw blend state, packed. Bit 0 =
+        // enable (from ColorState target-0); bits 8..14 =
+        // {srcRGB, dstRGB, srcA, dstA, eqRGB, eqA, target}
+        // each in a byte from BlendState (NVN values fit
+        // in 7b; CONSTANT_*=0x61+ ‡truncated — game doesn't
+        // use them per u779 SetBlendFunc x1=2 x2=1 = ONE/
+        // ZERO). 0 = not-captured (capVer<4 ⟹ heuristic).
+        // Stored as 8 bytes (= NVNblendState raw + enable).
+        public ulong BlendKey;
         // resolved texture state (W/H/Fmt/CpuPtr) at draw
         // time. Null if TexHandle's texId not registered.
         public H? Tex;
@@ -1179,7 +1211,90 @@ public static unsafe class NvnLinux {
             ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
             Attribs = _curAttribs, Streams = _curStreams,
             RtId = CurRtId,
+            // (T6)×62: pack latched blend. v0 = target-0
+            // only (the dominant case; rt1's 3-MRT wants
+            // blend=OFF anyway per the rtId≠1 heuristic
+            // which the captured-enable will confirm).
+            // Layout matches blend.bin: byte 0 = enable
+            // mask (from ColorState), bytes 1-7 =
+            // BlendState bytes 1-7 (target-0's func+eq).
+            BlendKey = (ulong)(_curBlendEnable & 0xff)
+                     | (_curBlend[0] & 0xffffff_ffffff00),
         };
+    }
+
+    // ── (T6)×62: NVN blend/color state hooks ──
+    // NVNblendState = 8B opaque. Our layout (we own it):
+    //   [0]=target [1]=srcRGB [2]=dstRGB [3]=srcA [4]=dstA
+    //   [5]=eqRGB  [6]=eqA    [7]=pad
+    // NVN BlendFunc enum: ZERO=1 ONE=2 SRC_COLOR=3
+    //   1−SRC_COLOR=4 SRC_ALPHA=5 1−SRC_ALPHA=6 DST_ALPHA=7
+    //   1−DST_ALPHA=8 DST_COLOR=9 1−DST_COLOR=0xA
+    //   SRC_ALPHA_SAT=0xB SRC1_*=0x10-0x13 CONST_*=0x61-64.
+    // NVN BlendEquation: ADD=1 SUB=2 RSUB=3 MIN=4 MAX=5.
+    // Defaults per GL convention: src=ONE dst=ZERO eq=ADD.
+    // u779 verified game calls SetBlendFunc(2,1,2,1) =
+    //   ONE,ZERO,ONE,ZERO = pure-replace for one state.
+    [UnmanagedCallersOnly]
+    static void BsSetDefaults(byte* s) {
+        s[0]=0; s[1]=2; s[2]=1; s[3]=2; s[4]=1; s[5]=1; s[6]=1; s[7]=0;
+    }
+    [UnmanagedCallersOnly]
+    static void BsSetTarget(byte* s, int target) {
+        s[0] = (byte)target;
+    }
+    [UnmanagedCallersOnly]
+    static void BsSetFunc(byte* s, int srcRgb, int dstRgb, int srcA, int dstA) {
+        s[1]=(byte)srcRgb; s[2]=(byte)dstRgb;
+        s[3]=(byte)srcA;   s[4]=(byte)dstA;
+    }
+    [UnmanagedCallersOnly]
+    static void BsSetEq(byte* s, int eqRgb, int eqA) {
+        s[5]=(byte)eqRgb; s[6]=(byte)eqA;
+    }
+    [UnmanagedCallersOnly]
+    static int BsGetTarget(byte* s) => s[0];
+    [UnmanagedCallersOnly]
+    static void BsGetFunc(byte* s, int* sr, int* dr, int* sa, int* da) {
+        *sr=s[1]; *dr=s[2]; *sa=s[3]; *da=s[4];
+    }
+    [UnmanagedCallersOnly]
+    static void BsGetEq(byte* s, int* er, int* ea) {
+        *er=s[5]; *ea=s[6];
+    }
+    // NVNcolorState = 4B opaque. Our layout: u32 bitmask,
+    // bit i = blend-enable for target i. Defaults = all OFF.
+    [UnmanagedCallersOnly]
+    static void CsSetDefaults(uint* s) { *s = 0; }
+    [UnmanagedCallersOnly]
+    static void CsSetBlendEnable(uint* s, int target, int enable) {
+        if(enable != 0) *s |=  (1u << target);
+        else            *s &= ~(1u << target);
+    }
+    [UnmanagedCallersOnly]
+    static int CsGetBlendEnable(uint* s, int target)
+        => (int)((*s >> target) & 1);
+
+    // Latched per-CB state. v0 = single global (one CB
+    // recording at a time per game's pattern; ‡ per-CB
+    // dict if multi-CB-recording surfaces). _curBlend[t]
+    // = the 8 bytes of target-t's bound BlendState as
+    // a ulong; _curBlendEnable = ColorState's bitmask.
+    static readonly ulong[] _curBlend = new ulong[8];
+    static uint _curBlendEnable;
+    static int _bindBlendN, _bindColorN;
+    [UnmanagedCallersOnly]
+    static void CbBindBlendState(ulong cb, byte* s) {
+        var t = s[0];
+        if(t < 8) _curBlend[t] = *(ulong*)s;
+        if(++_bindBlendN <= 20 || (_bindBlendN & 0x3ff) == 0)
+            $"[nvn] BindBlendState #{_bindBlendN} cb=0x{cb:x} t={t} func=({s[1]},{s[2]},{s[3]},{s[4]}) eq=({s[5]},{s[6]})".Log();
+    }
+    [UnmanagedCallersOnly]
+    static void CbBindColorState(ulong cb, uint* s) {
+        _curBlendEnable = *s;
+        if(++_bindColorN <= 20 || (_bindColorN & 0xff) == 0)
+            $"[nvn] BindColorState #{_bindColorN} cb=0x{cb:x} enable=0b{Convert.ToString(*s, 2).PadLeft(8,'0')}".Log();
     }
 
     static int _drawElN;

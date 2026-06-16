@@ -639,7 +639,7 @@ public static unsafe class NvnVulkan {
     // that bit me at ×38+×39 is the CORRECT discriminator
     // here (engine convention, not own-code-gap).
     static readonly Dictionary<(int vs, int fs, int vh, byte rt,
-        bool nd), ulong> _t3Pipes = new();
+        bool nd, ulong bk), ulong> _t3Pipes = new();
     static int VtxHash(NvnLinux.NvnAttrib[] a, NvnLinux.NvnStream[] s) {
         // Cheap structural hash. Order matters (= location N).
         int h = (a?.Length ?? 0) | ((s?.Length ?? 0) << 8);
@@ -748,11 +748,31 @@ public static unsafe class NvnVulkan {
     // 36B 4-attr (most title-screen draws use different stride
     // → wrong vbuf decode → garbage geometry; per-pair vertex-
     // layout = ). Returns 0 if .spv missing.
+    // (T6)×62: NVN BlendFunc/Equation → Vk maps. NVN
+    // values fit in a byte (CONST_*=0x61+ ‡not handled,
+    // game doesn't use per u779). Vk: ZERO=0 ONE=1
+    // SRC_COLOR=2 1−SRC_COLOR=3 DST_COLOR=4 1−DST_COLOR=5
+    // SRC_ALPHA=6 1−SRC_ALPHA=7 DST_ALPHA=8 1−DST_ALPHA=9
+    // SRC_ALPHA_SAT=14. NVN: ZERO=1 ONE=2 SRC_COLOR=3
+    // 1−SRC_COLOR=4 SRC_ALPHA=5 1−SRC_ALPHA=6 DST_ALPHA=7
+    // 1−DST_ALPHA=8 DST_COLOR=9 1−DST_COLOR=0xA SAT=0xB.
+    static byte NvnBfToVk(byte n) => n switch {
+        1 => 0, 2 => 1, 3 => 2, 4 => 3, 5 => 6, 6 => 7,
+        7 => 8, 8 => 9, 9 => 4, 10 => 5, 11 => 14,
+        // SRC1_*=0x10-13 → Vk 15-18; CONST_*=0x61-64 → Vk 10-13
+        0x10 => 15, 0x11 => 16, 0x12 => 17, 0x13 => 18,
+        0x61 => 10, 0x62 => 11, 0x63 => 12, 0x64 => 13,
+        _ => 1, // ‡ unknown → ONE (= identity-ish)
+    };
+    // NVN eq ADD=1 SUB=2 RSUB=3 MIN=4 MAX=5; Vk same-1.
+    static byte NvnBeToVk(byte n) => (byte)(n >= 1 && n <= 5 ? n - 1 : 0);
+
     static ulong T3Pipe(int vsIdx, int fsIdx,
                         NvnLinux.NvnAttrib[] nA, NvnLinux.NvnStream[] nS,
-                        byte rtId = 255, bool noDepth = false) {
+                        byte rtId = 255, bool noDepth = false,
+                        ulong blendKey = 0) {
         var vh = VtxHash(nA, nS);
-        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh, rtId, noDepth),
+        if(_t3Pipes.TryGetValue((vsIdx, fsIdx, vh, rtId, noDepth, blendKey),
                 out var p))
             return p;
         // (T6)×35 ×3: rtId=255 ⟹ pre-RTT (swap RP, 1
@@ -813,7 +833,7 @@ public static unsafe class NvnVulkan {
             : EnsureShaderModule(fsIdx, 2);
         if(vsm == 0 || fsm == 0) {
             if(!L.Quiet) $"[vk] T3Pipe({vsIdx},{fsIdx},vh{vh:x}): .spv missing → skip".Log();
-            _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth)] = 0;
+            _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth, blendKey)] = 0;
             return 0;
         }
         var entryName = stackalloc byte[8]; "main\0"u8.CopyTo(new Span<byte>(entryName, 8));
@@ -897,6 +917,22 @@ public static unsafe class NvnVulkan {
         // shadow nC=0; 3 for [A]G-buf). All identical
         // blend-state for now (‡ per-attachment blend
         // from game's nvnBlendState = ×37+).
+        // (T6)×62: per-draw NVN blend from blend.bin
+        // (capVer≥4). blendKey byte 0 = ColorState enable
+        // mask; bytes 1-6 = NVN {srcRGB,dstRGB,srcA,dstA,
+        // eqRGB,eqA} for target-0. blendKey=0 (capVer<4
+        // OR uncaptured) ⟹ fall through to per-rtId
+        // heuristic below.
+        bool blEn; byte blSrc, blDst, blSrcA, blDstA, blOp, blOpA;
+        if(blendKey != 0) {
+            blEn   = (blendKey & 1) != 0;
+            blSrc  = NvnBfToVk((byte)(blendKey >>  8));
+            blDst  = NvnBfToVk((byte)(blendKey >> 16));
+            blSrcA = NvnBfToVk((byte)(blendKey >> 24));
+            blDstA = NvnBfToVk((byte)(blendKey >> 32));
+            blOp   = NvnBeToVk((byte)(blendKey >> 40));
+            blOpA  = NvnBeToVk((byte)(blendKey >> 48));
+        } else {
         // (T6)×61 ×3: per-rtId blend heuristic. rt0 (post-
         // process: tonemap/AA/FXAA/c[2]-copy/letterbox)
         // = sequential OVERWRITES, blend=OFF. With the
@@ -916,15 +952,22 @@ public static unsafe class NvnVulkan {
         // depth). ‡ Structural fix = capture NVN per-draw
         // nvnBlendState (currently 0 hooks in NvnLinux);
         // this is the heuristic per-rtId stand-in.
-        var blendOn = !_t3NoBlend && rtId != 0 && rtId != 1;
+            blEn = !_t3NoBlend && rtId != 0 && rtId != 1;
+            blSrc = 6; blDst = 7; blSrcA = 1; blDstA = 7;
+            blOp = 0; blOpA = 0;
+        }
+        // _t3NoBlend env always wins (= the diagnostic knob).
+        if(_t3NoBlend) blEn = false;
         var cbAtt = stackalloc
             VkPipelineColorBlendAttachmentState[Math.Max(nCb, 1)];
         for(var ci = 0; ci < Math.Max(nCb, 1); ci++)
             cbAtt[ci] = new() {
-                blendEnable = blendOn ? 1u : 0u,
+                blendEnable = blEn ? 1u : 0u,
                 colorWriteMask = 0xf,
-                srcColorBF = 6, dstColorBF = 7, colorBlendOp = 0,
-                srcAlphaBF = 1, dstAlphaBF = 7, alphaBlendOp = 0,
+                srcColorBF = blSrc, dstColorBF = blDst,
+                colorBlendOp = blOp,
+                srcAlphaBF = blSrcA, dstAlphaBF = blDstA,
+                alphaBlendOp = blOpA,
             };
         var cbs = new VkPipelineColorBlendStateCreateInfo {
             sType = ST_PIPELINE_COLOR_BLEND_CI,
@@ -980,7 +1023,7 @@ public static unsafe class NvnVulkan {
         } else {
             $"[vk] T3Pipe({vsIdx},{fsIdx}) built → 0x{pipe:x}".Log();
         }
-        _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth)] = pipe;
+        _t3Pipes[(vsIdx, fsIdx, vh, rtId, noDepth, blendKey)] = pipe;
         return pipe;
     }
     static ulong _t3DslCbuf, _t3DslTex, _t3DsPool;
@@ -2500,7 +2543,7 @@ public static unsafe class NvnVulkan {
                 var noDepth = _t3Rtt && d.IdxCount == 0;
                 var pipe = T3Pipe(d.VsShIdx, d.FsShIdx,
                                   d.Attribs, d.Streams,
-                                  rtKey, noDepth);
+                                  rtKey, noDepth, d.BlendKey);
                 if(pipe == 0) continue;
                 if(pipe != curPipe) {
                     vkCmdBindPipeline(_cmdBuf, 0, pipe);
