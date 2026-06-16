@@ -142,5 +142,11 @@ public class ThreadManager {
             return 0;
         };
         game.Callbacks.SleepThread = ns => Thread.Sleep((int) (ns / 1_000_000));
+        // (T6)×69: Svc 0x1E GetSystemTick. Was throw-
+        // NotImplemented (default); game uses MRS
+        // CNTPCT_EL0 directly (op=3 fast-path) so this
+        // never fired in legoworlds, but other games
+        // may. Same source as the MRS path = consistent.
+        game.Callbacks.GetSystemTick = () => UmbraTime.Ticks();
     }
 }

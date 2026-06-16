@@ -80,8 +80,16 @@ public class MainLoop {
                     (true, (ulong) Kernel.ThreadManager.CurrentThread.TlsBase),
                 0b11_011_1101_0000_010 => // TPIDR
                     (true, Kernel.ThreadManager.CurrentThread.Tpidr),
-                0b11_011_1110_0000_001 => // CntpctEl0
-                    (true, (ulong) stopwatch.ElapsedMilliseconds * 19_200),
+                0b11_011_1110_0000_001 or  // CntpctEl0
+                0b11_011_1110_0000_010 =>  // CntvctEl0
+                    // (T6)×69: was `stopwatch.ElapsedMilliseconds
+                    // × 19200` (process-relative ✓ but ms-only +
+                    // own private Stopwatch ⟹ slightly different
+                    // epoch from UmbraTime's). The op=3 fast-path
+                    // catches these first; this is the fall-
+                    // through-consistency arm. + 0x5f00 (CNTFRQ)
+                    // not handled here ⟹ also fast-path-only.
+                    (true, UmbraTime.Ticks()),
                 0b11_011_0000_0000_111 => // DCZID_EL0
                     (true, 0UL),
                 _ => (false, 0UL),

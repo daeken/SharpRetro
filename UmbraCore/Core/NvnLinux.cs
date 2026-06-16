@@ -1683,10 +1683,16 @@ public static unsafe class NvnLinux {
         return 1;  // ‡
     }
 
-    static readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
-    static ulong NowNs() =>
-        (ulong) (_clock.ElapsedTicks * (1_000_000_000.0
-                 / System.Diagnostics.Stopwatch.Frequency));
+    // (T6)×69: was its own `Stopwatch.StartNew()` (=
+    // process-relative ✓, but a DIFFERENT epoch from
+    // GameWrapper's CNTPCT fast-path which used host-
+    // uptime via GetTimestamp() — the 316ef3d bug —
+    // AND from MainLoop's ReadSr stopwatch). Now ALL
+    // emulator timestamps share UmbraTime's single
+    // process-relative epoch. + the old impl went via
+    // double (= ~52-bit mantissa, fine for ns-since-
+    // process-start; UmbraTime.Ns() is Int128-exact).
+    static ulong NowNs() => UmbraTime.Ns();
     [UnmanagedCallersOnly]
     static ulong DeviceGetCurrentTimestampNs(ulong dev) => NowNs();
     static long _getTsN;
