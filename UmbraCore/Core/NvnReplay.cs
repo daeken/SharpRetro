@@ -67,10 +67,21 @@ public static unsafe class NvnReplay {
             var hh = t.GetProperty("h").GetInt32();
             var fmt = t.GetProperty("fmt").GetInt32();
             var hash = t.GetProperty("hash").GetString()!;
+            // (T6)×74: target/depth (40th, capVer≥4 only;
+            // emitted only when ≠ default 2D). Fail-fast:
+            // log every non-2D so the cube-wire path is
+            // visible per kt[2].
+            var target = t.TryGetProperty("target", out var jt)
+                ? jt.GetInt32() : 1;
+            var depth  = t.TryGetProperty("depth",  out var jd)
+                ? jd.GetInt32() : 1;
+            if(target != 1)
+                $"[replay] texId=0x{texId:x} {w}×{hh} fmt=0x{fmt:x} target={target}{(target==8?" CUBEMAP":target==2?" 3D":"")} depth={depth}".Log();
             var rgba = LoadTex(
                 Path.Combine(texDir, hash + ".tex"));
             NvnLinux.InjectTex(texId, new NvnLinux.H {
                 Width = w, Height = hh, Format = fmt,
+                Target = target, Depth = depth,
                 Rgba = rgba, Gen = 1,
             });
             nTex++;
