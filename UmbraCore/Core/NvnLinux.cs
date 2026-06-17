@@ -1711,6 +1711,10 @@ public static unsafe class NvnLinux {
     static long _rtLogN;
     static readonly bool _rtLog =
         Environment.GetEnvironmentVariable("UMBRA_RTT_LOG") != null;
+    // (T6)×97 ×2 ‡v0×22nd: include texPtr handles in RtSig key.
+    static readonly bool _rtSigHandle =
+        Environment.GetEnvironmentVariable("UMBRA_RTSIG_HANDLE")
+            == "1";
 
     [UnmanagedCallersOnly]
     static void CbSetRenderTargets(ulong cb, int numColors, ulong* colors,
@@ -1725,18 +1729,47 @@ public static unsafe class NvnLinux {
         // (T6)×33 ×4: sig-key + table-insert. Key = FNV
         // over (nC, c[i].{W,H,fmt}, d.{W,H,fmt}). 9
         // distinct in u774 ⟹ byte id sufficient.
+        // (T6)×97 ×2 ‡v0×22nd: UMBRA_RTSIG_HANDLE=1 ⟹
+        // also fold colors[i]/depth HANDLES into the key.
+        // ×97×1(a-3): the (T6)×33 key collides any two
+        // SetRenderTargets calls with same {nC,W,H,fmt}
+        // but DIFFERENT texPtrs. ×97×1(a) shows tex313
+        // only in rt1.c[2] at-manifest, BUT manifest
+        // stores FIRST-seen handle per sig ⟹ if game
+        // ping-pongs #663-665(c[0]=texA) ↔ #666(c[0]=texB)
+        // both 1920×1080-RGBA8+D24S8, they collide into
+        // rtId=0; replay writes #663-665 to rt0.c[0]=tex
+        // 308's image; #666 reads tex313 = stale G-buf
+        // c[2]. r165b's TH_OVERRIDE 666:0=308 stub WORKS
+        // (= redirects to what was actually written) ⟹
+        // mechanism-consistent. With handle in key, the
+        // ping-pong targets get distinct rtIds; replay
+        // writes to the right image automatically; #666
+        // reads tex313 = the actual #663-665 output via
+        // 48th's _rtImgByTid sharing. ⚠ kt[39] Arm(NO-
+        // PINGPONG): if game DOESN'T ping-pong, this
+        // produces same rtIds as before (= harmless) ⟹
+        // u796 with this knob = the discriminator (count
+        // rtSigs vs nvncap6l's 15). ‡ Default-OFF until
+        // u796 verifies + r166 SAFE-checks (= rtId-byte
+        // overflow if game uses >255 distinct handles;
+        // ‡unlikely but bounds-check at NEW-sig).
         ulong key = 0xcbf29ce484222325UL ^ (uint)numColors;
         for(var i = 0; i < numColors && colors != null; i++) {
             var s = S(colors[i]);
             key = (key * 0x100000001b3) ^ (uint)s.Width;
             key = (key * 0x100000001b3) ^ (uint)s.Height;
             key = (key * 0x100000001b3) ^ (uint)s.Format;
+            if(_rtSigHandle)
+                key = (key * 0x100000001b3) ^ colors[i];
         }
         if(depthStencil != 0) {
             var ds = S(depthStencil);
             key = (key * 0x100000001b3) ^ (uint)ds.Width;
             key = (key * 0x100000001b3) ^ (uint)ds.Height;
             key = (key * 0x100000001b3) ^ (uint)ds.Format;
+            if(_rtSigHandle)
+                key = (key * 0x100000001b3) ^ depthStencil;
         }
         if(!_rtSigTable.TryGetValue(key, out var id)) {
             // New sig — resolve attachments + texIds.
