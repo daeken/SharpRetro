@@ -608,7 +608,17 @@ public static unsafe class NvnVulkan {
                  // (c²³)(a) source H + its Gen at upload
                  // time. EnsureTexBound rebuilds if either
                  // changed (= re-register or re-init/upload).
-                 NvnLinux.H? Src = null, int Gen = 0);
+                 NvnLinux.H? Src = null, int Gen = 0,
+                 // (T6)×74: cube-typed view of the same Img
+                 // (viewType=CUBE, layerCount=6). Non-zero
+                 // only when tex.Target==8 (NVN_TEXTURE_
+                 // TARGET_CUBEMAP, per 40th's capture).
+                 // EnsureSlotDs binds THIS at samplerCube
+                 // bindings instead of the 39th's grey
+                 // placeholder ⟹ env_refl reads real cube
+                 // content. Layers tells FlushTexBarriers
+                 // how many array-layers to transition.
+                 ulong CubeView = 0, int Layers = 1);
     static readonly Dictionary<int, TexVk> _texVk = new();
     static readonly List<int> _texPendingBarrier = new();
     // ── T3 T3 state ──
@@ -1942,14 +1952,48 @@ public static unsafe class NvnVulkan {
             return 0;
         }
 
+        // (T6)×74: cube arm. tex.Target==8 (NVN_TEXTURE_
+        // TARGET_CUBEMAP per 40th, capVer≥4 manifest) ⟹
+        // create CUBE_COMPATIBLE + arrayLayers=6 + a second
+        // viewType=CUBE view. v0 = tile the captured 1-face
+        // RGBA into all 6 layers (DecodeForUpload reads w×h
+        // ×1 only per 40th's known-‡; rawLen=0x40000 in the
+        // .tex confirms 1-face at-data). Wrong-but-stable:
+        // env_refl gets REAL sky-content on every face (=
+        // texId 0x104 in nvncap6l/f36030 is the tcb_E env-
+        // map the (γ-3) chase landed on at ×66), just not
+        // direction-correct — strictly better than the
+        // 39th's grey-0.5 placeholder. v1 = NvnCapture-side
+        // 6-face DecodeForUpload (reads 6× from CpuPtr at
+        // per-face stride; ‡ NVN block-linear cube layout
+        // = face-major, GOB-swizzled per face).
+        // ‡ tiling=LINEAR + CUBE_COMPATIBLE: spec-VUID may
+        // forbid (VUID-VkImageCreateInfo-flags-08866);
+        // lavapipe accepts. Same caveat as the 39th's
+        // placeholder; if Chk fails ⟹ isCube=false fallback
+        // (= 2D image, grey-placeholder at bind).
+        var isCube = tex?.Target == 8;
+        var layers = isCube ? 6 : 1;
         var ici = new VkImageCreateInfo {
-            sType = ST_IMAGE_CI, imageType = 1, format = 37,
+            sType = ST_IMAGE_CI,
+            flags = isCube ? 0x10u : 0,   // CUBE_COMPATIBLE_BIT
+            imageType = 1, format = 37,
             width = (uint)w, height = (uint)h, depth = 1,
-            mipLevels = 1, arrayLayers = 1, samples = 1,
+            mipLevels = 1, arrayLayers = (uint)layers, samples = 1,
             tiling = 1, usage = 0x4 | 0x2, initialLayout = 0,
         };
         ulong img; if(Chk(vkCreateImage(_dev, &ici, null, &img),
-                $"vkCreateImage(tex{texId:x})") != 0) return 0;
+                $"vkCreateImage(tex{texId:x}{(isCube?",cube":"")})") != 0) {
+            // ‡ LINEAR+CUBE refused ⟹ retry as 2D (= the
+            // 39th's placeholder still covers the type-match;
+            // we just don't get real content on this driver).
+            if(isCube) { isCube = false; layers = 1;
+                ici.flags = 0; ici.arrayLayers = 1;
+                if(Chk(vkCreateImage(_dev, &ici, null, &img),
+                    $"vkCreateImage(tex{texId:x},2d-fallback)") != 0)
+                    return 0;
+            } else return 0;
+        }
         VkMemoryRequirements req;
         vkGetImageMemoryRequirements(_dev, img, &req);
         var mai = new VkMemoryAllocateInfo {
@@ -1961,7 +2005,24 @@ public static unsafe class NvnVulkan {
         Chk(vkBindImageMemory(_dev, img, mem, 0), "vkBindImageMem");
         void* p; Chk(vkMapMemory(_dev, mem, 0, req.size, 0, &p),
                 "vkMapMem");
-        rgba.AsSpan().CopyTo(new Span<byte>(p, (int)(w*h*4)));
+        if(isCube) {
+            // Tile 1-face × 6. ‡ Assumes lavapipe's LINEAR
+            // arrayPitch = layer-N at p + N×(req.size/6) and
+            // rowPitch = w×4 (= no stride padding). Both held
+            // for the 39th's 1×1 placeholder; for 256² they
+            // ‡may not. If garbled ⟹ query vkGetImageSub
+            // resourceLayout per-layer (v1). req.size covers
+            // all 6 ⟹ no overflow regardless.
+            var face = w * h * 4;
+            var stride = (int)(req.size / 6);
+            for(var L = 0; L < 6; L++)
+                rgba.AsSpan(0, face).CopyTo(
+                    new Span<byte>((byte*)p + (long)L*stride,
+                                   Math.Min(face, stride)));
+            $"[vk] EnsureTexBound texId=0x{texId:x} CUBE: 1-face×6 tiled, face={face}B stride={stride}B req={req.size}B".Log();
+        } else {
+            rgba.AsSpan().CopyTo(new Span<byte>(p, (int)(w*h*4)));
+        }
         // (c⁴¹)×3(S) verify-log: post-memcpy first-4-bytes at
         // mapped *p (= what the GPU will sample at texel(0,0)).
         // If ≠ rgba[0..3] ⟹ memcpy/mapping broken. Plus the
@@ -1978,6 +2039,23 @@ public static unsafe class NvnVulkan {
         };
         ulong vw; Chk(vkCreateImageView(_dev, &ivci, null, &vw),
                 "vkCreateImageView");
+        // (T6)×74: second view, viewType=CUBE layerCount=6,
+        // for samplerCube bindings. The 2D view (vw) stays
+        // for any sampler2D binding of the same texId (=
+        // ‡ none in this corpus per ×66 census, but the
+        // 2-views-1-image pattern is the general shape).
+        ulong cubeVw = 0;
+        if(isCube) {
+            var cvci = new VkImageViewCreateInfo {
+                sType = ST_IMAGE_VIEW_CI, image = img,
+                viewType = 3,   // VK_IMAGE_VIEW_TYPE_CUBE
+                format = 37,
+                subresourceRange = new() {
+                    aspectMask=1, levelCount=1, layerCount=6 },
+            };
+            Chk(vkCreateImageView(_dev, &cvci, null, &cubeVw),
+                "vkCreateImageView(cube)");
+        }
 
         // 5: alloc against _t3DslTex (= set=1's layout:
         // binding=8 COMBINED_IMAGE_SAMPLER) + _t3DsPool, so the
@@ -2010,9 +2088,10 @@ public static unsafe class NvnVulkan {
         vkUpdateDescriptorSets(_dev, T3TexBindN, wds, 0, null);
 
         _texVk[texId] = new(img, mem, vw, ds, w, h, false,
-                            tex, tex?.Gen ?? 0);
+                            tex, tex?.Gen ?? 0,
+                            cubeVw, layers);
         _texPendingBarrier.Add(texId);
-        $"[vk] EnsureTexBound texId=0x{texId:x} {w}×{h} img={img:x} view={vw:x} ds={ds:x}".Log();
+        $"[vk] EnsureTexBound texId=0x{texId:x} {w}×{h}{(isCube?" CUBE×6":"")} img={img:x} view={vw:x}{(cubeVw!=0?$" cubeView={cubeVw:x}":"")} ds={ds:x}".Log();
         return ds;
     }
 
@@ -2085,6 +2164,10 @@ public static unsafe class NvnVulkan {
         // views. EnsureTexBound also creates a redundant
         // per-texId DS (= pool-waste, ‡ tolerable v1).
         var views = stackalloc ulong[16];
+        // (T6)×74: per-slot real-cube-view (parallel to
+        // views[]). 0 = no cube-view for this slot's texId
+        // ⟹ falls back to 39th's _cubePhView at substitute.
+        var cubeViews = stackalloc ulong[16];
         var nReal = 0;
         var nRt = 0;
         for(var sl = 0; sl < nSlot; sl++) {
@@ -2104,9 +2187,18 @@ public static unsafe class NvnVulkan {
             }
             var tx = NvnLinux.ResolveTex(h);
             EnsureTexBound(ti, tx);
-            views[sl] = _texVk.TryGetValue(ti, out var tv)
-                && tv.View != 0 ? tv.View : fbView;
-            if(views[sl] != fbView) nReal++;
+            if(_texVk.TryGetValue(ti, out var tv)
+                    && tv.View != 0) {
+                views[sl] = tv.View;
+                // (T6)×74: stash the texture's own cube-
+                // typed view alongside. EnsureSlotDs binds
+                // THIS at samplerCube bindings instead of
+                // the 39th's grey placeholder when present.
+                cubeViews[sl] = tv.CubeView;
+                nReal++;
+            } else {
+                views[sl] = fbView;
+            }
         }
         ulong dsl = _t3DslTex;
         var dsai = new VkDescriptorSetAllocateInfo {
@@ -2136,10 +2228,18 @@ public static unsafe class NvnVulkan {
             // is also wrong-type if shader has Cube there —
             // but those are unused-binding-placeholders, never
             // actually sampled (= VUID-only concern).
+            // (T6)×74: prefer the texture's own cube-view
+            // (= real captured content, 1-face×6 tiled v0)
+            // over the 39th's grey placeholder. cubeViews
+            // [sl]==0 ⟹ texId has no cube-view (capVer<4
+            // capture, OR target≠8, OR LINEAR+CUBE refused
+            // on this driver) ⟹ placeholder = type-correct
+            // but flat-grey, same as r144c.
             if(sl >= 0 && sl < nSlot
-               && (cubeMask & (1ul << sl)) != 0
-               && _cubePhView != 0)
-                vw = _cubePhView;
+               && (cubeMask & (1ul << sl)) != 0)
+                vw = cubeViews[sl] != 0 ? cubeViews[sl]
+                   : _cubePhView != 0   ? _cubePhView
+                   : vw;   // ‡ last-resort = 2D view (UB)
             dii[b] = new() { sampler = _sampler,
                 imageView = vw, imageLayout = 1 };
             wds[b] = new() {
@@ -2177,10 +2277,12 @@ public static unsafe class NvnVulkan {
             _cubePhPending = false;
         }
         if(_texPendingBarrier.Count == 0) return;
-        var range = new VkImageSubresourceRange {
-            aspectMask = 1, levelCount = 1, layerCount = 1 };
         foreach(var texId in _texPendingBarrier) {
             var t = _texVk[texId];
+            // (T6)×74: per-tex layerCount (cube ⟹ 6).
+            var range = new VkImageSubresourceRange {
+                aspectMask = 1, levelCount = 1,
+                layerCount = (uint)t.Layers };
             var bar = new VkImageMemoryBarrier {
                 sType = ST_IMG_BARRIER, image = t.Img,
                 srcAccessMask = 0, dstAccessMask = 0x20,
