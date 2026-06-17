@@ -2456,6 +2456,15 @@ public static unsafe class NvnVulkan {
     // VkImage so write+read hit the same physical buffer.
     static readonly Dictionary<int,
         (ulong img, ulong mem, ulong view)> _rtImgByTid = new();
+    // (T6)×87 ×1-cont: bisect knob — disable the 48th's
+    // by-texId sharing (= revert to per-sig fresh images,
+    // pre-48th behavior). For isolating r159d=0%: between
+    // r150d (pre-48th, 100%-white) and r155b-3/r159d (post
+    // -48th+49th, 0%), variable = {48th, 49th-cb1}. This
+    // knob isolates the 48th cleanly (kt[36](a)).
+    static readonly bool _t3NoRtShare =
+        Environment.GetEnvironmentVariable("UMBRA_T3_NO_RTSHARE")
+            == "1";
 
     // NVN RT format → (VkFormat, aspectMask, usage).
     // Per botw nvn.h (sera ·10966).
@@ -2554,7 +2563,8 @@ public static unsafe class NvnVulkan {
         // per RtSig docstring) ⟹ no-share, fresh image.
         for(var i = 0; i < nC; i++) {
             var tid = sig.Colors[i].TexId;
-            if(tid != 0 && _rtImgByTid.TryGetValue(tid,
+            if(tid != 0 && !_t3NoRtShare
+                    && _rtImgByTid.TryGetValue(tid,
                     out var c)) {
                 (rf.Img[i], rf.Mem[i], rf.View[i]) = c;
                 $"[vk] EnsureRtFb rt{rtId}.c[{i}] tex{tid}: SHARED (‡v0×13th)".Log();
@@ -2568,7 +2578,8 @@ public static unsafe class NvnVulkan {
         }
         if(hasD) {
             var dtid0 = sig.Depth!.TexId;
-            if(dtid0 != 0 && _rtImgByTid.TryGetValue(dtid0,
+            if(dtid0 != 0 && !_t3NoRtShare
+                    && _rtImgByTid.TryGetValue(dtid0,
                     out var c)) {
                 (rf.DepthImg, rf.DepthMem, rf.DepthView) = c;
                 $"[vk] EnsureRtFb rt{rtId}.d tex{dtid0}: SHARED (‡v0×13th)".Log();
