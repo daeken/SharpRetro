@@ -15,6 +15,15 @@ public class MainLoop {
     public readonly List<ExeModule> Modules = [];
     
     public unsafe MainLoop(string libPath, string romFsPath) {
+        // (T6)×71: log args[] at startup. kt[2] fail-fast that
+        // would've made (W') (= ×62-×71, ~7.5h, n=9 stuck runs
+        // on args[1]=/tmp/legoworlds-romfs vs …/romfs/romfs)
+        // visible at line-1 of every u-run instead of via the
+        // FULL u779-vs-u783 normalized diff at ×71. + warn if
+        // romFsPath looks like a parent-dir (has romfs/ child).
+        $"[boot] libPath={libPath} romFsPath={romFsPath}".Log();
+        if(Directory.Exists(Path.Join(romFsPath, "romfs")))
+            $"[boot] ⚠ romFsPath has a 'romfs/' subdir — did you mean {Path.Join(romFsPath, "romfs")}? (game sees files at //romfs/X not //X)".Log();
         Instance = this;
         Game = new GameWrapper(libPath);
 
