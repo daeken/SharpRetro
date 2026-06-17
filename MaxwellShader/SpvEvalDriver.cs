@@ -238,6 +238,35 @@ public static class SpvEvalDriver {
                 opt.RtBufs[ti]=SpvRaster.LoadPpm(p[1]);
                 Console.WriteLine($"[rast] loaded tex{ti} ← {p[1]} ({opt.RtBufs[ti].W}×{opt.RtBufs[ti].H})");
                 break; }
+            case "--load-depth": {
+                // (T6)×85 ×3: texId=path.ppm (DumpRtPpm
+                // depth-stretch output; un-stretch on load).
+                var p=args[++i].Split('=');
+                var ti=int.Parse(p[0]);
+                opt.RtBufs[ti]=SpvRaster.LoadDepthPpm(p[1]);
+                Console.WriteLine($"[rast] loaded depth tex{ti} ← {p[1]} ({opt.RtBufs[ti].W}×{opt.RtBufs[ti].H}; un-stretched)");
+                break; }
+            case "--load-tex": {
+                // (T6)×85: texId=path.tex (NTEX format).
+                var p=args[++i].Split('=');
+                var ti=int.Parse(p[0]);
+                var rb=SpvRaster.LoadTexFile(p[1]);
+                if(rb!=null) {
+                    opt.RtBufs[ti]=rb;
+                    Console.WriteLine($"[rast] loaded tex{ti} ← {p[1]} (NTEX {rb.W}×{rb.H})");
+                } else
+                    Console.Error.WriteLine($"[rast] ⚠ --load-tex {p[1]}: not-found or bad-header");
+                break; }
+            case "--tex-default": {
+                // (T6)×85: texId=r,g,b,a constant (= for
+                // known-uniform texPool entries like tex256
+                // =0,0,0,0 tex314=1,1,1,1 without loading).
+                var p=args[++i].Split('=');
+                opt.TexDefault[int.Parse(p[0])]
+                    = ParseFloats(p[1]);
+                break; }
+            case "--dref-greater":
+                opt.DrefGreater=true; break;
             case "--depth-fill": {
                 // texId=value: fill an RtBuf[texId] with a
                 // constant (= depth stub when no real dump).

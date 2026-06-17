@@ -4273,6 +4273,20 @@ public static unsafe class NvnVulkan {
                         }
                         r = tm(p[0]); g = tm(p[1]); b = tm(p[2]);
                         break; }
+                    case 129: { // D24_UNORM_S8: depth→gray
+                        // (T6)×85: rt1.depth nf=0x35 maps
+                        // here. Per Vulkan spec, copy with
+                        // aspectMask=DEPTH_BIT writes 4B/px
+                        // with D24 in low 24 bits (high 8
+                        // undefined). Same (1−d)^0.4 stretch
+                        // as D32F arm for visibility.
+                        var u24 = *(uint*)(s + (y*w+x)*4)
+                                  & 0xFFFFFFu;
+                        var d = u24 / (float)0xFFFFFF;
+                        var v = (byte)(255 * MathF.Pow(
+                            MathF.Max(0, 1 - d), 0.4f));
+                        r = g = b = v;
+                        break; }
                     case 126: { // D32F: depth→gray
                         var d = *(float*)(s + (y*w+x)*4);
                         // ‡ depth often clusters near 1.0;

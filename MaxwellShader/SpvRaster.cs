@@ -183,12 +183,29 @@ public class RasterOptions {
     // Per-binding tex override (= --tex equiv). Wins over
     // RtBuf lookup. For stubbing (e.g. shadow b16=1.0).
     public Dictionary<uint, float[]> TexOverride = new();
+    // (T6)×85: per-texId constant override (= when texPool
+    // entry isn't loaded but its value is known-constant,
+    // e.g. tex256=(0,0,0,0) tex314=(1,1,1,1) per ×84×1-cont
+    // -2 at-bytes). Lower priority than RtBufs (loaded)
+    // and TexOverride (per-binding).
+    public Dictionary<int, float[]> TexDefault = new();
     // Pre-loaded RtBuf by texId (= GPU-rendered intermediary
     // dumps fed in). The "match what we're seeing" path =
     // pre-load rt1.c[0/1/2]+depth from r153-gbuf-* dumps.
     public Dictionary<int, RtBuf> RtBufs = new();
     // Where compiled .spv live (or .bin to compile fresh).
+    // (T6)×85: also where sh{N}-t{T}.cb1.bin live (= the
+    // per-shader Maxwell c[1] section captured by NvnLinux
+    // at ProgramSetShaders, dataGpu @ align_up(end,256);
+    // 49th). auto-cb1 loads from here ⟹ SpvRaster's c[1]
+    // matches GPU's automatically per-shader (= replaces
+    // the --c1sh manual override for the common case).
     public string ShaderDir = "/tmp/umbra-shaders";
+    // ‡ Dref compare-op. v0 = LESS (= lit if shadow-map
+    // depth at coord < ref-depth). For reverse-Z engines
+    // = GREATER. Flip via env if r156d shadow-stripes
+    // invert vs SpvRaster.
+    public bool DrefGreater = false;
     // Per-draw stats line.
     public Action<string> Log = Console.WriteLine;
     public bool LogVsVerts = true;
@@ -275,15 +292,31 @@ public static class SpvRaster {
             for(var sl=0;sl<8;sl++)
                 ubo[st][sl] = fd.Ubo(di, st, sl);
         }
-        var c1 = opt.C1PerSh.GetValueOrDefault(fsIdx) ?? opt.C1;
+        // (T6)×85 ×2: auto-load per-shader cb1 from
+        // sh{N}-t{T}.cb1.bin (= same data NvnVulkan binds
+        // on GPU since 49th). C1PerSh / C1 still wins as
+        // explicit-override (for A/B testing). VS+FS each
+        // get their own (vs63 cb1=zero; sh0417={2.0079};
+        // sh0111={1,0.005,0.99,1e-7}; sh0244=filmic).
+        var cb1Vs = LoadCb1(opt.ShaderDir, vsIdx, 1);
+        var cb1Fs = opt.C1PerSh.TryGetValue(fsIdx, out var c1o)
+            ? FloatsToBytes(c1o)
+            : LoadCb1(opt.ShaderDir, fsIdx, 2);
+        var c1Fallback = opt.C1;
         Func<int,uint,uint,uint,uint,float> cbuf =
             (stage, set, bind, v4i, cmp) => {
             // set: VS=0, FS=2 per SpirvEmit. bind = c[bind].
             // bind∈[3,10] → captured Ubos[stage][bind-3].
-            // bind∈{1,2} → C1/C2 or 1.0 (= C1_ONES baseline).
+            // bind∈{1,2} → cb1.bin / C1 / C2 / 1.0 fallback.
             if(bind==1) {
+                var cb1d = stage==0 ? cb1Vs : cb1Fs;
+                var off = (int)(v4i*16+cmp*4);
+                if(cb1d != null && off+4 <= cb1d.Length)
+                    return BitConverter.ToSingle(cb1d, off);
                 var w = (int)(v4i*4+cmp);
-                return c1!=null ? (w<c1.Length?c1[w]:0f) : 1f;
+                return c1Fallback!=null
+                    ? (w<c1Fallback.Length?c1Fallback[w]:0f)
+                    : 1f;
             }
             if(bind==2) {
                 var w = (int)(v4i*4+cmp);
@@ -430,13 +463,39 @@ public static class SpvRaster {
                         if(sl<0||sl>=40||th[sl]==0)
                             return new[]{0f,0f,0f,1f};
                         if(bufs.TryGetValue(th[sl],out var rb)) {
-                            // ‡ v0: 2D bilinear only. Cube/
-                            // shadow-Dref/array = override.
                             rb.Sample(coord[0],
                                 coord.Length>1?coord[1]:0, smp);
+                            // (T6)×85 ×2: Dref shadow-compare.
+                            // SpvEval passes dref≠0 only for
+                            // OpImageSampleDref* (line 484);
+                            // returns rgba[0] as scalar (line
+                            // 490). fs111 b16 = rt9.depth
+                            // shadow-map (1024×4096 cascade-
+                            // stacked); dref = c[1][0].z+bias
+                            // ≈ 0.99. ‡ compare-op = LESS by
+                            // default (= lit if shadow-depth
+                            // < ref); opt.DrefGreater flips
+                            // for reverse-Z. ‡ dref==0 is
+                            // ambiguous (could be real Dref
+                            // of 0); v0 treats it as not-Dref
+                            // since fs111's dref=0.99 always.
+                            if(dref != 0f) {
+                                var pass = (opt.DrefGreater
+                                    ? smp[0] > dref
+                                    : smp[0] < dref) ? 1f : 0f;
+                                return new[]{pass,pass,pass,pass};
+                            }
                             return (float[])smp.Clone();
                         }
                         // ‡ texPool tex not pre-loaded ⟹ 0.
+                        // (T6)×85: TexDefault[texId] override
+                        // for known-constant texPool entries
+                        // (e.g. tex314=(1,1,1,1) white-default
+                        // tex256=(0,0,0,0) black-default) so
+                        // they don't all alias to (0,0,0,1).
+                        if(opt.TexDefault.TryGetValue(
+                                th[sl], out var td))
+                            return td;
                         return new[]{0f,0f,0f,1f};
                     };
                     var fr = SpvEval.Eval(spvFs, env);
@@ -474,9 +533,67 @@ public static class SpvRaster {
         }
         // ── Footer ──
         var nz = outBuf.D.Where((v,i)=>i%4<3 && v!=0).Count()/3;
-        opt.Log($"  → cov={nCov}px oc.min=({min[0]:0.###},{min[1]:0.###},{min[2]:0.###}) max=({max[0]:0.###},{max[1]:0.###},{max[2]:0.###}) mean=({sum[0]/Math.Max(nCov,1):0.###},{sum[1]/Math.Max(nCov,1):0.###},{sum[2]/Math.Max(nCov,1):0.###}) | tex{outTexId} nz≈{nz}");
+        // (T6)×85: include α (= the SRC_α-blend gate per
+        // ×85×1(c): fs111 oc.α=0 ⟹ key=0→SRC_α no-write).
+        opt.Log($"  → cov={nCov}px oc.min=({min[0]:0.###},{min[1]:0.###},{min[2]:0.###},{min[3]:0.###}) max=({max[0]:0.###},{max[1]:0.###},{max[2]:0.###},{max[3]:0.###}) mean=({sum[0]/Math.Max(nCov,1):0.###},{sum[1]/Math.Max(nCov,1):0.###},{sum[2]/Math.Max(nCov,1):0.###},{sum[3]/Math.Max(nCov,1):0.###}) | tex{outTexId} nz≈{nz}");
         foreach(var (k,n) in noteHist.OrderByDescending(kv=>kv.Value).Take(5))
             opt.Log($"  ‡×{n}: {k}");
+    }
+
+    // (T6)×85 ×2: per-shader cb1 cache (= same as
+    // NvnVulkan._shCb1; loaded from sh{N}-t{T}.cb1.bin).
+    static readonly Dictionary<(int,int), byte[]?>
+        _cb1Cache = new();
+    static byte[]? LoadCb1(string dir, int shIdx, int t) {
+        if(_cb1Cache.TryGetValue((shIdx,t), out var c))
+            return c;
+        var p = $"{dir}/sh{shIdx:d4}-t{t}.cb1.bin";
+        var d = File.Exists(p) ? File.ReadAllBytes(p) : null;
+        return _cb1Cache[(shIdx,t)] = d;
+    }
+    static byte[] FloatsToBytes(float[] f) {
+        var b = new byte[f.Length*4];
+        Buffer.BlockCopy(f, 0, b, 0, b.Length);
+        return b;
+    }
+
+    // (T6)×85 ×2: NTEX .tex loader → RtBuf. Same format as
+    // NvnReplay.LoadTex (NvnReplay.cs:410): magic 'NTEX',
+    // u16 w, u16 h, u8 fmt, u8 _, u8 enc, u8 _, i32 rawLen,
+    // then enc=0 raw RGBA8 / enc=1 RLE {u32 cnt, u8×4}.
+    // For loading texPool entries (tex311 b14-LUT 256×1,
+    // tex256/314 4×4 defaults) without going through
+    // NvnReplay. ‡ Always decodes to RGBA8 (the .tex
+    // capture format); float = byte/255.
+    public static RtBuf? LoadTexFile(string path) {
+        if(!File.Exists(path)) return null;
+        var d = File.ReadAllBytes(path);
+        if(d.Length<16 || BitConverter.ToUInt32(d,0)
+                != 0x5845544e) return null;
+        var w = BitConverter.ToUInt16(d, 4);
+        var h = BitConverter.ToUInt16(d, 6);
+        var enc = d[10];
+        var rawLen = BitConverter.ToInt32(d, 12);
+        var rgba = new byte[rawLen];
+        if(enc == 0) {
+            d.AsSpan(16, Math.Min(rawLen, d.Length-16))
+             .CopyTo(rgba);
+        } else {
+            int o=16, p=0;
+            while(p<rawLen && o+8<=d.Length) {
+                var cnt = BitConverter.ToUInt32(d, o);
+                for(var k=0u; k<cnt && p+4<=rawLen; k++) {
+                    rgba[p++]=d[o+4]; rgba[p++]=d[o+5];
+                    rgba[p++]=d[o+6]; rgba[p++]=d[o+7];
+                }
+                o += 8;
+            }
+        }
+        var rb = new RtBuf(w, h);
+        for(var p=0; p<w*h && p*4+3<rawLen; p++)
+            for(var c=0;c<4;c++)
+                rb.D[p*4+c] = rgba[p*4+c]/255f;
+        return rb;
     }
 
     static readonly Dictionary<(int,int), byte[]?> _shCache = new();
@@ -494,6 +611,22 @@ public static class SpvRaster {
     // For "match GPU" mode: load r153-gbuf-c{0,1,2}.ppm into
     // bufs[308/310/313]. ‡ Lossy (8-bit); for HDR RTs use
     // .pfm (v0.5). ──
+    // (T6)×85 ×3: load a depth-PPM (= DumpRtPpm's vf=126/
+    // 129 output, which writes (1−d)^0.4×255 grayscale).
+    // Inverts the stretch: d = 1 − (px/255)^2.5. ‡ 8-bit
+    // lossy (~256 distinct depths); for value-match this
+    // is the precision ceiling. v0.5 = write a .pfm raw-
+    // float sidecar from DumpRtPpm and load THAT.
+    public static RtBuf LoadDepthPpm(string path) {
+        var rb = LoadPpm(path);
+        for(var p=0; p<rb.W*rb.H; p++) {
+            var g = rb.D[p*4];   // grayscale .r
+            var d = 1f - MathF.Pow(g, 2.5f);
+            rb.D[p*4]=d; rb.D[p*4+1]=d;
+            rb.D[p*4+2]=d; rb.D[p*4+3]=1f;
+        }
+        return rb;
+    }
     public static RtBuf LoadPpm(string path) {
         var d = File.ReadAllBytes(path);
         var i=0; while(d[i]!='\n') i++; i++;       // P6
