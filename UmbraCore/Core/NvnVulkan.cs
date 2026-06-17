@@ -717,6 +717,12 @@ public static unsafe class NvnVulkan {
     static readonly bool _t3RpGeneral =
         Environment.GetEnvironmentVariable("UMBRA_T3_RP_GENERAL")
             == "1";
+    // (T6)×100 ×2 ‡v0×25th: apply captured d.Vp*/d.Sc* per-draw
+    // (vs full-rf.W×H at rt-switch only). = the harsh-shadow-
+    // stripe root (rt16 cascades' 1024×1024 sub-vp ignored).
+    static readonly bool _t3VpPerDraw =
+        Environment.GetEnvironmentVariable("UMBRA_T3_VP_PERDRAW")
+            == "1";
     static readonly bool _t3RtMemBarrier =
         Environment.GetEnvironmentVariable("UMBRA_T3_RT_MEMBARRIER")
             == "1";
@@ -2789,6 +2795,7 @@ public static unsafe class NvnVulkan {
             // manifest = filterable by frame-of-capture's
             // copy-#-window but bloated. u796 will have it.
             lock(NvnLinux.CopyOps) NvnLinux.CopyOps.Clear();
+            lock(NvnLinux.ClearOps) NvnLinux.ClearOps.Clear();
         }
         // (T1') NVN-boundary frame capture. After Draws
         // snapshot, before any Vulkan recording — pure
@@ -2985,6 +2992,35 @@ public static unsafe class NvnVulkan {
                         += recN - rtDrawNAt;
                     rtDrawNAt = recN; nRpSwitch++;
                     curRtId = d.RtId; curPipe = 0;
+                }
+                // (T6)×100 ×2 ‡v0×25th: per-draw viewport/scissor
+                // from captured d.Vp*/d.Sc*. The rt-switch vp
+                // above (@2978) sets FULL rf.W×rf.H once; with
+                // RTSIG_HANDLE rt16=1024×4096 shadow-atlas, all
+                // 465 cascade-draws got 1024×4096 vp instead of
+                // their cascade-specific (0,y∈{0,1024,2048},1024,
+                // 1024). Each cascade's NDC meant for 1024×1024
+                // stretches across full 4096-height ⟹ cascades
+                // overlap+wrong-scale ⟹ THE harsh-shadow-stripes.
+                // Game = WindowOriginMode UPPER_LEFT (x1=1 per
+                // ×100×2(j-3)) ⟹ d.VpY from-top, same as Vk; the
+                // raster y-flip (height=-h, y=top+h) still applies.
+                // ‡ d.VpW==0 ⟹ uncaptured (= use rt-switch full-vp
+                // fallback). ‡ Scissor: VkRect2D unsigned ⟹ direct
+                // d.Sc*. ‡ Default-OFF until r168 verifies (vp.x/y
+                // for 1920×1080 RTs ‡may be (0,0,1280,720) game-
+                // res not RT-res ⟹ would shrink scene; check).
+                if(_t3VpPerDraw && d.VpW > 0) {
+                    var dvp = new VkViewport {
+                        x = d.VpX, y = d.VpY + d.VpH,
+                        width = d.VpW, height = -d.VpH,
+                        minDepth = 0, maxDepth = 1 };
+                    var dsc = new VkRect2D {
+                        x = d.ScX, y = d.ScY,
+                        width = (uint)(d.ScW > 0 ? d.ScW : d.VpW),
+                        height = (uint)(d.ScH > 0 ? d.ScH : d.VpH) };
+                    vkCmdSetViewport(_cmdBuf, 0, 1, &dvp);
+                    vkCmdSetScissor(_cmdBuf, 0, 1, &dsc);
                 }
                 // v1.0: per-draw pipeline lookup (build-on-miss).
                 // Returns 0 if .spv missing → skip this draw

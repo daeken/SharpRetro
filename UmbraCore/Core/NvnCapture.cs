@@ -334,7 +334,16 @@ public static unsafe class NvnCapture {
                     sx = c.Sx, sy = c.Sy,
                     dx = c.Dx, dy = c.Dy,
                 }).ToArray(),
-            version = 5, frameN,
+            // (T6)×100 ×1 ⚠-stub-(i): ClearDepthStencil per-
+            // frame at draw-position. Replay = vkCmdClear
+            // Attachments(depth=…) at di. capVer=6.
+            clearOps = NvnLinux.ClearOps
+                .Select(c => new {
+                    di = c.DrawIdxBefore, depth = c.Depth,
+                    dMask = c.DepthMask, stencil = c.Stencil,
+                    sMask = c.StencilMask,
+                }).ToArray(),
+            version = 6, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),
