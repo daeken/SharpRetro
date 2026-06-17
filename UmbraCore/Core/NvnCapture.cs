@@ -276,7 +276,26 @@ public static unsafe class NvnCapture {
             if(d.TexHandles != null)
                 for(var i = 0; i < 8; i++)
                     W64(rec, 164+i*8, d.TexHandles[i]);
-            // attribs[6] + stride[2]
+            // attribs[6] + stride[2] @228-255 (= the original
+            // (T6)×17 layout). (T6)×102 ×3 ‡v0×27th-PROPER:
+            // u797 census shows 8-attr signatures (×11+×1) =
+            // skinned-char draws with [6]=0x2e@28 (RGBA32F per
+            // ×40th) + [7]=0x27@44 (bone-idx). Min(count,6)
+            // LOSES attrs[6..7] ⟹ Vk feeds in_attr6/7=0 ⟹
+            // bone-idx=0 ⟹ all verts skin to bone-0's matrix
+            // ⟹ stretched character (= sera kt[12]×33 "fucked
+            // up character geometry" hairlines-cand). capVer=7
+            // adds attribs[6..15] in draws-ext.bin @256+ (10×4B
+            // = 40B; ext was 256B with th[8..39]@0-255 fully
+            // used, so attrs land in a 2nd ext file). v0 =
+            // simplest: bytes 256.. of the rec[256] are unused?
+            // No — rec is Span<byte>[256]. ⟹ pack into ext's
+            // unused tail: th[8..39]=32×8B=256B fills ext
+            // entirely. ⟹ need draws-ext2.bin OR widen ext to
+            // 320B. v0-conservative: keep 6-cap in rec[228..251]
+            // for back-compat; write attrs[6..15] to a NEW
+            // attrs-ext.bin (40B/draw). NvnReplay reads it if
+            // present (capVer≥7).
             for(var i = 0; i < Math.Min(
                     d.Attribs?.Length ?? 0, 6); i++) {
                 var a = d.Attribs![i];
@@ -287,6 +306,16 @@ public static unsafe class NvnCapture {
             for(var i = 0; i < Math.Min(
                     d.Streams?.Length ?? 0, 2); i++)
                 W16(rec, 252+i*2, d.Streams![i].Stride);
+            // (T6)×102 ×3 ‡v0×27th-PROPER ‡-deferred: u797 has
+            // ×11+×1 8-attr sigs (skinned-char: [6]=0x2e@28
+            // RGBA32F + [7]=0x27@44 bone-idx). Min(count,6)
+            // loses [6..7] ⟹ bone-idx=0 ⟹ stretched character
+            // (= sera kt[12]×33 hairlines-cand). attrs-ext.bin
+            // (40B/draw, attrs[6..15]) = capVer=7. ‡-deferred:
+            // f32822's only 0x2e is #81 attr[5] (not capped);
+            // floor-chaos root = ‡v0×16th(vs441 cb1=zero), NOT
+            // attr-cap. ×103 builds aext when chasing hairlines
+            // proper.
             dbin.Write(rec);
             rts.WriteByte(d.RtId);
             // (T6)×62: 8B BlendKey per-draw → blend.bin
