@@ -1712,9 +1712,21 @@ public static unsafe class NvnLinux {
     static readonly bool _rtLog =
         Environment.GetEnvironmentVariable("UMBRA_RTT_LOG") != null;
     // (T6)×97 ×2 ‡v0×22nd: include texPtr handles in RtSig key.
+    // (T6)×99 ×2: default-ON. The 58th's "‡ Default-OFF until
+    // verified" closes via ×98+×99: r166c (f32822, NO TH_
+    // OVERRIDE) = full #0→#668 chain L1=102.2 (vs 109.6 base)
+    // — ‡v0×20th + ‡v0×21st + ×89-00344 + rt9/16 ALL auto-
+    // fixed via the rt-split. n=2 work (f29478=38.6%, f32822
+    // =59%) + 1 explained-as-scene-state (f32322 rt2@662=0%
+    // = deferred-lit empty upstream-of-knob; first-frame-
+    // post-ON3D-onset). Strictly-no-worse argument: handle-
+    // in-key only ADDS resolution; collisions can only HIDE
+    // distinctions, not create wrong ones. ‡ rtId is byte;
+    // 25 sigs at 300s headroom to 255; ‡other games may have
+    // more. UMBRA_RTSIG_HANDLE=0 to opt out.
     static readonly bool _rtSigHandle =
         Environment.GetEnvironmentVariable("UMBRA_RTSIG_HANDLE")
-            == "1";
+            != "0";
 
     [UnmanagedCallersOnly]
     static void CbSetRenderTargets(ulong cb, int numColors, ulong* colors,
