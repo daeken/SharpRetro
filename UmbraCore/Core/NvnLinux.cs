@@ -292,6 +292,10 @@ public static unsafe class NvnLinux {
         // stale G-buf c[2] in replay); kt[37] says sampled
         // log can't refute. This hook captures every call.
         ["nvnCommandBufferCopyTextureToTexture"] = (nint)(delegate* unmanaged<ulong, ulong, ulong, uint*, ulong, ulong, uint*, int, void>)&CbCopyTexToTex,
+        // (T6)×100 ×1 ⚠-stub-(i): sera kt[12]×32 worklist. Sig
+        // per ref-botw:1607 = (cb, float depth, bool depthMask,
+        // int stencil, int stencilMask). float ⟹ s0 per AAPCS64.
+        ["nvnCommandBufferClearDepthStencil"] = (nint)(delegate* unmanaged<ulong, float, int, int, int, void>)&CbClearDepthStencil,
         // T2 (sera "fucked up geometry"): capture the draw chain.
         // BindVertexBuffer(cb, index, NVNbufferAddress addr, size_t size)
         // DrawArrays(cb, NVNdrawPrimitive prim, int first, int count)
@@ -607,6 +611,35 @@ public static unsafe class NvnLinux {
 
     static int _copyBufN;
     [UnmanagedCallersOnly]
+    static void CbClearDepthStencil(ulong cb, float depth,
+            int depthMask, int stencil, int stencilMask) {
+        // (T6)×100 ×1: capture-and-stub. We're the NVN driver
+        // ⟹ no call-through; record what game asked for.
+        // The depth value (s0) is the discriminator: game uses
+        // reversed-Z (DepthFunc=4=GREATER per ×99(b-2)) ⟹ ‡
+        // depth=0.0 (= far in reversed-Z). My EnsureRtFb @2814
+        // clears to 1.0 + DEPTH_OP=3=LEQUAL (= forward-Z). The
+        // double-flip is internally-consistent for G-buf which-
+        // frag-wins; shadow-map VALUES are reversed though ⟹
+        // fs111's b16 Dref-compare direction = the harsh-shadow
+        // -stripes root-cand. ‡ ×100×1-cont(i-prep-3'): 3
+        // cascades vp.y={0,1024,2048} NON-overlapping ⟹ Clear
+        // DS-miss benign for shadow-content per-se; the stripe
+        // -root may be ‡per-draw-vp-not-applied OR ‡Dref-dir.
+        var n = ++_clearDsN;
+        int di; lock(Draws) di = Draws.Count;
+        var rec = new ClearOpRecord(di, depth, depthMask,
+            stencil, stencilMask);
+        lock(ClearOps) ClearOps.Add(rec);
+        // Log first-20 + every-1000th + ALL where depth∉{0,1}
+        // (= the unexpected-value class). + ALL where curRtId
+        // is shadow (= the per-cascade question).
+        var unusual = depth != 0f && depth != 1f;
+        if(n <= 20 || n % 1000 == 0 || unusual)
+            $"[nvn] ClearDepthStencil #{n} di={di} depth={depth:F6} dMask={depthMask} stencil={stencil} sMask=0x{stencilMask:x}{(unusual?" ★":"")}".Log();
+    }
+
+    [UnmanagedCallersOnly]
     static void CbCopyTexToTex(ulong cb, ulong srcTex,
             ulong srcView, uint* srcR, ulong dstTex,
             ulong dstView, uint* dstR, int flags) {
@@ -911,6 +944,27 @@ public static unsafe class NvnLinux {
         int W, int H, int Sx, int Sy, int Dx, int Dy);
     public static readonly List<CopyOpRecord> CopyOps = new();
     static int _copyTexN;
+
+    // (T6)×100 ×1: ClearDepthStencil capture. Sig per ref-
+    // botw-nvn.h.txt:1607 = (cb, float depth, NVNboolean
+    // depthMask, int stencil, int stencilMask). ⚠ float arg
+    // ⟹ AArch64 ABI puts depth in s0 NOT x1 (own·8808-PROPER
+    // ×38th: ×99(b-2)'s "x1=1 ‡=clear-to-1.0" read x1 as
+    // depth; it's depthMask). The UCO sig with `float depth`
+    // makes .NET marshal s0 correctly. drawIdxBefore = Draws.
+    // Count so replay can vkCmdClearAttachments at the right
+    // position. ‡ ×100×1-cont: (i)+(ii) DepthFunc COUPLED —
+    // game = reversed-Z (DepthFunc=4=GREATER, ‡depth=0.0=far);
+    // mine = forward-Z (DEPTH_OP=3=LEQUAL, clear=1.0). Both
+    // internally-consistent for which-frag-wins; shadow-map
+    // VALUES are reversed ⟹ fs111's Dref-compare direction
+    // = the actual disc. The hook's first job = read what
+    // depth value game ACTUALLY passes (s0 invisible to the
+    // int-only universal-stub).
+    public record ClearOpRecord(int DrawIdxBefore,
+        float Depth, int DepthMask, int Stencil, int StencilMask);
+    public static readonly List<ClearOpRecord> ClearOps = new();
+    static int _clearDsN;
     static int _drawN;
 
     // Current bind state per cmdbuf (flat for v0 — only one cmdbuf in use).
