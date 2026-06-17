@@ -1191,6 +1191,62 @@ public static unsafe class NvnLinux {
                     var path = $"/tmp/umbra-shaders/sh{idx:d4}-t{sphType}.bin";
                     Directory.CreateDirectory("/tmp/umbra-shaders");
                     File.WriteAllBytes(path, new ReadOnlySpan<byte>(p, end).ToArray());
+                    // (T6)×81 ×2: ‡v0×14th instrument — dump
+                    // the GLSLC control section (ctrlCpu) +
+                    // the bytes PAST code-end in dataGpu. Per
+                    // kt[14] (ryujinx ShaderCache.cs:740 +
+                    // Decoder.cs:29): cb1 = per-shader-program
+                    // constants the NVN driver binds to Maxwell
+                    // uniform slot 1; the data lives in the
+                    // GLSLC output the game passed us at
+                    // {dataGpu, ctrlCpu}, NEVER via the game's
+                    // BindUniformBuffer (= why my +3 mapping
+                    // doesn't see it). FindShaderEnd stops at
+                    // EXIT ⟹ const-section past `end` was
+                    // never read. ctrlCpu was never read at
+                    // all. ·7827: dump both, scan for fs244's
+                    // filmic constants {0.06, 0.004, −0.0667}
+                    // (= 0x3d75c28f / 0x3b83126f / 0xbd888889
+                    // LE) at-bytes. ‡ tail-len=1024 heuristic;
+                    // ‡ ctrl-len: first u32 of ctrl is ‡likely
+                    // a magic or size — read 256B regardless.
+                    // ‡ Both reads may walk past the game's
+                    // allocation; catch+log AccessViolation.
+                    try {
+                        // (T6)×81 ×4: write .cb1.bin directly
+                        // (= the per-shader compiler-constant
+                        // section the NVN driver binds to
+                        // Maxwell c[1]). cb1_start = align_up
+                        // (end, 256) — verified ×81×3(a):
+                        // 139/139 non-zero shaders, ZERO
+                        // mismatches. Length = 256B fixed
+                        // (= max c[1] offset seen in any
+                        // corpus shader is fp_c1[1].x = 20B;
+                        // 256B covers 16 vec4s with margin).
+                        // ‡ The actual NVN const-buffer alloc
+                        // is likely bigger (game's GLSLC ctrl
+                        // says 0x830/0x838 = 2096/2104B
+                        // somewhere); 256B is what shaders
+                        // READ. If a shader's c[1] reads go
+                        // past [15] ⟹ extend (kt[2]: the
+                        // SpvEval Cbuf-callback log shows
+                        // every read's vec4-index).
+                        var cb1Off = ((end + 255) & ~255) - end;
+                        File.WriteAllBytes(
+                            $"/tmp/umbra-shaders/sh{idx:d4}-t{sphType}.cb1.bin",
+                            new ReadOnlySpan<byte>(p + end + cb1Off, 256).ToArray());
+                        File.WriteAllBytes(
+                            $"/tmp/umbra-shaders/sh{idx:d4}-t{sphType}.tail.bin",
+                            new ReadOnlySpan<byte>(p + end, 1024).ToArray());
+                        if(ctrlCpu != 0)
+                            File.WriteAllBytes(
+                                $"/tmp/umbra-shaders/sh{idx:d4}-t{sphType}.ctrl.bin",
+                                new ReadOnlySpan<byte>((byte*)ctrlCpu, 256).ToArray());
+                        if(idx <= 5)
+                            $"[nvn] sh{idx:d4} ‡v0×14th: end=0x{end:x} ctrlCpu=0x{ctrlCpu:x} ctrl[0..16]={(ctrlCpu!=0?Convert.ToHexString(new ReadOnlySpan<byte>((byte*)ctrlCpu,16)):"null")}".Log();
+                    } catch(Exception ex) {
+                        $"[nvn] sh{idx:d4} ‡v0×14th dump: {ex.GetType().Name} (= read past alloc; tail/ctrl partial)".Log();
+                    }
                     if(idx <= 10 || idx % 50 == 0)
                         $"[nvn] shader #{idx} (call #{n}) sph={sphType} {end-0x80}B insns hash={hash:x16} → {path}".Log();
                 }
