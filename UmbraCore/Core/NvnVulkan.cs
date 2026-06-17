@@ -2351,6 +2351,12 @@ public static unsafe class NvnVulkan {
     // DEPTH|STENCIL (=6) which some drivers reject for
     // combined-sampler; D32F (=2) is fine. ×38 if hit.
     static readonly Dictionary<int, ulong> _rtTexView = new();
+    // (T6)×80 ×3: ‡v0×13th — RT image cache by texId. Game
+    // aliases attachments across rt-sigs (rt0.c[0]=rt1.c[0]
+    // =308; rt0/1/2.depth=309); EnsureRtFb shares the
+    // VkImage so write+read hit the same physical buffer.
+    static readonly Dictionary<int,
+        (ulong img, ulong mem, ulong view)> _rtImgByTid = new();
 
     // NVN RT format → (VkFormat, aspectMask, usage).
     // Per botw nvn.h (sera ·10966).
@@ -2419,13 +2425,62 @@ public static unsafe class NvnVulkan {
                 $"vkCreateImageView({tag})");
             return (im, mm, vw);
         }
-        for(var i = 0; i < nC; i++)
-            (rf.Img[i], rf.Mem[i], rf.View[i]) =
-                MkImg(w, h, sig.Colors[i].Fmt, $"rt{rtId}.c[{i}]");
-        if(hasD)
-            (rf.DepthImg, rf.DepthMem, rf.DepthView) =
-                MkImg(sig.Depth!.W, sig.Depth.H, sig.Depth.Fmt,
-                      $"rt{rtId}.d");
+        // (T6)×80 ×3: ‡v0×13th fix — share VkImage by texId
+        // across rt-sigs. The game ALIASES attachments: rt0
+        // .c[0]=rt1.c[0]=texId 308 (G-buf c[0] slot reused as
+        // final framebuffer after G-buf done); rt0/1/2.depth
+        // all = texId 309. On real hw that's ONE physical
+        // texture; the post-process chain depends on it:
+        // #663 fs244 writes tonemapped→308; #664 fs206 reads
+        // 308 = #663's output. With per-sig fresh images
+        // (= the v0 here), #663 wrote to rt0's-own-308 while
+        // _rtTexView[308] (TryAdd@2519, first-wins) = rt1's-
+        // 308 ⟹ #664 read STALE G-buf albedo, NOT fs244
+        // output. = the trunk-r150=(208,208,173)≠#663-isolated
+        // mechanism (×76×2; confirmed at-data ×80×2(B)).
+        //
+        // Same for depth: rt2's renderpass had its own depth
+        // -att image (never written by G-buf-pass); #631's
+        // depth-test ran against THAT instead of rt1's-309
+        // scene-depth. (Sampling 309 as a texture was already
+        // correct via _rtTexView since rt1 fires first per
+        // ×80×1(b-1); the share fixes the ATTACHMENT side.)
+        //
+        // ‡ Cache key = texId only (not w/h/fmt). The same
+        // texId across sigs implies same dims+fmt (= the
+        // game registered ONE texture). If a corpus violates
+        // this, the renderpass-create will VUID on size
+        // mismatch ⟹ kt[2] visible, not silent-wrong.
+        // ‡ TexId==0 (= sig captured before pool-register,
+        // per RtSig docstring) ⟹ no-share, fresh image.
+        for(var i = 0; i < nC; i++) {
+            var tid = sig.Colors[i].TexId;
+            if(tid != 0 && _rtImgByTid.TryGetValue(tid,
+                    out var c)) {
+                (rf.Img[i], rf.Mem[i], rf.View[i]) = c;
+                $"[vk] EnsureRtFb rt{rtId}.c[{i}] tex{tid}: SHARED (‡v0×13th)".Log();
+            } else {
+                (rf.Img[i], rf.Mem[i], rf.View[i]) =
+                    MkImg(w, h, sig.Colors[i].Fmt,
+                          $"rt{rtId}.c[{i}]");
+                if(tid != 0) _rtImgByTid[tid] =
+                    (rf.Img[i], rf.Mem[i], rf.View[i]);
+            }
+        }
+        if(hasD) {
+            var dtid0 = sig.Depth!.TexId;
+            if(dtid0 != 0 && _rtImgByTid.TryGetValue(dtid0,
+                    out var c)) {
+                (rf.DepthImg, rf.DepthMem, rf.DepthView) = c;
+                $"[vk] EnsureRtFb rt{rtId}.d tex{dtid0}: SHARED (‡v0×13th)".Log();
+            } else {
+                (rf.DepthImg, rf.DepthMem, rf.DepthView) =
+                    MkImg(sig.Depth.W, sig.Depth.H,
+                          sig.Depth.Fmt, $"rt{rtId}.d");
+                if(dtid0 != 0) _rtImgByTid[dtid0] =
+                    (rf.DepthImg, rf.DepthMem, rf.DepthView);
+            }
+        }
         // RenderPass: nC color + optional depth.
         var nAtt = nC + (hasD ? 1 : 0);
         var atts = stackalloc VkAttachmentDescription[Math.Max(nAtt, 1)];
