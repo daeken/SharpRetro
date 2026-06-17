@@ -701,6 +701,11 @@ public static unsafe class NvnVulkan {
     static readonly bool _t3Cb1ZeroNull =
         Environment.GetEnvironmentVariable("UMBRA_T3_CB1_ZERO_NULL")
             == "1";
+    // (T6)×86: blendKey=0 → blend disabled (= NVN default
+    // when game never bound BlendState). ‡v0×18th fix.
+    static readonly bool _t3Key0Replace =
+        Environment.GetEnvironmentVariable("UMBRA_T3_KEY0_REPLACE")
+            == "1";
     static byte[]? LoadShCb1(int shIdx, int t) {
         if(_shCb1.TryGetValue((shIdx,t), out var c)) return c;
         // (T6)×81 ×4-cont-2: .cb1.bin lives in the LIVE-capture
@@ -1097,7 +1102,30 @@ public static unsafe class NvnVulkan {
         // depth). ‡ Structural fix = capture NVN per-draw
         // nvnBlendState (currently 0 hooks in NvnLinux);
         // this is the heuristic per-rtId stand-in.
-            blEn = !_t3NoBlend && rtId != 0 && rtId != 1;
+            // (T6)×86 ×2: ‡v0×18th — blendKey=0 means
+            // "game never bound a BlendState for this
+            // draw" ⟹ NVN-default = blend DISABLED (=
+            // overwrite). The (c⁴²) SRC_α heuristic above
+            // was derived under c1=ones (r129c 0.41→18.78%
+            // = #163-165's α happened to give structure).
+            // With REAL per-shader cb1 (49th+50th), fs111
+            // outputs oc.α=0 at frame-scale (×85×2-cont
+            // verified every config) ⟹ SRC_α = no-write
+            // ⟹ #631's deferred-lit RGB (= r156d, scene-
+            // recognizable) never reaches rt2 ⟹ never
+            // reaches [F]. UMBRA_T3_KEY0_REPLACE=1 ⟹
+            // blendKey=0 → blEn=false (= the structurally
+            // -correct interpretation). Affects #631 +
+            // #163-165 + #636-668 (all bk=0 per ×85×1
+            // (c-prep)); #633-635 have real bk (ONE,ONE)
+            // unaffected. ‡ Default-OFF (= old SRC_α
+            // heuristic) until r159 verifies it doesn't
+            // regress some other path the heuristic was
+            // load-bearing for. ‡ Structural fix = hook
+            // nvnCommandBufferBindBlendState (currently
+            // 0 hooks; capVer=5).
+            blEn = !_t3NoBlend && !_t3Key0Replace
+                   && rtId != 0 && rtId != 1;
             blSrc = 6; blDst = 7; blSrcA = 1; blDstA = 7;
             blOp = 0; blOpA = 0;
         }
