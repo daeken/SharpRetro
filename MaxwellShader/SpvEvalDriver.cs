@@ -33,6 +33,11 @@ public static class SpvEvalDriver {
         var py = float.Parse(args[4]);
         float[]? c1 = null, c2 = null;
         var texOverride = new Dictionary<uint, float[]>();
+        // (T6)×79 VS-mode: --in L,C=v injects an Input value
+        // (vbuf attr for VS, or extra interpolant for FS).
+        // For vs63's vec4 in_0: --in 0,0=-1 --in 0,1=-1
+        // --in 0,2=0 --in 0,3=1 (= one fullscreen-tri vert).
+        var inOverride = new Dictionary<(int,int), float>();
         var fullTrace = false;
         for(var i=5; i<args.Length; i++) {
             switch(args[i]) {
@@ -41,6 +46,12 @@ public static class SpvEvalDriver {
             case "--tex": {
                 var (b,v) = ParseTex(args[++i]);
                 texOverride[b] = v; break; }
+            case "--in": {
+                var p = args[++i].Split('=');
+                var lc = p[0].Split(',');
+                inOverride[(int.Parse(lc[0]),int.Parse(lc[1]))]
+                    = float.Parse(p[1]);
+                break; }
             case "--trace": fullTrace = true; break;
             default:
                 Console.Error.WriteLine($"⚠ unknown opt: {args[i]}");
@@ -100,6 +111,8 @@ public static class SpvEvalDriver {
                 [(0,1)] = py/H,
             },
         };
+        // (T6)×79: --in overrides (after defaults so they win).
+        foreach(var (k,v) in inOverride) env.In[k] = v;
         var cbufLog = new HashSet<(uint,uint,uint,uint)>();
         env.Cbuf = (set, bind, v4i, cmp) => {
             // SpirvEmit: VS cbuf[N]→set0/bN; FS cbuf[N]→set2/bN.
@@ -161,6 +174,18 @@ public static class SpvEvalDriver {
         }
 
         // ── output ──
+        // (T6)×79 VS-mode: report gl_Position + Out[(loc,
+        // comp)] when present (= the rasterizer's per-vert
+        // payload). For FS, Out mirrors OColor; for VS,
+        // OColor stays (0,0,0,0) and these are the signal.
+        if(r.BuiltInOut.TryGetValue(0, out var pos))
+            Console.WriteLine($"[spveval] gl_Position = ({pos[0]:0.######}, {pos[1]:0.######}, {pos[2]:0.######}, {pos[3]:0.######})");
+        if(r.Out.Count > 0) {
+            Console.WriteLine($"[spveval] Out[{r.Out.Count}]:");
+            foreach(var ((loc,cmp),v) in r.Out
+                    .OrderBy(kv=>kv.Key.Loc*16+kv.Key.Comp))
+                Console.WriteLine($"  out_{loc}_{cmp} = {v:0.######}");
+        }
         Console.WriteLine($"[spveval] oColor = ({r.OColor[0]:0.######}, {r.OColor[1]:0.######}, {r.OColor[2]:0.######}, {r.OColor[3]:0.######})");
         Console.WriteLine($"[spveval]        ≈ 8-bit ({Clamp8(r.OColor[0])}, {Clamp8(r.OColor[1])}, {Clamp8(r.OColor[2])})");
         if(r.Notes.Count>0) {
@@ -184,4 +209,63 @@ public static class SpvEvalDriver {
     }
     static int Clamp8(float f) =>
         (int)MathF.Round(MathF.Max(0,MathF.Min(1,f))*255);
+
+    // (T6)×79: --raster mode. Runs SpvRaster over a draw-
+    // range with G-buf inputs pre-loaded from PPM dumps.
+    //   --raster <frame-dir> <lo> <hi> [--step N]
+    //     [--load texId=path.ppm …] [--c1 …] [--tex b=… …]
+    //     [--out path-prefix]  [--depth-fill V]
+    public static int RunRaster(string[] args) {
+        var fd = new FrameData(args[0]);
+        var lo = int.Parse(args[1]);
+        var hi = int.Parse(args[2]);
+        var opt = new RasterOptions();
+        string? outPfx = null;
+        for(var i=3;i<args.Length;i++) switch(args[i]) {
+            case "--step": opt.Step=int.Parse(args[++i]); break;
+            case "--c1": opt.C1=ParseFloats(args[++i]); break;
+            case "--c2": opt.C2=ParseFloats(args[++i]); break;
+            case "--c1sh": {
+                var p=args[++i].Split('=');
+                opt.C1PerSh[int.Parse(p[0])]=ParseFloats(p[1]);
+                break; }
+            case "--tex": {
+                var (b,v)=ParseTex(args[++i]);
+                opt.TexOverride[b]=v; break; }
+            case "--load": {
+                var p=args[++i].Split('=');
+                var ti=int.Parse(p[0]);
+                opt.RtBufs[ti]=SpvRaster.LoadPpm(p[1]);
+                Console.WriteLine($"[rast] loaded tex{ti} ← {p[1]} ({opt.RtBufs[ti].W}×{opt.RtBufs[ti].H})");
+                break; }
+            case "--depth-fill": {
+                // texId=value: fill an RtBuf[texId] with a
+                // constant (= depth stub when no real dump).
+                var p=args[++i].Split('=');
+                var ti=int.Parse(p[0]);
+                var v=float.Parse(p[1]);
+                var rb=new RtBuf(1920,1080);
+                Array.Fill(rb.D, v);
+                opt.RtBufs[ti]=rb;
+                Console.WriteLine($"[rast] depth-fill tex{ti}={v}");
+                break; }
+            case "--out": outPfx=args[++i]; break;
+            default:
+                Console.Error.WriteLine($"⚠ unknown: {args[i]}");
+                break;
+        }
+        Console.WriteLine($"[rast] frame={args[0]} draws #{lo}..#{hi} step={opt.Step} N={fd.N}");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var bufs = SpvRaster.Run(fd, lo, hi, opt);
+        Console.WriteLine($"[rast] done {sw.Elapsed.TotalSeconds:0.0}s; {bufs.Count} RtBufs");
+        if(outPfx!=null)
+            foreach(var (ti,rb) in bufs) {
+                SpvRaster.DumpPpm(rb, $"{outPfx}-tex{ti}.ppm",
+                    reinhard: fd.RtTex.TryGetValue(ti,out var rt)
+                              && rt.fmt==0x29);
+                SpvRaster.DumpPfm(rb, $"{outPfx}-tex{ti}.pfm");
+                Console.WriteLine($"[rast]   wrote {outPfx}-tex{ti}.{{ppm,pfm}} ({rb.W}×{rb.H})");
+            }
+        return 0;
+    }
 }
