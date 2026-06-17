@@ -254,12 +254,132 @@ public unsafe partial class HookManager {
         return Marshal.GetFunctionPointerForDelegate(d);
     }
 
+    // (T6)×96 ×2: sera kt[12]×32 (·11559) "error on every
+    // unsupported nvn command, then remove them one by one
+    // as they get implemented. Just a thought to catch stuff
+    // like this easier!" — = kt[2] silent-fallthrough at the
+    // dispatch layer. CopyTextureToTexture fired ~33k× in
+    // u794.log via the every-1000th-sampled stub; never grep'd
+    // for it; found 8.5h later via ×87→×95 chase (own kt[29]
+    // ×2nd that day). The allowlist below = the 80 names from
+    // ×96×1-cont-2's u794 census, MINUS the rendering-affecting
+    // ones flagged ⚠ for explicit-stub-or-impl. With UMBRA_
+    // NVN_STRICT=1, any name NOT in Table AND NOT in this set
+    // throws at ResolveNvn-time (= boot fails at first call to
+    // the unhandled fn; the exception-text names it). Default
+    // (non-strict) keeps the named-stub-and-continue path for
+    // diagnostic runs where you WANT to see what's reached.
+    // ⚠-flagged = candidate-roots for ‡-deferred renderer bugs:
+    //   nvnCommandBufferBindDepthStencilState (= my DEPTH_OP
+    //     knob's proper source; game's per-draw depth-test
+    //     state. ‡ 33 calls = once-per-RT-pass?)
+    //   nvnCommandBufferBindChannelMaskState (= color-write
+    //     mask; ‡the "fs writes nothing" class)
+    //   nvnCommandBufferBindPolygonState (= cull-face/winding;
+    //     ‡the "geometry visible from wrong side" class)
+    //   nvnCommandBufferClearDepthStencil (= per-RT depth-
+    //     clear; my first-visit-clear may not match)
+    //   nvnCommandBufferBarrier (= game's own sync-points;
+    //     186 calls = ‡every-RT-switch + more)
+    //   nvnDepthStencilStateSet* + nvnPolygonStateSet* (= the
+    //     state-builder counterparts; needed if Bind* is impl'd)
+    static readonly bool _nvnStrict =
+        Environment.GetEnvironmentVariable("UMBRA_NVN_STRICT")
+            == "1";
+    static readonly HashSet<string> _nvnAllowStub = new() {
+        // ── once-at-boot builder/init noise (harmless-stub) ──
+        "nvnDeviceBuilderSetDefaults", "nvnDeviceBuilderSetFlags",
+        "nvnDeviceSetWindowOriginMode", "nvnDeviceSetDepthMode",
+        "nvnQueueBuilderSetDefaults", "nvnQueueBuilderSetDevice",
+        "nvnQueueInitialize",
+        "nvnWindowBuilderSetDefaults", "nvnWindowBuilderSetDevice",
+        "nvnWindowBuilderSetNativeWindow",
+        "nvnWindowBuilderSetPresentInterval",
+        "nvnWindowBuilderSetTextures", "nvnWindowInitialize",
+        "nvnMemoryPoolBuilderSetDefaults",
+        "nvnMemoryPoolBuilderSetDevice",
+        "nvnTexturePoolInitialize", "nvnSamplerPoolInitialize",
+        "nvnSamplerPoolRegisterSampler",
+        "nvnTextureBuilderSetDefaults", "nvnTextureBuilderSetDevice",
+        "nvnTextureBuilderSetFlags", "nvnTextureBuilderSetLevels",
+        "nvnTextureBuilderGetStorageSize",
+        "nvnTextureBuilderGetStorageAlignment",
+        "nvnTextureViewSetDefaults", "nvnTextureViewSetLevels",
+        "nvnTextureViewSetLayers",
+        "nvnTextureFinalize",
+        "nvnSamplerBuilderSetDefaults", "nvnSamplerBuilderSetDevice",
+        "nvnSamplerBuilderSetMinMagFilter",
+        "nvnSamplerBuilderSetWrapMode",
+        "nvnSamplerBuilderSetLodClamp", "nvnSamplerBuilderSetLodBias",
+        "nvnSamplerBuilderSetMaxAnisotropy",
+        "nvnSamplerBuilderSetCompare",
+        "nvnSamplerBuilderSetBorderColor",
+        "nvnSamplerInitialize",
+        "nvnBufferBuilderSetDefaults", "nvnBufferBuilderSetDevice",
+        "nvnBufferFinalize",
+        "nvnSyncInitialize",
+        "nvnCommandBufferInitialize",
+        "nvnProgramInitialize", "nvnProgramFinalize",
+        // ── per-frame queue/sync (we're the driver; no real
+        //   GPU to fence against) ──
+        "nvnQueueSubmitCommands", "nvnQueueFenceSync",
+        "nvnSyncWait",
+        "nvnCommandBufferBeginRecording",
+        "nvnCommandBufferEndRecording",
+        "nvnCommandBufferAddCommandMemory",
+        "nvnCommandBufferAddControlMemory",
+        "nvnCommandBufferSetMemoryCallback",
+        "nvnCommandBufferSetTexturePool",
+        "nvnCommandBufferSetSamplerPool",
+        "nvnCommandBufferSetShaderScratchMemory",
+        "nvnCommandBufferSetSampleMask",
+        "nvnCommandBufferSetStencilValueMask",
+        "nvnCommandBufferSetStencilMask",
+        "nvnCommandBufferSetStencilRef",
+        "nvnCommandBufferCopyCommands",
+        // ── ⚠ rendering-affecting; in allowlist for now so
+        //   strict-mode boots, but each is a flagged ‡-cand.
+        //   Remove from this set when impl'd OR when explicitly
+        //   verified-harmless-for-this-game. ──
+        "nvnCommandBufferBarrier",                  // ⚠ 186
+        "nvnCommandBufferClearDepthStencil",        // ⚠ 73
+        "nvnCommandBufferBindChannelMaskState",     // ⚠ 60
+        "nvnCommandBufferBindDepthStencilState",    // ⚠ 33
+        "nvnCommandBufferBindMultisampleState",     // ⚠ 34
+        "nvnCommandBufferBindPolygonState",         // ⚠ 20
+        "nvnDepthStencilStateSetDefaults",
+        "nvnDepthStencilStateSetDepthTestEnable",
+        "nvnDepthStencilStateSetDepthWriteEnable",
+        "nvnDepthStencilStateSetDepthFunc",
+        "nvnDepthStencilStateSetStencilTestEnable",
+        "nvnDepthStencilStateSetStencilFunc",
+        "nvnDepthStencilStateSetStencilOp",
+        "nvnPolygonStateSetDefaults",
+        "nvnPolygonStateSetCullFace",
+        "nvnPolygonStateSetFrontFace",
+        "nvnPolygonStateSetPolygonMode",
+        "nvnMultisampleStateSetDefaults",
+        "nvnChannelMaskStateSetDefaults",
+        "nvnChannelMaskStateSetChannelMask",
+    };
+
     static nint ResolveNvn(string name) {
         if(NvnResolved.TryGetValue(name, out var p)) return p;
         if(name == "nvnDeviceGetProcAddress")
             p = (nint)(delegate* unmanaged<void*, byte*, nint>)&NvnDeviceGetProcAddress;
         else if(NvnLinux.Table.TryGetValue(name, out var impl) && impl != 0)
             p = impl;  // 0 = "use the named-stub" (gated hooks)
+        else if(_nvnStrict && !_nvnAllowStub.Contains(name))
+            // (T6)×96 sera kt[12]×32: throw on unhandled-and-
+            // not-allowlisted. The exception-text IS the
+            // discriminator (kt[2]). Boot fails at first call
+            // ⟹ next ‡v0×21st-class miss surfaces at u-run-
+            // time instead of N chapters later.
+            throw new NotImplementedException(
+                $"[nvn-strict] '{name}' is not implemented and "
+              + $"not in _nvnAllowStub. Either implement it in "
+              + $"NvnLinux.Table, or add it to _nvnAllowStub if "
+              + $"verified-harmless-stub. (sera kt[12]×32 ·11559)");
         else
             p = MakeNamedStub(name);
         NvnResolved[name] = p;

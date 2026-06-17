@@ -281,6 +281,17 @@ public static unsafe class NvnLinux {
         // in observed calls except #1 x5=0x2517b — but x5
         // is past the 5-arg sig, likely caller-leftover).
         ["nvnCommandBufferCopyBufferToBuffer"] = (nint)(delegate* unmanaged<ulong, ulong, ulong, ulong, int, void>)&CbCopyBufferToBuffer,
+        // (T6)×96 ‡v0×21st: sig per ref-botw-nvn.h.txt:1652-
+        // 1656 = (cb, srcTex*, srcView*, srcRegion*, dstTex*,
+        // dstView*, dstRegion*, flags). 8 args. NVNcopyRegion
+        // = {xoff,yoff,zoff, w,h,d} 6×i32 (verified @210-217).
+        // Game fires ~33k× over u794's 180s ≈ 1/frame (the
+        // 261→swap-chain present-copy per ×96×1-cont-3 cross
+        // -ref). ‡v0×21st-hypothesis = there's ALSO an rt0→
+        // tex313 copy between #665↔#666 (= why #666 reads
+        // stale G-buf c[2] in replay); kt[37] says sampled
+        // log can't refute. This hook captures every call.
+        ["nvnCommandBufferCopyTextureToTexture"] = (nint)(delegate* unmanaged<ulong, ulong, ulong, uint*, ulong, ulong, uint*, int, void>)&CbCopyTexToTex,
         // T2 (sera "fucked up geometry"): capture the draw chain.
         // BindVertexBuffer(cb, index, NVNbufferAddress addr, size_t size)
         // DrawArrays(cb, NVNdrawPrimitive prim, int first, int count)
@@ -555,10 +566,21 @@ public static unsafe class NvnLinux {
     // resolved tex-handle at draw-time, not idx.
     public static readonly System.Collections.Concurrent
         .ConcurrentDictionary<int, ulong> TexByPoolIdx = new();
+    // (T6)×96 ×2: inverse map texPtr → most-recent pool-idx
+    // (= texId). For CbCopyTexToTex's resolution of NVNtexture*
+    // args → texId. ⚠️ Same caveat as TexByPoolIdx: game re-
+    // registers; latest-wins. A texture-ptr that's NEVER pool-
+    // registered (= swap-chain images, per ×96×1-cont-3: x4∈
+    // {76e0,7610,7540} = TextureInitialize'd but never TpReg'd)
+    // resolves to -1; CopyOpRecord carries the raw ptr too so
+    // capture can still identify swap-chain dsts post-hoc.
+    public static readonly System.Collections.Concurrent
+        .ConcurrentDictionary<ulong, int> TexPtrToId = new();
     [UnmanagedCallersOnly]
     static void TpRegTexture(ulong pool, int idx, ulong tex, ulong view) {
         var first = !TexByPoolIdx.ContainsKey(idx);
         TexByPoolIdx[idx] = tex;
+        TexPtrToId[tex] = idx;
         if(first) {  // log first registration per-idx (= the game
                      // re-registers 0x100 every frame; we want the
                      // ONCE-each map for the title's ~30 textures)
@@ -584,6 +606,50 @@ public static unsafe class NvnLinux {
     }
 
     static int _copyBufN;
+    [UnmanagedCallersOnly]
+    static void CbCopyTexToTex(ulong cb, ulong srcTex,
+            ulong srcView, uint* srcR, ulong dstTex,
+            ulong dstView, uint* dstR, int flags) {
+        // (T6)×96 ×2 ‡v0×21st: capture-and-stub. We're the
+        // NVN driver here ⟹ no call-through; just record
+        // what the game asked for so NvnCapture can serialize
+        // and NvnReplay can vkCmdCopyImage at the right draw-
+        // position. NVNcopyRegion = {x,y,z, w,h,d} (verified
+        // ref-botw @210-217). srcView/dstView usually 0 (=
+        // default-view of the texture; per ×96×1-cont-2 x2/
+        // x5=0 in all 34 sampled calls).
+        var n = ++_copyTexN;
+        var sTid = TexPtrToId.GetValueOrDefault(srcTex, -1);
+        var dTid = TexPtrToId.GetValueOrDefault(dstTex, -1);
+        // Region: src{x,y,z,w,h,d}; dst same shape. ‡ z/d
+        // ignored (2D only for now). w/h from srcR (= the
+        // copy size); fall back to dst-tex W×H if region null.
+        int sx=0,sy=0,dx=0,dy=0,w=0,h=0;
+        if(srcR != null) {
+            sx=(int)srcR[0]; sy=(int)srcR[1];
+            w=(int)srcR[3]; h=(int)srcR[4];
+        }
+        if(dstR != null) { dx=(int)dstR[0]; dy=(int)dstR[1]; }
+        if(w == 0) {
+            var ds = St.GetValueOrDefault(dstTex);
+            w = ds?.Width ?? 0; h = ds?.Height ?? 0;
+        }
+        int di; lock(Draws) di = Draws.Count;
+        var rec = new CopyOpRecord(di, sTid, dTid,
+            srcTex, dstTex, w, h, sx, sy, dx, dy);
+        lock(CopyOps) CopyOps.Add(rec);
+        // Log: first-20 + every-1000th + ALL during capture
+        // -active (= NvnCapture._dir set AND this frame in
+        // _frames; the per-frame log @CapVer=5 wants full-
+        // fidelity for the captured frame). + ALL where
+        // dTid≥0 AND dTid≠the-swap-chain (= the interesting
+        // ones; swap-chain dsts have dTid=-1 since never
+        // pool-registered).
+        var interesting = dTid >= 0;
+        if(n <= 20 || n % 1000 == 0 || interesting)
+            $"[nvn] CopyTexToTex #{n} di={di} src=0x{srcTex:x}(tid={sTid}) → dst=0x{dstTex:x}(tid={dTid}) sR=({sx},{sy},{w}×{h}) dR=({dx},{dy}) flags={flags}{(interesting?" ★":"")}".Log();
+    }
+
     [UnmanagedCallersOnly]
     static void CbCopyBufferToTexture(ulong cb, ulong srcGpuAddr, ulong dstTex,
             ulong dstView, ulong* region, int copyFlags) {
@@ -831,6 +897,20 @@ public static unsafe class NvnLinux {
     public record struct NvnAttrib(int StreamIdx, int Format, int Offset);
     public record struct NvnStream(int Stride, int Divisor);
     public static readonly List<DrawRecord> Draws = new();
+
+    // (T6)×96 ×2: ‡v0×21st — nvnCommandBufferCopyTextureTo
+    // Texture capture. The game does ~1/frame (the 261→swap
+    // present-copy per ×96×1-cont-3 sampled-log) and ‡maybe
+    // more (rt0→tex313 between #665↔#666 = the ‡v0×21st-
+    // hypothesis from ×95; ‡maybe rt2→tex335 = ‡v0×20th-proper).
+    // kt[37]: every-1000th sampling can't tell; hook captures
+    // every call. drawIdxBefore = Draws.Count at hook-time so
+    // replay can insert vkCmdCopyImage at the right position.
+    public record CopyOpRecord(int DrawIdxBefore,
+        int SrcTid, int DstTid, ulong SrcPtr, ulong DstPtr,
+        int W, int H, int Sx, int Sy, int Dx, int Dy);
+    public static readonly List<CopyOpRecord> CopyOps = new();
+    static int _copyTexN;
     static int _drawN;
 
     // Current bind state per cmdbuf (flat for v0 — only one cmdbuf in use).
