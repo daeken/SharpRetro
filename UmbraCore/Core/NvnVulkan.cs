@@ -698,6 +698,7 @@ public static unsafe class NvnVulkan {
     static readonly Dictionary<(int,int), byte[]?>
         _shCb1 = new();
     static bool _cb1SiteLogged;
+    static int _slot0LogN;
     static readonly bool _t3Cb1ZeroNull =
         Environment.GetEnvironmentVariable("UMBRA_T3_CB1_ZERO_NULL")
             == "1";
@@ -705,6 +706,10 @@ public static unsafe class NvnVulkan {
     // when game never bound BlendState). ‡v0×18th fix.
     static readonly bool _t3Key0Replace =
         Environment.GetEnvironmentVariable("UMBRA_T3_KEY0_REPLACE")
+            == "1";
+    // (T6)×89: ‡v0×20th one-knob (RGBA16F RTs → RGBA8).
+    static readonly bool _t3R16fAs8 =
+        Environment.GetEnvironmentVariable("UMBRA_T3_R16F_AS_8")
             == "1";
     static byte[]? LoadShCb1(int shIdx, int t) {
         if(_shCb1.TryGetValue((shIdx,t), out var c)) return c;
@@ -2282,7 +2287,22 @@ public static unsafe class NvnVulkan {
             // samples 0x134 etc per ×33×3(b) sequence).
             if(_t3Rtt && _rtTexView.TryGetValue(ti, out var rv)
                && rv != 0) {
-                views[sl] = rv; nReal++; nRt++; continue;
+                views[sl] = rv; nReal++; nRt++;
+                // (T6)×89 (xi): log sl[0]'s view-handle for
+                // tex318/rt2 verification. ×88 found GPU's
+                // tex318-sample=(0,0,0); this confirms which
+                // VkImageView is bound (= rf.View[0] from
+                // rt2's EnsureRtFb @#163, the SAME image
+                // r159f dumped 32.28%-lit content from).
+                // (T6)×89 ×1-cont own kt[2]: log-count
+                // exhausted on early draws (30× tex313).
+                // Log specifically for tex318/335/325 (=
+                // the rt2/rt3/rt4 RGBA16F-class) regardless
+                // of count, + first-30 for context.
+                if(sl == 0 && (_slot0LogN++ < 30
+                        || ti is 318 or 335 or 325 or 308))
+                    $"[vk] EnsureSlotDs d#{d.N} sl[0] tex{ti} → RT-view rv=0x{rv:x}".Log();
+                continue;
             }
             var tx = NvnLinux.ResolveTex(h);
             EnsureTexBound(ti, tx);
@@ -2471,7 +2491,20 @@ public static unsafe class NvnVulkan {
     static (uint vf, uint asp, uint usg) NvnRtFmt(int nvnFmt)
         => nvnFmt switch {
         0x25 => ( 37, 1, 0x10|0x4|0x1), // RGBA8       COLOR_ATTACH|SAMPLED|TRANSFER_SRC
-        0x29 => ( 97, 1, 0x10|0x4|0x1), // RGBA16F
+        // (T6)×89 ×1: ‡v0×20th one-knob — UMBRA_T3_R16F_AS_8
+        // makes RGBA16F RTs (rt2/rt3) use vf=37(RGBA8) instead
+        // of vf=97. ×88 narrowed: rt1(vf=37)→#631 RT-as-sampler
+        // WORKS (r156d); rt2(vf=97)→#636/#663 returns (0,0,0)
+        // (b8=0→23/255 PREDICT-EXACT per ×88×2-cont(ii-2)).
+        // SAME _rtTexView/EnsureSlotDs/sampler/layout/deps for
+        // both; ONLY diff = vf. If r160(vf=37) shows content
+        // at #663 ⟹ vf=97-RT-then-sampled is the gap (= lava
+        // pipe-specific OR my code's vf=97 path). ‡ Loses HDR
+        // precision (rt2 clamps to [0,1] in RGBA8); the proper
+        // fix once mechanism known = (a) explicit subpass-dep
+        // OR (b) crefs layout=GENERAL instead of COLOR_ATT_
+        // OPTIMAL OR (c) lavapipe-bug-workaround.
+        0x29 => (_t3R16fAs8 ? 37u : 97u, 1, 0x10|0x4|0x1), // RGBA16F
         0x12 => ( 77, 1, 0x10|0x4|0x1), // RG16_UNORM (velocity)
         0x34 => (126, 2, 0x20|0x4),     // D32_SFLOAT  DEPTH_STENCIL_ATTACH|SAMPLED
         0x35 => (129, 6, 0x20|0x4),     // D24_UNORM_S8 DEPTH|STENCIL
