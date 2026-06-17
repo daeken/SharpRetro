@@ -7,6 +7,10 @@ if(args.Length >= 2 && args[0] == "--replay") {
     var rep = args.Length >= 3 ? int.Parse(args[2]) : 1;
     return UmbraCore.Core.NvnReplay.Run(args[1], rep);
 }
+// (T6)×77 sera kt[12]×30: SPIR-V FS interpreter for value-
+// level shader debugging. See SpvEvalDriver.cs for usage.
+if(args.Length >= 6 && args[0] == "--spv-eval")
+    return MaxwellShader.SpvEvalDriver.Run(args[1..]);
 
 var mainLoop = new MainLoop(args[0], args[1]);
 return 0;
