@@ -698,6 +698,9 @@ public static unsafe class NvnVulkan {
     static readonly Dictionary<(int,int), byte[]?>
         _shCb1 = new();
     static bool _cb1SiteLogged;
+    static readonly bool _t3Cb1ZeroNull =
+        Environment.GetEnvironmentVariable("UMBRA_T3_CB1_ZERO_NULL")
+            == "1";
     static byte[]? LoadShCb1(int shIdx, int t) {
         if(_shCb1.TryGetValue((shIdx,t), out var c)) return c;
         // (T6)×81 ×4-cont-2: .cb1.bin lives in the LIVE-capture
@@ -734,7 +737,18 @@ public static unsafe class NvnVulkan {
         // position-relevant"). The 139 NON-zero .cb1.bin
         // (incl sh0244's filmic, sh0111's dref-bias) are
         // unaffected ⟹ keeps the sky Δ324→69 win.
-        if(d != null && !d.Any(b => b != 0)) d = null;
+        // (T6)×82 ×1-cont: ‡v0×15th refinement. ×81×4-cont-3's
+        // all-zero→null was wrong for FS case-(b) (= shader's
+        // consts ARE genuinely zero; r155-3 sky Δ324→69 vs
+        // r155-4 sky=324 proves an FS wants c1=0). For VS the
+        // open Q is whether the 4 all-zero G-buf VSes (45/813/
+        // 1023/1096) read c[1] — if no, zeros are correct; if
+        // yes, ‡new mechanism (= NOT GLSLC consts). The 8 NZ
+        // G-buf VSes have c1[0].x=2.0079 (= my VS_C1_0=2.0
+        // guess vindicated at 0.4%). Gate the heuristic on
+        // env knob; r156 (knob=0) = the empirical test.
+        if(d != null && _t3Cb1ZeroNull && !d.Any(b => b != 0))
+            d = null;
         // (T6)×81 ×4-cont kt[2]: log every first-lookup (hit
         // OR miss) so the wire is observable. r155≡r154 byte
         // -identical ⟹ this returned null for sh0244; the
@@ -3253,7 +3267,32 @@ public static unsafe class NvnVulkan {
                         var cb1d = st==0 ? vsCb1 : fsCb1;
                         var cb = (byte*)(_t3CbufPtr[st*12 + 1]
                                        + slot * T3CbufStride);
-                        if(cb1d != null) {
+                        // (T6)×82 ×2: stage-aware all-zero
+                        // handling. ×82×1(a-2') found vs1023
+                        // /vs1096 READ c[1] (7/13 refs) but
+                        // their .cb1.bin = all-zero ⟹ r156
+                        // geom-distort (the dark-blue concen
+                        // -tric blobs). FS-side zeros are
+                        // CORRECT (r155-3 sky Δ324→69 vs
+                        // r155-4=324 proved an FS wants c1
+                        // =0). ⟹ FS: use captured incl-zero;
+                        // VS: if all-zero, fall through to
+                        // VS_C1_0 fallback (= 2.0; the 8 NZ
+                        // G-buf VSes have c1[0].x=2.0079 so
+                        // the fallback ≈ correct). ‡v0×16th:
+                        // vs1023/1096's REAL c[1] source
+                        // unknown — ‡cands: (i) past my 256B
+                        // window OR multi-EXIT made `end`
+                        // wrong; (ii) genuinely-zero on hw
+                        // (= distortion from elsewhere);
+                        // (iii) per-draw runtime (= NOT
+                        // GLSLC-const for those two). The
+                        // stage-aware fallback gives the
+                        // empirically-right behavior
+                        // regardless; ‡-deferred per kt[26].
+                        var useCb1 = cb1d != null
+                            && (st == 1 || cb1d.Any(b=>b!=0));
+                        if(useCb1) {
                             // Real captured cb1. Copy 256B.
                             cb1d.AsSpan(0, Math.Min(256,
                                 cb1d.Length)).CopyTo(
@@ -3372,8 +3411,29 @@ public static unsafe class NvnVulkan {
                 // shader's own const-section; ‡ probably 2.0
                 // exactly, since it's the canonical N=enc×2−1
                 // decode). The knob stays as fallback-only.
+                // (T6)×82 ×2-cont own kt[2]: VS_C1_0 fires
+                // when vsCb1 is null OR all-zero. ×82×2's
+                // stage-aware useCb1=false for vs1023/1096
+                // (all-zero) falls to Clear(); THIS gate
+                // (was: ==null) didn't fire because LoadShCb1
+                // returns the all-zero array (non-null) ⟹
+                // r156b≡r156. ‡v0×16th: vs1023/1096 read
+                // c[1][0].x ONLY (×3, same offset per spirv-
+                // dis); their .tail = all-zero across full
+                // 1024B ⟹ NOT extraction-bug; their c1[0].x
+                // is genuinely NOT a GLSLC-const (= per-draw
+                // runtime via some other path, OR engine-
+                // patched-post-compile). The 2.0079 in the
+                // 8 NZ G-buf VSes ⟹ 2.0 is the right
+                // fallback-value for c1[0].x regardless.
+                // ⟹ this gate = the empirically-correct
+                // behavior; the mechanism for vs1023/1096
+                // = ‡v0×16th-deferred per kt[26] (bound:
+                // distortion-only, fixed-by-fallback).
+                var vsCb1g = LoadShCb1(d.VsShIdx, 1);
                 if(_t3VsC10 is {} vc10
-                        && LoadShCb1(d.VsShIdx, 1) == null) {
+                        && (vsCb1g == null
+                            || !vsCb1g.Any(b => b != 0))) {
                     var cb = (float*)(_t3CbufPtr[0*12 + 1]
                                     + slot * T3CbufStride);
                     cb[0] = vc10;
