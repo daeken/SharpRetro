@@ -302,15 +302,47 @@ public static unsafe class NvnVulkan {
         0x11 => ( 83,  4),  // R16G16_SFLOAT
         0x12 => ( 16,  2),  // R8G8_UNORM                     ‡
         0x16 => ( 91,  8),  // R16G16B16A16_SNORM  ‡‡ (sh794 tangent? 8B by gap)
-        // ── float×N (R32) family ───────────────────────────────
-        // 0x22 = float×3 CONFIRMED (menu pos@0, 12B). Adjacents
-        // ‡-inferred by enum±1 = component±1 pattern.
-        0x20 => (100,  4),  // R32_SFLOAT                     ‡
-        0x21 => (103,  8),  // R32G32_SFLOAT                  ‡
-        0x22 => (106, 12),  // R32G32B32_SFLOAT       ✓ menu pos
-        0x23 => (109, 16),  // R32G32B32A32_SFLOAT            ‡
-        // ── RGBA8 family ───────────────────────────────────────
-        0x25 => ( 37,  4),  // R8G8B8A8_UNORM         ✓ menu color
+        // ── (T6)×102 ×2 own·8808-PROPER ×40th: nvn.h NVNformat
+        // is AUTHORITATIVE (sera kt[12]×34 ·11559 "check nvn.h
+        // for those enum references"). My (T6)×9 "‡-inferred by
+        // enum±1=component±1 pattern" was WRONG PATTERN. Actual
+        // nvn.h pattern @ ref-botw-nvn.h.txt:
+        //   0x1E-21 = RGB16  {UNORM,SN,UI,I}      6B
+        //   0x22-24 = RGB32  {F,UI,I}            12B
+        //   0x25-28 = RGBA8  {UNORM,SN,UI,I}      4B
+        //   0x29-2D = RGBA16 {F,UNORM,SN,UI,I}    8B
+        //   0x2E-30 = RGBA32 {F,UI,I}            16B
+        //   0x31-36 = depth/stencil
+        // The 5 entries below WERE WRONG since (T6)×9 ~day-30
+        // (kt[19]'s "‡‡ reference-check pending" never closed):
+        //   0x20: was R32_SFLOAT(4B)     → RGB16UI(6B)  [unused]
+        //   0x21: was R32G32_SFLOAT(8B)  → RGB16I(6B)   [unused]
+        //   0x23: was RGBA32F(16B)       → RGB32UI(12B) [unused]
+        //   0x2e: was R32G32_SFLOAT(8B)  → RGBA32F(16B) [×11 in
+        //         u797: skinned-char attr[6]@28; the (T6)×9
+        //         "menu uv 0x2e@20" was a 9-as-e MISREAD per
+        //         ×102×1-cont(b-3): live menu = 0x29@20]
+        //   0x34: was RGBA16F(8B)        → DEPTH32F(4B) [unused
+        //         as vtx-attr; texture-fmt path separate]
+        // 0x16 above ‡‡ STILL inferred-by-gap (nvn.h says
+        // 0x16=RG32F=8B; my mapping=RGBA16_SNORM=8B; same SIZE
+        // diff TYPE. ‡ sh794 attr[4]@28 8B-gap-to-end fits
+        // either; ‡-defer until mismatch observed). ───────────
+        // ⚠ own kt[19]-RECURSIVE caught pre-commit (×102×2):
+        // first cut had 0x20→89 0x21→90 0x23→107 0x24→108 =
+        // VkFormat values pattern-guessed from memory = the
+        // SAME lesson (infer-from-pattern, don't-check-ref)
+        // applied to the FIX of that lesson. Vk R16G16B16_*
+        // = {84..90}; R32G32B32_* = {104..106}; R32G32B32A32_*
+        // = {107..109}. Verified vs vulkan_core.h numbering.
+        0x20 => ( 88,  6),  // R16G16B16_UINT        (nvn.h: RGB16UI)
+        0x21 => ( 89,  6),  // R16G16B16_SINT        (nvn.h: RGB16I)
+        0x22 => (106, 12),  // R32G32B32_SFLOAT      ✓ (nvn.h: RGB32F)
+        0x23 => (104, 12),  // R32G32B32_UINT        (nvn.h: RGB32UI)
+        0x24 => (105, 12),  // R32G32B32_SINT        (nvn.h: RGB32I)
+        // ── RGBA8 family (0x25-28) ─────────────────────────────
+        0x25 => ( 37,  4),  // R8G8B8A8_UNORM        ✓ (nvn.h: RGBA8)
+        0x26 => ( 38,  4),  // R8G8B8A8_SNORM        (nvn.h: RGBA8SN)
         // (T6)×33 sera ·10966 botw nvn.h: 0x27=RGBA8UI.
         // vs1023 bone-idx attr: shader does int(floor(
         // in_attr.x)) ⟹ wants float-with-integer-VALUE
@@ -323,15 +355,30 @@ public static unsafe class NvnVulkan {
         // sh800 reads 3 floats → quantized pos. ‡‡ SNORM vs
         // SFLOAT undetermined; SFLOAT first (positions can
         // exceed [-1,1]).
-        0x29 => ( 97,  8),  // R16G16B16A16_SFLOAT ‡‡ (was RGBA8_SRGB 4B, WRONG by stride-math)
-        // ── R32G32 (= 8B; 0x2e was the SAME as 0x21? — no:
-        // both seen distinctly; 0x2e@off=20 is the menu's uv,
-        // 8B confirmed. ⟹ NVN may have 0x21=R32G32_UINT and
-        // 0x2e=R32G32_SFLOAT, OR a stride-N gap in the enum.
-        // Treating both as RG32_SFLOAT until disambiguated.) ──
-        0x2e => (103,  8),  // R32G32_SFLOAT          ✓ menu uv
-        // ── R16 half-float family ──────────────────────────────
-        0x34 => ( 97,  8),  // R16G16B16A16_SFLOAT            ‡‡
+        // ── RGBA16 family (0x29-2D) ────────────────────────────
+        0x29 => ( 97,  8),  // R16G16B16A16_SFLOAT   ✓ (nvn.h: RGBA16F)
+        0x2a => ( 91,  8),  // R16G16B16A16_UNORM    (nvn.h: RGBA16)
+        0x2b => ( 92,  8),  // R16G16B16A16_SNORM    (nvn.h: RGBA16SN)
+        0x2c => ( 95,  8),  // R16G16B16A16_UINT     (nvn.h: RGBA16UI)
+        0x2d => ( 96,  8),  // R16G16B16A16_SINT     (nvn.h: RGBA16I)
+        // ── RGBA32 family (0x2E-30) ────────────────────────────
+        // (T6)×102 own·8808-PROPER ×40th: 0x2e was RG32F(8B,103)
+        // since (T6)×9 via "menu uv@20 8B-by-gap" — that was a
+        // 9-as-e MISREAD (×102×1-cont(b-3): live menu = 0x29@20).
+        // nvn.h: RGBA32F. Verified at-data: u797 8-attr skinned-
+        // char sig has 0x2e@28→0x27@44 = 16B gap. ⟹ ×40th-fix
+        // is LOAD-BEARING for the ×11 skinned draws (= sera's
+        // kt[12]×33 "fucked up character geometry" hairlines-
+        // cand): with old RG32F(8B), Vk-fetch read 8B at @28 =
+        // half the data; vs reads in_attr6.zw as in_attr7's
+        // first 8B. + attrs[6..7] capped at 6 by NvnCapture
+        // (= ‡v0×27th-PROPER; capVer=7 raises to 8).
+        0x2e => (109, 16),  // R32G32B32A32_SFLOAT   ✓ (nvn.h: RGBA32F)
+        0x2f => (107, 16),  // R32G32B32A32_UINT     (nvn.h: RGBA32UI)
+        0x30 => (108, 16),  // R32G32B32A32_SINT     (nvn.h: RGBA32I)
+        // 0x34 = NVN DEPTH32F — not a vertex-attr format; the
+        // (T6)×9 entry was bogus. Removed; falls to NvnVtxFmt
+        // Unknown if game ever passes it as an attr fmt.
         // 0 = unset (no SetFormat called for this slot). Caller
         // SKIPS — fmt 0 isn't a real attr.
         0x00 => (  0,  0),
