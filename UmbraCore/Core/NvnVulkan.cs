@@ -686,6 +686,63 @@ public static unsafe class NvnVulkan {
     // this, all views are 2D ⟹ shader's samplerCube reads UB.
     static readonly Dictionary<int, Dictionary<int,int>>
         _t3ShTexKinds = new();
+    // (T6)×81 ×4: per-shader cb1 data, loaded from sh{N}-t{T}
+    // .cb1.bin (= the NVN-GLSLC compiler-constant section
+    // captured at ProgramSetShaders, dataGpu @ align_up(end,
+    // 256), per ×81×2-cont ·7827 finding). Replaces the
+    // C1_ONES all-1.0 fill + the (T6)×49/50/59 hand-tuned
+    // bakes when present. Key = (shIdx, sphType); null =
+    // file-missing (= idx not yet captured ⟹ C1_ONES fallback
+    // = old behavior). 256B per shader ⟹ ~360KB for the full
+    // 1451-shader corpus; cached on first read.
+    static readonly Dictionary<(int,int), byte[]?>
+        _shCb1 = new();
+    static bool _cb1SiteLogged;
+    static byte[]? LoadShCb1(int shIdx, int t) {
+        if(_shCb1.TryGetValue((shIdx,t), out var c)) return c;
+        // (T6)×81 ×4-cont-2: .cb1.bin lives in the LIVE-capture
+        // dir (/tmp/umbra-shaders/, hardcoded in NvnLinux's
+        // ProgramSetShaders dump @ ×81×2), NOT in _t3ShDir
+        // (which in REPLAY mode = frame-dir/shaders/ — the
+        // .bin copies snapshotted at capture-time, before
+        // .cb1.bin existed). kt[2] @ ×4-cont caught this:
+        // _t3ShDir='/tmp/nvncap6l/shaders' ⟹ all-MISS. Look
+        // in BOTH (frame-dir first, for future captures that
+        // copy .cb1.bin alongside .bin; then live-dir).
+        // ‡ UMBRA_CB1_DIR env to override.
+        var dirs = new[] {
+            Environment.GetEnvironmentVariable("UMBRA_CB1_DIR"),
+            _t3ShDir,
+            "/tmp/umbra-shaders",
+        };
+        byte[]? d = null; string? p = null;
+        foreach(var dir in dirs) {
+            if(dir == null) continue;
+            p = $"{dir}/sh{shIdx:d4}-t{t}.cb1.bin";
+            if(File.Exists(p)) { d = File.ReadAllBytes(p); break; }
+        }
+        // (T6)×81 ×4-cont-3 own ‡v0×15th: all-zero .cb1.bin =
+        // "GLSLC emitted no consts for this shader" (= the
+        // shader doesn't read c[1], OR its consts are past
+        // the 1024B dump-window — ‡ but ×81×3(a) found 0
+        // such cases). Treat as null ⟹ falls through to
+        // C1_ONES (FS) / VS_C1_0 (VS) = the pre-49th behavior
+        // for those shaders. Without this: VS c1[0].x=0
+        // instead of VS_C1_0=2.0 ⟹ r155 fisheye-distortion
+        // (= some G-buf VS reads c1[0].x for position-
+        // affecting math, per (c⁴⁰)(R'-fix) "VS c[1] is
+        // position-relevant"). The 139 NON-zero .cb1.bin
+        // (incl sh0244's filmic, sh0111's dref-bias) are
+        // unaffected ⟹ keeps the sky Δ324→69 win.
+        if(d != null && !d.Any(b => b != 0)) d = null;
+        // (T6)×81 ×4-cont kt[2]: log every first-lookup (hit
+        // OR miss) so the wire is observable. r155≡r154 byte
+        // -identical ⟹ this returned null for sh0244; the
+        // log tells whether it was path-miss (_t3ShDir wrong)
+        // vs not-called (d.FsShIdx wrong / block not reached).
+        $"[vk] cb1 sh{shIdx:d4}-t{t}: {(d!=null?$"loaded {d.Length}B (REAL)":$"MISS path={p} (→ C1_ONES fallback)")}".Log();
+        return _shCb1[(shIdx,t)] = d;
+    }
     // (T6)×66 v0 placeholder cube: 1×1 RGBA8, 6 layers,
     // CUBE_COMPATIBLE, viewType=CUBE. Content = mid-grey
     // (0x80808080 ×6) so env_refl ≈ const(0.5,0.5,0.5) ⟹
@@ -3144,7 +3201,101 @@ public static unsafe class NvnVulkan {
                 // u747 showed VS c[1] is position-relevant
                 // (menu→0% with C1_ONES on both stages); FS
                 // c[1] is the scale-mult target.
-                if(_t3C1Ones)
+                // (T6)×81 ×4: real per-shader cb1 (= the
+                // ‡v0×11th fix). Captured from dataGpu @
+                // align_up(end,256) at ProgramSetShaders;
+                // verified at-bytes ×81×2-cont (sh0244 cb1=
+                // {0.06,0.004,−0.0667,0.7864,0.1527} = the
+                // exact filmic constants fs244 reads;
+                // sh0111 cb1={1.0,0.005,0.99,1e-7} = the
+                // shadow-dref-bias) + at-reference (kt[14]
+                // ryujinx ShaderCache.cs:740 reads cb1 from
+                // Maxwell uniform-slot-1, caches it as part
+                // of shader identity). VS+FS both get their
+                // own cb1 (G-buf VSes use c[1][0].x for
+                // normal-decode-K per VS_C1_0; the captured
+                // value supersedes the 2.0 guess).
+                //
+                // Falls back to C1_ONES (= old all-1.0 +
+                // ×49/50/59 bakes) when .cb1.bin missing
+                // for this shIdx (= not yet captured; e.g.
+                // idx>364 from u793's 60s window) ⟹ r155
+                // changes ONLY where real data exists, =
+                // safe to evaluate incrementally. The
+                // fallback's bakes (c1[0].z=FLT_MAX rtId≠1,
+                // c1[1].y=−1) were A/B-derived guesses at
+                // values that are now KNOWN: fs111's real
+                // c1[0].z=0.99 (NOT FLT_MAX); fs244's real
+                // c1[0].z=−0.0667 (NOT FLT_MAX) — the ×49
+                // bake was wrong-mechanism (it forced fs111's
+                // P0 predicate via threshold-overflow, not
+                // via the right value). The real values
+                // make the predicates work as the shader
+                // intends.
+                //
+                // c[2] (hw=2): no captured data yet (= ‡
+                // where does c[2] live in dataGpu? after
+                // c[1]? separate alignment?). Keep the
+                // C1_ONES 1.0-fill for c[2] when _t3C1Ones,
+                // else 0. ‡v0×15th-cand.
+                {
+                    // kt[2] ×4-cont: log call-site once so we
+                    // know the block IS reached + with what
+                    // shIdx values (= rules out d.FsShIdx≠244
+                    // and block-not-reached in one read).
+                    if(!_cb1SiteLogged) {
+                        _cb1SiteLogged = true;
+                        $"[vk] cb1 site reached: d#{d.N} vs={d.VsShIdx} fs={d.FsShIdx} _t3ShDir='{_t3ShDir}'".Log();
+                    }
+                    var fsCb1 = LoadShCb1(d.FsShIdx, 2);
+                    var vsCb1 = LoadShCb1(d.VsShIdx, 1);
+                    for(var st = 0; st < 2; st++) {
+                        var cb1d = st==0 ? vsCb1 : fsCb1;
+                        var cb = (byte*)(_t3CbufPtr[st*12 + 1]
+                                       + slot * T3CbufStride);
+                        if(cb1d != null) {
+                            // Real captured cb1. Copy 256B.
+                            cb1d.AsSpan(0, Math.Min(256,
+                                cb1d.Length)).CopyTo(
+                                new Span<byte>(cb, 256));
+                        } else if(_t3C1Ones && st == 1) {
+                            // Fallback = old C1_ONES + bakes
+                            // (FS only, per (c⁴⁰)(R'-fix)).
+                            // ‡ Reachable for any shIdx not
+                            // in the .cb1.bin set; remove
+                            // once a full-run capture lands.
+                            var cf = (float*)cb;
+                            for(var k=0;k<64;k++) cf[k]=1.0f;
+                            if(d.RtId != 1)
+                                cf[2] = float.MaxValue;
+                            cf[5] = -1f;
+                        } else {
+                            // No real, no C1_ONES ⟹ zero (=
+                            // VS-stage default per (c⁴⁰); the
+                            // VS_C1_0 knob below overrides
+                            // [0].x where set).
+                            new Span<byte>(cb, 256).Clear();
+                        }
+                    }
+                    // c[2]: ‡v0×15th — no captured data.
+                    // Keep _t3C1Ones 1.0-fill for FS c[2].
+                    if(_t3C1Ones) {
+                        var cf = (float*)(_t3CbufPtr[1*12 + 2]
+                                        + slot * T3CbufStride);
+                        for(var k=0;k<64;k++) cf[k]=1.0f;
+                    }
+                }
+                // ── PRESERVED below: the (T6)×49/50/59
+                // bake docstrings + the dead else-arm of
+                // the original block, kept as the FALLBACK
+                // documentation (= what we did before we
+                // had real cb1, and why). The active code
+                // is the block ABOVE; the `if(false &&
+                // _t3C1Ones)` below is the deprecated path
+                // kept compilable for the docstring. Remove
+                // once full-capture .cb1.bin coverage lands
+                // and the fallback never fires.
+                if(false && _t3C1Ones)
                     for(var hw = 1; hw <= 2; hw++) {
                         var cb = (float*)(_t3CbufPtr[1*12 + hw]
                                         + slot * T3CbufStride);
@@ -3213,7 +3364,16 @@ public static unsafe class NvnVulkan {
                 // (T6)×25 ×2: .x-only (was .xyzw=2.0 ⟹
                 // r73rich floor regressed primary→b/w;
                 // vs45 may use c1[0].{y|z|w} differently).
-                if(_t3VsC10 is {} vc10) {
+                // (T6)×81 ×4: VS_C1_0 now applies ONLY when
+                // the VS's real cb1 wasn't loaded (= idx not
+                // captured yet). Once G-buf VSes (sh0813 etc)
+                // have .cb1.bin, the captured value supersedes
+                // this guess (= the normal-decode K is in the
+                // shader's own const-section; ‡ probably 2.0
+                // exactly, since it's the canonical N=enc×2−1
+                // decode). The knob stays as fallback-only.
+                if(_t3VsC10 is {} vc10
+                        && LoadShCb1(d.VsShIdx, 1) == null) {
                     var cb = (float*)(_t3CbufPtr[0*12 + 1]
                                     + slot * T3CbufStride);
                     cb[0] = vc10;
