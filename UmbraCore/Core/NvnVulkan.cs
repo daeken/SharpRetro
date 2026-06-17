@@ -711,6 +711,15 @@ public static unsafe class NvnVulkan {
     static readonly bool _t3R16fAs8 =
         Environment.GetEnvironmentVariable("UMBRA_T3_R16F_AS_8")
             == "1";
+    // (T6)×90 (a): subpass-ref layout=GENERAL (no implicit
+    // transitions). (b): rt-switch barrier with mem-barrier
+    // (was exec-only per (T6)×39).
+    static readonly bool _t3RpGeneral =
+        Environment.GetEnvironmentVariable("UMBRA_T3_RP_GENERAL")
+            == "1";
+    static readonly bool _t3RtMemBarrier =
+        Environment.GetEnvironmentVariable("UMBRA_T3_RT_MEMBARRIER")
+            == "1";
     static byte[]? LoadShCb1(int shIdx, int t) {
         if(_shCb1.TryGetValue((shIdx,t), out var c)) return c;
         // (T6)×81 ×4-cont-2: .cb1.bin lives in the LIVE-capture
@@ -2642,7 +2651,21 @@ public static unsafe class NvnVulkan {
                 stencilLoadOp = 2, stencilStoreOp = 1,
                 initialLayout = 1, finalLayout = 1,  // GENERAL → GENERAL
             };
-            crefs[i] = new() { attachment = (uint)i, layout = 2 };
+            // (T6)×90 ×1-cont (a): UMBRA_T3_RP_GENERAL keeps
+            // GENERAL during subpass too (= initial=ref=final
+            // =1, no implicit transitions). ×89 validation
+            // (00344) flagged rt4-8/10/11 stuck at COLOR_ATT_
+            // OPTIMAL when sampled; layout=2 here is what
+            // creates the implicit GENERAL→COLOR_ATT→GENERAL
+            // chain. With layout=1, lavapipe accepts GENERAL
+            // for both color-att and sample (= the lazy-but-
+            // correct path). ‡ kt[40] residual: rt1 (same
+            // layout=2) → #631-sample WORKS; rt2 → #663
+            // doesn't. So this knob shouldn't be THE fix per
+            // at-source reasoning, but it's the cheapest
+            // empirical test of the layout-class hypothesis.
+            crefs[i] = new() { attachment = (uint)i,
+                layout = _t3RpGeneral ? 1u : 2u };
         }
         VkAttachmentReference dref = default;
         if(hasD) {
@@ -2653,7 +2676,8 @@ public static unsafe class NvnVulkan {
                 stencilLoadOp = 2, stencilStoreOp = 1,
                 initialLayout = 1, finalLayout = 1,
             };
-            dref = new() { attachment = (uint)nC, layout = 3 };
+            dref = new() { attachment = (uint)nC,
+                layout = _t3RpGeneral ? 1u : 3u };
         }
         var sub = new VkSubpassDescription {
             pipelineBindPoint = 0,
