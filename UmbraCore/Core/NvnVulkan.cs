@@ -2782,6 +2782,13 @@ public static unsafe class NvnVulkan {
         lock(NvnLinux.Draws) {
             draws = NvnLinux.Draws.ToArray();
             NvnLinux.Draws.Clear();
+            // (T6)×96 ×2-cont own kt[6]: CopyOps must reset
+            // per-frame too (else manifest.copyOps[] = all-
+            // frames not this-frame; ~33k entries instead of
+            // ~1-5). ⚠ u795 ran WITHOUT this clear ⟹ its
+            // manifest = filterable by frame-of-capture's
+            // copy-#-window but bloated. u796 will have it.
+            lock(NvnLinux.CopyOps) NvnLinux.CopyOps.Clear();
         }
         // (T1') NVN-boundary frame capture. After Draws
         // snapshot, before any Vulkan recording — pure

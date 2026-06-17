@@ -313,7 +313,28 @@ public static unsafe class NvnCapture {
             // (8B/draw NVN blend-state). v3 readers
             // ignore it; NvnVulkan falls back to per-
             // rtId heuristic when BlendKey=0.
-            version = 4, frameN,
+            // (T6)×96 ×2 ‡v0×21st: copyOps[] = the frame's
+            // CopyTextureToTexture calls, drawIdxBefore-tagged
+            // so NvnReplay can insert vkCmdCopyImage at the
+            // right position in the draw stream. capVer=5.
+            // Filter to this-frame's calls (CopyOps accumulates
+            // across frames like Draws does; this-frame's
+            // start = where drawIdxBefore ≥ the frame's first
+            // draw. Simpler: NvnVulkan.RecordDrawPass clears
+            // both per-frame ⟹ CopyOps already frame-scoped
+            // by the time Maybe() fires. ‡ Verify at first
+            // u795 read).
+            copyOps = NvnLinux.CopyOps
+                .Select(c => new {
+                    di = c.DrawIdxBefore,
+                    src = c.SrcTid, dst = c.DstTid,
+                    srcPtr = $"0x{c.SrcPtr:x}",
+                    dstPtr = $"0x{c.DstPtr:x}",
+                    w = c.W, h = c.H,
+                    sx = c.Sx, sy = c.Sy,
+                    dx = c.Dx, dy = c.Dy,
+                }).ToArray(),
+            version = 5, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),
