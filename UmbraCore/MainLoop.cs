@@ -60,6 +60,17 @@ public class MainLoop {
             }
             Kernel.MemoryManager.Regions[loadBase] = (size, 0);
             Modules.Add(new(loadBase, size, doRelocate: false));
+            // (T6)×72 ×3: set MainBase HERE (= when module[0]
+            // actually loads, inside the callback). The prior
+            // pre-Setup site fires before Game.Setup() invokes
+            // these callbacks ⟹ Modules.Count==0 ⟹ MainBase=0
+            // (own bug, caught at u791 [boot] MainBase=0x0).
+            // First InitModule call = main game module per
+            // at-data (u779 module[0] = 0x5BD8000-byte main).
+            if(Kernel.MainBase == 0) {
+                Kernel.MainBase = loadBase;
+                $"[boot] MainBase=0x{loadBase:X} (set on first InitModule)".Log();
+            }
         };
         Game.Callbacks.WriteSr = (op0, op1, crn, crm, op2, value) => {
             var reg = ((0b10 | (op0 & 0b1)) << 14) | ((op1 & 0b111) << 11) | ((crn & 0b1111) << 7) | ((crm & 0b1111) << 3) | (op2 & 0b111);

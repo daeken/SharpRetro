@@ -3084,7 +3084,19 @@ public static unsafe class NvnVulkan {
                 // fires and the file is generic NVN→Vulkan. The
                 // PATCH/FORCE bypasses (UMBRA_C33_*) are also
                 // sub-gated on this. Removable post-(N)-audio-fix.
-                if(_legoDiag && isIndexed && d.VsShIdx == 813) {
+                // (T6)×72 ×3: m0 = module[0].LoadBase. ALL the
+                // c29-c36 instrument-addrs were hardcoded from
+                // u779's setarch -R layout (own ‡v0×10th); now
+                // module-relative ⟹ layout-independent. m0==0
+                // (= MainBase not set; replay path) gates the
+                // whole block — c34's mprotect+NOP at a wrong-
+                // layout addr corrupted random memory in u791
+                // (= the crash). The 12 .data offsets verified
+                // at-data ×72×1-cont-2 against u779's module[0]
+                // @0xFFF5B0640000.
+                var m0 = Kernel.MainBase;
+                if(_legoDiag && isIndexed && d.VsShIdx == 813
+                        && m0 != 0) {
                     if(_c29First == 0) _c29First = _frameN;
                     // (c³³)×4 one-shot patch: NOP cbnz w21
                     // gates at Inst::Update +0x260/+0x348.
@@ -3104,7 +3116,9 @@ public static unsafe class NvnVulkan {
                     // env (UMBRA_C33_PATCH_W21) for A/B.
                     if(_c35PatchBit1 && !_c33Patched) {
                         _c33Patched = true;
-                        var ci = 0xfff5b195eb2cUL;
+                        // (T6)×72: was 0xfff5b195eb2c = m0+0x131EB2C
+                        // (= CI::OnProcess fn-base in main's .text).
+                        var ci = m0 + 0x131EB2CUL;
                         var pg = (nint)(ci & ~0xfffUL);
                         var rc = mprotect(pg, 0x2000, 7);
                         $"[c35] mprotect({pg:x},0x2000,RWX) rc={rc}".Log();
@@ -3118,7 +3132,7 @@ public static unsafe class NvnVulkan {
                         }
                     } else if(_c33Patch && !_c33Patched) {
                         _c33Patched = true;
-                        var ci = 0xfff5b195eb2cUL;
+                        var ci = m0 + 0x131EB2CUL;
                         var pg = (nint)(ci & ~0xfffUL);
                         var rc = mprotect(pg, 0x2000, 7);
                         $"[c34] mprotect({pg:x},0x2000,RWX) rc={rc}".Log();
@@ -3140,8 +3154,15 @@ public static unsafe class NvnVulkan {
                     // frozen ⟹ +0x388 gate-side. Constant
                     // 1.0 (= 1 EDL-frame/Inst::Update-call ≈
                     // 30fps at sysFC≈225/1500f rate).
+                    // (T6)×72: module-relative (was hardcoded
+                    // 0xfff5b4c180f8 from u779's setarch -R
+                    // layout = own ‡v0×10th). Verified ×72
+                    // ×1-cont-2: u779 module[0]@0xFFF5B0640000;
+                    // slot − base = +0x45D80F8 (∈ main's .data
+                    // segment, vaddr 0x3CF7000-0x5BD8000).
+                    // Layout-independent now (no setarch -R).
                     if(_c33ForceSpeed) {
-                        var ih = *(ulong*)0xfff5b4c180f8UL;
+                        var ih = *(ulong*)(m0 + 0x45D80F8UL);
                         if(ih != 0) {
                             *(float*)(ih+0x98) = 1.0f;
                             if(_c33ForceN++ < 3 || _c33ForceN%500==0)
@@ -3167,10 +3188,12 @@ public static unsafe class NvnVulkan {
                     // (c³²)×2 +0x90 ldr x23,[+0x108] was
                     // PARENT-inst; data is elsewhere).
                     if(_c29First != 0 && _c36ForceN++ < 8) {
-                        var devGp = *(ulong*)(0xfff5b444d000UL+2072);
+                        // (T6)×72: module-relative (own ‡v0×10th).
+                        // Was 0xfff5b444d000/…b4458000/…b4c180f8.
+                        var devGp = *(ulong*)(m0 + 0x3E0D000UL + 2072);
                         var devC = *(int*)devGp;
-                        var tmByte = *(byte*)(*(ulong*)(0xfff5b4458000UL+3960));
-                        var ih = *(ulong*)0xfff5b4c180f8UL;
+                        var tmByte = *(byte*)(*(ulong*)(m0 + 0x3E18000UL + 3960));
+                        var ih = *(ulong*)(m0 + 0x45D80F8UL);
                         // Walk inst+0x10..0x78 for ptrs (= find
                         // NuCutScene* data; it'll have +848/864
                         // SoundEventHandle slots).
@@ -3201,6 +3224,7 @@ public static unsafe class NvnVulkan {
                     }
                 }
                 if(_legoDiag && isIndexed && d.VsShIdx == 813
+                        && m0 != 0
                         && (_frameN-_c29First) / 200 != _c29LastBucket) {
                     _c29LastBucket = (_frameN-_c29First) / 200;
                     var c3 = d.Ubos?[0]; var c6 = d.Ubos?[3];
@@ -3223,9 +3247,10 @@ public static unsafe class NvnVulkan {
                     //      (= mpd+36=0; trace LCM::Process's
                     //      caller).
                     try {
-                        var instHead = *(ulong*)0xfff5b4c180f8UL;
-                        var sysFC    = *(int*) (*(ulong*)(0xfff5b4463000UL+1544));
-                        var x24flag  = *(sbyte*)(*(ulong*)(0xfff5b4456000UL+3368));
+                        // (T6)×72: module-relative (own ‡v0×10th).
+                        var instHead = *(ulong*)(m0 + 0x45D80F8UL);
+                        var sysFC    = *(int*) (*(ulong*)(m0 + 0x3E23000UL + 1544));
+                        var x24flag  = *(sbyte*)(*(ulong*)(m0 + 0x3E16000UL + 3368));
                         // (c³¹) NuFrameEnd's dt-global @ container
                         // (= *[0xfff5b442ff98] = 0xfff5b4accbb0)
                         // +1200/+1204. If THIS is nonzero ⟹
@@ -3233,7 +3258,7 @@ public static unsafe class NvnVulkan {
                         // GameFramework::Process's mpd-build.
                         // If 0 ⟹ NuTime/AsSeconds path broken
                         // (= our CNTPCT/CNTFRQ).
-                        var ctnr = *(ulong*)0xfff5b442ff98UL;
+                        var ctnr = *(ulong*)(m0 + 0x3DEFF98UL);
                         var dt1200 = *(float*)(ctnr+1200);
                         var dt1204 = *(float*)(ctnr+1204);
                         // + container+1208..1216 (= ‡ neighbors;
@@ -3267,9 +3292,9 @@ public static unsafe class NvnVulkan {
                         // config global *[*[b4431000+1480]]
                         // (= cutscene_start's bit-{0,4} source).
                         try {
-                            var lc = *(ulong*)(*(ulong*)(0xfff5b443b000UL+1832));
+                            var lc = *(ulong*)(*(ulong*)(m0 + 0x3DFB000UL + 1832));
                             var ciP = *(ulong*)(lc+336);
-                            var cfg = *(byte*)(*(ulong*)(0xfff5b4431000UL+1480));
+                            var cfg = *(byte*)(*(ulong*)(m0 + 0x3DF1000UL + 1480));
                             // (c³⁵)×4 (K-fix): [LC+336] isn't
                             // the active CI (it's the master-
                             // ref per +0x180). Try BOTH: dump
@@ -3353,7 +3378,7 @@ public static unsafe class NvnVulkan {
                         // + [ctnr+1236] (= the if-zero gate at
                         // GFP+0x8f0). + [+13924] (= w8 read at
                         // +0x8c8, ‡ paused-flag?).
-                        var gfP = *(ulong*)(*(ulong*)0xfff5b44571f8UL);
+                        var gfP = *(ulong*)(*(ulong*)(m0 + 0x3E171F8UL));
                         var raw  = *(float*)(gfP+13900);
                         var sm   = *(float*)(gfP+13904);
                         var src  = *(float*)(gfP+14812);
@@ -3370,7 +3395,7 @@ public static unsafe class NvnVulkan {
                         // CreateFixPtrs also writes, ‡ same
                         // fate?) for cross-check.
                         var m40 = *(int*)(gfP+13944);
-                        var ihh = *(ulong*)0xfff5b4c180f8UL;
+                        var ihh = *(ulong*)(m0 + 0x45D80F8UL);
                         var fa0 = ihh!=0 ? *(float*)(ihh+0xa0) : -1f;
                         $"[c31]   GF_this=0x{gfP:x}: raw[+13900]={raw:g6} sm[+13904]={sm:g6} 🔥src[+14812]={src:g6} acc={acc:g6} tkN={tkN} w8={w8c8} ctnr+1236={c1236:g6}".Log();
                         $"[c33]   🔥 GF[+13944](=mpd+40=w21)={m40}  inst+0xa0(ctor-sibling)={fa0:g6}".Log();

@@ -7,6 +7,16 @@ public static class Kernel {
 
     public static string RomFsPath;
     public static bool IsNative;
+    // (T6)×72: module[0] (= main game module) LoadBase, set
+    // by MainLoop after module-load. For instruments that
+    // need to read game .data globals at fixed module-
+    // relative offsets (= the C33/C36 cutscene instruments,
+    // which had hardcoded 0xfff5b… addrs from u779's specific
+    // ASLR layout — own ‡v0×10th). With this, those addrs are
+    // layout-independent (no setarch -R needed). + log it at
+    // [boot] so future env-reconstruction (= the kt[40] class)
+    // has it.
+    public static ulong MainBase;
     public static readonly HookManager HookManager = new();
     public static readonly IpcManager IpcManager = new();
     public static readonly MemoryManager MemoryManager = new();
