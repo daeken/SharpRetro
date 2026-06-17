@@ -89,6 +89,16 @@ public class SpvEvalResult {
     // ‡-markers from this eval (unhandled-but-skipped ops,
     // assumptions made). Per spec §4 lifter-self-‡.
     public List<string> Notes = new();
+    // (T6)×79 VS-mode: per-(Location,Component) Output values
+    // = what the rasterizer interpolates and feeds the next
+    // stage's env.In. gl_Position lands in BuiltInOut[0].
+    // For FS, Out[(0,k)] mirrors OColor[k] (oColor is the
+    // Location-0 Output; OColor kept for backward-compat
+    // with ×77×4's verified-≡-GPU results).
+    public Dictionary<(int Loc, int Comp), float> Out = new();
+    public Dictionary<uint, float[]> BuiltInOut = new();
+    public float[] Position =>
+        BuiltInOut.TryGetValue(0, out var p) ? p : new float[4];
     public float F(uint id, int c=0) =>
         BitConverter.UInt32BitsToSingle(Trace[id][c]);
 }
@@ -288,25 +298,56 @@ public static class SpvEval {
                              env, r.Notes, r.Names);
                 break; }
             case OpStore: {
-                // a[0]=ptr a[1]=value
+                // a[0]=ptr a[1]=value. (T6)×79 VS-mode: route
+                // ALL Output stores by decoration (BuiltIn →
+                // BuiltInOut[bi]; Location/Component → Out
+                // [(loc,comp)]). vs63 has 12 scalar out_N_M +
+                // 1 vec4 gl_Position (BuiltIn=0); fs244 has 1
+                // vec4 oColor (Location 0). OColor[] kept as
+                // the FS-convenience alias (= ×77×4 verified).
                 var v = V(a[1]);
-                if(obj.TryGetValue(a[0], out var ov)
-                        && ov is Var{StorageClass:7})
-                    mem[a[0]] = v;
-                else if(a[0] == outColorId
-                        || (obj.TryGetValue(a[0], out var ov2)
-                            && ov2 is Var{StorageClass:3})) {
-                    for(var k=0;k<Math.Min(4,v.Length);k++)
-                        r.OColor[k] = F(v[k]);
-                } else if(obj.TryGetValue(a[0], out var oc)
-                        && oc is Chain ch
-                        && obj[ch.BaseId] is Var{StorageClass:3}) {
-                    // Store via AccessChain into output
-                    // (e.g. oColor[2] = …). Index = component.
-                    var c = (int)ch.Indices[^1];
-                    if(c<4) r.OColor[c] = F(v[0]);
-                } else
-                    r.Notes.Add($"‡ OpStore to %{a[0]} (non-Function/Output) ignored");
+                uint tgt = a[0]; int? chC = null;
+                if(obj.TryGetValue(tgt, out var oc0)
+                        && oc0 is Chain c0) {
+                    tgt = c0.BaseId;
+                    chC = (int)c0.Indices[^1];
+                }
+                if(!(obj.TryGetValue(tgt, out var ov)
+                        && ov is Var(_, var vsc))) {
+                    r.Notes.Add($"‡ OpStore to %{a[0]} (not Var) ignored");
+                    break;
+                }
+                if(vsc == 7) {
+                    // Function-var. ‡ chC-indexed component-
+                    // write not modeled (0 in fs244+fs111+vs63
+                    // per ×77×2 census; v1 if a shader hits it).
+                    mem[tgt] = v;
+                    break;
+                }
+                if(vsc == 3) {  // Output
+                    var bd = dec.GetValueOrDefault(tgt) ?? new();
+                    var cb = chC ?? 0;
+                    if(bd.TryGetValue("BuiltIn", out var bi)) {
+                        if(!r.BuiltInOut.TryGetValue(bi, out var bo))
+                            r.BuiltInOut[bi] = bo = new float[4];
+                        for(var k=0;k<v.Length && cb+k<4;k++)
+                            bo[cb+k] = F(v[k]);
+                    } else {
+                        var loc = (int)bd.GetValueOrDefault("Location");
+                        var cmp = (int)bd.GetValueOrDefault("Component");
+                        for(var k=0;k<v.Length;k++)
+                            r.Out[(loc, cmp+cb+k)] = F(v[k]);
+                    }
+                    if(tgt == outColorId) {
+                        if(chC.HasValue) {
+                            if(chC.Value<4) r.OColor[chC.Value]=F(v[0]);
+                        } else
+                            for(var k=0;k<Math.Min(4,v.Length);k++)
+                                r.OColor[k] = F(v[k]);
+                    }
+                    break;
+                }
+                r.Notes.Add($"‡ OpStore to %{a[0]} sc={vsc} ignored");
                 break; }
 
             // ── composite ──
@@ -531,12 +572,29 @@ public static class SpvEval {
                 }
                 var loc = (int)d.GetValueOrDefault("Location");
                 var cmp = (int)d.GetValueOrDefault("Component");
-                // SpirvEmit declares scalar inputs (in_0_0,
-                // in_0_1 separately) ⟹ Load returns scalar.
-                if(env.In.TryGetValue((loc,cmp), out var iv))
-                    return new[]{U(iv)};
-                notes.Add($"‡ in_{loc}_{cmp} not in env → 0");
-                return new uint[]{0};
+                // (T6)×79 VS-mode: SpirvEmit declares FS
+                // inputs as SCALAR (in_0_0, in_0_1 separately
+                // per ×77×2 sh0244.dis) but VS attribute
+                // inputs as VEC4 (in_0 = vec4 per sh0063.dis).
+                // Read pointee comp-count from the var's
+                // pointer-type's Inner. env.In still keys on
+                // (loc,comp) — the rasterizer fills (0,0..3)
+                // for a vec4 attr at Location 0.
+                var n = 1;
+                if(ty.TryGetValue(tyId, out var pt)
+                   && ty.TryGetValue(pt.Inner, out var it)
+                   && it.K == TK.Vec)
+                    n = it.N;
+                var uv = new uint[n];
+                var miss = 0;
+                for(var k=0;k<n;k++) {
+                    if(env.In.TryGetValue((loc,cmp+k), out var iv))
+                        uv[k] = U(iv);
+                    else { uv[k]=0; miss++; }
+                }
+                if(miss == n)
+                    notes.Add($"‡ in_{loc}_{cmp}{(n>1?$"..{cmp+n-1}":"")} not in env → 0");
+                return uv;
             }
             case 0: {  // UniformConstant = sampledImage var.
                 // OpLoad on a tex-var produces a "sampled-

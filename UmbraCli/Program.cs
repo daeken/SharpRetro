@@ -11,6 +11,9 @@ if(args.Length >= 2 && args[0] == "--replay") {
 // level shader debugging. See SpvEvalDriver.cs for usage.
 if(args.Length >= 6 && args[0] == "--spv-eval")
     return MaxwellShader.SpvEvalDriver.Run(args[1..]);
+// (T6)×79 sera kt[12]×31: SPIR-V software rasterizer.
+if(args.Length >= 4 && args[0] == "--raster")
+    return MaxwellShader.SpvEvalDriver.RunRaster(args[1..]);
 
 var mainLoop = new MainLoop(args[0], args[1]);
 return 0;
