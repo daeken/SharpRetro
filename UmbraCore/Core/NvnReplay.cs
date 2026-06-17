@@ -25,6 +25,15 @@ using System.Text.Json;
 namespace UmbraCore.Core;
 
 public static unsafe class NvnReplay {
+    // (T6)×94 ×2: per-draw TexHandle override (kt[9] vary-
+    // CONSUMER mechanized). _thOverride[drawIdx] = list of
+    // (slot, texId) to apply after th[] parse from draws.bin
+    // /draws-ext.bin, before EnsureSlotDs sees d.TexHandles.
+    // Parsed from UMBRA_T3_TH_OVERRIDE="di:sl=tid,di:sl=tid".
+    // The r164-producing config = "663:4=256".
+    static readonly Dictionary<int, List<(int sl, int tid)>>
+        _thOverride = new();
+
     public static int Run(string frameDir, int repeat = 1) {
         var t0 = DateTime.UtcNow;
         var capDir = Path.GetFullPath(
@@ -96,6 +105,21 @@ public static unsafe class NvnReplay {
             Path.Combine(frameDir, "vbuf.bin"));
         var ibufB = File.ReadAllBytes(
             Path.Combine(frameDir, "ibuf.bin"));
+        // (T6)×94 ×2: parse UMBRA_T3_TH_OVERRIDE="di:sl=tid,
+        // di:sl=tid,…" into _thOverride[di] = [(sl,tid),…].
+        var thOvEnv = Environment.GetEnvironmentVariable(
+            "UMBRA_T3_TH_OVERRIDE");
+        if(thOvEnv != null)
+            foreach(var spec in thOvEnv.Split(',',
+                    StringSplitOptions.RemoveEmptyEntries)) {
+                // di:sl=tid
+                var p = spec.Split(new[]{':','='});
+                if(p.Length != 3) continue;
+                var di0 = int.Parse(p[0]);
+                if(!_thOverride.TryGetValue(di0, out var l))
+                    _thOverride[di0] = l = new();
+                l.Add((int.Parse(p[1]), int.Parse(p[2])));
+            }
         var ubosB = File.ReadAllBytes(
             Path.Combine(frameDir, "ubos.bin"));
         var vbufH = GCHandle.Alloc(vbufB, GCHandleType.Pinned);
@@ -258,6 +282,24 @@ public static unsafe class NvnReplay {
                 for(var k = 0; k < 32; k++)
                     th[8+k] = R64(e, k*8);
             }
+            // (T6)×94 ×2: UMBRA_T3_TH_OVERRIDE="di:sl=tid,…"
+            // overrides th[] per draw:slot. Mechanizes the
+            // draws.bin-edit pattern used ad-hoc ×91-94 (kt[9]
+            // vary-CONSUMER discriminator). The r164-producing
+            // config = "663:4=256" (= #663 sl[4] tex335→tex256
+            // ⟹ b16=(0,0,0,0) ⟹ fs244's DOF-blend %94=0 ⟹
+            // b8=rt2-lit wins ⟹ ‡v0×20th workaround-stub;
+            // loses DOF cosmetically, unblocks deferred-lit→
+            // tonemap). Applied AFTER th[] built so both main
+            // [0..7] and ext[8..39] slots are overridable.
+            if(_thOverride.TryGetValue(i, out var ovs))
+                foreach(var (sl, tid) in ovs)
+                    if(sl >= 0 && sl < th.Length) {
+                        var old = th[sl];
+                        th[sl] = ((ulong)(uint)tid << 32)
+                               | (old & 0xFFFFFFFF);
+                        $"[replay] TH_OVERRIDE #{i} sl[{sl}]: tex{old>>32}→tex{tid}".Log();
+                    }
             d.TexHandles = th;
             // d.TexHandle (= last-bound, scalar) — pick the
             // highest-numbered nonzero slot (= "last bound"
