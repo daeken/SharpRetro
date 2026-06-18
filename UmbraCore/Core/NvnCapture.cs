@@ -145,16 +145,37 @@ public static unsafe class NvnCapture {
             // or LastCopySrcCpu=0). + diag: log when
             // fresh ≠ cached (= confirms record-before-
             // fill at-data per-tex).
+            // (T6)×111 ×4 own·8808-PROPER ×54th on own 66th:
+            // unconditional fresh-decode REPLACED non-trivial
+            // cached for 6/9 ≠-cases (u801 (False,True)×1 +
+            // (False,False)×5) ⟹ r179 floor rainbow-noise +
+            // L1 102.2→107.6 = NET REGRESSION. The (False,
+            // False) cases = srcCpu memory changed between
+            // record and capture (‡adjacent-tex's mip-data
+            // overlap OR ‡pool-region reuse). Cached Rgba was
+            // decoded AT srcCpu's-correct-moment ⟹ trust it
+            // when non-trivial. ⟹ 67th gate: fresh ONLY when
+            // cached is null OR all-bytes∈{0,255} (= the
+            // DecodeBc-of-zero-src signature). Strict-improve
+            // (never replaces non-trivial cached). + own·8808
+            // ×55th-cand: only 1/9 showed (True,False) =
+            // record-before-fill weakly-supported; the (0,0,
+            // 0,255) set may be REAL game LOD-0 placeholders.
             byte[]? rgba = null;
-            if(t.LastCopySrcCpu != 0) {
+            var cachedTrivial = t.Rgba == null
+                || t.Rgba.All(b => b is 0 or 255);
+            if(t.LastCopySrcCpu != 0 && cachedTrivial) {
                 rgba = NvnLinux.DecodeBcFrom(
                     t.LastCopySrcCpu, t.Width, t.Height,
                     t.Format);
-                if(rgba != null && t.Rgba != null
-                   && !rgba.AsSpan().SequenceEqual(t.Rgba)) {
-                    var oz = t.Rgba.All(b => b is 0 or 255);
+                if(rgba != null) {
                     var fz = rgba.All(b => b is 0 or 255);
-                    $"[nvncap] tex{ti}: FRESH-decode ≠ cached ({t.Width}×{t.Height} fmt=0x{t.Format:x}; cached-trivial={oz} fresh-trivial={fz}) ⟸ ‡v0×29th".Log();
+                    if(t.Rgba == null || !rgba.AsSpan()
+                           .SequenceEqual(t.Rgba))
+                        $"[nvncap] tex{ti}: FRESH-decode (cached-trivial; fresh-trivial={fz}) {t.Width}×{t.Height} fmt=0x{t.Format:x} ⟸ ‡v0×29th".Log();
+                    if(fz) rgba = null;  // fresh ALSO trivial
+                        // ⟹ no improvement; keep cached (=
+                        // hash-stable across captures).
                 }
             }
             rgba ??= NvnLinux.DecodeForUpload(t);

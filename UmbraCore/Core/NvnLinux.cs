@@ -773,9 +773,17 @@ public static unsafe class NvnLinux {
             // s8=0 here but re-decode at capture gives content
             // ⟹ root verified end-to-end. ‡ first-200 only.
             dst.LastCopySrcCpu = srcCpu;
-            if(n <= 200 && fi.IsBc) {
+            // (T6)×111 ×4 own kt[37]×5th: n≤200 (66th) = menu
+            // -time only; the question is savanna copies
+            // (#308+, #1151+). ⟹ log when first-8B IS zero
+            // (= the record-before-fill signature) regardless
+            // of n; rare enough to be unbounded.
+            if(fi.IsBc) {
                 var s8 = *(ulong*)srcCpu;
-                $"[nvn]   srcCpu first-8B = 0x{s8:x16}{(s8==0?" ⟸ZERO@record":"")}".Log();
+                if(s8 == 0)
+                    $"[nvn]   CopyBufToTex#{n} srcCpu first-8B=0 ⟸ZERO@record (= ‡v0×29th record-before-fill cand)".Log();
+                else if(n <= 30)
+                    $"[nvn]   srcCpu first-8B = 0x{s8:x16}".Log();
             }
             try {
                 dst.Rgba = fi.IsBc
