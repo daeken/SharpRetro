@@ -1359,6 +1359,18 @@ public static unsafe class NvnVulkan {
     static readonly int _t3RttDumpAtt =
         int.TryParse(Environment.GetEnvironmentVariable(
             "UMBRA_T3_RTT_DUMP_ATT"), out var ra) ? ra : 0;
+    // (T6)×112 ×2 ‡v0×30th α-arm: RTT_DUMP_A=1 ⟹ ALSO
+    // write α-channel as P5 grayscale → {path%.ppm}.a.pgm.
+    // c[2].w drives fs111's b14_LUT-coord into the %481
+    // gate (×105(d) structure: %481 = (LUT(c[2].w)×(shadow
+    // +b18²)) < cb1[0][2]); P6-only DumpRtPpm drops it ⟹
+    // can't see the ONE %481-input. wedge+floor-black
+    // UNIFY at %481 (×109) ⟹ c[2].w@wedge-px = THE next
+    // discriminator. + c[0].α (= G-buf material flags)
+    // for the ‡⚠ChMask 87.9%-white question.
+    static readonly bool _t3RttDumpA =
+        Environment.GetEnvironmentVariable(
+            "UMBRA_T3_RTT_DUMP_A") == "1";
     static ulong _rtDumpBuf, _rtDumpMem;
     static byte* _rtDumpPtr;
     const int RtDumpBufSz = 32 << 20;  // 32MB ≥ max(1920×1080×8, 1024×4096×4)
@@ -4452,6 +4464,13 @@ public static unsafe class NvnVulkan {
                 .GetBytes($"P6\n{w} {h}\n255\n"));
             var s = _rtDumpPtr;
             var row = new byte[w * 3];
+            // (T6)×112 ×2 ‡v0×30th α-arm: collect α per-px
+            // alongside rgb; write as P5 sibling after the
+            // main loop. Only RGBA8/RGBA16F arms set it (=
+            // depth/RG16 arms have no meaningful α). Null
+            // when knob off ⟹ zero overhead on the hot path.
+            var alpha = (_t3RttDumpA && vf is 37 or 97)
+                ? new byte[w * h] : null;
             for(var y = 0; y < h; y++) {
                 for(var x = 0; x < w; x++) {
                     byte r, g, b;
@@ -4459,6 +4478,7 @@ public static unsafe class NvnVulkan {
                     case 37: {  // RGBA8: direct
                         var p = s + (y*w+x)*4;
                         r = p[0]; g = p[1]; b = p[2];
+                        if(alpha != null) alpha[y*w+x] = p[3];
                         break; }
                     case 97: {  // RGBA16F: Reinhard tonemap
                         var p = (ushort*)(s + (y*w+x)*8);
@@ -4469,6 +4489,7 @@ public static unsafe class NvnVulkan {
                             return (byte)(255 * f / (f + 1));
                         }
                         r = tm(p[0]); g = tm(p[1]); b = tm(p[2]);
+                        if(alpha != null) alpha[y*w+x] = tm(p[3]);
                         break; }
                     case 129: { // D24_UNORM_S8: depth→gray
                         // (T6)×85: rt1.depth nf=0x35 maps
@@ -4504,6 +4525,15 @@ public static unsafe class NvnVulkan {
                     row[x*3] = r; row[x*3+1] = g; row[x*3+2] = b;
                 }
                 fs.Write(row);
+            }
+            if(alpha != null) {
+                var ap = path[..^4] + ".a.pgm";
+                using var afs = File.Create(ap);
+                afs.Write(System.Text.Encoding.ASCII
+                    .GetBytes($"P5\n{w} {h}\n255\n"));
+                afs.Write(alpha);
+                var nz = alpha.Count(a => a != 0);
+                $"[vk] DumpRtPpm α → {ap} (nz={100.0*nz/alpha.Length:F1}%)".Log();
             }
             $"[vk] DumpRtPpm rt{_t3RttDump} {w}×{h} nf=0x{nf:x}(vf{vf}) → {path}".Log();
         } catch(Exception e) {
