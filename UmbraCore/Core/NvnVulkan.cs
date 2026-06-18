@@ -301,7 +301,18 @@ public static unsafe class NvnVulkan {
         // validation named). 83 = R16G16_SFLOAT.
         0x11 => ( 83,  4),  // R16G16_SFLOAT
         0x12 => ( 16,  2),  // R8G8_UNORM                     ‡
-        0x16 => ( 91,  8),  // R16G16B16A16_SNORM  ‡‡ (sh794 tangent? 8B by gap)
+        // (T6)×108 ×1(c) own·8808 on 61st's residual-‡‡:
+        // nvn.h: 0x16 = NVN_FORMAT_RG32F (verified ×108×1
+        // (c-prep)). My (T6)×9 inferred-by-gap had this as
+        // R16G16B16A16_SNORM (& 61st docstring said SNORM
+        // but the value 91=UNORM = own·8808-on-own-doc-
+        // string too). Vk R32G32_SFLOAT=103 per ×102×2-
+        // cont vulkan_core.h verify. Used at f34232 #161
+        // vs1064 attr[6]@28 (×107(e)). Same 8B size ⟹
+        // stride-fit unchanged; vs1064 reads in_6 as 2×f32
+        // instead of 4×snorm16 ⟹ different VALUES. Closes
+        // the LAST ‡‡ in NvnVtxFmt; sera kt[12]×34 complete.
+        0x16 => (103,  8),  // R32G32_SFLOAT         ✓ (nvn.h: RG32F)
         // ── (T6)×102 ×2 own·8808-PROPER ×40th: nvn.h NVNformat
         // is AUTHORITATIVE (sera kt[12]×34 ·11559 "check nvn.h
         // for those enum references"). My (T6)×9 "‡-inferred by
