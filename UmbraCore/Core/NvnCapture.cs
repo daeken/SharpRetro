@@ -133,6 +133,49 @@ public static unsafe class NvnCapture {
         foreach(var ti in texIds.OrderBy(x => x)) {
             var t = NvnLinux.ResolveTex((ulong)ti << 32);
             if(t == null) continue;
+            // (T6)×116 ×2 ‡NvnCapture 6-face (= ×74's named
+            // "v1"): cube (Target==8) ⟹ decode 6 faces from
+            // staging at capture-time. faceStride = (Last−
+            // First)/5 derived from the game's own upload
+            // pattern (×116×1(a-prep-1'): tex260 = 6 mip-0
+            // calls with contiguous srcCpu; (a-prep-5) Σ-
+            // formula matches EXACT). NVNtextureView OPAQUE
+            // ⟹ can't read face from dstView. ‡ Assumes
+            // face-0 first (at-data confirms for lego). The
+            // 5-divisibility + Last>First cross-check
+            // catches violation ⟹ fall-through to 1-face
+            // (= ×74's v0 tiles it ×6, current behavior).
+            byte[]? cubeRgba = null;
+            if(t.Target == 8 && t.FirstCopySrcCpu != 0
+               && t.LastCopySrcCpu > t.FirstCopySrcCpu) {
+                var span = t.LastCopySrcCpu - t.FirstCopySrcCpu;
+                if(span % 5 == 0) {
+                    var fStride = span / 5;
+                    var face = t.Width * t.Height * 4;
+                    var cube = new byte[6 * face];
+                    var ok = true;
+                    for(var f = 0; f < 6 && ok; f++) {
+                        var fr = NvnLinux.DecodeBcFrom(
+                            t.FirstCopySrcCpu + (ulong)f*fStride,
+                            t.Width, t.Height, t.Format);
+                        if(fr == null) { ok = false; break; }
+                        fr.AsSpan().CopyTo(
+                            cube.AsSpan(f * face, face));
+                    }
+                    if(ok) {
+                        cubeRgba = cube;
+                        $"[nvncap] tex{ti}: CUBE 6-face decode {t.Width}² fmt=0x{t.Format:x} fStride=0x{fStride:x} ⟸ ×116".Log();
+                    }
+                }
+                if(cubeRgba == null)
+                    $"[nvncap] tex{ti}: CUBE 6-face SKIPPED (span=0x{span:x} %5={span%5}) ⟹ 1-face fallback".Log();
+            }
+            // cubeRgba (when set) flows into the existing
+            // rgba path below (= TexHash + texPool entry
+            // already handle target/depth via ×67's arm;
+            // WriteTex gets faces=6). Skips the 67th fresh-
+            // decode + DecodeForUpload (cube-decode IS the
+            // fresh path for cubes).
             // (T6)×111 ×2 ‡v0×29th-PROPER fix: for BC
             // textures with a recorded LastCopySrcCpu,
             // FRESH-decode from staging at capture-time
@@ -161,10 +204,11 @@ public static unsafe class NvnCapture {
             // ×55th-cand: only 1/9 showed (True,False) =
             // record-before-fill weakly-supported; the (0,0,
             // 0,255) set may be REAL game LOD-0 placeholders.
-            byte[]? rgba = null;
+            byte[]? rgba = cubeRgba;
             var cachedTrivial = t.Rgba == null
                 || t.Rgba.All(b => b is 0 or 255);
-            if(t.LastCopySrcCpu != 0 && cachedTrivial) {
+            if(rgba == null && t.LastCopySrcCpu != 0
+                    && cachedTrivial) {
                 rgba = NvnLinux.DecodeBcFrom(
                     t.LastCopySrcCpu, t.Width, t.Height,
                     t.Format);
@@ -213,7 +257,8 @@ public static unsafe class NvnCapture {
             texPool.Add(entry);
             if(_texWritten.Add(hash))
                 WriteTex(Path.Combine(texDir, hash+".tex"),
-                    t.Width, t.Height, t.Format, rgba);
+                    t.Width, t.Height, t.Format, rgba,
+                    faces: cubeRgba != null ? 6 : 1);
         }
 
         // ── 3. distinct vbuf regions (by VbCpu addr) ──
