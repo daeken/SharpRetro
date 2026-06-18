@@ -450,7 +450,7 @@ public static unsafe class NvnCapture {
                     dMask = c.DepthMask, stencil = c.Stencil,
                     sMask = c.StencilMask,
                 }).ToArray(),
-            version = 7, frameN,
+            version = 8, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),
@@ -518,7 +518,7 @@ public static unsafe class NvnCapture {
     }
 
     static void WriteTex(string path, int w, int h,
-            int nvnFmt, byte[] rgba) {
+            int nvnFmt, byte[] rgba, int faces = 1) {
         if(File.Exists(path)) return;  // cross-run dedup
         // Try RLE; pick whichever's smaller.
         var rle = RleEncode(rgba);
@@ -530,6 +530,11 @@ public static unsafe class NvnCapture {
         W16(hdr, 4, w); W16(hdr, 6, h);
         W16(hdr, 8, nvnFmt);
         hdr[10] = enc;
+        // (T6)×116: hdr[11]=faces (1=2D/1-face cube; 6=full
+        // cube). Back-compat: pre-69th captures have hdr[11]
+        // =0 ⟹ LoadTex/×74 read rawLen which already encodes
+        // 1-vs-6 face count via rgba.Length.
+        hdr[11] = (byte)faces;
         W32(hdr, 12, rgba.Length);
         f.Write(hdr);
         f.Write(body);

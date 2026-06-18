@@ -2204,11 +2204,18 @@ public static unsafe class NvnVulkan {
             // all 6 ⟹ no overflow regardless.
             var face = w * h * 4;
             var stride = (int)(req.size / 6);
+            // (T6)×116 ×2: if rgba carries 6 faces (= capVer
+            // ≥8 cube capture per 69th), upload each face to
+            // its layer. Else fall back to ×74's v0 (tile
+            // 1-face×6 = wrong-but-stable). The discriminator
+            // = rgba.Length vs 6×face (LoadTex returns rawLen
+            // bytes; 6-face .tex has rawLen=6×w×h×4).
+            var has6 = rgba.Length >= 6 * face;
             for(var L = 0; L < 6; L++)
-                rgba.AsSpan(0, face).CopyTo(
+                rgba.AsSpan(has6 ? L*face : 0, face).CopyTo(
                     new Span<byte>((byte*)p + (long)L*stride,
                                    Math.Min(face, stride)));
-            $"[vk] EnsureTexBound texId=0x{texId:x} CUBE: 1-face×6 tiled, face={face}B stride={stride}B req={req.size}B".Log();
+            $"[vk] EnsureTexBound texId=0x{texId:x} CUBE: {(has6?"6-face":"1-face×6 tiled")} face={face}B stride={stride}B req={req.size}B".Log();
         } else {
             rgba.AsSpan().CopyTo(new Span<byte>(p, (int)(w*h*4)));
         }

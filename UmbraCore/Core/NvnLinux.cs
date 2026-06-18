@@ -50,6 +50,17 @@ public static unsafe class NvnLinux {
         // STILL holds the game's data ⟹ re-decode then.
         // Cleared at TexInitialize (= new tex instance ⟹ stale).
         public ulong LastCopySrcCpu;
+        // (T6)×116 ×2 ‡NvnCapture 6-face: FIRST mip-0 srcCpu
+        // since TexInit. For cube (Target==8), game uploads
+        // face-0..5 each as 9-mip-chain to SAME dst-handle
+        // with dstView selecting the face (×116×1(a-prep-1'):
+        // tex260 = 54 CopyBufToTex = 6×9; #1482=face0-mip0
+        // @…26000, #1491=face1-mip0 @…30ab8; faceStride =
+        // 0xaab8 = Σ BC1 256→1 mips EXACT per (a-prep-5)).
+        // NVNtextureView OPAQUE in nvn.h (a-prep-4) ⟹ can't
+        // read face from view; derive faceStride = (Last−
+        // First)/5 at capture instead. Set-once per instance.
+        public ulong FirstCopySrcCpu;
         public ulong PoolPtr, Offset;       // Buffer: SetStorage(pool,off,size)
         public ulong GpuAddr;               // Buffer/Pool: assigned at Initialize
         public int Flags;                   // MemoryPool flags
@@ -584,6 +595,7 @@ public static unsafe class NvnLinux {
         ts.GpuAddr = pool != null ? pool.GpuAddr + bs.Offset : 0;
         ts.Rgba = null;  // (c²³)(a) re-init ⟹ stale decode
         ts.LastCopySrcCpu = 0;  // (T6)×111: new instance
+        ts.FirstCopySrcCpu = 0; // (T6)×116
         ts.Gen++;
         $"[nvn] TextureInitialize tex=0x{tex:x} {ts.Width}×{ts.Height}{(ts.Depth>1?$"×{ts.Depth}":"")} fmt=0x{ts.Format:x}{(ts.Target!=1?$" target={ts.Target}":"")} pool=0x{ts.PoolPtr:x}+0x{ts.Offset:x} cpu=0x{ts.CpuPtr:x}".Log();
         return 1;
@@ -772,6 +784,8 @@ public static unsafe class NvnLinux {
             // diag confirms record-before-fill at-data: if
             // s8=0 here but re-decode at capture gives content
             // ⟹ root verified end-to-end. ‡ first-200 only.
+            if(dst.FirstCopySrcCpu == 0)
+                dst.FirstCopySrcCpu = srcCpu;
             dst.LastCopySrcCpu = srcCpu;
             // (T6)×111 ×4 own kt[37]×5th: n≤200 (66th) = menu
             // -time only; the question is savanna copies
