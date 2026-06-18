@@ -379,6 +379,10 @@ public static unsafe class NvnLinux {
         ["nvnColorStateGetBlendEnable"]      = (nint)(delegate* unmanaged<uint*, int, int>)&CsGetBlendEnable,
         ["nvnCommandBufferBindBlendState"]   = (nint)(delegate* unmanaged<ulong, byte*, void>)&CbBindBlendState,
         ["nvnCommandBufferBindColorState"]   = (nint)(delegate* unmanaged<ulong, uint*, void>)&CbBindColorState,
+        // (T6)×136 74th: ChannelMask (= ⚠-stub(iii); ×135).
+        ["nvnChannelMaskStateSetDefaults"]   = (nint)(delegate* unmanaged<ulong, void>)&ChMaskSetDefaults,
+        ["nvnChannelMaskStateSetChannelMask"]= (nint)(delegate* unmanaged<ulong, int, int, int, int, int, void>)&ChMaskSetChannelMask,
+        ["nvnCommandBufferBindChannelMaskState"] = (nint)(delegate* unmanaged<ulong, ulong, void>)&CbBindChannelMaskState,
         ["nvnDeviceGetTextureHandle"]        = (nint)(delegate* unmanaged<ulong, int, int, ulong>)&DeviceGetTextureHandle,
         // T3 ("real shader compilation 👀"): capture
         // what nvnProgramSetShaders actually receives. NVNshaderData
@@ -1533,7 +1537,9 @@ public static unsafe class NvnLinux {
             // mask (from ColorState), bytes 1-7 =
             // BlendState bytes 1-7 (target-0's func+eq).
             BlendKey = (ulong)(_curBlendEnable & 0xff)
-                     | (_curBlend[0] & 0xffffff_ffffff00),
+                     | (_curBlend[0] & 0x00ffff_ffffff00)
+                     | ((ulong)((_curChMask0 ^ 0xf) & 0xf)
+                        << 56),
         };
     }
 
@@ -1598,6 +1604,22 @@ public static unsafe class NvnLinux {
     static readonly ulong[] _curBlend = new ulong[8];
     static uint _curBlendEnable;
     static int _bindBlendN, _bindColorN;
+    // (T6)×136 ×2 = 74th: ChannelMaskState. Own ⚠-stub
+    // (iii) carried since ~×62 = #153×13th. ×135: game
+    // calls BindChannelMaskState >7000×; SetChannelMask
+    // (ea48,target=0,r=0,g=0,b=0,a=0)=mask-0 state EXISTS;
+    // ea48 IS bound 15/66 sampled. NVNchannelMaskState =
+    // 4B opaque (nvn.h:74-76). Track-via-Set* (NOT deref-
+    // at-Bind: my stubs never wrote into the 4B; deref =
+    // garbage). _chMaskByState[ptr] = target-0's RGBA bits
+    // (Vulkan-order: R=1 G=2 B=4 A=8). Default 0xf for
+    // unknown ptrs (= ea50/ea54 never Set*'d per ×135(j)).
+    // ‡ target-0 only; per-target[1..7] deferred (rt1 G-
+    // buf draws all-channels by-design; #164=rt2 nC=1).
+    static readonly Dictionary<ulong, byte> _chMaskByState
+        = new();
+    static byte _curChMask0 = 0xf;
+    static int _bindChMaskN;
     // (T6)×62 ×3-cont: u780/u781 hung @ BindColorState #11
     // (process exited, NLWP=1 cpu=0:00; u779 w/ no-op stubs
     // had ~7K lines after that point). Gate behind env so
@@ -1621,6 +1643,37 @@ public static unsafe class NvnLinux {
         _curBlendEnable = *s;
         if(++_bindColorN <= 20 || (_bindColorN & 0xff) == 0)
             $"[nvn] BindColorState #{_bindColorN} cb=0x{cb:x} enable=0b{Convert.ToString(*s, 2).PadLeft(8,'0')}".Log();
+    }
+    // (T6)×136 74th: 3 ChannelMask hooks. nvn.h:1433-1436
+    // sigs = SetDefaults(s*); SetChannelMask(s*,int target,
+    // NVNboolean r,g,b,a); Bind(cb*,s*). Mechanism (×135):
+    // real-hw #164 bound w/ mask=0 ⟹ fs46's out=(0,0,0,0)
+    // DISCARDED ⟹ #163's c[0]-decode (rt2@163 nz=95.24%
+    // post-73rd) survives ⟹ rt2-base = ambient. My pre-74th
+    // colorWriteMask=0xf ⟹ #164 overwrites ⟹ rt2-base=0.
+    [UnmanagedCallersOnly]
+    static void ChMaskSetDefaults(ulong s) {
+        if(_blendHooks < 1) return;
+        _chMaskByState[s] = 0xf;
+    }
+    [UnmanagedCallersOnly]
+    static void ChMaskSetChannelMask(ulong s, int target,
+            int r, int g, int b, int a) {
+        if(_blendHooks < 1) return;
+        // ‡ target-0 only for now (×136×1(d) decision).
+        if(target != 0) return;
+        _chMaskByState[s] = (byte)(
+            (r != 0 ? 1 : 0) | (g != 0 ? 2 : 0)
+          | (b != 0 ? 4 : 0) | (a != 0 ? 8 : 0));
+    }
+    [UnmanagedCallersOnly]
+    static void CbBindChannelMaskState(ulong cb, ulong s) {
+        if(_blendHooks < 1) return;
+        _curChMask0 = _chMaskByState.GetValueOrDefault(s,
+            (byte)0xf);
+        var n = ++_bindChMaskN;
+        if(n <= 20 || (n & 0x3ff) == 0)
+            $"[nvn] BindChannelMaskState #{n} cb=0x{cb:x} s=0x{s:x} mask0=0x{_curChMask0:x}".Log();
     }
 
     static int _drawElN;
@@ -1754,7 +1807,9 @@ public static unsafe class NvnLinux {
             // THERE. #153 ×6th: own ×38 docstring named it
             // ~86ch ago.
             BlendKey = (ulong)(_curBlendEnable & 0xff)
-                     | (_curBlend[0] & 0xffffff_ffffff00),
+                     | (_curBlend[0] & 0x00ffff_ffffff00)
+                     | ((ulong)((_curChMask0 ^ 0xf) & 0xf)
+                        << 56),
         };
         lock(Draws) Draws.Add(dr);
         if(n <= 25 || n % 100 == 0) {

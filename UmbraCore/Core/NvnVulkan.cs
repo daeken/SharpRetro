@@ -1214,7 +1214,16 @@ public static unsafe class NvnVulkan {
         for(var ci = 0; ci < Math.Max(nCb, 1); ci++)
             cbAtt[ci] = new() {
                 blendEnable = blEn ? 1u : 0u,
-                colorWriteMask = 0xf,
+                // (T6)×136 74th: ChannelMask from BlendKey
+                // byte-7 (XOR-0xf encoded ⟹ byte-7=0 = mask
+                // 0xf = old-capture/default-RGBA fallback ✓;
+                // byte-7=0xf = mask-0 = no-write). Target-0
+                // only (#164=rt2 nC=1 = the ×135 case); ‡
+                // MRT targets-1+ deferred. ×135 mechanism:
+                // real-hw #164 bound mask=0 ⟹ fs46 out
+                // discarded ⟹ #163's c[0]-decode survives.
+                colorWriteMask =
+                    (uint)(((blendKey >> 56) & 0xf) ^ 0xf),
                 srcColorBF = blSrc, dstColorBF = blDst,
                 colorBlendOp = blOp,
                 srcAlphaBF = blSrcA, dstAlphaBF = blDstA,
