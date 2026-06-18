@@ -133,7 +133,31 @@ public static unsafe class NvnCapture {
         foreach(var ti in texIds.OrderBy(x => x)) {
             var t = NvnLinux.ResolveTex((ulong)ti << 32);
             if(t == null) continue;
-            var rgba = NvnLinux.DecodeForUpload(t);
+            // (T6)×111 ×2 ‡v0×29th-PROPER fix: for BC
+            // textures with a recorded LastCopySrcCpu,
+            // FRESH-decode from staging at capture-time
+            // (= after game's worker filled it). The
+            // record-time stash in t.Rgba may be all-
+            // (0,0,0,255) (= DecodeBc of zero-src per
+            // ×111×2(a'')). 1535/1535 distinct srcCpu ⟹
+            // staging persists. ‡ Falls back to cached
+            // path if fresh-decode null (= non-BC, BC4+,
+            // or LastCopySrcCpu=0). + diag: log when
+            // fresh ≠ cached (= confirms record-before-
+            // fill at-data per-tex).
+            byte[]? rgba = null;
+            if(t.LastCopySrcCpu != 0) {
+                rgba = NvnLinux.DecodeBcFrom(
+                    t.LastCopySrcCpu, t.Width, t.Height,
+                    t.Format);
+                if(rgba != null && t.Rgba != null
+                   && !rgba.AsSpan().SequenceEqual(t.Rgba)) {
+                    var oz = t.Rgba.All(b => b is 0 or 255);
+                    var fz = rgba.All(b => b is 0 or 255);
+                    $"[nvncap] tex{ti}: FRESH-decode ≠ cached ({t.Width}×{t.Height} fmt=0x{t.Format:x}; cached-trivial={oz} fresh-trivial={fz}) ⟸ ‡v0×29th".Log();
+                }
+            }
+            rgba ??= NvnLinux.DecodeForUpload(t);
             if(rgba == null) {
                 // No decode (RT never written, or unhandled
                 // fmt). Synthesize solid-black at declared
