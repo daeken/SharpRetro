@@ -218,6 +218,19 @@ public static unsafe class NvnCapture {
             && d.TexHandles.Skip(8).Any(h => h != 0));
         using var dext = needExt ? File.Create(
             Path.Combine(fdir, "draws-ext.bin")) : null;
+        // (T6)×106 ×1 ‡v0×27th-PROPER: attrs[6..15] →
+        // attrs-ext.bin (40B/draw). u797 census: ×11+×1
+        // 8-attr sigs (skinned-char [6]=0x2e@28 RGBA32F per
+        // 61st + [7]=0x27@44 bone-idx). Min(count,6) loses
+        // them ⟹ Vk feeds in_attr6/7=0 ⟹ bone-idx=0 ⟹ all
+        // verts skin to bone-0 ⟹ stretched character (=
+        // sera kt[12]×33 hairlines-cand). Gated needAext so
+        // captures with no >6-attr draws don't write the
+        // file (= replay-side reads rec[228..251] only,
+        // back-compat with capVer≤6). capVer=7.
+        var needAext = draws.Any(d => (d.Attribs?.Length ?? 0) > 6);
+        using var aext = needAext ? File.Create(
+            Path.Combine(fdir, "attrs-ext.bin")) : null;
 
         Span<byte> rec = stackalloc byte[256];
         foreach(var d in draws) {
@@ -306,16 +319,27 @@ public static unsafe class NvnCapture {
             for(var i = 0; i < Math.Min(
                     d.Streams?.Length ?? 0, 2); i++)
                 W16(rec, 252+i*2, d.Streams![i].Stride);
-            // (T6)×102 ×3 ‡v0×27th-PROPER ‡-deferred: u797 has
-            // ×11+×1 8-attr sigs (skinned-char: [6]=0x2e@28
-            // RGBA32F + [7]=0x27@44 bone-idx). Min(count,6)
-            // loses [6..7] ⟹ bone-idx=0 ⟹ stretched character
-            // (= sera kt[12]×33 hairlines-cand). attrs-ext.bin
-            // (40B/draw, attrs[6..15]) = capVer=7. ‡-deferred:
-            // f32822's only 0x2e is #81 attr[5] (not capped);
-            // floor-chaos root = ‡v0×16th(vs441 cb1=zero), NOT
-            // attr-cap. ×103 builds aext when chasing hairlines
-            // proper.
+            // (T6)×106 ×1 ‡v0×27th-PROPER: attrs[6..15] → aext
+            // (40B/draw; same 4B-per-attr packing as rec[228]).
+            // aext is 40B-per-draw fixed-stride regardless of
+            // this draw's attr-count (= replay reads aebin
+            // [di*40..di*40+40]; zero-fmt slots skipped same
+            // as rec[228..251] reader). Most draws have ≤6
+            // attrs ⟹ 40B of zeros ⟹ aext compresses well on
+            // disk; the per-draw cost is the deterministic-
+            // stride simplicity at replay-time.
+            if(aext != null) {
+                Span<byte> ae = stackalloc byte[40];
+                ae.Clear();
+                var nA = d.Attribs?.Length ?? 0;
+                for(var i = 6; i < Math.Min(nA, 16); i++) {
+                    var a = d.Attribs![i];
+                    ae[(i-6)*4]   = (byte)a.StreamIdx;
+                    ae[(i-6)*4+1] = (byte)a.Format;
+                    W16(ae, (i-6)*4+2, a.Offset);
+                }
+                aext.Write(ae);
+            }
             dbin.Write(rec);
             rts.WriteByte(d.RtId);
             // (T6)×62: 8B BlendKey per-draw → blend.bin
@@ -372,7 +396,7 @@ public static unsafe class NvnCapture {
                     dMask = c.DepthMask, stencil = c.Stencil,
                     sMask = c.StencilMask,
                 }).ToArray(),
-            version = 6, frameN,
+            version = 7, frameN,
             game = Path.GetFileNameWithoutExtension(
                 Environment.GetEnvironmentVariable(
                     "UMBRA_GAME_SO") ?? "unknown"),

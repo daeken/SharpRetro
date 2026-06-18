@@ -174,6 +174,12 @@ public static unsafe class NvnReplay {
             Path.Combine(frameDir, "draws.bin"));
         var ext = hasExt ? File.ReadAllBytes(
             Path.Combine(frameDir, "draws-ext.bin")) : null;
+        // (T6)×106 ×1 ‡v0×27th-PROPER: attrs[6..15] sidecar.
+        var aePath = Path.Combine(frameDir, "attrs-ext.bin");
+        var aebin = File.Exists(aePath)
+            ? File.ReadAllBytes(aePath) : null;
+        if(aebin != null)
+            $"[replay] attrs-ext.bin: {aebin.Length}B = {aebin.Length/40} draws (capVer≥7)".Log();
         // (T6)×34 capVer≥3: per-draw RT-set id sidecar
         // (1B/draw, parallel to draws.bin). Index into
         // manifest.renderTargets[]. capVer<3 ⟹ all
@@ -316,6 +322,26 @@ public static unsafe class NvnReplay {
                     StreamIdx: r[228 + k*4],
                     Format:    fmt,
                     Offset:    (ushort)R16(r, 228 + k*4 + 2)));
+            }
+            // (T6)×106 ×1 ‡v0×27th-PROPER: attrs[6..15] from
+            // attrs-ext.bin (40B/draw, same 4B packing). The
+            // ×11 8-attr skinned-char draws lose [6]=0x2e@28
+            // (RGBA32F per 61st) + [7]=0x27@44 (bone-idx) at
+            // the rec[228..251] Min(6)-cap; aebin carries them.
+            // capVer≥7 only (older captures have no aebin;
+            // attrs stays at ≤6 = back-compat). Same fmt!=0
+            // skip-empty as the rec-reader above.
+            if(aebin != null) {
+                var ao = i * 40;
+                for(var k = 0; k < 10; k++) {
+                    var fmt = aebin[ao + k*4 + 1];
+                    if(fmt == 0) break;
+                    attrs.Add(new(
+                        StreamIdx: aebin[ao + k*4],
+                        Format:    fmt,
+                        Offset:    (ushort)R16(aebin,
+                                       ao + k*4 + 2)));
+                }
             }
             d.Attribs = attrs.ToArray();
             d.Streams = new NvnLinux.NvnStream[] {
