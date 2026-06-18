@@ -140,6 +140,15 @@ public static unsafe class NvnCapture {
                 // dims so the slot isn't a hole. Hashes to
                 // the same file as every other same-size
                 // black (= the dedup working as designed).
+                // (T6)×110 ×4 ‡v0×29th-PROPER diagnostic:
+                // log WHY null (CpuPtr=0? Rgba was null?
+                // fmt-unhandled?). Per ×110×2(m-3) at f32822
+                // 0 BC-DecodeForUpload ran ⟹ all early-
+                // returned; ×52nd showed `if(first)` log-
+                // gate hides savanna re-registrations ⟹
+                // can't see capture-time H-state from
+                // existing log. This line answers per-tex.
+                $"[nvncap] tex{ti}: rgba=null → black-synth. cpu=0x{t.CpuPtr:x} fmt=0x{t.Format:x} {t.Width}×{t.Height} pool=0x{t.PoolPtr:x}+0x{t.Offset:x}".Log();
                 rgba = new byte[t.Width * t.Height * 4];
             }
             var hash = TexHash(t.Width, t.Height, rgba);

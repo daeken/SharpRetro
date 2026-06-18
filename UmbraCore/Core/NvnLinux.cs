@@ -513,11 +513,21 @@ public static unsafe class NvnLinux {
     // BC formats: dump as .dds (any viewer opens it) + BC3-decode → PPM.
     record FmtInfo(int Bpp, bool IsBc, int BcBlockBytes, string FourCC);
     static FmtInfo Fmt(int fmt) => fmt switch {
-        0x42 => new(0, true, 8,  "DXT1"),   // ‡ BC1
-        0x43 => new(0, true, 16, "DXT3"),   // ‡ BC2
-        0x44 => new(0, true, 16, "DXT5"),   // BC3 (verified via 1Bpp delta)
-        0x45 => new(0, true, 8,  "BC4U"),   // ‡ BC4
-        0x46 or 0x47 => new(0, true, 16, "BC5U"),  // ‡
+        // (T6)×110 ×4 own·8808 on own ×1(a-prep-1) cross-
+        // check vs nvn.h: 0x45-48 = DXT*_SRGB variants (NOT
+        // BC4/5; those are 0x49-4C=RGTC). Latent-wrong since
+        // first authored; not-hit-yet (lego's 51 BC-tex are
+        // all 0x42/0x44 per ×110×1). nvn.h-authoritative now:
+        0x41 or 0x42 => new(0, true,  8, "DXT1"),  // BC1 (RGB / RGBA)
+        0x43         => new(0, true, 16, "DXT3"),  // BC2
+        0x44         => new(0, true, 16, "DXT5"),  // BC3 (verified via 1Bpp delta)
+        0x45 or 0x46 => new(0, true,  8, "DXT1"),  // BC1 SRGB (RGB / RGBA)
+        0x47         => new(0, true, 16, "DXT3"),  // BC2 SRGB
+        0x48         => new(0, true, 16, "DXT5"),  // BC3 SRGB
+        0x49 or 0x4A => new(0, true,  8, "BC4"),   // RGTC1 UNORM/SNORM
+        0x4B or 0x4C => new(0, true, 16, "BC5"),   // RGTC2 UNORM/SNORM
+        0x4D or 0x4E => new(0, true, 16, "BC7"),   // BPTC UNORM/SRGB
+        0x4F or 0x50 => new(0, true, 16, "BC6H"),  // BPTC SFLOAT/UFLOAT
         0x11 => new(1, false, 0, ""),       // ‡ R8
         0x12 => new(2, false, 0, ""),       // ‡ RG8
         0x25 or 0x29 => new(4, false, 0, ""),  // RGBA8 / SRGB
@@ -582,14 +592,25 @@ public static unsafe class NvnLinux {
         .ConcurrentDictionary<ulong, int> TexPtrToId = new();
     [UnmanagedCallersOnly]
     static void TpRegTexture(ulong pool, int idx, ulong tex, ulong view) {
-        var first = !TexByPoolIdx.ContainsKey(idx);
+        // (T6)×110 ×4 own·8808-PROPER ×52nd: the `if(first)`
+        // gate (orig: "game re-registers 0x100 every frame;
+        // ONCE-each map") was designed for menu's ~30 stable
+        // texIds. Savanna RE-REGISTERS texIds with DIFFERENT
+        // textures (verified at-data ×110×3(m-2'): idx=261
+        // first-reg = 1920×1080 RT fmt=0x25; manifest@f32822
+        // = 128² fmt=0x42 BC ⟹ game reassigned the slot).
+        // ⟹ log first AND every re-reg where (handle,w,h,fmt)
+        // differs from prior (= REAL reassignment, not the
+        // every-frame-same-tex idempotent re-bind). The
+        // ‡v0×29th-PROPER 28-zero diagnostic depends on
+        // seeing the SAVANNA-time registration's cpu/Rgba.
+        var prior = TexByPoolIdx.TryGetValue(idx, out var pt) ? pt : 0;
         TexByPoolIdx[idx] = tex;
         TexPtrToId[tex] = idx;
-        if(first) {  // log first registration per-idx (= the game
-                     // re-registers 0x100 every frame; we want the
-                     // ONCE-each map for the title's ~30 textures)
-            var ts = St.GetValueOrDefault(tex);
-            $"[nvn] TexturePoolRegister idx=0x{idx:x} tex=0x{tex:x} view=0x{view:x} → {ts?.Width ?? 0}×{ts?.Height ?? 0} fmt=0x{ts?.Format ?? 0:x} cpu=0x{ts?.CpuPtr ?? 0:x}".Log();
+        var ts = St.GetValueOrDefault(tex);
+        var changed = prior != 0 && prior != tex;
+        if(prior == 0 || changed) {
+            $"[nvn] TexturePoolRegister idx=0x{idx:x} tex=0x{tex:x} view=0x{view:x}{(changed?$" RE-REG(was 0x{prior:x})":"")} → {ts?.Width ?? 0}×{ts?.Height ?? 0} fmt=0x{ts?.Format ?? 0:x} cpu=0x{ts?.CpuPtr ?? 0:x} rgba={(ts?.Rgba!=null?$"{ts.Rgba.Length}B":"null")}".Log();
         }
     }
     // Resolve a TexHandle (= packed (samplerId<<32)|texId per
