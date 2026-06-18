@@ -424,6 +424,32 @@ public static unsafe class NvnReplay {
             use = use.Skip(a).Take(b - a + 1).ToArray();
             $"[replay] RANGE=[{a},{b}]: {use.Length} draws".Log();
         }
+        // (T6)×126 ×3 ‡v0×33rd: WARMUP_END=N ⟹ iters 0..
+        // repeat-2 run draws[0..N] (= e.g. 0..630 = G-buf
+        // fill ONLY, stopping BEFORE #631-668 ping-pong
+        // overwrites tex308/313 with rt0/rt15 content per
+        // ×97); LAST iter runs `use` (= RANGE'd or full
+        // set). ⟹ last-iter's #165 reads warmup-iter's
+        // REAL G-buf in tex308-313 instead of warmup-
+        // iter's ping-pong end-state (= what plain 2-
+        // iter gives; ×125×3(d) r197≡r196 md5). Verified
+        // ×126×1(f-3): fs111.α=fs140.α=sample(tex256)=0
+        // ⟹ both ONE,1-SRC_A = ADDITIVE ⟹ #165's content
+        // structurally passes through #631 to [F]; the
+        // kill-path was tex313 = ping-pong-B NOT G-buf
+        // c[2] in iter-2's #165 read. Uses pre-RANGE
+        // `draws` (= full set) so warmup is unaffected
+        // by RANGE on the final iter. ‡ Doesn't address
+        // tex309/310 (depth/c[1], NOT ping-ponged ⟹
+        // those = warmup-iter's G-buf already in plain
+        // 2-iter); the gap is tex308/313 specifically.
+        NvnLinux.DrawRecord[]? warmup = null;
+        if(Environment.GetEnvironmentVariable(
+                "UMBRA_REPLAY_WARMUP_END") is {} we
+           && int.TryParse(we, out var weN)) {
+            warmup = draws.Take(weN + 1).ToArray();
+            $"[replay] WARMUP_END={weN}: iters 0..{repeat-2} use draws[0..{weN}] ({warmup.Length} draws); last iter uses `use` ({use.Length})".Log();
+        }
         var sweep = Environment.GetEnvironmentVariable(
                 "UMBRA_REPLAY_SWEEP") != null;
         if(sweep) {
@@ -448,7 +474,9 @@ public static unsafe class NvnReplay {
                 if(sweep)
                     NvnLinux.Draws.Add(use[iter]);
                 else
-                    NvnLinux.Draws.AddRange(use);
+                    NvnLinux.Draws.AddRange(
+                        warmup != null && iter < repeat - 1
+                            ? warmup : use);
             }
             var ti = DateTime.UtcNow;
             NvnVulkan.Present(0, iter % 3);
