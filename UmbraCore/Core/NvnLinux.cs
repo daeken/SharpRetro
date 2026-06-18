@@ -38,6 +38,18 @@ public static unsafe class NvnLinux {
     // One bag per opaque handle (builder OR object — Initialize copies).
     public class H {
         public ulong CpuPtr, Size;          // MemoryPool: SetStorage ptr/size
+        // (T6)×111 ×2 ‡v0×29th-PROPER root: nvnCommandBuffer
+        // CopyBufferToTexture is RECORDED into a cmdbuf; on
+        // real-hw the GPU executes the DMA at QueueSubmit, by
+        // which time the worker thread has filled the staging
+        // buffer. My CbCopyBufferToTexture hook reads srcCpu at
+        // RECORD-time = too early ⟹ DecodeBc(zero-src) ⟹
+        // (0,0,0,255) stashed (verified ×111×2(a''): tex265/
+        // 269/270/275 .tex α=255). 1535/1535 distinct srcCpu
+        // (= NO staging-reuse) ⟹ at NvnCapture-time srcCpu
+        // STILL holds the game's data ⟹ re-decode then.
+        // Cleared at TexInitialize (= new tex instance ⟹ stale).
+        public ulong LastCopySrcCpu;
         public ulong PoolPtr, Offset;       // Buffer: SetStorage(pool,off,size)
         public ulong GpuAddr;               // Buffer/Pool: assigned at Initialize
         public int Flags;                   // MemoryPool flags
@@ -512,6 +524,21 @@ public static unsafe class NvnLinux {
     // 0x29: ‡ near 0x25 → SRGB RGBA8? 0x11/0x12: ‡ R8/RG8? 0x34/0x35: depth?
     // BC formats: dump as .dds (any viewer opens it) + BC3-decode → PPM.
     record FmtInfo(int Bpp, bool IsBc, int BcBlockBytes, string FourCC);
+    // (T6)×111 ×2: capture-time fresh-decode from a given
+    // src ptr (= LastCopySrcCpu). Bypasses ts.Rgba cache +
+    // ts.CpuPtr (= pool storage which my stub never DMA-
+    // fills). Same FourCC switch as CbCopyBufferToTexture's
+    // record-time stash; called from NvnCapture per-tex.
+    public static byte[]? DecodeBcFrom(ulong srcCpu, int w,
+            int h, int fmt) {
+        if(srcCpu == 0) return null;
+        var fi = Fmt(fmt);
+        if(!fi.IsBc) return null;
+        return fi.FourCC switch {
+            "DXT5" => DecodeBc3((byte*)srcCpu, w, h),
+            "DXT1" => DecodeBc1((byte*)srcCpu, w, h),
+            _      => null };
+    }
     static FmtInfo Fmt(int fmt) => fmt switch {
         // (T6)×110 ×4 own·8808 on own ×1(a-prep-1) cross-
         // check vs nvn.h: 0x45-48 = DXT*_SRGB variants (NOT
@@ -556,6 +583,7 @@ public static unsafe class NvnLinux {
         ts.CpuPtr = pool != null ? pool.CpuPtr + bs.Offset : 0;
         ts.GpuAddr = pool != null ? pool.GpuAddr + bs.Offset : 0;
         ts.Rgba = null;  // (c²³)(a) re-init ⟹ stale decode
+        ts.LastCopySrcCpu = 0;  // (T6)×111: new instance
         ts.Gen++;
         $"[nvn] TextureInitialize tex=0x{tex:x} {ts.Width}×{ts.Height}{(ts.Depth>1?$"×{ts.Depth}":"")} fmt=0x{ts.Format:x}{(ts.Target!=1?$" target={ts.Target}":"")} pool=0x{ts.PoolPtr:x}+0x{ts.Offset:x} cpu=0x{ts.CpuPtr:x}".Log();
         return 1;
@@ -738,6 +766,17 @@ public static unsafe class NvnLinux {
         if(srcCpu != 0 && dst != null && w == dst.Width && h == dst.Height
            && (region == null || (((uint*)region)[0]|((uint*)region)[1]|((uint*)region)[2]) == 0)) {
             var fi = Fmt(fmt);
+            // (T6)×111 ×2 ‡v0×29th-PROPER: store srcCpu so
+            // NvnCapture can re-decode AT CAPTURE TIME (when
+            // game's worker has filled staging). + first-8B
+            // diag confirms record-before-fill at-data: if
+            // s8=0 here but re-decode at capture gives content
+            // ⟹ root verified end-to-end. ‡ first-200 only.
+            dst.LastCopySrcCpu = srcCpu;
+            if(n <= 200 && fi.IsBc) {
+                var s8 = *(ulong*)srcCpu;
+                $"[nvn]   srcCpu first-8B = 0x{s8:x16}{(s8==0?" ⟸ZERO@record":"")}".Log();
+            }
             try {
                 dst.Rgba = fi.IsBc
                     ? fi.FourCC switch {
