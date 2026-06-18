@@ -497,17 +497,48 @@ public class MaxwellLift {
                 break;
             }
             case "F2F-R": case "F2F-C": case "F2F-I": {
-                // Float → float (size or rounding change). v0 = both
-                // f32 (the rounding is what matters: floor/ceil/round
-                // for fract()/etc patterns). RoundMode = bit42<<2 |
-                // bits[40:39] → IntegerRound enum (0=Pass 1=rn 4=rm
-                // 5=rp 6=rz). ‡ f16/f64 → ‡unimpl when surface.
+                // Float → float (size or rounding change). RoundMode
+                // = bit42<<2 | bits[40:39] → IntegerRound enum.
+                //
+                // (T6)×134 ×2 = 73rd: srcFmt/dstFmt/Sh handling. Own
+                // ‡@504 "f16/f64 → ‡unimpl when surface" SURFACED as
+                // ‡v0×30th (×133): fs442's HDR-encode does F2F.F16.
+                // F16.FLOOR on a packed-half-pair register; pre-73rd
+                // floored the f32-bitcast (= NaN when high-half =
+                // 0xff80) ⟹ %846=.x=0 ⟹ %881=1/0=∞ ⟹ c[0].rgb=∞-
+                // clamp(255) + c[0].α=0 ⟹ #163 fs50×0²=0 ⟹ rt2-base
+                // =0 ⟹ 68%-black at [F]. = #153×11th (own deferred-‡
+                // in own code) + kt[26] (deferred-with-‡ unstated-
+                // bound). Corpus (×134×1(d)): 149/1451 shaders use
+                // F2F with F16-fmt; dominant combo (F16,F16,sh=0,
+                // floor) = exactly fs442's pattern.
+                //
+                // Per kt[14] ryujinx InstEmitConversion.cs:344
+                // UnpackReg + InstDecoders.cs:1591 InstF2fR: srcFmt
+                // @10:2, dstFmt@8:2, Sh@41. F16-src ⟹ extract Sh-
+                // selected ONE half BEFORE abs/neg/rmode (own·8808-
+                // mild on ×133×2(p) "floors each half" — Maxwell F2F
+                // is single-half via Sh, NOT packed-SIMD). F16-dst ⟹
+                // result to Sh-half of rd, other-half preserved (=
+                // HPack MrgH0/MrgH1). ‡ F64 → comment-only (0 corpus
+                // hits in 1451).
                 var rmHi = B(42,1); var rmLo = B(39,2);
                 var rmode = (rmHi << 2) | rmLo;
-                var b = Fsrc(d.Name switch {
+                var srcFmt = B(10,2); var dstFmt = B(8,2);
+                var sh = B(41,1);
+                var rawSrc = d.Name switch {
                     "F2F-R" => Gpr(B(20,8)), "F2F-C" => Cbuf(),
-                    "F2F-I" => Fimm20(), _ => throw new() },
-                    B(45,1), B(49,1));
+                    "F2F-I" => Fimm20(), _ => throw new() };
+                Il b;
+                if(srcFmt == 1) {
+                    // F16-src: unpack both, take Sh-selected, THEN
+                    // abs/neg on that f32 half.
+                    var (lo, hi) = HUnpack(rawSrc, 0, 0, 0);
+                    b = Fsrc(sh == 1 ? hi : lo, B(45,1), B(49,1));
+                } else {
+                    // F32-src (or F64-‡): existing v0 path.
+                    b = Fsrc(rawSrc, B(45,1), B(49,1));
+                }
                 // IntegerRound: 1=Pass, 4=Round, 5=Floor, 6=Ceil,
                 // 7=Trunc (per ryujinx InstDecoders.cs:252-258).
                 // (T6)×43 mcb (Δ-3+Δ-4): was off-by-one (4=Floor
@@ -519,9 +550,21 @@ public class MaxwellLift {
                 else if(rmode == 5) b = new IlUn(F32, UnOp.Floor, b);
                 else if(rmode == 6) b = new IlUn(F32, UnOp.Ceil, b);
                 else if(rmode == 7) b = new IlUn(F32, UnOp.Trunc, b);
-                // .SAT@50 handled at wrapper-site below (F2F is
-                // in the bit-50 allowlist).
-                body.Add(SetGpr(rd, b));
+                // .SAT@50 handled at wrapper-site below (F2F is in
+                // the bit-50 allowlist). ‡‡ Sat+F16-dst: wrapper sees
+                // the HPack'd-bitcast value not the f32-result ⟹
+                // saturating that = wrong. ‡ 0 known corpus hits;
+                // ×134×3-census-residual to verify.
+                if(dstFmt == 1) {
+                    // F16-dst: pack result into Sh-half of rd, merge
+                    // other half from rd's prior content. HPack ofmt
+                    // =2(MrgH0)=write-lo-keep-hi; =3(MrgH1)=write-hi-
+                    // keep-lo. Pass (b,b); ofmt picks the right lane.
+                    body.Add(SetGpr(rd,
+                        HPack((b, b), sh == 1 ? 3ul : 2ul, Gpr(rd))));
+                } else {
+                    body.Add(SetGpr(rd, b));
+                }
                 break;
             }
             case "I2I-R": case "I2I-C": case "I2I-I": {
