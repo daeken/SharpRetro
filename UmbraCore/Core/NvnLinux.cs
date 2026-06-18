@@ -1734,6 +1734,27 @@ public static unsafe class NvnLinux {
             ScX = _scX, ScY = _scY, ScW = _scW, ScH = _scH,
             Attribs = _curAttribs, Streams = _curStreams,
             RtId = CurRtId,
+            // (T6)×124 ×2 own·8808-PROPER ×81st on (α)71st
+            // -as-framed: NOT per-cb tracking. (T6)×62
+            // added BlendKey to SnapDraw but this inline-
+            // init was never updated (= the (T6)×38×2 own
+            // docstring's named structural issue verbatim:
+            // "the duplication is the structural issue;
+            // ×39 = collapse to SnapDraw"). ⟹ ALL CbDraw
+            // Arrays draws (= every non-indexed = #163-165,
+            // #631-632, #636-668 = exactly the bk=0 set
+            // per ×119×4(α-2')) had BlendKey=default=0.
+            // Verified ×124×1-cont(b-3): bk=0 ⟺ idx=0;
+            // #633-635 (idx=900, → SnapDraw) have bk≠0.
+            // The 2 cbs (b-3: …52a0/…5340) are real but
+            // ORTHOGONAL — bk=0 was THIS missing field,
+            // not cross-cb-state. ‡Whether #631 gets the
+            // RIGHT bk after this (= additive vs inherited
+            // ONE,ZERO from #630) = ×125; per-cb may matter
+            // THERE. #153 ×6th: own ×38 docstring named it
+            // ~86ch ago.
+            BlendKey = (ulong)(_curBlendEnable & 0xff)
+                     | (_curBlend[0] & 0xffffff_ffffff00),
         };
         lock(Draws) Draws.Add(dr);
         if(n <= 25 || n % 100 == 0) {
