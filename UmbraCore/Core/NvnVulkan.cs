@@ -931,6 +931,20 @@ public static unsafe class NvnVulkan {
             // so the per-draw tex DS-write can match view-type
             // to what the shader declares (Cube vs 2D etc).
             _t3ShTexKinds[shIdx] = tk;
+            // (T6)×140 ×3: §7 A/B at-bytes. Dump post-lift
+            // .spv on knob for spirv-dis diff vs the stale
+            // Jun-14 .bin.spv (= pre-73rd baseline). Verifies
+            // 73rd's HUnpack→neg→Floor→HPack emit at %832-
+            // site + scans for half-op residuals across the
+            // 52 half-ops in fs442 (×140×2(b-2)). Per ×106th:
+            // raw F2F @0x0a30 neg@45=1 ⟹ negate INSIDE F2F ⟹
+            // 73rd unpack→neg→floor = correct semantics; this
+            // dump confirms emit-shape matches that reading.
+            if(Environment.GetEnvironmentVariable(
+                    "UMBRA_T3_DUMP_SPV") == "1")
+                File.WriteAllBytes(
+                    $"{_t3ShDir}/sh{shIdx:d4}-t{sphType}.post73.spv",
+                    spv);
             if(notes.Length > 0)
                 $"[vk] sh{shIdx:d4}: {notes.Length} ‡notes — {string.Join("; ", notes)}".Log();
             fixed(byte* p = spv) {
