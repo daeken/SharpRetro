@@ -1382,6 +1382,18 @@ public static unsafe class NvnVulkan {
     static readonly int _t3RttDumpAtt =
         int.TryParse(Environment.GetEnvironmentVariable(
             "UMBRA_T3_RTT_DUMP_ATT"), out var ra) ? ra : 0;
+    // (T6)×173 ×2 = 83rd: UMBRA_T3_DRAW_END=N — stop recording
+    // at draw-index N (draws[0..N-1] recorded; [N..] skipped).
+    // General-purpose draw-bisect knob (closes ×156(k) "NO draw
+    // -end-knob" tool-gap). With RTT_DUMP=M ⟹ dump rtId=M state
+    // AT draw-N (= mid-frame readback). Per ×171 ×131st: tex308
+    // SHARED rtId=0.c[0]/rtId=1.c[0] ⟹ RTT_DUMP=1 ATT=0 at end-
+    // of-frame = FINAL-overwritten; DRAW_END=163 stops before
+    // #163(fs50) + #666-668 ⟹ tex308 = real G-buf-c[0]-albedo.
+    // -1 = unbounded (default). N=0 ⟹ no draws (= clear-only).
+    static readonly int _t3DrawEnd =
+        int.TryParse(Environment.GetEnvironmentVariable(
+            "UMBRA_T3_DRAW_END"), out var de) ? de : -1;
     // (T6)×112 ×2 ‡v0×30th α-arm: RTT_DUMP_A=1 ⟹ ALSO
     // write α-channel as P5 grayscale → {path%.ppm}.a.pgm.
     // c[2].w drives fs111's b14_LUT-coord into the %481
@@ -2977,7 +2989,18 @@ public static unsafe class NvnVulkan {
             // (T6)×37 ×3: reset SeenThisFrame at frame-start.
             if(_t3Rtt) foreach(var rf_ in _rtFb)
                 if(rf_ != null) rf_.SeenThisFrame = 0;
+            var di = -1;
             foreach(var d in draws) {
+                di++;
+                // 83rd ((T6)×173 ×2): draw-bisect gate. di =
+                // draws[]-array-index (incl early-continues ⟹
+                // same numbering as draws.bin/manifest since
+                // NvnReplay populates draws[] 1:1). break (not
+                // continue/return) ⟹ post-loop RP-close +
+                // RTT_DUMP fire on truncated state. T3-RTT-
+                // path only (the @4383 non-RTT foreach doesn't
+                // have this; not needed there).
+                if(_t3DrawEnd >= 0 && di >= _t3DrawEnd) break;
                 if(d.VbCpu == 0) continue;
                 if(d.IdxCount == 0 && d.Count <= 0) continue;
                 if(skipPostproc && hasIndexed
