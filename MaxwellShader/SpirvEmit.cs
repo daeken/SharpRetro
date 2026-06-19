@@ -718,14 +718,74 @@ public class SpirvEmit {
                     // need to NOT divide. ‡ Stage-3 oracle settles this
                     // (= compare pixels to fixed.frag); for now load
                     // FragCoord.w as-is and let the math fall out.
+                    // ⟹ RESOLVED (T6)×154 81st = #153×17th: the math
+                    // did NOT fall out (= ‡v0×36th(A) over-bright;
+                    // maxlit∝clip_w³ per ×153(p)). Fix = user-attr
+                    // else-block below drops ×mul. pos-attr load here
+                    // unchanged (FragCoord.w as-is = correct; the
+                    // downstream MUFU.RCP gives clip_w which is now-
+                    // mostly-dead since user-attr no longer ×it).
                 } else {
                     // User varying input — same scalar-per-comp scheme
                     // as VS attr-in.
+                    //
+                    // (T6)×154 ×3 = 81st: drop mode==1 ×mul for user-
+                    // attr. = (A)-root fix (‡v0×36th over-bright; the
+                    // ‡@720 above from stage-3 era = #153×17th = 5th
+                    // own-deferred-‡ this segment per kt[26]: F2F@504
+                    // →73rd, ⚠-stub(iii)→74th, F2I-blind→77th, SpvEval
+                    // ‡@449→79th, SpirvEmit‡@720→81st).
+                    //
+                    // Mechanism (×153×3(s)+(p) via §7-resolver):
+                    //   Maxwell: IPA.Mul(attr, ×Rb) where Rb=RCP(IPA(
+                    //     pos.w))=clip_w; hardware interps attr/w
+                    //     linearly ⟹ result = linear(attr/clip_w) ×
+                    //     clip_w = perspective-correct attr.
+                    //   Vulkan: in_N (smooth, default) = ALREADY
+                    //     perspective-correct attr.
+                    //   ⟹ pre-81st emit `in_N × Visit(mul)` where
+                    //     Visit(mul) → OpFDiv(1, FragCoord.w) = clip_w
+                    //     ⟹ attr × clip_w = WRONG by factor clip_w.
+                    //   ×153(p) w-sweep: maxlit ∝ (1/fcw)³ CUBIC via
+                    //     this (lit-arm ∝clip_w via SH%668 × %740 ∝
+                    //     (in_0×clip_w)²); =32@fcw≈0.25 = trunk-far.
+                    //   ryujinx (×154(b)+(b-2)): emit `in_N × FragCoord
+                    //     .w` (when SPH ImapType==Perspective) THEN ×
+                    //     SrcB ⟹ cancels-at-optimizer ⟹ 0 gl_FragCoord
+                    //     in their GLSL (×153(s)). = the §7-3-way
+                    //     DIVERGENCE (kt[22]: trust the differential).
+                    //
+                    // Corpus (×154(c-2) @0x80, FS-only): 1008/1008
+                    // shaders with user-attr IPA.Mul use SINGLE rb (=
+                    // always RCP(IPA(pos.w)) per ×154(d) at-bytes
+                    // pattern in fs442). 15185 user-Mul / 38 user-Pass
+                    // / 0 user-Const. ⟹ drop-×mul for user-attr mode==1
+                    // = bare in_N = correct on Vulkan = corpus-safe.
+                    //
+                    // ‡ mode==0 user-attr (38 corpus, 0.25%): pre-81st
+                    //   = bare in_N = perspective-correct on Vulkan;
+                    //   Maxwell IPA.Pass = noperspective(attr/clip_w)
+                    //   ⟹ wrong by 1/clip_w (OTHER direction from the
+                    //   mode==1 bug). To be Maxwell-faithful would need
+                    //   ×FragCoord.w here. Defer-until-surfaces.
+                    // ‡ SPH ImapTypes (×154(e) at-bytes): fs442 @0x48
+                    //   = 6×0x2a + 0x0a = in_0..5.xyz + in_6.xy ALL
+                    //   imap=2=Perspective. The ryujinx-faithful fix
+                    //   reads SPH-imap and ×FragCoord.w conditionally
+                    //   (handles mode==0 + non-Perspective too); not
+                    //   done here per kt[16] (= simplest-deliverable;
+                    //   corpus-uniform ⟹ unconditional-drop suffices).
                     var (loc, comp) = AttrLoc(off, 0x80);
-                    val = R(TyF32(), OpLoad, IoVar(ScInput, loc, comp));
+                    return R(TyF32(), OpLoad,
+                        IoVar(ScInput, loc, comp));
                 }
-                // Mode 1 = multiply by the mul-operand (typically rcp(w)
-                // from MUFU). Mode 0 = pass-through.
+                // pos-attr (0x70-0x7c) only reaches here (user-attr
+                // early-returned above per 81st). Mode 1 = ×mul kept
+                // for pos-class (corpus ×154(c-2): pos never mode==1;
+                // ‡"other"-class attr=0x3ff/0x0 = 1125 mode==1 — Idx-
+                // sentinel-class, ‡unanalyzed; but those don't route
+                // through this off-based dispatch since Idx-mode is
+                // ‡handled-elsewhere or ‡falls-to-user-attr).
                 return mode == 1
                     ? R(TyF32(), OpFMul, val, EmitExpr(mul))
                     : val;
