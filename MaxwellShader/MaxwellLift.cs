@@ -492,11 +492,10 @@ public class MaxwellLift {
                 // those shaders surface (different game-state).
                 // ‡ NO HPack at output (dst is always int-in-u32,
                 // not packed-half; unlike F2F's dstFmt==1 path).
-                // ‡‡ SEPARATE bug-cand noted (g): ryujinx clamps
-                // !signed → max(b,0) before FToUI (negative-f32→
-                // uint = SPIR-V UB); my emit lacks. DIFFERENT
-                // class (affects all F2I-unsigned not just F16);
-                // NOT bundled here per kt[16]; ×148 corpus-scan.
+                // ×148×1(a) own·8808-mild on "DIFFERENT class 619":
+                // unsigned-F2I ≡ F16-F2I EXACTLY (41 = 41; all 578
+                // signed are srcFmt=F32). ⟹ the !signed-clamp Q
+                // affects the SAME 41 as 77th. = 78th below.
                 var dstFmt = (B(12,1) << 2) | B(8,2);
                 var signed = (dstFmt & 4) != 0;
                 var rm = B(39, 2);
@@ -522,6 +521,24 @@ public class MaxwellLift {
                     b = new IlUn(F32, rm switch {
                         0 => UnOp.Round, 1 => UnOp.Floor,
                         2 => UnOp.Ceil, _ => UnOp.Round }, b);
+                // (T6)×148 ×3 = 78th: !signed → max(b,0) clamp
+                // before FToUI. Per ryujinx EmitF2I (×147×2(g)
+                // InstEmitConversion.cs): "Negative float to uint
+                // cast is undefined, so we clamp the value before
+                // conversion." SPIR-V ConvertFToU on negative = UB.
+                // ×148×1(a): affects same 41 NONE-ACTIVE shaders as
+                // 77th. ×147×2(f) at-bytes: sh0477 input prev=HADD2
+                // -R = NOT abs/max ⟹ possibly-negative. + 77th may
+                // have INTRODUCED UB-exposure (pre-77th f32-bitcast
+                // (half-pair) was always-positive-garbage; post-
+                // 77th real-half can be neg ⟹ now hits UB) ⟹ kt[34]
+                // (b) completes 77th. ‡ unverified-at-data (NONE-
+                // ACTIVE in 6w/6o/7m/7n/7p ⟹ no §7-emit-target);
+                // correctness-by-spec+ref(g) only. ✓SAFE r166c-19+
+                // r206c-4+r208c expected md5-≡ per ×148×1(a).
+                if(!signed)
+                    b = new IlBin(F32, BinOp.FMax, b,
+                        new IlConst(F32, 0));
                 // Result u32 → bitcast back to f32 for storage in
                 // _gpr (typeless). Downstream int-ops bitcast back.
                 body.Add(SetGpr(rd, new IlCast(F32, CastKind.Bitcast,
