@@ -39,6 +39,15 @@ public static class SpvEvalDriver {
         // --in 0,2=0 --in 0,3=1 (= one fullscreen-tri vert).
         var inOverride = new Dictionary<(int,int), float>();
         var fullTrace = false;
+        // (T6)×153: --fcw = gl_FragCoord.w override (= 1/clip_w
+        // per Vulkan). v0 hardcoded 1f (= correct for fullscreen
+        // -quad fs244/fs111 where VS w=1; ‡@97). For geometry-FS
+        // (fs442), fcw varies per-px with depth. ×152×4(o): %15
+        // (=1/fcw=clip_w) feeds %780-maxlit depth=10 via SH-arm
+        // (%668=in_1×%15). w-sweep settles whether fcw drives
+        // trunk's maxlit≥32. --fcz for [2]=depth (less likely
+        // load-bearing; included for completeness).
+        float fcW = 1f, fcZ = 0f;
         for(var i=5; i<args.Length; i++) {
             switch(args[i]) {
             case "--c1": c1 = ParseFloats(args[++i]); break;
@@ -53,6 +62,8 @@ public static class SpvEvalDriver {
                     = float.Parse(p[1]);
                 break; }
             case "--trace": fullTrace = true; break;
+            case "--fcw": fcW = float.Parse(args[++i]); break;
+            case "--fcz": fcZ = float.Parse(args[++i]); break;
             default:
                 Console.Error.WriteLine($"⚠ unknown opt: {args[i]}");
                 break;
@@ -98,7 +109,7 @@ public static class SpvEvalDriver {
                 // perspective; for full-screen-quad VS at
                 // z=0,w=1 ⟹ depth=0, 1/w=1. fs244 only reads
                 // .w via 1.0/in (= temp_3 in glsl).
-                [15] = new[]{px+0.5f, py+0.5f, 0f, 1f},
+                [15] = new[]{px+0.5f, py+0.5f, fcZ, fcW},
             },
             In = {
                 // ‡ VS-passed UV. For our fullscreen-tri VS
