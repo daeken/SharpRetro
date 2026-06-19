@@ -1660,7 +1660,19 @@ public static unsafe class NvnLinux {
     static void ChMaskSetChannelMask(ulong s, int target,
             int r, int g, int b, int a) {
         if(_blendHooks < 1) return;
-        // ‡ target-0 only for now (×136×1(d) decision).
+        // target-0 only (×136×1(d) decision). ‡74th MRT-1+ open-Q
+        // RESOLVED (T6)×175 u811 (own·8808-PROPER ×132nd): game
+        // calls SetChannelMask 12× = 4 states × 3 targets each;
+        // PER-STATE-UNIFORM (every state: mask[t=0]==mask[t=1]==
+        // mask[t=2]). States: ea48→0(no-write), ea4c→8(α-only;
+        // =#164 fs46), ea50→7(RGB-only; =#165), ea54→f(all;
+        // =#163+G-buf #55-162). ⟹ this drop loses NO information
+        // for this game; replay@1227's for(ci<nCb)cbAtt[ci]=
+        // target-0's-mask is EXACTLY CORRECT. ⟹ ‡74th DONE. NOT
+        // (iii)/(ζ)-contributor (×166(d) hypothesized). ‡ Holds
+        // as a real-‡ for any future game with per-target-
+        // DIFFERENT masks (= would need full-4B capture +
+        // per-target replay; not built per kt[13]).
         if(target != 0) return;
         _chMaskByState[s] = (byte)(
             (r != 0 ? 1 : 0) | (g != 0 ? 2 : 0)
