@@ -425,6 +425,41 @@ public static class SpvEval {
                     Set(0); break;
                 }
                 var fn=a[3];
+                // (T6)×151 ×2 = 79th: Pack/UnpackHalf2x16. The
+                // ‡@449-marker from (T6)×77 ("scalar-only here…
+                // v0=bitcast-no-op+‡-note") = #153×15th = 4th
+                // own-deferred-‡ surfacing this segment (kt[26]
+                // pattern: F2F@504→73rd, ⚠-stub(iii)→74th, F2I-
+                // srcFmt-blind→77th, now this→79th). ×150(e):
+                // fs442 (= first half-prec FS through SpvEval;
+                // 52 half-ops) hit %146=UnpackHalf2x16 → fell to
+                // default → uint[1]{0} → %147=Extract idx=1 OOB.
+                // Special-case before the scalar `float x=` line
+                // since the switch{} below is scalar-by-design.
+                // GLSL.std.450: 58=PackHalf2x16(vec2→uint),
+                // 64=UnpackHalf2x16(uint→vec2). .NET Half via
+                // BitConverter.{UInt16BitsToHalf,HalfToUInt16Bits}.
+                if(fn == 62) {  // UnpackHalf2x16: uint → vec2
+                    // own·8808 ×113th: I had this as #64; at-
+                    // bytes (×151×3(h) raw .spv word-read) %146
+                    // fn=0x3e=62. spirv-dis labels it UnpackHalf
+                    // 2x16 ⟹ #62. kt[3]/·7827: bytes answered in
+                    // 1 read what ×151×2's "still throws" didn't.
+                    var u = V(a[4])[0];
+                    SetF((float)BitConverter.UInt16BitsToHalf(
+                             (ushort)(u & 0xffff)),
+                         (float)BitConverter.UInt16BitsToHalf(
+                             (ushort)(u >> 16)));
+                    break;
+                }
+                if(fn == 58) {  // PackHalf2x16: vec2 → uint
+                    var v2 = V(a[4]);
+                    Set((uint)BitConverter.HalfToUInt16Bits(
+                            (Half)F(v2[0]))
+                      | ((uint)BitConverter.HalfToUInt16Bits(
+                            (Half)F(v2[1])) << 16));
+                    break;
+                }
                 float x=Ff(a[4]);
                 float y=wc>6?Ff(a[5]):0, z=wc>7?Ff(a[6]):0;
                 SetF(fn switch {
@@ -668,6 +703,12 @@ public static class SpvEval {
         OpImageSampleDrefImplicitLod=>"TexDI",
         OpFOrdGreaterThan=>"F>",OpFOrdLessThan=>"F<",
         OpLogicalNot=>"!",OpLogicalAnd=>"&&",
+        OpBitwiseAnd=>"u&",OpBitwiseOr=>"u|",
+        OpBitwiseXor=>"u^",OpNot=>"u~",
+        OpShiftRightLogical=>"u>>",OpShiftLeftLogical=>"u<<",
+        OpIAdd=>"IAdd",OpIMul=>"IMul",
+        OpConvertFToS=>"F→I",OpConvertFToU=>"F→U",
+        OpConvertSToF=>"I→F",OpConvertUToF=>"U→F",
         _=>$"op{op}",
     };
 }
