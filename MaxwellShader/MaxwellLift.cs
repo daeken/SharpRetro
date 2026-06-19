@@ -509,9 +509,17 @@ public class MaxwellLift {
                 // clamp(255) + c[0].α=0 ⟹ #163 fs50×0²=0 ⟹ rt2-base
                 // =0 ⟹ 68%-black at [F]. = #153×11th (own deferred-‡
                 // in own code) + kt[26] (deferred-with-‡ unstated-
-                // bound). Corpus (×134×1(d)): 149/1451 shaders use
-                // F2F with F16-fmt; dominant combo (F16,F16,sh=0,
-                // floor) = exactly fs442's pattern.
+                // bound). Corpus (×140×3(b-3), ×106th-corrected:
+                // ×134(d)'s scan was @0x50; insns @0x80 = NVN-
+                // prefix 0x00-0x2F + SPH 0x30-0x7F): 212/1451
+                // shaders use F2F with non-F32 fmt; ALL single
+                // combo (F16,F16,sh=0,neg=1,floor,sat=0) =
+                // exactly fs442's @0x0a30. Verified 4-ways (T6)
+                // ×141: at-source(×137(b) HUnpack sw=0=F16-
+                // unpack docstring) + at-input-bytes(×140(b-2)
+                // neg@45=1 INSIDE-F2F) + at-emit-shape(×141(f-3)
+                // post73=unpack→.x→neg→floor→pack-merge) +
+                // empirical(r206a c[0].α 0%→95.4%).
                 //
                 // Per kt[14] ryujinx InstEmitConversion.cs:344
                 // UnpackReg + InstDecoders.cs:1591 InstF2fR: srcFmt
@@ -560,6 +568,12 @@ public class MaxwellLift {
                     // other half from rd's prior content. HPack ofmt
                     // =2(MrgH0)=write-lo-keep-hi; =3(MrgH1)=write-hi-
                     // keep-lo. Pass (b,b); ofmt picks the right lane.
+                    // ‡ (b,b) emit-wasteful (×141(f-3): post73 shows
+                    // dup %836-840 = both halves built then one
+                    // masked-away). Semantically correct (verified
+                    // at-emit-shape ×141); HPack-MrgH{0,1} only uses
+                    // one. (b,Const0) would halve emit but touches
+                    // verified-working code ⟹ deferred per kt[13].
                     body.Add(SetGpr(rd,
                         HPack((b, b), sh == 1 ? 3ul : 2ul, Gpr(rd))));
                 } else {
@@ -852,17 +866,28 @@ public class MaxwellLift {
                     // @0x9d0/@0xa70 bit43=1 (ryu: 0.0−c1[…]).
                     // We had B(56,1) here = always-0 in observed
                     // encodings ⟹ negate silently dropped.
-                    // ‡ HADD2-C: InstHadd2C layout unverified —
-                    // ryujinx Hadd2C likely has BOTH NegA(srcA)
-                    // and NegB(cbuf) since add isn't commutative
-                    // w.r.t. sign; keeping B(56,1) for isAdd
-                    // until checked. ‡‡ srcA's negA above reads
-                    // B(31,1) for !isAdd; for -C form bit31 is
-                    // inside CbufOffset (bits 20-33) — =0 in all
-                    // observed encodings (offsets <0x800), but
-                    // structurally wrong; ryujinx passes `false`
-                    // for HMUL2-C srcA. Proper fix = per-form
-                    // negA; deferred.
+                    // HADD2-C: verified (T6)×142×1(a) vs ryujinx
+                    // InstHadd2C (InstDecoders.cs): NegA@43→srcA,
+                    // NegB@56→cbuf, ASwz@47:2, OFmt@49:2, AbsA@44,
+                    // AbsB@54. My emit (negA=B(43,1) above; negCb
+                    // =B(56,1) here) MATCHES. ×142×3(h) InstHadd2I
+                    // also matches (BimmH0@20:10, BimmH1=(b56<<9)|
+                    // b30:9, <<6, NegA@43). ⟹ ‡@855 closed.
+                    //
+                    // ‡‡-residual (documented-not-fixed per kt[13]
+                    // — observationally =0 in all encodings, NOT
+                    // a known wrong-output): srcA's negA above
+                    // reads B(31,1) for !isAdd. For HMUL2-C bit31
+                    // ∈ CbufOffset(20-33); for HMUL2-I bit31 ∈
+                    // BimmH1(30-38). ryujinx passes `false` for
+                    // HMUL2-C/I srcA-neg (no field exists). =0 in
+                    // all corpus encodings (cbuf-offsets <0x800;
+                    // imm-bit1 happens-to-be-0 in fs442's 3 HADD2-I
+                    // — but those are isAdd⟹B(43,1) anyway). The
+                    // structurally-correct fix = per-form negA
+                    // (R:B(31,1), C/I:0 for !isAdd) but touches
+                    // pre-form-branch ⟹ deferred until a corpus
+                    // hit surfaces. ×142 confirmed: NOT (A)'s root.
                     var negCb = isAdd ? B(56,1) : B(43,1);
                     (bl, bh) = HUnpack(Cbuf(), 1, negCb, B(54,1));
                 } else {
