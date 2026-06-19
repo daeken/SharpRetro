@@ -3305,8 +3305,16 @@ public static unsafe class NvnVulkan {
                 // flip on odd i. Count N → 3(N-2) list verts.
                 // ‡ Doesn't honor primitive-restart (game doesn't
                 // use it for sh349/346). NVN prim 6 (TRI_FAN) /
-                // 9 (QUADS) / 10 (QUAD_STRIP) not seen in u705;
+                // 8 (QUAD_STRIP) / 9 (POLYGON) not seen in u705;
                 // when they show, same expansion approach.
+                // own·8808-PROPER ×119th (T6)×156: this comment
+                // had "9(QUADS)/10(QUAD_STRIP)" — wrong enum (NVN
+                // ref-botw: 7=Quads 8=QuadStrip 9=Polygon). prim=7
+                // (Quads) IS used: #632 fs270 cnt=424/460 in 6w/6o
+                // = the ONLY non-tri draw both frames. Pre-82nd
+                // fell to else-branch ⟹ 424-as-TriList = ~70 cross
+                // -quad sliver-tris = ‡v0×37th(ii)′ orange-lines.
+                // 82nd handles prim==7 below.
                 // (c²⁷) Actual stride from captured Streams
                 // (was hardcoded 36 — wrong for str=28/40/etc;
                 // worked-by-luck on count=3 reads past 84B buf).
@@ -3397,6 +3405,59 @@ public static unsafe class NvnVulkan {
                         Buffer.MemoryCopy(src + (d.First+a)*stride, dst, stride, stride); dst += stride;
                         Buffer.MemoryCopy(src + (d.First+b)*stride, dst, stride, stride); dst += stride;
                         Buffer.MemoryCopy(src + (d.First+i)*stride, dst, stride, stride); dst += stride;
+                    }
+                    voff = vbo;
+                    vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
+                } else if(d.Prim == 7 && d.Count >= 4) {
+                    // (T6)×157 ×2 = 82nd: NVN prim=7 = QUADS. Vulkan
+                    // has no quad topology; T3Pipe hardcoded TriList
+                    // (@888 per (c²⁴)). Expand each 4-vert quad → 2
+                    // tris {v0,v1,v2, v0,v2,v3} = 6 verts. Count N →
+                    // (N/4)×6. = ‡v0×37th(ii)′ orange-lines fix.
+                    //
+                    // ×156×4(j-2): #632 = the ONLY prim≠4 in BOTH
+                    // 6w(cnt=424) + 6o(cnt=460), fs=270 (= particle/
+                    // sprite-class; intBitsToFloat-rgb output per
+                    // ×156×3(i)). Pre-82nd fell to else-branch ⟹
+                    // 424-as-TriList = 141 tris. own·8808-PROPER
+                    // ×120th (×157×1(a) mechanism): with period
+                    // lcm(3,4)=12, tri{3,4,5}={q0.v3,q1.v0,q1.v1} +
+                    // tri{6,7,8}={q1.v2,q1.v3,q2.v0} = cross-quad
+                    // SLIVERS connecting consecutive particle-
+                    // positions ⟹ ~70 thin diagonal lines criss-
+                    // crossing the frame = r166c-21 LOOK exactly.
+                    // ×156×1(c): line-color (201,128,58) constant
+                    // 1-2px = fs270's packed-output-as-RGB tint.
+                    //
+                    // ×119th: own (c²⁴) comment above had "9(QUADS)/
+                    // 10(QUAD_STRIP)" = wrong enum-values (off-by-2;
+                    // ref-botw: 7=Quads); fixed.
+                    //
+                    // ‡ Winding: NVN quads = {v0,v1,v2,v3} CCW ⟹
+                    // both tris {0,1,2}+{0,2,3} CCW = winding-
+                    // preserved. ‡ Provoking-vertex (= flat-interp
+                    // picks which vert): both tris share v0+v2;
+                    // fs270 has no flat-qualified inputs ⟹ moot.
+                    // ‡ d.Count%4≠0: floor (drop trailing partial).
+                    var nQuad = d.Count / 4;
+                    drawCount = nQuad * 6;
+                    drawFirst = 0;
+                    bytes = (ulong) drawCount * (ulong) stride;
+                    if(vbo + bytes > VbufSize) break;
+                    var src = (byte*) d.VbCpu
+                            + (ulong) d.First * (ulong) stride;
+                    var dst = (byte*)(_vbufPtr + vbo);
+                    for(var q = 0; q < nQuad; q++) {
+                        var v0 = src + (q*4+0)*stride;
+                        var v1 = src + (q*4+1)*stride;
+                        var v2 = src + (q*4+2)*stride;
+                        var v3 = src + (q*4+3)*stride;
+                        Buffer.MemoryCopy(v0, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(v1, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(v2, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(v0, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(v2, dst, stride, stride); dst += stride;
+                        Buffer.MemoryCopy(v3, dst, stride, stride); dst += stride;
                     }
                     voff = vbo;
                     vkCmdBindVertexBuffers(_cmdBuf, 0, 1, &vb, &voff);
