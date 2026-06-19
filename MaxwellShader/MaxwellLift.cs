@@ -475,13 +475,46 @@ public class MaxwellLift {
                 // Float → int. SrcFmt@10:2 (DstFmt enum: 2=f32).
                 // IDstFmt = sign@12 | size@8:2. RoundMode2@39:2
                 // (0=rn 1=rm/floor 2=rp/ceil 3=rz/trunc).
+                //
+                // (T6)×147 ×3 = 77th: srcFmt/Sh handling. kt[34]
+                // (b) sibling of 73rd's F2F fix — same srcFmt-
+                // blind read of half-pair-as-f32. Corpus (×147
+                // ×1(a) @0x80): 41/1451 shaders use F2I.F16; ALL
+                // single-combo (F16,u32,sh=0,neg=0,abs=0,trunc).
+                // ×147×2(f) at-bytes: sh0477 @0xf0 prev-insn =
+                // HADD2-R writes R4 = packed-half-pair ⟹ F2I@
+                // 0xf8 reading R4-as-f32-bitcast = trunc(garbage)
+                // → uint. (g) ryujinx F2iR = UnpackReg(srcFmt,
+                // Sh,SrcB) BEFORE EmitF2I (InstEmitConversion.cs
+                // :F2iR). (d) NONE of the 41 active in 6w/6o/7m
+                // ⟹ ✓SAFE r166c-18+r206c-3+r208b ALL md5-≡ post-
+                // 77th = correctness-fix that pays forward when
+                // those shaders surface (different game-state).
+                // ‡ NO HPack at output (dst is always int-in-u32,
+                // not packed-half; unlike F2F's dstFmt==1 path).
+                // ‡‡ SEPARATE bug-cand noted (g): ryujinx clamps
+                // !signed → max(b,0) before FToUI (negative-f32→
+                // uint = SPIR-V UB); my emit lacks. DIFFERENT
+                // class (affects all F2I-unsigned not just F16);
+                // NOT bundled here per kt[16]; ×148 corpus-scan.
                 var dstFmt = (B(12,1) << 2) | B(8,2);
                 var signed = (dstFmt & 4) != 0;
                 var rm = B(39, 2);
-                var b = Fsrc(d.Name switch {
+                var srcFmt = B(10, 2); var sh = B(41, 1);
+                var rawSrc = d.Name switch {
                     "F2I-R" => Gpr(B(20,8)), "F2I-C" => Cbuf(),
-                    "F2I-I" => Fimm20(), _ => throw new() },
-                    B(45,1), B(49,1));
+                    "F2I-I" => Fimm20(), _ => throw new() };
+                Il b;
+                if(srcFmt == 1) {
+                    // F16-src: unpack both, take Sh-selected, THEN
+                    // abs/neg on that f32 half. Same as 73rd's F2F
+                    // input-side (verified-4-ways ×141).
+                    var (lo, hi) = HUnpack(rawSrc, 0, 0, 0);
+                    b = Fsrc(sh == 1 ? hi : lo, B(45,1), B(49,1));
+                } else {
+                    // F32-src (or F64-‡): pre-77th path unchanged.
+                    b = Fsrc(rawSrc, B(45,1), B(49,1));
+                }
                 // Apply rounding (Floor/Ceil/Round/Trunc) BEFORE the
                 // FToI cast — SPIR-V's ConvertFToS/U truncates, so
                 // floor(x) → trunc-to-int gets the right rm=1 result.
