@@ -21,6 +21,11 @@
 # layer too).
 set -euo pipefail
 
+# (T6)×212 85th: idempotent restage of /tmp deps (fixed.spv/lwimg/etc).
+# Post-reboot, missing fixed.spv → InitPipeline return-false → HID-accept
+# breaks downstream (u812-vs-u829). stage-tmp.sh makes runs reboot-proof.
+~/projects/Pagentry/stage-tmp.sh >/dev/null 2>&1 || echo "WARN: stage-tmp.sh failed" >&2
+
 LABEL="${1:?usage: run-lego.sh <label> [opts]}"
 shift
 
