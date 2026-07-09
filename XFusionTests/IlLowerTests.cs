@@ -141,6 +141,54 @@ public class IlLowerTests {
 	}
 
 	[Test]
+	public void PushExplicitRsp() {  // ·62: value FIRST (push rsp = old rsp), then SP-=, then store
+		var (ps, eval) = Load("PUSH");
+		var il = IlLower.Render(IlLower.Lower(ps, eval,
+			new Dictionary<string, OperandBind> { ["src"] = new OperandBind.Reg("X86_RCX", 64) }, 64));
+		var iVal = il.IndexOf("(let %0 = (u64 X86_RCX))");
+		var iAdj = il.IndexOf("(X86_RSP := (u64 sub (u64 X86_RSP) (u64 #8)))");
+		var iSto = il.IndexOf("(store (u64 X86_RSP) (u64 %0))");
+		Assert.That(iVal, Is.GreaterThanOrEqualTo(0));
+		Assert.That(iAdj, Is.GreaterThan(iVal));
+		Assert.That(iSto, Is.GreaterThan(iAdj));
+	}
+
+	[Test]
+	public void PopExplicitRsp() {  // ·62: load [RSP] then RSP+=, dest written from the tmp
+		var (ps, eval) = Load("POP");
+		var il = IlLower.Render(IlLower.Lower(ps, eval,
+			new Dictionary<string, OperandBind> { ["dst"] = new OperandBind.Reg("X86_RCX", 64) }, 64));
+		var iLoad = il.IndexOf("(let %0 = (u64 load (u64 X86_RSP)))");
+		var iAdj = il.IndexOf("(X86_RSP := (u64 add (u64 X86_RSP) (u64 #8)))");
+		var iWr = il.IndexOf("(X86_RCX := (u64 %0))");
+		Assert.That(iLoad, Is.GreaterThanOrEqualTo(0));
+		Assert.That(iAdj, Is.GreaterThan(iLoad));
+		Assert.That(iWr, Is.GreaterThan(iAdj));
+	}
+
+	[Test]
+	public void CmovIsIteNotBranch() {  // ·62: IlIfV (csel), no intra-insn control flow
+		var (ps, eval) = Load("CMOVB");
+		var il = IlLower.Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
+			["dst"] = new OperandBind.Reg("X86_RAX", 32),
+			["src"] = new OperandBind.Reg("X86_RBX", 32),
+		}, 32));
+		Assert.That(il, Does.Contain("ite (u1 EFLAGS.C)"));
+		Assert.That(il, Does.Not.Contain("(if "));
+	}
+
+	[Test]
+	public void IntrinsicPassthrough() {  // ·62: IlIntrin(V0, name, positional args)
+		var (ps, eval) = Load("BSF");
+		var il = IlLower.Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
+			["dst"] = new OperandBind.Reg("X86_RAX", 32),
+			["src"] = new OperandBind.Reg("X86_RBX", 32),
+		}, 32));
+		Assert.That(il, Does.Contain("(intrin bsf"));
+		Assert.That(il, Does.Contain("(u32 trunc (u64 X86_RAX))"));  // operands ride as dataflow args
+	}
+
+	[Test]
 	public void Sub8BitInsertWrite() {  // 8-bit write = masked insert, not zext
 		var il = LowerRegReg("SUB", 8);
 		Assert.That(il, Does.Contain("(u64 and (u64 X86_RAX) (u64 #ffffffffffffff00))"));

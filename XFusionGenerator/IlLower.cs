@@ -19,16 +19,15 @@ public abstract record Ilx(int W) {
 	public sealed record Bin(int Wb, string Op, Ilx A, Ilx B) : Ilx(Wb);
 	public sealed record Cast(int Wt, string Kind, Ilx A) : Ilx(Wt);        // trunc/zext/sext
 	public sealed record Load(int Wl, Ilx Addr) : Ilx(Wl);
-	public sealed record Pop(int Wp) : Ilx(Wp);                             // stack pop (consumer lowers vs RSP)
 	public sealed record AddrOf(string Operand) : Ilx(64);                  // LEA: the mem operand's ADDRESS expr
-	public sealed record Ite(int Wi, Ilx Cond, Ilx T, Ilx F) : Ilx(Wi);     // conditional value (CMOVcc data form)
+	public sealed record Ite(int Wi, Ilx Cond, Ilx T, Ilx F) : Ilx(Wi);     // conditional value → consumer IlIfV (csel; ·62)
 }
 
 public abstract record IlxStmt {
 	public sealed record Let(Ilx.Tmp T, Ilx E) : IlxStmt;
-	public sealed record If(Ilx Cond, List<IlxStmt> Then) : IlxStmt;     // consumer: IlBranch or predication — table item
+	public sealed record If(Ilx Cond, List<IlxStmt> Then) : IlxStmt;     // guarded flag-writes (SHL); CMOVcc uses Ite=IlIfV
 	public sealed record Branch(string Kind, Ilx Target) : IlxStmt;     // jmp/call/ret
-	public sealed record Push(Ilx E) : IlxStmt;                         // abstract stack op (consumer lowers vs RSP)
+	public sealed record Intrin(string Name, List<Ilx> Args) : IlxStmt; // consumer IlIntrin(V0, name, args) — ·62 convention
 	public sealed record WriteReg(string Name, Ilx E) : IlxStmt;
 	public sealed record WriteFlag(string Flag, Ilx E) : IlxStmt;           // E is u1
 	public sealed record Store(Ilx Addr, Ilx E) : IlxStmt;
@@ -139,15 +138,31 @@ public class IlLower {
 				Stmts.Add(new IlxStmt.If(cond, inner.Stmts));
 				break;
 			}
-			case PName("push"):
-				Stmts.Add(new IlxStmt.Push(Expr(l[1])));
+			case PName("push"): {
+				// ·62: explicit RSP arithmetic, not abstract-stack. Value evaluated BEFORE
+				// the SP adjust (push rsp pushes the OLD rsp — SDM).
+				var v = Expr(l[1]);
+				var vt = NewTmp(v.W);
+				Stmts.Add(new IlxStmt.Let(vt, v));
+				Stmts.Add(new IlxStmt.WriteReg("X86_RSP",
+					new Ilx.Bin(64, "sub", new Ilx.ReadReg("X86_RSP"), new Ilx.Const(64, v.W / 8))));
+				Stmts.Add(new IlxStmt.Store(new Ilx.ReadReg("X86_RSP"), vt));
 				break;
+			}
 			case PName("branch"):
 				Stmts.Add(new IlxStmt.Branch("jmp", Expr(l[1], 64)));
 				break;
-			case PName("intrinsic"):
-				// intrinsic node — passthrough (consumer IlIntrin); not in golden scope
-				throw new NotSupportedException("intrinsic lowering is XF-5 scope");
+			case PName("intrinsic"): {
+				// ·62 convention: IlIntrin(V0, well-known-name, positional operand args).
+				// Side-effects implied by the name (rep_movsb's RCX/RSI/RDI writeback etc);
+				// real semantics land demand-driven, replacing the intrinsic in the .isa.
+				var name = ((PName) l[1]).Name;
+				var args = new List<Ilx>();
+				foreach(var a in l.Skip(2))
+					args.Add(a is PInt(var iv) ? new Ilx.Const(OpWidth, iv) : Expr(a));
+				Stmts.Add(new IlxStmt.Intrin(name, args));
+				break;
+			}
 			default:
 				throw new NotSupportedException($"stmt head {l[0]}");
 		}
@@ -215,7 +230,15 @@ public class IlLower {
 				var e = Expr(l[1]);
 				return new Ilx.Const(ctxW, e.W);
 			}
-			case "pop": return new Ilx.Pop(OpWidth);
+			case "pop": {
+				// ·62: explicit RSP arithmetic — load [RSP] into a tmp, bump RSP, yield tmp.
+				// Stmt-order-safe: the load + adjust are emitted at evaluation point.
+				var vt = NewTmp(OpWidth);
+				Stmts.Add(new IlxStmt.Let(vt, new Ilx.Load(OpWidth, new Ilx.ReadReg("X86_RSP"))));
+				Stmts.Add(new IlxStmt.WriteReg("X86_RSP",
+					new Ilx.Bin(64, "add", new Ilx.ReadReg("X86_RSP"), new Ilx.Const(64, OpWidth / 8))));
+				return vt;
+			}
 			case "next-pc": return new Ilx.Tmp(64, "%nextpc");  // consumer: IlReadPc + len (lift-time const)
 			case "addr-of": {
 				// LEA: the operand must be a mem bind — its ADDRESS, not its value
@@ -321,7 +344,7 @@ public class IlLower {
 		IlxStmt.Store(var a, var e) => $"(store {R(a)} {R(e)})",
 		IlxStmt.If(var c, var body) => $"(if {R(c)} {string.Join(' ', body.Select(RenderStmt))})",
 		IlxStmt.Branch(var k, var t2) => $"({k} {R(t2)})",
-		IlxStmt.Push(var e) => $"(push {R(e)})",
+		IlxStmt.Intrin(var n, var args) => $"(intrin {n}{string.Concat(args.Select(a => " " + R(a)))})",
 		_ => throw new NotSupportedException(s.ToString())
 	};
 
@@ -332,7 +355,6 @@ public class IlLower {
 		Ilx.Bin(var w, var op, var a, var b) => $"(u{w} {op} {R(a)} {R(b)})",
 		Ilx.Cast(var w, var k, var a) => $"(u{w} {k} {R(a)})",
 		Ilx.Load(var w, var a) => $"(u{w} load {R(a)})",
-		Ilx.Pop(var w) => $"(u{w} pop)",
 		Ilx.AddrOf(var o) => $"(u64 addr {o})",
 		Ilx.Ite(var w, var c, var t2, var f) => $"(u{w} ite {R(c)} {R(t2)} {R(f)})",
 		_ => throw new NotSupportedException(e.ToString())
