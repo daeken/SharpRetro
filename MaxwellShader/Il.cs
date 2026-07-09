@@ -1,6 +1,6 @@
-namespace Pagentry.Lifter;
+namespace MaxwellShader;
 
-// Low-level typed IL per spec-pagentry.md §4. One instruction → one IlBlock.
+// Low-level typed IL. One instruction → one IlBlock.
 // No register allocation, no calling convention — architectural regs by index,
 // memory as flat address space, flags as a single nzcv word. SSA-ish via IlLet/IlTmp.
 //

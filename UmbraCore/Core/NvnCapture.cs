@@ -1,5 +1,5 @@
 // NvnCapture.cs — NVN-boundary frame capture per
-// ~/projects/Pagentry/NVNCAP.md. (T1') per sera's kt[12]×3
+// See NVNCAP.md.
 // steer (day-32 ~02:00Z): capture at the NVN boundary so
 // the same frame drives BOTH NvnVulkan (Linux/lavapipe
 // debugging, ~1s loop vs 280s emulator-boot) AND NvnMetal

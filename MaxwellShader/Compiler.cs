@@ -1,7 +1,7 @@
 using System.Reflection;
 using CoreArchCompiler;
 using MaxwellGenerator;
-using Pagentry.Lifter;
+// (types now in this namespace)
 
 namespace MaxwellShader;
 
@@ -19,7 +19,7 @@ namespace MaxwellShader;
 //
 // (T6)×42 per sera ·11090. Source files (Il/MaxwellLift/SpirvEmit/
 // MaxwellEval/MaxwellDef + maxwell.isa) brought in verbatim from
-// Pagentry @356c; namespaces left as Pagentry.Lifter +
+// Namespaces unified under MaxwellShader.
 // MaxwellGenerator for v0 (= least churn; ‡ rename post-v0).
 public static class Compiler {
 

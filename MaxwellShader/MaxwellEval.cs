@@ -1,4 +1,4 @@
-namespace Pagentry.Lifter;
+namespace MaxwellShader;
 
 // §7-verify-lite: IL evaluator for Maxwell-lifted shaders. Walks the
 // structurized IL (MaxwellLift.LiftShader → Structurize) over a

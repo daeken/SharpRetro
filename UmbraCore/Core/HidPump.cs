@@ -139,7 +139,7 @@ public static unsafe class HidPump {
         // (η) M4-v2: hook addresses (= our own UCO stubs that
         // game pfnc_* slots point at). NOT a contiguous region
         // (= CoreCLR JIT/exec-heap, scattered) — instead emit
-        // addr→name so Pagentry's RuntimeImage can resolve
+        // addr→name so RuntimeImage overlay can resolve
         // pfnc-deref past `?unmapped`. Same .syms format
         // (size=0 = synthetic).
         using(var hw = new StreamWriter($"{baseP}.hooks")) {

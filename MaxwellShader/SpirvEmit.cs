@@ -1,6 +1,6 @@
-namespace Pagentry.Lifter;
+namespace MaxwellShader;
 
-// M2: Pagentry IL → SPIR-V binary (tier-3, day-28 ~07:00Z).
+// Typed-IL → SPIR-V binary.
 //
 // v0 scope = shader-01 (VS, no sampling): IlConst, IlCast(bitcast),
 // IlReadReg/IlWriteReg(Gpr), IlAttrLoad/Store, IlCbufLoad, IlBin(Add/Mul),
@@ -1503,7 +1503,7 @@ public class SpirvEmit {
         // (The flat per-insn list → nested IlIf trees for forward
         // predicated branches; v0 leaves loops/overlap as IlBranch
         // → throws below = the shader SKIPs.)
-        var structured = Pagentry.Lifter.MaxwellLift.Structurize(lifted);
+        var structured = MaxwellLift.Structurize(lifted);
         return Compile(stage, structured);
     }
 
@@ -1566,7 +1566,7 @@ public class SpirvEmit {
         var all = new List<uint> {
             0x07230203,         // magic
             0x00010000,         // version 1.0
-            0x00504147,         // generator = 'PAG\0' (Pagentry)
+            0x004D5753,         // generator = 'SWM\0'
             _nextId,            // bound
             0,                  // schema
         };

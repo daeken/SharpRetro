@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using MaxwellShader;
-using Pagentry.Lifter;
+using MaxwellShader;
 
 // MaxwellTool: Maxwell SM5x shader binary → target by extension.
 // Per sera ·11090 (#2): separate CLI; output format dispatched on
@@ -12,7 +12,7 @@ using Pagentry.Lifter;
 //
 // .spv  = SPIR-V binary (the runtime path)
 // .dis  = SPIR-V disassembly (via spirv-dis if on PATH, else hex)
-// .il   = Pagentry IL tree (the M1 intermediate, for debugging)
+// .il   = typed-IL tree (intermediate, for debugging)
 //
 // Input may have NvnCapture's 48B header (magic 0x12345678 @0);
 // auto-stripped. Stage (VS/FS) read from SPH @0x30.

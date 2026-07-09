@@ -8,7 +8,7 @@
 ;; Clean-room per kt[14]: encodings/bitfields are hardware facts learned
 ;; by reading ryujinx-ref Decoders/{InstTable,InstDecoders}.cs for
 ;; UNDERSTANDING + verified at-bytes against captured shaders
-;; (Pagentry/umbra-shader-0{1..5}-0.bin from Lego Worlds). Semantics
+;; (umbra-shader-0{1..5}-0.bin corpus). Semantics
 ;; written in our own words. ZERO code reuse.
 ;;
 ;; ── Architecture shape ──

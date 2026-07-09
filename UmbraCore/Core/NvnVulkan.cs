@@ -2911,7 +2911,7 @@ public static unsafe class NvnVulkan {
         }
         // (T1') NVN-boundary frame capture. After Draws
         // snapshot, before any Vulkan recording — pure
-        // NVN-state at this point. See Pagentry/NVNCAP.md.
+        // NVN-state at this point. See NVNCAP.md.
         NvnCapture.Maybe(_frameN, draws);
         {  // (re-open the brace the str_replace closed)
         }

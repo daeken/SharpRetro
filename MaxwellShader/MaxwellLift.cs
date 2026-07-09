@@ -1,8 +1,8 @@
 using MaxwellGenerator;
 
-namespace Pagentry.Lifter;
+namespace MaxwellShader;
 
-// Maxwell SM5x → Pagentry IL lifter (tier-3 M1, day-28).
+// Maxwell SM5x → typed-IL lifter.
 //
 // v0 = hardcoded per-mnemonic lift (switch on MaxwellDef.Name → IL).
 // Bypasses the .isa eval-expr → PTree → InferType chain so I can get
