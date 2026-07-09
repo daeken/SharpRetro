@@ -40,7 +40,24 @@ public static class DisassemblerGenerator {
 		foreach(var g in groups) {
 			var mapName = g.Key.Map.ToString();
 			sb.AppendLine($"\t\t\tcase (OpcodeMap.{mapName}, 0x{g.Key.Opcode:X2}): {{");
-			var byExt = g.ToList();
+			// Mandatory-prefix rows dispatch first (F3 90 = pause, not rep nop; SSE later).
+			// The matched prefix is CONSUMED — cleared so it doesn't render as rep/data16.
+			foreach(var pd in g.Where(d => d.MandatoryPrefix != null)) {
+				var cond = pd.MandatoryPrefix switch {
+					"rep" => "p.Rep", "repnz" => "p.RepNz", "opsize" => "p.OpSize",
+					_ => throw new NotSupportedException(pd.MandatoryPrefix)
+				};
+				var clear = pd.MandatoryPrefix switch {
+					"rep" => "p.Rep = false;", "repnz" => "p.RepNz = false;", "opsize" => "p.OpSize = false;",
+					_ => null
+				};
+				sb.AppendLine($"\t\t\t\tif({cond}) {{");
+				sb.AppendLine($"\t\t\t\t\t{clear}");
+				EmitDefBody(sb, pd, "\t\t\t\t\t");
+				sb.AppendLine("\t\t\t\t}");
+			}
+			var byExt = g.Where(d => d.MandatoryPrefix == null).ToList();
+			if(byExt.Count == 0) { sb.AppendLine("\t\t\t\treturn (null, 0);"); sb.AppendLine("\t\t\t}"); continue; }
 			if(byExt.Count > 1 || byExt[0].RegExtension >= 0) {
 				// need ModRM.reg to disambiguate; all rows in a /N group carry ModRM
 				sb.AppendLine("\t\t\t\tif(i >= code.Length) return (null, 0);");
@@ -49,8 +66,9 @@ public static class DisassemblerGenerator {
 				foreach(var d in byExt.OrderBy(x => x.RegExtension)) {
 					if(d.RegExtension < 0)
 						throw new NotSupportedException($"(map,opcode) collision without /N: {d.Name}");
-					sb.AppendLine($"\t\t\t\t\tcase {d.RegExtension}:");
+					sb.AppendLine($"\t\t\t\t\tcase {d.RegExtension}: {{");
 					EmitDefBody(sb, d, "\t\t\t\t\t\t");
+					sb.AppendLine("\t\t\t\t\t}");
 				}
 				sb.AppendLine("\t\t\t\t\tdefault: return (null, 0);");
 				sb.AppendLine("\t\t\t\t}");
@@ -79,9 +97,11 @@ public static class DisassemblerGenerator {
 			opTexts.Add(EmitOperand(sb, def, spec, ind));
 
 		// Format: template dasm string with $param -> operand text, positionally.
-		// lock/rep prefixes render before the mnemonic (XED convention).
+		// lock/rep prefixes render before the mnemonic (XED convention). A 0x66 on a
+		// zero-operand insn has nothing to absorb it — XED renders it as 'data16 ' (66 90).
 		var fmt = RenderDasm(def, opTexts);
-		sb.AppendLine($"{ind}return (Decode.MnemonicPrefix(in p) + {fmt}, i);");
+		var data16 = def.Operands.Count == 0 ? "(p.OpSize ? \"data16 \" : \"\") + " : "";
+		sb.AppendLine($"{ind}return ({data16}Decode.MnemonicPrefix(in p) + {fmt}, i);");
 	}
 
 	/// Emits decode statements for one operand; returns the C# expression producing its text.
@@ -99,6 +119,9 @@ public static class DisassemblerGenerator {
 		};
 
 		switch(spec.Class) {
+			case OpClass.ModRmRm when spec.MemOnly:
+				// address-only operand (LEA): no size qualifier — XED renders bare 'ptr [...]'
+				return $"Decode.MemOperandString(in m, in p, mode, 0, pc + (ulong)i)";
 			case OpClass.ModRmRm:
 				return $"(m.IsReg ? Decode.GprName(m.Rm, {WidthExpr()}, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, {WidthExpr()}, pc + (ulong)i))";
 			case OpClass.ModRmReg:

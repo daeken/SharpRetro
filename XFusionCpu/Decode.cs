@@ -186,11 +186,13 @@ public static class Decode {
 
 	public static string SegRegName(int idx) => SegNames[idx & 7];
 
-	/// Prefix text rendered before the mnemonic ("lock " / "rep " / "repnz ").
-	/// String ops with rep semantics come later; for now rep/repnz render on any
-	/// insn that carries them, matching XED's SHORT output for the covered set.
+	/// Prefix text rendered before the mnemonic. Stray F3/F2 on non-string, non-SSE
+	/// ops are dropped by XED (F3 C3 rep-ret renders plain 'ret'); string ops render
+	/// rep through their own templates when they land. lock always renders.
+	/// TODO(cet-tier): 3E on indirect branch = 'notrack ' (XED renders it; we drop —
+	/// 2 corpus hits, accepted-mismatch class until CET vocabulary lands).
 	public static string MnemonicPrefix(in PrefixState p) =>
-		(p.Lock ? "lock " : "") + (p.Rep ? "rep " : "") + (p.RepNz ? "repnz " : "");
+		p.Lock ? "lock " : "";
 
 	public static string SegPrefixName(byte seg) => seg switch {
 		0x26 => "es", 0x2E => "cs", 0x36 => "ss", 0x3E => "ds", 0x64 => "fs", 0x65 => "gs",
@@ -202,12 +204,15 @@ public static class Decode {
 		var aw = p.AWidth(mode);
 		var size = ptrBits switch {
 			8 => "byte ptr ", 16 => "word ptr ", 32 => "dword ptr ", 64 => "qword ptr ",
-			48 => "fword ptr ", 128 => "xmmword ptr ", 0 => "",
+			48 => "fword ptr ", 128 => "xmmword ptr ", 0 => "ptr ",  // 0 = address-only (LEA)
 			_ => ""
 		};
-		var seg = p.Segment != 0 ? SegPrefixName(p.Segment) + ":" : "";
+		// ES/CS/SS/DS overrides are architecturally null in 64-bit mode (only FS/GS apply);
+		// XED drops them from rendering (e.g. 66 2E 0F 1F = nop word ptr [rax+rax*1], no cs:).
+		var segIgnored = mode == XMode.Bits64 && p.Segment is 0x26 or 0x2E or 0x36 or 0x3E;
+		var seg = p.Segment != 0 && !segIgnored ? SegPrefixName(p.Segment) + ":" : "";
 		if(m.RipRelative)
-			return $"{size}{seg}[rip{(m.Disp >= 0 ? "+" : "")}0x{m.Disp:x}]";
+			return m.Disp < 0 ? $"{size}{seg}[rip-0x{-m.Disp:x}]" : $"{size}{seg}[rip+0x{m.Disp:x}]";
 		var parts = new List<string>();
 		if(m.BaseReg >= 0) parts.Add(GprName(m.BaseReg, aw, p.Rex != 0));
 		if(m.IndexReg >= 0) parts.Add($"{GprName(m.IndexReg, aw, p.Rex != 0)}*{m.Scale}");  // XED prints *1 explicitly

@@ -43,7 +43,7 @@ public class Program {
 			insnsTotal++;
 			bytesTotal += len;
 			var span = text.AsSpan((int) offset, Math.Min(15 + 4, text.Length - (int) offset));
-			var (ours, ourLen) = Disassembler.Disassemble(span, vaddr + (ulong) offset, mode);
+			var (ours, ourLen) = Disassembler.Disassemble(span, (ulong) offset, mode);  // base 0: XED sees raw bytes
 			if(ours == null) {
 				insnsMiss++;
 				// blocker key: prefix-skipped first opcode byte(s) from XED's bytes

@@ -21,6 +21,7 @@ public class XFusionDef : Def {
 	public byte Opcode;
 	public int RegExtension = -1;      // /0../7 constraint on ModRM.reg, or -1
 	public bool D64;                   // SDM D64 attribute: default operand 64 in long mode, 32 unavailable (PUSH/POP/CALL/JMP class)
+	public string MandatoryPrefix;     // null | "rep" (F3) | "repnz" (F2) | "opsize" (66) — the SSE/PAUSE discriminator; prefix-matched rows dispatch before the bare row
 	public List<OperandSpec> Operands; // positional, matches template params
 	public List<string> ParamNames;    // template params ("lval", "rval")
 	public string Mnemonic;
@@ -74,8 +75,8 @@ public class XFusionDef : Def {
 						throw new NotSupportedException(
 							$"encoding {mnem} ({string.Join(" ", specs.Select(x => x.Text))}) has {specs.Count} operands; template takes {tmpl.Params.Count}");
 
-					var (map, opcode, regExt, d64) = ParseOpcodes(opcList, mnem);
-					var def = Build(tmpl, specs, map, opcode, regExt, d64);
+					var (map, opcode, regExt, d64, mprefix) = ParseOpcodes(opcList, mnem);
+					var def = Build(tmpl, specs, map, opcode, regExt, d64, mprefix);
 					defs.Add(def);
 					break;
 				}
@@ -84,10 +85,11 @@ public class XFusionDef : Def {
 		return (templates.Values.ToList(), defs);
 	}
 
-	static (OpcodeMap, byte, int, bool) ParseOpcodes(PList opcList, string mnem) {
+	static (OpcodeMap, byte, int, bool, string) ParseOpcodes(PList opcList, string mnem) {
 		var bytes = new List<byte>();
 		var regExt = -1;
 		var d64 = false;
+		string mprefix = null;
 		foreach(var item in opcList)
 			switch(item) {
 				case PInt(var v):
@@ -99,20 +101,23 @@ public class XFusionDef : Def {
 				case PName("d64"):
 					d64 = true;
 					break;
+				case PName("rep") or PName("repnz") or PName("opsize") when bytes.Count == 0:
+					mprefix = ((PName) item).Name;
+					break;
 				default:
 					throw new NotSupportedException($"opcode element {item} in encoding {mnem}");
 			}
 
 		return bytes switch {
-			[var one] => (OpcodeMap.OneByte, one, regExt, d64),
-			[0x0F, var two] => (OpcodeMap.TwoByte0F, two, regExt, d64),
-			[0x0F, 0x38, var three] => (OpcodeMap.ThreeByte0F38, three, regExt, d64),
-			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three, regExt, d64),
+			[var one] => (OpcodeMap.OneByte, one, regExt, d64, mprefix),
+			[0x0F, var two] => (OpcodeMap.TwoByte0F, two, regExt, d64, mprefix),
+			[0x0F, 0x38, var three] => (OpcodeMap.ThreeByte0F38, three, regExt, d64, mprefix),
+			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three, regExt, d64, mprefix),
 			_ => throw new NotSupportedException($"opcode byte pattern in encoding {mnem}: [{string.Join(", ", bytes.Select(b => $"0x{b:X2}"))}]")
 		};
 	}
 
-	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeMap map, byte opcode, int regExt, bool d64) {
+	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeMap map, byte opcode, int regExt, bool d64, string mprefix) {
 		// Locals: template params are bound at decode time; typing is resolved during
 		// generation (width expansion). For now register params as compile-time-unknown ints.
 		var locals = new Dictionary<string, EType>();
@@ -126,6 +131,7 @@ public class XFusionDef : Def {
 			Opcode = opcode,
 			RegExtension = regExt,
 			D64 = d64,
+			MandatoryPrefix = mprefix,
 			Operands = specs,
 			ParamNames = tmpl.Params,
 			Mnemonic = tmpl.Mnemonic,

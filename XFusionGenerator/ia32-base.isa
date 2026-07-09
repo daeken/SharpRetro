@@ -53,3 +53,335 @@
     (= dst (pop)))
 
 (encoding POP (Ev) (0x8F /0 d64))
+
+; =====================================================================
+; wave-1: census-ranked from glibc x86-64 (2026-07-09 run @1e7d5c3)
+; =====================================================================
+
+; --- the ALU family: same 8-encoding lattice as ADD (SDM one-byte map rows 0x00-0x3F).
+; Flag semantics per-op; encodings mechanical. AF for logic ops is UNDEFINED per SDM
+; — not written (test-tier decision documented in DESIGN.md).
+
+(instruction OR (lval rval)
+    "or $lval, $rval"
+    (mlet (tval (| lval rval))
+        (= lval tval)
+        (= CF 0) (= OF 0)
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding OR (Eb Gb)    (0x08))
+(encoding OR (Ev Gv)    (0x09))
+(encoding OR (Gb Eb)    (0x0A))
+(encoding OR (Gv Ev)    (0x0B))
+(encoding OR (AL Ib)    (0x0C))
+(encoding OR (rAX Iz)   (0x0D))
+(encoding OR (Eb Ib)    (0x80 /1))
+(encoding OR (Ev Iz)    (0x81 /1))
+(encoding OR (Ev Ib-sx) (0x83 /1))
+
+(instruction ADC (lval rval)
+    "adc $lval, $rval"
+    (mlet (_lval lval _rval rval tval (+ _lval _rval CF))
+        (= lval tval)
+        (= CF (| (< tval _lval) (< tval _rval)))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ tval _lval) (^ tval _rval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding ADC (Eb Gb)    (0x10))
+(encoding ADC (Ev Gv)    (0x11))
+(encoding ADC (Gb Eb)    (0x12))
+(encoding ADC (Gv Ev)    (0x13))
+(encoding ADC (AL Ib)    (0x14))
+(encoding ADC (rAX Iz)   (0x15))
+(encoding ADC (Eb Ib)    (0x80 /2))
+(encoding ADC (Ev Iz)    (0x81 /2))
+(encoding ADC (Ev Ib-sx) (0x83 /2))
+
+(instruction SBB (lval rval)
+    "sbb $lval, $rval"
+    (mlet (_lval lval _rval rval tval (- _lval _rval CF))
+        (= lval tval)
+        (= CF (| (< _lval _rval) (& (== _lval _rval) CF)))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding SBB (Eb Gb)    (0x18))
+(encoding SBB (Ev Gv)    (0x19))
+(encoding SBB (Gb Eb)    (0x1A))
+(encoding SBB (Gv Ev)    (0x1B))
+(encoding SBB (AL Ib)    (0x1C))
+(encoding SBB (rAX Iz)   (0x1D))
+(encoding SBB (Eb Ib)    (0x80 /3))
+(encoding SBB (Ev Iz)    (0x81 /3))
+(encoding SBB (Ev Ib-sx) (0x83 /3))
+
+(instruction AND (lval rval)
+    "and $lval, $rval"
+    (mlet (tval (& lval rval))
+        (= lval tval)
+        (= CF 0) (= OF 0)
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding AND (Eb Gb)    (0x20))
+(encoding AND (Ev Gv)    (0x21))
+(encoding AND (Gb Eb)    (0x22))
+(encoding AND (Gv Ev)    (0x23))
+(encoding AND (AL Ib)    (0x24))
+(encoding AND (rAX Iz)   (0x25))
+(encoding AND (Eb Ib)    (0x80 /4))
+(encoding AND (Ev Iz)    (0x81 /4))
+(encoding AND (Ev Ib-sx) (0x83 /4))
+
+(instruction SUB (lval rval)
+    "sub $lval, $rval"
+    (mlet (_lval lval _rval rval tval (- _lval _rval))
+        (= lval tval)
+        (= CF (< _lval _rval))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding SUB (Eb Gb)    (0x28))
+(encoding SUB (Ev Gv)    (0x29))
+(encoding SUB (Gb Eb)    (0x2A))
+(encoding SUB (Gv Ev)    (0x2B))
+(encoding SUB (AL Ib)    (0x2C))
+(encoding SUB (rAX Iz)   (0x2D))
+(encoding SUB (Eb Ib)    (0x80 /5))
+(encoding SUB (Ev Iz)    (0x81 /5))
+(encoding SUB (Ev Ib-sx) (0x83 /5))
+
+(instruction XOR (lval rval)
+    "xor $lval, $rval"
+    (mlet (tval (^ lval rval))
+        (= lval tval)
+        (= CF 0) (= OF 0)
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding XOR (Eb Gb)    (0x30))
+(encoding XOR (Ev Gv)    (0x31))
+(encoding XOR (Gb Eb)    (0x32))
+(encoding XOR (Gv Ev)    (0x33))
+(encoding XOR (AL Ib)    (0x34))
+(encoding XOR (rAX Iz)   (0x35))
+(encoding XOR (Eb Ib)    (0x80 /6))
+(encoding XOR (Ev Iz)    (0x81 /6))
+(encoding XOR (Ev Ib-sx) (0x83 /6))
+
+; CMP = SUB w/o writeback
+(instruction CMP (lval rval)
+    "cmp $lval, $rval"
+    (mlet (_lval lval _rval rval tval (- _lval _rval))
+        (= CF (< _lval _rval))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding CMP (Eb Gb)    (0x38))
+(encoding CMP (Ev Gv)    (0x39))
+(encoding CMP (Gb Eb)    (0x3A))
+(encoding CMP (Gv Ev)    (0x3B))
+(encoding CMP (AL Ib)    (0x3C))
+(encoding CMP (rAX Iz)   (0x3D))
+(encoding CMP (Eb Ib)    (0x80 /7))
+(encoding CMP (Ev Iz)    (0x81 /7))
+(encoding CMP (Ev Ib-sx) (0x83 /7))
+
+; TEST = AND w/o writeback
+(instruction TEST (lval rval)
+    "test $lval, $rval"
+    (mlet (tval (& lval rval))
+        (= CF 0) (= OF 0)
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding TEST (Eb Gb)  (0x84))
+(encoding TEST (Ev Gv)  (0x85))
+(encoding TEST (AL Ib)  (0xA8))
+(encoding TEST (rAX Iz) (0xA9))
+(encoding TEST (Eb Ib)  (0xF6 /0))
+(encoding TEST (Ev Iz)  (0xF7 /0))
+
+; --- LEA: address computation, no memory access, no flags ---
+(instruction LEA (dst src)
+    "lea $dst, $src"
+    (= dst (addr-of src)))
+
+(encoding LEA (Gv Mv) (0x8D))
+
+; --- XCHG r/m ---
+(instruction XCHG (a b)
+    "xchg $a, $b"
+    (mlet (t a)
+        (= a b)
+        (= b t)))
+
+(encoding XCHG (Eb Gb) (0x86))
+(encoding XCHG (Ev Gv) (0x87))
+
+; --- MOVZX/MOVSX-free zero-idiom NOPs ---
+(instruction NOP ()
+    "nop"
+    (block))
+
+(encoding NOP () (0x90))
+
+; PAUSE = F3 90 — a distinct instruction (spin-wait hint), not rep+nop.
+(instruction PAUSE ()
+    "pause"
+    (intrinsic pause))
+
+(encoding PAUSE () (rep 0x90))
+
+; multi-byte NOP: 0F 1F /0 — operand decoded+rendered, no semantics
+(instruction NOPL (src)
+    "nop $src"
+    (block))
+
+(encoding NOPL (Ev) (0x0F 0x1F /0))
+
+; --- control flow ---
+(instruction CALL (target)
+    "call $target"
+    (push (next-pc))
+    (branch target))
+
+(encoding CALL (Jz) (0xE8 d64))
+(encoding CALL (Ev) (0xFF /2 d64))
+
+(instruction JMP (target)
+    "jmp $target"
+    (branch target))
+
+(encoding JMP (Jz) (0xE9 d64))
+(encoding JMP (Jb) (0xEB d64))
+(encoding JMP (Ev) (0xFF /4 d64))
+
+(instruction RET ()
+    "ret"
+    (branch (pop)))
+
+(encoding RET () (0xC3 d64))
+
+(instruction RETI (imm)
+    "ret $imm"
+    (mlet (t (pop))
+        (= SP (+ SP imm))
+        (branch t)))
+
+(encoding RETI (Iw) (0xC2 d64))
+
+; --- Jcc: one instruction per condition; short (7x) and near (0F 8x) forms ---
+; XED mnemonic convention: jz/jnz/jl/jnl/jle/jnle/jb/jnb/jbe/jnbe/js/jns/jo/jno/jp/jnp
+(instruction JO (target)
+    "jo $target"
+    (if OF (branch target)))
+(encoding JO (Jb) (0x70 d64))
+(encoding JO (Jz) (0x0F 0x80 d64))
+
+(instruction JNO (target)
+    "jno $target"
+    (if (! OF) (branch target)))
+(encoding JNO (Jb) (0x71 d64))
+(encoding JNO (Jz) (0x0F 0x81 d64))
+
+(instruction JB (target)
+    "jb $target"
+    (if CF (branch target)))
+(encoding JB (Jb) (0x72 d64))
+(encoding JB (Jz) (0x0F 0x82 d64))
+
+(instruction JNB (target)
+    "jnb $target"
+    (if (! CF) (branch target)))
+(encoding JNB (Jb) (0x73 d64))
+(encoding JNB (Jz) (0x0F 0x83 d64))
+
+(instruction JZ (target)
+    "jz $target"
+    (if ZF (branch target)))
+(encoding JZ (Jb) (0x74 d64))
+(encoding JZ (Jz) (0x0F 0x84 d64))
+
+(instruction JNZ (target)
+    "jnz $target"
+    (if (! ZF) (branch target)))
+(encoding JNZ (Jb) (0x75 d64))
+(encoding JNZ (Jz) (0x0F 0x85 d64))
+
+(instruction JBE (target)
+    "jbe $target"
+    (if (| CF ZF) (branch target)))
+(encoding JBE (Jb) (0x76 d64))
+(encoding JBE (Jz) (0x0F 0x86 d64))
+
+(instruction JNBE (target)
+    "jnbe $target"
+    (if (! (| CF ZF)) (branch target)))
+(encoding JNBE (Jb) (0x77 d64))
+(encoding JNBE (Jz) (0x0F 0x87 d64))
+
+(instruction JS (target)
+    "js $target"
+    (if SF (branch target)))
+(encoding JS (Jb) (0x78 d64))
+(encoding JS (Jz) (0x0F 0x88 d64))
+
+(instruction JNS (target)
+    "jns $target"
+    (if (! SF) (branch target)))
+(encoding JNS (Jb) (0x79 d64))
+(encoding JNS (Jz) (0x0F 0x89 d64))
+
+(instruction JP (target)
+    "jp $target"
+    (if PF (branch target)))
+(encoding JP (Jb) (0x7A d64))
+(encoding JP (Jz) (0x0F 0x8A d64))
+
+(instruction JNP (target)
+    "jnp $target"
+    (if (! PF) (branch target)))
+(encoding JNP (Jb) (0x7B d64))
+(encoding JNP (Jz) (0x0F 0x8B d64))
+
+(instruction JL (target)
+    "jl $target"
+    (if (!= SF OF) (branch target)))
+(encoding JL (Jb) (0x7C d64))
+(encoding JL (Jz) (0x0F 0x8C d64))
+
+(instruction JNL (target)
+    "jnl $target"
+    (if (== SF OF) (branch target)))
+(encoding JNL (Jb) (0x7D d64))
+(encoding JNL (Jz) (0x0F 0x8D d64))
+
+(instruction JLE (target)
+    "jle $target"
+    (if (| ZF (!= SF OF)) (branch target)))
+(encoding JLE (Jb) (0x7E d64))
+(encoding JLE (Jz) (0x0F 0x8E d64))
+
+(instruction JNLE (target)
+    "jnle $target"
+    (if (! (| ZF (!= SF OF))) (branch target)))
+(encoding JNLE (Jb) (0x7F d64))
+(encoding JNLE (Jz) (0x0F 0x8F d64))
