@@ -243,6 +243,8 @@
 
 ; +r register forms (opcode low 3 bits + REX.B). Zv/Zb per SDM Z-class.
 (encoding PUSH (Zv) (0x50 +r d64))
+(encoding PUSH (Ib-sx) (0x6A d64))
+(encoding PUSH (Iz)    (0x68 d64))
 (encoding POP  (Zv) (0x58 +r d64))
 
 ; B8+r: MOV r, imm — Iv is FULL v-width imm (REX.W = genuine imm64)

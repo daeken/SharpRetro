@@ -176,7 +176,8 @@ public static class DisassemblerGenerator {
 			case OpClass.RelBranch: {
 				var v = $"rel{BodyN}_{spec.Text}";
 				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, {WidthExpr()}, true);");
-				return $"$\"0x{{pc + (ulong)i + (ulong){v}:x}}\"";
+				// target wraps at the mode's IP width (EIP in 32-bit mode)
+				return $"$\"0x{{Decode.MaskToWidth((long)(pc + (ulong)i + (ulong){v}), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}}\"";
 			}
 			case OpClass.MemOffset: {
 				var v = $"moffs{BodyN}_{spec.Text}";
