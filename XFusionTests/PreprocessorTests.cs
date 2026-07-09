@@ -2,7 +2,7 @@ using CoreArchCompiler;
 
 namespace XFusionTests;
 
-/// XF-0 compiler-layer tests (layer 1 of 3 per #pagentry-dev ·26 plan).
+/// XF-0 compiler-layer tests (layer 1 of 3 per 3-layer test plan).
 /// Feed spec strings, assert on the preprocessed/rewritten tree — no generator run needed.
 public class PreprocessorTests {
 	static PList Pre(string src, params string[] features) {

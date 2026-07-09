@@ -1,5 +1,55 @@
-; ia32-base.isa — the ~100-insn ia32 core (first ladder rung, XF-2 corpus-verified).
-; Gated behind (featuring ia32 ...) in xfusion.isa.
-; First instruction defs land with XF-1 (XFusionDef.Parse: prefix* + opcode[1-3]
-; + ModRM? + SIB? + disp? + imm?). Semantics-once / encodings-xN pattern per
-; the Coppermine meta-macro insight (sera #pagentry-dev .24).
+; ia32-base.isa — the ia32 core, first rung of the ladder (XF-2 grows this to ~100
+; insns, corpus-verified vs XED). Gated behind (featuring ia32 ...) in xfusion.isa.
+;
+; Authoring model:
+;   (instruction MNEM (params) "dasm $param..." ...eval-forms)   — semantics, ONCE
+;   (encoding MNEM (operand-specs) (opcode-bytes [/N]))          — one per SDM row
+; Operand specs are SDM Appendix-A notation (Eb Ev Gb Gv Ib Iz rAX AL /0..).
+; Semantics eval is parsed+stored in XF-1; interpreter/recompiler emission = XF-3+.
+
+; --- ADD (semantics from sera's Coppermine sketch, incl. the 0x6996 PF nibble trick) ---
+(instruction ADD (lval rval)
+    "add $lval, $rval"
+    (mlet (_lval lval _rval rval tval (+ _lval _rval))
+        (= lval tval)
+        (= CF (| (< tval _lval) (< tval _rval)))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ tval _lval) (^ tval _rval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
+
+(encoding ADD (Eb Gb)    (0x00))
+(encoding ADD (Ev Gv)    (0x01))
+(encoding ADD (Gb Eb)    (0x02))
+(encoding ADD (Gv Ev)    (0x03))
+(encoding ADD (AL Ib)    (0x04))
+(encoding ADD (rAX Iz)   (0x05))
+(encoding ADD (Eb Ib)    (0x80 /0))
+(encoding ADD (Ev Iz)    (0x81 /0))
+(encoding ADD (Ev Ib-sx) (0x83 /0))
+
+; --- MOV (no flags) ---
+(instruction MOV (dst src)
+    "mov $dst, $src"
+    (= dst src))
+
+(encoding MOV (Eb Gb)  (0x88))
+(encoding MOV (Ev Gv)  (0x89))
+(encoding MOV (Gb Eb)  (0x8A))
+(encoding MOV (Gv Ev)  (0x8B))
+(encoding MOV (Eb Ib)  (0xC6 /0))
+(encoding MOV (Ev Iz)  (0xC7 /0))
+
+; --- PUSH/POP (r/m forms; the +r register forms need opcode-range encodings, XF-2) ---
+(instruction PUSH (src)
+    "push $src"
+    (push src))
+
+(encoding PUSH (Ev) (0xFF /6 d64))
+
+(instruction POP (dst)
+    "pop $dst"
+    (= dst (pop)))
+
+(encoding POP (Ev) (0x8F /0 d64))

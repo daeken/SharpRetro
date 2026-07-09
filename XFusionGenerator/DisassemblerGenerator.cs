@@ -76,19 +76,22 @@ public static class DisassemblerGenerator {
 
 		var opTexts = new List<string>();
 		foreach(var spec in def.Operands)
-			opTexts.Add(EmitOperand(sb, spec, ind));
+			opTexts.Add(EmitOperand(sb, def, spec, ind));
 
 		// Format: template dasm string with $param -> operand text, positionally.
+		// lock/rep prefixes render before the mnemonic (XED convention).
 		var fmt = RenderDasm(def, opTexts);
-		sb.AppendLine($"{ind}return ({fmt}, i);");
+		sb.AppendLine($"{ind}return (Decode.MnemonicPrefix(in p) + {fmt}, i);");
 	}
 
 	/// Emits decode statements for one operand; returns the C# expression producing its text.
-	static string EmitOperand(StringBuilder sb, OperandSpec spec, string ind) {
+	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind) {
+		var vw = def.D64 ? "p.VWidthD64(mode)" : "p.VWidth(mode)";
+		string VWidthExpr() => vw;
 		string WidthExpr() => spec.Width switch {
 			WCode.b => "8",
 			WCode.w => "16",
-			WCode.v => "p.VWidth(mode)",
+			WCode.v => vw,
 			WCode.z => "p.ZWidth(mode)",
 			WCode.d => "32",
 			WCode.q => "64",
@@ -114,7 +117,12 @@ public static class DisassemblerGenerator {
 				return $"\"{spec.FixedValue}\"";
 			case OpClass.Imm: {
 				var v = $"imm_{spec.Text.Replace("-", "_")}";
-				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, {WidthExpr()}, {(spec.SignExtended ? "true" : "false")});");
+				// z-imms fetch 16/32 but the VALUE is sign-extended to the v-sized destination
+				// (SDM: imm32 sign-extended in 64-bit ops). Render masked to destination width
+				// (XED: 83 C0 FB = add eax, 0xfffffffb; 48 C7 C0 FF.. = mov rax, 0xffffffffffffffff).
+				var sx = spec.SignExtended || spec.Width == WCode.z;
+				var destW = spec.SignExtended || spec.Width == WCode.z ? VWidthExpr() : WidthExpr();
+				sb.AppendLine($"{ind}var {v} = Decode.MaskToWidth(Decode.ReadImm(code, ref i, {WidthExpr()}, {(sx ? "true" : "false")}), {destW});");
 				return $"$\"0x{{{v}:x}}\"";
 			}
 			case OpClass.RelBranch: {
@@ -142,7 +150,7 @@ public static class DisassemblerGenerator {
 		}
 
 		switch(def.Disassembly) {
-			case PString(var s):
+			case PString { String: var s }:
 				return $"\"{s}\"";
 			case PName(var n):  // whole dasm is one $param (unusual but legal)
 				return Bind(n);
@@ -150,7 +158,7 @@ public static class DisassemblerGenerator {
 				var sb = new StringBuilder("$\"");
 				foreach(var seg in l.Skip(1))
 					switch(seg) {
-						case PString(var s): sb.Append(s.Replace("\"", "\\\"")); break;
+						case PString { String: var s }: sb.Append(s.Replace("\"", "\\\"")); break;
 						case PName(var n): sb.Append("{").Append(Bind(n)).Append("}"); break;
 						default: throw new NotSupportedException($"dasm segment {seg} in {def.Mnemonic}");
 					}
