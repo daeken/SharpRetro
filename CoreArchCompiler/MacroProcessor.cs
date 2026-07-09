@@ -13,9 +13,12 @@ public static class MacroProcessor {
 			if(elem is not PList list || list[0] is not PName("defm")) continue;
 			if(list[1] is not PName(var name)) throw new();
 			var varnames = ((PList) list[2]).Select(x => ((PName) x).Name).ToList();
+			if(varnames.SkipLast(1).Any(x => x.StartsWith("...")))
+				throw new NotSupportedException($"Variadic macro arg must be last: {name}");
 			if(!macros.TryGetValue(name, out var mlist))
 				mlist = macros[name] = [];
-			mlist.Add((varnames, list[3]));
+			var body = list.Count == 4 ? list[3] : new PList(new PTree[] { new PName("inline-block") }.Concat(list.Skip(3)));
+			mlist.Add((varnames, body));
 		}
 
 		PTree Repl(string macroName, PTree elem, Dictionary<string, PTree> replacements, Dictionary<string, int> uids) {
@@ -58,8 +61,13 @@ public static class MacroProcessor {
 			}
 			if(!macros.TryGetValue(name, out var mlist)) return new PList(list.Select(Sub));
 			foreach(var (args, block) in mlist) {
-				if(args.Count != list.Count - 1) continue;
-				return Sub(Repl(name, block, args.Select((vn, i) => (vn, list[i + 1])).ToDictionary(), []));
+				var variadic = args.Count > 0 && args[^1].StartsWith("...");
+				if(variadic ? list.Count - 1 < args.Count - 1 : args.Count != list.Count - 1) continue;
+				var repls = args.Take(variadic ? args.Count - 1 : args.Count)
+					.Select((vn, i) => (vn, list[i + 1])).ToDictionary(x => x.vn, x => x.Item2);
+				if(variadic)
+					repls[args[^1]] = new PList(new PTree[] { new PName("inline-block") }.Concat(list.Skip(args.Count)));
+				return Sub(Repl(name, block, repls, []));
 			}
 
 			throw new NotSupportedException($"No overload of macro {name.ToPrettyString()} takes {list.Count - 1} arguments");

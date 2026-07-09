@@ -1,0 +1,5 @@
+; ia32-base.isa — the ~100-insn ia32 core (first ladder rung, XF-2 corpus-verified).
+; Gated behind (featuring ia32 ...) in xfusion.isa.
+; First instruction defs land with XF-1 (XFusionDef.Parse: prefix* + opcode[1-3]
+; + ModRM? + SIB? + disp? + imm?). Semantics-once / encodings-xN pattern per
+; the Coppermine meta-macro insight (sera #pagentry-dev .24).

@@ -167,8 +167,19 @@ public class Core {
 		}
 	}
 
+	public static List<Def> ParseSpecFile(string path, IEnumerable<string> features, ExecutionState es, Func<PList, Def> defCtor) {
+		var pp = new Preprocessor(features);
+		var ptree = pp.Include(path);
+		pp.ValidateEnabled();
+		return ParseTree(ptree, es, defCtor);
+	}
+
 	public static List<Def> ParseSpec(string spec, ExecutionState es, Func<PList, Def> defCtor) {
 		var ptree = ListParser.Parse(spec);
+		return ParseTree(ptree, es, defCtor);
+	}
+
+	static List<Def> ParseTree(PList ptree, ExecutionState es, Func<PList, Def> defCtor) {
 		ptree = MacroProcessor.Rewrite(ptree);
 		foreach(var tle in ptree) {
 			try {

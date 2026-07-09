@@ -246,6 +246,10 @@ public static class ListParser {
 				case ' ': case '\t': case '\n': case '\r':
 					i++;
 					break;
+				case ';':
+					while(i < code.Length && code[i] != '\n')
+						i++;
+					break;
 				case '(':
 					i++;
 					list.Add(ParseList(code, ref i));
@@ -255,7 +259,10 @@ public static class ListParser {
 					return list;
 				case '-' when code[i + 1] >= '0' && code[i + 1] <= '9':
 				case >= '0' and <= '9':
-					list.Add(ParseInt(code, ref i));
+					if(IsNumericToken(code, i))
+						list.Add(ParseInt(code, ref i));
+					else
+						list.Add(ParseName(code, ref i));
 					break;
 				case '"': case '\'':
 					list.Add(ParseString(code, ref i));
@@ -317,6 +324,30 @@ public static class ListParser {
 		return new(negative ? -value : value);
 	}
 
+	// A digit-led token is only a numeric literal if the ENTIRE token (to the next
+	// terminator) matches int/hex/binary shape; otherwise it's a name (e.g. 3dnow).
+	static bool IsNumericToken(string code, int i) {
+		var j = i;
+		if(code[j] == '-') j++;
+		var (digits, hex, bin) = (false, false, false);
+		if(j + 1 < code.Length && code[j] == '0' && (code[j + 1] == 'x' || code[j + 1] == 'b')) {
+			hex = code[j + 1] == 'x';
+			bin = !hex;
+			j += 2;
+		}
+		for(; j < code.Length; j++) {
+			var c = code[j];
+			if(c is ' ' or '\t' or '\n' or '\r' or '(' or ')' or ',' or ';')
+				return digits;
+			var ok = bin ? c is '0' or '1' or '_'
+				: hex ? c is (>= '0' and <= '9') or (>= 'a' and <= 'f') or (>= 'A' and <= 'F') or '_'
+				: c is (>= '0' and <= '9') or '_';
+			if(!ok) return false;
+			if(c != '_') digits = true;
+		}
+		return digits;
+	}
+
 	static PTree ParseString(string code, ref int i) {
 		var start = code[i++];
 		var segs = new List<PTree>();
@@ -362,6 +393,7 @@ public static class ListParser {
 		while(true) {
 			switch(code[i++]) {
 				case ' ': case '\t': case '\n': case '\r': case '(': case ')': case ',':
+				case ';' when !inString:
 				case '.' when inString: case '[' when inString: case ']' when inString:
 				case '$' when name.Length > 0:
 				case '\'' when inString: case '"' when inString:

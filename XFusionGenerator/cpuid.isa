@@ -1,0 +1,4 @@
+; cpuid.isa — CPUID leaf/feature-bit definitions.
+; Included unconditionally by xfusion.isa; the generated core reports exactly the
+; feature set it was compiled with (the feature flags ARE the CPUID truth source).
+; Instruction def for CPUID itself lands under XF-1 once XFusionDef.Parse exists.
