@@ -18,6 +18,8 @@ public enum OpClass {
 	XmmRmReg,    // U* — xmm register from ModRM.rm, mod==11 required
 	XmmVvvv,     // H* — xmm register from VEX.vvvv (second source; VEX rows only)
 	GprVvvv,     // Hv — GPR from VEX.vvvv (BMI: sarx/bzhi count operand)
+	FpuTop,      // ST — x87 top-of-stack (renders 'st')
+	FpuSti,      // STi — x87 ST(i), i = ModRM.rm & 7 (reg-form rows)
 	MaskReg,     // KR — opmask register from ModRM.reg (vpcmp*/vptestm* dest, kmov dest)
 	MaskRm,      // KU — opmask register from ModRM.rm (kmov reg-form src)
 	MmxReg,      // P* — mmx register from ModRM.reg
@@ -58,7 +60,7 @@ public class OperandSpec {
 
 	public bool NeedsModRm => Class is OpClass.ModRmRm or OpClass.ModRmReg or OpClass.ModRmSeg
 		or OpClass.XmmReg or OpClass.XmmRm or OpClass.XmmRmReg or OpClass.MmxReg or OpClass.MmxRm
-		or OpClass.MaskReg or OpClass.MaskRm;
+		or OpClass.MaskReg or OpClass.MaskRm or OpClass.FpuSti;
 
 	static readonly Dictionary<string, int> FixedGpr = new() {
 		["AL"] = 0, ["CL"] = 1, ["DL"] = 2, ["BL"] = 3,
@@ -101,6 +103,16 @@ public class OperandSpec {
 
 		var sx = s.EndsWith("-sx");
 		var core = sx ? s[..^3] : s;
+		if(core == "ST") {
+			spec.Class = OpClass.FpuTop;
+			spec.Width = WCode.none;
+			return spec;
+		}
+		if(core == "STi") {
+			spec.Class = OpClass.FpuSti;
+			spec.Width = WCode.none;
+			return spec;
+		}
 		if(core == "M") {  // bare M: address-only (LEA) — SDM writes it widthless
 			spec.Class = OpClass.ModRmRm;
 			spec.MemOnly = true;

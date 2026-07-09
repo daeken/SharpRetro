@@ -5,6 +5,7 @@
 ; and disabled regions are pruned before macro processing.
 
 (define-feature x86-16)
+(define-feature x87)
 (define-feature ia32)
 (define-feature x86-64)
 (define-feature mmx)
@@ -26,6 +27,8 @@
     (include "sse.isa"))
 (featuring sse2
     (include "sse2.isa"))
+(featuring x87
+    (include "x87.isa"))
 (include "sse3plus.isa") ; self-gated per-feature inside
 (featuring avx
     (include "avx.isa"))

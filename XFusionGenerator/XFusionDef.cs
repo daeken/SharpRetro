@@ -30,6 +30,8 @@ public class XFusionDef : Def {
 	public VexMode Vex;                // None = legacy-only row; TwoSrc/ThreeSrc = VEX row (vvvv unused/used); VEX rows only match p.VexValid
 	public bool Evex;                  // 62-encoded row (matches p.EvexValid; Vex carries the src-arity)
 	public bool? VexW;                 // null = W-agnostic; else row requires VEX/EVEX.W == value (vmovdqu8 w0 / vmovdqu64 w1)
+	public bool? Mod11;                // null = either; true = reg-form only (mod==11); false = mem-form only. x87 rows.
+	public int RmExact = -1;           // exact ModRM.rm constraint (x87 singles: fxam = D9 /4 rm=5), or -1
 	public List<OperandSpec> Operands; // positional, matches template params
 	public List<string> ParamNames;    // template params ("lval", "rval")
 	public string Mnemonic;
@@ -93,8 +95,8 @@ public class XFusionDef : Def {
 						throw new NotSupportedException(
 							$"encoding {mnem} ({string.Join(" ", specs.Select(x => x.Text))}) has {specs.Count} operands; template takes {tmpl.Params.Count}");
 
-					var (map, opcode, regExt, d64, mprefix, plusR, vex, evex, vexW) = ParseOpcodes(opcList, mnem);
-					var def = Build(tmpl, specs, map, opcode, regExt, d64, mprefix, plusR, vex, evex, vexW);
+					var facts = ParseOpcodes(opcList, mnem);
+					var def = Build(tmpl, specs, facts);
 					defs.Add(def);
 					break;
 				}
@@ -103,7 +105,10 @@ public class XFusionDef : Def {
 		return (templates.Values.ToList(), defs);
 	}
 
-	static (OpcodeMap, byte, int, bool, string, bool, VexMode, bool, bool?) ParseOpcodes(PList opcList, string mnem) {
+	public record OpcodeFacts(OpcodeMap Map, byte Opcode, int RegExt, bool D64, string MPrefix,
+		bool PlusR, VexMode Vex, bool Evex, bool? VexW, bool? Mod11, int RmExact);
+
+	static OpcodeFacts ParseOpcodes(PList opcList, string mnem) {
 		var bytes = new List<byte>();
 		var regExt = -1;
 		var d64 = false;
@@ -111,6 +116,8 @@ public class XFusionDef : Def {
 		var vex = VexMode.None;
 		var evex = false;
 		bool? vexW = null;
+		bool? mod11 = null;
+		var rmExact = -1;
 		string mprefix = null;
 		foreach(var item in opcList)
 			switch(item) {
@@ -146,6 +153,15 @@ public class XFusionDef : Def {
 				case PName("w1"):
 					vexW = true;
 					break;
+				case PName("mod11"):
+					mod11 = true;
+					break;
+				case PName("mem"):
+					mod11 = false;
+					break;
+				case PName(var rmTok) when rmTok.StartsWith("rm=") && rmTok.Length == 4 && rmTok[3] is >= '0' and <= '7':
+					rmExact = rmTok[3] - '0';
+					break;
 				case PName("rep") or PName("repnz") or PName("opsize") when bytes.Count == 0:
 					mprefix = ((PName) item).Name;
 					break;
@@ -153,16 +169,17 @@ public class XFusionDef : Def {
 					throw new NotSupportedException($"opcode element {item} in encoding {mnem}");
 			}
 
-		return bytes switch {
-			[var one] => (OpcodeMap.OneByte, one, regExt, d64, mprefix, plusR, vex, evex, vexW),
-			[0x0F, var two] => (OpcodeMap.TwoByte0F, two, regExt, d64, mprefix, plusR, vex, evex, vexW),
-			[0x0F, 0x38, var three] => (OpcodeMap.ThreeByte0F38, three, regExt, d64, mprefix, plusR, vex, evex, vexW),
-			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three, regExt, d64, mprefix, plusR, vex, evex, vexW),
+		var (map, op) = bytes switch {
+			[var one] => (OpcodeMap.OneByte, one),
+			[0x0F, var two] => (OpcodeMap.TwoByte0F, two),
+			[0x0F, 0x38, var three] => (OpcodeMap.ThreeByte0F38, three),
+			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three),
 			_ => throw new NotSupportedException($"opcode byte pattern in encoding {mnem}: [{string.Join(", ", bytes.Select(b => $"0x{b:X2}"))}]")
 		};
+		return new(map, op, regExt, d64, mprefix, plusR, vex, evex, vexW, mod11, rmExact);
 	}
 
-	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeMap map, byte opcode, int regExt, bool d64, string mprefix, bool plusR, VexMode vex, bool evex, bool? vexW) {
+	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeFacts f) {
 		// Locals: template params are bound at decode time; typing is resolved during
 		// generation (width expansion). For now register params as compile-time-unknown ints.
 		var locals = new Dictionary<string, EType>();
@@ -173,15 +190,17 @@ public class XFusionDef : Def {
 		return new XFusionDef(name, new PString(name), new PList { new PName("block") }, new PList { new PName("block") }, locals) {
 			Dasm = tmpl.Dasm,
 			SemanticsEval = tmpl.Eval,
-			Map = map,
-			Opcode = opcode,
-			RegExtension = regExt,
-			D64 = d64,
-			MandatoryPrefix = mprefix,
-			PlusR = plusR,
-			Vex = vex,
-			Evex = evex,
-			VexW = vexW,
+			Map = f.Map,
+			Opcode = f.Opcode,
+			RegExtension = f.RegExt,
+			D64 = f.D64,
+			MandatoryPrefix = f.MPrefix,
+			PlusR = f.PlusR,
+			Vex = f.Vex,
+			Evex = f.Evex,
+			VexW = f.VexW,
+			Mod11 = f.Mod11,
+			RmExact = f.RmExact,
 			Operands = specs,
 			ParamNames = tmpl.Params,
 			Mnemonic = tmpl.Mnemonic,

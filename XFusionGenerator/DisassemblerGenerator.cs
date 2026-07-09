@@ -148,12 +148,29 @@ public static class DisassemblerGenerator {
 				// need ModRM.reg to disambiguate; all rows in a /N group carry ModRM
 				sb.AppendLine("\t\t\t\tif(i >= code.Length) return (null, 0);");
 				sb.AppendLine("\t\t\t\tvar regField = (code[i] >> 3) & 7;");
+				sb.AppendLine("\t\t\t\tvar modIs11 = (code[i] >> 6) == 3;");
+				sb.AppendLine("\t\t\t\tvar rmField = code[i] & 7;");
 				sb.AppendLine("\t\t\t\tswitch(regField) {");
-				foreach(var d in byExt.OrderBy(x => x.RegExtension)) {
-					if(d.RegExtension < 0)
-						throw new NotSupportedException($"(map,opcode) collision without /N: {d.Name}");
-					sb.AppendLine($"\t\t\t\t\tcase {d.RegExtension}: {{");
-					EmitDefBody(sb, d, "\t\t\t\t\t\t");
+				foreach(var eg in byExt.GroupBy(x => x.RegExtension).OrderBy(x => x.Key)) {
+					if(eg.Key < 0)
+						throw new NotSupportedException($"(map,opcode) collision without /N: {eg.First().Name}");
+					sb.AppendLine($"\t\t\t\t\tcase {eg.Key}: {{");
+					// within one /N: mem-form + mod11-form(s) coexist (x87); rm=N = exact singles.
+					var members = eg.ToList();
+					if(members.Count == 1 && members[0].Mod11 == null && members[0].RmExact < 0)
+						EmitDefBody(sb, members[0], "\t\t\t\t\t\t");
+					else {
+						foreach(var d in members.OrderBy(x => x.RmExact < 0 ? 1 : 0)) {  // exact-rm rows first
+							var conds = new List<string>();
+							if(d.Mod11 == true) conds.Add("modIs11");
+							if(d.Mod11 == false) conds.Add("!modIs11");
+							if(d.RmExact >= 0) conds.Add($"rmField == {d.RmExact}");
+							sb.AppendLine($"\t\t\t\t\t\tif({(conds.Count > 0 ? string.Join(" && ", conds) : "true")}) {{");
+							EmitDefBody(sb, d, "\t\t\t\t\t\t\t");
+							sb.AppendLine("\t\t\t\t\t\t}");
+						}
+						sb.AppendLine("\t\t\t\t\t\treturn (null, 0);");
+					}
 					sb.AppendLine("\t\t\t\t\t}");
 				}
 				sb.AppendLine("\t\t\t\t\tdefault: return (null, 0);");
@@ -315,6 +332,10 @@ public static class DisassemblerGenerator {
 				var l = Packed() ? "p.VexL" : "false";
 				return $"Decode.XmmName(p.VexVvvv, {l})";
 			}
+			case OpClass.FpuTop:
+				return "\"st\"";
+			case OpClass.FpuSti:
+				return $"$\"st({{{m}.Rm & 7}})\"";
 			case OpClass.GprVvvv:
 				return $"Decode.GprName(p.VexVvvv, {VWidthExpr()}, true)";
 			case OpClass.MaskReg:
