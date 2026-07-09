@@ -325,8 +325,13 @@ public static class DisassemblerGenerator {
 				return $"({m}.IsReg ? Decode.GprName({m}.Rm, {WidthExpr()}, p.Rex != 0) : Decode.MemOperandString(in {m}, in p, mode, {WidthExpr()}, pc + (ulong)i))";
 			case OpClass.ModRmReg:
 				return $"Decode.GprName({m}.Reg, {WidthExpr()}, p.Rex != 0)";
-			case OpClass.ModRmSeg:
+			case OpClass.ModRmSeg: {
+				// reg 6/7 = no such segment (#UD, XED BAD_REGISTER — fuzz-caught OOB);
+				// CS as DESTINATION (Sw first operand, 8E /1) = #UD.
+				var csBad = def.Operands.Count > 0 && ReferenceEquals(def.Operands[0], spec) ? $" || {m}.Reg == 1" : "";
+				sb.AppendLine($"{ind}if({m}.Reg > 5{csBad}) return false;");
 				return $"Decode.SegRegName({m}.Reg)";
+			}
 			case OpClass.FixedReg when spec.SegName != null:
 				return $"\"{spec.SegName.ToLowerInvariant()}\"";
 			case OpClass.FixedReg when spec.FixedRegByte:

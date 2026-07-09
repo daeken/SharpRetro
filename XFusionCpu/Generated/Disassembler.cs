@@ -1631,6 +1631,7 @@ public static partial class Disassembler {
 				var m134Len = Decode.ReadModRm(code[i..], mode, in p, out var m134);
 				if(m134Len < 0) return false;
 				i += m134Len;
+				if(m134.Reg > 5) return false;
 				d.DefId = 134;
 				d.Len = i;
 				d.Op = op;
@@ -1658,6 +1659,7 @@ public static partial class Disassembler {
 				var m136Len = Decode.ReadModRm(code[i..], mode, in p, out var m136);
 				if(m136Len < 0) return false;
 				i += m136Len;
+				if(m136.Reg > 5 || m136.Reg == 1) return false;
 				d.DefId = 136;
 				d.Len = i;
 				d.Op = op;
