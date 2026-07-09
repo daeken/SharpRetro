@@ -12,7 +12,41 @@ namespace XFusionCensus;
 ///   - MISMATCHES: both decoded but text/length differ (the dangerous class)
 /// Usage: XFusionCensus <elf> <16|32|64> [maxInsns] [--mismatches N]
 public class Program {
+	/// Corpus-scale lift gate: every insn OUR decoder accepts must lift to a
+	/// non-null IlBlock without throwing. Linear sweep with our own decoder
+	/// (no XED needed — decode correctness is the census's job; this gates lift).
+	static int LiftSmoke(string[] args) {
+		var path = args[1];
+		var mode = args[2] switch { "16" => XMode.Bits16, "32" => XMode.Bits32, _ => XMode.Bits64 };
+		var (text, vaddr) = ReadTextSection(path);
+		Console.WriteLine($"{path}: .text {text.Length} bytes, lift-smoke mode {mode}");
+		long decoded = 0, lifted = 0;
+		var fails = new Dictionary<string, long>();
+		var firstFail = new Dictionary<string, string>();
+		var i = 0;
+		while(i < text.Length) {
+			if(!Disassembler.DecodeInsn(text.AsSpan(i), mode, out var d)) { i++; continue; }
+			decoded++;
+			string fail = null;
+			try {
+				if(X86Lifter.Lift(in d, (ulong) i, mode) == null) fail = "null-block";
+			} catch(Exception e) { fail = e.Message.Length > 50 ? e.Message[..50] : e.Message; }
+			if(fail == null) lifted++;
+			else {
+				var key = $"{Disassembler.DefNames[d.DefId]}: {fail}";
+				fails[key] = fails.GetValueOrDefault(key) + 1;
+				firstFail.TryAdd(key, Convert.ToHexString(text.AsSpan(i, d.Len)));
+			}
+			i += d.Len;
+		}
+		Console.WriteLine($"decoded {decoded} | lifted {lifted} ({100.0 * lifted / decoded:f2}%) | fail-classes {fails.Count}");
+		foreach(var (k, n) in fails.OrderByDescending(x => x.Value).Take(15))
+			Console.WriteLine($"  {n,6}  {k}   e.g. {firstFail[k]}");
+		return fails.Count > 0 ? 1 : 0;
+	}
+
 	public static int Main(string[] args) {
+		if(args.Length > 0 && args[0] == "lift") return LiftSmoke(args);
 		if(args.Length > 0 && args[0] == "fuzz") return Fuzz.Run(args);
 		if(args.Length < 2) { Console.Error.WriteLine("usage: XFusionCensus <elf> <16|32|64> [maxInsns] [--mismatches N] | XFusionCensus fuzz [n] [seed] [32|64]"); return 1; }
 		var path = args[0];

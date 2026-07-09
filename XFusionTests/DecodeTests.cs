@@ -148,6 +148,17 @@ public class DecodeTests {
 	[TestCase("c5fb93c1", "kmovd eax, k1")]
 	public void EvexTier(string hex, string expected) => Row(hex, XMode.Bits64, expected);
 
+	/// Every [TestCase] hex row + its mode — the lift smoke iterates these.
+	public static IEnumerable<(string Hex, XMode Mode)> AllRows() {
+		foreach(var m in typeof(DecodeTests).GetMethods())
+			foreach(var tc in m.GetCustomAttributes(typeof(TestCaseAttribute), false).Cast<TestCaseAttribute>()) {
+				if(tc.Arguments.Length < 1 || tc.Arguments[0] is not string hex) continue;
+				if(hex.Length % 2 != 0 || !hex.All(Uri.IsHexDigit)) continue;
+				var mode = m.Name.Contains("32") || m.Name.Contains("I386") ? XMode.Bits32 : XMode.Bits64;
+				yield return (hex, mode);
+			}
+	}
+
 	// --- undecodable / boundary ---
 	[Test]
 	public void UnknownOpcodeReturnsNull() {

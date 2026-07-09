@@ -1,5 +1,5 @@
 using CoreArchCompiler;
-using XFusionGenerator;
+using XFusionGenerator;  // IlLower/OperandBind shared-source (compiled into XFusionCpu)
 using LiftIl;
 
 namespace XFusionTests;

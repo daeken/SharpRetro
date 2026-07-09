@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -6,5 +6,16 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
     </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../CoreArchCompiler/CoreArchCompiler.csproj"/>
+        <ProjectReference Include="../LiftIl/LiftIl.csproj"/>
+        <!-- Shared-source: the .isa->IL walker runs at BOTH generator time (tests,
+             census) and runtime (lift). No project ref either direction: the
+             generator must never depend on XFusionCpu (bootstrap rule), and
+             XFusionCpu must not drag codegen in. DESIGN.md §Lift-wiring. -->
+        <Compile Include="../XFusionGenerator/IlLower.cs" Link="Lift/IlLower.cs"/>
+        <Compile Include="../XFusionGenerator/OperandSpec.cs" Link="Lift/OperandSpec.cs"/>
+    </ItemGroup>
 
 </Project>

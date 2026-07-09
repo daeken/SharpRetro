@@ -83,6 +83,8 @@ public class OperandSpec {
 	}
 
 	public static OperandSpec Parse(string s) {
+		if(long.TryParse(s, out var fixedV))
+			return new() { Text = s, Class = OpClass.FixedInt, FixedValue = fixedV, Width = WCode.none };
 		var spec = new OperandSpec { Text = s };
 
 		if(SegRegs.Contains(s)) {

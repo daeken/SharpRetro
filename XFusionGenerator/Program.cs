@@ -25,6 +25,11 @@ public class Program : Core {
 		Directory.CreateDirectory(outDir);
 		File.WriteAllText(Path.Combine(outDir, "Disassembler.cs"), DisassemblerGenerator.Generate(defs));
 		Console.WriteLine($"Wrote {Path.Combine(outDir, "Disassembler.cs")}");
+		// BodyOrder counts EMISSIONS (≥ defs: +r ranges, VEX/legacy shared defs etc.
+		// emit one body per dispatch row; DefId = emission ordinal, rows repeat defs).
+		File.WriteAllText(Path.Combine(outDir, "LiftTables.cs"),
+			LiftTablesGenerator.Generate(templates, DisassemblerGenerator.BodyOrder));
+		Console.WriteLine($"Wrote {Path.Combine(outDir, "LiftTables.cs")}");
 	}
 
 	static string FindOutDir() {

@@ -278,10 +278,13 @@ public static class DisassemblerGenerator {
 			.Replace("(op & 7)", "(d.Op & 7)");
 		RenderCases.AppendLine($"\t\t\tcase {BodyN}: return {expr};");
 		RenderNames.Add(def.Name);
+		BodyOrder.Add(def);
 	}
 
 	static readonly StringBuilder RenderCases = new();
 	static readonly List<string> RenderNames = [];
+	/// Defs in DefId order (BodyN emission order) — LiftTables keys off this.
+	public static readonly List<XFusionDef> BodyOrder = [];
 	static int ImmSlot;
 
 	/// Emits decode statements for one operand; returns the C# expression producing its text.
