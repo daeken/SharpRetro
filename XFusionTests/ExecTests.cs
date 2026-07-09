@@ -235,6 +235,57 @@ public class ExecTests {
 		Assert.That(me.Gpr[1], Is.EqualTo(4UL), "but CX still dec'd");
 	}
 
+	// --- wide mul/div (F7 family) ---
+	[Test]
+	public void MulWideSetsDxAndCf() {  // mul ebx: eax=0x80000000 * 4 → edx:eax = 2:0, CF/OF=1
+		var m = M64("f7e3");
+		m.Gpr[0] = 0x80000000; m.Gpr[3] = 4;
+		m.Step();
+		Assert.That(m.Gpr[0], Is.EqualTo(0UL));
+		Assert.That(m.Gpr[2], Is.EqualTo(2UL), "high half in edx");
+		Assert.That(F(m, CF), Is.True, "CF: high half nonzero");
+
+		var m2 = M64("f7e3");  // 3*5 fits → CF=0
+		m2.Gpr[0] = 3; m2.Gpr[3] = 5;
+		m2.Step();
+		Assert.That(m2.Gpr[0], Is.EqualTo(15UL));
+		Assert.That(F(m2, CF), Is.False);
+	}
+
+	[Test]
+	public void DivWideQuotientRemainder() {  // div ebx: edx:eax = 0:100 / 7 → q=14 r=2
+		var m = M64("f7f3");
+		m.Gpr[0] = 100; m.Gpr[2] = 0; m.Gpr[3] = 7;
+		m.Step();
+		Assert.That(m.Gpr[0], Is.EqualTo(14UL));
+		Assert.That(m.Gpr[2], Is.EqualTo(2UL));
+	}
+
+	[Test]
+	public void IdivSigned() {  // idiv ebx: -100 / 7 → q=-14 r=-2 (C truncation semantics)
+		var m = M64("f7fb");
+		m.Gpr[0] = unchecked((ulong) -100L) & 0xFFFFFFFF; m.Gpr[2] = 0xFFFFFFFF; m.Gpr[3] = 7;
+		m.Step();
+		Assert.That((int) m.Gpr[0], Is.EqualTo(-14));
+		Assert.That((int) m.Gpr[2], Is.EqualTo(-2));
+	}
+
+	[Test]
+	public void DivByZeroThrows() {
+		var m = M64("f7f3");
+		m.Gpr[0] = 5; m.Gpr[3] = 0;
+		Assert.Throws<DivideByZeroException>(() => m.Step());
+	}
+
+	[Test]
+	public void Mul8UsesAx() {  // mul bl: al=20 * 30 → ax=600
+		var m = M64("f6e3");
+		m.Gpr[0] = 20; m.Gpr[3] = 30;
+		m.Step();
+		Assert.That(m.Gpr[0] & 0xFFFF, Is.EqualTo(600UL));
+		Assert.That(F(m, CF), Is.True, "AH nonzero → CF");
+	}
+
 	[Test]
 	public void IntrinsicDispatch() {  // int 21h routes to the handler with the imm arg
 		var m = M64("cd21");

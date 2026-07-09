@@ -436,25 +436,25 @@
 
 (instruction MUL (src)
     "mul $src"
-    (intrinsic mul-wide src))
+    (intrinsic mul-wide (bitwidth src) src))
 (encoding MUL (Eb) (0xF6 /4))
 (encoding MUL (Ev) (0xF7 /4))
 
 (instruction IMUL1 (src)
     "imul $src"
-    (intrinsic imul-wide src))
+    (intrinsic imul-wide (bitwidth src) src))
 (encoding IMUL1 (Eb) (0xF6 /5))
 (encoding IMUL1 (Ev) (0xF7 /5))
 
 (instruction DIV (src)
     "div $src"
-    (intrinsic div-wide src))
+    (intrinsic div-wide (bitwidth src) src))
 (encoding DIV (Eb) (0xF6 /6))
 (encoding DIV (Ev) (0xF7 /6))
 
 (instruction IDIV (src)
     "idiv $src"
-    (intrinsic idiv-wide src))
+    (intrinsic idiv-wide (bitwidth src) src))
 (encoding IDIV (Eb) (0xF6 /7))
 (encoding IDIV (Ev) (0xF7 /7))
 

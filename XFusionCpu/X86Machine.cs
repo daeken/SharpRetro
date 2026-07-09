@@ -111,6 +111,92 @@ public class X86Machine {
 		if(name.StartsWith("rep_")) { rep = RepKind.Rep; baseName = name[4..]; }
 		else if(name.StartsWith("repe_")) { rep = RepKind.RepE; baseName = name[5..]; }
 		else if(name.StartsWith("repne_")) { rep = RepKind.RepNe; baseName = name[6..]; }
+		// wide mul/div (F6/F7 /4-/7): args = [width, src]. 8-bit uses AX (AL*src→AX,
+		// AX/src→AL:AH); wider uses rDX:rAX. Div overflow/zero = #DE (throw — the
+		// honest v1; interrupt vectoring is a later real-mode feature).
+		if(baseName is "mul-wide" or "imul-wide" or "div-wide" or "idiv-wide") {
+			var mw = (int) args[0];
+			var src = args[1];
+			void SetCfOf(bool v) {
+				Flags = (Flags & ~((1UL << 0) | (1UL << 11))) | (v ? (1UL << 0) | (1UL << 11) : 0);
+			}
+			if(mw == 8) {
+				var al = Gpr[0] & 0xFF;
+				switch(baseName) {
+					case "mul-wide": {
+						var r = al * (src & 0xFF);
+						Gpr[0] = (Gpr[0] & ~0xFFFFUL) | (r & 0xFFFF);
+						SetCfOf((r >> 8) != 0);
+						break;
+					}
+					case "imul-wide": {
+						var r = (long) (sbyte) al * (sbyte) src;
+						Gpr[0] = (Gpr[0] & ~0xFFFFUL) | ((ulong) r & 0xFFFF);
+						SetCfOf(r != (sbyte) r);
+						break;
+					}
+					case "div-wide": {
+						var ax = Gpr[0] & 0xFFFF;
+						var d0 = src & 0xFF;
+						if(d0 == 0 || ax / d0 > 0xFF) throw new DivideByZeroException("#DE");
+						Gpr[0] = (Gpr[0] & ~0xFFFFUL) | (ax / d0 & 0xFF) | ((ax % d0 & 0xFF) << 8);
+						break;
+					}
+					case "idiv-wide": {
+						var ax = (long) (short) (Gpr[0] & 0xFFFF);
+						var d1 = (long) (sbyte) src;
+						if(d1 == 0) throw new DivideByZeroException("#DE");
+						var q = ax / d1;
+						if(q != (sbyte) q) throw new DivideByZeroException("#DE overflow");
+						Gpr[0] = (Gpr[0] & ~0xFFFFUL) | ((ulong) q & 0xFF) | (((ulong) (ax % d1) & 0xFF) << 8);
+						break;
+					}
+				}
+				return true;
+			}
+			// 16/32/64: rDX:rAX conventions. 128-bit via UInt128.
+			var a2 = MaskW(Gpr[0], mw);
+			var hi = MaskW(Gpr[2], mw);
+			var sM = MaskW(src, mw);
+			void WrAx(ulong v) => Gpr[0] = mw == 64 ? v : mw == 32 ? MaskW(v, 32) : (Gpr[0] & ~0xFFFFUL) | (v & 0xFFFF);
+			void WrDx(ulong v) => Gpr[2] = mw == 64 ? v : mw == 32 ? MaskW(v, 32) : (Gpr[2] & ~0xFFFFUL) | (v & 0xFFFF);
+			switch(baseName) {
+				case "mul-wide": {
+					var r = (UInt128) a2 * sM;
+					WrAx((ulong) r); WrDx((ulong) (r >> mw));
+					SetCfOf((ulong) (r >> mw) != 0);
+					break;
+				}
+				case "imul-wide": {
+					var r = (Int128) SignEx(a2, mw) * SignEx(sM, mw);
+					WrAx((ulong) (UInt128) r); WrDx((ulong) ((UInt128) r >> mw));
+					SetCfOf(r != SignEx((ulong) (UInt128) r, mw));
+					break;
+				}
+				case "div-wide": {
+					var num = ((UInt128) hi << mw) | a2;
+					if(sM == 0) throw new DivideByZeroException("#DE");
+					var q = num / sM;
+					if(q > MaskW(ulong.MaxValue, mw)) throw new DivideByZeroException("#DE overflow");
+					WrAx((ulong) q); WrDx((ulong) (num % sM));
+					break;
+				}
+				case "idiv-wide": {
+					var num = (Int128) (((UInt128) hi << mw) | a2);
+					// sign: interpret the 2w-bit value
+					num = (Int128) ((UInt128) num << (128 - 2 * mw)) >> (128 - 2 * mw);
+					var dv = (Int128) SignEx(sM, mw);
+					if(dv == 0) throw new DivideByZeroException("#DE");
+					var q = num / dv;
+					var lim = (Int128) 1 << (mw - 1);
+					if(q >= lim || q < -lim) throw new DivideByZeroException("#DE overflow");
+					WrAx((ulong) (UInt128) q & MaskW(ulong.MaxValue, mw)); WrDx((ulong) (UInt128) (num % dv) & MaskW(ulong.MaxValue, mw));
+					break;
+				}
+			}
+			return true;
+		}
+
 		// loop family: args[0] = pre-resolved absolute target
 		if(baseName is "loop" or "loope" or "loopne" or "jcxz") {
 			ulong CxA() => Mode == XMode.Bits16 ? Gpr[1] & 0xFFFF : Mode == XMode.Bits32 ? Gpr[1] & 0xFFFFFFFF : Gpr[1];
