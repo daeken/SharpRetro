@@ -70,4 +70,79 @@ public class IlLowerTests {
 
 	static string Norm(string s) => string.Join('\n',
 		s.Replace("\r", "").Split('\n').Select(x => x.TrimEnd()).Where(x => x.Length > 0));
+
+	// ---- family sweep: every 2-op ALU template lowers at every width ----
+	static (List<string> Params, List<PTree> Eval) Load(string mnem) {
+		var src = File.ReadAllText(Path.Combine(TestContext.CurrentContext.TestDirectory,
+			"../../../../XFusionGenerator/ia32-base.isa"));
+		foreach(var elem in ListParser.Parse(src))
+			if(elem is PList { Count: >= 4 } pl && pl[0] is PName("instruction")
+				&& pl[1] is PName(var n) && n == mnem) {
+				var ps = ((PList) pl[2]).Select(x => ((PName) x).Name).ToList();
+				return (ps, pl.Skip(4).ToList());
+			}
+		throw new InvalidOperationException($"{mnem} not found");
+	}
+
+	static string LowerRegReg(string mnem, int w) {
+		var (ps, eval) = Load(mnem);
+		var binds = new Dictionary<string, OperandBind>();
+		binds[ps[0]] = new OperandBind.Reg("X86_RAX", w);
+		if(ps.Count > 1) binds[ps[1]] = new OperandBind.Reg("X86_RBX", w);
+		return IlLower.Render(IlLower.Lower(ps, eval, binds, w));
+	}
+
+	[Test]
+	public void AluFamilySweep() {
+		// every flag-writing 2-op template × every width lowers without throwing
+		foreach(var mnem in new[] { "ADD", "OR", "ADC", "SBB", "AND", "SUB", "XOR", "CMP", "TEST" })
+			foreach(var w in new[] { 8, 16, 32, 64 }) {
+				var il = LowerRegReg(mnem, w);
+				Assert.That(il, Does.Contain("EFLAGS.Z"), $"{mnem}/{w}");
+				Assert.That(il, Does.Contain($"(u{w} "), $"{mnem}/{w}");
+			}
+	}
+
+	[Test]
+	public void XorConstFlags() {  // (= CF 0) → const u1 write
+		var il = LowerRegReg("XOR", 32);
+		Assert.That(il, Does.Contain("(EFLAGS.C := (u1 #0))"));
+		Assert.That(il, Does.Contain("(EFLAGS.O := (u1 #0))"));
+	}
+
+	[Test]
+	public void CmpStoresNothing() {  // CMP computes flags only — no reg/mem write
+		var il = LowerRegReg("CMP", 32);
+		Assert.That(il, Does.Not.Contain(":= (u64 zext"));  // no operand write-back
+		Assert.That(il, Does.Not.Contain("(store"));
+		Assert.That(il, Does.Contain("EFLAGS.C"));
+	}
+
+	[Test]
+	public void MovBare() {  // MOV: single write, zero flags
+		var il = LowerRegReg("MOV", 32);
+		Assert.That(il, Does.Not.Contain("EFLAGS"));
+		Assert.That(il, Does.Contain("(X86_RAX := (u64 zext (u32 trunc (u64 X86_RBX))))"));
+	}
+
+	[Test]
+	public void IncPreservesCf() {  // INC's defining quirk: CF untouched
+		var (ps, eval) = Load("INC");
+		var il = IlLower.Render(IlLower.Lower(ps, eval,
+			new Dictionary<string, OperandBind> { ["lval"] = new OperandBind.Reg("X86_RAX", 32) }, 32));
+		Assert.That(il, Does.Not.Contain("EFLAGS.C :="));
+		Assert.That(il, Does.Contain("EFLAGS.Z"));
+	}
+
+	[Test]
+	public void SubBorrowCf() {  // SUB: CF = lval < rval (borrow), not the ADD carry form
+		var il = LowerRegReg("SUB", 32);
+		Assert.That(il, Does.Contain("(EFLAGS.C := (u1 ult (u32 %0) (u32 %1)))"));
+	}
+
+	[Test]
+	public void Sub8BitInsertWrite() {  // 8-bit write = masked insert, not zext
+		var il = LowerRegReg("SUB", 8);
+		Assert.That(il, Does.Contain("(u64 and (u64 X86_RAX) (u64 #ffffffffffffff00))"));
+	}
 }

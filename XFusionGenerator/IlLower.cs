@@ -226,6 +226,7 @@ public class IlLower {
 	/// Flag-write canonicalization (see class doc).
 	static Ilx CanonFlag(Ilx e) {
 		if(e.W == 1) return e;                                            // comparison chain
+		if(e is Ilx.Const(_, var cv) && cv is 0 or 1) return new Ilx.Const(1, cv);  // (= CF 0)
 		switch(e) {
 			case Ilx.Bin(_, "and", _, Ilx.Const(_, 1)):                   // (& _ 1) → bit0 valid
 			case Ilx.Bin(_, "shr", var a, Ilx.Const(_, var sh)) when sh == a.W - 1:  // sign shift
