@@ -55,6 +55,189 @@
 (encoding POP (Ev) (0x8F /0 d64))
 
 ; =====================================================================
+; wave-3: base-map stragglers (census @264003d)
+; =====================================================================
+
+(instruction SYSCALL ()
+    "syscall"
+    (intrinsic syscall))
+(encoding SYSCALL () (0x0F 0x05))
+
+(instruction UD2 ()
+    "ud2"
+    (intrinsic ud2))
+(encoding UD2 () (0x0F 0x0B))
+
+; --- bit scan: bare = bsf/bsr; F3-prefixed = tzcnt/lzcnt (BMI/LZCNT feature-wise,
+; but present in the base map as prefix-discriminated rows) ---
+(instruction BSF (dst src)
+    "bsf $dst, $src"
+    (intrinsic bsf dst src))
+(encoding BSF (Gv Ev) (0x0F 0xBC))
+
+(instruction TZCNT (dst src)
+    "tzcnt $dst, $src"
+    (intrinsic tzcnt dst src))
+(encoding TZCNT (Gv Ev) (rep 0x0F 0xBC))
+
+(instruction BSR (dst src)
+    "bsr $dst, $src"
+    (intrinsic bsr dst src))
+(encoding BSR (Gv Ev) (0x0F 0xBD))
+
+(instruction LZCNT (dst src)
+    "lzcnt $dst, $src"
+    (intrinsic lzcnt dst src))
+(encoding LZCNT (Gv Ev) (rep 0x0F 0xBD))
+
+(instruction POPCNT (dst src)
+    "popcnt $dst, $src"
+    (intrinsic popcnt dst src))
+(encoding POPCNT (Gv Ev) (rep 0x0F 0xB8))
+
+; --- atomics ---
+(instruction CMPXCHG (dst src)
+    "cmpxchg $dst, $src"
+    (intrinsic cmpxchg dst src))
+(encoding CMPXCHG (Eb Gb) (0x0F 0xB0))
+(encoding CMPXCHG (Ev Gv) (0x0F 0xB1))
+
+(instruction XADD (dst src)
+    "xadd $dst, $src"
+    (mlet (t (+ dst src))
+        (= src dst)
+        (= dst t)))
+(encoding XADD (Eb Gb) (0x0F 0xC0))
+(encoding XADD (Ev Gv) (0x0F 0xC1))
+
+(instruction BSWAP (dst)
+    "bswap $dst"
+    (intrinsic bswap dst))
+(encoding BSWAP (Zv) (0x0F 0xC8 +r))
+
+; --- BT family ---
+(instruction BT (src bit)
+    "bt $src, $bit"
+    (= CF (& (>> src bit) 1)))
+(encoding BT (Ev Gv) (0x0F 0xA3))
+(encoding BT (Ev Ib) (0x0F 0xBA /4))
+
+(instruction BTS (lval bit)
+    "bts $lval, $bit"
+    (= CF (& (>> lval bit) 1))
+    (= lval (| lval (<< 1 bit))))
+(encoding BTS (Ev Gv) (0x0F 0xAB))
+(encoding BTS (Ev Ib) (0x0F 0xBA /5))
+
+(instruction BTR (lval bit)
+    "btr $lval, $bit"
+    (= CF (& (>> lval bit) 1))
+    (= lval (& lval (~ (<< 1 bit)))))
+(encoding BTR (Ev Gv) (0x0F 0xB3))
+(encoding BTR (Ev Ib) (0x0F 0xBA /6))
+
+(instruction BTC (lval bit)
+    "btc $lval, $bit"
+    (= CF (& (>> lval bit) 1))
+    (= lval (^ lval (<< 1 bit))))
+(encoding BTC (Ev Gv) (0x0F 0xBB))
+(encoding BTC (Ev Ib) (0x0F 0xBA /7))
+
+; --- string ops: X = DS:[rSI], Y = ES:[rDI]; rep renders (semantic there).
+; v-forms are width-suffix-mnemonic'd (movsw/movsd/movsq) per XED.
+(instruction MOVSB (dst src)
+    "movsb $dst, $src"
+    (intrinsic movs 8 dst src))
+(encoding MOVSB (Yb Xb) (0xA4))
+
+(instruction MOVSV (dst src)
+    "$(wname movsw movsd movsq) $dst, $src"
+    (intrinsic movs dst src))
+(encoding MOVSV (Yv Xv) (0xA5))
+
+(instruction STOSB (dst)
+    "stosb $dst"
+    (intrinsic stos 8 dst))
+(encoding STOSB (Yb) (0xAA))
+
+(instruction STOSV (dst)
+    "$(wname stosw stosd stosq) $dst"
+    (intrinsic stos dst))
+(encoding STOSV (Yv) (0xAB))
+
+(instruction LODSB (src)
+    "lodsb $src"
+    (intrinsic lods 8 src))
+(encoding LODSB (Xb) (0xAC))
+
+(instruction LODSV (src)
+    "$(wname lodsw lodsd lodsq) $src"
+    (intrinsic lods src))
+(encoding LODSV (Xv) (0xAD))
+
+(instruction SCASB (dst)
+    "scasb $dst"
+    (intrinsic scas 8 dst))
+(encoding SCASB (Yb) (0xAE))
+
+(instruction SCASV (dst)
+    "$(wname scasw scasd scasq) $dst"
+    (intrinsic scas dst))
+(encoding SCASV (Yv) (0xAF))
+
+(instruction CMPSB (src dst)
+    "cmpsb $src, $dst"
+    (intrinsic cmps 8 src dst))
+(encoding CMPSB (Xb Yb) (0xA6))
+
+(instruction CMPSV (src dst)
+    "$(wname cmpsw cmpsd cmpsq) $src, $dst"
+    (intrinsic cmps src dst))
+(encoding CMPSV (Xv Yv) (0xA7))
+
+; --- misc ---
+(instruction LEAVE ()
+    "leave"
+    (= SP BP)
+    (= BP (pop)))
+(encoding LEAVE () (0xC9 d64))
+
+(instruction INT3 ()
+    "int3"
+    (intrinsic int3))
+(encoding INT3 () (0xCC))
+
+(instruction INT (vec)
+    "int $vec"
+    (intrinsic int vec))
+(encoding INT (Ib) (0xCD))
+
+(instruction HLT ()
+    "hlt"
+    (intrinsic hlt))
+(encoding HLT () (0xF4))
+
+(instruction CLC () "clc" (= CF 0))
+(encoding CLC () (0xF8))
+(instruction STC () "stc" (= CF 1))
+(encoding STC () (0xF9))
+(instruction CLD () "cld" (= DF 0))
+(encoding CLD () (0xFC))
+(instruction STD () "std" (= DF 1))
+(encoding STD () (0xFD))
+(instruction CMC () "cmc" (= CF (! CF)))
+(encoding CMC () (0xF5))
+
+; --- CPUID: reports exactly the feature set this core was compiled with ---
+(instruction CPUID ()
+    "cpuid"
+    (intrinsic cpuid))
+(encoding CPUID () (0x0F 0xA2))
+
+; --- XCHG 90+r: rAX forms (91-97; 90 itself = NOP, dispatch order handles it) ---
+(encoding XCHG (Zv rAX) (0x90 +r))
+
+; =====================================================================
 ; wave-2: +r forms + extend/shift/unary groups (census @c82d5ce)
 ; =====================================================================
 

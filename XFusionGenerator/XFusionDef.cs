@@ -49,6 +49,8 @@ public class XFusionDef : Def {
 		var templates = new Dictionary<string, Template>();
 		var defs = new List<XFusionDef>();
 
+		// Pass 1: templates. Pass 2: encodings. Encodings may precede their template
+		// in file order (waves prepend; includes interleave) — order must not matter.
 		foreach(var elem in top) {
 			if(elem is not PList pl || pl.Count == 0) continue;
 			switch(pl[0]) {
@@ -64,6 +66,12 @@ public class XFusionDef : Def {
 					templates[mnem] = new(mnem, ps, dasm, eval);
 					break;
 				}
+			}
+		}
+
+		foreach(var elem in top) {
+			if(elem is not PList pl || pl.Count == 0) continue;
+			switch(pl[0]) {
 				case PName("encoding"): {
 					// (encoding MNEM (specs...) (opcode-bytes... [/N]))
 					if(pl[1] is not PName(var mnem)) throw new NotSupportedException($"encoding name: {pl[1]}");

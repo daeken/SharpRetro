@@ -36,8 +36,13 @@ public static class DisassemblerGenerator {
 
 		// Group: (map, opcode) -> defs (multiple only via /N extensions)
 		// +r defs occupy 8 consecutive opcodes — expand for grouping/dispatch.
+		// An exact-opcode def SHADOWS a +r member at the same (map, opcode): 0x90 NOP
+		// wins over XCHG (0x90 +r); 0x91-97 remain xchg. (90 IS xchg eax,eax — the
+		// architectural alias; XED renders nop.)
+		var exact = defs.Where(d => !d.PlusR).Select(d => (d.Map, d.Opcode)).ToHashSet();
 		var dispatchRows = defs.SelectMany(d => d.PlusR
 			? Enumerable.Range(0, 8).Select(r => (Op: (byte) (d.Opcode + r), Def: d))
+				.Where(x => !exact.Contains((d.Map, x.Op)))
 			: [(Op: d.Opcode, Def: d)]);
 		var groups = dispatchRows.GroupBy(x => (x.Def.Map, x.Op)).OrderBy(g => g.Key.Map).ThenBy(g => g.Key.Op);
 		sb.AppendLine("\t\tswitch(map, op) {");
@@ -87,29 +92,37 @@ public static class DisassemblerGenerator {
 		return sb.ToString();
 	}
 
+	static int BodyN;
+
 	static void EmitDefBody(StringBuilder sb, XFusionDef def, string ind) {
+		// Unique local names per body: a prefix-guarded child block's declaration would
+		// conflict with the bare row's parent-scope declaration (CS0136).
+		var m = $"m{++BodyN}";
 		// Decode phase: ModRM if needed, then operand exprs in spec order.
 		if(def.NeedsModRm) {
 			sb.AppendLine($"{ind}if(i >= code.Length) return (null, 0);");
-			sb.AppendLine($"{ind}i += Decode.ReadModRm(code[i..], mode, in p, out var m);");
+			sb.AppendLine($"{ind}i += Decode.ReadModRm(code[i..], mode, in p, out var {m});");
 			var memOnly = def.Operands.Any(o => o.MemOnly);
-			if(memOnly) sb.AppendLine($"{ind}if(m.IsReg) return (null, 0);");
+			if(memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return (null, 0);");
 		}
 
 		var opTexts = new List<string>();
 		foreach(var spec in def.Operands)
-			opTexts.Add(EmitOperand(sb, def, spec, ind));
+			opTexts.Add(EmitOperand(sb, def, spec, ind, m));
 
 		// Format: template dasm string with $param -> operand text, positionally.
 		// lock/rep prefixes render before the mnemonic (XED convention). A 0x66 on a
 		// zero-operand insn has nothing to absorb it — XED renders it as 'data16 ' (66 90).
+		// String ops (X/Y operands) DO render rep/repnz — the prefix is semantic there.
 		var fmt = RenderDasm(def, opTexts);
 		var data16 = def.Operands.Count == 0 ? "(p.OpSize ? \"data16 \" : \"\") + " : "";
-		sb.AppendLine($"{ind}return ({data16}Decode.MnemonicPrefix(in p) + {fmt}, i);");
+		var isStringOp = def.Operands.Any(o => o.Class is OpClass.StrSrc or OpClass.StrDst);
+		var repRender = isStringOp ? "(p.Rep ? \"rep \" : p.RepNz ? \"repnz \" : \"\") + " : "";
+		sb.AppendLine($"{ind}return ({data16}{repRender}Decode.MnemonicPrefix(in p) + {fmt}, i);");
 	}
 
 	/// Emits decode statements for one operand; returns the C# expression producing its text.
-	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind) {
+	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind, string m) {
 		var vw = def.D64 ? "p.VWidthD64(mode)" : "p.VWidth(mode)";
 		string VWidthExpr() => vw;
 		string WidthExpr() => spec.Width switch {
@@ -125,13 +138,13 @@ public static class DisassemblerGenerator {
 		switch(spec.Class) {
 			case OpClass.ModRmRm when spec.MemOnly:
 				// address-only operand (LEA): no size qualifier — XED renders bare 'ptr [...]'
-				return $"Decode.MemOperandString(in m, in p, mode, 0, pc + (ulong)i)";
+				return $"Decode.MemOperandString(in {m}, in p, mode, 0, pc + (ulong)i)";
 			case OpClass.ModRmRm:
-				return $"(m.IsReg ? Decode.GprName(m.Rm, {WidthExpr()}, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, {WidthExpr()}, pc + (ulong)i))";
+				return $"({m}.IsReg ? Decode.GprName({m}.Rm, {WidthExpr()}, p.Rex != 0) : Decode.MemOperandString(in {m}, in p, mode, {WidthExpr()}, pc + (ulong)i))";
 			case OpClass.ModRmReg:
-				return $"Decode.GprName(m.Reg, {WidthExpr()}, p.Rex != 0)";
+				return $"Decode.GprName({m}.Reg, {WidthExpr()}, p.Rex != 0)";
 			case OpClass.ModRmSeg:
-				return "Decode.SegRegName(m.Reg)";
+				return $"Decode.SegRegName({m}.Reg)";
 			case OpClass.FixedReg when spec.SegName != null:
 				return $"\"{spec.SegName.ToLowerInvariant()}\"";
 			case OpClass.FixedReg when spec.FixedRegByte:
@@ -146,8 +159,12 @@ public static class DisassemblerGenerator {
 				var w = spec.Width == WCode.b ? "8" : VWidthExpr();
 				return $"Decode.GprName((op & 7) | (p.RexB ? 8 : 0), {w}, p.Rex != 0)";
 			}
+			case OpClass.StrSrc:
+				return $"Decode.StrOperand(6, {WidthExpr()}, in p, mode)";  // rSI
+			case OpClass.StrDst:
+				return $"Decode.StrOperand(7, {WidthExpr()}, in p, mode)";  // rDI
 			case OpClass.Imm: {
-				var v = $"imm_{spec.Text.Replace("-", "_")}";
+				var v = $"imm{BodyN}_{spec.Text.Replace("-", "_")}";
 				// z-imms fetch 16/32 but the VALUE is sign-extended to the v-sized destination
 				// (SDM: imm32 sign-extended in 64-bit ops). Render masked to destination width
 				// (XED: 83 C0 FB = add eax, 0xfffffffb; 48 C7 C0 FF.. = mov rax, 0xffffffffffffffff).
@@ -157,12 +174,12 @@ public static class DisassemblerGenerator {
 				return $"$\"0x{{{v}:x}}\"";
 			}
 			case OpClass.RelBranch: {
-				var v = $"rel_{spec.Text}";
+				var v = $"rel{BodyN}_{spec.Text}";
 				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, {WidthExpr()}, true);");
 				return $"$\"0x{{pc + (ulong)i + (ulong){v}:x}}\"";
 			}
 			case OpClass.MemOffset: {
-				var v = $"moffs_{spec.Text}";
+				var v = $"moffs{BodyN}_{spec.Text}";
 				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, p.AWidth(mode), false);");
 				return $"$\"[0x{{{v}:x}}]\"";
 			}
@@ -201,6 +218,7 @@ public static class DisassemblerGenerator {
 					switch(seg) {
 						case PString { String: var s }: sb.Append(s.Replace("\"", "\\\"")); break;
 						case PName(var n): sb.Append("{").Append(Bind(n)).Append("}"); break;
+						case var w when TryWname(w) != null: sb.Append("{").Append(TryWname(w)).Append("}"); break;
 						default: throw new NotSupportedException($"dasm segment {seg} in {def.Mnemonic}");
 					}
 				sb.Append('"');

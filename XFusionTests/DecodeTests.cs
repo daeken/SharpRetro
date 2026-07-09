@@ -91,10 +91,30 @@ public class DecodeTests {
 	// --- undecodable / boundary ---
 	[Test]
 	public void UnknownOpcodeReturnsNull() {
-		var (text, len) = Disassembler.Disassemble(Convert.FromHexString("0F05"), 0, XMode.Bits32);  // syscall not defined yet
+		var (text, len) = Disassembler.Disassemble(Convert.FromHexString("0F04"), 0, XMode.Bits32);  // 0F 04 undefined
 		Assert.That(text, Is.Null);
 		Assert.That(len, Is.EqualTo(0));
 	}
+
+	// --- wave-3 (XED-verified 2026-07-09) ---
+	[TestCase("0f05", "syscall")]
+	[TestCase("f3480fbcc9", "tzcnt rcx, rcx")]        // mandatory F3 on 0F map
+	[TestCase("0fbcc1", "bsf eax, ecx")]              // bare row same opcode
+	[TestCase("f3480fbdc9", "lzcnt rcx, rcx")]
+	[TestCase("f30fb8c1", "popcnt eax, ecx")]
+	[TestCase("480fb1cb", "cmpxchg rbx, rcx")]
+	[TestCase("f00fb1158fea0a00", "lock cmpxchg dword ptr [rip+0xaea8f], edx")]
+	[TestCase("0fc1c8", "xadd eax, ecx")]
+	[TestCase("480fc8", "bswap rax")]                 // +r on 0F map
+	[TestCase("a4", "movsb byte ptr [rdi], byte ptr [rsi]")]
+	[TestCase("f3a4", "rep movsb byte ptr [rdi], byte ptr [rsi]")]  // rep renders on string ops
+	[TestCase("f348ab", "rep stosq qword ptr [rdi]")] // wname suffix by REX.W
+	[TestCase("f3a5", "rep movsd dword ptr [rdi], dword ptr [rsi]")]
+	[TestCase("91", "xchg ecx, eax")]                 // 90+r shadowed at 90 by NOP
+	[TestCase("90", "nop")]
+	[TestCase("0f0b", "ud2")]
+	[TestCase("c9", "leave")]
+	public void Wave3(string hex, string expected) => Row(hex, XMode.Bits64, expected);
 
 	[Test]
 	public void TruncatedModRmReturnsNull() {

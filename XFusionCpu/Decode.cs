@@ -199,6 +199,16 @@ public static class Decode {
 		_ => ""
 	};
 
+	/// String-op implicit operand (X=DS:[rSI] reg=6, Y=ES:[rDI] reg=7). XED shape:
+	/// 'movsb byte ptr [rdi], byte ptr [rsi]' — no segment shown in 64-bit mode.
+	public static string StrOperand(int reg, int ptrBits, in PrefixState p, XMode mode) {
+		var size = ptrBits switch {
+			8 => "byte ptr ", 16 => "word ptr ", 32 => "dword ptr ", 64 => "qword ptr ", _ => ""
+		};
+		var seg = mode != XMode.Bits64 && p.Segment != 0 && reg == 6 ? SegPrefixName(p.Segment) + ":" : "";
+		return $"{size}{seg}[{GprName(reg, p.AWidth(mode), false)}]";
+	}
+
 	/// AT&T-free Intel-syntax memory operand rendering, XED-compatible shape.
 	public static string MemOperandString(in ModRm m, in PrefixState p, XMode mode, int ptrBits, ulong nextRip) {
 		var aw = p.AWidth(mode);
