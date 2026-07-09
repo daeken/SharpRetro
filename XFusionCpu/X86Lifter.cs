@@ -34,6 +34,7 @@ public static class X86Lifter {
 		for(var k = 0; k < specs.Length && k < params_.Count; k++)
 			binds[params_[k]] = Bind(specs[k], in d, mode, vw, pc, ref immSlot);
 
+		binds["%nextpc"] = new OperandBind.Imm((long) (pc + (ulong) d.Len), 64);
 		var opWidth = specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
 		return IlLower.Lower(params_, eval, binds, opWidth);
 	}
@@ -87,9 +88,13 @@ public static class X86Lifter {
 				else if(mode == XMode.Bits16) abs &= 0xFFFF;
 				return new OperandBind.Imm((long) abs, 64);
 			}
-			case OpClass.MemOffset:  // moffs = MEMORY at an absolute address (A0-A3 both directions)
-				return new OperandBind.Mem(
-					new IlConst(IlType.U64, (ulong) (immSlot++ == 0 ? d.Imm0 : d.Imm1)), w);
+			case OpClass.MemOffset: {  // moffs = MEMORY at seg:offset (A0-A3; DS unless overridden)
+				Il a = new IlConst(IlType.U64, (ulong) (immSlot++ == 0 ? d.Imm0 : d.Imm1));
+				var segIdx = d.P.Segment switch { 0x26 => 0, 0x2E => 1, 0x36 => 2, 0x3E => 3, 0x64 => 4, 0x65 => 5, _ => 3 };
+				if(segIdx != 3 || mode != XMode.Bits64)  // 64-bit: only fs/gs live
+					a = new IlBin(IlType.U64, BinOp.Add, new IlReadReg(IlType.U64, RegKind.X86Seg, segIdx), a);
+				return new OperandBind.Mem(a, w);
+			}
 			case OpClass.FixedInt:
 				return new OperandBind.Imm(spec.FixedValue, 8);
 			case OpClass.FixedReg:

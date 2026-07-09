@@ -218,7 +218,11 @@ public class IlLower {
 					new IlBin(IlType.U64, BinOp.Add, Rsp(), C(64, OpWidth / 8))));
 				return vt;
 			}
-			case "next-pc": return new IlReadPc(IlType.U64);  // + insn-len at lift time (wiring TODO)
+			case "next-pc":
+				// resolved at lift time when the lifter provides it (pc+len as a bind);
+				// falls back to the pc node for hand-bind tests.
+				return Binds != null && Binds.TryGetValue("%nextpc", out var np) && np is OperandBind.Imm(var nv, _)
+					? new IlConst(IlType.U64, (ulong) nv) : new IlReadPc(IlType.U64);
 			case "addr-of": {
 				var opName = ((PName) l[1]).Name;
 				return Binds[opName] is OperandBind.Mem ? MemAddr[opName]

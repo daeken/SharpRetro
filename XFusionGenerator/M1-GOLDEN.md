@@ -3,10 +3,10 @@
 > Width doctrine (barrow ·60 + the PF-shrink find): the consumer IL's IlConst
 > carries explicit IlType — width is never node-inferred there. The walker's
 > adopt-sibling-width is a LOWERING heuristic for arithmetic constants (masks,
-> shift amounts); semantically-widthed constants (the 0x6996 u16 table) keep
+> shift amounts); semantically-widthed constants (the 0x9669 u16 parity table) keep
 > their own width and any narrowing must be an explicit cast. Shifts: result
 > width = left operand width, always. If a future template diverges under the
-> heuristic, the fix is per-.isa explicit width forms ((u16 0x6996)), not more
+> heuristic, the fix is per-.isa explicit width forms ((u16 0x9669)), not more
 > heuristic.
 
 The .isa semantics template (ia32-base.isa ADD) lowered by hand to the consumer
@@ -38,7 +38,7 @@ Conventions (per DESIGN.md M1 map + consumer answers ·44/·53):
                                 (u32 #80000000)) (u32 #0)))
   (EFLAGS.A := (u1 trunc (u32 and (u32 shr (u32 xor (u32 %0) (u32 %1) (u32 %2)) (u32 #4)) (u32 #1))))
   (let %3 = (u8 trunc (u32 %2)))                ; low8
-  (EFLAGS.P := (u1 trunc (u32 and (u32 shr (u32 #6996) (u8 and (u8 xor (u8 %3) (u8 shr (u8 %3) (u8 #4))) (u8 #f))) (u32 #1))))
+  (EFLAGS.P := (u1 trunc (u32 and (u32 shr (u32 #9669) (u8 and (u8 xor (u8 %3) (u8 shr (u8 %3) (u8 #4))) (u8 #f))) (u32 #1))))
   (EFLAGS.Z := (u1 eq (u32 %2) (u32 #0))))
 ```
 

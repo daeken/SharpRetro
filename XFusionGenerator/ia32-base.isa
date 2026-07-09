@@ -16,7 +16,7 @@
         (= SF (>> tval (- (bitwidth tval) 1)))
         (= OF (& (^ tval _lval) (^ tval _rval) (<< 1 (- (bitwidth tval) 1))))
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding ADD (Eb Gb)    (0x00))
@@ -350,11 +350,11 @@
 
 (instruction SHL (lval count)
     "shl $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) tval (<< lval c))
+    (mlet (c (& count (- (bitwidth lval) 1)) _lval lval tval (<< _lval c))
         (= lval tval)
         (if (!= c 0)
             (block
-                (= CF (& (>> lval (- (bitwidth lval) c)) 1))
+                (= CF (& (>> _lval (- (bitwidth _lval) c)) 1))
                 (= SF (>> tval (- (bitwidth tval) 1)))
                 (= ZF (== tval 0))))))
 (encoding SHL (Eb Ib) (0xC0 /4))
@@ -366,11 +366,11 @@
 
 (instruction SHR (lval count)
     "shr $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) tval (>> lval c))
+    (mlet (c (& count (- (bitwidth lval) 1)) _lval lval tval (>> _lval c))
         (= lval tval)
         (if (!= c 0)
             (block
-                (= CF (& (>> lval (- c 1)) 1))
+                (= CF (& (>> _lval (- c 1)) 1))
                 (= SF (>> tval (- (bitwidth tval) 1)))
                 (= ZF (== tval 0))))))
 (encoding SHR (Eb Ib) (0xC0 /5))
@@ -382,11 +382,11 @@
 
 (instruction SAR (lval count)
     "sar $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) tval (>>a lval c))
+    (mlet (c (& count (- (bitwidth lval) 1)) _lval lval tval (>>a _lval c))
         (= lval tval)
         (if (!= c 0)
             (block
-                (= CF (& (>> lval (- c 1)) 1))
+                (= CF (& (>> _lval (- c 1)) 1))
                 (= SF (>> tval (- (bitwidth tval) 1)))
                 (= ZF (== tval 0))))))
 (encoding SAR (Eb Ib) (0xC0 /7))
@@ -561,7 +561,7 @@
         (= lval tval)
         (= CF 0) (= OF 0)
         (= SF (>> tval (- (bitwidth tval) 1)))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding OR (Eb Gb)    (0x08))
@@ -582,7 +582,7 @@
         (= SF (>> tval (- (bitwidth tval) 1)))
         (= OF (& (^ tval _lval) (^ tval _rval) (<< 1 (- (bitwidth tval) 1))))
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding ADC (Eb Gb)    (0x10))
@@ -603,7 +603,7 @@
         (= SF (>> tval (- (bitwidth tval) 1)))
         (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding SBB (Eb Gb)    (0x18))
@@ -622,7 +622,7 @@
         (= lval tval)
         (= CF 0) (= OF 0)
         (= SF (>> tval (- (bitwidth tval) 1)))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding AND (Eb Gb)    (0x20))
@@ -643,7 +643,7 @@
         (= SF (>> tval (- (bitwidth tval) 1)))
         (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding SUB (Eb Gb)    (0x28))
@@ -662,7 +662,7 @@
         (= lval tval)
         (= CF 0) (= OF 0)
         (= SF (>> tval (- (bitwidth tval) 1)))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding XOR (Eb Gb)    (0x30))
@@ -683,7 +683,7 @@
         (= SF (>> tval (- (bitwidth tval) 1)))
         (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding CMP (Eb Gb)    (0x38))
@@ -702,7 +702,7 @@
     (mlet (tval (& lval rval))
         (= CF 0) (= OF 0)
         (= SF (>> tval (- (bitwidth tval) 1)))
-        (let low8 (u8 tval) (= PF (& (>> 0x6996 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 
 (encoding TEST (Eb Gb)  (0x84))
