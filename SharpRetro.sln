@@ -90,6 +90,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxwellShader", "MaxwellSha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxwellTool", "MaxwellTool\MaxwellTool.csproj", "{E7FCB763-F232-4347-846C-183968FE14DA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiftIl", "LiftIl\LiftIl.csproj", "{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -508,6 +510,18 @@ Global
 		{E7FCB763-F232-4347-846C-183968FE14DA}.Release|x64.Build.0 = Release|Any CPU
 		{E7FCB763-F232-4347-846C-183968FE14DA}.Release|x86.ActiveCfg = Release|Any CPU
 		{E7FCB763-F232-4347-846C-183968FE14DA}.Release|x86.Build.0 = Release|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Debug|x64.Build.0 = Debug|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Debug|x86.Build.0 = Debug|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Release|x64.ActiveCfg = Release|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Release|x64.Build.0 = Release|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Release|x86.ActiveCfg = Release|Any CPU
+		{9B2845F0-69D1-49A0-849F-E7B91F46A0A3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

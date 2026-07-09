@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <!-- Shared arch-neutral typed IL. One instruction → one IlBlock.
+         No register allocation, no calling convention — architectural
+         regs by index, memory as flat address space. SSA-ish via
+         IlLet/IlTmp. IlUnimpl = lifter self-‡ (says "I don't model
+         this" instead of guessing).
+         Emitters: Aarch64Generator (via consumer's Lifter), XFusion
+         (IlLower), MaxwellShader (its own diverged copy for now).
+         Zero deps by design — pure records + enums. -->
+  </PropertyGroup>
+</Project>
