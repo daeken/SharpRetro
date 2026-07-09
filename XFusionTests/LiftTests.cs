@@ -76,6 +76,35 @@ public class LiftTests {
 		Assert.That(il, Does.Contain("if (u1 EFLAGS.C)"));
 	}
 
+	// --- 16-bit mode (sera ·76: "could we run DOS?") — XED -16 verified ---
+	[TestCase("b409", "mov ah, 0x9")]              // DOS print-string setup
+	[TestCase("cd21", "int 0x21")]                 // THE DOS syscall
+	[TestCase("55", "push bp")]
+	[TestCase("89e5", "mov bp, sp")]
+	[TestCase("b8004c", "mov ax, 0x4c00")]         // exit(0)
+	[TestCase("8b4602", "mov ax, word ptr [bp+0x2]")]  // 16-bit ModRM table (BP+disp)
+	[TestCase("f3a5", "rep movsw word ptr [di], word ptr [si]")]
+	[TestCase("8ed8", "mov ds, ax")]               // segment reg move
+	[TestCase("e8fe00", "call 0x201")]             // 16-bit rel, IP-wrap space
+	[TestCase("26a10200", "mov ax, word ptr es:[0x2]")]  // seg-override moffs
+	public void Dos16Decode(string hex, string expected) {
+		var (text, _) = Disassembler.Disassemble(Convert.FromHexString(hex), 0x100, XMode.Bits16);
+		Assert.That(text, Is.EqualTo(expected));
+	}
+
+	[Test]
+	public void Dos16Lifts() {  // the same rows lift (16-bit widths through the walker)
+		foreach(var hex in new[] { "b409", "cd21", "55", "89e5", "b8004c", "8b4602", "8ed8" }) {
+			var il = LiftText(hex, XMode.Bits16, 0x100);
+			Assert.That(il, Is.Not.Null, hex);
+		}
+		// spot semantics: push bp in 16-bit = SP-2, word store
+		var push = LiftText("55", XMode.Bits16);
+		Assert.That(push, Does.Contain("(RSP := (u64 sub (u64 RSP) (u64 #2)))"));
+		// mov ah, 9: high-8 write = masked insert at bits 8-15... AH is reg4 in
+		// byte-file terms — pinned below in Dos16AhWrite.
+	}
+
 	[Test]
 	public void EveryDecodableTestRowLifts() {
 		// smoke: every hex in the disasm test corpus that DECODES also LIFTS non-null.

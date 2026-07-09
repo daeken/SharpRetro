@@ -39,6 +39,16 @@
 (encoding MOV (Gb Eb)  (0x8A))
 (encoding MOV (Gv Ev)  (0x8B))
 (encoding MOV (Eb Ib)  (0xC6 /0))
+
+; segment-reg moves: Sw = seg from ModRM.reg. Store form renders v-sized rm (XED).
+(instruction MOV-SEG-R (dst src)
+    "mov $dst, $src"
+    (intrinsic mov-seg-store dst src))
+(encoding MOV-SEG-R (Ev Sw) (0x8C))
+(instruction MOV-SEG-W (dst src)
+    "mov $dst, $src"
+    (intrinsic mov-seg-load dst src))
+(encoding MOV-SEG-W (Sw Ew) (0x8E))
 (encoding MOV (Ev Iz)  (0xC7 /0))
 
 ; --- PUSH/POP (r/m forms; the +r register forms need opcode-range encodings, XF-2) ---
