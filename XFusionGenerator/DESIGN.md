@@ -113,6 +113,36 @@ IL). No implicit flag magic in the generator. "Undefined per SDM" flags are
 NOT written (documented per-insn); a test-tier decision later whether to model
 silicon behavior for them (qemu diffs will surface it).
 
+## M1 lowering map (Il.cs read 2026-07-09 — Pagentry.Lifter/Il.cs, NOT the
+## MaxwellShader/Il.cs fork in this repo; they diverged at the ×149 split)
+
+The consumer's IL: typed records, one insn → one IlBlock, SSA-ish via IlLet/
+IlTmp, archregs by (RegKind, idx), flat memory, IlUnimpl as lifter self-‡.
+Extension precedent exists (Maxwell added Gpr/Pred kinds + shader nodes).
+
+x86 mapping, no new node SHAPES needed:
+
+| .isa construct | IL |
+|---|---|
+| GPR read/write (rax..r15) | new RegKind (x86 64-bit file, 16 regs) + IlReadReg/IlWriteReg |
+| partial reg (eax/ax/al/ah) | extract = IlCast.Trunc(IlReadReg); insert = IlWriteReg(masked IlBin.Or) — settled ·44 |
+| CF/ZF/... | new RegKind.Eflags, SAME pattern as Nzcv (idx=-1 whole word, else bit#: CF=0 PF=2 AF=4 ZF=6 SF=7 DF=10 OF=11) |
+| segment base (fs:/gs:) | RegKind.Sys read folded into addr expr — settled ·44 |
+| mem operand | addr expr from (base index scale disp) 4-tuple; RIP-rel = IlReadPc-based; load/store = IlLoad/IlStore |
+| (= lval expr) | IlWriteReg / IlStore by operand class |
+| flags exprs (the 0x6996 PF trick) | IlBin shift/xor/and chains — plain |
+| xmm | RegKind.V exists (128-bit); IlVecBin/IlVecElem lane ops fit SSE |
+| ymm/zmm | ‡ IlType.Vec(128) is hardcoded in vector records — the ONE type-level gap; needs Vec(256/512) or lane-splitting. Flag for the table. |
+| REP MOVSB etc | IlIntrin (exists! "the escape hatch" — barrow's ·44 intrinsic answer is already a node) |
+| Jcc/JMP/CALL/RET | IlBranch(CondJmp/Jmp/Call/Ret) |
+| CPUID/syscall | IlIntrin / IlSyscall |
+| undefined-per-SDM flags | IlNote annotation or leave unwritten + document |
+
+Repo-shape question (barrow ·51, sera call): shared IL lives where?
+(a) SharpRetro→Pagentry dep (backwards), (b) IL type-tree moves INTO SharpRetro
+as shared lib (barrow leans b; CoreArchCompiler is already the shared home),
+(c) per-arch IL + normalize at load. XFusion assumes (b)-or-equivalent.
+
 ## Test plan (3 layers, design review)
 
 1. **compiler tests** — landed with XF-0 (19 green).
