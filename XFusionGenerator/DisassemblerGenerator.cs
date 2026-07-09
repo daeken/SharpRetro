@@ -25,7 +25,11 @@ public static class DisassemblerGenerator {
 		sb.AppendLine("\t\tif(i >= code.Length) return (null, 0);");
 		sb.AppendLine("\t\tvar op = code[i++];");
 		sb.AppendLine("\t\tvar map = OpcodeMap.OneByte;");
-		sb.AppendLine("\t\tif(op == 0x0F) {");
+		sb.AppendLine("\t\tif(p.VexValid) {");
+		sb.AppendLine("\t\t\t// VEX carries the map — the opcode byte after the prefix is bare (no 0F escape)");
+		sb.AppendLine("\t\t\tmap = p.VexMap switch { 1 => OpcodeMap.TwoByte0F, 2 => OpcodeMap.ThreeByte0F38, 3 => OpcodeMap.ThreeByte0F3A, _ => (OpcodeMap) 255 };");
+		sb.AppendLine("\t\t\tif(map == (OpcodeMap) 255) return (null, 0);");
+		sb.AppendLine("\t\t} else if(op == 0x0F) {");
 		sb.AppendLine("\t\t\tif(i >= code.Length) return (null, 0);");
 		sb.AppendLine("\t\t\top = code[i++];");
 		sb.AppendLine("\t\t\tmap = OpcodeMap.TwoByte0F;");
@@ -49,9 +53,31 @@ public static class DisassemblerGenerator {
 		foreach(var g in groups) {
 			var mapName = g.Key.Map.ToString();
 			sb.AppendLine($"\t\t\tcase (OpcodeMap.{mapName}, 0x{g.Key.Op:X2}): {{");
-			// Mandatory-prefix rows dispatch first (F3 90 = pause, not rep nop; SSE later).
+			// VEX rows dispatch first, under p.VexValid (pp is folded into OpSize/Rep/RepNz
+			// by the scanner, so the same prefix conditions discriminate). Legacy rows
+			// implicitly reject VEX via the else-order + the vexGuard below.
+			var vexRows = g.Select(x => x.Def).Where(d => d.Vex != VexMode.None).ToList();
+			if(vexRows.Count > 0) {
+				sb.AppendLine("\t\t\t\tif(p.VexValid) {");
+				foreach(var vd in vexRows) {
+					var conds = new List<string>();
+					conds.Add(vd.MandatoryPrefix switch {
+						"rep" => "p.Rep", "repnz" => "p.RepNz", "opsize" => "p.OpSize",
+						null => "!p.OpSize && !p.Rep && !p.RepNz",
+						_ => throw new NotSupportedException(vd.MandatoryPrefix)
+					});
+					if(vd.Vex == VexMode.TwoSrc) conds.Add("p.VexVvvv == 0");  // #UD otherwise
+					sb.AppendLine($"\t\t\t\t\tif({string.Join(" && ", conds)}) {{");
+					EmitDefBody(sb, vd, "\t\t\t\t\t\t");
+					sb.AppendLine("\t\t\t\t\t}");
+				}
+				sb.AppendLine("\t\t\t\t\treturn (null, 0);");
+				sb.AppendLine("\t\t\t\t}");
+			}
+			sb.AppendLine("\t\t\t\tif(p.VexValid) return (null, 0);  // no VEX row here");
+			// Mandatory-prefix rows dispatch next (F3 90 = pause, not rep nop).
 			// The matched prefix is CONSUMED — cleared so it doesn't render as rep/data16.
-			foreach(var pg in g.Select(x => x.Def).Where(d => d.MandatoryPrefix != null).GroupBy(d => d.MandatoryPrefix)) {
+			foreach(var pg in g.Select(x => x.Def).Where(d => d.MandatoryPrefix != null && d.Vex == VexMode.None).GroupBy(d => d.MandatoryPrefix)) {
 				var cond = pg.Key switch {
 					"rep" => "p.Rep", "repnz" => "p.RepNz", "opsize" => "p.OpSize",
 					_ => throw new NotSupportedException(pg.Key)
@@ -80,7 +106,7 @@ public static class DisassemblerGenerator {
 					EmitDefBody(sb, pdefs[0], "\t\t\t\t\t");
 				sb.AppendLine("\t\t\t\t}");
 			}
-			var byExt = g.Select(x => x.Def).Where(d => d.MandatoryPrefix == null).ToList();
+			var byExt = g.Select(x => x.Def).Where(d => d.MandatoryPrefix == null && d.Vex == VexMode.None).ToList();
 			if(byExt.Count == 0) { sb.AppendLine("\t\t\t\treturn (null, 0);"); sb.AppendLine("\t\t\t}"); continue; }
 			// Vector space (any V/W/U/P/Q operand in the group) is uniformly prefix-
 			// discriminated: 66/F3/F2 ALWAYS select a different instruction there. The
@@ -171,6 +197,7 @@ public static class DisassemblerGenerator {
 	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind, string m) {
 		var vw = def.D64 ? "p.VWidthD64(mode)" : "p.VWidth(mode)";
 		string VWidthExpr() => vw;
+		bool Packed() => spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.x;
 		string VecPtrBits() => spec.Width switch {
 			WCode.ss => "32", WCode.sd => "64", WCode.q => "64", WCode.d => "32",
 			WCode.ps or WCode.pd or WCode.dq or WCode.x => "128",
@@ -190,8 +217,10 @@ public static class DisassemblerGenerator {
 			case OpClass.ModRmRm when spec.MemOnly && spec.Width == WCode.none:
 				// address-only operand (LEA): no size qualifier — XED renders bare 'ptr [...]'
 				return $"Decode.MemOperandString(in {m}, in p, mode, 0, pc + (ulong)i)";
-			case OpClass.ModRmRm when spec.MemOnly && spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.ss or WCode.sd or WCode.x:
-				return $"Decode.MemOperandString(in {m}, in p, mode, {VecPtrBits()}, pc + (ulong)i)";
+			case OpClass.ModRmRm when spec.MemOnly && spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.ss or WCode.sd or WCode.x: {
+				var ptr = Packed() ? $"p.VexL ? 256 : {VecPtrBits()}" : VecPtrBits();
+				return $"Decode.MemOperandString(in {m}, in p, mode, {ptr}, pc + (ulong)i)";
+			}
 			case OpClass.ModRmRm when spec.MemOnly:
 				return $"Decode.MemOperandString(in {m}, in p, mode, {WidthExpr()}, pc + (ulong)i)";
 			case OpClass.ModRmRm:
@@ -218,12 +247,23 @@ public static class DisassemblerGenerator {
 				return $"Decode.StrOperand(6, {WidthExpr()}, in p, mode)";  // rSI
 			case OpClass.StrDst:
 				return $"Decode.StrOperand(7, {WidthExpr()}, in p, mode)";  // rDI
-			case OpClass.XmmReg:
-				return $"Decode.XmmName({m}.Reg)";
-			case OpClass.XmmRm:
-				return $"({m}.IsReg ? Decode.XmmName({m}.Rm) : Decode.MemOperandString(in {m}, in p, mode, {VecPtrBits()}, pc + (ulong)i))";
-			case OpClass.XmmRmReg:
-				return $"Decode.XmmName({m}.Rm)";  // mod==11 enforced by MemOnly-inverse below
+			case OpClass.XmmReg: {
+				var l = Packed() ? "p.VexL" : "false";  // scalar widths are L-ignored (LIG)
+				return $"Decode.XmmName({m}.Reg, {l})";
+			}
+			case OpClass.XmmRm: {
+				var l = Packed() ? "p.VexL" : "false";
+				var ptr = Packed() ? $"p.VexL ? 256 : {VecPtrBits()}" : VecPtrBits();
+				return $"({m}.IsReg ? Decode.XmmName({m}.Rm, {l}) : Decode.MemOperandString(in {m}, in p, mode, {ptr}, pc + (ulong)i))";
+			}
+			case OpClass.XmmRmReg: {
+				var l = Packed() ? "p.VexL" : "false";
+				return $"Decode.XmmName({m}.Rm, {l})";  // mod==11 enforced by MemOnly-inverse below
+			}
+			case OpClass.XmmVvvv: {
+				var l = Packed() ? "p.VexL" : "false";
+				return $"Decode.XmmName(p.VexVvvv, {l})";
+			}
 			case OpClass.MmxReg:
 				return $"Decode.MmxName({m}.Reg)";
 			case OpClass.MmxRm:
@@ -264,10 +304,14 @@ public static class DisassemblerGenerator {
 		}
 
 		// $(wname n16 n32 n64): mnemonic selected by effective operand width (98/99 class).
+		// $(lname l0 l1): mnemonic selected by VEX.L (vzeroupper/vzeroall).
 		string TryWname(PTree t) {
 			if(t is PList wl && wl.Count == 4 && wl[0] is PName("wname")
 				&& wl[1] is PName(var n16) && wl[2] is PName(var n32) && wl[3] is PName(var n64))
 				return $"(p.VWidth(mode) switch {{ 16 => \"{n16}\", 32 => \"{n32}\", _ => \"{n64}\" }})";
+			if(t is PList ll && ll.Count == 3 && ll[0] is PName("lname")
+				&& ll[1] is PName(var l0) && ll[2] is PName(var l1))
+				return $"(p.VexL ? \"{l1}\" : \"{l0}\")";
 			return null;
 		}
 

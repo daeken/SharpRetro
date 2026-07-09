@@ -1,0 +1,76 @@
+; avx.isa — VEX-encoded tier. Gated behind (featuring avx ...) in xfusion.isa.
+; VEX rows are separate encodings (vex-2src / vex-3src tokens) sharing semantics
+; templates via new v-prefixed instructions. The C4/C5 prefix supplies map+pp+vvvv+L;
+; dispatch folds pp into the same prefix fields legacy rows use (Decode.ApplyVexPp).
+; Corpus-ranked (glibc x86-64 @0c819df): vmovdqu 1208, vpmovmskb 1061, vpcmpeqb
+; 1017, vpaddb 460, vmovdqa 434, vzeroupper 422, vpandn 380 ...
+;
+; 2src = vvvv must be 0 (mov class); 3src = vvvv is second source (arith class).
+
+; 0F 77: L=0 = vzeroupper, L=1 = vzeroall — one row, L-selected mnemonic.
+(instruction VZEROUPPER () "$(lname vzeroupper vzeroall)" (intrinsic vzeroupper))
+(encoding VZEROUPPER () (vex-2src 0x0F 0x77))
+
+; --- moves (2src: vvvv==0) ---
+(instruction VMOVDQU (dst src) "vmovdqu $dst, $src" (intrinsic vmovdqu dst src))
+(encoding VMOVDQU (Vdq Wdq) (vex-2src rep 0x0F 0x6F))
+(encoding VMOVDQU (Wdq Vdq) (vex-2src rep 0x0F 0x7F))
+
+(instruction VMOVDQA (dst src) "vmovdqa $dst, $src" (intrinsic vmovdqa dst src))
+(encoding VMOVDQA (Vdq Wdq) (vex-2src opsize 0x0F 0x6F))
+(encoding VMOVDQA (Wdq Vdq) (vex-2src opsize 0x0F 0x7F))
+
+(instruction VMOVUPS (dst src) "vmovups $dst, $src" (intrinsic vmovups dst src))
+(encoding VMOVUPS (Vps Wps) (vex-2src 0x0F 0x10))
+(encoding VMOVUPS (Wps Vps) (vex-2src 0x0F 0x11))
+
+(instruction VMOVAPS (dst src) "vmovaps $dst, $src" (intrinsic vmovaps dst src))
+(encoding VMOVAPS (Vps Wps) (vex-2src 0x0F 0x28))
+(encoding VMOVAPS (Wps Vps) (vex-2src 0x0F 0x29))
+
+(instruction VMOVNTDQ (dst src) "vmovntdq $dst, $src" (intrinsic vmovntdq dst src))
+(encoding VMOVNTDQ (Mdq Vdq) (vex-2src opsize 0x0F 0xE7))
+
+(instruction VPMOVMSKB (dst src) "vpmovmskb $dst, $src" (intrinsic vpmovmskb dst src))
+(encoding VPMOVMSKB (Gd Udq) (vex-2src opsize 0x0F 0xD7))
+
+; --- integer compare/arith (3src: vvvv = second source) ---
+(instruction VPCMPEQB (dst a b) "vpcmpeqb $dst, $a, $b" (intrinsic vpcmpeqb dst a b))
+(encoding VPCMPEQB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x74))
+(instruction VPCMPEQW (dst a b) "vpcmpeqw $dst, $a, $b" (intrinsic vpcmpeqw dst a b))
+(encoding VPCMPEQW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x75))
+(instruction VPCMPEQD (dst a b) "vpcmpeqd $dst, $a, $b" (intrinsic vpcmpeqd dst a b))
+(encoding VPCMPEQD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x76))
+
+(instruction VPCMPGTB (dst a b) "vpcmpgtb $dst, $a, $b" (intrinsic vpcmpgtb dst a b))
+(encoding VPCMPGTB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x64))
+
+(instruction VPADDB (dst a b) "vpaddb $dst, $a, $b" (intrinsic vpaddb dst a b))
+(encoding VPADDB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFC))
+(instruction VPSUBB (dst a b) "vpsubb $dst, $a, $b" (intrinsic vpsubb dst a b))
+(encoding VPSUBB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xF8))
+
+(instruction VPAND (dst a b) "vpand $dst, $a, $b" (intrinsic vpand dst a b))
+(encoding VPAND (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDB))
+(instruction VPANDN (dst a b) "vpandn $dst, $a, $b" (intrinsic vpandn dst a b))
+(encoding VPANDN (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDF))
+(instruction VPOR (dst a b) "vpor $dst, $a, $b" (intrinsic vpor dst a b))
+(encoding VPOR (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEB))
+(instruction VPXOR (dst a b) "vpxor $dst, $a, $b" (intrinsic vpxor dst a b))
+(encoding VPXOR (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEF))
+
+(instruction VPMINUB (dst a b) "vpminub $dst, $a, $b" (intrinsic vpminub dst a b))
+(encoding VPMINUB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDA))
+(instruction VPMAXUB (dst a b) "vpmaxub $dst, $a, $b" (intrinsic vpmaxub dst a b))
+(encoding VPMAXUB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDE))
+
+; --- shuffles: 2src + imm ---
+(instruction VPSHUFD (dst src sel) "vpshufd $dst, $src, $sel" (intrinsic vpshufd dst src sel))
+(encoding VPSHUFD (Vdq Wdq Ib) (vex-2src opsize 0x0F 0x70))
+
+(instruction VPSHUFB (dst a b) "vpshufb $dst, $a, $b" (intrinsic vpshufb dst a b))
+(encoding VPSHUFB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x00))
+
+; --- ptest (0F38 map, 2src) ---
+(instruction VPTEST (a b) "vptest $a, $b" (intrinsic vptest a b))
+(encoding VPTEST (Vdq Wdq) (vex-2src opsize 0x0F 0x38 0x17))

@@ -110,6 +110,32 @@ public class DecodeTests {
 	[TestCase("0fc302", "movnti dword ptr [rdx], eax")]
 	public void SseTier(string hex, string expected) => Row(hex, XMode.Bits64, expected);
 
+	// --- VEX tier (XED-verified 2026-07-09) ---
+	[TestCase("c5f877", "vzeroupper")]                // C5, L=0
+	[TestCase("c5fc77", "vzeroall")]                  // same row, L=1 (lname)
+	[TestCase("c5fa6f06", "vmovdqu xmm0, xmmword ptr [rsi]")]   // pp=F3
+	[TestCase("c5fe6f06", "vmovdqu ymm0, ymmword ptr [rsi]")]   // L=1 → ymm
+	[TestCase("c5f96fc1", "vmovdqa xmm0, xmm1")]      // pp=66
+	[TestCase("c5f97f06", "vmovdqa xmmword ptr [rsi], xmm0")]   // store form
+	[TestCase("c5f9d7c0", "vpmovmskb eax, xmm0")]
+	[TestCase("c5fdd7c0", "vpmovmskb eax, ymm0")]
+	[TestCase("c5f974c1", "vpcmpeqb xmm0, xmm0, xmm1")]  // 3src: vvvv renders
+	[TestCase("c5ed74c1", "vpcmpeqb ymm0, ymm2, ymm1")]  // vvvv=2, L=1
+	[TestCase("c5f9efc0", "vpxor xmm0, xmm0, xmm0")]
+	[TestCase("c5edfcda", "vpaddb ymm3, ymm2, ymm2")]
+	public void VexTier(string hex, string expected) => Row(hex, XMode.Bits64, expected);
+
+	[Test]
+	public void VexC5In32BitModeIsLdsUnlessMod11() {
+		// 32-bit: C5 with next-byte mod!=11 is LDS (not defined yet → undecode, NOT vex-misdecode)
+		var (text, _) = Disassembler.Disassemble(Convert.FromHexString("C5F877"), 0, XMode.Bits32);
+		// C5 F8: F8 has mod=11 → VEX path → vzeroupper decodes in 32-bit too
+		Assert.That(text, Is.EqualTo("vzeroupper"));
+		var (text2, _) = Disassembler.Disassemble(Convert.FromHexString("C5066f06"), 0, XMode.Bits32);
+		// C5 06: mod=00 → LDS esi, [esi] territory — must NOT decode as VEX
+		Assert.That(text2, Is.Null);
+	}
+
 	// --- undecodable / boundary ---
 	[Test]
 	public void UnknownOpcodeReturnsNull() {

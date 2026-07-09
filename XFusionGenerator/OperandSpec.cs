@@ -16,6 +16,7 @@ public enum OpClass {
 	XmmReg,      // V* — xmm register from ModRM.reg
 	XmmRm,       // W* — xmm register or memory from ModRM.rm
 	XmmRmReg,    // U* — xmm register from ModRM.rm, mod==11 required
+	XmmVvvv,     // H* — xmm register from VEX.vvvv (second source; VEX rows only)
 	MmxReg,      // P* — mmx register from ModRM.reg
 	MmxRm,       // Q* — mmx register or memory from ModRM.rm
 	MemOffset,   // O* — moffs: address-sized immediate offset, no ModRM (A0-A3)
@@ -127,6 +128,7 @@ public class OperandSpec {
 			'V' => OpClass.XmmReg,
 			'W' => OpClass.XmmRm,
 			'U' => OpClass.XmmRmReg,
+			'H' => OpClass.XmmVvvv,
 			'P' => OpClass.MmxReg,
 			'Q' => OpClass.MmxRm,
 			_ => throw new NotSupportedException($"operand class in {s}")

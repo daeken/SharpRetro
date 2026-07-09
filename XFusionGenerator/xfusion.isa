@@ -26,3 +26,5 @@
     (include "sse.isa"))
 (featuring sse2
     (include "sse2.isa"))
+(featuring avx
+    (include "avx.isa"))

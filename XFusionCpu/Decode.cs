@@ -15,6 +15,11 @@ public struct PrefixState {
 	public bool Rep;       // 0xF3
 	public byte Segment;   // 0=none, else 0x26/0x2E/0x36/0x3E/0x64/0x65
 	public byte Rex;       // 0 if none; else the raw REX byte (0x40-0x4F), 64-bit mode only
+	                       // (VEX folds R̄X̄B̄W into a synthetic Rex so ModRM/GprName code is shared)
+	public bool VexValid;  // C4/C5 seen — opcode map comes from VexMap, pp folded into OpSize/Rep/RepNz
+	public byte VexMap;    // 1=0F, 2=0F38, 3=0F3A (mmmmm)
+	public byte VexVvvv;   // 2nd-source register (already un-inverted)
+	public bool VexL;      // 0=xmm(128), 1=ymm(256)
 
 	public bool RexW => (Rex & 8) != 0;
 	public bool RexR => (Rex & 4) != 0;
@@ -57,8 +62,12 @@ public struct ModRm {
 }
 
 public static class Decode {
-	/// Scan legacy prefixes + REX. Returns bytes consumed. REX must be the last
-	/// prefix before the opcode — a legacy prefix after REX cancels it (SDM 2.2.1).
+	/// Scan legacy prefixes + REX + VEX. Returns bytes consumed. REX must be the last
+	/// legacy-class prefix before the opcode — a legacy prefix after REX cancels it
+	/// (SDM 2.2.1). VEX (C4/C5) terminates the scan — the opcode byte follows directly
+	/// and no legacy/REX prefixes may precede... they MAY precede but combining with
+	/// 66/F2/F3/REX/LOCK is #UD (SDM 2.3.2); we decode permissively and let pp rule.
+	/// 32-bit mode: C4/C5 are LES/LDS unless the NEXT byte's top 2 bits are 11.
 	public static int ScanPrefixes(ReadOnlySpan<byte> code, XMode mode, out PrefixState p) {
 		p = default;
 		var i = 0;
@@ -72,11 +81,48 @@ public static class Decode {
 				case 0xF3: p.Rep = true; p.Rex = 0; break;
 				case 0x26 or 0x2E or 0x36 or 0x3E or 0x64 or 0x65: p.Segment = b; p.Rex = 0; break;
 				case >= 0x40 and <= 0x4F when mode == XMode.Bits64: p.Rex = b; break;
+				case 0xC5 when i + 2 < code.Length && (mode == XMode.Bits64 || (code[i + 1] & 0xC0) == 0xC0): {
+					// 2-byte VEX: [C5][R̄vvvvLpp] — map=0F, X̄=B̄=1(clear), W=0
+					var b1 = code[i + 1];
+					p.VexValid = true;
+					p.VexMap = 1;
+					p.VexVvvv = (byte) ((~b1 >> 3) & 0xF);
+					p.VexL = (b1 & 4) != 0;
+					p.Rex = (byte) (0x40 | ((b1 & 0x80) == 0 ? 4 : 0));  // R̄ inverted → REX.R
+					ApplyVexPp((byte) (b1 & 3), ref p);
+					return i + 2;
+				}
+				case 0xC4 when i + 3 < code.Length && (mode == XMode.Bits64 || (code[i + 1] & 0xC0) == 0xC0): {
+					// 3-byte VEX: [C4][R̄X̄B̄mmmmm][WvvvvLpp]
+					var b1 = code[i + 1];
+					var b2 = code[i + 2];
+					p.VexValid = true;
+					p.VexMap = (byte) (b1 & 0x1F);
+					p.VexVvvv = (byte) ((~b2 >> 3) & 0xF);
+					p.VexL = (b2 & 4) != 0;
+					p.Rex = (byte) (0x40
+						| ((b2 & 0x80) != 0 ? 8 : 0)      // W
+						| ((b1 & 0x80) == 0 ? 4 : 0)      // R̄
+						| ((b1 & 0x40) == 0 ? 2 : 0)      // X̄
+						| ((b1 & 0x20) == 0 ? 1 : 0));    // B̄
+					ApplyVexPp((byte) (b2 & 3), ref p);
+					return i + 3;
+				}
 				default: return i;
 			}
 			i++;
 		}
 		return i;
+	}
+
+	static void ApplyVexPp(byte pp, ref PrefixState p) {
+		// pp plays the mandatory-prefix role — fold into the same fields the
+		// non-VEX dispatch already discriminates on.
+		switch(pp) {
+			case 1: p.OpSize = true; break;
+			case 2: p.Rep = true; break;
+			case 3: p.RepNz = true; break;
+		}
 	}
 
 	/// Decode ModRM byte + SIB + displacement. Returns bytes consumed from `code`
@@ -186,7 +232,7 @@ public static class Decode {
 
 	public static string SegRegName(int idx) => SegNames[idx & 7];
 
-	public static string XmmName(int idx) => $"xmm{idx}";
+	public static string XmmName(int idx, bool ymm = false) => ymm ? $"ymm{idx}" : $"xmm{idx}";
 	public static string MmxName(int idx) => $"mm{idx & 7}";  // no REX extension for mmx
 
 	/// Prefix text rendered before the mnemonic. Stray F3/F2 on non-string, non-SSE
@@ -217,7 +263,7 @@ public static class Decode {
 		var aw = p.AWidth(mode);
 		var size = ptrBits switch {
 			8 => "byte ptr ", 16 => "word ptr ", 32 => "dword ptr ", 64 => "qword ptr ",
-			48 => "fword ptr ", 128 => "xmmword ptr ", 0 => "ptr ",  // 0 = address-only (LEA)
+			48 => "fword ptr ", 128 => "xmmword ptr ", 256 => "ymmword ptr ", 0 => "ptr ",  // 0 = address-only (LEA)
 			_ => ""
 		};
 		// ES/CS/SS/DS overrides are architecturally null in 64-bit mode (only FS/GS apply);
