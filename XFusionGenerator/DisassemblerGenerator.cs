@@ -326,7 +326,7 @@ public static class DisassemblerGenerator {
 			case OpClass.MemOffset: {
 				var v = $"moffs{BodyN}_{spec.Text}";
 				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, p.AWidth(mode), false);");
-				return $"$\"[0x{{{v}:x}}]\"";
+				return $"Decode.MoffsString({v}, {WidthExpr()}, in p, mode)";
 			}
 			default:
 				throw new NotSupportedException($"operand class {spec.Class} ({spec.Text})");

@@ -195,6 +195,30 @@
     (intrinsic cmps src dst))
 (encoding CMPSV (Xv Yv) (0xA7))
 
+; --- moffs forms: AL/rAX <-> [disp] with no ModRM (A0-A3) ---
+(encoding MOV (AL Ob)  (0xA0))
+(encoding MOV (rAX Ov) (0xA1))
+(encoding MOV (Ob AL)  (0xA2))
+(encoding MOV (Ov rAX) (0xA3))
+
+; --- SHLD/SHRD (double-precision shifts) ---
+(instruction SHLD (dst src count)
+    "shld $dst, $src, $count"
+    (intrinsic shld dst src count))
+(encoding SHLD (Ev Gv Ib) (0x0F 0xA4))
+(encoding SHLD (Ev Gv CL) (0x0F 0xA5))
+
+(instruction SHRD (dst src count)
+    "shrd $dst, $src, $count"
+    (intrinsic shrd dst src count))
+(encoding SHRD (Ev Gv Ib) (0x0F 0xAC))
+(encoding SHRD (Ev Gv CL) (0x0F 0xAD))
+
+; --- 40+r INC / 48+r DEC: 32/16-bit modes only (64-bit: those bytes are REX,
+; consumed by the prefix scanner before dispatch — these rows never fire there) ---
+(encoding INC (Zv) (0x40 +r))
+(encoding DEC (Zv) (0x48 +r))
+
 ; --- misc ---
 (instruction LEAVE ()
     "leave"

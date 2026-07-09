@@ -299,6 +299,14 @@ public static class Decode {
 		if(m.Mod == 1) m.Disp *= n;
 	}
 
+	/// moffs operand (A0-A3): absolute address, sized + segment-prefixed.
+	public static string MoffsString(long addr, int ptrBits, in PrefixState p, XMode mode) {
+		var size = ptrBits switch { 8 => "byte ptr ", 16 => "word ptr ", 32 => "dword ptr ", 64 => "qword ptr ", _ => "" };
+		var segIgnored = mode == XMode.Bits64 && p.Segment is 0x26 or 0x2E or 0x36 or 0x3E;
+		var seg = p.Segment != 0 && !segIgnored ? SegPrefixName(p.Segment) + ":" : "";
+		return $"{size}{seg}[0x{(ulong) addr:x}]";
+	}
+
 	/// String-op implicit operand (X=DS:[rSI] reg=6, Y=ES:[rDI] reg=7). XED shape:
 	/// 'movsb byte ptr [rdi], byte ptr [rsi]' — no segment shown in 64-bit mode.
 	public static string StrOperand(int reg, int ptrBits, in PrefixState p, XMode mode) {
