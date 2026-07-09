@@ -5,6 +5,8 @@ namespace XFusionGenerator;
 public class Program : Core {
 	public static void Main(string[] args) {
 		// Feature set = the CPU we're compiling. CLI args override the default (ia32 dev set).
+		var census = args.Contains("--lower-census");
+		if(census) args = args.Where(a => a != "--lower-census").ToArray();
 		var features = args.Length != 0 ? args : ["ia32"];
 		Console.WriteLine($"XFusion: compiling with features [{string.Join(", ", features)}]");
 
@@ -16,6 +18,8 @@ public class Program : Core {
 
 		var (templates, defs) = XFusionDef.CollectAll(tree);
 		Console.WriteLine($"{templates.Count} instruction templates, {defs.Count} encodings.");
+
+		if(census) { LowerCensus.Run(templates); return; }
 
 		var outDir = FindOutDir();
 		Directory.CreateDirectory(outDir);

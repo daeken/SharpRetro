@@ -1,5 +1,14 @@
 # M1 golden: ADD — hand-lowered target IL
 
+> Width doctrine (barrow ·60 + the PF-shrink find): the consumer IL's IlConst
+> carries explicit IlType — width is never node-inferred there. The walker's
+> adopt-sibling-width is a LOWERING heuristic for arithmetic constants (masks,
+> shift amounts); semantically-widthed constants (the 0x6996 u16 table) keep
+> their own width and any narrowing must be an explicit cast. Shifts: result
+> width = left operand width, always. If a future template diverges under the
+> heuristic, the fix is per-.isa explicit width forms ((u16 0x6996)), not more
+> heuristic.
+
 The .isa semantics template (ia32-base.isa ADD) lowered by hand to the consumer
 IL, for one concrete encoding each of reg-reg and mem-reg. Next session's
 eval-body→Il walker is built against these as the acceptance rows (layer-3 test

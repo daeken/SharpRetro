@@ -19,10 +19,16 @@ public abstract record Ilx(int W) {
 	public sealed record Bin(int Wb, string Op, Ilx A, Ilx B) : Ilx(Wb);
 	public sealed record Cast(int Wt, string Kind, Ilx A) : Ilx(Wt);        // trunc/zext/sext
 	public sealed record Load(int Wl, Ilx Addr) : Ilx(Wl);
+	public sealed record Pop(int Wp) : Ilx(Wp);                             // stack pop (consumer lowers vs RSP)
+	public sealed record AddrOf(string Operand) : Ilx(64);                  // LEA: the mem operand's ADDRESS expr
+	public sealed record Ite(int Wi, Ilx Cond, Ilx T, Ilx F) : Ilx(Wi);     // conditional value (CMOVcc data form)
 }
 
 public abstract record IlxStmt {
 	public sealed record Let(Ilx.Tmp T, Ilx E) : IlxStmt;
+	public sealed record If(Ilx Cond, List<IlxStmt> Then) : IlxStmt;     // consumer: IlBranch or predication — table item
+	public sealed record Branch(string Kind, Ilx Target) : IlxStmt;     // jmp/call/ret
+	public sealed record Push(Ilx E) : IlxStmt;                         // abstract stack op (consumer lowers vs RSP)
 	public sealed record WriteReg(string Name, Ilx E) : IlxStmt;
 	public sealed record WriteFlag(string Flag, Ilx E) : IlxStmt;           // E is u1
 	public sealed record Store(Ilx Addr, Ilx E) : IlxStmt;
@@ -43,6 +49,15 @@ public class IlLower {
 	readonly int OpWidth;                        // instruction operand width (v-width)
 
 	IlLower(int opWidth) => OpWidth = opWidth;
+
+	/// Implicit arch-reg names usable directly in eval bodies (LEAVE: (= SP BP)).
+	/// v-sized reads of the 64-bit file; the M4 generator will width-select — for
+	/// the tree, the 64-bit reg is the honest object.
+	static string ArchReg(string n) => n switch {
+		"SP" => "X86_RSP", "BP" => "X86_RBP", "AX" => "X86_RAX", "CX" => "X86_RCX",
+		"DX" => "X86_RDX", "BX" => "X86_RBX", "SI" => "X86_RSI", "DI" => "X86_RDI",
+		_ => null
+	};
 
 	/// Lower one instruction instance: template params + eval body forms + concrete
 	/// operand bindings. Returns the statement block.
@@ -100,8 +115,36 @@ public class IlLower {
 				var e = Expr(l[2]);
 				if(IsFlag(target)) { Stmts.Add(new IlxStmt.WriteFlag(FlagName(target), CanonFlag(e))); break; }
 				if(Binds.TryGetValue(target, out var b)) { WriteOperand(target, b, e); break; }
+				if(ArchReg(target) is { } ar) { Stmts.Add(new IlxStmt.WriteReg(ar, e.W == 64 ? e : new Ilx.Cast(64, "zext", e))); break; }
 				throw new NotSupportedException($"write target {target}");
 			}
+			case PName("block"):
+				foreach(var f in l.Skip(1)) Stmt(f);
+				break;
+			case PName("if"): {
+				var cond = CanonFlag(Expr(l[1]));
+				// CMOVcc data form: (if C (= dst src)) with dst a reg bind → Ite (no control flow)
+				if(l.Count == 3 && l[2] is PList { Count: 3 } asn && asn[0] is PName("=")
+					&& asn[1] is PName(var dn) && Binds.TryGetValue(dn, out var db) && db is OperandBind.Reg) {
+					var val = Expr(asn[2]);
+					WriteOperand(dn, db, new Ilx.Ite(val.W, cond, val, ReadOperand(dn, db)));
+					break;
+				}
+				// general form: guarded stmt block (SHL flag-writes)
+				var inner = new IlLower(OpWidth) { Binds = Binds, TmpN = TmpN };
+				foreach(var (k, v) in Env) inner.Env[k] = v;
+				foreach(var (k, v) in MemAddr) inner.MemAddr[k] = v;
+				foreach(var f in l.Skip(2)) inner.Stmt(f);
+				TmpN = inner.TmpN;
+				Stmts.Add(new IlxStmt.If(cond, inner.Stmts));
+				break;
+			}
+			case PName("push"):
+				Stmts.Add(new IlxStmt.Push(Expr(l[1])));
+				break;
+			case PName("branch"):
+				Stmts.Add(new IlxStmt.Branch("jmp", Expr(l[1], 64)));
+				break;
 			case PName("intrinsic"):
 				// intrinsic node — passthrough (consumer IlIntrin); not in golden scope
 				throw new NotSupportedException("intrinsic lowering is XF-5 scope");
@@ -142,6 +185,7 @@ public class IlLower {
 				if(Env.TryGetValue(n, out var bound) && bound != null) return bound;
 				if(Binds != null && Binds.TryGetValue(n, out var b)) return ReadOperand(n, b);
 				if(IsFlag(n)) return new Ilx.Tmp(1, "EFLAGS." + FlagName(n));  // flag read
+				if(ArchReg(n) is { } ar) return new Ilx.ReadReg(ar);           // SP/BP/AX... implicit regs
 				throw new NotSupportedException($"name {n}");
 			}
 			case PList l when l.Count >= 1: return ListExpr(l, ctxW);
@@ -171,6 +215,29 @@ public class IlLower {
 				var e = Expr(l[1]);
 				return new Ilx.Const(ctxW, e.W);
 			}
+			case "pop": return new Ilx.Pop(OpWidth);
+			case "next-pc": return new Ilx.Tmp(64, "%nextpc");  // consumer: IlReadPc + len (lift-time const)
+			case "addr-of": {
+				// LEA: the operand must be a mem bind — its ADDRESS, not its value
+				var opName = ((PName) l[1]).Name;
+				return Binds[opName] is OperandBind.Mem ? MemAddr[opName]
+					: throw new NotSupportedException("addr-of non-mem operand");
+			}
+			case "sext": {
+				// (sext x toWidth?) — default to op width
+				var a = Expr(l[1]);
+				var w = l.Count > 2 && l[2] is PInt(var wv) ? (int) wv : OpWidth;
+				return new Ilx.Cast(w, "sext", a);
+			}
+			case "zext": {
+				var a = Expr(l[1]);
+				var w = l.Count > 2 && l[2] is PInt(var wv) ? (int) wv : OpWidth;
+				return new Ilx.Cast(w, "zext", a);
+			}
+			case "~": {
+				var a = Expr(l[1], ctxW);
+				return new Ilx.Bin(a.W, "xor", a, new Ilx.Const(a.W, -1));
+			}
 		}
 		// comparisons → u1
 		if(h is "<" or "==" or "!=" or ">") {
@@ -185,10 +252,11 @@ public class IlLower {
 			"+" => "add", "-" => "sub", "*" => "mul",
 			"&" => "and", "|" => "or", "^" => "xor",
 			">>" => "shr", "<<" => "shl", "!" => "not",
+			">>a" => "sar", "rotl" => "rotl", "rotr" => "rotr",
 			_ => throw new NotSupportedException($"op {h}")
 		};
 		if(op2 == "not") return new Ilx.Bin(1, "eq", Expr(l[1]), new Ilx.Const(Expr(l[1]).W, 0));
-		var isShift = op2 is "shr" or "shl";
+		var isShift = op2 is "shr" or "shl" or "sar" or "rotl" or "rotr";
 		var acc = Expr(l[1], ctxW);
 		for(var i = 2; i < l.Count; i++) {
 			var rhs = Expr(l[i], acc.W);
@@ -251,6 +319,9 @@ public class IlLower {
 		IlxStmt.WriteReg(var n, var e) => $"({n} := {R(e)})",
 		IlxStmt.WriteFlag(var f, var e) => $"(EFLAGS.{f} := {R(e)})",
 		IlxStmt.Store(var a, var e) => $"(store {R(a)} {R(e)})",
+		IlxStmt.If(var c, var body) => $"(if {R(c)} {string.Join(' ', body.Select(RenderStmt))})",
+		IlxStmt.Branch(var k, var t2) => $"({k} {R(t2)})",
+		IlxStmt.Push(var e) => $"(push {R(e)})",
 		_ => throw new NotSupportedException(s.ToString())
 	};
 
@@ -261,6 +332,9 @@ public class IlLower {
 		Ilx.Bin(var w, var op, var a, var b) => $"(u{w} {op} {R(a)} {R(b)})",
 		Ilx.Cast(var w, var k, var a) => $"(u{w} {k} {R(a)})",
 		Ilx.Load(var w, var a) => $"(u{w} load {R(a)})",
+		Ilx.Pop(var w) => $"(u{w} pop)",
+		Ilx.AddrOf(var o) => $"(u64 addr {o})",
+		Ilx.Ite(var w, var c, var t2, var f) => $"(u{w} ite {R(c)} {R(t2)} {R(f)})",
 		_ => throw new NotSupportedException(e.ToString())
 	};
 
