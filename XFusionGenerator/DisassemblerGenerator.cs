@@ -20,6 +20,9 @@ public static class DisassemblerGenerator {
 		sb.AppendLine();
 		sb.AppendLine("\t/// Returns (text, length) or (null, 0) if undecodable.");
 		sb.AppendLine("\tpublic static (string Text, int Length) Disassemble(ReadOnlySpan<byte> code, ulong pc, XMode mode) {");
+		sb.AppendLine("\t\t// x86 caps instruction length at 15 bytes (#UD past that) — clamp the view");
+		sb.AppendLine("\t\t// so prefix-soup can't produce >15-byte decodes.");
+		sb.AppendLine("\t\tif(code.Length > 15) code = code[..15];");
 		sb.AppendLine("\t\tvar pLen = Decode.ScanPrefixes(code, mode, out var p);");
 		sb.AppendLine("\t\tvar i = pLen;");
 		sb.AppendLine("\t\tif(i >= code.Length) return (null, 0);");
@@ -168,16 +171,30 @@ public static class DisassemblerGenerator {
 
 	static int BodyN;
 
+	/// SDM's closed LOCK-legal set (legal only with a MEMORY destination).
+	static readonly HashSet<string> Lockable = [
+		"ADD", "ADC", "AND", "BTC", "BTR", "BTS", "CMPXCHG", "DEC", "INC",
+		"NEG", "NOT", "OR", "SBB", "SUB", "XOR", "XADD", "XCHG",
+	];
+
 	static void EmitDefBody(StringBuilder sb, XFusionDef def, string ind) {
 		// Unique local names per body: a prefix-guarded child block's declaration would
 		// conflict with the bare row's parent-scope declaration (CS0136).
 		var m = $"m{++BodyN}";
+		// LOCK legality (SDM closed set, memory destination only) — fuzz MISDECODE class.
+		// Non-lockable mnemonic OR a form whose destination can't be memory → #UD.
+		if(!Lockable.Contains(def.Mnemonic) || def.Operands.Count == 0 || def.Operands[0].Class != OpClass.ModRmRm)
+			sb.AppendLine($"{ind}if(p.Lock) return (null, 0);");
 		// Decode phase: ModRM if needed, then operand exprs in spec order.
 		if(def.NeedsModRm) {
-			sb.AppendLine($"{ind}if(i >= code.Length) return (null, 0);");
-			sb.AppendLine($"{ind}i += Decode.ReadModRm(code[i..], mode, in p, out var {m});");
+			sb.AppendLine($"{ind}var {m}Len = Decode.ReadModRm(code[i..], mode, in p, out var {m});");
+			sb.AppendLine($"{ind}if({m}Len < 0) return (null, 0);");
+			sb.AppendLine($"{ind}i += {m}Len;");
 			var memOnly = def.Operands.Any(o => o.MemOnly);
 			if(memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return (null, 0);");
+			// LOCK's other half: legal mnemonic but register destination — still #UD.
+			if(Lockable.Contains(def.Mnemonic) && def.Operands.Count > 0 && def.Operands[0].Class == OpClass.ModRmRm)
+				sb.AppendLine($"{ind}if(p.Lock && {m}.IsReg) return (null, 0);");
 			if(def.Evex) {
 				// disp8*N (SDM 2.7.5): N from the memory operand's shape.
 				var memSpec = def.Operands.FirstOrDefault(o => o.Class is OpClass.XmmRm or OpClass.ModRmRm && !o.MemOnly || o.MemOnly);
@@ -226,6 +243,7 @@ public static class DisassemblerGenerator {
 			WCode.b => "8",
 			WCode.w => "16",
 			WCode.v => vw,
+			WCode.z when spec.Class == OpClass.RelBranch && def.D64 => "p.BranchZWidth(mode)",
 			WCode.z => "p.ZWidth(mode)",
 			WCode.d => "32",
 			WCode.q => "64",
@@ -314,17 +332,20 @@ public static class DisassemblerGenerator {
 				// (XED: 83 C0 FB = add eax, 0xfffffffb; 48 C7 C0 FF.. = mov rax, 0xffffffffffffffff).
 				var sx = spec.SignExtended || spec.Width == WCode.z;
 				var destW = spec.SignExtended || spec.Width == WCode.z ? VWidthExpr() : WidthExpr();
+				sb.AppendLine($"{ind}if(i + ({WidthExpr()}) / 8 > code.Length) return (null, 0);");
 				sb.AppendLine($"{ind}var {v} = Decode.MaskToWidth(Decode.ReadImm(code, ref i, {WidthExpr()}, {(sx ? "true" : "false")}), {destW});");
 				return $"$\"0x{{{v}:x}}\"";
 			}
 			case OpClass.RelBranch: {
 				var v = $"rel{BodyN}_{spec.Text}";
+				sb.AppendLine($"{ind}if(i + ({WidthExpr()}) / 8 > code.Length) return (null, 0);");
 				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, {WidthExpr()}, true);");
 				// target wraps at the mode's IP width (EIP in 32-bit mode)
 				return $"$\"0x{{Decode.MaskToWidth((long)(pc + (ulong)i + (ulong){v}), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}}\"";
 			}
 			case OpClass.MemOffset: {
 				var v = $"moffs{BodyN}_{spec.Text}";
+				sb.AppendLine($"{ind}if(i + p.AWidth(mode) / 8 > code.Length) return (null, 0);");
 				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, p.AWidth(mode), false);");
 				return $"Decode.MoffsString({v}, {WidthExpr()}, in p, mode)";
 			}

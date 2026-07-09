@@ -51,6 +51,11 @@ public struct PrefixState {
 	/// 0x66 still selects 16.
 	public int VWidthD64(XMode mode) => mode == XMode.Bits64 ? (OpSize ? 16 : 64) : VWidth(mode);
 
+	/// Near-branch displacement width (Jz under d64): in 64-bit mode the fetch is
+	/// ALWAYS 32 — 0x66 is ignored on near branches (SDM F64; Intel behavior, fuzz
+	/// LEN-diverge find; AMD honors 66 on jmp — a divergence for the AMD-oracle tier).
+	public int BranchZWidth(XMode mode) => mode == XMode.Bits64 ? 32 : ZWidth(mode);
+
 	/// Effective address width in bits.
 	public int AWidth(XMode mode) => mode switch {
 		XMode.Bits16 => AdSize ? 32 : 16,
@@ -160,8 +165,11 @@ public static class Decode {
 
 	/// Decode ModRM byte + SIB + displacement. Returns bytes consumed from `code`
 	/// (which must start AT the ModRM byte).
+	/// Returns bytes consumed, or -1 if the buffer is too short (truncated input —
+	/// decoder totality; the fuzz CRASH class). Callers must check.
 	public static int ReadModRm(ReadOnlySpan<byte> code, XMode mode, in PrefixState p, out ModRm m) {
 		m = default;
+		if(code.Length < 1) return -1;
 		var modrm = code[0];
 		var i = 1;
 		m.Mod = (byte) (modrm >> 6);
@@ -190,9 +198,9 @@ public static class Decode {
 				6 => ((sbyte) 5, (sbyte) -1),  // BP (or disp16 if mod==00)
 				_ => ((sbyte) 3, (sbyte) -1),  // BX
 			};
-			if(m.Mod == 0 && rm == 6) { m.BaseReg = -1; m.Disp = (short) (code[i] | (code[i + 1] << 8)); i += 2; }
-			else if(m.Mod == 1) { m.Disp = (sbyte) code[i]; i += 1; }
-			else if(m.Mod == 2) { m.Disp = (short) (code[i] | (code[i + 1] << 8)); i += 2; }
+			if(m.Mod == 0 && rm == 6) { if(i + 2 > code.Length) return -1; m.BaseReg = -1; m.Disp = (short) (code[i] | (code[i + 1] << 8)); i += 2; }
+			else if(m.Mod == 1) { if(i + 1 > code.Length) return -1; m.Disp = (sbyte) code[i]; i += 1; }
+			else if(m.Mod == 2) { if(i + 2 > code.Length) return -1; m.Disp = (short) (code[i] | (code[i + 1] << 8)); i += 2; }
 			return i;
 		}
 
@@ -200,17 +208,20 @@ public static class Decode {
 		var rmLow = modrm & 7;
 		if(rmLow == 4) {
 			// SIB
+			if(i >= code.Length) return -1;
 			var sib = code[i++];
 			m.Scale = (byte) (1 << (sib >> 6));
 			var idx = ((sib >> 3) & 7) | (p.RexX ? 8 : 0);
 			m.IndexReg = idx == 4 ? (sbyte) -1 : (sbyte) idx;  // index=100 (no REX.X) = none
 			var bse = (sib & 7) | (p.RexB ? 8 : 0);
 			if((sib & 7) == 5 && m.Mod == 0) {
+				if(i + 4 > code.Length) return -1;
 				m.BaseReg = -1;  // disp32 base
 				m.Disp = ReadI32(code, ref i);
 			} else
 				m.BaseReg = (sbyte) bse;
 		} else if(rmLow == 5 && m.Mod == 0) {
+			if(i + 4 > code.Length) return -1;
 			if(mode == XMode.Bits64) {
 				m.RipRelative = true;
 				m.Disp = ReadI32(code, ref i);
@@ -221,8 +232,8 @@ public static class Decode {
 		} else
 			m.BaseReg = (sbyte) m.Rm;
 
-		if(m.Mod == 1) m.Disp = (sbyte) code[i++];
-		else if(m.Mod == 2) m.Disp = ReadI32(code, ref i);
+		if(m.Mod == 1) { if(i + 1 > code.Length) return -1; m.Disp = (sbyte) code[i++]; }
+		else if(m.Mod == 2) { if(i + 4 > code.Length) return -1; m.Disp = ReadI32(code, ref i); }
 		return i;
 	}
 

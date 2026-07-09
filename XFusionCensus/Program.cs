@@ -13,7 +13,8 @@ namespace XFusionCensus;
 /// Usage: XFusionCensus <elf> <16|32|64> [maxInsns] [--mismatches N]
 public class Program {
 	public static int Main(string[] args) {
-		if(args.Length < 2) { Console.Error.WriteLine("usage: XFusionCensus <elf> <16|32|64> [maxInsns] [--mismatches N]"); return 1; }
+		if(args.Length > 0 && args[0] == "fuzz") return Fuzz.Run(args);
+		if(args.Length < 2) { Console.Error.WriteLine("usage: XFusionCensus <elf> <16|32|64> [maxInsns] [--mismatches N] | XFusionCensus fuzz [n] [seed] [32|64]"); return 1; }
 		var path = args[0];
 		var mode = args[1] switch { "16" => XMode.Bits16, "32" => XMode.Bits32, _ => XMode.Bits64 };
 		var maxInsns = args.Length > 2 && !args[2].StartsWith("--") ? long.Parse(args[2]) : long.MaxValue;
