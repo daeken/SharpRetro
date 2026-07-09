@@ -143,6 +143,30 @@ Repo-shape question (barrow ·51, sera call): shared IL lives where?
 as shared lib (barrow leans b; CoreArchCompiler is already the shared home),
 (c) per-arch IL + normalize at load. XFusion assumes (b)-or-equivalent.
 
+## Lift wiring (designed 2026-07-09, implementation next session)
+
+v1 = RUNTIME lowering: Pagentry lifts each insn once and caches db.fns[].il,
+so per-lift walker cost is fine; generator-time specialization (parametric
+trees with operand holes) is an optimization with its own risks — later.
+
+Pieces:
+1. IlLower.cs becomes a SHARED-SOURCE compile (<Compile Include>) into both
+   XFusionGenerator and XFusionCpu — no project ref either direction (the
+   generator must never depend on XFusionCpu: bootstrap rule; XFusionCpu
+   depending on the generator drags codegen into the runtime). CoreArchCompiler
+   ref from XFusionCpu is fine (runtime-safe lib, Damage precedent =
+   DamageCore→LibSharpRetro).
+2. Generated/LiftTables.cs: per-template {mnemonic, params[], eval S-expr}
+   serialized back out by the generator; runtime parses once via ListParser.
+3. THE FORK, decided: refactor the generated decoder to return a structured
+   DecodedInsn {def-id, operand binds, length} and make BOTH disasm-string
+   rendering AND lifting consumers of it — instead of generating a second
+   parallel dispatch for lift (duplication rots) or bolting binds onto the
+   string path. This churns the corpus-verified decoder ⟹ fresh-session arc
+   with census re-verification at every step, not a session-tail change.
+4. Then: Lift(bytes, pc, mode) → DecodedInsn → binds → IlLower → tree;
+   renderer swaps text→real Il ctors when the shared-IL repo location lands.
+
 ## Test plan (3 layers, design review)
 
 1. **compiler tests** — landed with XF-0 (19 green).
