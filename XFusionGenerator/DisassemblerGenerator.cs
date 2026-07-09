@@ -61,11 +61,13 @@ public static class DisassemblerGenerator {
 				sb.AppendLine("\t\t\t\tif(p.VexValid) {");
 				foreach(var vd in vexRows) {
 					var conds = new List<string>();
+					conds.Add(vd.Evex ? "p.EvexValid" : "!p.EvexValid");
 					conds.Add(vd.MandatoryPrefix switch {
 						"rep" => "p.Rep", "repnz" => "p.RepNz", "opsize" => "p.OpSize",
 						null => "!p.OpSize && !p.Rep && !p.RepNz",
 						_ => throw new NotSupportedException(vd.MandatoryPrefix)
 					});
+					if(vd.VexW is not null) conds.Add(vd.VexW.Value ? "p.RexW" : "!p.RexW");
 					if(vd.Vex == VexMode.TwoSrc) conds.Add("p.VexVvvv == 0");  // #UD otherwise
 					sb.AppendLine($"\t\t\t\t\tif({string.Join(" && ", conds)}) {{");
 					EmitDefBody(sb, vd, "\t\t\t\t\t\t");
@@ -176,11 +178,27 @@ public static class DisassemblerGenerator {
 			sb.AppendLine($"{ind}i += Decode.ReadModRm(code[i..], mode, in p, out var {m});");
 			var memOnly = def.Operands.Any(o => o.MemOnly);
 			if(memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return (null, 0);");
+			if(def.Evex) {
+				// disp8*N (SDM 2.7.5): N from the memory operand's shape.
+				var memSpec = def.Operands.FirstOrDefault(o => o.Class is OpClass.XmmRm or OpClass.ModRmRm && !o.MemOnly || o.MemOnly);
+				var n = memSpec?.Width switch {
+					WCode.ss => "4",
+					WCode.sd => "8",
+					WCode.q => "8",
+					WCode.d => "4",
+					WCode.b => "1",
+					_ => "16 << p.VecLen",  // full-vector tuple (dq/ps/pd/x)
+				};
+				sb.AppendLine($"{ind}Decode.ScaleDisp8(ref {m}, {n});");
+			}
 		}
 
 		var opTexts = new List<string>();
 		foreach(var spec in def.Operands)
 			opTexts.Add(EmitOperand(sb, def, spec, ind, m));
+		// EVEX: {k1}{z} decoration rides the destination (first operand).
+		if(def.Evex && opTexts.Count > 0)
+			opTexts[0] = $"{opTexts[0]} + Decode.EvexDecoration(in p)";
 
 		// Format: template dasm string with $param -> operand text, positionally.
 		// lock/rep prefixes render before the mnemonic (XED convention). A 0x66 on a
@@ -200,6 +218,7 @@ public static class DisassemblerGenerator {
 		bool Packed() => spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.x;
 		string VecPtrBits() => spec.Width switch {
 			WCode.ss => "32", WCode.sd => "64", WCode.q => "64", WCode.d => "32",
+			WCode.b => "8", WCode.w => "16",
 			WCode.ps or WCode.pd or WCode.dq or WCode.x => "128",
 			_ => throw new NotSupportedException($"vector width {spec.Width} for {spec.Text}")
 		};
@@ -218,7 +237,9 @@ public static class DisassemblerGenerator {
 				// address-only operand (LEA): no size qualifier — XED renders bare 'ptr [...]'
 				return $"Decode.MemOperandString(in {m}, in p, mode, 0, pc + (ulong)i)";
 			case OpClass.ModRmRm when spec.MemOnly && spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.ss or WCode.sd or WCode.x: {
-				var ptr = Packed() ? $"p.VexL ? 256 : {VecPtrBits()}" : VecPtrBits();
+				var ptr = !Packed() ? VecPtrBits()
+					: def.Evex ? $"p.VecLen == 2 ? 512 : p.VecLen == 1 ? 256 : {VecPtrBits()}"
+					: $"p.VexL ? 256 : {VecPtrBits()}";
 				return $"Decode.MemOperandString(in {m}, in p, mode, {ptr}, pc + (ulong)i)";
 			}
 			case OpClass.ModRmRm when spec.MemOnly:
@@ -247,23 +268,39 @@ public static class DisassemblerGenerator {
 				return $"Decode.StrOperand(6, {WidthExpr()}, in p, mode)";  // rSI
 			case OpClass.StrDst:
 				return $"Decode.StrOperand(7, {WidthExpr()}, in p, mode)";  // rDI
+			case OpClass.XmmReg when def.Evex:
+				return $"Decode.VecName({m}.Reg | (p.EvexRp ? 16 : 0), {(Packed() ? "p.VecLen" : "0")})";
 			case OpClass.XmmReg: {
 				var l = Packed() ? "p.VexL" : "false";  // scalar widths are L-ignored (LIG)
 				return $"Decode.XmmName({m}.Reg, {l})";
+			}
+			case OpClass.XmmRm when def.Evex: {
+				var ln = Packed() ? "p.VecLen" : "0";
+				var ptr = Packed() ? $"p.VecLen == 2 ? 512 : p.VecLen == 1 ? 256 : {VecPtrBits()}" : VecPtrBits();
+				// reg-form rm extends via X̄ (folded to Rex bit 1... X is bit 2): (RexX ? 16 : 0)
+				return $"({m}.IsReg ? Decode.VecName({m}.Rm | (p.RexX ? 16 : 0), {ln}) : Decode.MemOperandString(in {m}, in p, mode, {ptr}, pc + (ulong)i))";
 			}
 			case OpClass.XmmRm: {
 				var l = Packed() ? "p.VexL" : "false";
 				var ptr = Packed() ? $"p.VexL ? 256 : {VecPtrBits()}" : VecPtrBits();
 				return $"({m}.IsReg ? Decode.XmmName({m}.Rm, {l}) : Decode.MemOperandString(in {m}, in p, mode, {ptr}, pc + (ulong)i))";
 			}
+			case OpClass.XmmRmReg when def.Evex:
+				return $"Decode.VecName({m}.Rm | (p.RexX ? 16 : 0), {(Packed() ? "p.VecLen" : "0")})";
 			case OpClass.XmmRmReg: {
 				var l = Packed() ? "p.VexL" : "false";
 				return $"Decode.XmmName({m}.Rm, {l})";  // mod==11 enforced by MemOnly-inverse below
 			}
+			case OpClass.XmmVvvv when def.Evex:
+				return $"Decode.VecName(p.VexVvvv, {(Packed() ? "p.VecLen" : "0")})";
 			case OpClass.XmmVvvv: {
 				var l = Packed() ? "p.VexL" : "false";
 				return $"Decode.XmmName(p.VexVvvv, {l})";
 			}
+			case OpClass.MaskReg:
+				return $"Decode.MaskName({m}.Reg)";
+			case OpClass.MaskRm:
+				return $"Decode.MaskName({m}.Rm)";
 			case OpClass.MmxReg:
 				return $"Decode.MmxName({m}.Reg)";
 			case OpClass.MmxRm:

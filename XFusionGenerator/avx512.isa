@@ -1,0 +1,119 @@
+; avx512.isa — EVEX tier (AVX-512). Gated behind (featuring avx512 ...).
+; EVEX rows: evex-2src/evex-3src tokens; w0/w1 = EVEX.W-discriminated mnemonics;
+; dest carries {k}{z} decoration automatically; disp8*N handled by tuple shape.
+; Corpus (glibc x86-64): vmovdqu64 680, kmovd 530, vpcmpb 353, vmovdqa64 257,
+; vpcmpd 123, vpcmpub 107, vmovntdq 100, vptestmb 98, vpbroadcastb ...
+
+; --- masked/unmasked full-vector moves, W-discriminated mnemonics ---
+(instruction VMOVDQU8 (dst src) "vmovdqu8 $dst, $src" (intrinsic vmovdqu8 dst src))
+(encoding VMOVDQU8 (Vdq Wdq) (evex-2src repnz w0 0x0F 0x6F))
+(encoding VMOVDQU8 (Wdq Vdq) (evex-2src repnz w0 0x0F 0x7F))
+
+(instruction VMOVDQU16 (dst src) "vmovdqu16 $dst, $src" (intrinsic vmovdqu16 dst src))
+(encoding VMOVDQU16 (Vdq Wdq) (evex-2src repnz w1 0x0F 0x6F))
+(encoding VMOVDQU16 (Wdq Vdq) (evex-2src repnz w1 0x0F 0x7F))
+
+(instruction VMOVDQU32 (dst src) "vmovdqu32 $dst, $src" (intrinsic vmovdqu32 dst src))
+(encoding VMOVDQU32 (Vdq Wdq) (evex-2src rep w0 0x0F 0x6F))
+(encoding VMOVDQU32 (Wdq Vdq) (evex-2src rep w0 0x0F 0x7F))
+
+(instruction VMOVDQU64 (dst src) "vmovdqu64 $dst, $src" (intrinsic vmovdqu64 dst src))
+(encoding VMOVDQU64 (Vdq Wdq) (evex-2src rep w1 0x0F 0x6F))
+(encoding VMOVDQU64 (Wdq Vdq) (evex-2src rep w1 0x0F 0x7F))
+
+(instruction VMOVDQA32 (dst src) "vmovdqa32 $dst, $src" (intrinsic vmovdqa32 dst src))
+(encoding VMOVDQA32 (Vdq Wdq) (evex-2src opsize w0 0x0F 0x6F))
+(encoding VMOVDQA32 (Wdq Vdq) (evex-2src opsize w0 0x0F 0x7F))
+
+(instruction VMOVDQA64 (dst src) "vmovdqa64 $dst, $src" (intrinsic vmovdqa64 dst src))
+(encoding VMOVDQA64 (Vdq Wdq) (evex-2src opsize w1 0x0F 0x6F))
+(encoding VMOVDQA64 (Wdq Vdq) (evex-2src opsize w1 0x0F 0x7F))
+
+(instruction VMOVNTDQ-E (dst src) "vmovntdq $dst, $src" (intrinsic vmovntdq-e dst src))
+(encoding VMOVNTDQ-E (Mdq Vdq) (evex-2src opsize w0 0x0F 0xE7))
+
+; --- mask-dest compares (0F3A map, imm8 predicate; unsigned variants W-shared) ---
+(instruction VPCMPB (k a b pred) "vpcmpb $k, $a, $b, $pred" (intrinsic vpcmpb k a b pred))
+(encoding VPCMPB (KR Hdq Wdq Ib) (evex-3src opsize w0 0x0F 0x3A 0x3F))
+(instruction VPCMPW (k a b pred) "vpcmpw $k, $a, $b, $pred" (intrinsic vpcmpw k a b pred))
+(encoding VPCMPW (KR Hdq Wdq Ib) (evex-3src opsize w1 0x0F 0x3A 0x3F))
+
+(instruction VPCMPUB (k a b pred) "vpcmpub $k, $a, $b, $pred" (intrinsic vpcmpub k a b pred))
+(encoding VPCMPUB (KR Hdq Wdq Ib) (evex-3src opsize w0 0x0F 0x3A 0x3E))
+(instruction VPCMPUW (k a b pred) "vpcmpuw $k, $a, $b, $pred" (intrinsic vpcmpuw k a b pred))
+(encoding VPCMPUW (KR Hdq Wdq Ib) (evex-3src opsize w1 0x0F 0x3A 0x3E))
+
+(instruction VPCMPD (k a b pred) "vpcmpd $k, $a, $b, $pred" (intrinsic vpcmpd k a b pred))
+(encoding VPCMPD (KR Hdq Wdq Ib) (evex-3src opsize w0 0x0F 0x3A 0x1F))
+(instruction VPCMPQ (k a b pred) "vpcmpq $k, $a, $b, $pred" (intrinsic vpcmpq k a b pred))
+(encoding VPCMPQ (KR Hdq Wdq Ib) (evex-3src opsize w1 0x0F 0x3A 0x1F))
+(instruction VPCMPUD (k a b pred) "vpcmpud $k, $a, $b, $pred" (intrinsic vpcmpud k a b pred))
+(encoding VPCMPUD (KR Hdq Wdq Ib) (evex-3src opsize w0 0x0F 0x3A 0x1E))
+
+; --- vpcmpeq/gt legacy-promoted forms with mask dest (0F map under EVEX) ---
+(instruction VPCMPEQB-E (k a b) "vpcmpeqb $k, $a, $b" (intrinsic vpcmpeqb-e k a b))
+(encoding VPCMPEQB-E (KR Hdq Wdq) (evex-3src opsize 0x0F 0x74))
+(instruction VPCMPEQD-E (k a b) "vpcmpeqd $k, $a, $b" (intrinsic vpcmpeqd-e k a b))
+(encoding VPCMPEQD-E (KR Hdq Wdq) (evex-3src opsize 0x0F 0x76))
+(instruction VPCMPGTB-E (k a b) "vpcmpgtb $k, $a, $b" (intrinsic vpcmpgtb-e k a b))
+(encoding VPCMPGTB-E (KR Hdq Wdq) (evex-3src opsize 0x0F 0x64))
+
+; --- vptestm (0F38 map) ---
+(instruction VPTESTMB (k a b) "vptestmb $k, $a, $b" (intrinsic vptestmb k a b))
+(encoding VPTESTMB (KR Hdq Wdq) (evex-3src opsize w0 0x0F 0x38 0x26))
+(instruction VPTESTMW (k a b) "vptestmw $k, $a, $b" (intrinsic vptestmw k a b))
+(encoding VPTESTMW (KR Hdq Wdq) (evex-3src opsize w1 0x0F 0x38 0x26))
+(instruction VPTESTMD (k a b) "vptestmd $k, $a, $b" (intrinsic vptestmd k a b))
+(encoding VPTESTMD (KR Hdq Wdq) (evex-3src opsize w0 0x0F 0x38 0x27))
+
+; --- broadcasts (0F38; element tuple — disp8*N = element size) ---
+(instruction VPBROADCASTB (dst src) "vpbroadcastb $dst, $src" (intrinsic vpbroadcastb dst src))
+(encoding VPBROADCASTB (Vdq Wb) (evex-2src opsize w0 0x0F 0x38 0x78))
+(instruction VPBROADCASTD (dst src) "vpbroadcastd $dst, $src" (intrinsic vpbroadcastd dst src))
+(encoding VPBROADCASTD (Vdq Wd) (evex-2src opsize w0 0x0F 0x38 0x58))
+
+; --- logic (promoted, W-discriminated) ---
+(instruction VPXORD (dst a b) "vpxord $dst, $a, $b" (intrinsic vpxord dst a b))
+(encoding VPXORD (Vdq Hdq Wdq) (evex-3src opsize w0 0x0F 0xEF))
+(instruction VPXORQ (dst a b) "vpxorq $dst, $a, $b" (intrinsic vpxorq dst a b))
+(encoding VPXORQ (Vdq Hdq Wdq) (evex-3src opsize w1 0x0F 0xEF))
+(instruction VPANDD (dst a b) "vpandd $dst, $a, $b" (intrinsic vpandd dst a b))
+(encoding VPANDD (Vdq Hdq Wdq) (evex-3src opsize w0 0x0F 0xDB))
+(instruction VPANDQ (dst a b) "vpandq $dst, $a, $b" (intrinsic vpandq dst a b))
+(encoding VPANDQ (Vdq Hdq Wdq) (evex-3src opsize w1 0x0F 0xDB))
+(instruction VPORD (dst a b) "vpord $dst, $a, $b" (intrinsic vpord dst a b))
+(encoding VPORD (Vdq Hdq Wdq) (evex-3src opsize w0 0x0F 0xEB))
+(instruction VPORQ (dst a b) "vporq $dst, $a, $b" (intrinsic vporq dst a b))
+(encoding VPORQ (Vdq Hdq Wdq) (evex-3src opsize w1 0x0F 0xEB))
+
+(instruction VPMINUB-E (dst a b) "vpminub $dst, $a, $b" (intrinsic vpminub-e dst a b))
+(encoding VPMINUB-E (Vdq Hdq Wdq) (evex-3src opsize 0x0F 0xDA))
+
+; --- mask-register ops (VEX-encoded, but avx512 vocabulary — kmovd/kmovq etc.) ---
+; kmov: 0F 90/91 (load/store-form), 92/93 (gpr-form); pp+W pick b/w/d/q variant.
+(instruction KMOVW (dst src) "kmovw $dst, $src" (intrinsic kmovw dst src))
+(encoding KMOVW (KR KU) (vex-2src w0 0x0F 0x90))
+(instruction KMOVB (dst src) "kmovb $dst, $src" (intrinsic kmovb dst src))
+(encoding KMOVB (KR KU) (vex-2src opsize w0 0x0F 0x90))
+(instruction KMOVQ-K (dst src) "kmovq $dst, $src" (intrinsic kmovq-k dst src))
+(encoding KMOVQ-K (KR KU) (vex-2src w1 0x0F 0x90))
+(instruction KMOVD-K (dst src) "kmovd $dst, $src" (intrinsic kmovd-k dst src))
+(encoding KMOVD-K (KR KU) (vex-2src opsize w1 0x0F 0x90))
+
+; gpr forms: 92 = k←r32, 93 = r32←k. pp discriminates b/w vs d(F2) vs q(F2+W1).
+(instruction KMOVW-GK (dst src) "kmovw $dst, $src" (intrinsic kmovw-gk dst src))
+(encoding KMOVW-GK (KR Ed) (vex-2src w0 0x0F 0x92))
+(instruction KMOVB-GK (dst src) "kmovb $dst, $src" (intrinsic kmovb-gk dst src))
+(encoding KMOVB-GK (KR Ed) (vex-2src opsize w0 0x0F 0x92))
+(instruction KMOVD-GK (dst src) "kmovd $dst, $src" (intrinsic kmovd-gk dst src))
+(encoding KMOVD-GK (KR Ed) (vex-2src repnz w0 0x0F 0x92))
+
+(instruction KMOVW-KG (dst src) "kmovw $dst, $src" (intrinsic kmovw-kg dst src))
+(encoding KMOVW-KG (Gd KU) (vex-2src w0 0x0F 0x93))
+(instruction KMOVD-KG (dst src) "kmovd $dst, $src" (intrinsic kmovd-kg dst src))
+(encoding KMOVD-KG (Gd KU) (vex-2src repnz w0 0x0F 0x93))
+
+(instruction KORTESTD (a b) "kortestd $a, $b" (intrinsic kortestd a b))
+(encoding KORTESTD (KR KU) (vex-2src opsize w1 0x0F 0x98))
+(instruction KORTESTW (a b) "kortestw $a, $b" (intrinsic kortestw a b))
+(encoding KORTESTW (KR KU) (vex-2src w0 0x0F 0x98))

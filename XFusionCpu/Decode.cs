@@ -16,10 +16,16 @@ public struct PrefixState {
 	public byte Segment;   // 0=none, else 0x26/0x2E/0x36/0x3E/0x64/0x65
 	public byte Rex;       // 0 if none; else the raw REX byte (0x40-0x4F), 64-bit mode only
 	                       // (VEX folds R̄X̄B̄W into a synthetic Rex so ModRM/GprName code is shared)
-	public bool VexValid;  // C4/C5 seen — opcode map comes from VexMap, pp folded into OpSize/Rep/RepNz
-	public byte VexMap;    // 1=0F, 2=0F38, 3=0F3A (mmmmm)
-	public byte VexVvvv;   // 2nd-source register (already un-inverted)
-	public bool VexL;      // 0=xmm(128), 1=ymm(256)
+	public bool VexValid;  // C4/C5/62 seen — opcode map comes from VexMap, pp folded into OpSize/Rep/RepNz
+	public byte VexMap;    // 1=0F, 2=0F38, 3=0F3A (mmmmm / EVEX.mm)
+	public byte VexVvvv;   // 2nd-source register (already un-inverted; EVEX: 5 bits via V')
+	public bool VexL;      // 0=xmm(128), 1=ymm(256) — EVEX uses VecLen instead
+	public bool EvexValid; // 62 seen (implies VexValid)
+	public byte VecLen;    // EVEX L'L: 0=128, 1=256, 2=512
+	public byte EvexMask;  // aaa: 0=none, 1-7=k1-k7
+	public bool EvexZ;     // zeroing-masking
+	public bool EvexB;     // broadcast/rc/sae
+	public bool EvexRp;    // R' — ModRM.reg bit 4
 
 	public bool RexW => (Rex & 8) != 0;
 	public bool RexR => (Rex & 4) != 0;
@@ -91,6 +97,29 @@ public static class Decode {
 					p.Rex = (byte) (0x40 | ((b1 & 0x80) == 0 ? 4 : 0));  // R̄ inverted → REX.R
 					ApplyVexPp((byte) (b1 & 3), ref p);
 					return i + 2;
+				}
+				case 0x62 when i + 4 < code.Length && (mode == XMode.Bits64 || (code[i + 1] & 0xC0) == 0xC0): {
+					// EVEX: [62][R̄X̄B̄R̄'00mm][Wvvvv1pp][zL'Lb V'aaa] (32-bit mode: 62=BOUND unless mod11)
+					var e1 = code[i + 1];
+					var e2 = code[i + 2];
+					var e3 = code[i + 3];
+					p.VexValid = true;
+					p.EvexValid = true;
+					p.VexMap = (byte) (e1 & 3);
+					p.VexVvvv = (byte) ((((~e2 >> 3) & 0xF)) | ((e3 & 8) == 0 ? 16 : 0));  // V' inverted, bit 4
+					p.VecLen = (byte) ((e3 >> 5) & 3);
+					p.VexL = p.VecLen == 1;  // keep VexL coherent for shared render paths
+					p.EvexMask = (byte) (e3 & 7);
+					p.EvexZ = (e3 & 0x80) != 0;
+					p.EvexB = (e3 & 0x10) != 0;
+					p.EvexRp = (e1 & 0x10) == 0;  // R' inverted
+					p.Rex = (byte) (0x40
+						| ((e2 & 0x80) != 0 ? 8 : 0)      // W
+						| ((e1 & 0x80) == 0 ? 4 : 0)      // R̄
+						| ((e1 & 0x40) == 0 ? 2 : 0)      // X̄
+						| ((e1 & 0x20) == 0 ? 1 : 0));    // B̄
+					ApplyVexPp((byte) (e2 & 3), ref p);
+					return i + 4;
 				}
 				case 0xC4 when i + 3 < code.Length && (mode == XMode.Bits64 || (code[i + 1] & 0xC0) == 0xC0): {
 					// 3-byte VEX: [C4][R̄X̄B̄mmmmm][WvvvvLpp]
@@ -233,6 +262,17 @@ public static class Decode {
 	public static string SegRegName(int idx) => SegNames[idx & 7];
 
 	public static string XmmName(int idx, bool ymm = false) => ymm ? $"ymm{idx}" : $"xmm{idx}";
+
+	/// EVEX-aware vector reg name: VecLen 0/1/2 = xmm/ymm/zmm (idx 0-31).
+	public static string VecName(int idx, int vecLen) => vecLen switch {
+		2 => $"zmm{idx}", 1 => $"ymm{idx}", _ => $"xmm{idx}"
+	};
+
+	public static string MaskName(int idx) => $"k{idx & 7}";
+
+	/// EVEX operand decoration: {k1} mask + {z} zeroing suffix on the destination.
+	public static string EvexDecoration(in PrefixState p) =>
+		p.EvexMask != 0 ? $"{{k{p.EvexMask}}}" + (p.EvexZ ? "{z}" : "") : "";
 	public static string MmxName(int idx) => $"mm{idx & 7}";  // no REX extension for mmx
 
 	/// Prefix text rendered before the mnemonic. Stray F3/F2 on non-string, non-SSE
@@ -247,6 +287,13 @@ public static class Decode {
 		0x26 => "es", 0x2E => "cs", 0x36 => "ss", 0x3E => "ds", 0x64 => "fs", 0x65 => "gs",
 		_ => ""
 	};
+
+	/// EVEX disp8*N (SDM 2.7.5): mod==01 disp8 is compressed — scale by tuple-N.
+	/// Call after ReadModRm on EVEX defs; N per the def's tuple class (full-vector
+	/// moves/logic: vector byte width; element tuples: element size).
+	public static void ScaleDisp8(ref ModRm m, int n) {
+		if(m.Mod == 1) m.Disp *= n;
+	}
 
 	/// String-op implicit operand (X=DS:[rSI] reg=6, Y=ES:[rDI] reg=7). XED shape:
 	/// 'movsb byte ptr [rdi], byte ptr [rsi]' — no segment shown in 64-bit mode.
@@ -263,7 +310,7 @@ public static class Decode {
 		var aw = p.AWidth(mode);
 		var size = ptrBits switch {
 			8 => "byte ptr ", 16 => "word ptr ", 32 => "dword ptr ", 64 => "qword ptr ",
-			48 => "fword ptr ", 128 => "xmmword ptr ", 256 => "ymmword ptr ", 0 => "ptr ",  // 0 = address-only (LEA)
+			48 => "fword ptr ", 128 => "xmmword ptr ", 256 => "ymmword ptr ", 512 => "zmmword ptr ", 0 => "ptr ",  // 0 = address-only (LEA)
 			_ => ""
 		};
 		// ES/CS/SS/DS overrides are architecturally null in 64-bit mode (only FS/GS apply);

@@ -136,6 +136,18 @@ public class DecodeTests {
 		Assert.That(text2, Is.Null);
 	}
 
+	// --- EVEX tier (XED-verified 2026-07-09) ---
+	[TestCase("62f17fc96f0f", "vmovdqu8 zmm1{k1}{z}, zmmword ptr [rdi]")]  // mask+zero
+	[TestCase("62f1fe486f06", "vmovdqu64 zmm0, zmmword ptr [rsi]")]        // W1 mnemonic
+	[TestCase("62f17f486f06", "vmovdqu8 zmm0, zmmword ptr [rsi]")]         // W0
+	[TestCase("62f1fe486f4610", "vmovdqu64 zmm0, zmmword ptr [rsi+0x400]")] // disp8*64
+	[TestCase("62f37d483f0e00", "vpcmpb k1, zmm0, zmmword ptr [rsi], 0x0")] // mask dest + imm
+	[TestCase("62f26d4826ca", "vptestmb k1, zmm2, zmm2")]
+	[TestCase("62f27d4878c8", "vpbroadcastb zmm1, xmm0")]                  // src stays xmm
+	[TestCase("c5fb92c8", "kmovd k1, eax")]                                // VEX-encoded mask op
+	[TestCase("c5fb93c1", "kmovd eax, k1")]
+	public void EvexTier(string hex, string expected) => Row(hex, XMode.Bits64, expected);
+
 	// --- undecodable / boundary ---
 	[Test]
 	public void UnknownOpcodeReturnsNull() {

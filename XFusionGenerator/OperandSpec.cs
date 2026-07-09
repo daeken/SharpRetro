@@ -17,6 +17,8 @@ public enum OpClass {
 	XmmRm,       // W* — xmm register or memory from ModRM.rm
 	XmmRmReg,    // U* — xmm register from ModRM.rm, mod==11 required
 	XmmVvvv,     // H* — xmm register from VEX.vvvv (second source; VEX rows only)
+	MaskReg,     // KR — opmask register from ModRM.reg (vpcmp*/vptestm* dest, kmov dest)
+	MaskRm,      // KU — opmask register from ModRM.rm (kmov reg-form src)
 	MmxReg,      // P* — mmx register from ModRM.reg
 	MmxRm,       // Q* — mmx register or memory from ModRM.rm
 	MemOffset,   // O* — moffs: address-sized immediate offset, no ModRM (A0-A3)
@@ -54,7 +56,8 @@ public class OperandSpec {
 	public string SegName;       // for fixed segment-reg operands (ES/CS/SS/DS/FS/GS)
 
 	public bool NeedsModRm => Class is OpClass.ModRmRm or OpClass.ModRmReg or OpClass.ModRmSeg
-		or OpClass.XmmReg or OpClass.XmmRm or OpClass.XmmRmReg or OpClass.MmxReg or OpClass.MmxRm;
+		or OpClass.XmmReg or OpClass.XmmRm or OpClass.XmmRmReg or OpClass.MmxReg or OpClass.MmxRm
+		or OpClass.MaskReg or OpClass.MaskRm;
 
 	static readonly Dictionary<string, int> FixedGpr = new() {
 		["AL"] = 0, ["CL"] = 1, ["DL"] = 2, ["BL"] = 3,
@@ -105,6 +108,15 @@ public class OperandSpec {
 		}
 		if(core.Length is < 2 or > 3) throw new NotSupportedException($"operand spec: {s}");
 		var (cls, wstr) = (core[0], core[1..]);
+		if(cls == 'K') {
+			spec.Class = wstr switch {
+				"R" => OpClass.MaskReg,
+				"U" => OpClass.MaskRm,
+				_ => throw new NotSupportedException($"mask-reg spec {s}")
+			};
+			spec.Width = WCode.none;
+			return spec;
+		}
 		spec.SignExtended = sx;
 		spec.Width = wstr switch {
 			"b" => WCode.b, "w" => WCode.w, "v" => WCode.v, "z" => WCode.z,
