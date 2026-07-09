@@ -111,6 +111,22 @@ public class X86Machine {
 		if(name.StartsWith("rep_")) { rep = RepKind.Rep; baseName = name[4..]; }
 		else if(name.StartsWith("repe_")) { rep = RepKind.RepE; baseName = name[5..]; }
 		else if(name.StartsWith("repne_")) { rep = RepKind.RepNe; baseName = name[6..]; }
+		// loop family: args[0] = pre-resolved absolute target
+		if(baseName is "loop" or "loope" or "loopne" or "jcxz") {
+			ulong CxA() => Mode == XMode.Bits16 ? Gpr[1] & 0xFFFF : Mode == XMode.Bits32 ? Gpr[1] & 0xFFFFFFFF : Gpr[1];
+			if(baseName == "jcxz") {
+				if(CxA() == 0) _branchTo = args[0];
+				return true;
+			}
+			// dec confined to the address width (16-bit loop decs CX; upper bits untouched)
+			if(Mode == XMode.Bits16) Gpr[1] = (Gpr[1] & ~0xFFFFUL) | ((Gpr[1] - 1) & 0xFFFF);
+			else if(Mode == XMode.Bits32) Gpr[1] = (Gpr[1] - 1) & 0xFFFFFFFF;  // 32-bit dec zexts (reg-write rule)
+			else Gpr[1]--;
+			var zf = ((Flags >> 6) & 1) != 0;
+			var take = CxA() != 0 && baseName switch { "loope" => zf, "loopne" => !zf, _ => true };
+			if(take) _branchTo = args[0];
+			return true;
+		}
 		if(baseName is not ("movs" or "stos" or "lods" or "scas" or "cmps")) return false;
 
 		var w = args.Length > 0 ? (int) args[0] : 16;  // .isa convention: args[0] = width

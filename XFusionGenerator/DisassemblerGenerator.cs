@@ -437,6 +437,10 @@ public static class DisassemblerGenerator {
 			if(t is PList ll && ll.Count == 3 && ll[0] is PName("lname")
 				&& ll[1] is PName(var l0) && ll[2] is PName(var l1))
 				return $"(p.VexL ? \"{l1}\" : \"{l0}\")";
+			// $(aname n16 n32 n64): mnemonic selected by ADDRESS size (jcxz/jecxz/jrcxz).
+			if(t is PList al && al.Count == 4 && al[0] is PName("aname")
+				&& al[1] is PName(var a16) && al[2] is PName(var a32) && al[3] is PName(var a64))
+				return $"(p.AWidth(mode) switch {{ 16 => \"{a16}\", 32 => \"{a32}\", _ => \"{a64}\" }})";
 			return null;
 		}
 

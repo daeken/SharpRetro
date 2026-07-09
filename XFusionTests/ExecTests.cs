@@ -200,6 +200,41 @@ public class ExecTests {
 		Assert.That(F(m2, CF), Is.True, "borrow");
 	}
 
+	// --- loop family ---
+	[Test]
+	public void LoopCountsDown() {  // mov ecx,3; L: inc eax; loop L
+		var m = M64("B903000000" + "FFC0" + "E2FC");
+		m.Step();
+		for(var i = 0; i < 20 && m.Ip != 0x1009; i++) m.Step();
+		Assert.That(m.Gpr[0], Is.EqualTo(3UL), "body ran CX times");
+		Assert.That(m.Gpr[1], Is.EqualTo(0UL));
+	}
+
+	[Test]
+	public void JcxzBranchesOnZero() {
+		var m = M64("E302" + "9090");  // jrcxz +2
+		m.Gpr[1] = 0;
+		m.Step();
+		Assert.That(m.Ip, Is.EqualTo(0x1004UL), "taken on rcx==0");
+
+		var m2 = M64("E302" + "9090");
+		m2.Gpr[1] = 5;
+		m2.Step();
+		Assert.That(m2.Ip, Is.EqualTo(0x1002UL), "not taken");
+		Assert.That(m2.Gpr[1], Is.EqualTo(5UL), "jcxz never decs");
+	}
+
+	[Test]
+	public void LoopeStopsOnZfClear() {  // loope: continue while CX!=0 AND ZF=1
+		var m = M64("E2FE");  // loop self — but as loope via E1
+		var me = M64("E1FE");
+		me.Gpr[1] = 5;
+		me.Flags &= ~(1UL << ZF);  // ZF=0 → loope falls through immediately
+		me.Step();
+		Assert.That(me.Ip, Is.EqualTo(0x1002UL), "ZF=0 ends loope");
+		Assert.That(me.Gpr[1], Is.EqualTo(4UL), "but CX still dec'd");
+	}
+
 	[Test]
 	public void IntrinsicDispatch() {  // int 21h routes to the handler with the imm arg
 		var m = M64("cd21");

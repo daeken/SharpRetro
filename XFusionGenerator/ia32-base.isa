@@ -205,6 +205,27 @@
     (intrinsic cmps (bitwidth src) src dst))
 (encoding CMPSV (Xv Yv) (0xA7))
 
+; --- LOOP family (E0-E3): dec CX (ADDRESS-size width) then branch while CX!=0
+; (+ZF condition for e/ne); E3 branches if CX==0 WITHOUT dec. Machine-native
+; intrinsics (CX width = address size — same problem/solution as string ops;
+; the machine masks by AWidth). Target pre-resolved to absolute by the binder.
+(instruction LOOP (target)
+    "loop $target"
+    (intrinsic loop target))
+(encoding LOOP (Jb) (0xE2 d64))
+(instruction LOOPE (target)
+    "loope $target"
+    (intrinsic loope target))
+(encoding LOOPE (Jb) (0xE1 d64))
+(instruction LOOPNE (target)
+    "loopne $target"
+    (intrinsic loopne target))
+(encoding LOOPNE (Jb) (0xE0 d64))
+(instruction JCXZ (target)
+    "$(aname jcxz jecxz jrcxz) $target"
+    (intrinsic jcxz target))
+(encoding JCXZ (Jb) (0xE3 d64))
+
 ; --- moffs forms: AL/rAX <-> [disp] with no ModRM (A0-A3) ---
 (encoding MOV (AL Ob)  (0xA0))
 (encoding MOV (rAX Ov) (0xA1))
