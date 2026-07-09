@@ -65,17 +65,24 @@ public static class X86Lifter {
 		_ => vw
 	};
 
+	/// Legacy high-8 rule: 8-bit reg idx 4-7 WITHOUT any REX = AH/CH/DH/BH
+	/// (bits 8-15 of gpr idx-4). Any REX (incl bare 40) switches to spl/bpl/sil/dil.
+	static OperandBind GprBind(int idx, int w, in DecodedInsn d) =>
+		w == 8 && idx is >= 4 and <= 7 && d.P.Rex == 0
+			? new OperandBind.Reg(idx - 4, 8, High8: true)
+			: new OperandBind.Reg(idx, w);
+
 	static OperandBind Bind(OperandSpec spec, in DecodedInsn d, XMode mode, int vw, ulong pc, ref int immSlot) {
 		var w = WidthOf(spec, in d, mode, vw);
 		switch(spec.Class) {
 			case OpClass.ModRmRm when d.M.IsReg:
-				return new OperandBind.Reg(d.M.Rm, w);
+				return GprBind(d.M.Rm, w, in d);
 			case OpClass.ModRmRm:
 				return new OperandBind.Mem(AddrExpr(in d, mode), w);
 			case OpClass.ModRmReg:
-				return new OperandBind.Reg(d.M.Reg, w);
+				return GprBind(d.M.Reg, w, in d);
 			case OpClass.OpcodeReg:
-				return new OperandBind.Reg((d.Op & 7) | ((d.P.Rex & 1) << 3), w);
+				return GprBind((d.Op & 7) | ((d.P.Rex & 1) << 3), w, in d);
 			case OpClass.Imm:
 				return new OperandBind.Imm(immSlot++ == 0 ? d.Imm0 : d.Imm1, w);
 			case OpClass.RelBranch: {

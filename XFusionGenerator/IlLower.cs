@@ -19,7 +19,9 @@ namespace XFusionGenerator;
 ///   Flags = RegKind.Eflags bit-indexed. CMOVcc → IlIfV. push/pop → explicit
 ///   RSP arithmetic. Intrinsics → IlIntrin(V0, name, args).
 public abstract record OperandBind {
-	public sealed record Reg(int Idx, int Width) : OperandBind;   // RegKind.X86 index
+	/// High8: legacy AH/CH/DH/BH (8-bit reg 4-7 without REX) = bits 8-15 of
+	/// GPR Idx (already remapped to 0-3 by the binder). The x86 wart, encoded once.
+	public sealed record Reg(int Idx, int Width, bool High8 = false) : OperandBind;   // RegKind.X86 index
 	public sealed record Mem(Il AddrExpr, int Width) : OperandBind;
 	public sealed record Imm(long Value, int Width) : OperandBind;
 }
@@ -156,14 +158,21 @@ public class IlLower {
 
 	void WriteOperand(string name, OperandBind b, Il e) {
 		switch(b) {
-			case OperandBind.Reg(var reg, 64):
+			case OperandBind.Reg(var reg, _, true):  // AH/CH/DH/BH: insert at bits 8-15
+				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlBin(IlType.U64, BinOp.Or,
+					new IlBin(IlType.U64, BinOp.And,
+						new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, ~0xFF00L)),
+					new IlBin(IlType.U64, BinOp.Shl,
+						new IlCast(IlType.U64, CastKind.Zext, e), C(64, 8)))));
+				break;
+			case OperandBind.Reg(var reg, 64, _):
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, e));
 				break;
-			case OperandBind.Reg(var reg, 32):
+			case OperandBind.Reg(var reg, 32, _):
 				// x86-64 rule: 32-bit write ZERO-EXTENDS to 64 (not insert)
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlCast(IlType.U64, CastKind.Zext, e)));
 				break;
-			case OperandBind.Reg(var reg, var w):  // 8/16: masked insert
+			case OperandBind.Reg(var reg, var w, _):  // 8/16 low: masked insert
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlBin(IlType.U64, BinOp.Or,
 					new IlBin(IlType.U64, BinOp.And,
 						new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, ~((1L << w) - 1))),
@@ -196,8 +205,10 @@ public class IlLower {
 	}
 
 	Il ReadOperand(string name, OperandBind b) => b switch {
-		OperandBind.Reg(var reg, 64) => new IlReadReg(IlType.U64, RegKind.X86, reg),
-		OperandBind.Reg(var reg, var w) => new IlCast(U(w), CastKind.Trunc, new IlReadReg(IlType.U64, RegKind.X86, reg)),
+		OperandBind.Reg(var reg, _, true) => new IlCast(IlType.U8, CastKind.Trunc,
+			new IlBin(IlType.U64, BinOp.Shr, new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, 8))),
+		OperandBind.Reg(var reg, 64, _) => new IlReadReg(IlType.U64, RegKind.X86, reg),
+		OperandBind.Reg(var reg, var w, _) => new IlCast(U(w), CastKind.Trunc, new IlReadReg(IlType.U64, RegKind.X86, reg)),
 		OperandBind.Mem(_, var w) => new IlLoad(U(w), MemAddr[name]),
 		OperandBind.Imm(var v, var w) => C(w, v),
 		_ => throw new NotSupportedException(b.ToString())
