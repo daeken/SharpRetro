@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../CoreArchCompiler/CoreArchCompiler.csproj"/>
+        <ProjectReference Include="../LiftIl/LiftIl.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

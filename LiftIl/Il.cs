@@ -11,7 +11,15 @@ public enum RegKind { X, W, Sp, Wsp, V, Nzcv, Pc, Sys,
     // Maxwell shader regs. Gpr = R0-R254 (32-bit
     // each, R255=RZ); Pred = P0-P6 (1-bit, P7=PT). Distinct from X/W
     // so IlEval/SPIR-V backend can dispatch without arch-tagging.
-    Gpr, Pred }
+    Gpr, Pred,
+    // x86 (XFusion). X86 = the 64-bit GPR file (0=RAX 1=RCX 2=RDX 3=RBX
+    // 4=RSP 5=RBP 6=RSI 7=RDI 8-15=R8-R15; sub-widths are extract/insert,
+    // except 32-bit writes which zero-extend). Eflags: idx=-1 whole word,
+    // else the architectural bit (CF=0 PF=2 AF=4 ZF=6 SF=7 DF=10 OF=11).
+    // X86Seg = segment base as opaque Sys-like context (0=ES..5=GS).
+    // St = x87 stack (0-7, TOP-relative). Xmm = vector file 0-31 (value
+    // type carries the width: v128/v256/v512).
+    X86, Eflags, X86Seg, St, Xmm }
 
 public abstract record IlType {
     public sealed record Void() : IlType { public override string ToString() => "void"; }
@@ -99,6 +107,11 @@ public abstract record Il(IlType Ty) {
         RegKind.Sys => $"S{(i>>14)&3}_{(i>>11)&7}_C{(i>>7)&15}_C{(i>>3)&15}_{i&7}",
         RegKind.Gpr => i == 255 ? "RZ" : $"R{i}",
         RegKind.Pred => i == 7 ? "PT" : $"P{i}",
+        RegKind.X86 => i < 8 ? new[]{"RAX","RCX","RDX","RBX","RSP","RBP","RSI","RDI"}[i] : $"R{i}",
+        RegKind.Eflags => i < 0 ? "EFLAGS" : $"EFLAGS.{i switch { 0=>"C", 2=>"P", 4=>"A", 6=>"Z", 7=>"S", 10=>"D", 11=>"O", _=>i.ToString() }}",
+        RegKind.X86Seg => new[]{"ES","CS","SS","DS","FS","GS"}[i & 7],
+        RegKind.St => $"ST{i}",
+        RegKind.Xmm => $"XMM{i}",
         _ => $"{k}{i}",
     };
 }

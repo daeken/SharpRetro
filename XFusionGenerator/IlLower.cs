@@ -1,120 +1,93 @@
 using CoreArchCompiler;
+using LiftIl;
 
 namespace XFusionGenerator;
 
-/// XF-4: lowers .isa eval bodies to the consumer IL tree shape (M1-GOLDEN.md is
-/// the acceptance form). Internal node set mirrors Pagentry.Lifter/Il.cs shapes;
-/// the renderer emits the golden's text form. When the shared-IL repo location
-/// lands (sera's call, ·51), the renderer swaps for real Il ctor emission — the
-/// tree is the contract, the text is the current test surface.
+/// XF-4: lowers .isa eval bodies to the shared LiftIl tree (M1-GOLDEN.md is the
+/// acceptance form, rendered via LiftIl's own printer). History: v1 built an
+/// internal mirror tree + text renderer while the IL lived in the consumer's
+/// repo; repo-shape (b) landed LiftIl/ in SharpRetro, so this emits real nodes.
 ///
-/// Width model: widths are bits (1/8/16/32/64). Every expr carries a width.
-/// Flag-write canonicalization (M1-GOLDEN note, one rule picked):
-///   comparison → u1 directly; top-level (& _ 1) or (>> _ width-1) → trunc-to-u1
-///   (bit 0 IS the flag); anything else → ne-#0 (bit 0 is NOT the flag — OF).
-public abstract record Ilx(int W) {
-	public sealed record Const(int Wc, long V) : Ilx(Wc);
-	public sealed record ReadReg(string Name) : Ilx(64);                    // arch reg, 64-bit file
-	public sealed record Tmp(int Wt, string Name) : Ilx(Wt);
-	public sealed record Bin(int Wb, string Op, Ilx A, Ilx B) : Ilx(Wb);
-	public sealed record Cast(int Wt, string Kind, Ilx A) : Ilx(Wt);        // trunc/zext/sext
-	public sealed record Load(int Wl, Ilx Addr) : Ilx(Wl);
-	public sealed record AddrOf(string Operand) : Ilx(64);                  // LEA: the mem operand's ADDRESS expr
-	public sealed record Ite(int Wi, Ilx Cond, Ilx T, Ilx F) : Ilx(Wi);     // conditional value → consumer IlIfV (csel; ·62)
-}
-
-public abstract record IlxStmt {
-	public sealed record Let(Ilx.Tmp T, Ilx E) : IlxStmt;
-	public sealed record If(Ilx Cond, List<IlxStmt> Then) : IlxStmt;     // guarded flag-writes (SHL); CMOVcc uses Ite=IlIfV
-	public sealed record Branch(string Kind, Ilx Target) : IlxStmt;     // jmp/call/ret
-	public sealed record Intrin(string Name, List<Ilx> Args) : IlxStmt; // consumer IlIntrin(V0, name, args) — ·62 convention
-	public sealed record WriteReg(string Name, Ilx E) : IlxStmt;
-	public sealed record WriteFlag(string Flag, Ilx E) : IlxStmt;           // E is u1
-	public sealed record Store(Ilx Addr, Ilx E) : IlxStmt;
-}
-
-/// Operand binding: how a template param reads/writes for a CONCRETE instance.
+/// Width model: constants adopt sibling width EXCEPT shifts (result = left
+/// width — the PF 0x6996 catch). Semantically-widthed constants use explicit
+/// .isa width forms if the heuristic ever diverges (M1-GOLDEN doctrine).
+/// Flag-write canonicalization: comparison → u1 direct; bare 0/1 const → u1;
+/// top-level (& _ 1) / (>> _ w-1) → trunc-to-u1; else ne-#0.
+///
+/// x86 conventions (settled ·44/·53/·62 + LiftIl RegKind doc):
+///   GPR file = RegKind.X86 (64-bit); 32-bit writes zext, 8/16 masked-insert.
+///   Flags = RegKind.Eflags bit-indexed. CMOVcc → IlIfV. push/pop → explicit
+///   RSP arithmetic. Intrinsics → IlIntrin(V0, name, args).
 public abstract record OperandBind {
-	public sealed record Reg(string Name, int Width) : OperandBind;         // e.g. X86_RAX, 32
-	public sealed record Mem(Ilx AddrExpr, int Width) : OperandBind;        // addr already built
+	public sealed record Reg(int Idx, int Width) : OperandBind;   // RegKind.X86 index
+	public sealed record Mem(Il AddrExpr, int Width) : OperandBind;
 	public sealed record Imm(long Value, int Width) : OperandBind;
 }
 
 public class IlLower {
-	readonly List<IlxStmt> Stmts = [];
-	readonly Dictionary<string, Ilx> Env = [];   // template params + mlet/let names
-	readonly Dictionary<string, Ilx.Tmp> MemAddr = [];  // operand name -> bound addr tmp
+	readonly List<Il> Stmts = [];
+	readonly Dictionary<string, Il> Env = [];       // mlet/let names -> IlTmp
+	readonly Dictionary<string, IlTmp> MemAddr = [];// operand name -> bound addr tmp
 	int TmpN;
-	readonly int OpWidth;                        // instruction operand width (v-width)
+	readonly int OpWidth;
+	IReadOnlyDictionary<string, OperandBind> Binds;
 
 	IlLower(int opWidth) => OpWidth = opWidth;
 
-	/// Implicit arch-reg names usable directly in eval bodies (LEAVE: (= SP BP)).
-	/// v-sized reads of the 64-bit file; the M4 generator will width-select — for
-	/// the tree, the 64-bit reg is the honest object.
-	static string ArchReg(string n) => n switch {
-		"SP" => "X86_RSP", "BP" => "X86_RBP", "AX" => "X86_RAX", "CX" => "X86_RCX",
-		"DX" => "X86_RDX", "BX" => "X86_RBX", "SI" => "X86_RSI", "DI" => "X86_RDI",
-		_ => null
-	};
-
-	/// Lower one instruction instance: template params + eval body forms + concrete
-	/// operand bindings. Returns the statement block.
-	public static List<IlxStmt> Lower(IReadOnlyList<string> params_, IEnumerable<PTree> evalForms,
+	public static IlBlock Lower(IReadOnlyList<string> params_, IEnumerable<PTree> evalForms,
 		IReadOnlyDictionary<string, OperandBind> binds, int opWidth) {
-		var l = new IlLower(opWidth);
+		var l = new IlLower(opWidth) { Binds = binds };
 		// Pre-bind memory operand addresses (x86: address evaluated ONCE per insn).
 		foreach(var (name, b) in binds)
 			if(b is OperandBind.Mem mem) {
-				var t = new Ilx.Tmp(64, "%addr" + (l.MemAddr.Count == 0 ? "" : l.MemAddr.Count.ToString()));
-				l.Stmts.Add(new IlxStmt.Let(t, mem.AddrExpr));
+				var t = new IlTmp(IlType.U64, l.TmpN);
+				l.Stmts.Add(new IlLet(l.TmpN++, mem.AddrExpr));
 				l.MemAddr[name] = t;
 			}
-		foreach(var p in params_)
-			l.Env[p] = null;  // params resolve through binds at use
-		l.Binds = binds;
 		foreach(var form in evalForms)
 			l.Stmt(form);
-		return l.Stmts;
+		return new IlBlock(l.Stmts);
 	}
 
-	IReadOnlyDictionary<string, OperandBind> Binds;
+	static IlType U(int w) => w switch {
+		1 => IlType.U1, 8 => IlType.U8, 32 => IlType.U32, 64 => IlType.U64,
+		_ => new IlType.I(false, w)
+	};
+	static int W(Il e) => e.Ty is IlType.I(_, var b) ? b : 64;
+	static IlConst C(int w, long v) => new(U(w), (UInt128) (ulong) (v & MaskW(w)));
+	static long MaskW(int w) => w >= 64 ? -1L : (1L << w) - 1;
 
-	Ilx.Tmp NewTmp(int w) => new(w, $"%{TmpN++}");
+	IlTmp Let(Il e) {
+		var t = new IlTmp(e.Ty, TmpN);
+		Stmts.Add(new IlLet(TmpN++, e));
+		return t;
+	}
 
 	// ---- statements ----
 	void Stmt(PTree t) {
 		if(t is not PList l || l.Count == 0) throw new NotSupportedException($"stmt {t}");
 		switch(l[0]) {
 			case PName("mlet"): {
-				// (mlet (n1 e1 n2 e2 ...) body...) — pairs bind in order, each as a let
 				var pairs = (PList) l[1];
-				for(var i = 0; i + 1 < pairs.Count; i += 2) {
-					var name = ((PName) pairs[i]).Name;
-					var e = Expr(pairs[i + 1]);
-					var tmp = NewTmp(e.W);
-					Stmts.Add(new IlxStmt.Let(tmp, e));
-					Env[name] = tmp;
-				}
+				for(var i = 0; i + 1 < pairs.Count; i += 2)
+					Env[((PName) pairs[i]).Name] = Let(Expr(pairs[i + 1]));
 				foreach(var body in l.Skip(2)) Stmt(body);
 				break;
 			}
 			case PName("let"): {
-				// (let name expr body...) — single binding, inner scope
-				var name = ((PName) l[1]).Name;
-				var e = Expr(l[2]);
-				var tmp = NewTmp(e.W);
-				Stmts.Add(new IlxStmt.Let(tmp, e));
-				Env[name] = tmp;
+				Env[((PName) l[1]).Name] = Let(Expr(l[2]));
 				foreach(var body in l.Skip(3)) Stmt(body);
 				break;
 			}
 			case PName("="): {
 				var target = ((PName) l[1]).Name;
 				var e = Expr(l[2]);
-				if(IsFlag(target)) { Stmts.Add(new IlxStmt.WriteFlag(FlagName(target), CanonFlag(e))); break; }
+				if(IsFlag(target)) { Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit(target), CanonFlag(e))); break; }
 				if(Binds.TryGetValue(target, out var b)) { WriteOperand(target, b, e); break; }
-				if(ArchReg(target) is { } ar) { Stmts.Add(new IlxStmt.WriteReg(ar, e.W == 64 ? e : new Ilx.Cast(64, "zext", e))); break; }
+				if(ArchReg(target) is { } ar) {
+					Stmts.Add(new IlWriteReg(RegKind.X86, ar, W(e) == 64 ? e : new IlCast(IlType.U64, CastKind.Zext, e)));
+					break;
+				}
 				throw new NotSupportedException($"write target {target}");
 			}
 			case PName("block"):
@@ -122,45 +95,41 @@ public class IlLower {
 				break;
 			case PName("if"): {
 				var cond = CanonFlag(Expr(l[1]));
-				// CMOVcc data form: (if C (= dst src)) with dst a reg bind → Ite (no control flow)
+				// CMOVcc data form: (if C (= dst src)) with dst a reg bind → IlIfV (csel)
 				if(l.Count == 3 && l[2] is PList { Count: 3 } asn && asn[0] is PName("=")
 					&& asn[1] is PName(var dn) && Binds.TryGetValue(dn, out var db) && db is OperandBind.Reg) {
 					var val = Expr(asn[2]);
-					WriteOperand(dn, db, new Ilx.Ite(val.W, cond, val, ReadOperand(dn, db)));
+					WriteOperand(dn, db, new IlIfV(val.Ty, cond, val, ReadOperand(dn, db)));
 					break;
 				}
-				// general form: guarded stmt block (SHL flag-writes)
+				// general form: guarded stmt block (SHL flag-writes) → IlIf(then, else:[])
 				var inner = new IlLower(OpWidth) { Binds = Binds, TmpN = TmpN };
 				foreach(var (k, v) in Env) inner.Env[k] = v;
 				foreach(var (k, v) in MemAddr) inner.MemAddr[k] = v;
 				foreach(var f in l.Skip(2)) inner.Stmt(f);
 				TmpN = inner.TmpN;
-				Stmts.Add(new IlxStmt.If(cond, inner.Stmts));
+				Stmts.Add(new IlIf(cond, inner.Stmts, []));
 				break;
 			}
 			case PName("push"): {
-				// ·62: explicit RSP arithmetic, not abstract-stack. Value evaluated BEFORE
-				// the SP adjust (push rsp pushes the OLD rsp — SDM).
+				// ·62: explicit RSP arithmetic. Value BEFORE the adjust (push rsp = OLD rsp).
 				var v = Expr(l[1]);
-				var vt = NewTmp(v.W);
-				Stmts.Add(new IlxStmt.Let(vt, v));
-				Stmts.Add(new IlxStmt.WriteReg("X86_RSP",
-					new Ilx.Bin(64, "sub", new Ilx.ReadReg("X86_RSP"), new Ilx.Const(64, v.W / 8))));
-				Stmts.Add(new IlxStmt.Store(new Ilx.ReadReg("X86_RSP"), vt));
+				var vt = Let(v);
+				Stmts.Add(new IlWriteReg(RegKind.X86, 4,
+					new IlBin(IlType.U64, BinOp.Sub, Rsp(), C(64, W(v) / 8))));
+				Stmts.Add(new IlStore(Rsp(), vt));
 				break;
 			}
 			case PName("branch"):
-				Stmts.Add(new IlxStmt.Branch("jmp", Expr(l[1], 64)));
+				Stmts.Add(new IlBranch(BranchKind.Jmp, Expr(l[1], 64)));
 				break;
 			case PName("intrinsic"): {
-				// ·62 convention: IlIntrin(V0, well-known-name, positional operand args).
-				// Side-effects implied by the name (rep_movsb's RCX/RSI/RDI writeback etc);
-				// real semantics land demand-driven, replacing the intrinsic in the .isa.
+				// ·62: IlIntrin(V0, well-known-name, positional dataflow args).
 				var name = ((PName) l[1]).Name;
-				var args = new List<Ilx>();
+				var args = new List<Il>();
 				foreach(var a in l.Skip(2))
-					args.Add(a is PInt(var iv) ? new Ilx.Const(OpWidth, iv) : Expr(a));
-				Stmts.Add(new IlxStmt.Intrin(name, args));
+					args.Add(a is PInt(var iv) ? C(OpWidth, iv) : Expr(a));
+				Stmts.Add(new IlIntrin(IlType.V0, name, args.ToArray()));
 				break;
 			}
 			default:
@@ -168,22 +137,25 @@ public class IlLower {
 		}
 	}
 
-	void WriteOperand(string name, OperandBind b, Ilx e) {
+	static Il Rsp() => new IlReadReg(IlType.U64, RegKind.X86, 4);
+
+	void WriteOperand(string name, OperandBind b, Il e) {
 		switch(b) {
 			case OperandBind.Reg(var reg, 64):
-				Stmts.Add(new IlxStmt.WriteReg(reg, e));
+				Stmts.Add(new IlWriteReg(RegKind.X86, reg, e));
 				break;
 			case OperandBind.Reg(var reg, 32):
 				// x86-64 rule: 32-bit write ZERO-EXTENDS to 64 (not insert)
-				Stmts.Add(new IlxStmt.WriteReg(reg, new Ilx.Cast(64, "zext", e)));
+				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlCast(IlType.U64, CastKind.Zext, e)));
 				break;
 			case OperandBind.Reg(var reg, var w):  // 8/16: masked insert
-				Stmts.Add(new IlxStmt.WriteReg(reg, new Ilx.Bin(64, "or",
-					new Ilx.Bin(64, "and", new Ilx.ReadReg(reg), new Ilx.Const(64, ~((1L << w) - 1))),
-					new Ilx.Cast(64, "zext", e))));
+				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlBin(IlType.U64, BinOp.Or,
+					new IlBin(IlType.U64, BinOp.And,
+						new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, ~((1L << w) - 1))),
+					new IlCast(IlType.U64, CastKind.Zext, e))));
 				break;
 			case OperandBind.Mem:
-				Stmts.Add(new IlxStmt.Store(MemAddr[name], e));
+				Stmts.Add(new IlStore(MemAddr[name], e));
 				break;
 			default:
 				throw new NotSupportedException($"write to {b}");
@@ -191,16 +163,16 @@ public class IlLower {
 	}
 
 	// ---- expressions ----
-	Ilx Expr(PTree t) => Expr(t, OpWidth);
+	Il Expr(PTree t) => Expr(t, OpWidth);
 
-	Ilx Expr(PTree t, int ctxW) {
+	Il Expr(PTree t, int ctxW) {
 		switch(t) {
-			case PInt(var v): return new Ilx.Const(ctxW, v);
+			case PInt(var v): return C(ctxW, v);
 			case PName(var n): {
 				if(Env.TryGetValue(n, out var bound) && bound != null) return bound;
 				if(Binds != null && Binds.TryGetValue(n, out var b)) return ReadOperand(n, b);
-				if(IsFlag(n)) return new Ilx.Tmp(1, "EFLAGS." + FlagName(n));  // flag read
-				if(ArchReg(n) is { } ar) return new Ilx.ReadReg(ar);           // SP/BP/AX... implicit regs
+				if(IsFlag(n)) return new IlReadReg(IlType.U1, RegKind.Eflags, FlagBit(n));
+				if(ArchReg(n) is { } ar) return new IlReadReg(IlType.U64, RegKind.X86, ar);
 				throw new NotSupportedException($"name {n}");
 			}
 			case PList l when l.Count >= 1: return ListExpr(l, ctxW);
@@ -208,157 +180,124 @@ public class IlLower {
 		}
 	}
 
-	Ilx ReadOperand(string name, OperandBind b) => b switch {
-		OperandBind.Reg(var reg, 64) => new Ilx.ReadReg(reg),
-		OperandBind.Reg(var reg, var w) => new Ilx.Cast(w, "trunc", new Ilx.ReadReg(reg)),
-		OperandBind.Mem(_, var w) => LoadOnce(name, w),
-		OperandBind.Imm(var v, var w) => new Ilx.Const(w, v),
+	Il ReadOperand(string name, OperandBind b) => b switch {
+		OperandBind.Reg(var reg, 64) => new IlReadReg(IlType.U64, RegKind.X86, reg),
+		OperandBind.Reg(var reg, var w) => new IlCast(U(w), CastKind.Trunc, new IlReadReg(IlType.U64, RegKind.X86, reg)),
+		OperandBind.Mem(_, var w) => new IlLoad(U(w), MemAddr[name]),
+		OperandBind.Imm(var v, var w) => C(w, v),
 		_ => throw new NotSupportedException(b.ToString())
 	};
 
-	Ilx LoadOnce(string name, int w) => new Ilx.Load(w, MemAddr[name]);
-
-	Ilx ListExpr(PList l, int ctxW) {
+	Il ListExpr(PList l, int ctxW) {
 		var head = l[0] is PName(var h) ? h : throw new NotSupportedException(l[0].ToString());
 		switch(h) {
-			// width casts: (u8 x) etc
-			case "u8": return new Ilx.Cast(8, "trunc", Expr(l[1]));
-			case "u16": return new Ilx.Cast(16, "trunc", Expr(l[1]));
-			case "u32": return new Ilx.Cast(32, "trunc", Expr(l[1]));
-			case "u64": return new Ilx.Cast(64, "zext", Expr(l[1]));
-			case "bitwidth": {
-				var e = Expr(l[1]);
-				return new Ilx.Const(ctxW, e.W);
-			}
+			case "u8": return new IlCast(IlType.U8, CastKind.Trunc, Expr(l[1]));
+			case "u16": return new IlCast(U(16), CastKind.Trunc, Expr(l[1]));
+			case "u32": return new IlCast(IlType.U32, CastKind.Trunc, Expr(l[1]));
+			case "u64": return new IlCast(IlType.U64, CastKind.Zext, Expr(l[1]));
+			case "bitwidth": return C(ctxW, W(Expr(l[1])));
 			case "pop": {
-				// ·62: explicit RSP arithmetic — load [RSP] into a tmp, bump RSP, yield tmp.
-				// Stmt-order-safe: the load + adjust are emitted at evaluation point.
-				var vt = NewTmp(OpWidth);
-				Stmts.Add(new IlxStmt.Let(vt, new Ilx.Load(OpWidth, new Ilx.ReadReg("X86_RSP"))));
-				Stmts.Add(new IlxStmt.WriteReg("X86_RSP",
-					new Ilx.Bin(64, "add", new Ilx.ReadReg("X86_RSP"), new Ilx.Const(64, OpWidth / 8))));
+				// ·62: load [RSP], bump RSP, yield the tmp.
+				var vt = Let(new IlLoad(U(OpWidth), Rsp()));
+				Stmts.Add(new IlWriteReg(RegKind.X86, 4,
+					new IlBin(IlType.U64, BinOp.Add, Rsp(), C(64, OpWidth / 8))));
 				return vt;
 			}
-			case "next-pc": return new Ilx.Tmp(64, "%nextpc");  // consumer: IlReadPc + len (lift-time const)
+			case "next-pc": return new IlReadPc(IlType.U64);  // + insn-len at lift time (wiring TODO)
 			case "addr-of": {
-				// LEA: the operand must be a mem bind — its ADDRESS, not its value
 				var opName = ((PName) l[1]).Name;
 				return Binds[opName] is OperandBind.Mem ? MemAddr[opName]
 					: throw new NotSupportedException("addr-of non-mem operand");
 			}
 			case "sext": {
-				// (sext x toWidth?) — default to op width
 				var a = Expr(l[1]);
 				var w = l.Count > 2 && l[2] is PInt(var wv) ? (int) wv : OpWidth;
-				return new Ilx.Cast(w, "sext", a);
+				return new IlCast(U(w), CastKind.Sext, a);
 			}
 			case "zext": {
 				var a = Expr(l[1]);
-				var w = l.Count > 2 && l[2] is PInt(var wv) ? (int) wv : OpWidth;
-				return new Ilx.Cast(w, "zext", a);
+				var w = l.Count > 2 && l[2] is PInt(var wv2) ? (int) wv2 : OpWidth;
+				return new IlCast(U(w), CastKind.Zext, a);
 			}
 			case "~": {
 				var a = Expr(l[1], ctxW);
-				return new Ilx.Bin(a.W, "xor", a, new Ilx.Const(a.W, -1));
+				return new IlUn(a.Ty, UnOp.Not, a);
 			}
 		}
 		// comparisons → u1
 		if(h is "<" or "==" or "!=" or ">") {
 			var a = Expr(l[1], ctxW);
-			var b = Expr(l[2], a is Ilx.Const ? ctxW : a.W);
-			if(a is Ilx.Const ca && b.W != a.W) a = ca with { Wc = b.W };
-			var op = h switch { "<" => "ult", "==" => "eq", "!=" => "ne", ">" => "ugt", _ => null };
-			return new Ilx.Bin(1, op, a, b);
+			var b = Expr(l[2], a is IlConst ? ctxW : W(a));
+			if(a is IlConst ca && W(b) != W(a)) a = new IlConst(U(W(b)), ca.Bits);
+			var op = h switch { "<" => BinOp.Ult, "==" => BinOp.Eq, "!=" => BinOp.Ne, ">" => BinOp.Ugt, _ => default };
+			return new IlBin(IlType.U1, op, a, b);
 		}
-		// n-ary fold: (op a b c) → (op (op a b) c)
 		var op2 = h switch {
-			"+" => "add", "-" => "sub", "*" => "mul",
-			"&" => "and", "|" => "or", "^" => "xor",
-			">>" => "shr", "<<" => "shl", "!" => "not",
-			">>a" => "sar", "rotl" => "rotl", "rotr" => "rotr",
+			"+" => BinOp.Add, "-" => BinOp.Sub, "*" => BinOp.Mul,
+			"&" => BinOp.And, "|" => BinOp.Or, "^" => BinOp.Xor,
+			">>" => BinOp.Shr, "<<" => BinOp.Shl, ">>a" => BinOp.Sar, "rotr" => BinOp.Ror,
+			"!" => BinOp.Eq,  // (! x) → (== x 0)
+			"rotl" => (BinOp) (-1),
 			_ => throw new NotSupportedException($"op {h}")
 		};
-		if(op2 == "not") return new Ilx.Bin(1, "eq", Expr(l[1]), new Ilx.Const(Expr(l[1]).W, 0));
-		var isShift = op2 is "shr" or "shl" or "sar" or "rotl" or "rotr";
+		if(h == "!") { var x = Expr(l[1]); return new IlBin(IlType.U1, BinOp.Eq, x, C(W(x), 0)); }
+		if(h == "rotl") {  // no Rol in BinOp: rotl w x n = ror x (w-n)
+			var x = Expr(l[1], ctxW);
+			var n = Expr(l[2], W(x));
+			return new IlBin(x.Ty, BinOp.Ror, x, new IlBin(U(W(x)), BinOp.Sub, C(W(x), W(x)), n));
+		}
+		var isShift = op2 is BinOp.Shr or BinOp.Shl or BinOp.Sar or BinOp.Ror;
 		var acc = Expr(l[1], ctxW);
 		for(var i = 2; i < l.Count; i++) {
-			var rhs = Expr(l[i], acc.W);
+			var rhs = Expr(l[i], W(acc));
 			int w;
-			if(isShift) {
-				// shifts: result width = LEFT width; a const left keeps ctxW (the PF
-				// 0x6996 table must NOT shrink to the shift-amount's width); rhs width
-				// is irrelevant to the result.
-				w = acc.W;
-			} else {
-				w = Math.Max(acc.W, rhs.W);
-				// constants adopt sibling width
-				if(acc is Ilx.Const c1 && rhs is not Ilx.Const) { acc = c1 with { Wc = rhs.W }; w = rhs.W; }
-				if(rhs is Ilx.Const c2 && acc is not Ilx.Const) { rhs = c2 with { Wc = acc.W }; w = acc.W; }
+			if(isShift) w = W(acc);  // shifts: result = LEFT width (the PF 0x6996 rule)
+			else {
+				w = Math.Max(W(acc), W(rhs));
+				if(acc is IlConst c1 && rhs is not IlConst) { acc = new IlConst(U(W(rhs)), c1.Bits); w = W(rhs); }
+				if(rhs is IlConst c2 && acc is not IlConst) { rhs = new IlConst(U(W(acc)), c2.Bits); w = W(acc); }
 			}
-			acc = Fold(new Ilx.Bin(w, op2, acc, rhs));
+			acc = Fold(new IlBin(U(w), op2, acc, rhs));
 		}
 		return acc;
 	}
 
 	/// Constant-fold pure-constant binops ((<< 1 31) → #80000000; (- 32 1) → #1f).
-	static Ilx Fold(Ilx.Bin b) {
-		if(b.A is Ilx.Const(_, var x) && b.B is Ilx.Const(_, var y)) {
+	static Il Fold(IlBin b) {
+		if(b.L is IlConst(_, var x) && b.R is IlConst(_, var y)) {
+			var (xv, yv) = ((long) (ulong) x, (long) (ulong) y);
 			long? v = b.Op switch {
-				"add" => x + y, "sub" => x - y, "mul" => x * y,
-				"and" => x & y, "or" => x | y, "xor" => x ^ y,
-				"shl" => x << (int) y, "shr" => (long) ((ulong) x >> (int) y),
+				BinOp.Add => xv + yv, BinOp.Sub => xv - yv, BinOp.Mul => xv * yv,
+				BinOp.And => xv & yv, BinOp.Or => xv | yv, BinOp.Xor => xv ^ yv,
+				BinOp.Shl => xv << (int) yv, BinOp.Shr => (long) ((ulong) xv >> (int) yv),
 				_ => null
 			};
-			if(v is { } vv) return new Ilx.Const(b.W, vv);
+			if(v is { } vv) return C(W(b), vv);
 		}
 		return b;
 	}
 
-	/// Flag-write canonicalization (see class doc).
-	static Ilx CanonFlag(Ilx e) {
-		if(e.W == 1) return e;                                            // comparison chain
-		if(e is Ilx.Const(_, var cv) && cv is 0 or 1) return new Ilx.Const(1, cv);  // (= CF 0)
+	/// Flag-write canonicalization (class doc).
+	static Il CanonFlag(Il e) {
+		if(e.Ty is IlType.I(_, 1)) return e;
+		if(e is IlConst(_, var cv) && (ulong) cv is 0 or 1) return new IlConst(IlType.U1, cv);
 		switch(e) {
-			case Ilx.Bin(_, "and", _, Ilx.Const(_, 1)):                   // (& _ 1) → bit0 valid
-			case Ilx.Bin(_, "shr", var a, Ilx.Const(_, var sh)) when sh == a.W - 1:  // sign shift
-				return new Ilx.Cast(1, "trunc", e);
+			case IlBin(_, BinOp.And, _, IlConst(_, var m)) when (ulong) m == 1:
+			case IlBin(_, BinOp.Shr, var a, IlConst(_, var sh)) when (long) (ulong) sh == W(a) - 1:
+				return new IlCast(IlType.U1, CastKind.Trunc, e);
 			default:
-				return new Ilx.Bin(1, "ne", e, new Ilx.Const(e.W, 0));    // OF class
+				return new IlBin(IlType.U1, BinOp.Ne, e, C(W(e), 0));
 		}
 	}
 
 	static bool IsFlag(string n) => n is "CF" or "PF" or "AF" or "ZF" or "SF" or "OF" or "DF";
-	static string FlagName(string n) => n[..1];
-
-	// ---- renderer: the golden text form ----
-	public static string Render(List<IlxStmt> stmts) {
-		var sb = new System.Text.StringBuilder("(block\n");
-		foreach(var s in stmts) sb.Append("  ").Append(RenderStmt(s)).Append('\n');
-		return sb.Append(')').ToString();
-	}
-
-	static string RenderStmt(IlxStmt s) => s switch {
-		IlxStmt.Let(var t, var e) => $"(let {t.Name} = {R(e)})",
-		IlxStmt.WriteReg(var n, var e) => $"({n} := {R(e)})",
-		IlxStmt.WriteFlag(var f, var e) => $"(EFLAGS.{f} := {R(e)})",
-		IlxStmt.Store(var a, var e) => $"(store {R(a)} {R(e)})",
-		IlxStmt.If(var c, var body) => $"(if {R(c)} {string.Join(' ', body.Select(RenderStmt))})",
-		IlxStmt.Branch(var k, var t2) => $"({k} {R(t2)})",
-		IlxStmt.Intrin(var n, var args) => $"(intrin {n}{string.Concat(args.Select(a => " " + R(a)))})",
-		_ => throw new NotSupportedException(s.ToString())
+	static int FlagBit(string n) => n switch {
+		"CF" => 0, "PF" => 2, "AF" => 4, "ZF" => 6, "SF" => 7, "DF" => 10, "OF" => 11, _ => -1
 	};
 
-	static string R(Ilx e) => e switch {
-		Ilx.Const(var w, var v) => $"(u{w} #{v & MaskW(w):x})",
-		Ilx.ReadReg(var n) => $"(u64 {n})",
-		Ilx.Tmp(var w, var n) => n.StartsWith("EFLAGS") ? $"(u1 {n})" : $"(u{w} {n})",
-		Ilx.Bin(var w, var op, var a, var b) => $"(u{w} {op} {R(a)} {R(b)})",
-		Ilx.Cast(var w, var k, var a) => $"(u{w} {k} {R(a)})",
-		Ilx.Load(var w, var a) => $"(u{w} load {R(a)})",
-		Ilx.AddrOf(var o) => $"(u64 addr {o})",
-		Ilx.Ite(var w, var c, var t2, var f) => $"(u{w} ite {R(c)} {R(t2)} {R(f)})",
-		_ => throw new NotSupportedException(e.ToString())
+	/// Implicit arch-reg names in eval bodies (LEAVE: (= SP BP)) → X86 file index.
+	static int? ArchReg(string n) => n switch {
+		"AX" => 0, "CX" => 1, "DX" => 2, "BX" => 3, "SP" => 4, "BP" => 5, "SI" => 6, "DI" => 7,
+		_ => null
 	};
-
-	static long MaskW(int w) => w >= 64 ? -1L : (1L << w) - 1;
 }

@@ -1,4 +1,5 @@
 using CoreArchCompiler;
+using LiftIl;
 
 namespace XFusionGenerator;
 
@@ -15,9 +16,8 @@ public static class LowerCensus {
 			// synthetic binds: every param a 32-bit reg (widest structural coverage
 			// without operand-class knowledge; mem/imm variants exercise the same body)
 			var binds = new Dictionary<string, OperandBind>();
-			var regs = new[] { "X86_RAX", "X86_RBX", "X86_RCX", "X86_RDX" };
 			for(var i = 0; i < t.Params.Count; i++)
-				binds[t.Params[i]] = new OperandBind.Reg(regs[i % regs.Length], 32);
+				binds[t.Params[i]] = new OperandBind.Reg(i % 4, 32);  // rax/rcx/rdx/rbx
 			try {
 				IlLower.Lower(t.Params, t.Eval.Skip(1), binds, 32);  // Eval = (block ...)
 				ok.Add(t.Mnemonic);  // empty body (NOP) is a valid lowering
@@ -25,7 +25,7 @@ public static class LowerCensus {
 				// LEA-shaped: the operand is an M-class — retry with a mem bind
 				try {
 					var membinds = new Dictionary<string, OperandBind>(binds);
-					membinds[t.Params[^1]] = new OperandBind.Mem(new Ilx.ReadReg("X86_RCX"), 32);
+					membinds[t.Params[^1]] = new OperandBind.Mem(new IlReadReg(IlType.U64, RegKind.X86, 1), 32);
 					IlLower.Lower(t.Params, t.Eval.Skip(1), membinds, 32);
 					ok.Add(t.Mnemonic);
 				} catch(Exception e2) { Tally(fails, e2, t.Mnemonic); }

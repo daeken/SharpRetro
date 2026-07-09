@@ -1,5 +1,6 @@
 using CoreArchCompiler;
 using XFusionGenerator;
+using LiftIl;
 
 namespace XFusionTests;
 
@@ -25,16 +26,16 @@ public class IlLowerTests {
 	public void AddRegReg() {  // 01 D8 = add eax, ebx (mode=64)
 		var (ps, eval) = LoadAdd();
 		var stmts = IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
-			["lval"] = new OperandBind.Reg("X86_RAX", 32),
-			["rval"] = new OperandBind.Reg("X86_RBX", 32),
+			["lval"] = new OperandBind.Reg(0, 32),
+			["rval"] = new OperandBind.Reg(3, 32),
 		}, 32);
-		var got = IlLower.Render(stmts);
+		var got = Render(stmts);
 		var expect = """
 (block
-  (let %0 = (u32 trunc (u64 X86_RAX)))
-  (let %1 = (u32 trunc (u64 X86_RBX)))
+  (let %0 = (u32 trunc (u64 RAX)))
+  (let %1 = (u32 trunc (u64 RBX)))
   (let %2 = (u32 add (u32 %0) (u32 %1)))
-  (X86_RAX := (u64 zext (u32 %2)))
+  (RAX := (u64 zext (u32 %2)))
   (EFLAGS.C := (u1 or (u1 ult (u32 %2) (u32 %0)) (u1 ult (u32 %2) (u32 %1))))
   (EFLAGS.S := (u1 trunc (u32 shr (u32 %2) (u32 #1f))))
   (EFLAGS.O := (u1 ne (u32 and (u32 and (u32 xor (u32 %2) (u32 %0)) (u32 xor (u32 %2) (u32 %1))) (u32 #80000000)) (u32 #0)))
@@ -50,26 +51,28 @@ public class IlLowerTests {
 	[Test]
 	public void AddMemReg() {  // 01 5D F0 = add dword ptr [rbp-0x10], ebx
 		var (ps, eval) = LoadAdd();
-		var addr = new Ilx.Bin(64, "add", new Ilx.ReadReg("X86_RBP"), new Ilx.Const(64, -16));
+		var addr = new IlBin(IlType.U64, BinOp.Add, new IlReadReg(IlType.U64, RegKind.X86, 5), new IlConst(IlType.U64, unchecked((ulong)-16L)));
 		var stmts = IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
 			["lval"] = new OperandBind.Mem(addr, 32),
-			["rval"] = new OperandBind.Reg("X86_RBX", 32),
+			["rval"] = new OperandBind.Reg(3, 32),
 		}, 32);
-		var got = IlLower.Render(stmts);
+		var got = Render(stmts);
 		// structural assertions per golden row 2:
-		Assert.That(got, Does.Contain("(let %addr = (u64 add (u64 X86_RBP) (u64 #fffffffffffffff0)))"));
-		Assert.That(got, Does.Contain("(u32 load (u64 %addr))"));           // lval reads via the SHARED addr
-		Assert.That(got, Does.Contain("(store (u64 %addr)"));               // write-back to SAME addr
+		Assert.That(got, Does.Contain("(let %0 = (u64 add (u64 RBP) (u64 #fffffffffffffff0)))"));
+		Assert.That(got, Does.Contain("(u32 load (u64 %0))"));           // lval reads via the SHARED addr
+		Assert.That(got, Does.Contain("(store (u64 %0)"));               // write-back to SAME addr
 		Assert.That(got.IndexOf("(store"), Is.GreaterThan(got.IndexOf("load")));
 		// exactly one addr computation
-		Assert.That(got.Split("%addr =").Length, Is.EqualTo(2));
+		Assert.That(got.Split("%0 =").Length, Is.EqualTo(2));
 		// flag block identical shape to row 1 (spot: CF + Z)
 		Assert.That(got, Does.Contain("(EFLAGS.C := (u1 or (u1 ult"));
 		Assert.That(got, Does.Contain("(EFLAGS.Z := (u1 eq"));
 	}
 
 	static string Norm(string s) => string.Join('\n',
-		s.Replace("\r", "").Split('\n').Select(x => x.TrimEnd()).Where(x => x.Length > 0));
+		s.Replace("\r", "").Replace("\n)", ")").Split('\n').Select(x => x.Trim()).Where(x => x.Length > 0));
+
+	static string Render(IlBlock b) => b.ToString();
 
 	// ---- family sweep: every 2-op ALU template lowers at every width ----
 	static (List<string> Params, List<PTree> Eval) Load(string mnem) {
@@ -87,9 +90,9 @@ public class IlLowerTests {
 	static string LowerRegReg(string mnem, int w) {
 		var (ps, eval) = Load(mnem);
 		var binds = new Dictionary<string, OperandBind>();
-		binds[ps[0]] = new OperandBind.Reg("X86_RAX", w);
-		if(ps.Count > 1) binds[ps[1]] = new OperandBind.Reg("X86_RBX", w);
-		return IlLower.Render(IlLower.Lower(ps, eval, binds, w));
+		binds[ps[0]] = new OperandBind.Reg(0, w);
+		if(ps.Count > 1) binds[ps[1]] = new OperandBind.Reg(3, w);
+		return Render(IlLower.Lower(ps, eval, binds, w));
 	}
 
 	[Test]
@@ -122,14 +125,14 @@ public class IlLowerTests {
 	public void MovBare() {  // MOV: single write, zero flags
 		var il = LowerRegReg("MOV", 32);
 		Assert.That(il, Does.Not.Contain("EFLAGS"));
-		Assert.That(il, Does.Contain("(X86_RAX := (u64 zext (u32 trunc (u64 X86_RBX))))"));
+		Assert.That(il, Does.Contain("(RAX := (u64 zext (u32 trunc (u64 RBX))))"));
 	}
 
 	[Test]
 	public void IncPreservesCf() {  // INC's defining quirk: CF untouched
 		var (ps, eval) = Load("INC");
-		var il = IlLower.Render(IlLower.Lower(ps, eval,
-			new Dictionary<string, OperandBind> { ["lval"] = new OperandBind.Reg("X86_RAX", 32) }, 32));
+		var il = Render(IlLower.Lower(ps, eval,
+			new Dictionary<string, OperandBind> { ["lval"] = new OperandBind.Reg(0, 32) }, 32));
 		Assert.That(il, Does.Not.Contain("EFLAGS.C :="));
 		Assert.That(il, Does.Contain("EFLAGS.Z"));
 	}
@@ -143,11 +146,11 @@ public class IlLowerTests {
 	[Test]
 	public void PushExplicitRsp() {  // ·62: value FIRST (push rsp = old rsp), then SP-=, then store
 		var (ps, eval) = Load("PUSH");
-		var il = IlLower.Render(IlLower.Lower(ps, eval,
-			new Dictionary<string, OperandBind> { ["src"] = new OperandBind.Reg("X86_RCX", 64) }, 64));
-		var iVal = il.IndexOf("(let %0 = (u64 X86_RCX))");
-		var iAdj = il.IndexOf("(X86_RSP := (u64 sub (u64 X86_RSP) (u64 #8)))");
-		var iSto = il.IndexOf("(store (u64 X86_RSP) (u64 %0))");
+		var il = Render(IlLower.Lower(ps, eval,
+			new Dictionary<string, OperandBind> { ["src"] = new OperandBind.Reg(1, 64) }, 64));
+		var iVal = il.IndexOf("(let %0 = (u64 RCX))");
+		var iAdj = il.IndexOf("(RSP := (u64 sub (u64 RSP) (u64 #8)))");
+		var iSto = il.IndexOf("(store (u64 RSP) (u64 %0))");
 		Assert.That(iVal, Is.GreaterThanOrEqualTo(0));
 		Assert.That(iAdj, Is.GreaterThan(iVal));
 		Assert.That(iSto, Is.GreaterThan(iAdj));
@@ -156,11 +159,11 @@ public class IlLowerTests {
 	[Test]
 	public void PopExplicitRsp() {  // ·62: load [RSP] then RSP+=, dest written from the tmp
 		var (ps, eval) = Load("POP");
-		var il = IlLower.Render(IlLower.Lower(ps, eval,
-			new Dictionary<string, OperandBind> { ["dst"] = new OperandBind.Reg("X86_RCX", 64) }, 64));
-		var iLoad = il.IndexOf("(let %0 = (u64 load (u64 X86_RSP)))");
-		var iAdj = il.IndexOf("(X86_RSP := (u64 add (u64 X86_RSP) (u64 #8)))");
-		var iWr = il.IndexOf("(X86_RCX := (u64 %0))");
+		var il = Render(IlLower.Lower(ps, eval,
+			new Dictionary<string, OperandBind> { ["dst"] = new OperandBind.Reg(1, 64) }, 64));
+		var iLoad = il.IndexOf("(let %0 = (u64 load (u64 RSP)))");
+		var iAdj = il.IndexOf("(RSP := (u64 add (u64 RSP) (u64 #8)))");
+		var iWr = il.IndexOf("(RCX := (u64 %0))");
 		Assert.That(iLoad, Is.GreaterThanOrEqualTo(0));
 		Assert.That(iAdj, Is.GreaterThan(iLoad));
 		Assert.That(iWr, Is.GreaterThan(iAdj));
@@ -169,28 +172,28 @@ public class IlLowerTests {
 	[Test]
 	public void CmovIsIteNotBranch() {  // ·62: IlIfV (csel), no intra-insn control flow
 		var (ps, eval) = Load("CMOVB");
-		var il = IlLower.Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
-			["dst"] = new OperandBind.Reg("X86_RAX", 32),
-			["src"] = new OperandBind.Reg("X86_RBX", 32),
+		var il = Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
+			["dst"] = new OperandBind.Reg(0, 32),
+			["src"] = new OperandBind.Reg(3, 32),
 		}, 32));
-		Assert.That(il, Does.Contain("ite (u1 EFLAGS.C)"));
-		Assert.That(il, Does.Not.Contain("(if "));
+		Assert.That(il, Does.Contain("if (u1 EFLAGS.C)"));
+		Assert.That(il, Does.Not.Contain("(if (u1 EFLAGS.C)\n"));
 	}
 
 	[Test]
 	public void IntrinsicPassthrough() {  // ·62: IlIntrin(V0, name, positional args)
 		var (ps, eval) = Load("BSF");
-		var il = IlLower.Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
-			["dst"] = new OperandBind.Reg("X86_RAX", 32),
-			["src"] = new OperandBind.Reg("X86_RBX", 32),
+		var il = Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
+			["dst"] = new OperandBind.Reg(0, 32),
+			["src"] = new OperandBind.Reg(3, 32),
 		}, 32));
-		Assert.That(il, Does.Contain("(intrin bsf"));
-		Assert.That(il, Does.Contain("(u32 trunc (u64 X86_RAX))"));  // operands ride as dataflow args
+		Assert.That(il, Does.Contain("(void intrin.bsf"));
+		Assert.That(il, Does.Contain("(u32 trunc (u64 RAX))"));  // operands ride as dataflow args
 	}
 
 	[Test]
 	public void Sub8BitInsertWrite() {  // 8-bit write = masked insert, not zext
 		var il = LowerRegReg("SUB", 8);
-		Assert.That(il, Does.Contain("(u64 and (u64 X86_RAX) (u64 #ffffffffffffff00))"));
+		Assert.That(il, Does.Contain("(u64 and (u64 RAX) (u64 #ffffffffffffff00))"));
 	}
 }
