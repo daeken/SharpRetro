@@ -29,7 +29,7 @@ Conventions (per DESIGN.md M1 map + consumer answers ·44/·53):
                                 (u32 #80000000)) (u32 #0)))
   (EFLAGS.A := (u1 trunc (u32 and (u32 shr (u32 xor (u32 %0) (u32 %1) (u32 %2)) (u32 #4)) (u32 #1))))
   (let %3 = (u8 trunc (u32 %2)))                ; low8
-  (EFLAGS.P := (u1 trunc (u32 and (u32 shr (u32 #6996) (u32 and (u8 xor (u8 %3) (u8 shr (u8 %3) (u8 #4))) (u32 #f))) (u32 #1))))
+  (EFLAGS.P := (u1 trunc (u32 and (u32 shr (u32 #6996) (u8 and (u8 xor (u8 %3) (u8 shr (u8 %3) (u8 #4))) (u8 #f))) (u32 #1))))
   (EFLAGS.Z := (u1 eq (u32 %2) (u32 #0))))
 ```
 

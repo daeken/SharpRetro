@@ -30,6 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="../CoreArchCompiler/CoreArchCompiler.csproj"/>
         <ProjectReference Include="../XFusionCpu/XFusionCpu.csproj"/>
+        <ProjectReference Include="../XFusionGenerator/XFusionGenerator.csproj"/>
     </ItemGroup>
 
 </Project>
