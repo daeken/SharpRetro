@@ -76,6 +76,19 @@ public struct ModRm {
 	public bool RipRelative;       // 64-bit mode mod=00 rm=101
 }
 
+/// Structured decode result — ONE decode, two consumers (disasm text render +
+/// lift operand-binding). DefId = the generated per-encoding-body ordinal
+/// (Disassembler.DefMnemonics[DefId] names it); Imm0/Imm1 = decoded immediate
+/// slots in operand order (two suffice: no defined form carries three).
+public struct DecodedInsn {
+	public int DefId;
+	public int Len;          // total instruction length (prefixes + opcode + operands)
+	public byte Op;          // final opcode byte (for +r reg extraction)
+	public PrefixState P;
+	public ModRm M;          // valid only if the def carries ModRM
+	public long Imm0, Imm1;
+}
+
 public static class Decode {
 	/// Scan legacy prefixes + REX + VEX. Returns bytes consumed. REX must be the last
 	/// legacy-class prefix before the opcode — a legacy prefix after REX cancels it

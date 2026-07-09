@@ -20,24 +20,31 @@ public static class DisassemblerGenerator {
 		sb.AppendLine();
 		sb.AppendLine("\t/// Returns (text, length) or (null, 0) if undecodable.");
 		sb.AppendLine("\tpublic static (string Text, int Length) Disassemble(ReadOnlySpan<byte> code, ulong pc, XMode mode) {");
+		sb.AppendLine("\t\tif(!DecodeInsn(code, mode, out var d)) return (null, 0);");
+		sb.AppendLine("\t\treturn (RenderInsn(in d, pc, mode), d.Len);");
+		sb.AppendLine("\t}");
+		sb.AppendLine();
+		sb.AppendLine("\t/// Structured decode — the single decoder both disasm and lift consume.");
+		sb.AppendLine("\tpublic static bool DecodeInsn(ReadOnlySpan<byte> code, XMode mode, out DecodedInsn d) {");
+		sb.AppendLine("\t\td = default;");
 		sb.AppendLine("\t\t// x86 caps instruction length at 15 bytes (#UD past that) — clamp the view");
 		sb.AppendLine("\t\t// so prefix-soup can't produce >15-byte decodes.");
 		sb.AppendLine("\t\tif(code.Length > 15) code = code[..15];");
 		sb.AppendLine("\t\tvar pLen = Decode.ScanPrefixes(code, mode, out var p);");
 		sb.AppendLine("\t\tvar i = pLen;");
-		sb.AppendLine("\t\tif(i >= code.Length) return (null, 0);");
+		sb.AppendLine("\t\tif(i >= code.Length) return false;");
 		sb.AppendLine("\t\tvar op = code[i++];");
 		sb.AppendLine("\t\tvar map = OpcodeMap.OneByte;");
 		sb.AppendLine("\t\tif(p.VexValid) {");
 		sb.AppendLine("\t\t\t// VEX carries the map — the opcode byte after the prefix is bare (no 0F escape)");
 		sb.AppendLine("\t\t\tmap = p.VexMap switch { 1 => OpcodeMap.TwoByte0F, 2 => OpcodeMap.ThreeByte0F38, 3 => OpcodeMap.ThreeByte0F3A, _ => (OpcodeMap) 255 };");
-		sb.AppendLine("\t\t\tif(map == (OpcodeMap) 255) return (null, 0);");
+		sb.AppendLine("\t\t\tif(map == (OpcodeMap) 255) return false;");
 		sb.AppendLine("\t\t} else if(op == 0x0F) {");
-		sb.AppendLine("\t\t\tif(i >= code.Length) return (null, 0);");
+		sb.AppendLine("\t\t\tif(i >= code.Length) return false;");
 		sb.AppendLine("\t\t\top = code[i++];");
 		sb.AppendLine("\t\t\tmap = OpcodeMap.TwoByte0F;");
-		sb.AppendLine("\t\t\tif(op == 0x38) { if(i >= code.Length) return (null, 0); op = code[i++]; map = OpcodeMap.ThreeByte0F38; }");
-		sb.AppendLine("\t\t\telse if(op == 0x3A) { if(i >= code.Length) return (null, 0); op = code[i++]; map = OpcodeMap.ThreeByte0F3A; }");
+		sb.AppendLine("\t\t\tif(op == 0x38) { if(i >= code.Length) return false; op = code[i++]; map = OpcodeMap.ThreeByte0F38; }");
+		sb.AppendLine("\t\t\telse if(op == 0x3A) { if(i >= code.Length) return false; op = code[i++]; map = OpcodeMap.ThreeByte0F3A; }");
 		sb.AppendLine("\t\t}");
 		sb.AppendLine();
 
@@ -76,10 +83,10 @@ public static class DisassemblerGenerator {
 					EmitDefBody(sb, vd, "\t\t\t\t\t\t");
 					sb.AppendLine("\t\t\t\t\t}");
 				}
-				sb.AppendLine("\t\t\t\t\treturn (null, 0);");
+				sb.AppendLine("\t\t\t\t\treturn false;");
 				sb.AppendLine("\t\t\t\t}");
 			}
-			sb.AppendLine("\t\t\t\tif(p.VexValid) return (null, 0);  // no VEX row here");
+			sb.AppendLine("\t\t\t\tif(p.VexValid) return false;  // no VEX row here");
 			// Mandatory-prefix rows dispatch next (F3 90 = pause, not rep nop).
 			// The matched prefix is CONSUMED — cleared so it doesn't render as rep/data16.
 			foreach(var pg in g.Select(x => x.Def).Where(d => d.MandatoryPrefix != null && d.Vex == VexMode.None).GroupBy(d => d.MandatoryPrefix)) {
@@ -96,7 +103,7 @@ public static class DisassemblerGenerator {
 				var pdefs = pg.ToList();
 				if(pdefs.Count > 1 || pdefs[0].RegExtension >= 0) {
 					// /N-discriminated within this prefix (opsize 0F 73 /2 /3 /6 /7 class)
-					sb.AppendLine("\t\t\t\t\tif(i >= code.Length) return (null, 0);");
+					sb.AppendLine("\t\t\t\t\tif(i >= code.Length) return false;");
 					sb.AppendLine($"\t\t\t\t\tswitch((code[i] >> 3) & 7) {{");
 					foreach(var pd in pdefs.OrderBy(x => x.RegExtension)) {
 						if(pd.RegExtension < 0)
@@ -105,14 +112,14 @@ public static class DisassemblerGenerator {
 						EmitDefBody(sb, pd, "\t\t\t\t\t\t\t");
 						sb.AppendLine("\t\t\t\t\t\t}");
 					}
-					sb.AppendLine("\t\t\t\t\t\tdefault: return (null, 0);");
+					sb.AppendLine("\t\t\t\t\t\tdefault: return false;");
 					sb.AppendLine("\t\t\t\t\t}");
 				} else
 					EmitDefBody(sb, pdefs[0], "\t\t\t\t\t");
 				sb.AppendLine("\t\t\t\t}");
 			}
 			var byExt = g.Select(x => x.Def).Where(d => d.MandatoryPrefix == null && d.Vex == VexMode.None).ToList();
-			if(byExt.Count == 0) { sb.AppendLine("\t\t\t\treturn (null, 0);"); sb.AppendLine("\t\t\t}"); continue; }
+			if(byExt.Count == 0) { sb.AppendLine("\t\t\t\treturn false;"); sb.AppendLine("\t\t\t}"); continue; }
 			// Vector space (any V/W/U/P/Q operand in the group) is uniformly prefix-
 			// discriminated: 66/F3/F2 ALWAYS select a different instruction there. The
 			// bare row must REJECT unclaimed prefixes — an unimplemented 66-sibling has
@@ -126,7 +133,7 @@ public static class DisassemblerGenerator {
 				if(!claimed.Contains("rep")) rejects.Add("p.Rep");
 				if(!claimed.Contains("repnz")) rejects.Add("p.RepNz");
 				if(rejects.Count > 0)
-					sb.AppendLine($"\t\t\t\tif({string.Join(" || ", rejects)}) return (null, 0);");
+					sb.AppendLine($"\t\t\t\tif({string.Join(" || ", rejects)}) return false;");
 			}
 			// mod-field discrimination (0F 12: movhlps mod==11 / movlps mem): a RegOnly
 			// (U*-operand) def and a MemOnly def can share (map, opcode) without /N.
@@ -134,7 +141,7 @@ public static class DisassemblerGenerator {
 				var regForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
 				var memForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
 				if(regForm != null && memForm != null && regForm != memForm) {
-					sb.AppendLine("\t\t\t\tif(i >= code.Length) return (null, 0);");
+					sb.AppendLine("\t\t\t\tif(i >= code.Length) return false;");
 					sb.AppendLine("\t\t\t\tif((code[i] >> 6) == 3) {");
 					EmitDefBody(sb, regForm, "\t\t\t\t\t");
 					sb.AppendLine("\t\t\t\t} else {");
@@ -146,7 +153,7 @@ public static class DisassemblerGenerator {
 			}
 			if(byExt.Count > 1 || byExt[0].RegExtension >= 0) {
 				// need ModRM.reg to disambiguate; all rows in a /N group carry ModRM
-				sb.AppendLine("\t\t\t\tif(i >= code.Length) return (null, 0);");
+				sb.AppendLine("\t\t\t\tif(i >= code.Length) return false;");
 				sb.AppendLine("\t\t\t\tvar regField = (code[i] >> 3) & 7;");
 				sb.AppendLine("\t\t\t\tvar modIs11 = (code[i] >> 6) == 3;");
 				sb.AppendLine("\t\t\t\tvar rmField = code[i] & 7;");
@@ -169,19 +176,34 @@ public static class DisassemblerGenerator {
 							EmitDefBody(sb, d, "\t\t\t\t\t\t\t");
 							sb.AppendLine("\t\t\t\t\t\t}");
 						}
-						sb.AppendLine("\t\t\t\t\t\treturn (null, 0);");
+						sb.AppendLine("\t\t\t\t\t\treturn false;");
 					}
 					sb.AppendLine("\t\t\t\t\t}");
 				}
-				sb.AppendLine("\t\t\t\t\tdefault: return (null, 0);");
+				sb.AppendLine("\t\t\t\t\tdefault: return false;");
 				sb.AppendLine("\t\t\t\t}");
 			} else
 				EmitDefBody(sb, byExt[0], "\t\t\t\t");
 			sb.AppendLine("\t\t\t}");
 		}
-		sb.AppendLine("\t\t\tdefault: return (null, 0);");
+		sb.AppendLine("\t\t\tdefault: return false;");
 		sb.AppendLine("\t\t}");
 		sb.AppendLine("\t}");
+		sb.AppendLine();
+		sb.AppendLine("\t/// Text form of a decoded instruction (XED SHORT shape).");
+		sb.AppendLine("\tpublic static string RenderInsn(in DecodedInsn d, ulong pc, XMode mode) {");
+		sb.AppendLine("\t\tswitch(d.DefId) {");
+		sb.Append(RenderCases);
+		sb.AppendLine("\t\t\tdefault: return null;");
+		sb.AppendLine("\t\t}");
+		sb.AppendLine("\t}");
+		sb.AppendLine();
+		sb.AppendLine("\t/// DefId -> encoding name (mnemonic-operands-opcode), index = DefId (1-based; [0] unused).");
+		sb.AppendLine("\tpublic static readonly string[] DefNames = [");
+		sb.AppendLine("\t\tnull,");
+		foreach(var n in RenderNames)
+			sb.AppendLine($"\t\t\"{n}\",");
+		sb.AppendLine("\t];");
 		sb.AppendLine("}");
 		return sb.ToString();
 	}
@@ -201,17 +223,17 @@ public static class DisassemblerGenerator {
 		// LOCK legality (SDM closed set, memory destination only) — fuzz MISDECODE class.
 		// Non-lockable mnemonic OR a form whose destination can't be memory → #UD.
 		if(!Lockable.Contains(def.Mnemonic) || def.Operands.Count == 0 || def.Operands[0].Class != OpClass.ModRmRm)
-			sb.AppendLine($"{ind}if(p.Lock) return (null, 0);");
+			sb.AppendLine($"{ind}if(p.Lock) return false;");
 		// Decode phase: ModRM if needed, then operand exprs in spec order.
 		if(def.NeedsModRm) {
 			sb.AppendLine($"{ind}var {m}Len = Decode.ReadModRm(code[i..], mode, in p, out var {m});");
-			sb.AppendLine($"{ind}if({m}Len < 0) return (null, 0);");
+			sb.AppendLine($"{ind}if({m}Len < 0) return false;");
 			sb.AppendLine($"{ind}i += {m}Len;");
 			var memOnly = def.Operands.Any(o => o.MemOnly);
-			if(memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return (null, 0);");
+			if(memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return false;");
 			// LOCK's other half: legal mnemonic but register destination — still #UD.
 			if(Lockable.Contains(def.Mnemonic) && def.Operands.Count > 0 && def.Operands[0].Class == OpClass.ModRmRm)
-				sb.AppendLine($"{ind}if(p.Lock && {m}.IsReg) return (null, 0);");
+				sb.AppendLine($"{ind}if(p.Lock && {m}.IsReg) return false;");
 			if(def.Evex) {
 				// disp8*N (SDM 2.7.5): N from the memory operand's shape.
 				var memSpec = def.Operands.FirstOrDefault(o => o.Class is OpClass.XmmRm or OpClass.ModRmRm && !o.MemOnly || o.MemOnly);
@@ -227,6 +249,7 @@ public static class DisassemblerGenerator {
 			}
 		}
 
+		ImmSlot = 0;
 		var opTexts = new List<string>();
 		foreach(var spec in def.Operands)
 			opTexts.Add(EmitOperand(sb, def, spec, ind, m));
@@ -234,16 +257,32 @@ public static class DisassemblerGenerator {
 		if(def.Evex && opTexts.Count > 0)
 			opTexts[0] = $"{opTexts[0]} + Decode.EvexDecoration(in p)";
 
-		// Format: template dasm string with $param -> operand text, positionally.
-		// lock/rep prefixes render before the mnemonic (XED convention). A 0x66 on a
-		// zero-operand insn has nothing to absorb it — XED renders it as 'data16 ' (66 90).
-		// String ops (X/Y operands) DO render rep/repnz — the prefix is semantic there.
+		// Decode side: fill the struct. (ModRM local copies in; defaults elsewhere.)
+		sb.AppendLine($"{ind}d.DefId = {BodyN};");
+		sb.AppendLine($"{ind}d.Len = i;");
+		sb.AppendLine($"{ind}d.Op = op;");
+		sb.AppendLine($"{ind}d.P = p;");
+		if(def.NeedsModRm) sb.AppendLine($"{ind}d.M = {m};");
+		sb.AppendLine($"{ind}return true;");
+
+		// Render side: the SAME interpolation, reading struct fields. Collected as a
+		// switch case on DefId; mechanical local->field rewrites (m./p./imm/op/i).
 		var fmt = RenderDasm(def, opTexts);
 		var data16 = def.Operands.Count == 0 ? "(p.OpSize ? \"data16 \" : \"\") + " : "";
 		var isStringOp = def.Operands.Any(o => o.Class is OpClass.StrSrc or OpClass.StrDst);
 		var repRender = isStringOp ? "(p.Rep ? \"rep \" : p.RepNz ? \"repnz \" : \"\") + " : "";
-		sb.AppendLine($"{ind}return ({data16}{repRender}Decode.MnemonicPrefix(in p) + {fmt}, i);");
+		var expr = $"{data16}{repRender}Decode.MnemonicPrefix(in p) + {fmt}";
+		expr = expr.Replace($"in {m}", "in d.M").Replace($"{m}.", "d.M.")
+			.Replace("in p", "in d.P").Replace("p.", "d.P.")
+			.Replace("pc + (ulong)i", "pc + (ulong)d.Len")
+			.Replace("(op & 7)", "(d.Op & 7)");
+		RenderCases.AppendLine($"\t\t\tcase {BodyN}: return {expr};");
+		RenderNames.Add(def.Name);
 	}
+
+	static readonly StringBuilder RenderCases = new();
+	static readonly List<string> RenderNames = [];
+	static int ImmSlot;
 
 	/// Emits decode statements for one operand; returns the C# expression producing its text.
 	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind, string m) {
@@ -347,27 +386,29 @@ public static class DisassemblerGenerator {
 			case OpClass.MmxRm:
 				return $"({m}.IsReg ? Decode.MmxName({m}.Rm) : Decode.MemOperandString(in {m}, in p, mode, {VecPtrBits()}, pc + (ulong)i))";
 			case OpClass.Imm: {
-				var v = $"imm{BodyN}_{spec.Text.Replace("-", "_")}";
+				var v = $"d.Imm{ImmSlot++}";
 				// z-imms fetch 16/32 but the VALUE is sign-extended to the v-sized destination
 				// (SDM: imm32 sign-extended in 64-bit ops). Render masked to destination width
 				// (XED: 83 C0 FB = add eax, 0xfffffffb; 48 C7 C0 FF.. = mov rax, 0xffffffffffffffff).
 				var sx = spec.SignExtended || spec.Width == WCode.z;
 				var destW = spec.SignExtended || spec.Width == WCode.z ? VWidthExpr() : WidthExpr();
-				sb.AppendLine($"{ind}if(i + ({WidthExpr()}) / 8 > code.Length) return (null, 0);");
-				sb.AppendLine($"{ind}var {v} = Decode.MaskToWidth(Decode.ReadImm(code, ref i, {WidthExpr()}, {(sx ? "true" : "false")}), {destW});");
+				sb.AppendLine($"{ind}if(i + ({WidthExpr()}) / 8 > code.Length) return false;");
+				sb.AppendLine($"{ind}{v} = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, {WidthExpr()}, {(sx ? "true" : "false")}), {destW});");
 				return $"$\"0x{{{v}:x}}\"";
 			}
 			case OpClass.RelBranch: {
-				var v = $"rel{BodyN}_{spec.Text}";
-				sb.AppendLine($"{ind}if(i + ({WidthExpr()}) / 8 > code.Length) return (null, 0);");
-				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, {WidthExpr()}, true);");
-				// target wraps at the mode's IP width (EIP in 32-bit mode)
+				var v = $"d.Imm{ImmSlot++}";
+				sb.AppendLine($"{ind}if(i + ({WidthExpr()}) / 8 > code.Length) return false;");
+				sb.AppendLine($"{ind}{v} = Decode.ReadImm(code, ref i, {WidthExpr()}, true);");
+				// target wraps at the mode's IP width (EIP in 32-bit mode).
+				// NB render-side: 'pc + (ulong)i' here is FINAL len (imm is last field) —
+				// the d.Len rewrite in the tail preserves exact semantics.
 				return $"$\"0x{{Decode.MaskToWidth((long)(pc + (ulong)i + (ulong){v}), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}}\"";
 			}
 			case OpClass.MemOffset: {
-				var v = $"moffs{BodyN}_{spec.Text}";
-				sb.AppendLine($"{ind}if(i + p.AWidth(mode) / 8 > code.Length) return (null, 0);");
-				sb.AppendLine($"{ind}var {v} = Decode.ReadImm(code, ref i, p.AWidth(mode), false);");
+				var v = $"d.Imm{ImmSlot++}";
+				sb.AppendLine($"{ind}if(i + p.AWidth(mode) / 8 > code.Length) return false;");
+				sb.AppendLine($"{ind}{v} = Decode.ReadImm(code, ref i, p.AWidth(mode), false);");
 				return $"Decode.MoffsString({v}, {WidthExpr()}, in p, mode)";
 			}
 			default:
