@@ -754,7 +754,7 @@
 (instruction CALL (target)
     "call $target"
     (push (next-pc))
-    (branch target))
+    (call target))
 
 (encoding CALL (Jz) (0xE8 d64))
 (encoding CALL (Ev) (0xFF /2 d64))
@@ -769,7 +769,7 @@
 
 (instruction RET ()
     "ret"
-    (branch (pop)))
+    (ret (pop)))
 
 (encoding RET () (0xC3 d64))
 
@@ -785,96 +785,96 @@
 ; XED mnemonic convention: jz/jnz/jl/jnl/jle/jnle/jb/jnb/jbe/jnbe/js/jns/jo/jno/jp/jnp
 (instruction JO (target)
     "jo $target"
-    (if OF (branch target)))
+    (branch-if OF target))
 (encoding JO (Jb) (0x70 d64))
 (encoding JO (Jz) (0x0F 0x80 d64))
 
 (instruction JNO (target)
     "jno $target"
-    (if (! OF) (branch target)))
+    (branch-if (! OF) target))
 (encoding JNO (Jb) (0x71 d64))
 (encoding JNO (Jz) (0x0F 0x81 d64))
 
 (instruction JB (target)
     "jb $target"
-    (if CF (branch target)))
+    (branch-if CF target))
 (encoding JB (Jb) (0x72 d64))
 (encoding JB (Jz) (0x0F 0x82 d64))
 
 (instruction JNB (target)
     "jnb $target"
-    (if (! CF) (branch target)))
+    (branch-if (! CF) target))
 (encoding JNB (Jb) (0x73 d64))
 (encoding JNB (Jz) (0x0F 0x83 d64))
 
 (instruction JZ (target)
     "jz $target"
-    (if ZF (branch target)))
+    (branch-if ZF target))
 (encoding JZ (Jb) (0x74 d64))
 (encoding JZ (Jz) (0x0F 0x84 d64))
 
 (instruction JNZ (target)
     "jnz $target"
-    (if (! ZF) (branch target)))
+    (branch-if (! ZF) target))
 (encoding JNZ (Jb) (0x75 d64))
 (encoding JNZ (Jz) (0x0F 0x85 d64))
 
 (instruction JBE (target)
     "jbe $target"
-    (if (| CF ZF) (branch target)))
+    (branch-if (| CF ZF) target))
 (encoding JBE (Jb) (0x76 d64))
 (encoding JBE (Jz) (0x0F 0x86 d64))
 
 (instruction JNBE (target)
     "jnbe $target"
-    (if (! (| CF ZF)) (branch target)))
+    (branch-if (! (| CF ZF)) target))
 (encoding JNBE (Jb) (0x77 d64))
 (encoding JNBE (Jz) (0x0F 0x87 d64))
 
 (instruction JS (target)
     "js $target"
-    (if SF (branch target)))
+    (branch-if SF target))
 (encoding JS (Jb) (0x78 d64))
 (encoding JS (Jz) (0x0F 0x88 d64))
 
 (instruction JNS (target)
     "jns $target"
-    (if (! SF) (branch target)))
+    (branch-if (! SF) target))
 (encoding JNS (Jb) (0x79 d64))
 (encoding JNS (Jz) (0x0F 0x89 d64))
 
 (instruction JP (target)
     "jp $target"
-    (if PF (branch target)))
+    (branch-if PF target))
 (encoding JP (Jb) (0x7A d64))
 (encoding JP (Jz) (0x0F 0x8A d64))
 
 (instruction JNP (target)
     "jnp $target"
-    (if (! PF) (branch target)))
+    (branch-if (! PF) target))
 (encoding JNP (Jb) (0x7B d64))
 (encoding JNP (Jz) (0x0F 0x8B d64))
 
 (instruction JL (target)
     "jl $target"
-    (if (!= SF OF) (branch target)))
+    (branch-if (!= SF OF) target))
 (encoding JL (Jb) (0x7C d64))
 (encoding JL (Jz) (0x0F 0x8C d64))
 
 (instruction JNL (target)
     "jnl $target"
-    (if (== SF OF) (branch target)))
+    (branch-if (== SF OF) target))
 (encoding JNL (Jb) (0x7D d64))
 (encoding JNL (Jz) (0x0F 0x8D d64))
 
 (instruction JLE (target)
     "jle $target"
-    (if (| ZF (!= SF OF)) (branch target)))
+    (branch-if (| ZF (!= SF OF)) target))
 (encoding JLE (Jb) (0x7E d64))
 (encoding JLE (Jz) (0x0F 0x8E d64))
 
 (instruction JNLE (target)
     "jnle $target"
-    (if (! (| ZF (!= SF OF))) (branch target)))
+    (branch-if (! (| ZF (!= SF OF))) target))
 (encoding JNLE (Jb) (0x7F d64))
 (encoding JNLE (Jz) (0x0F 0x8F d64))

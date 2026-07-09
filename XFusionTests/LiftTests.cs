@@ -105,6 +105,36 @@ public class LiftTests {
 		// byte-file terms — pinned below in Dos16AhWrite.
 	}
 
+	// --- the IL branch contract (barrow step-2a ·NOTES 689c): arch-neutral
+	// scanners read IlBranch(Kind, ABSOLUTE-target[, Cond]) — same as aarch64 BL ---
+	[Test]
+	public void CallEmitsCallKindAbsoluteTarget() {  // E8 FB 05 00 00 @ pc=0x1000, len 5 → target 0x1600
+		var il = LiftText("e8fb050000", pc: 0x1000);
+		Assert.That(il, Does.Contain("(call (u64 #1600))"));       // Kind=Call, abs
+		Assert.That(il, Does.Contain("(store (u64 RSP)"));         // return-addr push intact
+	}
+
+	[Test]
+	public void RetEmitsRetKind() {  // C3
+		var il = LiftText("c3");
+		Assert.That(il, Does.Contain("(ret (u64 %0))"));           // Kind=Ret, popped target
+	}
+
+	[Test]
+	public void JccEmitsCondJmpWithCondField() {  // 74 10 = jz +0x10 @0, len 2 → 0x12
+		var il = LiftText("7410");
+		Assert.That(il, Does.Contain("condjmp"));
+		Assert.That(il, Does.Contain("#12"));                       // absolute, not raw rel
+		Assert.That(il, Does.Contain("EFLAGS.Z"));                  // cond rides the node
+		Assert.That(il, Does.Not.Contain("(if "));                  // NO IlIf wrapper
+	}
+
+	[Test]
+	public void JmpRelIsAbsolute() {  // EB FE = jmp -2 (self) @ pc=0x400
+		var il = LiftText("ebfe", pc: 0x400);
+		Assert.That(il, Does.Contain("(jmp (u64 #400))"));
+	}
+
 	[Test]
 	public void EveryDecodableTestRowLifts() {
 		// smoke: every hex in the disasm test corpus that DECODES also LIFTS non-null.

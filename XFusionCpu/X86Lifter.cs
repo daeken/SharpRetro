@@ -32,7 +32,7 @@ public static class X86Lifter {
 		var binds = new Dictionary<string, OperandBind>();
 		var immSlot = 0;
 		for(var k = 0; k < specs.Length && k < params_.Count; k++)
-			binds[params_[k]] = Bind(specs[k], in d, mode, vw, ref immSlot);
+			binds[params_[k]] = Bind(specs[k], in d, mode, vw, pc, ref immSlot);
 
 		var opWidth = specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
 		return IlLower.Lower(params_, eval, binds, opWidth);
@@ -64,7 +64,7 @@ public static class X86Lifter {
 		_ => vw
 	};
 
-	static OperandBind Bind(OperandSpec spec, in DecodedInsn d, XMode mode, int vw, ref int immSlot) {
+	static OperandBind Bind(OperandSpec spec, in DecodedInsn d, XMode mode, int vw, ulong pc, ref int immSlot) {
 		var w = WidthOf(spec, in d, mode, vw);
 		switch(spec.Class) {
 			case OpClass.ModRmRm when d.M.IsReg:
@@ -76,8 +76,17 @@ public static class X86Lifter {
 			case OpClass.OpcodeReg:
 				return new OperandBind.Reg((d.Op & 7) | ((d.P.Rex & 1) << 3), w);
 			case OpClass.Imm:
-			case OpClass.RelBranch:  // branch target as imm; IlBranch wiring reads it
 				return new OperandBind.Imm(immSlot++ == 0 ? d.Imm0 : d.Imm1, w);
+			case OpClass.RelBranch: {
+				// resolve to ABSOLUTE at bind time (pc + len + rel, wrapped at mode IP
+				// width) — the IL contract carries absolutes (aarch64 BL shape); raw
+				// rels would couple every consumer to x86 encoding. barrow step-2a find.
+				var rel = immSlot++ == 0 ? d.Imm0 : d.Imm1;
+				var abs = pc + (ulong) d.Len + (ulong) rel;
+				if(mode == XMode.Bits32) abs &= 0xFFFFFFFF;
+				else if(mode == XMode.Bits16) abs &= 0xFFFF;
+				return new OperandBind.Imm((long) abs, 64);
+			}
 			case OpClass.MemOffset:  // moffs = MEMORY at an absolute address (A0-A3 both directions)
 				return new OperandBind.Mem(
 					new IlConst(IlType.U64, (ulong) (immSlot++ == 0 ? d.Imm0 : d.Imm1)), w);

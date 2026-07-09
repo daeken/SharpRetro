@@ -123,6 +123,21 @@ public class IlLower {
 			case PName("branch"):
 				Stmts.Add(new IlBranch(BranchKind.Jmp, Expr(l[1], 64)));
 				break;
+			case PName("call"):
+				// call-site marker for the arch-neutral scanner (IlBranch(Call, abs)) —
+				// the return-address push is a separate stmt in the .isa body.
+				Stmts.Add(new IlBranch(BranchKind.Call, Expr(l[1], 64)));
+				break;
+			case PName("ret"):
+				Stmts.Add(new IlBranch(BranchKind.Ret, Expr(l[1], 64)));
+				break;
+			case PName("branch-if"): {
+				// Jcc: IlBranch(CondJmp, target, cond) — Cond is a field on the node
+				// (LiftIl:159; consumer Cfg.cs:71 reads it directly). No IlIf wrapper.
+				var cond = CanonFlag(Expr(l[1]));
+				Stmts.Add(new IlBranch(BranchKind.CondJmp, Expr(l[2], 64), cond));
+				break;
+			}
 			case PName("intrinsic"): {
 				// ·62: IlIntrin(V0, well-known-name, positional dataflow args).
 				var name = ((PName) l[1]).Name;
