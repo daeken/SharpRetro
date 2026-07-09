@@ -297,6 +297,8 @@ public static class DisassemblerGenerator {
 				var l = Packed() ? "p.VexL" : "false";
 				return $"Decode.XmmName(p.VexVvvv, {l})";
 			}
+			case OpClass.GprVvvv:
+				return $"Decode.GprName(p.VexVvvv, {VWidthExpr()}, true)";
 			case OpClass.MaskReg:
 				return $"Decode.MaskName({m}.Reg)";
 			case OpClass.MaskRm:

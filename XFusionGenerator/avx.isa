@@ -74,3 +74,21 @@
 ; --- ptest (0F38 map, 2src) ---
 (instruction VPTEST (a b) "vptest $a, $b" (intrinsic vptest a b))
 (encoding VPTEST (Vdq Wdq) (vex-2src opsize 0x0F 0x38 0x17))
+
+; --- vmovd/vmovq gpr<->xmm ---
+(instruction VMOVD-V (dst src) "$(wname vmovd vmovd vmovq) $dst, $src" (intrinsic vmovd-v dst src))
+(encoding VMOVD-V (Vdq Ev) (vex-2src opsize 0x0F 0x6E))
+(instruction VMOVD-VS (dst src) "$(wname vmovd vmovd vmovq) $dst, $src" (intrinsic vmovd-vs dst src))
+(encoding VMOVD-VS (Ev Vdq) (vex-2src opsize 0x0F 0x7E))
+(instruction VMOVQ-V (dst src) "vmovq $dst, $src" (intrinsic vmovq-v dst src))
+(encoding VMOVQ-V (Vq Wq) (vex-2src rep 0x0F 0x7E))
+
+; --- BMI2 shifts (0F38 map, vvvv = shift-count source, VEX-only) ---
+(instruction SARX (dst src count) "sarx $dst, $src, $count" (intrinsic sarx dst src count))
+(encoding SARX (Gv Ev Hv) (vex-3src rep 0x0F 0x38 0xF7))
+(instruction SHLX (dst src count) "shlx $dst, $src, $count" (intrinsic shlx dst src count))
+(encoding SHLX (Gv Ev Hv) (vex-3src opsize 0x0F 0x38 0xF7))
+(instruction SHRX (dst src count) "shrx $dst, $src, $count" (intrinsic shrx dst src count))
+(encoding SHRX (Gv Ev Hv) (vex-3src repnz 0x0F 0x38 0xF7))
+(instruction BZHI (dst src count) "bzhi $dst, $src, $count" (intrinsic bzhi dst src count))
+(encoding BZHI (Gv Ev Hv) (vex-3src 0x0F 0x38 0xF5))

@@ -26,6 +26,7 @@
     (include "sse.isa"))
 (featuring sse2
     (include "sse2.isa"))
+(include "sse3plus.isa") ; self-gated per-feature inside
 (featuring avx
     (include "avx.isa"))
 (featuring avx512

@@ -89,6 +89,22 @@
 (instruction VPMINUB-E (dst a b) "vpminub $dst, $a, $b" (intrinsic vpminub-e dst a b))
 (encoding VPMINUB-E (Vdq Hdq Wdq) (evex-3src opsize 0x0F 0xDA))
 
+; --- EVEX-promoted float moves + byte arith (census: vmovups-zmm, vpaddb-ymm{k}) ---
+(instruction VMOVUPS-E (dst src) "vmovups $dst, $src" (intrinsic vmovups-e dst src))
+(encoding VMOVUPS-E (Vps Wps) (evex-2src w0 0x0F 0x10))
+(encoding VMOVUPS-E (Wps Vps) (evex-2src w0 0x0F 0x11))
+(instruction VMOVAPS-E (dst src) "vmovaps $dst, $src" (intrinsic vmovaps-e dst src))
+(encoding VMOVAPS-E (Vps Wps) (evex-2src w0 0x0F 0x28))
+(encoding VMOVAPS-E (Wps Vps) (evex-2src w0 0x0F 0x29))
+
+(instruction VPADDB-E (dst a b) "vpaddb $dst, $a, $b" (intrinsic vpaddb-e dst a b))
+(encoding VPADDB-E (Vdq Hdq Wdq) (evex-3src opsize 0x0F 0xFC))
+(instruction VPSUBB-E (dst a b) "vpsubb $dst, $a, $b" (intrinsic vpsubb-e dst a b))
+(encoding VPSUBB-E (Vdq Hdq Wdq) (evex-3src opsize 0x0F 0xF8))
+
+(instruction VPTESTNMB (k a b) "vptestnmb $k, $a, $b" (intrinsic vptestnmb k a b))
+(encoding VPTESTNMB (KR Hdq Wdq) (evex-3src rep w0 0x0F 0x38 0x26))
+
 ; --- mask-register ops (VEX-encoded, but avx512 vocabulary — kmovd/kmovq etc.) ---
 ; kmov: 0F 90/91 (load/store-form), 92/93 (gpr-form); pp+W pick b/w/d/q variant.
 (instruction KMOVW (dst src) "kmovw $dst, $src" (intrinsic kmovw dst src))

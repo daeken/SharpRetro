@@ -17,6 +17,7 @@ public enum OpClass {
 	XmmRm,       // W* — xmm register or memory from ModRM.rm
 	XmmRmReg,    // U* — xmm register from ModRM.rm, mod==11 required
 	XmmVvvv,     // H* — xmm register from VEX.vvvv (second source; VEX rows only)
+	GprVvvv,     // Hv — GPR from VEX.vvvv (BMI: sarx/bzhi count operand)
 	MaskReg,     // KR — opmask register from ModRM.reg (vpcmp*/vptestm* dest, kmov dest)
 	MaskRm,      // KU — opmask register from ModRM.rm (kmov reg-form src)
 	MmxReg,      // P* — mmx register from ModRM.reg
@@ -140,7 +141,7 @@ public class OperandSpec {
 			'V' => OpClass.XmmReg,
 			'W' => OpClass.XmmRm,
 			'U' => OpClass.XmmRmReg,
-			'H' => OpClass.XmmVvvv,
+			'H' => wstr == "v" ? OpClass.GprVvvv : OpClass.XmmVvvv,
 			'P' => OpClass.MmxReg,
 			'Q' => OpClass.MmxRm,
 			_ => throw new NotSupportedException($"operand class in {s}")

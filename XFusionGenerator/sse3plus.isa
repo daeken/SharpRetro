@@ -1,0 +1,63 @@
+; sse3plus.isa — SSE3 / SSSE3 / SSE4.1 / SSE4.2 rows (census-tail from glibc).
+; Gated per-feature in xfusion.isa; grouped in one file because each tier's
+; corpus presence is small. Split when any grows.
+
+(featuring sse3
+    (instruction MOVSLDUP (dst src) "movsldup $dst, $src" (intrinsic movsldup dst src))
+    (encoding MOVSLDUP (Vps Wps) (rep 0x0F 0x12))
+    (instruction MOVSHDUP (dst src) "movshdup $dst, $src" (intrinsic movshdup dst src))
+    (encoding MOVSHDUP (Vps Wps) (rep 0x0F 0x16))
+    (instruction MOVDDUP (dst src) "movddup $dst, $src" (intrinsic movddup dst src))
+    (encoding MOVDDUP (Vpd Wsd) (repnz 0x0F 0x12))
+    (instruction LDDQU (dst src) "lddqu $dst, $src" (intrinsic lddqu dst src))
+    (encoding LDDQU (Vdq Mdq) (repnz 0x0F 0xF0))
+    (instruction HADDPS (dst src) "haddps $dst, $src" (intrinsic haddps dst src))
+    (encoding HADDPS (Vps Wps) (repnz 0x0F 0x7C))
+    (instruction HADDPD (dst src) "haddpd $dst, $src" (intrinsic haddpd dst src))
+    (encoding HADDPD (Vpd Wpd) (opsize 0x0F 0x7C)))
+
+(featuring ssse3
+    (instruction PSHUFB-S (dst src) "pshufb $dst, $src" (intrinsic pshufb-s dst src))
+    (encoding PSHUFB-S (Vdq Wdq) (opsize 0x0F 0x38 0x00))
+    (instruction PALIGNR (dst src sel) "palignr $dst, $src, $sel" (intrinsic palignr dst src sel))
+    (encoding PALIGNR (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x0F))
+    (instruction PABSB (dst src) "pabsb $dst, $src" (intrinsic pabsb dst src))
+    (encoding PABSB (Vdq Wdq) (opsize 0x0F 0x38 0x1C))
+    (instruction PABSW (dst src) "pabsw $dst, $src" (intrinsic pabsw dst src))
+    (encoding PABSW (Vdq Wdq) (opsize 0x0F 0x38 0x1D))
+    (instruction PABSD (dst src) "pabsd $dst, $src" (intrinsic pabsd dst src))
+    (encoding PABSD (Vdq Wdq) (opsize 0x0F 0x38 0x1E)))
+
+(featuring sse4.1
+    (instruction PTEST (a b) "ptest $a, $b" (intrinsic ptest a b))
+    (encoding PTEST (Vdq Wdq) (opsize 0x0F 0x38 0x17))
+    (instruction PMOVZXBW (dst src) "pmovzxbw $dst, $src" (intrinsic pmovzxbw dst src))
+    (encoding PMOVZXBW (Vdq Wq) (opsize 0x0F 0x38 0x30))
+    (instruction PMOVZXWD (dst src) "pmovzxwd $dst, $src" (intrinsic pmovzxwd dst src))
+    (encoding PMOVZXWD (Vdq Wq) (opsize 0x0F 0x38 0x33))
+    (instruction PMINUD (dst src) "pminud $dst, $src" (intrinsic pminud dst src))
+    (encoding PMINUD (Vdq Wdq) (opsize 0x0F 0x38 0x3B))
+    (instruction PMINUW (dst src) "pminuw $dst, $src" (intrinsic pminuw dst src))
+    (encoding PMINUW (Vdq Wdq) (opsize 0x0F 0x38 0x3A))
+    (instruction PCMPEQQ (dst src) "pcmpeqq $dst, $src" (intrinsic pcmpeqq dst src))
+    (encoding PCMPEQQ (Vdq Wdq) (opsize 0x0F 0x38 0x29))
+    (instruction PEXTRB (dst src sel) "pextrb $dst, $src, $sel" (intrinsic pextrb dst src sel))
+    (encoding PEXTRB (Ed Vdq Ib) (opsize 0x0F 0x3A 0x14))
+    (instruction PEXTRD (dst src sel) "pextrd $dst, $src, $sel" (intrinsic pextrd dst src sel))
+    (encoding PEXTRD (Ed Vdq Ib) (opsize 0x0F 0x3A 0x16))
+    (instruction PINSRB (dst src sel) "pinsrb $dst, $src, $sel" (intrinsic pinsrb dst src sel))
+    (encoding PINSRB (Vdq Ed Ib) (opsize 0x0F 0x3A 0x20))
+    (instruction MOVNTDQA (dst src) "movntdqa $dst, $src" (intrinsic movntdqa dst src))
+    (encoding MOVNTDQA (Vdq Mdq) (opsize 0x0F 0x38 0x2A)))
+
+(featuring sse4.2
+    (instruction PCMPISTRI (a b pred) "pcmpistri $a, $b, $pred" (intrinsic pcmpistri a b pred))
+    (encoding PCMPISTRI (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x63))
+    (instruction PCMPISTRM (a b pred) "pcmpistrm $a, $b, $pred" (intrinsic pcmpistrm a b pred))
+    (encoding PCMPISTRM (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x62))
+    (instruction PCMPESTRI (a b pred) "pcmpestri $a, $b, $pred" (intrinsic pcmpestri a b pred))
+    (encoding PCMPESTRI (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x61))
+    (instruction CRC32-B (dst src) "crc32 $dst, $src" (intrinsic crc32-b dst src))
+    (encoding CRC32-B (Gv Eb) (repnz 0x0F 0x38 0xF0))
+    (instruction CRC32-V (dst src) "crc32 $dst, $src" (intrinsic crc32-v dst src))
+    (encoding CRC32-V (Gv Ev) (repnz 0x0F 0x38 0xF1)))

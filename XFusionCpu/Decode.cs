@@ -32,12 +32,16 @@ public struct PrefixState {
 	public bool RexX => (Rex & 2) != 0;
 	public bool RexB => (Rex & 1) != 0;
 
-	/// Effective operand width in bits for a v-sized operand.
-	public int VWidth(XMode mode) => mode switch {
-		XMode.Bits16 => OpSize ? 32 : 16,
-		XMode.Bits32 => OpSize ? 16 : 32,
-		_ => RexW ? 64 : OpSize ? 16 : 32,
-	};
+	/// Effective operand width in bits for a v-sized operand. Under VEX/EVEX the
+	/// pp field folds into OpSize as a ROW SELECTOR only — v-operands there size
+	/// by W alone (C5F96E = vmovd xmm, r32 not r16).
+	public int VWidth(XMode mode) => VexValid
+		? RexW ? 64 : 32
+		: mode switch {
+			XMode.Bits16 => OpSize ? 32 : 16,
+			XMode.Bits32 => OpSize ? 16 : 32,
+			_ => RexW ? 64 : OpSize ? 16 : 32,
+		};
 
 	/// z-sized: like v but capped at 32 (immediates in 64-bit ops are imm32 sign-extended).
 	public int ZWidth(XMode mode) => Math.Min(VWidth(mode), 32);
