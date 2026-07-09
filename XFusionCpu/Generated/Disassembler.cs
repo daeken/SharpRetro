@@ -2,7 +2,7 @@
 namespace XFusionCpu;
 
 public static partial class Disassembler {
-	public const int EncodingCount = 131;
+	public const int EncodingCount = 235;
 
 	/// Returns (text, length) or (null, 0) if undecodable.
 	public static (string Text, int Length) Disassemble(ReadOnlySpan<byte> code, ulong pc, XMode mode) {
@@ -243,6 +243,71 @@ public static partial class Disassembler {
 			case (OpcodeMap.OneByte, 0x3D): {
 				var imm_Iz = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.ZWidth(mode), true), p.VWidth(mode));
 				return (Decode.MnemonicPrefix(in p) + $"cmp {Decode.GprName(0, p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iz:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0x50): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x51): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x52): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x53): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x54): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x55): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x56): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x57): {
+				return (Decode.MnemonicPrefix(in p) + $"push {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x58): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x59): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x5A): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x5B): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x5C): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x5D): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x5E): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x5F): {
+				return (Decode.MnemonicPrefix(in p) + $"pop {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidthD64(mode), p.Rex != 0)}", i);
+			}
+			case (OpcodeMap.OneByte, 0x63): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"movsxd {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, 32, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 32, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.OneByte, 0x69): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				var imm_Iz = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.ZWidth(mode), true), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"imul {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Iz:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0x6B): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				var imm_Ib_sx = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, true), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"imul {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib_sx:x}"}", i);
 			}
 			case (OpcodeMap.OneByte, 0x70): {
 				var rel_Jb = Decode.ReadImm(code, ref i, 8, true);
@@ -538,6 +603,12 @@ public static partial class Disassembler {
 				}
 				return ((p.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in p) + "nop", i);
 			}
+			case (OpcodeMap.OneByte, 0x98): {
+				return ((p.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in p) + (p.VWidth(mode) switch { 16 => "cbw", 32 => "cwde", _ => "cdqe" }), i);
+			}
+			case (OpcodeMap.OneByte, 0x99): {
+				return ((p.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in p) + (p.VWidth(mode) switch { 16 => "cwd", 32 => "cdq", _ => "cqo" }), i);
+			}
 			case (OpcodeMap.OneByte, 0xA8): {
 				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 				return (Decode.MnemonicPrefix(in p) + $"test {Decode.GprName(0, 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
@@ -545,6 +616,168 @@ public static partial class Disassembler {
 			case (OpcodeMap.OneByte, 0xA9): {
 				var imm_Iz = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.ZWidth(mode), true), p.VWidth(mode));
 				return (Decode.MnemonicPrefix(in p) + $"test {Decode.GprName(0, p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iz:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB0): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB1): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB2): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB3): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB4): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB5): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB6): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB7): {
+				var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), 8, p.Rex != 0)}, {$"0x{imm_Ib:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB8): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xB9): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xBA): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xBB): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xBC): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xBD): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xBE): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xBF): {
+				var imm_Iv = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.VWidth(mode), false), p.VWidth(mode));
+				return (Decode.MnemonicPrefix(in p) + $"mov {Decode.GprName((op & 7) | (p.RexB ? 8 : 0), p.VWidth(mode), p.Rex != 0)}, {$"0x{imm_Iv:x}"}", i);
+			}
+			case (OpcodeMap.OneByte, 0xC0): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"rol {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"ror {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"rcl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"rcr {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"shl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"shr {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"sar {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					default: return (null, 0);
+				}
+			}
+			case (OpcodeMap.OneByte, 0xC1): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"rol {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"ror {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"rcl {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"rcr {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"shl {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"shr {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						return (Decode.MnemonicPrefix(in p) + $"sar {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
+					}
+					default: return (null, 0);
+				}
 			}
 			case (OpcodeMap.OneByte, 0xC2): {
 				var imm_Iw = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 16, false), 16);
@@ -579,6 +812,174 @@ public static partial class Disassembler {
 					default: return (null, 0);
 				}
 			}
+			case (OpcodeMap.OneByte, 0xD0): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rol {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"ror {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcr {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shr {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"sar {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {"0x1"}", i);
+					}
+					default: return (null, 0);
+				}
+			}
+			case (OpcodeMap.OneByte, 0xD1): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rol {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"ror {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcl {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcr {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shl {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shr {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"sar {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {"0x1"}", i);
+					}
+					default: return (null, 0);
+				}
+			}
+			case (OpcodeMap.OneByte, 0xD2): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rol {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"ror {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcr {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shr {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"sar {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					default: return (null, 0);
+				}
+			}
+			case (OpcodeMap.OneByte, 0xD3): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rol {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"ror {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcl {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"rcr {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shl {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"shr {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"sar {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {Decode.GprName(1, 8, p.Rex != 0)}", i);
+					}
+					default: return (null, 0);
+				}
+			}
 			case (OpcodeMap.OneByte, 0xE8): {
 				var rel_Jz = Decode.ReadImm(code, ref i, p.ZWidth(mode), true);
 				return (Decode.MnemonicPrefix(in p) + $"call {$"0x{pc + (ulong)i + (ulong)rel_Jz:x}"}", i);
@@ -601,6 +1002,36 @@ public static partial class Disassembler {
 						var imm_Ib = Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 						return (Decode.MnemonicPrefix(in p) + $"test {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}, {$"0x{imm_Ib:x}"}", i);
 					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"not {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"neg {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"mul {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"imul {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
+					case 6: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"div {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"idiv {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
 					default: return (null, 0);
 				}
 			}
@@ -614,6 +1045,53 @@ public static partial class Disassembler {
 						var imm_Iz = Decode.MaskToWidth(Decode.ReadImm(code, ref i, p.ZWidth(mode), true), p.VWidth(mode));
 						return (Decode.MnemonicPrefix(in p) + $"test {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}, {$"0x{imm_Iz:x}"}", i);
 					}
+					case 2: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"not {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					case 3: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"neg {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					case 4: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"mul {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					case 5: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"imul {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					case 6: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"div {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					case 7: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"idiv {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					default: return (null, 0);
+				}
+			}
+			case (OpcodeMap.OneByte, 0xFE): {
+				if(i >= code.Length) return (null, 0);
+				var regField = (code[i] >> 3) & 7;
+				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"inc {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"dec {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+					}
 					default: return (null, 0);
 				}
 			}
@@ -621,6 +1099,16 @@ public static partial class Disassembler {
 				if(i >= code.Length) return (null, 0);
 				var regField = (code[i] >> 3) & 7;
 				switch(regField) {
+					case 0: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"inc {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
+					case 1: {
+						if(i >= code.Length) return (null, 0);
+						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+						return (Decode.MnemonicPrefix(in p) + $"dec {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+					}
 					case 2: {
 						if(i >= code.Length) return (null, 0);
 						i += Decode.ReadModRm(code[i..], mode, in p, out var m);
@@ -650,6 +1138,86 @@ public static partial class Disassembler {
 					}
 					default: return (null, 0);
 				}
+			}
+			case (OpcodeMap.TwoByte0F, 0x40): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovo {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x41): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovno {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x42): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovb {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x43): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovnb {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x44): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovz {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x45): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovnz {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x46): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovbe {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x47): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovnbe {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x48): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovs {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x49): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovns {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x4A): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovp {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x4B): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovnp {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x4C): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovl {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x4D): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovnl {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x4E): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovle {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x4F): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"cmovnle {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
 			}
 			case (OpcodeMap.TwoByte0F, 0x80): {
 				var rel_Jz = Decode.ReadImm(code, ref i, p.ZWidth(mode), true);
@@ -714,6 +1282,111 @@ public static partial class Disassembler {
 			case (OpcodeMap.TwoByte0F, 0x8F): {
 				var rel_Jz = Decode.ReadImm(code, ref i, p.ZWidth(mode), true);
 				return (Decode.MnemonicPrefix(in p) + $"jnle {$"0x{pc + (ulong)i + (ulong)rel_Jz:x}"}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x90): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"seto {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x91): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setno {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x92): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setb {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x93): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setnb {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x94): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setz {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x95): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setnz {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x96): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setbe {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x97): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setnbe {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x98): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"sets {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x99): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setns {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x9A): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setp {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x9B): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setnp {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x9C): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x9D): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setnl {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x9E): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setle {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0x9F): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"setnle {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0xAF): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"imul {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, p.VWidth(mode), p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, p.VWidth(mode), pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0xB6): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"movzx {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0xB7): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"movzx {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, 16, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 16, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0xBE): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"movsx {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, 8, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 8, pc + (ulong)i))}", i);
+			}
+			case (OpcodeMap.TwoByte0F, 0xBF): {
+				if(i >= code.Length) return (null, 0);
+				i += Decode.ReadModRm(code[i..], mode, in p, out var m);
+				return (Decode.MnemonicPrefix(in p) + $"movsx {Decode.GprName(m.Reg, p.VWidth(mode), p.Rex != 0)}, {(m.IsReg ? Decode.GprName(m.Rm, 16, p.Rex != 0) : Decode.MemOperandString(in m, in p, mode, 16, pc + (ulong)i))}", i);
 			}
 			default: return (null, 0);
 		}

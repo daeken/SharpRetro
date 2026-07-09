@@ -61,6 +61,33 @@ public class DecodeTests {
 	[TestCase("83c005", "add eax, 0x5")]                   // default 32 in long mode
 	public void Long64(string hex, string expected) => Row(hex, XMode.Bits64, expected);
 
+	// --- wave-2: +r forms, extends, shifts, unary group (XED-verified 2026-07-09) ---
+	[TestCase("55", "push rbp")]                     // 50+r
+	[TestCase("4155", "push r13")]                   // REX.B extends +r
+	[TestCase("5d", "pop rbp")]
+	[TestCase("b80e000000", "mov eax, 0xe")]         // B8+r Iv
+	[TestCase("48b8efbeaddeefbeadde", "mov rax, 0xdeadbeefdeadbeef")]  // REX.W = true imm64
+	[TestCase("41bc01000000", "mov r12d, 0x1")]
+	[TestCase("480fb6c3", "movzx rax, bl")]          // dest/src different widths
+	[TestCase("0fb7c0", "movzx eax, ax")]
+	[TestCase("4863c8", "movsxd rcx, eax")]
+	[TestCase("48c1e03f", "shl rax, 0x3f")]
+	[TestCase("d1e8", "shr eax, 0x1")]               // by-1 form renders 0x1
+	[TestCase("48f7d8", "neg rax")]
+	[TestCase("f7e1", "mul ecx")]
+	[TestCase("480fafc1", "imul rax, rcx")]
+	[TestCase("6bc00a", "imul eax, eax, 0xa")]       // 3-operand
+	[TestCase("4898", "cdqe")]                       // wname: REX.W selects cdqe
+	[TestCase("98", "cwde")]
+	[TestCase("0f95c0", "setnz al")]
+	[TestCase("490f44c4", "cmovz rax, r12")]
+	[TestCase("f390", "pause")]                      // mandatory prefix consumed
+	[TestCase("f3c3", "ret")]                        // stray rep dropped (rep-ret idiom)
+	public void Wave2(string hex, string expected) => Row(hex, XMode.Bits64, expected);
+
+	[TestCase("66b84523", "mov ax, 0x2345")]         // B8+r under opsize: Iv = imm16
+	public void Wave2Mode32(string hex, string expected) => Row(hex, XMode.Bits32, expected);
+
 	// --- undecodable / boundary ---
 	[Test]
 	public void UnknownOpcodeReturnsNull() {

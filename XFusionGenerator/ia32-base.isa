@@ -55,6 +55,280 @@
 (encoding POP (Ev) (0x8F /0 d64))
 
 ; =====================================================================
+; wave-2: +r forms + extend/shift/unary groups (census @c82d5ce)
+; =====================================================================
+
+; +r register forms (opcode low 3 bits + REX.B). Zv/Zb per SDM Z-class.
+(encoding PUSH (Zv) (0x50 +r d64))
+(encoding POP  (Zv) (0x58 +r d64))
+
+; B8+r: MOV r, imm — Iv is FULL v-width imm (REX.W = genuine imm64)
+(encoding MOV (Zb Ib) (0xB0 +r))
+(encoding MOV (Zv Iv) (0xB8 +r))
+
+; --- sign/zero extension ---
+(instruction MOVZX (dst src)
+    "movzx $dst, $src"
+    (= dst (zext src)))
+
+(encoding MOVZX (Gv Eb) (0x0F 0xB6))
+(encoding MOVZX (Gv Ew) (0x0F 0xB7))
+
+(instruction MOVSX (dst src)
+    "movsx $dst, $src"
+    (= dst (sext src)))
+
+(encoding MOVSX (Gv Eb) (0x0F 0xBE))
+(encoding MOVSX (Gv Ew) (0x0F 0xBF))
+
+(instruction MOVSXD (dst src)
+    "movsxd $dst, $src"
+    (= dst (sext src)))
+
+(encoding MOVSXD (Gv Ed) (0x63))
+
+; --- shifts/rotates: C0/C1 (imm8), D0/D1 (by 1), D2/D3 (by CL) ---
+; OF semantics are 1-bit-shift-only per SDM; modeled at interpreter tier.
+(instruction ROL (lval count)
+    "rol $lval, $count"
+    (= lval (rotl lval count)))
+(encoding ROL (Eb Ib) (0xC0 /0))
+(encoding ROL (Ev Ib) (0xC1 /0))
+(encoding ROL (Eb 1)  (0xD0 /0))
+(encoding ROL (Ev 1)  (0xD1 /0))
+(encoding ROL (Eb CL) (0xD2 /0))
+(encoding ROL (Ev CL) (0xD3 /0))
+
+(instruction ROR (lval count)
+    "ror $lval, $count"
+    (= lval (rotr lval count)))
+(encoding ROR (Eb Ib) (0xC0 /1))
+(encoding ROR (Ev Ib) (0xC1 /1))
+(encoding ROR (Eb 1)  (0xD0 /1))
+(encoding ROR (Ev 1)  (0xD1 /1))
+(encoding ROR (Eb CL) (0xD2 /1))
+(encoding ROR (Ev CL) (0xD3 /1))
+
+(instruction RCL (lval count)
+    "rcl $lval, $count"
+    (intrinsic rcl lval count))
+(encoding RCL (Eb Ib) (0xC0 /2))
+(encoding RCL (Ev Ib) (0xC1 /2))
+(encoding RCL (Eb 1)  (0xD0 /2))
+(encoding RCL (Ev 1)  (0xD1 /2))
+(encoding RCL (Eb CL) (0xD2 /2))
+(encoding RCL (Ev CL) (0xD3 /2))
+
+(instruction RCR (lval count)
+    "rcr $lval, $count"
+    (intrinsic rcr lval count))
+(encoding RCR (Eb Ib) (0xC0 /3))
+(encoding RCR (Ev Ib) (0xC1 /3))
+(encoding RCR (Eb 1)  (0xD0 /3))
+(encoding RCR (Ev 1)  (0xD1 /3))
+(encoding RCR (Eb CL) (0xD2 /3))
+(encoding RCR (Ev CL) (0xD3 /3))
+
+(instruction SHL (lval count)
+    "shl $lval, $count"
+    (mlet (c (& count (- (bitwidth lval) 1)) tval (<< lval c))
+        (= lval tval)
+        (if (!= c 0)
+            (block
+                (= CF (& (>> lval (- (bitwidth lval) c)) 1))
+                (= SF (>> tval (- (bitwidth tval) 1)))
+                (= ZF (== tval 0))))))
+(encoding SHL (Eb Ib) (0xC0 /4))
+(encoding SHL (Ev Ib) (0xC1 /4))
+(encoding SHL (Eb 1)  (0xD0 /4))
+(encoding SHL (Ev 1)  (0xD1 /4))
+(encoding SHL (Eb CL) (0xD2 /4))
+(encoding SHL (Ev CL) (0xD3 /4))
+
+(instruction SHR (lval count)
+    "shr $lval, $count"
+    (mlet (c (& count (- (bitwidth lval) 1)) tval (>> lval c))
+        (= lval tval)
+        (if (!= c 0)
+            (block
+                (= CF (& (>> lval (- c 1)) 1))
+                (= SF (>> tval (- (bitwidth tval) 1)))
+                (= ZF (== tval 0))))))
+(encoding SHR (Eb Ib) (0xC0 /5))
+(encoding SHR (Ev Ib) (0xC1 /5))
+(encoding SHR (Eb 1)  (0xD0 /5))
+(encoding SHR (Ev 1)  (0xD1 /5))
+(encoding SHR (Eb CL) (0xD2 /5))
+(encoding SHR (Ev CL) (0xD3 /5))
+
+(instruction SAR (lval count)
+    "sar $lval, $count"
+    (mlet (c (& count (- (bitwidth lval) 1)) tval (>>a lval c))
+        (= lval tval)
+        (if (!= c 0)
+            (block
+                (= CF (& (>> lval (- c 1)) 1))
+                (= SF (>> tval (- (bitwidth tval) 1)))
+                (= ZF (== tval 0))))))
+(encoding SAR (Eb Ib) (0xC0 /7))
+(encoding SAR (Ev Ib) (0xC1 /7))
+(encoding SAR (Eb 1)  (0xD0 /7))
+(encoding SAR (Ev 1)  (0xD1 /7))
+(encoding SAR (Eb CL) (0xD2 /7))
+(encoding SAR (Ev CL) (0xD3 /7))
+
+; --- F6/F7 unary group (TEST /0 already above) ---
+(instruction NOT (lval)
+    "not $lval"
+    (= lval (~ lval)))
+(encoding NOT (Eb) (0xF6 /2))
+(encoding NOT (Ev) (0xF7 /2))
+
+(instruction NEG (lval)
+    "neg $lval"
+    (mlet (_v lval tval (- 0 _v))
+        (= lval tval)
+        (= CF (!= _v 0))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= ZF (== tval 0))))
+(encoding NEG (Eb) (0xF6 /3))
+(encoding NEG (Ev) (0xF7 /3))
+
+(instruction MUL (src)
+    "mul $src"
+    (intrinsic mul-wide src))
+(encoding MUL (Eb) (0xF6 /4))
+(encoding MUL (Ev) (0xF7 /4))
+
+(instruction IMUL1 (src)
+    "imul $src"
+    (intrinsic imul-wide src))
+(encoding IMUL1 (Eb) (0xF6 /5))
+(encoding IMUL1 (Ev) (0xF7 /5))
+
+(instruction DIV (src)
+    "div $src"
+    (intrinsic div-wide src))
+(encoding DIV (Eb) (0xF6 /6))
+(encoding DIV (Ev) (0xF7 /6))
+
+(instruction IDIV (src)
+    "idiv $src"
+    (intrinsic idiv-wide src))
+(encoding IDIV (Eb) (0xF6 /7))
+(encoding IDIV (Ev) (0xF7 /7))
+
+; --- two/three-operand IMUL ---
+(instruction IMUL (dst src)
+    "imul $dst, $src"
+    (= dst (* dst src)))
+(encoding IMUL (Gv Ev) (0x0F 0xAF))
+
+(instruction IMUL3 (dst src imm)
+    "imul $dst, $src, $imm"
+    (= dst (* src imm)))
+(encoding IMUL3 (Gv Ev Ib-sx) (0x6B))
+(encoding IMUL3 (Gv Ev Iz)    (0x69))
+
+; --- FE/FF INC/DEC ---
+(instruction INC (lval)
+    "inc $lval"
+    (mlet (tval (+ lval 1))
+        (= lval tval)
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= ZF (== tval 0))))
+(encoding INC (Eb) (0xFE /0))
+(encoding INC (Ev) (0xFF /0))
+
+(instruction DEC (lval)
+    "dec $lval"
+    (mlet (tval (- lval 1))
+        (= lval tval)
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= ZF (== tval 0))))
+(encoding DEC (Eb) (0xFE /1))
+(encoding DEC (Ev) (0xFF /1))
+
+; --- sign-extend rAX: mnemonic is width-selected (SDM: 98 = CBW/CWDE/CDQE by opsize) ---
+(instruction CWDE ()
+    "$(wname cbw cwde cdqe)"
+    (intrinsic cwde))
+(encoding CWDE () (0x98))
+
+(instruction CDQ ()
+    "$(wname cwd cdq cqo)"
+    (intrinsic cdq))
+(encoding CDQ () (0x99))
+
+; --- SETcc (0F 90-9F): store condition to r/m8 ---
+(instruction SETO (dst) "seto $dst" (= dst OF))
+(encoding SETO (Eb) (0x0F 0x90))
+(instruction SETNO (dst) "setno $dst" (= dst (! OF)))
+(encoding SETNO (Eb) (0x0F 0x91))
+(instruction SETB (dst) "setb $dst" (= dst CF))
+(encoding SETB (Eb) (0x0F 0x92))
+(instruction SETNB (dst) "setnb $dst" (= dst (! CF)))
+(encoding SETNB (Eb) (0x0F 0x93))
+(instruction SETZ (dst) "setz $dst" (= dst ZF))
+(encoding SETZ (Eb) (0x0F 0x94))
+(instruction SETNZ (dst) "setnz $dst" (= dst (! ZF)))
+(encoding SETNZ (Eb) (0x0F 0x95))
+(instruction SETBE (dst) "setbe $dst" (= dst (| CF ZF)))
+(encoding SETBE (Eb) (0x0F 0x96))
+(instruction SETNBE (dst) "setnbe $dst" (= dst (! (| CF ZF))))
+(encoding SETNBE (Eb) (0x0F 0x97))
+(instruction SETS (dst) "sets $dst" (= dst SF))
+(encoding SETS (Eb) (0x0F 0x98))
+(instruction SETNS (dst) "setns $dst" (= dst (! SF)))
+(encoding SETNS (Eb) (0x0F 0x99))
+(instruction SETP (dst) "setp $dst" (= dst PF))
+(encoding SETP (Eb) (0x0F 0x9A))
+(instruction SETNP (dst) "setnp $dst" (= dst (! PF)))
+(encoding SETNP (Eb) (0x0F 0x9B))
+(instruction SETL (dst) "setl $dst" (= dst (!= SF OF)))
+(encoding SETL (Eb) (0x0F 0x9C))
+(instruction SETNL (dst) "setnl $dst" (= dst (== SF OF)))
+(encoding SETNL (Eb) (0x0F 0x9D))
+(instruction SETLE (dst) "setle $dst" (= dst (| ZF (!= SF OF))))
+(encoding SETLE (Eb) (0x0F 0x9E))
+(instruction SETNLE (dst) "setnle $dst" (= dst (! (| ZF (!= SF OF)))))
+(encoding SETNLE (Eb) (0x0F 0x9F))
+
+; --- CMOVcc (0F 40-4F) ---
+(instruction CMOVO (dst src) "cmovo $dst, $src" (if OF (= dst src)))
+(encoding CMOVO (Gv Ev) (0x0F 0x40))
+(instruction CMOVNO (dst src) "cmovno $dst, $src" (if (! OF) (= dst src)))
+(encoding CMOVNO (Gv Ev) (0x0F 0x41))
+(instruction CMOVB (dst src) "cmovb $dst, $src" (if CF (= dst src)))
+(encoding CMOVB (Gv Ev) (0x0F 0x42))
+(instruction CMOVNB (dst src) "cmovnb $dst, $src" (if (! CF) (= dst src)))
+(encoding CMOVNB (Gv Ev) (0x0F 0x43))
+(instruction CMOVZ (dst src) "cmovz $dst, $src" (if ZF (= dst src)))
+(encoding CMOVZ (Gv Ev) (0x0F 0x44))
+(instruction CMOVNZ (dst src) "cmovnz $dst, $src" (if (! ZF) (= dst src)))
+(encoding CMOVNZ (Gv Ev) (0x0F 0x45))
+(instruction CMOVBE (dst src) "cmovbe $dst, $src" (if (| CF ZF) (= dst src)))
+(encoding CMOVBE (Gv Ev) (0x0F 0x46))
+(instruction CMOVNBE (dst src) "cmovnbe $dst, $src" (if (! (| CF ZF)) (= dst src)))
+(encoding CMOVNBE (Gv Ev) (0x0F 0x47))
+(instruction CMOVS (dst src) "cmovs $dst, $src" (if SF (= dst src)))
+(encoding CMOVS (Gv Ev) (0x0F 0x48))
+(instruction CMOVNS (dst src) "cmovns $dst, $src" (if (! SF) (= dst src)))
+(encoding CMOVNS (Gv Ev) (0x0F 0x49))
+(instruction CMOVP (dst src) "cmovp $dst, $src" (if PF (= dst src)))
+(encoding CMOVP (Gv Ev) (0x0F 0x4A))
+(instruction CMOVNP (dst src) "cmovnp $dst, $src" (if (! PF) (= dst src)))
+(encoding CMOVNP (Gv Ev) (0x0F 0x4B))
+(instruction CMOVL (dst src) "cmovl $dst, $src" (if (!= SF OF) (= dst src)))
+(encoding CMOVL (Gv Ev) (0x0F 0x4C))
+(instruction CMOVNL (dst src) "cmovnl $dst, $src" (if (== SF OF) (= dst src)))
+(encoding CMOVNL (Gv Ev) (0x0F 0x4D))
+(instruction CMOVLE (dst src) "cmovle $dst, $src" (if (| ZF (!= SF OF)) (= dst src)))
+(encoding CMOVLE (Gv Ev) (0x0F 0x4E))
+(instruction CMOVNLE (dst src) "cmovnle $dst, $src" (if (! (| ZF (!= SF OF))) (= dst src)))
+(encoding CMOVNLE (Gv Ev) (0x0F 0x4F))
+
+; =====================================================================
 ; wave-1: census-ranked from glibc x86-64 (2026-07-09 run @1e7d5c3)
 ; =====================================================================
 

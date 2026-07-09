@@ -10,6 +10,7 @@ public enum OpClass {
 	RelBranch,   // J* — signed displacement relative to next insn
 	FixedReg,    // AL, CL, rAX, DX ... — no bytes consumed
 	FixedInt,    // literal constant operand (e.g. "1" in shift-by-1 forms)
+	OpcodeReg,   // Z* — GPR embedded in opcode low 3 bits (+r forms), REX.B-extended
 	MemOffset,   // O* — moffs: address-sized immediate offset, no ModRM (A0-A3)
 	FarPtr,      // Ap — ptr16:16/16:32 direct far address
 }
@@ -98,6 +99,7 @@ public class OperandSpec {
 			'J' => OpClass.RelBranch,
 			'O' => OpClass.MemOffset,
 			'A' => OpClass.FarPtr,
+			'Z' => OpClass.OpcodeReg,
 			_ => throw new NotSupportedException($"operand class in {s}")
 		};
 		spec.MemOnly = cls == 'M';

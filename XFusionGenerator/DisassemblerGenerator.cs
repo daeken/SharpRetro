@@ -35,14 +35,18 @@ public static class DisassemblerGenerator {
 		sb.AppendLine();
 
 		// Group: (map, opcode) -> defs (multiple only via /N extensions)
-		var groups = defs.GroupBy(d => (d.Map, d.Opcode)).OrderBy(g => g.Key.Map).ThenBy(g => g.Key.Opcode);
+		// +r defs occupy 8 consecutive opcodes — expand for grouping/dispatch.
+		var dispatchRows = defs.SelectMany(d => d.PlusR
+			? Enumerable.Range(0, 8).Select(r => (Op: (byte) (d.Opcode + r), Def: d))
+			: [(Op: d.Opcode, Def: d)]);
+		var groups = dispatchRows.GroupBy(x => (x.Def.Map, x.Op)).OrderBy(g => g.Key.Map).ThenBy(g => g.Key.Op);
 		sb.AppendLine("\t\tswitch(map, op) {");
 		foreach(var g in groups) {
 			var mapName = g.Key.Map.ToString();
-			sb.AppendLine($"\t\t\tcase (OpcodeMap.{mapName}, 0x{g.Key.Opcode:X2}): {{");
+			sb.AppendLine($"\t\t\tcase (OpcodeMap.{mapName}, 0x{g.Key.Op:X2}): {{");
 			// Mandatory-prefix rows dispatch first (F3 90 = pause, not rep nop; SSE later).
 			// The matched prefix is CONSUMED — cleared so it doesn't render as rep/data16.
-			foreach(var pd in g.Where(d => d.MandatoryPrefix != null)) {
+			foreach(var pd in g.Select(x => x.Def).Where(d => d.MandatoryPrefix != null)) {
 				var cond = pd.MandatoryPrefix switch {
 					"rep" => "p.Rep", "repnz" => "p.RepNz", "opsize" => "p.OpSize",
 					_ => throw new NotSupportedException(pd.MandatoryPrefix)
@@ -56,7 +60,7 @@ public static class DisassemblerGenerator {
 				EmitDefBody(sb, pd, "\t\t\t\t\t");
 				sb.AppendLine("\t\t\t\t}");
 			}
-			var byExt = g.Where(d => d.MandatoryPrefix == null).ToList();
+			var byExt = g.Select(x => x.Def).Where(d => d.MandatoryPrefix == null).ToList();
 			if(byExt.Count == 0) { sb.AppendLine("\t\t\t\treturn (null, 0);"); sb.AppendLine("\t\t\t}"); continue; }
 			if(byExt.Count > 1 || byExt[0].RegExtension >= 0) {
 				// need ModRM.reg to disambiguate; all rows in a /N group carry ModRM
@@ -137,7 +141,11 @@ public static class DisassemblerGenerator {
 			case OpClass.FixedReg:
 				return $"Decode.GprName({spec.FixedRegIndex}, 16, false)";
 			case OpClass.FixedInt:
-				return $"\"{spec.FixedValue}\"";
+				return $"\"0x{spec.FixedValue:x}\"";
+			case OpClass.OpcodeReg: {
+				var w = spec.Width == WCode.b ? "8" : VWidthExpr();
+				return $"Decode.GprName((op & 7) | (p.RexB ? 8 : 0), {w}, p.Rex != 0)";
+			}
 			case OpClass.Imm: {
 				var v = $"imm_{spec.Text.Replace("-", "_")}";
 				// z-imms fetch 16/32 but the VALUE is sign-extended to the v-sized destination
@@ -172,9 +180,19 @@ public static class DisassemblerGenerator {
 			return opTexts[idx];
 		}
 
-		switch(def.Disassembly) {
+		// $(wname n16 n32 n64): mnemonic selected by effective operand width (98/99 class).
+		string TryWname(PTree t) {
+			if(t is PList wl && wl.Count == 4 && wl[0] is PName("wname")
+				&& wl[1] is PName(var n16) && wl[2] is PName(var n32) && wl[3] is PName(var n64))
+				return $"(p.VWidth(mode) switch {{ 16 => \"{n16}\", 32 => \"{n32}\", _ => \"{n64}\" }})";
+			return null;
+		}
+
+		switch(def.Dasm) {
 			case PString { String: var s }:
 				return $"\"{s}\"";
+			case var t when TryWname(t) != null:
+				return TryWname(t);
 			case PName(var n):  // whole dasm is one $param (unusual but legal)
 				return Bind(n);
 			case PList l when l.Count > 0 && l[0] is PName("string-concat"): {
@@ -189,7 +207,7 @@ public static class DisassemblerGenerator {
 				return sb.ToString();
 			}
 			default:
-				throw new NotSupportedException($"dasm shape for {def.Mnemonic}: {def.Disassembly}");
+				throw new NotSupportedException($"dasm shape for {def.Mnemonic}: {def.Dasm}");
 		}
 	}
 }

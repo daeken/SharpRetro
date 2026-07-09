@@ -22,9 +22,12 @@ public class XFusionDef : Def {
 	public int RegExtension = -1;      // /0../7 constraint on ModRM.reg, or -1
 	public bool D64;                   // SDM D64 attribute: default operand 64 in long mode, 32 unavailable (PUSH/POP/CALL/JMP class)
 	public string MandatoryPrefix;     // null | "rep" (F3) | "repnz" (F2) | "opsize" (66) — the SSE/PAUSE discriminator; prefix-matched rows dispatch before the bare row
+	public bool PlusR;                 // +r form: opcode occupies [Opcode, Opcode+7], reg = (op&7)|REX.B<<3
 	public List<OperandSpec> Operands; // positional, matches template params
 	public List<string> ParamNames;    // template params ("lval", "rval")
 	public string Mnemonic;
+	public PTree Dasm;                 // the REAL dasm tree (base.Disassembly gets a placeholder — Def's
+	                                   // InferType can't type x86 dasm vocab like (wname …); same deferral as SemanticsEval)
 	public PList SemanticsEval;        // template eval body — typed+compiled at the interpreter
 	                                   // milestone (needs XFusion Builtins for Core.Statements/Expressions);
 	                                   // base.Eval gets an empty block until then so Def's InferType passes.
@@ -75,8 +78,8 @@ public class XFusionDef : Def {
 						throw new NotSupportedException(
 							$"encoding {mnem} ({string.Join(" ", specs.Select(x => x.Text))}) has {specs.Count} operands; template takes {tmpl.Params.Count}");
 
-					var (map, opcode, regExt, d64, mprefix) = ParseOpcodes(opcList, mnem);
-					var def = Build(tmpl, specs, map, opcode, regExt, d64, mprefix);
+					var (map, opcode, regExt, d64, mprefix, plusR) = ParseOpcodes(opcList, mnem);
+					var def = Build(tmpl, specs, map, opcode, regExt, d64, mprefix, plusR);
 					defs.Add(def);
 					break;
 				}
@@ -85,10 +88,11 @@ public class XFusionDef : Def {
 		return (templates.Values.ToList(), defs);
 	}
 
-	static (OpcodeMap, byte, int, bool, string) ParseOpcodes(PList opcList, string mnem) {
+	static (OpcodeMap, byte, int, bool, string, bool) ParseOpcodes(PList opcList, string mnem) {
 		var bytes = new List<byte>();
 		var regExt = -1;
 		var d64 = false;
+		var plusR = false;
 		string mprefix = null;
 		foreach(var item in opcList)
 			switch(item) {
@@ -101,6 +105,9 @@ public class XFusionDef : Def {
 				case PName("d64"):
 					d64 = true;
 					break;
+				case PName("+r"):
+					plusR = true;
+					break;
 				case PName("rep") or PName("repnz") or PName("opsize") when bytes.Count == 0:
 					mprefix = ((PName) item).Name;
 					break;
@@ -109,15 +116,15 @@ public class XFusionDef : Def {
 			}
 
 		return bytes switch {
-			[var one] => (OpcodeMap.OneByte, one, regExt, d64, mprefix),
-			[0x0F, var two] => (OpcodeMap.TwoByte0F, two, regExt, d64, mprefix),
-			[0x0F, 0x38, var three] => (OpcodeMap.ThreeByte0F38, three, regExt, d64, mprefix),
-			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three, regExt, d64, mprefix),
+			[var one] => (OpcodeMap.OneByte, one, regExt, d64, mprefix, plusR),
+			[0x0F, var two] => (OpcodeMap.TwoByte0F, two, regExt, d64, mprefix, plusR),
+			[0x0F, 0x38, var three] => (OpcodeMap.ThreeByte0F38, three, regExt, d64, mprefix, plusR),
+			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three, regExt, d64, mprefix, plusR),
 			_ => throw new NotSupportedException($"opcode byte pattern in encoding {mnem}: [{string.Join(", ", bytes.Select(b => $"0x{b:X2}"))}]")
 		};
 	}
 
-	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeMap map, byte opcode, int regExt, bool d64, string mprefix) {
+	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeMap map, byte opcode, int regExt, bool d64, string mprefix, bool plusR) {
 		// Locals: template params are bound at decode time; typing is resolved during
 		// generation (width expansion). For now register params as compile-time-unknown ints.
 		var locals = new Dictionary<string, EType>();
@@ -125,13 +132,15 @@ public class XFusionDef : Def {
 			locals[p] = new EInt(false, 64).AsCompiletime();
 
 		var name = $"{tmpl.Mnemonic}-{string.Join("-", specs.Select(s => s.Text.Replace("/", "x")))}";
-		return new XFusionDef(name, tmpl.Dasm, new PList { new PName("block") }, new PList { new PName("block") }, locals) {
+		return new XFusionDef(name, new PString(name), new PList { new PName("block") }, new PList { new PName("block") }, locals) {
+			Dasm = tmpl.Dasm,
 			SemanticsEval = tmpl.Eval,
 			Map = map,
 			Opcode = opcode,
 			RegExtension = regExt,
 			D64 = d64,
 			MandatoryPrefix = mprefix,
+			PlusR = plusR,
 			Operands = specs,
 			ParamNames = tmpl.Params,
 			Mnemonic = tmpl.Mnemonic,
