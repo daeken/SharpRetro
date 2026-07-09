@@ -124,6 +124,37 @@ silicon behavior for them (qemu diffs will surface it).
    to be runnable by: generated interpreter (now), qemu-user diff (next),
    real hardware (sera's aarch64 harness precedent).
 
+## VEX/EVEX tier (designed 2026-07-09, implementation next)
+
+Corpus population (glibc x86-64, 10,503 remaining undecoded): VEX = AVX-promoted
+forms of instructions we already define (vmovdqu 1208, vpmovmskb 1061, vpcmpeqb
+1017, vpaddb 460...) + AVX-512 EVEX forms (vmovdqu64, kmovd, vpcmp* with mask
+regs). Almost no *new* semantics — new *encoding* of existing rows.
+
+Mechanism (auto-promotion, not hand-duplication):
+
+1. **Prefix scanner** learns C5 (2-byte: [C5, R̄vvvvLpp]) and C4 (3-byte:
+   [C4, R̄X̄B̄mmmmm, WvvvvLpp]) → PrefixState.Vex { Map (mmmmm: 1=0F/2=0F38/3=0F3A),
+   Pp (0=none/1=66/2=F3/3=F2), Vvvv (inverted), L, W, and R/X/B folded into the
+   REX-equivalent bits }. EVEX (62) same shape, 4-byte, +mask/z/L'/b fields.
+   ⚠ 32-bit mode: C4/C5/62 are LES/LDS/BOUND unless next-byte mod==11 —
+   lookahead required (64-bit unconditional).
+2. **Dispatch**: VEX-encoded lookups hit the SAME (map, opcode) switch; Pp
+   substitutes for the mandatory-prefix condition. Defs are vex-capable by
+   default in vector space; a `vex` / `vex-only` / `novex` encoding token
+   overrides (vzeroupper = vex-only; new defs like vpermd live in avx*.isa).
+3. **Promotion rule**: a 2-operand SSE row (Vdq Wdq) under VEX gains vvvv as
+   second source → renders 3-operand (vpaddb xmm1, xmm2, xmm3). MOV-class rows
+   (movdqu/movaps...) do NOT gain vvvv (vvvv must be 1111 else #UD). The .isa
+   marks which: `(vex 3src)` vs `(vex 2src)` on the encoding, or a promote-table
+   in avx.isa keyed by mnemonic. L=1 renders ymm. W selects 64-bit lane forms.
+4. **EVEX adds**: mask-reg operand ({k1}), zeroing ({z}), disp8*N compression
+   (memory disp scales by element size — LENGTH-affecting, must be exact),
+   opmask registers k0-k7 as a new reg file.
+
+Sequencing: VEX first (C5 then C4), corpus-verify, then EVEX. kmovd/vpcmpb
+(mask-reg forms) land with EVEX since that's where the corpus uses them.
+
 ## Ladder
 
 ia32-base (~100 insns, one-byte map core) → verify M0 vs XED on corpus →
