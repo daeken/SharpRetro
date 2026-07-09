@@ -162,7 +162,7 @@
 
 (instruction MOVSV (dst src)
     "$(wname movsw movsd movsq) $dst, $src"
-    (intrinsic movs dst src))
+    (intrinsic movs (bitwidth dst) dst src))
 (encoding MOVSV (Yv Xv) (0xA5))
 
 (instruction STOSB (dst)
@@ -172,7 +172,7 @@
 
 (instruction STOSV (dst)
     "$(wname stosw stosd stosq) $dst"
-    (intrinsic stos dst))
+    (intrinsic stos (bitwidth dst) dst))
 (encoding STOSV (Yv) (0xAB))
 
 (instruction LODSB (src)
@@ -182,7 +182,7 @@
 
 (instruction LODSV (src)
     "$(wname lodsw lodsd lodsq) $src"
-    (intrinsic lods src))
+    (intrinsic lods (bitwidth src) src))
 (encoding LODSV (Xv) (0xAD))
 
 (instruction SCASB (dst)
@@ -192,7 +192,7 @@
 
 (instruction SCASV (dst)
     "$(wname scasw scasd scasq) $dst"
-    (intrinsic scas dst))
+    (intrinsic scas (bitwidth dst) dst))
 (encoding SCASV (Yv) (0xAF))
 
 (instruction CMPSB (src dst)
@@ -202,7 +202,7 @@
 
 (instruction CMPSV (src dst)
     "$(wname cmpsw cmpsd cmpsq) $src, $dst"
-    (intrinsic cmps src dst))
+    (intrinsic cmps (bitwidth src) src dst))
 (encoding CMPSV (Xv Yv) (0xA7))
 
 ; --- moffs forms: AL/rAX <-> [disp] with no ModRM (A0-A3) ---

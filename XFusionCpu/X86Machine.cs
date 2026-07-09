@@ -91,6 +91,7 @@ public class X86Machine {
 				break;
 			case IlIntrin(_, var name, var args): {
 				var vals = args.Select(Eval).ToArray();
+				if(StringOp(name, vals)) break;  // machine-native (SI/DI/CX/DF state)
 				if(OnIntrin == null || !OnIntrin(this, name, vals))
 					throw new NotSupportedException($"unhandled intrinsic {name}");
 				break;
@@ -98,6 +99,65 @@ public class X86Machine {
 			case IlNote: break;
 			default: throw new NotSupportedException($"exec {s.GetType().Name}");
 		}
+	}
+
+	/// The string family, machine-native. Convention from the .isa: args[0] =
+	/// width (literal or bitwidth-const) — but we re-derive everything from
+	/// state; the NAME (incl rep_/repe_/repne_ prefix) + the width arg drive it.
+	/// Real-mode segment bases honored (DS:SI src, ES:DI dst). DF advances.
+	bool StringOp(string name, ulong[] args) {
+		var baseName = name;
+		var rep = RepKind.None;
+		if(name.StartsWith("rep_")) { rep = RepKind.Rep; baseName = name[4..]; }
+		else if(name.StartsWith("repe_")) { rep = RepKind.RepE; baseName = name[5..]; }
+		else if(name.StartsWith("repne_")) { rep = RepKind.RepNe; baseName = name[6..]; }
+		if(baseName is not ("movs" or "stos" or "lods" or "scas" or "cmps")) return false;
+
+		var w = args.Length > 0 ? (int) args[0] : 16;  // .isa convention: args[0] = width
+		var step = (ulong) (w / 8);
+		var down = ((Flags >> 10) & 1) != 0;  // DF
+
+		ulong AddrMask(ulong a) => Mode == XMode.Bits16 ? a & 0xFFFF : Mode == XMode.Bits32 ? a & 0xFFFFFFFF : a;
+		ulong Si() => SegBase[3] + AddrMask(Gpr[6]);
+		ulong Di() => SegBase[0] + AddrMask(Gpr[7]);
+		void Adv(int reg) => Gpr[reg] = down ? Gpr[reg] - step : Gpr[reg] + step;
+		ulong Rd(ulong a) { var v = 0UL; for(var b = 0; b < (int) step; b++) v |= (ulong) Mem[(int) (a + (ulong) b)] << (b * 8); return v; }
+		void Wr(ulong a, ulong v) { for(var b = 0; b < (int) step; b++) Mem[(int) (a + (ulong) b)] = (byte) (v >> (b * 8)); }
+
+		while(true) {
+			if(rep != RepKind.None) {
+				var cx = Mode == XMode.Bits16 ? Gpr[1] & 0xFFFF : Mode == XMode.Bits32 ? Gpr[1] & 0xFFFFFFFF : Gpr[1];
+				if(cx == 0) break;
+			}
+			switch(baseName) {
+				case "movs": Wr(Di(), Rd(Si())); Adv(6); Adv(7); break;
+				case "stos": Wr(Di(), MaskW(Gpr[0], w)); Adv(7); break;
+				case "lods": Gpr[0] = w == 64 ? Rd(Si()) : (Gpr[0] & ~((1UL << w) - 1)) | Rd(Si()); Adv(6); break;
+				case "scas": SubFlags(MaskW(Gpr[0], w), Rd(Di()), w); Adv(7); break;
+				case "cmps": { var a = Rd(Si()); var b = Rd(Di()); SubFlags(a, b, w); Adv(6); Adv(7); break; }
+			}
+			if(rep == RepKind.None) break;
+			Gpr[1]--;
+			// repe/repne termination on ZF (scas/cmps only)
+			if(rep == RepKind.RepE && ((Flags >> 6) & 1) == 0) break;
+			if(rep == RepKind.RepNe && ((Flags >> 6) & 1) != 0) break;
+		}
+		return true;
+	}
+
+	enum RepKind { None, Rep, RepE, RepNe }
+
+	/// CMP-shape flags (scas/cmps): CF/ZF/SF/OF/PF from a-b at width w.
+	void SubFlags(ulong a, ulong b, int w) {
+		var r = MaskW(a - b, w);
+		void Set(int bit, bool v) => Flags = (Flags & ~(1UL << bit)) | ((v ? 1UL : 0) << bit);
+		Set(0, MaskW(a, w) < MaskW(b, w));                       // CF borrow
+		Set(6, r == 0);                                          // ZF
+		Set(7, (r >> (w - 1) & 1) != 0);                         // SF
+		var of = ((a ^ b) & (a ^ r)) >> (w - 1) & 1;             // OF (sub form)
+		Set(11, of != 0);
+		var p = (byte) r; p ^= (byte) (p >> 4);                  // PF (even parity, 0x9669)
+		Set(2, ((0x9669 >> (p & 0xF)) & 1) != 0);
 	}
 
 	ulong Eval(Il e) {

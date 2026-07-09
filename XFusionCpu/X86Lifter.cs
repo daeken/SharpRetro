@@ -36,7 +36,16 @@ public static class X86Lifter {
 
 		binds["%nextpc"] = new OperandBind.Imm((long) (pc + (ulong) d.Len), 64);
 		var opWidth = specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
-		return IlLower.Lower(params_, eval, binds, opWidth);
+		var block = IlLower.Lower(params_, eval, binds, opWidth);
+
+		// rep/repe/repne on the string family → intrinsic-name prefix (·62 naming).
+		// movs/stos/lods take plain rep; scas/cmps distinguish repe (F3) / repne (F2).
+		var (rep, repNz) = (d.P.Rep, d.P.RepNz);
+		if((rep || repNz) && block.Body.Any(st => st is IlIntrin))
+			block = new IlBlock(block.Body.Select(st => st is IlIntrin(var ty, var nm, var args) && IsStringOp(nm)
+				? new IlIntrin(ty, (repNz ? "repne_" : nm is "scas" or "cmps" ? "repe_" : "rep_") + nm, args.ToArray())
+				: st).ToList());
+		return block;
 	}
 
 	static (List<string> Params, List<PTree> Eval) Template(int tid) {
@@ -64,6 +73,8 @@ public static class X86Lifter {
 		WCode.ps or WCode.pd or WCode.dq or WCode.x => d.P.VexL ? 256 : 128,
 		_ => vw
 	};
+
+	static bool IsStringOp(string n) => n is "movs" or "stos" or "lods" or "scas" or "cmps";
 
 	/// Legacy high-8 rule: 8-bit reg idx 4-7 WITHOUT any REX = AH/CH/DH/BH
 	/// (bits 8-15 of gpr idx-4). Any REX (incl bare 40) switches to spl/bpl/sil/dil.

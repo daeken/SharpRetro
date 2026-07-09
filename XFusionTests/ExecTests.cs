@@ -136,6 +136,70 @@ public class ExecTests {
 		Assert.That((ushort) m.Gpr[0], Is.EqualTo((ushort) 0x1234));
 	}
 
+	// --- string family (machine-native) ---
+	[Test]
+	public void RepMovsbCopies() {  // 64-bit flat: rep movsb, rsi→rdi, rcx=5
+		var m = M64("f3a4");
+		m.Gpr[6] = 0x5000; m.Gpr[7] = 0x6000; m.Gpr[1] = 5;
+		"HELLO"u8.ToArray().CopyTo(m.Mem, 0x5000);
+		m.Step();
+		Assert.That(System.Text.Encoding.ASCII.GetString(m.Mem, 0x6000, 5), Is.EqualTo("HELLO"));
+		Assert.That(m.Gpr[1], Is.EqualTo(0UL), "CX exhausted");
+		Assert.That(m.Gpr[6], Is.EqualTo(0x5005UL));
+		Assert.That(m.Gpr[7], Is.EqualTo(0x6005UL));
+	}
+
+	[Test]
+	public void RepStoswFills() {  // rep stosw: AX pattern × 3
+		var m = M64("66f3ab");  // rep stosw (66 = 16-bit op)
+		m.Gpr[0] = 0xABCD; m.Gpr[7] = 0x7000; m.Gpr[1] = 3;
+		m.Step();
+		for(var i = 0; i < 3; i++) {
+			Assert.That(m.Mem[0x7000 + i * 2], Is.EqualTo((byte) 0xCD));
+			Assert.That(m.Mem[0x7001 + i * 2], Is.EqualTo((byte) 0xAB));
+		}
+		Assert.That(m.Gpr[7], Is.EqualTo(0x7006UL));
+	}
+
+	[Test]
+	public void RepneScasbStrlen() {  // the strlen idiom: AL=0, CX=max, repne scasb
+		var m = M64("f2ae");
+		m.Gpr[0] = 0; m.Gpr[7] = 0x5000; m.Gpr[1] = 0xFFFF;
+		"abc\0"u8.ToArray().CopyTo(m.Mem, 0x5000);
+		m.Step();
+		// stops AFTER matching the NUL: DI = 0x5004, len = 0xFFFF - CX - 1 = 3
+		Assert.That(m.Gpr[7], Is.EqualTo(0x5004UL));
+		Assert.That(0xFFFFUL - m.Gpr[1] - 1, Is.EqualTo(3UL), "strlen");
+		Assert.That(F(m, ZF), Is.True, "ZF set on match");
+	}
+
+	[Test]
+	public void MovsbRespectDf() {  // std; movsb → SI/DI decrement
+		var m = M64("fd" + "a4");
+		m.Gpr[6] = 0x5000; m.Gpr[7] = 0x6000;
+		m.Mem[0x5000] = 0x77;
+		m.Step(); m.Step();
+		Assert.That(m.Mem[0x6000], Is.EqualTo((byte) 0x77));
+		Assert.That(m.Gpr[6], Is.EqualTo(0x4FFFUL), "SI decremented");
+		Assert.That(m.Gpr[7], Is.EqualTo(0x5FFFUL), "DI decremented");
+	}
+
+	[Test]
+	public void CmpsbSetsFlags() {  // cmpsb equal → ZF; then differing → CF per compare
+		var m = M64("a6");
+		m.Gpr[6] = 0x5000; m.Gpr[7] = 0x6000;
+		m.Mem[0x5000] = 5; m.Mem[0x6000] = 5;
+		m.Step();
+		Assert.That(F(m, ZF), Is.True, "equal bytes");
+
+		var m2 = M64("a6");
+		m2.Gpr[6] = 0x5000; m2.Gpr[7] = 0x6000;
+		m2.Mem[0x5000] = 3; m2.Mem[0x6000] = 7;  // 3-7 borrows
+		m2.Step();
+		Assert.That(F(m2, ZF), Is.False);
+		Assert.That(F(m2, CF), Is.True, "borrow");
+	}
+
 	[Test]
 	public void IntrinsicDispatch() {  // int 21h routes to the handler with the imm arg
 		var m = M64("cd21");
