@@ -88,6 +88,28 @@ public class DecodeTests {
 	[TestCase("66b84523", "mov ax, 0x2345")]         // B8+r under opsize: Iv = imm16
 	public void Wave2Mode32(string hex, string expected) => Row(hex, XMode.Bits32, expected);
 
+	// --- SSE/SSE2 tier (XED-verified 2026-07-09) ---
+	[TestCase("0f100a", "movups xmm1, xmmword ptr [rdx]")]
+	[TestCase("f30f10c1", "movss xmm0, xmm1")]        // F3 row
+	[TestCase("f20f10c1", "movsd xmm0, xmm1")]        // F2 row
+	[TestCase("660f10c1", "movupd xmm0, xmm1")]       // 66 row
+	[TestCase("0f280a", "movaps xmm1, xmmword ptr [rdx]")]
+	[TestCase("660f6fc1", "movdqa xmm0, xmm1")]
+	[TestCase("f30f6f06", "movdqu xmm0, xmmword ptr [rsi]")]
+	[TestCase("660fefc0", "pxor xmm0, xmm0")]
+	[TestCase("660fd7c0", "pmovmskb eax, xmm0")]
+	[TestCase("660f74c1", "pcmpeqb xmm0, xmm1")]
+	[TestCase("660f73fa0f", "pslldq xmm2, 0xf")]      // prefix + /7
+	[TestCase("660f73db01", "psrldq xmm3, 0x1")]      // prefix + /3
+	[TestCase("f20f5ac1", "cvtsd2ss xmm0, xmm1")]
+	[TestCase("660f70c1b1", "pshufd xmm0, xmm1, 0xb1")]
+	[TestCase("66480f7ec8", "movq rax, xmm1")]        // 66 0F 7E + REX.W = movq via wname
+	[TestCase("f3480f2ac7", "cvtsi2ss xmm0, rdi")]
+	[TestCase("0f2b02", "movntps xmmword ptr [rdx], xmm0")]
+	[TestCase("0f184e40", "prefetcht0 ptr [rsi+0x40]")]  // bare-ptr address-only
+	[TestCase("0fc302", "movnti dword ptr [rdx], eax")]
+	public void SseTier(string hex, string expected) => Row(hex, XMode.Bits64, expected);
+
 	// --- undecodable / boundary ---
 	[Test]
 	public void UnknownOpcodeReturnsNull() {

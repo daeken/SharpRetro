@@ -1,0 +1,266 @@
+; sse2.isa — SSE2 tier. Gated behind (featuring sse2 ...) in xfusion.isa.
+; The 66-prefixed pd rows + F2 sd rows on SSE1 opcodes, plus the integer-xmm
+; family (66-prefixed MMX opcodes) that dominates real binaries (memcpy/strlen).
+
+; --- pd/sd movement ---
+(instruction MOVUPD (dst src) "movupd $dst, $src" (intrinsic movupd dst src))
+(encoding MOVUPD (Vpd Wpd) (opsize 0x0F 0x10))
+(encoding MOVUPD (Wpd Vpd) (opsize 0x0F 0x11))
+
+(instruction MOVSD-X (dst src) "movsd $dst, $src" (intrinsic movsd-x dst src))
+(encoding MOVSD-X (Vsd Wsd) (repnz 0x0F 0x10))
+(encoding MOVSD-X (Wsd Vsd) (repnz 0x0F 0x11))
+
+(instruction MOVAPD (dst src) "movapd $dst, $src" (intrinsic movapd dst src))
+(encoding MOVAPD (Vpd Wpd) (opsize 0x0F 0x28))
+(encoding MOVAPD (Wpd Vpd) (opsize 0x0F 0x29))
+
+(instruction MOVMSKPD (dst src) "movmskpd $dst, $src" (intrinsic movmskpd dst src))
+(encoding MOVMSKPD (Gd Upd) (opsize 0x0F 0x50))
+
+(instruction UNPCKLPD (dst src) "unpcklpd $dst, $src" (intrinsic unpcklpd dst src))
+(encoding UNPCKLPD (Vpd Wpd) (opsize 0x0F 0x14))
+(instruction UNPCKHPD (dst src) "unpckhpd $dst, $src" (intrinsic unpckhpd dst src))
+(encoding UNPCKHPD (Vpd Wpd) (opsize 0x0F 0x15))
+
+(instruction MOVLPD (dst src) "movlpd $dst, $src" (intrinsic movlpd dst src))
+(encoding MOVLPD (Vq Mq) (opsize 0x0F 0x12))
+(encoding MOVLPD (Mq Vq) (opsize 0x0F 0x13))
+(instruction MOVHPD (dst src) "movhpd $dst, $src" (intrinsic movhpd dst src))
+(encoding MOVHPD (Vq Mq) (opsize 0x0F 0x16))
+(encoding MOVHPD (Mq Vq) (opsize 0x0F 0x17))
+
+; --- pd/sd arithmetic ---
+(instruction ADDPD (dst src) "addpd $dst, $src" (intrinsic addpd dst src))
+(encoding ADDPD (Vpd Wpd) (opsize 0x0F 0x58))
+(instruction ADDSD (dst src) "addsd $dst, $src" (intrinsic addsd dst src))
+(encoding ADDSD (Vsd Wsd) (repnz 0x0F 0x58))
+
+(instruction MULPD (dst src) "mulpd $dst, $src" (intrinsic mulpd dst src))
+(encoding MULPD (Vpd Wpd) (opsize 0x0F 0x59))
+(instruction MULSD (dst src) "mulsd $dst, $src" (intrinsic mulsd dst src))
+(encoding MULSD (Vsd Wsd) (repnz 0x0F 0x59))
+
+(instruction SUBPD (dst src) "subpd $dst, $src" (intrinsic subpd dst src))
+(encoding SUBPD (Vpd Wpd) (opsize 0x0F 0x5C))
+(instruction SUBSD (dst src) "subsd $dst, $src" (intrinsic subsd dst src))
+(encoding SUBSD (Vsd Wsd) (repnz 0x0F 0x5C))
+
+(instruction MINPD (dst src) "minpd $dst, $src" (intrinsic minpd dst src))
+(encoding MINPD (Vpd Wpd) (opsize 0x0F 0x5D))
+(instruction MINSD (dst src) "minsd $dst, $src" (intrinsic minsd dst src))
+(encoding MINSD (Vsd Wsd) (repnz 0x0F 0x5D))
+
+(instruction DIVPD (dst src) "divpd $dst, $src" (intrinsic divpd dst src))
+(encoding DIVPD (Vpd Wpd) (opsize 0x0F 0x5E))
+(instruction DIVSD (dst src) "divsd $dst, $src" (intrinsic divsd dst src))
+(encoding DIVSD (Vsd Wsd) (repnz 0x0F 0x5E))
+
+(instruction MAXPD (dst src) "maxpd $dst, $src" (intrinsic maxpd dst src))
+(encoding MAXPD (Vpd Wpd) (opsize 0x0F 0x5F))
+(instruction MAXSD (dst src) "maxsd $dst, $src" (intrinsic maxsd dst src))
+(encoding MAXSD (Vsd Wsd) (repnz 0x0F 0x5F))
+
+(instruction SQRTPD (dst src) "sqrtpd $dst, $src" (intrinsic sqrtpd dst src))
+(encoding SQRTPD (Vpd Wpd) (opsize 0x0F 0x51))
+(instruction SQRTSD (dst src) "sqrtsd $dst, $src" (intrinsic sqrtsd dst src))
+(encoding SQRTSD (Vsd Wsd) (repnz 0x0F 0x51))
+
+; --- pd logicals ---
+(instruction ANDPD (dst src) "andpd $dst, $src" (intrinsic andpd dst src))
+(encoding ANDPD (Vpd Wpd) (opsize 0x0F 0x54))
+(instruction ANDNPD (dst src) "andnpd $dst, $src" (intrinsic andnpd dst src))
+(encoding ANDNPD (Vpd Wpd) (opsize 0x0F 0x55))
+(instruction ORPD (dst src) "orpd $dst, $src" (intrinsic orpd dst src))
+(encoding ORPD (Vpd Wpd) (opsize 0x0F 0x56))
+(instruction XORPD (dst src) "xorpd $dst, $src" (intrinsic xorpd dst src))
+(encoding XORPD (Vpd Wpd) (opsize 0x0F 0x57))
+
+; --- compares ---
+(instruction UCOMISD (a b) "ucomisd $a, $b" (intrinsic ucomisd a b))
+(encoding UCOMISD (Vsd Wsd) (opsize 0x0F 0x2E))
+(instruction COMISD (a b) "comisd $a, $b" (intrinsic comisd a b))
+(encoding COMISD (Vsd Wsd) (opsize 0x0F 0x2F))
+
+(instruction CMPPD (dst src pred) "cmppd $dst, $src, $pred" (intrinsic cmppd dst src pred))
+(encoding CMPPD (Vpd Wpd Ib) (opsize 0x0F 0xC2))
+(instruction CMPSD-X (dst src pred) "cmpsd $dst, $src, $pred" (intrinsic cmpsd-x dst src pred))
+(encoding CMPSD-X (Vsd Wsd Ib) (repnz 0x0F 0xC2))
+
+(instruction SHUFPD (dst src sel) "shufpd $dst, $src, $sel" (intrinsic shufpd dst src sel))
+(encoding SHUFPD (Vpd Wpd Ib) (opsize 0x0F 0xC6))
+
+; --- integer xmm: movement (the census bulk — memcpy/strlen inner loops) ---
+(instruction MOVDQA (dst src) "movdqa $dst, $src" (intrinsic movdqa dst src))
+(encoding MOVDQA (Vdq Wdq) (opsize 0x0F 0x6F))
+(encoding MOVDQA (Wdq Vdq) (opsize 0x0F 0x7F))
+
+(instruction MOVDQU (dst src) "movdqu $dst, $src" (intrinsic movdqu dst src))
+(encoding MOVDQU (Vdq Wdq) (rep 0x0F 0x6F))
+(encoding MOVDQU (Wdq Vdq) (rep 0x0F 0x7F))
+
+; MOVD/MOVQ gpr<->xmm (66 0F 6E/7E; REX.W makes it movq)
+(instruction MOVD-X (dst src) "$(wname movd movd movq) $dst, $src" (intrinsic movd-x dst src))
+(encoding MOVD-X (Vdq Ev) (opsize 0x0F 0x6E))
+(instruction MOVD-XS (dst src) "$(wname movd movd movq) $dst, $src" (intrinsic movd-xs dst src))
+(encoding MOVD-XS (Ev Vdq) (opsize 0x0F 0x7E))
+
+; MOVQ xmm<->xmm/m64 (F3 0F 7E load, 66 0F D6 store)
+(instruction MOVQ-X (dst src) "movq $dst, $src" (intrinsic movq-x dst src))
+(encoding MOVQ-X (Vq Wq) (rep 0x0F 0x7E))
+(instruction MOVQ-XS (dst src) "movq $dst, $src" (intrinsic movq-xs dst src))
+(encoding MOVQ-XS (Wq Vq) (opsize 0x0F 0xD6))
+
+; --- integer xmm: compare/extract ---
+(instruction PCMPEQB (dst src) "pcmpeqb $dst, $src" (intrinsic pcmpeqb dst src))
+(encoding PCMPEQB (Vdq Wdq) (opsize 0x0F 0x74))
+(instruction PCMPEQW (dst src) "pcmpeqw $dst, $src" (intrinsic pcmpeqw dst src))
+(encoding PCMPEQW (Vdq Wdq) (opsize 0x0F 0x75))
+(instruction PCMPEQD (dst src) "pcmpeqd $dst, $src" (intrinsic pcmpeqd dst src))
+(encoding PCMPEQD (Vdq Wdq) (opsize 0x0F 0x76))
+
+(instruction PCMPGTB (dst src) "pcmpgtb $dst, $src" (intrinsic pcmpgtb dst src))
+(encoding PCMPGTB (Vdq Wdq) (opsize 0x0F 0x64))
+(instruction PCMPGTW (dst src) "pcmpgtw $dst, $src" (intrinsic pcmpgtw dst src))
+(encoding PCMPGTW (Vdq Wdq) (opsize 0x0F 0x65))
+(instruction PCMPGTD (dst src) "pcmpgtd $dst, $src" (intrinsic pcmpgtd dst src))
+(encoding PCMPGTD (Vdq Wdq) (opsize 0x0F 0x66))
+
+(instruction PMOVMSKB (dst src) "pmovmskb $dst, $src" (intrinsic pmovmskb dst src))
+(encoding PMOVMSKB (Gd Udq) (opsize 0x0F 0xD7))
+
+; --- integer xmm: arithmetic/logic ---
+(instruction PADDB (dst src) "paddb $dst, $src" (intrinsic paddb dst src))
+(encoding PADDB (Vdq Wdq) (opsize 0x0F 0xFC))
+(instruction PADDW (dst src) "paddw $dst, $src" (intrinsic paddw dst src))
+(encoding PADDW (Vdq Wdq) (opsize 0x0F 0xFD))
+(instruction PADDD (dst src) "paddd $dst, $src" (intrinsic paddd dst src))
+(encoding PADDD (Vdq Wdq) (opsize 0x0F 0xFE))
+(instruction PADDQ (dst src) "paddq $dst, $src" (intrinsic paddq dst src))
+(encoding PADDQ (Vdq Wdq) (opsize 0x0F 0xD4))
+
+(instruction PSUBB (dst src) "psubb $dst, $src" (intrinsic psubb dst src))
+(encoding PSUBB (Vdq Wdq) (opsize 0x0F 0xF8))
+(instruction PSUBW (dst src) "psubw $dst, $src" (intrinsic psubw dst src))
+(encoding PSUBW (Vdq Wdq) (opsize 0x0F 0xF9))
+(instruction PSUBD (dst src) "psubd $dst, $src" (intrinsic psubd dst src))
+(encoding PSUBD (Vdq Wdq) (opsize 0x0F 0xFA))
+(instruction PSUBQ (dst src) "psubq $dst, $src" (intrinsic psubq dst src))
+(encoding PSUBQ (Vdq Wdq) (opsize 0x0F 0xFB))
+
+(instruction PAND (dst src) "pand $dst, $src" (intrinsic pand dst src))
+(encoding PAND (Vdq Wdq) (opsize 0x0F 0xDB))
+(instruction PANDN (dst src) "pandn $dst, $src" (intrinsic pandn dst src))
+(encoding PANDN (Vdq Wdq) (opsize 0x0F 0xDF))
+(instruction POR (dst src) "por $dst, $src" (intrinsic por dst src))
+(encoding POR (Vdq Wdq) (opsize 0x0F 0xEB))
+(instruction PXOR (dst src) "pxor $dst, $src" (intrinsic pxor dst src))
+(encoding PXOR (Vdq Wdq) (opsize 0x0F 0xEF))
+
+(instruction PMINUB (dst src) "pminub $dst, $src" (intrinsic pminub dst src))
+(encoding PMINUB (Vdq Wdq) (opsize 0x0F 0xDA))
+(instruction PMAXUB (dst src) "pmaxub $dst, $src" (intrinsic pmaxub dst src))
+(encoding PMAXUB (Vdq Wdq) (opsize 0x0F 0xDE))
+
+; --- integer xmm: shifts (imm forms are /N on 71/72/73) ---
+(instruction PSRLW-I (dst count) "psrlw $dst, $count" (intrinsic psrlw dst count))
+(encoding PSRLW-I (Udq Ib) (opsize 0x0F 0x71 /2))
+(instruction PSRAW-I (dst count) "psraw $dst, $count" (intrinsic psraw dst count))
+(encoding PSRAW-I (Udq Ib) (opsize 0x0F 0x71 /4))
+(instruction PSLLW-I (dst count) "psllw $dst, $count" (intrinsic psllw dst count))
+(encoding PSLLW-I (Udq Ib) (opsize 0x0F 0x71 /6))
+
+(instruction PSRLD-I (dst count) "psrld $dst, $count" (intrinsic psrld dst count))
+(encoding PSRLD-I (Udq Ib) (opsize 0x0F 0x72 /2))
+(instruction PSRAD-I (dst count) "psrad $dst, $count" (intrinsic psrad dst count))
+(encoding PSRAD-I (Udq Ib) (opsize 0x0F 0x72 /4))
+(instruction PSLLD-I (dst count) "pslld $dst, $count" (intrinsic pslld dst count))
+(encoding PSLLD-I (Udq Ib) (opsize 0x0F 0x72 /6))
+
+(instruction PSRLQ-I (dst count) "psrlq $dst, $count" (intrinsic psrlq dst count))
+(encoding PSRLQ-I (Udq Ib) (opsize 0x0F 0x73 /2))
+(instruction PSRLDQ-I (dst count) "psrldq $dst, $count" (intrinsic psrldq dst count))
+(encoding PSRLDQ-I (Udq Ib) (opsize 0x0F 0x73 /3))
+(instruction PSLLQ-I (dst count) "psllq $dst, $count" (intrinsic psllq dst count))
+(encoding PSLLQ-I (Udq Ib) (opsize 0x0F 0x73 /6))
+(instruction PSLLDQ-I (dst count) "pslldq $dst, $count" (intrinsic pslldq dst count))
+(encoding PSLLDQ-I (Udq Ib) (opsize 0x0F 0x73 /7))
+
+; --- unpacks ---
+(instruction PUNPCKLBW (dst src) "punpcklbw $dst, $src" (intrinsic punpcklbw dst src))
+(encoding PUNPCKLBW (Vdq Wdq) (opsize 0x0F 0x60))
+(instruction PUNPCKLWD (dst src) "punpcklwd $dst, $src" (intrinsic punpcklwd dst src))
+(encoding PUNPCKLWD (Vdq Wdq) (opsize 0x0F 0x61))
+(instruction PUNPCKLDQ (dst src) "punpckldq $dst, $src" (intrinsic punpckldq dst src))
+(encoding PUNPCKLDQ (Vdq Wdq) (opsize 0x0F 0x62))
+(instruction PUNPCKLQDQ (dst src) "punpcklqdq $dst, $src" (intrinsic punpcklqdq dst src))
+(encoding PUNPCKLQDQ (Vdq Wdq) (opsize 0x0F 0x6C))
+(instruction PUNPCKHBW (dst src) "punpckhbw $dst, $src" (intrinsic punpckhbw dst src))
+(encoding PUNPCKHBW (Vdq Wdq) (opsize 0x0F 0x68))
+(instruction PUNPCKHWD (dst src) "punpckhwd $dst, $src" (intrinsic punpckhwd dst src))
+(encoding PUNPCKHWD (Vdq Wdq) (opsize 0x0F 0x69))
+(instruction PUNPCKHDQ (dst src) "punpckhdq $dst, $src" (intrinsic punpckhdq dst src))
+(encoding PUNPCKHDQ (Vdq Wdq) (opsize 0x0F 0x6A))
+(instruction PUNPCKHQDQ (dst src) "punpckhqdq $dst, $src" (intrinsic punpckhqdq dst src))
+(encoding PUNPCKHQDQ (Vdq Wdq) (opsize 0x0F 0x6D))
+
+; --- shuffles ---
+(instruction PSHUFD (dst src sel) "pshufd $dst, $src, $sel" (intrinsic pshufd dst src sel))
+(encoding PSHUFD (Vdq Wdq Ib) (opsize 0x0F 0x70))
+(instruction PSHUFLW (dst src sel) "pshuflw $dst, $src, $sel" (intrinsic pshuflw dst src sel))
+(encoding PSHUFLW (Vdq Wdq Ib) (repnz 0x0F 0x70))
+(instruction PSHUFHW (dst src sel) "pshufhw $dst, $src, $sel" (intrinsic pshufhw dst src sel))
+(encoding PSHUFHW (Vdq Wdq Ib) (rep 0x0F 0x70))
+
+; --- converts ---
+(instruction CVTSI2SD (dst src) "cvtsi2sd $dst, $src" (intrinsic cvtsi2sd dst src))
+(encoding CVTSI2SD (Vsd Ev) (repnz 0x0F 0x2A))
+(instruction CVTSD2SI (dst src) "cvtsd2si $dst, $src" (intrinsic cvtsd2si dst src))
+(encoding CVTSD2SI (Gv Wsd) (repnz 0x0F 0x2D))
+(instruction CVTTSD2SI (dst src) "cvttsd2si $dst, $src" (intrinsic cvttsd2si dst src))
+(encoding CVTTSD2SI (Gv Wsd) (repnz 0x0F 0x2C))
+
+(instruction CVTSS2SD (dst src) "cvtss2sd $dst, $src" (intrinsic cvtss2sd dst src))
+(encoding CVTSS2SD (Vsd Wss) (rep 0x0F 0x5A))
+(instruction CVTSD2SS (dst src) "cvtsd2ss $dst, $src" (intrinsic cvtsd2ss dst src))
+(encoding CVTSD2SS (Vss Wsd) (repnz 0x0F 0x5A))
+(instruction CVTPS2PD (dst src) "cvtps2pd $dst, $src" (intrinsic cvtps2pd dst src))
+(encoding CVTPS2PD (Vpd Wps) (0x0F 0x5A))
+(instruction CVTPD2PS (dst src) "cvtpd2ps $dst, $src" (intrinsic cvtpd2ps dst src))
+(encoding CVTPD2PS (Vps Wpd) (opsize 0x0F 0x5A))
+
+(instruction CVTDQ2PS (dst src) "cvtdq2ps $dst, $src" (intrinsic cvtdq2ps dst src))
+(encoding CVTDQ2PS (Vps Wdq) (0x0F 0x5B))
+(instruction CVTPS2DQ (dst src) "cvtps2dq $dst, $src" (intrinsic cvtps2dq dst src))
+(encoding CVTPS2DQ (Vdq Wps) (opsize 0x0F 0x5B))
+(instruction CVTTPS2DQ (dst src) "cvttps2dq $dst, $src" (intrinsic cvttps2dq dst src))
+(encoding CVTTPS2DQ (Vdq Wps) (rep 0x0F 0x5B))
+
+(instruction CVTDQ2PD (dst src) "cvtdq2pd $dst, $src" (intrinsic cvtdq2pd dst src))
+(encoding CVTDQ2PD (Vpd Wq) (rep 0x0F 0xE6))
+(instruction CVTPD2DQ (dst src) "cvtpd2dq $dst, $src" (intrinsic cvtpd2dq dst src))
+(encoding CVTPD2DQ (Vdq Wpd) (repnz 0x0F 0xE6))
+(instruction CVTTPD2DQ (dst src) "cvttpd2dq $dst, $src" (intrinsic cvttpd2dq dst src))
+(encoding CVTTPD2DQ (Vdq Wpd) (opsize 0x0F 0xE6))
+
+; --- non-temporal + fences ---
+(instruction MOVNTDQ (dst src) "movntdq $dst, $src" (intrinsic movntdq dst src))
+(encoding MOVNTDQ (Mdq Vdq) (opsize 0x0F 0xE7))
+(instruction MOVNTPD (dst src) "movntpd $dst, $src" (intrinsic movntpd dst src))
+(encoding MOVNTPD (Mpd Vpd) (opsize 0x0F 0x2B))
+(instruction MOVNTI (dst src) "movnti $dst, $src" (intrinsic movnti dst src))
+(encoding MOVNTI (Mv Gv) (0x0F 0xC3))
+
+(instruction LFENCE () "lfence" (intrinsic lfence))
+(encoding LFENCE () (0x0F 0xAE /5))
+(instruction MFENCE () "mfence" (intrinsic mfence))
+(encoding MFENCE () (0x0F 0xAE /6))
+
+(instruction PREFETCHT0 (src) "prefetcht0 $src" (intrinsic prefetcht0 src))
+(encoding PREFETCHT0 (M) (0x0F 0x18 /1))
+(instruction PREFETCHT1 (src) "prefetcht1 $src" (intrinsic prefetcht1 src))
+(encoding PREFETCHT1 (M) (0x0F 0x18 /2))
+(instruction PREFETCHT2 (src) "prefetcht2 $src" (intrinsic prefetcht2 src))
+(encoding PREFETCHT2 (M) (0x0F 0x18 /3))
+(instruction PREFETCHNTA (src) "prefetchnta $src" (intrinsic prefetchnta src))
+(encoding PREFETCHNTA (M) (0x0F 0x18 /0))

@@ -51,22 +51,68 @@ public static class DisassemblerGenerator {
 			sb.AppendLine($"\t\t\tcase (OpcodeMap.{mapName}, 0x{g.Key.Op:X2}): {{");
 			// Mandatory-prefix rows dispatch first (F3 90 = pause, not rep nop; SSE later).
 			// The matched prefix is CONSUMED — cleared so it doesn't render as rep/data16.
-			foreach(var pd in g.Select(x => x.Def).Where(d => d.MandatoryPrefix != null)) {
-				var cond = pd.MandatoryPrefix switch {
+			foreach(var pg in g.Select(x => x.Def).Where(d => d.MandatoryPrefix != null).GroupBy(d => d.MandatoryPrefix)) {
+				var cond = pg.Key switch {
 					"rep" => "p.Rep", "repnz" => "p.RepNz", "opsize" => "p.OpSize",
-					_ => throw new NotSupportedException(pd.MandatoryPrefix)
+					_ => throw new NotSupportedException(pg.Key)
 				};
-				var clear = pd.MandatoryPrefix switch {
+				var clear = pg.Key switch {
 					"rep" => "p.Rep = false;", "repnz" => "p.RepNz = false;", "opsize" => "p.OpSize = false;",
 					_ => null
 				};
 				sb.AppendLine($"\t\t\t\tif({cond}) {{");
 				sb.AppendLine($"\t\t\t\t\t{clear}");
-				EmitDefBody(sb, pd, "\t\t\t\t\t");
+				var pdefs = pg.ToList();
+				if(pdefs.Count > 1 || pdefs[0].RegExtension >= 0) {
+					// /N-discriminated within this prefix (opsize 0F 73 /2 /3 /6 /7 class)
+					sb.AppendLine("\t\t\t\t\tif(i >= code.Length) return (null, 0);");
+					sb.AppendLine($"\t\t\t\t\tswitch((code[i] >> 3) & 7) {{");
+					foreach(var pd in pdefs.OrderBy(x => x.RegExtension)) {
+						if(pd.RegExtension < 0)
+							throw new NotSupportedException($"prefix-group (map,opcode) collision without /N: {pd.Name}");
+						sb.AppendLine($"\t\t\t\t\t\tcase {pd.RegExtension}: {{");
+						EmitDefBody(sb, pd, "\t\t\t\t\t\t\t");
+						sb.AppendLine("\t\t\t\t\t\t}");
+					}
+					sb.AppendLine("\t\t\t\t\t\tdefault: return (null, 0);");
+					sb.AppendLine("\t\t\t\t\t}");
+				} else
+					EmitDefBody(sb, pdefs[0], "\t\t\t\t\t");
 				sb.AppendLine("\t\t\t\t}");
 			}
 			var byExt = g.Select(x => x.Def).Where(d => d.MandatoryPrefix == null).ToList();
 			if(byExt.Count == 0) { sb.AppendLine("\t\t\t\treturn (null, 0);"); sb.AppendLine("\t\t\t}"); continue; }
+			// Vector space (any V/W/U/P/Q operand in the group) is uniformly prefix-
+			// discriminated: 66/F3/F2 ALWAYS select a different instruction there. The
+			// bare row must REJECT unclaimed prefixes — an unimplemented 66-sibling has
+			// to undecode, not misdecode as the ps form (census: movapd read as movaps).
+			var isVectorGroup = g.Select(x => x.Def).Any(d => d.Operands.Any(o =>
+				o.Class is OpClass.XmmReg or OpClass.XmmRm or OpClass.XmmRmReg or OpClass.MmxReg or OpClass.MmxRm));
+			if(isVectorGroup) {
+				var claimed = g.Select(x => x.Def.MandatoryPrefix).Where(x => x != null).ToHashSet();
+				var rejects = new List<string>();
+				if(!claimed.Contains("opsize")) rejects.Add("p.OpSize");
+				if(!claimed.Contains("rep")) rejects.Add("p.Rep");
+				if(!claimed.Contains("repnz")) rejects.Add("p.RepNz");
+				if(rejects.Count > 0)
+					sb.AppendLine($"\t\t\t\tif({string.Join(" || ", rejects)}) return (null, 0);");
+			}
+			// mod-field discrimination (0F 12: movhlps mod==11 / movlps mem): a RegOnly
+			// (U*-operand) def and a MemOnly def can share (map, opcode) without /N.
+			if(byExt.Count == 2 && byExt.All(d => d.RegExtension < 0)) {
+				var regForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+				var memForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+				if(regForm != null && memForm != null && regForm != memForm) {
+					sb.AppendLine("\t\t\t\tif(i >= code.Length) return (null, 0);");
+					sb.AppendLine("\t\t\t\tif((code[i] >> 6) == 3) {");
+					EmitDefBody(sb, regForm, "\t\t\t\t\t");
+					sb.AppendLine("\t\t\t\t} else {");
+					EmitDefBody(sb, memForm, "\t\t\t\t\t");
+					sb.AppendLine("\t\t\t\t}");
+					sb.AppendLine("\t\t\t}");
+					continue;
+				}
+			}
 			if(byExt.Count > 1 || byExt[0].RegExtension >= 0) {
 				// need ModRM.reg to disambiguate; all rows in a /N group carry ModRM
 				sb.AppendLine("\t\t\t\tif(i >= code.Length) return (null, 0);");
@@ -125,6 +171,11 @@ public static class DisassemblerGenerator {
 	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind, string m) {
 		var vw = def.D64 ? "p.VWidthD64(mode)" : "p.VWidth(mode)";
 		string VWidthExpr() => vw;
+		string VecPtrBits() => spec.Width switch {
+			WCode.ss => "32", WCode.sd => "64", WCode.q => "64", WCode.d => "32",
+			WCode.ps or WCode.pd or WCode.dq or WCode.x => "128",
+			_ => throw new NotSupportedException($"vector width {spec.Width} for {spec.Text}")
+		};
 		string WidthExpr() => spec.Width switch {
 			WCode.b => "8",
 			WCode.w => "16",
@@ -136,9 +187,13 @@ public static class DisassemblerGenerator {
 		};
 
 		switch(spec.Class) {
-			case OpClass.ModRmRm when spec.MemOnly:
+			case OpClass.ModRmRm when spec.MemOnly && spec.Width == WCode.none:
 				// address-only operand (LEA): no size qualifier — XED renders bare 'ptr [...]'
 				return $"Decode.MemOperandString(in {m}, in p, mode, 0, pc + (ulong)i)";
+			case OpClass.ModRmRm when spec.MemOnly && spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.ss or WCode.sd or WCode.x:
+				return $"Decode.MemOperandString(in {m}, in p, mode, {VecPtrBits()}, pc + (ulong)i)";
+			case OpClass.ModRmRm when spec.MemOnly:
+				return $"Decode.MemOperandString(in {m}, in p, mode, {WidthExpr()}, pc + (ulong)i)";
 			case OpClass.ModRmRm:
 				return $"({m}.IsReg ? Decode.GprName({m}.Rm, {WidthExpr()}, p.Rex != 0) : Decode.MemOperandString(in {m}, in p, mode, {WidthExpr()}, pc + (ulong)i))";
 			case OpClass.ModRmReg:
@@ -163,6 +218,16 @@ public static class DisassemblerGenerator {
 				return $"Decode.StrOperand(6, {WidthExpr()}, in p, mode)";  // rSI
 			case OpClass.StrDst:
 				return $"Decode.StrOperand(7, {WidthExpr()}, in p, mode)";  // rDI
+			case OpClass.XmmReg:
+				return $"Decode.XmmName({m}.Reg)";
+			case OpClass.XmmRm:
+				return $"({m}.IsReg ? Decode.XmmName({m}.Rm) : Decode.MemOperandString(in {m}, in p, mode, {VecPtrBits()}, pc + (ulong)i))";
+			case OpClass.XmmRmReg:
+				return $"Decode.XmmName({m}.Rm)";  // mod==11 enforced by MemOnly-inverse below
+			case OpClass.MmxReg:
+				return $"Decode.MmxName({m}.Reg)";
+			case OpClass.MmxRm:
+				return $"({m}.IsReg ? Decode.MmxName({m}.Rm) : Decode.MemOperandString(in {m}, in p, mode, {VecPtrBits()}, pc + (ulong)i))";
 			case OpClass.Imm: {
 				var v = $"imm{BodyN}_{spec.Text.Replace("-", "_")}";
 				// z-imms fetch 16/32 but the VALUE is sign-extended to the v-sized destination

@@ -186,6 +186,9 @@ public static class Decode {
 
 	public static string SegRegName(int idx) => SegNames[idx & 7];
 
+	public static string XmmName(int idx) => $"xmm{idx}";
+	public static string MmxName(int idx) => $"mm{idx & 7}";  // no REX extension for mmx
+
 	/// Prefix text rendered before the mnemonic. Stray F3/F2 on non-string, non-SSE
 	/// ops are dropped by XED (F3 C3 rep-ret renders plain 'ret'); string ops render
 	/// rep through their own templates when they land. lock always renders.

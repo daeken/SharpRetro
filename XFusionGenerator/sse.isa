@@ -1,0 +1,126 @@
+; sse.isa — SSE1 (Katmai) tier. Gated behind (featuring sse ...) in xfusion.isa.
+; Same-opcode rows discriminate by mandatory prefix: bare=ps, F3=ss (F2/66 = sse2).
+; Semantics at interpreter tier are intrinsics for now (packed-lane IL = a design
+; conversation with the consumer before committing shape).
+
+(instruction MOVUPS (dst src) "movups $dst, $src" (intrinsic movups dst src))
+(encoding MOVUPS (Vps Wps) (0x0F 0x10))
+(encoding MOVUPS (Wps Vps) (0x0F 0x11))
+
+(instruction MOVSS (dst src) "movss $dst, $src" (intrinsic movss dst src))
+(encoding MOVSS (Vss Wss) (rep 0x0F 0x10))
+(encoding MOVSS (Wss Vss) (rep 0x0F 0x11))
+
+(instruction MOVAPS (dst src) "movaps $dst, $src" (intrinsic movaps dst src))
+(encoding MOVAPS (Vps Wps) (0x0F 0x28))
+(encoding MOVAPS (Wps Vps) (0x0F 0x29))
+
+(instruction MOVHLPS (dst src) "movhlps $dst, $src" (intrinsic movhlps dst src))
+(encoding MOVHLPS (Vps Ups) (0x0F 0x12))
+(instruction MOVLPS (dst src) "movlps $dst, $src" (intrinsic movlps dst src))
+(encoding MOVLPS (Vq Mq) (0x0F 0x12))
+(encoding MOVLPS (Mq Vq) (0x0F 0x13))
+
+(instruction MOVLHPS (dst src) "movlhps $dst, $src" (intrinsic movlhps dst src))
+(encoding MOVLHPS (Vps Ups) (0x0F 0x16))
+(instruction MOVHPS (dst src) "movhps $dst, $src" (intrinsic movhps dst src))
+(encoding MOVHPS (Vq Mq) (0x0F 0x16))
+(encoding MOVHPS (Mq Vq) (0x0F 0x17))
+
+(instruction MOVMSKPS (dst src) "movmskps $dst, $src" (intrinsic movmskps dst src))
+(encoding MOVMSKPS (Gd Ups) (0x0F 0x50))
+
+(instruction UNPCKLPS (dst src) "unpcklps $dst, $src" (intrinsic unpcklps dst src))
+(encoding UNPCKLPS (Vps Wps) (0x0F 0x14))
+(instruction UNPCKHPS (dst src) "unpckhps $dst, $src" (intrinsic unpckhps dst src))
+(encoding UNPCKHPS (Vps Wps) (0x0F 0x15))
+
+; --- arithmetic: ps (bare) + ss (F3) rows share opcodes 58-5F ---
+(instruction ADDPS (dst src) "addps $dst, $src" (intrinsic addps dst src))
+(encoding ADDPS (Vps Wps) (0x0F 0x58))
+(instruction ADDSS (dst src) "addss $dst, $src" (intrinsic addss dst src))
+(encoding ADDSS (Vss Wss) (rep 0x0F 0x58))
+
+(instruction MULPS (dst src) "mulps $dst, $src" (intrinsic mulps dst src))
+(encoding MULPS (Vps Wps) (0x0F 0x59))
+(instruction MULSS (dst src) "mulss $dst, $src" (intrinsic mulss dst src))
+(encoding MULSS (Vss Wss) (rep 0x0F 0x59))
+
+(instruction SUBPS (dst src) "subps $dst, $src" (intrinsic subps dst src))
+(encoding SUBPS (Vps Wps) (0x0F 0x5C))
+(instruction SUBSS (dst src) "subss $dst, $src" (intrinsic subss dst src))
+(encoding SUBSS (Vss Wss) (rep 0x0F 0x5C))
+
+(instruction MINPS (dst src) "minps $dst, $src" (intrinsic minps dst src))
+(encoding MINPS (Vps Wps) (0x0F 0x5D))
+(instruction MINSS (dst src) "minss $dst, $src" (intrinsic minss dst src))
+(encoding MINSS (Vss Wss) (rep 0x0F 0x5D))
+
+(instruction DIVPS (dst src) "divps $dst, $src" (intrinsic divps dst src))
+(encoding DIVPS (Vps Wps) (0x0F 0x5E))
+(instruction DIVSS (dst src) "divss $dst, $src" (intrinsic divss dst src))
+(encoding DIVSS (Vss Wss) (rep 0x0F 0x5E))
+
+(instruction MAXPS (dst src) "maxps $dst, $src" (intrinsic maxps dst src))
+(encoding MAXPS (Vps Wps) (0x0F 0x5F))
+(instruction MAXSS (dst src) "maxss $dst, $src" (intrinsic maxss dst src))
+(encoding MAXSS (Vss Wss) (rep 0x0F 0x5F))
+
+(instruction SQRTPS (dst src) "sqrtps $dst, $src" (intrinsic sqrtps dst src))
+(encoding SQRTPS (Vps Wps) (0x0F 0x51))
+(instruction SQRTSS (dst src) "sqrtss $dst, $src" (intrinsic sqrtss dst src))
+(encoding SQRTSS (Vss Wss) (rep 0x0F 0x51))
+
+(instruction RSQRTPS (dst src) "rsqrtps $dst, $src" (intrinsic rsqrtps dst src))
+(encoding RSQRTPS (Vps Wps) (0x0F 0x52))
+(instruction RSQRTSS (dst src) "rsqrtss $dst, $src" (intrinsic rsqrtss dst src))
+(encoding RSQRTSS (Vss Wss) (rep 0x0F 0x52))
+
+(instruction RCPPS (dst src) "rcpps $dst, $src" (intrinsic rcpps dst src))
+(encoding RCPPS (Vps Wps) (0x0F 0x53))
+(instruction RCPSS (dst src) "rcpss $dst, $src" (intrinsic rcpss dst src))
+(encoding RCPSS (Vss Wss) (rep 0x0F 0x53))
+
+; --- logicals ---
+(instruction ANDPS (dst src) "andps $dst, $src" (intrinsic andps dst src))
+(encoding ANDPS (Vps Wps) (0x0F 0x54))
+(instruction ANDNPS (dst src) "andnps $dst, $src" (intrinsic andnps dst src))
+(encoding ANDNPS (Vps Wps) (0x0F 0x55))
+(instruction ORPS (dst src) "orps $dst, $src" (intrinsic orps dst src))
+(encoding ORPS (Vps Wps) (0x0F 0x56))
+(instruction XORPS (dst src) "xorps $dst, $src" (intrinsic xorps dst src))
+(encoding XORPS (Vps Wps) (0x0F 0x57))
+
+; --- compares ---
+(instruction UCOMISS (a b) "ucomiss $a, $b" (intrinsic ucomiss a b))
+(encoding UCOMISS (Vss Wss) (0x0F 0x2E))
+(instruction COMISS (a b) "comiss $a, $b" (intrinsic comiss a b))
+(encoding COMISS (Vss Wss) (0x0F 0x2F))
+
+(instruction CMPPS (dst src pred) "cmpps $dst, $src, $pred" (intrinsic cmpps dst src pred))
+(encoding CMPPS (Vps Wps Ib) (0x0F 0xC2))
+(instruction CMPSS (dst src pred) "cmpss $dst, $src, $pred" (intrinsic cmpss dst src pred))
+(encoding CMPSS (Vss Wss Ib) (rep 0x0F 0xC2))
+
+(instruction SHUFPS (dst src sel) "shufps $dst, $src, $sel" (intrinsic shufps dst src sel))
+(encoding SHUFPS (Vps Wps Ib) (0x0F 0xC6))
+
+; --- converts (SSE1 half: cvt*si2ss / ss2si / ps<->pi) ---
+(instruction CVTSI2SS (dst src) "cvtsi2ss $dst, $src" (intrinsic cvtsi2ss dst src))
+(encoding CVTSI2SS (Vss Ev) (rep 0x0F 0x2A))
+(instruction CVTSS2SI (dst src) "cvtss2si $dst, $src" (intrinsic cvtss2si dst src))
+(encoding CVTSS2SI (Gv Wss) (rep 0x0F 0x2D))
+(instruction CVTTSS2SI (dst src) "cvttss2si $dst, $src" (intrinsic cvttss2si dst src))
+(encoding CVTTSS2SI (Gv Wss) (rep 0x0F 0x2C))
+
+; --- non-temporal + fences (SSE1) ---
+(instruction MOVNTPS (dst src) "movntps $dst, $src" (intrinsic movntps dst src))
+(encoding MOVNTPS (Mps Vps) (0x0F 0x2B))
+
+(instruction LDMXCSR (src) "ldmxcsr $src" (intrinsic ldmxcsr src))
+(encoding LDMXCSR (Md) (0x0F 0xAE /2))
+(instruction STMXCSR (dst) "stmxcsr $dst" (intrinsic stmxcsr dst))
+(encoding STMXCSR (Md) (0x0F 0xAE /3))
+
+(instruction SFENCE () "sfence" (intrinsic sfence))
+(encoding SFENCE () (0x0F 0xAE /7))

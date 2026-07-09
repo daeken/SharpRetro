@@ -683,7 +683,7 @@
     "lea $dst, $src"
     (= dst (addr-of src)))
 
-(encoding LEA (Gv Mv) (0x8D))
+(encoding LEA (Gv M) (0x8D))
 
 ; --- XCHG r/m ---
 (instruction XCHG (a b)

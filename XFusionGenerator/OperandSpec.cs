@@ -13,6 +13,11 @@ public enum OpClass {
 	OpcodeReg,   // Z* — GPR embedded in opcode low 3 bits (+r forms), REX.B-extended
 	StrSrc,      // X* — string-op source DS:[rSI] (rSI = si/esi/rsi by address size)
 	StrDst,      // Y* — string-op dest ES:[rDI]
+	XmmReg,      // V* — xmm register from ModRM.reg
+	XmmRm,       // W* — xmm register or memory from ModRM.rm
+	XmmRmReg,    // U* — xmm register from ModRM.rm, mod==11 required
+	MmxReg,      // P* — mmx register from ModRM.reg
+	MmxRm,       // Q* — mmx register or memory from ModRM.rm
 	MemOffset,   // O* — moffs: address-sized immediate offset, no ModRM (A0-A3)
 	FarPtr,      // Ap — ptr16:16/16:32 direct far address
 }
@@ -26,6 +31,12 @@ public enum WCode {
 	d,     // dword
 	q,     // qword
 	p,     // 32/48-bit far pointer
+	ps,    // packed single (128-bit access, xmmword)
+	pd,    // packed double (128-bit)
+	ss,    // scalar single (32-bit access)
+	sd,    // scalar double (64-bit)
+	dq,    // double quadword (128-bit)
+	x,     // 128/256 by VEX.L — xmm tier reads as 128
 	none,  // width not applicable (fixed regs carry their own)
 }
 
@@ -41,7 +52,8 @@ public class OperandSpec {
 	public long FixedValue;      // for FixedInt
 	public string SegName;       // for fixed segment-reg operands (ES/CS/SS/DS/FS/GS)
 
-	public bool NeedsModRm => Class is OpClass.ModRmRm or OpClass.ModRmReg or OpClass.ModRmSeg;
+	public bool NeedsModRm => Class is OpClass.ModRmRm or OpClass.ModRmReg or OpClass.ModRmSeg
+		or OpClass.XmmReg or OpClass.XmmRm or OpClass.XmmRmReg or OpClass.MmxReg or OpClass.MmxRm;
 
 	static readonly Dictionary<string, int> FixedGpr = new() {
 		["AL"] = 0, ["CL"] = 1, ["DL"] = 2, ["BL"] = 3,
@@ -84,12 +96,20 @@ public class OperandSpec {
 
 		var sx = s.EndsWith("-sx");
 		var core = sx ? s[..^3] : s;
-		if(core.Length is < 2 or > 2) throw new NotSupportedException($"operand spec: {s}");
-		var (cls, w) = (core[0], core[1]);
+		if(core == "M") {  // bare M: address-only (LEA) — SDM writes it widthless
+			spec.Class = OpClass.ModRmRm;
+			spec.MemOnly = true;
+			spec.Width = WCode.none;
+			return spec;
+		}
+		if(core.Length is < 2 or > 3) throw new NotSupportedException($"operand spec: {s}");
+		var (cls, wstr) = (core[0], core[1..]);
 		spec.SignExtended = sx;
-		spec.Width = w switch {
-			'b' => WCode.b, 'w' => WCode.w, 'v' => WCode.v, 'z' => WCode.z,
-			'd' => WCode.d, 'q' => WCode.q, 'p' => WCode.p,
+		spec.Width = wstr switch {
+			"b" => WCode.b, "w" => WCode.w, "v" => WCode.v, "z" => WCode.z,
+			"d" => WCode.d, "q" => WCode.q, "p" => WCode.p,
+			"ps" => WCode.ps, "pd" => WCode.pd, "ss" => WCode.ss, "sd" => WCode.sd,
+			"dq" => WCode.dq, "x" => WCode.x,
 			_ => throw new NotSupportedException($"width code in {s}")
 		};
 		spec.Class = cls switch {
@@ -104,6 +124,11 @@ public class OperandSpec {
 			'Z' => OpClass.OpcodeReg,
 			'X' => OpClass.StrSrc,
 			'Y' => OpClass.StrDst,
+			'V' => OpClass.XmmReg,
+			'W' => OpClass.XmmRm,
+			'U' => OpClass.XmmRmReg,
+			'P' => OpClass.MmxReg,
+			'Q' => OpClass.MmxRm,
 			_ => throw new NotSupportedException($"operand class in {s}")
 		};
 		spec.MemOnly = cls == 'M';
