@@ -62,4 +62,38 @@ public unsafe class RecompileTests {
 	[Test] public void JzNotTaken() => Diff("83c801" + "7402" + "90");
 	[Test] public void Cmov() => Diff("39d8" + "0f44ca", g => { g[0] = 5; g[3] = 5; g[1] = 111; g[2] = 222; });
 	[Test] public void CmovNot() => Diff("39d8" + "0f44ca", g => { g[0] = 5; g[3] = 6; g[1] = 111; g[2] = 222; });
+
+	// --- fuzz-tier: random start regs × the corpus (fixed-value goldens don't
+	// exercise width/mask/sign-extend edges — n=2 on this lesson at day-3) ---
+	static readonly string[] FuzzCorpus = [
+		"01d8", "29d8", "31c0", "09d8", "21d8", "39d8",       // ALU Ev,Gv
+		"83c005", "83e805", "83f005", "83f805",               // ALU Ev,Ib-sx
+		"c1e003", "c1e803", "c1f803", "d1e0", "d1e8",         // shifts (by imm, by 1)
+		"0f44ca", "0f45ca", "0f4cca",                         // cmov z/nz/l
+		"ffc0", "ffc8",                                       // inc/dec
+		"f7d0", "f7d8",                                       // not/neg
+		"8bc3", "89d8", "b8efbeadde",                         // mov reg/reg, mov reg imm
+		"55", "5d",                                           // push/pop (needs valid RSP)
+	];
+
+	[Test]
+	public void FuzzInterpVsRecompile([Range(0, 4)] int seed) {
+		var rnd = new Random(seed);
+		var fails = new List<string>();
+		foreach(var hex in FuzzCorpus) {
+			for(var trial = 0; trial < 8; trial++) {
+				var g0 = new ulong[16];
+				for(var i = 0; i < 8; i++) g0[i] = (ulong) rnd.NextInt64();
+				g0[4] = 0x8000 + (ulong) (rnd.Next(0x1000) & ~7);  // RSP: valid + aligned
+				try {
+					Diff(hex, g => Array.Copy(g0, g, 16));
+				} catch(AssertionException e) {
+					fails.Add($"{hex} seed={seed} trial={trial} regs=[{string.Join(",", g0.Take(8).Select(x => x.ToString("x")))}]: {e.Message.Split('\n')[0]}");
+				} catch(Exception e) {
+					fails.Add($"{hex} seed={seed} trial={trial}: THROW {e.GetType().Name}: {e.Message}");
+				}
+			}
+		}
+		Assert.That(fails, Is.Empty, string.Join("\n", fails.Take(10)));
+	}
 }
