@@ -22,6 +22,27 @@ public class X86Machine {
 	public readonly ushort[] SegSel = new ushort[6];
 
 	public byte[] Mem;
+	/// Overlay-miss fallback: barrow's X86Env sets this to read Image bytes
+	/// underneath a write-overlay when Mem is null / addr out-of-range.
+	/// Called by Load() when Mem doesn't cover; return the value at addr.
+	public Func<ulong, int, ulong> LoadHook;
+	/// Write hook (MMIO / dirty-tracking); default null = write to Mem[].
+	/// Return true to consume (Mem[] not written).
+	public Func<ulong, ulong, int, bool> StoreHook;
+
+	public ulong Load(ulong a, int w) {
+		if(Mem == null || a + (ulong) (w / 8) > (ulong) Mem.Length)
+			return LoadHook?.Invoke(a, w)
+				?? throw new IndexOutOfRangeException($"Load @{a:X} w={w} (no Mem, no LoadHook)");
+		var v = 0UL;
+		for(var b = 0; b < w / 8; b++) v |= (ulong) Mem[(int) (a + (ulong) b)] << (b * 8);
+		return v;
+	}
+	public void Store(ulong a, ulong val, int w) {
+		if(StoreHook?.Invoke(a, val, w) == true) return;
+		if(Mem == null) throw new IndexOutOfRangeException($"Store @{a:X} w={w} (no Mem)");
+		for(var b = 0; b < w / 8; b++) Mem[(int) (a + (ulong) b)] = (byte) (val >> (b * 8));
+	}
 	public XMode Mode = XMode.Bits16;
 
 	/// Intrinsic handler: (machine, name, evaluated-args) → handled?
@@ -41,8 +62,14 @@ public class X86Machine {
 	public bool Step() {
 		if(_halted) return false;
 		var lin = SegBase[1] + Ip;  // CS base + IP (flat modes: SegBase[1]=0)
-		var span = Mem.AsSpan((int) lin, Math.Min(15, Mem.Length - (int) lin));
-		if(!Disassembler.DecodeInsn(span, Mode, out var d)) return false;
+		DecodedInsn d;
+		if(Mem != null && lin + 15 <= (ulong) Mem.Length) {
+			if(!Disassembler.DecodeInsn(Mem.AsSpan((int) lin, 15), Mode, out d)) return false;
+		} else {  // hook-backed fetch (barrow's X86Env: code lives in Image, not Mem[])
+			Span<byte> fbuf = stackalloc byte[15];
+			for(var i = 0; i < 15; i++) fbuf[i] = (byte) Load(lin + (ulong) i, 8);
+			if(!Disassembler.DecodeInsn(fbuf, Mode, out d)) return false;
+		}
 		var block = X86Lifter.Lift(in d, Ip, Mode);
 		if(block == null) return false;
 		_branchTo = null;
@@ -75,13 +102,9 @@ public class X86Machine {
 				if(Mode == XMode.Bits16) SegBase[i] = (ulong) sel << 4;  // real mode
 				break;
 			}
-			case IlStore(var addr, var v): {
-				var a = Eval(addr);
-				var val = Eval(v);
-				var w = (v.Ty as IlType.I)?.Bits ?? 64;
-				for(var b = 0; b < w / 8; b++) Mem[(int) (a + (ulong) b)] = (byte) (val >> (b * 8));
+			case IlStore(var addr, var v):
+				Store(Eval(addr), Eval(v), (v.Ty as IlType.I)?.Bits ?? 64);
 				break;
-			}
 			case IlBranch(var kind, var target, var cond):
 				if(cond == null || (Eval(cond) & 1) != 0)
 					_branchTo = Eval(target);
@@ -223,8 +246,8 @@ public class X86Machine {
 		ulong Si() => SegBase[3] + AddrMask(Gpr[6]);
 		ulong Di() => SegBase[0] + AddrMask(Gpr[7]);
 		void Adv(int reg) => Gpr[reg] = down ? Gpr[reg] - step : Gpr[reg] + step;
-		ulong Rd(ulong a) { var v = 0UL; for(var b = 0; b < (int) step; b++) v |= (ulong) Mem[(int) (a + (ulong) b)] << (b * 8); return v; }
-		void Wr(ulong a, ulong v) { for(var b = 0; b < (int) step; b++) Mem[(int) (a + (ulong) b)] = (byte) (v >> (b * 8)); }
+		ulong Rd(ulong a) => Load(a, (int) step * 8);
+		void Wr(ulong a, ulong v) => Store(a, v, (int) step * 8);
 
 		while(true) {
 			if(rep != RepKind.None) {
@@ -319,13 +342,8 @@ public class X86Machine {
 					_ => throw new NotSupportedException($"cast {kind}")
 				};
 			}
-			case IlLoad(var ty, var addr): {
-				var a = Eval(addr);
-				var w = (ty as IlType.I)?.Bits ?? 64;
-				var v = 0UL;
-				for(var b = 0; b < w / 8; b++) v |= (ulong) Mem[(int) (a + (ulong) b)] << (b * 8);
-				return v;
-			}
+			case IlLoad(var ty, var addr):
+				return Load(Eval(addr), (ty as IlType.I)?.Bits ?? 64);
 			case IlIfV(_, var c, var t, var f):
 				return (Eval(c) & 1) != 0 ? Eval(t) : Eval(f);
 			default: throw new NotSupportedException($"eval {e.GetType().Name}");

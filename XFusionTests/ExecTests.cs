@@ -287,6 +287,29 @@ public class ExecTests {
 	}
 
 	[Test]
+	public void MemHooksFallback() {  // no Mem[] — fetch + load + store all via hooks (barrow's X86Env pattern ·124)
+		var stores = new Dictionary<ulong, (ulong v, int w)>();
+		byte[] code = [0x48, 0x8B, 0x03, 0x50];  // mov rax,[rbx] ; push rax
+		int loadW = 0;
+		var m = new X86Machine {
+			Mode = XMode.Bits64, Ip = 0x1000,
+			LoadHook = (a, w) => {
+				if(a >= 0x1000 && a < 0x1000 + (ulong) code.Length) return code[a - 0x1000];  // fetch (byte-at-a-time)
+				if(a == 0xC0FFEE) { loadW = w; return 0x1234; }  // data
+				return 0;
+			},
+			StoreHook = (a, v, w) => { stores[a] = (v, w); return true; },
+		};
+		m.Gpr[3] = 0xC0FFEE; m.Gpr[4] = 0x8000;
+		m.Step();
+		Assert.That(m.Gpr[0], Is.EqualTo(0x1234UL));
+		Assert.That(loadW, Is.EqualTo(64));  // Ev width = 64 (REX.W)
+		m.Step();
+		Assert.That(stores[0x7FF8].v, Is.EqualTo(0x1234UL));
+		Assert.That(stores[0x7FF8].w, Is.EqualTo(64));
+	}
+
+	[Test]
 	public void IntrinsicDispatch() {  // int 21h routes to the handler with the imm arg
 		var m = M64("cd21");
 		string got = null; ulong gotArg = 0;
