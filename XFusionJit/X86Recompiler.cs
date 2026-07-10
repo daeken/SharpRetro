@@ -26,21 +26,29 @@ public class X86Recompiler {
 	public bool Branched;  // set when the emitted block branched (host ends the compile-block)
 
 	/// Emit one instruction's IlBlock. Returns true on decode/emit success.
-	public bool RecompileOne(IBuilder<ulong> builder, IStructRef<X86State> state,
-		ReadOnlySpan<byte> code, ulong pc, XMode mode) {
-		if(!Disassembler.DecodeInsn(code, mode, out var d)) return false;
-		var block = X86Lifter.Lift(in d, pc, mode);
-		if(block == null) return false;
+	/// Bind builder + state (once per compiled block, before the driver loop).
+	public void Begin(IBuilder<ulong> builder, IStructRef<X86State> state) {
 		B = builder; S = state;
 		Gpr = new("Gpr", S, 0x00);
 		SegBase = new("SegBase", S, 0x90);
-		_tmps.Clear();
 		Branched = false;
-		EmitBlock(block.Body);
-		if(!Branched)  // fallthrough: pc += len
-			S.SetField("Rip", 0x80, B.LiteralValue(pc + (ulong) d.Len));
-		return true;
 	}
+
+	/// Emit one instruction. Caller drives until Branched or bytes exhausted.
+	/// Returns bytes consumed (0 = decode fail).
+	public int RecompileOne(ReadOnlySpan<byte> code, ulong pc, XMode mode) {
+		if(!Disassembler.DecodeInsn(code, mode, out var d)) return 0;
+		var block = X86Lifter.Lift(in d, pc, mode);
+		if(block == null) return 0;
+		_tmps.Clear();
+		NextPc = pc + (ulong) d.Len;  // known before emit — CondFallthrough reads it
+		EmitBlock(block.Body);
+		if(!Branched)  // fallthrough: pc += len (for single-block harness / block-tail)
+			S.SetField("Rip", 0x80, B.LiteralValue(NextPc));
+		return d.Len;
+	}
+
+	protected ulong NextPc;
 
 	protected void EmitBlock(IReadOnlyList<Il> body) {
 		foreach(var st in body) Emit(st);
@@ -70,10 +78,17 @@ public class X86Recompiler {
 				Store(Eval(addr), Eval(v), (v.Ty as IlType.I)?.Bits ?? 64);
 				break;
 			case IlBranch(var kind, var target, var cond): {
-				Branched = true;
 				var t = Eval(target);
-				if(cond == null) Branch(kind, t);
-				else B.If(EvalBool(cond), () => Branch(kind, t), () => { /* fallthrough — host emits pc+=len */ });
+				if(cond == null) { Branched = true; Branch(kind, t); }
+				else {
+					// CondJmp: v0 ends the block on both arms (taken → target;
+					// not-taken → nextpc, which RecompileOne records). A real
+					// block-driver overrides CondFallthrough to keep compiling.
+					Branched = true;
+					B.If(EvalBool(cond),
+						() => Branch(kind, t),
+						() => CondFallthrough());
+				}
 				break;
 			}
 			case IlIf(var c, var then, var els):
@@ -183,6 +198,10 @@ public class X86Recompiler {
 	// --- host hooks (override in a subclass to wire the JIT/env) ---
 	protected virtual void Branch(BranchKind kind, IRuntimeValue<ulong> target) =>
 		throw new NotImplementedException();
+	/// Not-taken arm of a CondJmp. v0: writes nextpc into Rip (RecompileOne
+	/// records LastBranchNextPc). A block-driver overrides to keep compiling.
+	protected virtual void CondFallthrough() =>
+		S.SetField("Rip", 0x80, B.LiteralValue(NextPc));
 	protected virtual void Intrinsic(string name, IRuntimeValue<ulong>[] args) =>
 		throw new NotImplementedException();
 	/// Default load/store: builder.Pointer<T> — host overrides for MMU/MMIO.

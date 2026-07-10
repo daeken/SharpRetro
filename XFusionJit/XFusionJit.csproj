@@ -12,6 +12,7 @@
              consumes for decode/lift/interpret) stays preview-clean. -->
         <ProjectReference Include="../XFusionCpu/XFusionCpu.csproj"/>
         <ProjectReference Include="../JitBase/JitBase.csproj"/>
+        <ProjectReference Include="../CilJit/CilJit.csproj"/>
         <ProjectReference Include="../LiftIl/LiftIl.csproj"/>
     </ItemGroup>
 </Project>

@@ -4,6 +4,8 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
@@ -30,6 +32,7 @@
     <ItemGroup>
         <ProjectReference Include="../CoreArchCompiler/CoreArchCompiler.csproj"/>
         <ProjectReference Include="../XFusionCpu/XFusionCpu.csproj"/>
+        <ProjectReference Include="../XFusionJit/XFusionJit.csproj"/>
     </ItemGroup>
 
 </Project>
