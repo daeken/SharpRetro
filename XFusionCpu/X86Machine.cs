@@ -22,6 +22,14 @@ public class X86Machine {
 	public readonly ushort[] SegSel = new ushort[6];
 
 	public byte[] Mem;
+	/// Instruction-fetch hook — DISTINCT from LoadHook so a host can
+	/// exec-filter (barrow's X86Env step-1.5(c) ‡: LoadHook serves both
+	/// fetch and data, so his Segment.Exec check can't discriminate).
+	/// Fill up to 15 bytes at addr; return false if addr isn't executable
+	/// (Step() returns false = clean [not-exec] fault). Null → Step falls
+	/// through to Mem[]/Load() (current behavior — behaviorally transparent).
+	public delegate bool FetchDelegate(ulong addr, Span<byte> into);
+	public FetchDelegate FetchHook;
 	/// Overlay-miss fallback: barrow's X86Env sets this to read Image bytes
 	/// underneath a write-overlay when Mem is null / addr out-of-range.
 	/// Called by Load() when Mem doesn't cover; return the value at addr.
@@ -63,9 +71,13 @@ public class X86Machine {
 		if(_halted) return false;
 		var lin = SegBase[1] + Ip;  // CS base + IP (flat modes: SegBase[1]=0)
 		DecodedInsn d;
-		if(Mem != null && lin + 15 <= (ulong) Mem.Length) {
+		if(FetchHook != null) {
+			Span<byte> fbuf = stackalloc byte[15];
+			if(!FetchHook(lin, fbuf)) return false;   // host says not-executable
+			if(!Disassembler.DecodeInsn(fbuf, Mode, out d)) return false;
+		} else if(Mem != null && lin + 15 <= (ulong) Mem.Length) {
 			if(!Disassembler.DecodeInsn(Mem.AsSpan((int) lin, 15), Mode, out d)) return false;
-		} else {  // hook-backed fetch (barrow's X86Env: code lives in Image, not Mem[])
+		} else {  // hook-backed fetch fallback via Load() (no distinct FetchHook set)
 			Span<byte> fbuf = stackalloc byte[15];
 			for(var i = 0; i < 15; i++) fbuf[i] = (byte) Load(lin + (ulong) i, 8);
 			if(!Disassembler.DecodeInsn(fbuf, Mode, out d)) return false;

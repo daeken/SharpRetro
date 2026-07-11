@@ -287,6 +287,27 @@ public class ExecTests {
 	}
 
 	[Test]
+	public void FetchHookExecFilter() {  // FetchHook distinct from LoadHook (barrow's step-1.5(c) ‡)
+		byte[] code = [0x48, 0x8B, 0x03, 0xC3];  // mov rax,[rbx] ; ret
+		var m = new X86Machine {
+			Mode = XMode.Bits64, Ip = 0x1000,
+			FetchHook = (a, buf) => {
+				if(a < 0x1000 || a >= 0x2000) return false;  // exec-region check
+				var off = (int) (a - 0x1000);
+				for(var i = 0; i < buf.Length && off + i < code.Length; i++) buf[i] = code[off + i];
+				return true;
+			},
+			LoadHook = (a, w) => a == 0x9999 ? 0xFEEDUL : 0,  // data ONLY — fetch never reaches here
+		};
+		m.Gpr[3] = 0x9999; m.Gpr[4] = 0x8000;
+		Assert.That(m.Step(), Is.True);   // mov rax,[rbx]
+		Assert.That(m.Gpr[0], Is.EqualTo(0xFEEDUL), "data via LoadHook, fetch via FetchHook");
+		// jump outside exec region → FetchHook returns false → Step()=false
+		m.Ip = 0x5000;
+		Assert.That(m.Step(), Is.False, "not-exec → Step false");
+	}
+
+	[Test]
 	public void MemHooksFallback() {  // no Mem[] — fetch + load + store all via hooks (barrow's X86Env pattern ·124)
 		var stores = new Dictionary<ulong, (ulong v, int w)>();
 		byte[] code = [0x48, 0x8B, 0x03, 0x50];  // mov rax,[rbx] ; push rax
