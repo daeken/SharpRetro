@@ -126,14 +126,35 @@ public class X86Machine {
 				break;
 			case IlIntrin(_, var name, var args): {
 				var vals = args.Select(Eval).ToArray();
-				if(StringOp(name, vals)) break;  // machine-native (SI/DI/CX/DF state)
-				if(OnIntrin == null || !OnIntrin(this, name, vals))
-					throw new NotSupportedException($"unhandled intrinsic {name}");
+				RunIntrinsic(name, vals);
 				break;
 			}
 			case IlNote: break;
 			default: throw new NotSupportedException($"exec {s.GetType().Name}");
 		}
+	}
+
+	/// The single intrinsic dispatch — StringOp (machine-native: mul/div/
+	/// loop/string) then OnIntrin (host shim) then throw. Public so the
+	/// recompiler bridge can B.Call into the SAME handler code (one
+	/// semantics source; TestRecompiler was no-op'ing intrinsics = silent
+	/// divergence, my identity's open_questions[0]). branchTo out for the
+	/// loop/jcxz family (they set _branchTo internally).
+	public void RunIntrinsic(string name, ulong[] args, out ulong? branchTo) {
+		var save = _branchTo;
+		_branchTo = null;
+		var handled = StringOp(name, args);
+		branchTo = _branchTo;
+		_branchTo = save ?? _branchTo;  // preserve any prior branch; loop's branch wins if set
+		if(handled) return;
+		if(OnIntrin == null || !OnIntrin(this, name, args))
+			throw new NotSupportedException($"unhandled intrinsic {name}");
+	}
+	// Overload for the exec path (branchTo → _branchTo directly).
+	void RunIntrinsic(string name, ulong[] args) {
+		if(StringOp(name, args)) return;
+		if(OnIntrin == null || !OnIntrin(this, name, args))
+			throw new NotSupportedException($"unhandled intrinsic {name}");
 	}
 
 	/// The string family, machine-native. Convention from the .isa: args[0] =

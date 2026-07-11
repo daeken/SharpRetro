@@ -31,14 +31,16 @@ public unsafe class RecompileTests {
 		for(var i = 0; i < 16; i++) st.Gpr[i] = gs[i];
 		st.Rip = pc;
 		st.Flags = 2;
-		var fn = TestRecompiler.Compile(code, pc, XMode.Bits64, mem);
+		var (rc, fn) = TestRecompiler.Compile(code, pc, XMode.Bits64, mem);
+		rc.BindState(&st);
 		fn(&st);
 		// re-enter until Rip leaves the code range OR steady-state (v0: single-block
 		// compile per re-entry — block-cache is a later perf step)
 		var reEnters = 0;
 		while(st.Rip >= pc && st.Rip < pc + (ulong) code.Length && reEnters++ < 200) {
 			var off = (int) (st.Rip - pc);
-			var f2 = TestRecompiler.Compile(code[off..], st.Rip, XMode.Bits64, mem);
+			var (rc2, f2) = TestRecompiler.Compile(code[off..], st.Rip, XMode.Bits64, mem);
+			rc2.BindState(&st);
 			f2(&st);
 		}
 		// diff
@@ -63,6 +65,13 @@ public unsafe class RecompileTests {
 	[Test] public void Cmov() => Diff("39d8" + "0f44ca", g => { g[0] = 5; g[3] = 5; g[1] = 111; g[2] = 222; });
 	[Test] public void CmovNot() => Diff("39d8" + "0f44ca", g => { g[0] = 5; g[3] = 6; g[1] = 111; g[2] = 222; });
 
+	// --- intrinsic bridge (RunIntrinsic via B.Call — one semantics source) ---
+	[Test] public void MulWideBridge() => Diff("f7e3", g => { g[0] = 0x80000000; g[3] = 4; });
+	[Test] public void DivWideBridge() => Diff("f7f3", g => { g[0] = 100; g[2] = 0; g[3] = 7; });
+	[Test] public void IdivBridge() => Diff("f7fb", g => { g[0] = unchecked((ulong) -100L) & 0xFFFFFFFF; g[2] = 0xFFFFFFFF; g[3] = 7; });
+	[Test] public void LoopBridge() => Diff("48ffc0" + "e2fb", g => { g[1] = 5; });   // inc rax; loop -5 → rax=5, rcx=0
+	[Test] public void RepStosBridge() => Diff("f3ab", g => { g[0] = 0xDEADBEEF; g[7] = 0x8000; g[1] = 4; });
+
 	// --- fuzz-tier: random start regs × the corpus (fixed-value goldens don't
 	// exercise width/mask/sign-extend edges — n=2 on this lesson at day-3) ---
 	static readonly string[] FuzzCorpus = [
@@ -72,6 +81,7 @@ public unsafe class RecompileTests {
 		"0f44ca", "0f45ca", "0f4cca",                         // cmov z/nz/l
 		"ffc0", "ffc8",                                       // inc/dec
 		"f7d0", "f7d8",                                       // not/neg
+		"f7e3", "f7eb",                                       // mul/imul ebx (intrinsic bridge)
 		"8bc3", "89d8", "b8efbeadde",                         // mov reg/reg, mov reg imm
 		"55", "5d",                                           // push/pop (needs valid RSP)
 	];
