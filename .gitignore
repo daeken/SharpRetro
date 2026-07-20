@@ -1,4 +1,7 @@
 ﻿.idea
-*/bin
-*/obj
+bin/
+obj/
 *.DotSettings.user
+*.log
+*.partial
+node_modules/
