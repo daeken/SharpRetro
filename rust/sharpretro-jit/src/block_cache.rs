@@ -24,6 +24,19 @@ pub trait BlockCompiler {
     fn compile_block(&self, t0: &mut Tier0, pc: u64, mode: u32) -> (usize, StopReason);
     /// Is this insn a driver-level stop? (BRK/HLT/etc — the "return to host" signal.)
     fn is_stop(&self, insn: u32) -> bool;
+    /// Called at each driver-loop iteration BEFORE is_stop / compile-or-lookup.
+    /// If `pc` is a native-call target (in the enumerated `native_call_targets` set
+    /// under shared-mode / mem_base=0), the impl: calls the native fn (win64→AAPCS
+    /// ABI-map: args from state[gpr[rcx/rdx/r8/r9]], return → state[gpr[rax]]), pops
+    /// the return-addr from guest stack into state[off_pc], and returns true. The
+    /// driver loop then `continue`s (next iter reads the popped return-pc). Default
+    /// impl = false (no native crossings; the aarch64 harness case).
+    ///
+    /// This is the DRIVER-LOOP discrimination point (per DESIGN.md §call_native /
+    /// the shared-mode design): every indirect `call [target]` compiles to `push
+    /// next_pc; branch(target)` → block ends → driver's next iter sees pc=target
+    /// → THIS check fires. Zero tier-0 emit changes; the discrimination is here.
+    fn dispatch_native(&self, _pc: u64, _state: &mut [u64]) -> bool { false }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -63,6 +76,13 @@ impl BlockCache {
         let pc_idx = (self.layout.off_pc / 8) as usize;
         for _ in 0..max_execs {
             let pc = state[pc_idx];
+            // Native-call discrimination: if pc is a native-call target (shared-mode:
+            // in the enumerated seam-vtable/IAT-shim set), the compiler calls it +
+            // pops return-addr into state[pc_idx]; loop continues at the return-pc.
+            if compiler.dispatch_native(pc, state) {
+                self.n_execs += 1;
+                continue;
+            }
             // Stop-check BEFORE compile (a block that ended AT a BRK branch()es to it,
             // so the next iteration's fetch sees it here).
             if compiler.is_stop(compiler.fetch(pc)) {

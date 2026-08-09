@@ -275,3 +275,76 @@ The x86 architecture differs from aarch64 structurally, so the port shape differ
 4. Tier-0 x64-guest reuses the aarch64-host `Aarch64Enc`+`Tier0` unchanged (guest-ISA
    varies the recompile_one/lift_one; host machine-code emit is invariant). BlockCache
    already arch-neutral via the `BlockCompiler` trait.
+
+---
+
+## §call_native — the guest→native boundary (two modes)
+
+The guest's `call [IAT_slot]` (import) and `call [[obj]+N*8]` (COM vtable dispatch)
+both compile to `push next_pc; branch(computed_target)` → the block ends → the
+driver's next iteration reads `pc = state[off_pc]`. That's the discrimination point:
+`BlockCompiler::dispatch_native(pc, state) -> bool` fires there, before is_stop /
+compile-or-lookup. **Zero tier-0 emit changes** — indirect calls compile the same as
+guest→guest; the driver decides.
+
+### Shared mode (mem_base=0 — Alky's model; the emulator-only path)
+
+Guest-address = host-address (one process VA, mmap PE at ImageBase). Consequences:
+
+**Call-plane**: guest reads native seam-vtables at their real host addresses (no
+rewrite). `dispatch_native` = bsearch pc over `native_call_targets` (a sorted set
+built once at init: `{ *(vtable_base + i*8) : (base,count) ∈ seam_vtables(), i<count }`
+∪ `{ IAT-shim addresses }` — the deref'd fn-ptr VALUES from all seam vtable slots +
+the loader's IAT-resolved shim addresses; ~200+N_imports entries). On hit: call the
+native fn (win64→AAPCS ABI-map: args from state[gpr[rcx/rdx/r8/r9]], stack args from
+state[gpr[rsp]+0x28..], return → state[gpr[rax]]), pop the pushed return-addr from
+guest stack into state[off_pc], return true. **wrap-on-return retires entirely.**
+
+**Map data-plane** (D3D12 `ID3D12Resource::Map`): `vkMapMemory` returns `ppData` at
+the driver's chosen host-addr; under mem_base=0 that IS a valid guest-address.
+`Map()` returns `ppData` verbatim → guest writes through it directly (plain
+`str data, [0 + ppData]`). Zero copy, no VK_EXT_external_memory_host, no reserved
+region. `Unmap()` fires the coherence-flush hook (`vkFlushMappedMemoryRanges` on
+non-HOST_COHERENT — orthogonal to address-space, seam owns it).
+
+**Trade**: no isolation (guest reads/writes the whole process — JIT internals,
+native stacks). Same as Rosetta today; acceptable for non-adversarial guests.
+
+### Sandboxed mode (mem_base=guest_region — generic SharpRetro, hostile-guest)
+
+Guest-address is an offset into a bounded region (`host = mem_base + guest_addr`).
+Guest CANNOT read native seam vtables (they're outside the region). Consequences:
+
+**Call-plane** (thunk-range design): loader reserves a guest-VA range (e.g.
+`0x7FF0_0000_0000 + slot*16`, provably outside any real PE mapping) as the thunk
+range. Each native fn (IAT shims + seam-vtable slot values) gets a thunk-slot →
+a thunk-guest-address. Loader fills IAT slots AND rewrites returned COM-object
+vtables (at the same object-return trigger point where the gs-swap wrap fires
+today) with thunk-guest-addresses. `dispatch_native` = range-check: `pc ∈
+[thunk_base, thunk_base + N*16)` → `slot = (pc - thunk_base)/16` → NativeTable[slot].
+
+**Map data-plane** (Mechanism-A copy-at-Unmap): loader reserves a device-mapped
+region within guest-space + a `guest_alloc(size) -> guest_va` API. `Map()` returns
+a guest-VA-backed plain buffer from that region (host = mem_base + guest_va).
+Guest writes through it (plain store, zero tax). `Unmap()` = seam memcpy
+guest-buffer → vk-mapped-memory (extends the coherence-flush hook). Mechanism-B
+(VK_EXT_external_memory_host, import guest-buffer AS vk memory, zero-copy) is the
+optimization once A works + the extension is verified per-backend.
+
+### Reverse-thunk (native → guest callback)
+
+A native shim calling a guest-implemented interface (guest `IUnknown::Release`,
+guest-supplied callback): the shim calls `cache.run(state, pc=guest_fn, max_execs)`
+re-entrantly with a reserved sentinel return-addr pushed on guest stack; the guest's
+`ret` pops the sentinel → driver sees pc=sentinel → `dispatch_native` recognizes it
+→ returns from the re-entrant `run()` back to the shim. Sentinel = one reserved slot
+in native_call_targets (shared) or thunk-range (sandboxed). Depth-stack per
+reverse-thunk-stack (@f93f196).
+
+### State (piece-1/1.5 green)
+
+- piece-1 (sandboxed handoff): PE minted+parsed+placed → JIT runs sum10 → rax=55.
+- piece-1.5 (mem_base=0 proof): PE mmap'd at real ImageBase → JIT with
+  `flat[OFF_MEMBASE]=0` → rax=55. Shared-mode empirically de-risked.
+- piece-2 (native crossing): `dispatch_native` hook landed (default-false, zero
+  behavior change verified). Loader-side impl (enumerated-set + ABI-map + pop) next.
