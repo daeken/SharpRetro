@@ -142,64 +142,51 @@ fn main() {
         }
         println!("[interp: {} insns, x0=0x{:X} x1=0x{:X} pc=0x{:X}]", n_i, si.x[0], si.x[1], si.pc);
 
-        // ── tier-0 block driver ────────────────────────────────────────────
+        // ── tier-0 via BlockCache (crate-level; the DESIGN.md step-④ shape) ─
         use sharpretro_jit::tier0::{Tier0, STATE_WORDS};
-        use std::collections::HashMap;
-        // tier-0 reads from the SAME guest_bytes via mem_base (identity-map).
-        let mut cache: HashMap<u64, sharpretro_jit::tier0::CompiledBlock> = HashMap::new();
-        let mut flat = [0u64; STATE_WORDS];
-        flat[33] = entry;      // pc
-        flat[66] = host_base;  // mem_base (host ptr; guest_addr N → host_base+N)
-        flat[67] = 0;          // mem_len=0 = unchecked
-        let mut n_t = 0; let mut n_compiles = 0;
-        loop {
-            let pc = flat[33];
-            // Stop-check: peek the insn at pc for BRK before compiling.
-            let first_insn = mem_i.read(pc, 32) as u32;
-            if (first_insn & 0xFFE00000) == 0xD4200000 { break; }
-            // Compile-or-lookup a block starting at pc.
-            let block = cache.entry(pc).or_insert_with(|| {
-                n_compiles += 1;
-                let mut t0 = Tier0::new();
+        use sharpretro_jit::block_cache::{BlockCache, BlockCompiler, StopReason};
+        use sharpretro_jit::{Builder, IlType};
+
+        // Aarch64Compiler: BlockCompiler impl over the shared guest-bytes.
+        // fetch = read u32 from host_base+pc; compile_block = recompile_one in a loop
+        // until branched()/BRK/max. This is the arch-specific glue between BlockCache
+        // (arch-neutral) and the generated recompiler.rs.
+        struct Aarch64Compiler { host_base: u64, max_block: usize }
+        impl BlockCompiler for Aarch64Compiler {
+            fn fetch(&self, pc: u64) -> u32 {
+                unsafe { ((self.host_base + pc) as *const u32).read_unaligned() }
+            }
+            fn is_stop(&self, insn: u32) -> bool {
+                (insn & 0xFFE00000) == 0xD4200000  // BRK
+            }
+            fn compile_block(&self, t0: &mut Tier0, pc: u64, _mode: u32) -> (usize, StopReason) {
                 let mut cur = pc;
-                let mut n = 0;
-                loop {
-                    let insn = mem_i.read(cur, 32) as u32;
-                    if (insn & 0xFFE00000) == 0xD4200000 {
-                        // BRK inside a block → emit a branch-to-self so pc=cur, driver
-                        // loop's BRK-check catches it next iteration.
-                        // Actually simpler: just stop compiling here; block ends at
-                        // cur (fallthrough), driver sees BRK at cur next.
-                        // But tier-0 needs to write pc=cur so the driver knows. Use
-                        // branch(cur, false) to set pc + terminate block.
-                        use sharpretro_jit::Builder;
-                        let t = t0.literal(sharpretro_jit::IlType::U64, cur as u128);
+                for n in 0..self.max_block {
+                    let insn = self.fetch(cur);
+                    if self.is_stop(insn) {
+                        // Emit branch-to-cur so pc=cur; driver's next-iter stop-check catches it.
+                        let t = t0.literal(IlType::U64, cur as u128);
                         t0.branch(t, false);
-                        break;
+                        return (n, StopReason::StopInsn);
                     }
-                    let ok = recompile_one(&mut t0, insn, cur);
-                    if !ok {
+                    if !recompile_one(t0, insn, cur) {
                         panic!("block@0x{pc:X}+{n}: insn 0x{insn:08X} not decoded");
                     }
-                    n += 1;
-                    if t0.branched() { break; }
+                    if t0.branched() { return (n + 1, StopReason::Branched); }
                     cur += 4;
-                    if n >= 32 {
-                        // Block-size cap: emit a fallthrough-branch to cur.
-                        use sharpretro_jit::Builder;
-                        let t = t0.literal(sharpretro_jit::IlType::U64, cur as u128);
-                        t0.branch(t, false);
-                        break;
-                    }
                 }
-                t0.finalize()
-            });
-            block.exec(&mut flat);
-            n_t += 1;
-            if n_t > max_insns { println!("tier0: max_blocks hit"); break; }
+                (self.max_block, StopReason::MaxInsns)
+            }
         }
-        println!("[tier0: {} block-execs, {} compiles, x0=0x{:X} x1=0x{:X} pc=0x{:X}]",
-            n_t, n_compiles, flat[0], flat[1], flat[33]);
+
+        let compiler = Aarch64Compiler { host_base, max_block: 32 };
+        let mut cache = BlockCache::new();
+        let mut flat = [0u64; STATE_WORDS];
+        flat[33] = entry;
+        flat[66] = host_base;
+        let result = cache.run(&compiler, &mut flat, 0, max_insns);
+        println!("[tier0: {} block-execs, {} compiles, x0=0x{:X} x1=0x{:X} pc=0x{:X}, {:?}]",
+            cache.n_execs, cache.n_compiles, flat[0], flat[1], flat[33], result);
 
         // ── diff ───────────────────────────────────────────────────────────
         let mut d = vec![];

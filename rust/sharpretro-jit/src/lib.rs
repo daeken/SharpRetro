@@ -17,6 +17,8 @@ pub mod interp;
 pub mod aarch64_enc;
 #[cfg(target_arch = "aarch64")]
 pub mod tier0;
+#[cfg(target_arch = "aarch64")]
+pub mod block_cache;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
