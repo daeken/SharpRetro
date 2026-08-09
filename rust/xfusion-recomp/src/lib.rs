@@ -9,6 +9,7 @@ pub mod decode;
 pub mod operand;
 pub mod state;
 pub mod hand_lift;
+pub mod x64_stub;
 pub mod disassembler;
 pub mod lift;
 // pub mod state;         // X86State: RegState impl — next

@@ -85,6 +85,138 @@ fn main() {
         return;
     }
 
+    // --fuzz-x64 [N] [--emit-corpus <file>] — for each of the 506 def-encodings:
+    // synthesize N random-fielded valid encodings + random pre-state, execute via
+    // interp (this box), optionally emit the {stub_bytes, pre_state, interp_post}
+    // triple to a corpus-file for the Mac-side Rosetta-oracle runner.
+    if args.get(1).map(|s| s.as_str()) == Some("--fuzz-x64") {
+        use xfusion_recomp::x64_stub::emit_stub;
+        use xfusion_recomp::state::X86State;
+        use std::io::Write;
+
+        let n: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+        let seed: u64 = args.iter().position(|a| a == "--seed")
+            .and_then(|i| args.get(i+1)).and_then(|s| s.parse().ok()).unwrap_or(0xC0FFEE);
+        let corpus_path = args.iter().position(|a| a == "--emit-corpus")
+            .and_then(|i| args.get(i+1).cloned());
+        let mut rng = seed;
+        let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
+
+        let mut mem = FlatMem::new(0, 0x100000);
+        let mut corpus: Option<std::io::BufWriter<std::fs::File>> =
+            corpus_path.as_ref().map(|p| std::io::BufWriter::new(std::fs::File::create(p).unwrap()));
+        let mut n_triples = 0u32;
+        // Header placeholder (rewound at end).
+        if let Some(f) = &mut corpus {
+            f.write_all(&0x43343658u32.to_le_bytes()).unwrap();  // 'X64C'
+            f.write_all(&0u32.to_le_bytes()).unwrap();  // n_triples (patched)
+        }
+
+        // Enumerate encodings by walking DEF_MNEMONICS + a table of {def_id → sample bytes}.
+        // Simplest approach: decode_insn is the decoder — feed it BEDROCK's own bytes and
+        // collect one unique encoding per def_id. Then randomize operands per triple.
+        // ‡ v1: use the Bedrock corpus as the encoding-sampler (real compiler-emitted forms;
+        //   avoids me hand-synthesizing every encoding class). v2: proper per-def_id synth.
+        let bedrock = std::fs::read("/tmp/Minecraft.Windows.exe").ok();
+        let mut sample_by_def: std::collections::BTreeMap<u32, Vec<u8>> = Default::default();
+        if let Some(all) = &bedrock {
+            let bytes = &all[0x400..0x400+0x100000];
+            let mut i = 0;
+            while i < bytes.len() && sample_by_def.len() < 506 {
+                if let Some(d) = decode_insn(&bytes[i..], XMode::Bits64) {
+                    sample_by_def.entry(d.def_id).or_insert(bytes[i..i+d.len as usize].to_vec());
+                    i += d.len as usize;
+                } else { i += 1; }
+            }
+        }
+        eprintln!("[fuzz-x64: {} distinct encodings sampled from Bedrock 1MB]", sample_by_def.len());
+
+        // v1 exclusions (same rationale as aarch64 native-diff): mem-touching insns need
+        // a controlled address (random regs → random guest-addr → segfault); branches
+        // change rip; system insns. Filter by mnemonic + def_id class.
+        let excluded_mnem = |m: &str| {
+            m.starts_with("MOV") && m != "MOV" ||  // MOVS/MOVZX/MOVSX ok; MOVSB/MOVDQU = mem/xmm — actually keep MOVZX/SX
+            matches!(m, "PUSH"|"POP"|"CALL"|"RET"|"JMP"|"LEAVE"|"ENTER"
+                |"PUSHF"|"POPF"|"IRET"|"INT"|"INT3"|"HLT"|"SYSCALL"|"SYSRET"|"SYSENTER"
+                |"IN"|"OUT"|"INS"|"OUTS"|"LODS"|"STOS"|"MOVS"|"CMPS"|"SCAS"
+                |"LGDT"|"LIDT"|"LTR"|"LMSW"|"WRMSR"|"RDMSR"|"CPUID"|"RDTSC"
+                |"XSAVE"|"XRSTOR"|"FXSAVE"|"FXRSTOR"|"CLFLUSH"|"PREFETCH"
+                |"CMPXCHG"|"XADD"|"XCHG")
+            || m.starts_with('J')  // Jcc, JMP handled above but J* = branches
+            || m.starts_with("LOOP")
+            || m.starts_with("SET")  // ‡ SETcc writes Eb — could be reg-only, but skip v1
+        };
+
+        let (mut n_ok, mut n_ipanic, mut n_skip) = (0, 0, 0);
+        let mut skip_by: std::collections::BTreeMap<&str, usize> = Default::default();
+        for (&def_id, sample) in &sample_by_def {
+            let mnem = DEF_MNEMONICS[def_id as usize];
+            if excluded_mnem(mnem) { *skip_by.entry("mnem").or_default() += n; n_skip += n; continue; }
+            for _ in 0..n {
+                // ‡ v1: use the sample bytes verbatim (real encoding), randomize pre-state.
+                //   v2: mutate ModRM.reg/rm/imm within the sample to widen coverage.
+                let insn_bytes = sample.clone();
+                // Skip if the decoded insn's ModRM is a MEMORY form (random-addr segfault).
+                let d = decode_insn(&insn_bytes, XMode::Bits64).unwrap();
+                // Skip if this encoding has a ModRM memory-form (random regs → random
+                // guest-addr → segfault under Rosetta). Detect: m fields populated AND
+                // not is_reg. (An insn with no ModRM leaves m all-default = passes.)
+                let has_modrm = d.m.mod_ != 0 || d.m.reg != 0 || d.m.rm != 0 || d.m.is_reg;
+                if has_modrm && !d.m.is_reg {
+                    *skip_by.entry("mem-form").or_default() += 1; n_skip += 1; continue;
+                }
+                // Also skip if the sample uses rsp as an operand (rsp is the anchor).
+                if (has_modrm && (d.m.reg == 4 || d.m.rm == 4)) || (d.op & 0xF8) == 0x50 && (d.op & 7) == 4 {
+                    *skip_by.entry("rsp-operand").or_default() += 1; n_skip += 1; continue;
+                }
+
+                let mut pre = X86State::default();
+                for r in 0..16 { if r != 4 { pre.gpr[r] = rand(); } }
+                pre.gpr[4] = 0x80000;  // rsp = mid-mem (unused, but sane)
+                pre.eflags = ((rand() as u32) & 0x8D5) | 0x202;
+
+                // Interp side.
+                let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+                    interp_one_x64(&pre, &mut mem, &insn_bytes, 0x1000)));
+                let (i_post, _len, _br, handled) = match ir {
+                    Ok(r) => r, Err(_) => { n_ipanic += 1; continue; }
+                };
+                if !handled { *skip_by.entry("no-lift").or_default() += 1; n_skip += 1; continue; }
+
+                n_ok += 1;
+                // Emit triple to corpus.
+                if let Some(f) = &mut corpus {
+                    let (stub, _slot) = emit_stub(&insn_bytes);
+                    f.write_all(&(def_id as u32).to_le_bytes()).unwrap();
+                    f.write_all(&(stub.len() as u32).to_le_bytes()).unwrap();
+                    f.write_all(&stub).unwrap();
+                    let pre_flat = pre.to_flat();
+                    for w in &pre_flat { f.write_all(&w.to_le_bytes()).unwrap(); }
+                    let post_flat = i_post.to_flat();
+                    for w in &post_flat { f.write_all(&w.to_le_bytes()).unwrap(); }
+                    n_triples += 1;
+                }
+            }
+        }
+        // Patch n_triples in header.
+        if let Some(mut f) = corpus {
+            f.flush().unwrap();
+            drop(f);
+            if let Some(p) = &corpus_path {
+                let mut all = std::fs::read(p).unwrap();
+                all[4..8].copy_from_slice(&n_triples.to_le_bytes());
+                std::fs::write(p, all).unwrap();
+            }
+        }
+
+        eprintln!("[fuzz-x64: {} defs sampled × {} = {} triples attempted]",
+            sample_by_def.len(), n, sample_by_def.len() * n);
+        eprintln!("  interp-ok={}  interp-panic={}  skip={}  emitted={}",
+            n_ok, n_ipanic, n_skip, n_triples);
+        eprintln!("  skip breakdown: {:?}", skip_by);
+        return;
+    }
+
     // --corpus <file> [<hex-off> <hex-len>] — linear-sweep bytes through decode_insn,
     // count decoded/undecoded + dump per-insn (offset, len, mnem) for C#-diff.
     // With --dump: print `offset len def_id mnem` per insn (the diff-target format).
