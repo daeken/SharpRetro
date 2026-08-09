@@ -21,4 +21,19 @@ if diff -q /tmp/c.typed /tmp/n.typed > /dev/null; then
 else
   echo "  ✗ DIFFERS"; diff /tmp/c.typed /tmp/n.typed | head -20; FAIL=1
 fi
+echo ""
+echo "=== pre-push: house-vocab check (public repo — no seat-names/channel-cites/kt-refs) ==="
+if grep -rn 'barrow\|fuchi\|coram\|kt\[\|own #\|·[0-9]\|#alky\|corpse' \
+     ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ oracle-baseline/README.md 2>/dev/null \
+   | grep -v '/obj/\|/bin/'; then
+  echo "  ✗ house-vocab present in tracked source — scrub before push"
+  FAIL=1
+else
+  echo "  ✓ clean"
+fi
+if git log origin/main..HEAD --format='%s%n%b' 2>/dev/null | grep -qE '·[0-9]+|barrow|fuchi|kt\[|own #|#alky|corpse'; then
+  echo "  ✗ house-vocab in unpushed commit messages — reword before push"
+  FAIL=1
+fi
+
 exit $FAIL
