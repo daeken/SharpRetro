@@ -25,8 +25,11 @@ public class Program : Core {
 
 		if(rustOut != null) {
 			Directory.CreateDirectory(rustOut);
+			// Disasm first (populates RustDisasmGen.BodyOrder = the def_id order).
 			File.WriteAllText(Path.Combine(rustOut, "disassembler.rs"), RustDisasmGen.Generate(defs));
 			Console.WriteLine($"Wrote {Path.Combine(rustOut, "disassembler.rs")} ({RustDisasmGen.BodyOrder.Count} def-bodies)");
+			File.WriteAllText(Path.Combine(rustOut, "lift.rs"), RustLiftGen.Generate(templates, defs));
+			Console.WriteLine($"Wrote {Path.Combine(rustOut, "lift.rs")}");
 			return;
 		}
 

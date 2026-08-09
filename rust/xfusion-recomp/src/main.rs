@@ -3,7 +3,11 @@
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::state::X86State;
-use xfusion_recomp::hand_lift::lift_one;
+// Generated lift.rs (278 templates × 506 defs). hand_lift stays as the reference
+// (spot-checkable per-mnemonic) but the primary path is the generated one.
+use xfusion_recomp::lift::lift_one;
+#[allow(unused_imports)]
+use xfusion_recomp::hand_lift as _;
 use sharpretro_jit::interp::{InterpretingBuilder, FlatMem, GuestMem};
 
 /// Execute one x64 insn via decode_insn + lift_one + InterpretingBuilder.

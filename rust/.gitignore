@@ -2,3 +2,4 @@ target/
 aarch64-recomp/src/lib.rs
 aarch64-recomp/Cargo.lock
 xfusion-recomp/src/disassembler.rs
+xfusion-recomp/src/lift.rs
