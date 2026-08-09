@@ -6,6 +6,11 @@
     <Nullable>disable</Nullable>
     <RootNamespace>Backends.CSharp</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- CS8321 (unused local function): the extraction preserves Define()-locals verbatim;
+         some (e.g. SignExt in Logic) are only referenced by the exec-half, which lives in
+         ArchCompilerCore now. Harmless dead locals; suppressing the warning keeps the
+         extraction mechanical rather than filtering per-local. -->
+    <NoWarn>$(NoWarn);CS8321</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../ArchCompilerCore/ArchCompilerCore.csproj" />

@@ -4,18 +4,25 @@ set -e
 cd "$(dirname "$0")/.."
 FAIL=0
 
+# Build ONCE up front so `dotnet run --no-build` output is pure program-output
+# (a cold `dotnet run` emits build warnings to stdout → contaminates the sha256).
+echo "=== build ==="
+dotnet build ArchCompiler/ArchCompiler.csproj -v q 2>&1 | tail -3
+dotnet build oracle-baseline/instruments/LegacyR1b/LegacyR1b.csproj -v q 2>&1 | tail -3
+RUN="dotnet run --no-build --project"
+
 echo "=== rung-1a: parse+macro (aarch64/mips/dmg) ==="
 for isa in Aarch64Generator/aarch64.isa SharpStationGenerator/mips-r3051.isa DamageGenerator/sm83.isa; do
   # (legacy-side dump instrument would need to exist per-isa; for now, use the checked-in sha256s)
-  h=$(dotnet run --project ArchCompiler -- $isa 2>/dev/null | sha256sum | cut -d' ' -f1)
+  h=$($RUN ArchCompiler -- $isa 2>/dev/null | sha256sum | cut -d' ' -f1)
   echo "  $isa → $h"
 done
 echo "  aarch64 expected: a5739063032c2d21e0f2c2c15f1f1a7bfd2d4a3f79d9637acb054674573e9e33"
 
 echo ""
 echo "=== rung-1b: typed trees (aarch64) ==="
-dotnet run --project oracle-baseline/instruments/LegacyR1b -- $(pwd)/Aarch64Generator/aarch64.isa 2>/dev/null | sed 's/CoreArchCompiler\.//g' > /tmp/c.typed
-dotnet run --project ArchCompiler -- Aarch64Generator/aarch64.isa --stage typed 2>/dev/null | sed 's/ArchCompilerCore\.//g' > /tmp/n.typed
+$RUN oracle-baseline/instruments/LegacyR1b -- $(pwd)/Aarch64Generator/aarch64.isa 2>/dev/null | sed 's/CoreArchCompiler\.//g' > /tmp/c.typed
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage typed 2>/dev/null | sed 's/ArchCompilerCore\.//g' > /tmp/n.typed
 if diff -q /tmp/c.typed /tmp/n.typed > /dev/null; then
   echo "  ✓ byte-identical ($(grep -c '^# ' /tmp/n.typed) defs)"
 else
@@ -23,7 +30,7 @@ else
 fi
 echo ""
 echo "=== rung-2: emit (aarch64 Disassembler.cs + Recompiler.cs) ==="
-dotnet run --project ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --out /tmp/ac-out 2>/dev/null >/dev/null
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --out /tmp/ac-out 2>/dev/null >/dev/null
 for f in Disassembler.cs Recompiler.cs; do
   if diff -q oracle-baseline/aarch64/$f /tmp/ac-out/$f >/dev/null 2>&1; then
     echo "  ✓ $f byte-identical"
