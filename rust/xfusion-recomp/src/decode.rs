@@ -294,7 +294,7 @@ pub fn read_imm(code: &[u8], i: &mut usize, bits: u32, sign_extend: bool) -> i64
     *i += n;
     if sign_extend && bits < 64 {
         let sh = 64 - bits;
-        (((v << sh) as i64) >> sh)
+        ((v << sh) as i64) >> sh
     } else {
         v as i64
     }

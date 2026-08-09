@@ -1,9 +1,85 @@
 // x64-guest harness. Phase-1: decode-only spot-checks + XED corpus-diff.
+// Phase-2/3: --interp = execute via InterpretingBuilder × X86State × hand_lift.
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
+use xfusion_recomp::state::X86State;
+use xfusion_recomp::hand_lift::lift_one;
+use sharpretro_jit::interp::{InterpretingBuilder, FlatMem, GuestMem};
+
+/// Execute one x64 insn via decode_insn + lift_one + InterpretingBuilder.
+/// Returns (post-state, insn-len, branched, handled). Mirrors aarch64 interp_one shape.
+fn interp_one_x64(pre: &X86State, mem: &mut impl GuestMem, code: &[u8], pc: u64)
+    -> (X86State, u32, bool, bool)
+{
+    let d = match decode_insn(code, XMode::Bits64) {
+        Some(d) => d,
+        None => panic!("undecoded @0x{pc:x}: {:02X?}", &code[..code.len().min(4)]),
+    };
+    let mut s = pre.clone();
+    s.rip = pc;
+    let (branched, handled);
+    {
+        let mut b = InterpretingBuilder::new(&mut s, mem, pc);
+        b.intrinsic = |_,_,id,_| panic!("intrinsic id={id} not wired");
+        handled = lift_one(&mut b, &d, pc, XMode::Bits64);
+        branched = b.branched;
+    }
+    if !branched { s.rip = pc + d.len as u64; }
+    (s, d.len, branched, handled)
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+
+    // --interp <hex-bytes> [reg=val ...] — decode + lift + execute one insn (or a
+    // sequence separated by /), dump changed regs. Phase-2/3 first-execute.
+    if args.get(1).map(|s| s.as_str()) == Some("--interp") {
+        let mut s = X86State::default();
+        let mut mem = FlatMem::new(0, 0x100000);
+        s.gpr[4] = 0x80000;  // rsp = mid-mem so PUSH/CALL/RET have a stack
+        let mut prog: Vec<Vec<u8>> = vec![];
+        for a in &args[2..] {
+            if let Some((r, v)) = a.split_once('=') {
+                let val = u64::from_str_radix(v.trim_start_matches("0x"), 16).unwrap();
+                match r {
+                    "rax" => s.gpr[0] = val, "rcx" => s.gpr[1] = val, "rdx" => s.gpr[2] = val,
+                    "rbx" => s.gpr[3] = val, "rsp" => s.gpr[4] = val, "rbp" => s.gpr[5] = val,
+                    "rsi" => s.gpr[6] = val, "rdi" => s.gpr[7] = val,
+                    _ => if let Some(n) = r.strip_prefix('r') { s.gpr[n.parse::<usize>().unwrap()] = val; }
+                }
+            } else {
+                for insn_str in a.split('/') {
+                    let bytes: Vec<u8> = insn_str.split(',')
+                        .filter(|x| !x.is_empty())
+                        .map(|x| u8::from_str_radix(x.trim().trim_start_matches("0x"), 16).unwrap())
+                        .collect();
+                    prog.push(bytes);
+                }
+            }
+        }
+        let pre = s.clone();
+        let mut pc = 0x1000u64;
+        for bytes in &prog {
+            let (post, len, branched, handled) = interp_one_x64(&s, &mut mem, bytes, pc);
+            let mnem = decode_insn(bytes, XMode::Bits64)
+                .map(|d| DEF_MNEMONICS[d.def_id as usize]).unwrap_or("?");
+            println!("→ 0x{pc:x}: {:02X?}  {} len={} {}",
+                bytes, mnem, len, if handled { "" } else { "  ✗ NOT-HANDLED (no lift)" });
+            s = post;
+            pc = if branched { s.rip } else { pc + len as u64 };
+        }
+        println!("─── final state (changed only) ───");
+        let names = ["rax","rcx","rdx","rbx","rsp","rbp","rsi","rdi",
+                     "r8","r9","r10","r11","r12","r13","r14","r15"];
+        for i in 0..16 { if s.gpr[i] != pre.gpr[i] {
+            println!("  {:4} = 0x{:016X}  (was 0x{:X})", names[i], s.gpr[i], pre.gpr[i]); } }
+        if s.eflags != pre.eflags {
+            println!("  eflags = 0x{:08X}  CF={} ZF={} SF={} OF={}",
+                s.eflags, s.cf() as u8, s.zf() as u8, s.sf() as u8, s.of() as u8);
+        }
+        println!("  rip  = 0x{:X}", s.rip);
+        return;
+    }
 
     // --corpus <file> [<hex-off> <hex-len>] — linear-sweep bytes through decode_insn,
     // count decoded/undecoded + dump per-insn (offset, len, mnem) for C#-diff.
