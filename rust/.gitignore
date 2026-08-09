@@ -1,2 +1,3 @@
 target/
-aarch64-recomp/
+aarch64-recomp/src/lib.rs
+aarch64-recomp/Cargo.lock

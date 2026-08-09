@@ -1,0 +1,7 @@
+[package]
+name = "aarch64-recomp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sharpretro-jit = { path = "../sharpretro-jit" }
