@@ -107,8 +107,80 @@ fn main() {
             n += 1;
             if n > max_insns { println!("  max_insns hit"); break; }
         }
-        println!("[run-x64: {} insns, rax=0x{:X} rcx=0x{:X} rip=0x{:X}]",
+        println!("[interp: {} insns, rax=0x{:X} rcx=0x{:X} rip=0x{:X}]",
             n, s.gpr[0], s.gpr[1], s.rip);
+
+        // ── tier-0 via BlockCache (x64-guest, aarch64-host) ────────────────
+        #[cfg(target_arch = "aarch64")]
+        {
+            use sharpretro_jit::tier0::Tier0;
+            use sharpretro_jit::block_cache::{BlockCache, BlockCompiler, StopReason};
+            use sharpretro_jit::{Builder, IlType};
+            use xfusion_recomp::state::{X64_LAYOUT, STATE_WORDS_X64, OFF_RIP, OFF_MEMBASE};
+
+            // Fresh guest bytes for tier-0 (interp side may have mutated mem via CALL push).
+            let mut guest_bytes = vec![0u8; 0x100000];
+            for (i, &b) in prog.iter().enumerate() { guest_bytes[entry as usize + i] = b; }
+            let host_base = guest_bytes.as_mut_ptr() as u64;
+
+            struct X64Compiler { host_base: u64, max_block: usize }
+            impl BlockCompiler for X64Compiler {
+                fn fetch(&self, pc: u64) -> u32 {
+                    // Return first 4 bytes packed — is_stop only needs byte-0.
+                    unsafe { ((self.host_base + pc) as *const u32).read_unaligned() }
+                }
+                fn is_stop(&self, first_word: u32) -> bool {
+                    (first_word & 0xFF) == 0xCC  // INT3
+                }
+                fn compile_block(&self, t0: &mut Tier0, pc: u64, _mode: u32) -> (usize, StopReason) {
+                    let mut cur = pc;
+                    for n in 0..self.max_block {
+                        // Fetch up to 15 bytes at cur.
+                        let bytes = unsafe {
+                            std::slice::from_raw_parts((self.host_base + cur) as *const u8, 15)
+                        };
+                        if bytes[0] == 0xCC {
+                            let t = t0.literal(IlType::U64, cur as u128);
+                            t0.branch(t, false);
+                            return (n, StopReason::StopInsn);
+                        }
+                        let d = decode_insn(bytes, XMode::Bits64)
+                            .unwrap_or_else(|| panic!("undecoded @0x{cur:x}: {:02X?}", &bytes[..4]));
+                        if !lift_one(t0, &d, cur, XMode::Bits64) {
+                            panic!("no lift @0x{cur:x}: {} def_id={}",
+                                DEF_MNEMONICS[d.def_id as usize], d.def_id);
+                        }
+                        cur += d.len as u64;
+                        if t0.branched() { return (n + 1, StopReason::Branched); }
+                    }
+                    // Max-cap: emit fallthrough-branch to `cur` (variable-length ⟹ we
+                    // can't compute it externally; the block MUST emit its own).
+                    let t = t0.literal(IlType::U64, cur as u128);
+                    t0.branch(t, false);
+                    (self.max_block, StopReason::MaxInsns)
+                }
+            }
+
+            let compiler = X64Compiler { host_base, max_block: 32 };
+            let mut cache = BlockCache::with_layout(&X64_LAYOUT);
+            let mut flat = [0u64; STATE_WORDS_X64];
+            flat[OFF_RIP] = entry;
+            flat[4] = 0x80000;               // rsp
+            flat[OFF_MEMBASE] = host_base;
+            let result = cache.run(&compiler, &mut flat[..], 0, max_insns);
+            println!("[tier0: {} block-execs, {} compiles, rax=0x{:X} rcx=0x{:X} rip=0x{:X}, {:?}]",
+                cache.n_execs, cache.n_compiles, flat[0], flat[1], flat[OFF_RIP], result);
+
+            // Diff.
+            let mut d = vec![];
+            for r in 0..16 { if s.gpr[r] != flat[r] {
+                d.push(format!("r{r}: interp=0x{:X} tier0=0x{:X}", s.gpr[r], flat[r])); } }
+            if (s.eflags & 0x8D5) != ((flat[16] as u32) & 0x8D5) {
+                d.push(format!("eflags: interp=0x{:X} tier0=0x{:X}", s.eflags, flat[16]));
+            }
+            if d.is_empty() { println!("✓ MATCH"); }
+            else { println!("✗ DIFF:"); for l in &d { println!("    {l}"); } }
+        }
         return;
     }
 

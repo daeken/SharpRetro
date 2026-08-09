@@ -49,6 +49,27 @@ pub const OFF_SEG: usize = 18;
 pub const OFF_XMM: usize = 24;
 pub const OFF_MEMBASE: usize = 88;
 
+/// Tier-0 StateLayout for x64-guest — flat[90] per the offsets above.
+/// RegFile mapping: 0=GPR, 1=EFLAGS(idx=bit#), 2=SEG, 3=XMM.
+/// x64 partial-write semantics live in operand.rs (write_operand does 32-zext /
+/// 8-16-mask-insert BEFORE calling bd.reg_write with a u64), so gpr_w_zext=false.
+#[cfg(target_arch = "aarch64")]
+pub static X64_LAYOUT: sharpretro_jit::tier0::StateLayout = sharpretro_jit::tier0::StateLayout {
+    state_words: STATE_WORDS_X64,
+    off_pc: (OFF_RIP * 8) as u32,
+    off_membase: (OFF_MEMBASE * 8) as u32,
+    flag_file: 1,
+    off_flags: (OFF_EFLAGS * 8) as u32,
+    flag_bit: |idx| idx,   // eflags: idx IS the bit# directly (CF=0 PF=2 AF=4 ZF=6 SF=7 OF=11)
+    reg_off: |f, idx| match f.0 {
+        0 => (OFF_GPR as u32 + idx) * 8,       // GPR rax..r15
+        2 => (OFF_SEG as u32 + idx) * 8,       // SEG es..gs
+        3 => (OFF_XMM as u32 + idx * 2) * 8,   // XMM (2-word; ‡ tier-0 stores lo-only for now)
+        _ => panic!("x64 tier-0: file {} not wired", f.0),
+    },
+    gpr_w_zext: false,
+};
+
 impl X86State {
     pub fn to_flat(&self) -> [u64; STATE_WORDS_X64] {
         let mut f = [0u64; STATE_WORDS_X64];

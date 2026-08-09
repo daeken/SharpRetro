@@ -29,18 +29,50 @@ const X_B: u32 = 10;       // scratch B
 const X_C: u32 = 11;       // scratch C (for 3-arg ops / temp)
 
 // State offsets (in bytes from x28).
-const OFF_GPR: u32 = 0;         // + idx*8
-const OFF_NZCV: u32 = 32 * 8;
-const OFF_PC: u32 = 33 * 8;
-const OFF_VEC: u32 = 34 * 8;    // + idx*8 (‡ low-64 only)
-const OFF_MEMBASE: u32 = 66 * 8;  // *mut u8 host-base of guest memory (identity-map:
-                                  //   guest_addr N → host addr mem_base+N). The consumer's
-                                  //   loader maps the guest image + sets this. For paged/
-                                  //   protected models, this becomes a call_intrinsic; the
-                                  //   flat identity-map is tier-0's fast path.
-const OFF_MEMLEN: u32 = 67 * 8;   // guest-address-space size (for the bounds-check;
-                                  //   0 = unchecked, the trusted-loader case).
+/// Per-guest-arch state layout — parameterizes Tier0's flat u64[] offsets so the
+/// same emitter serves aarch64-guest AND x64-guest (and any future arch). Tier0
+/// takes a `&'static StateLayout` at `new()`; the per-arch constant lives with the
+/// arch's state.rs (AARCH64_LAYOUT here; X64_LAYOUT in xfusion-recomp/state.rs).
+///
+/// RegFile mapping is arch-specific:
+///   aarch64: 0=GPR(x0-30), 1=VEC(v0-31), 2=NZCV(idx 1..4 = bit 31/30/29/28)
+///   x64:     0=GPR(rax-r15), 1=EFLAGS(idx = bit# directly), 2=SEG, 3=XMM
+/// The flag-file is bit-packed into ONE word; `flag_bit(idx)` maps idx→bit-position.
+pub struct StateLayout {
+    pub state_words: usize,
+    pub off_pc: u32,          // byte-offset of the pc/rip word in flat[]
+    pub off_membase: u32,     // byte-offset of the mem_base host-ptr word
+    /// Which RegFile.0 is the bit-packed flags file (aarch64=2, x64=1).
+    pub flag_file: u8,
+    pub off_flags: u32,       // byte-offset of the flags word
+    /// idx → bit-position in the flags word. aarch64: 1..4→31..28; x64: idx→idx.
+    pub flag_bit: fn(u32) -> u32,
+    /// Byte-offset of RegFile f at index idx, for NON-flag files. Panics on unknown file.
+    /// (The flag file is handled via off_flags + flag_bit RMW, not here.)
+    pub reg_off: fn(RegFile, u32) -> u32,
+    /// aarch64 GPR W-writes zero-extend to 64 (Tier0 handles it here). x64 does
+    /// partial-write semantics in operand.rs BEFORE calling reg_write (already
+    /// zero-extended to u64), so tier-0's reg_write is a plain store. This flag
+    /// gates the aarch64-specific W-zext-in-reg_write.
+    pub gpr_w_zext: bool,
+}
 
+pub static AARCH64_LAYOUT: StateLayout = StateLayout {
+    state_words: 68,
+    off_pc: 33 * 8,
+    off_membase: 66 * 8,
+    flag_file: 2,             // NZCV
+    off_flags: 32 * 8,
+    flag_bit: |idx| 32 - idx, // idx 1..4 → N=31, Z=30, C=29, V=28
+    reg_off: |f, idx| match f.0 {
+        0 => idx * 8,         // GPR x0..x30
+        1 => 34 * 8 + idx * 8, // VEC (‡ low-64 only, v0..v31)
+        _ => panic!("aarch64 tier-0: file {} not wired", f.0),
+    },
+    gpr_w_zext: true,
+};
+
+/// Legacy alias — aarch64 harness code uses this. Same as AARCH64_LAYOUT.state_words.
 pub const STATE_WORDS: usize = 68;
 
 pub struct Tier0 {
@@ -51,10 +83,14 @@ pub struct Tier0 {
     /// Set once branch() emits — subsequent ops are dead (unreachable). Tier-0
     /// still emits them (harmless — after the ret) to keep the trait contract simple.
     branched: bool,
+    layout: &'static StateLayout,
 }
 
 impl Tier0 {
-    pub fn new() -> Self {
+    pub fn new() -> Self { Self::with_layout(&AARCH64_LAYOUT) }
+
+    pub fn with_layout(layout: &'static StateLayout) -> Self {
+        let _ = layout;  // (prologue is layout-independent — x28=state, x27=spill)
         let mut enc = Aarch64Enc::new();
         // Prologue: save callee-saved x27/x28 (we clobber both), move args into place.
         enc.sub_i(31, 31, 32);          // sub sp, sp, #32
@@ -63,7 +99,7 @@ impl Tier0 {
         enc.str_x(30, 31, 16);          // save lr (branch may clobber via bl later — ‡ v2)
         enc.mov_r(X_STATE, 0);          // x28 = state
         enc.mov_r(X_SPILL, 1);          // x27 = spill
-        Self { enc, next_slot: 0, tys: vec![], branched: false }
+        Self { enc, next_slot: 0, tys: vec![], branched: false, layout }
     }
 
     /// Whether this block emitted a `branch` (= it terminates itself; the driver
@@ -127,13 +163,9 @@ impl Tier0 {
         self.enc.str_x(xt, X_SPILL, slot * 8);
         self.enc.str_x(xt_hi, X_SPILL, (slot + 1) * 8);
     }
-    fn state_off(&self, f: RegFile, idx: u32) -> u32 {
-        match f.0 {
-            0 => OFF_GPR + idx * 8,
-            1 => OFF_VEC + idx * 8,     // ‡ low-64
-            2 => OFF_NZCV,              // idx=0 whole-word; idx=1..4 mask-bit below
-            _ => panic!("tier-0: file {} not wired", f.0),
-        }
+    #[inline] fn state_off(&self, f: RegFile, idx: u32) -> u32 {
+        if f.0 == self.layout.flag_file { self.layout.off_flags }
+        else { (self.layout.reg_off)(f, idx) }
     }
 
     /// Post-op mask to `ty`'s width (matches interp's ibin mask). Skip for width≥64.
@@ -191,12 +223,11 @@ impl Builder for Tier0 {
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 {
         let s = self.slot(ty);
         let off = self.state_off(f, idx);
-        // GPR at U32 = W-read (mask to 32 bits — matches Aarch64State.reg_read).
         self.enc.ldr_x(X_A, X_STATE, off);
         if f.0 == 0 { self.mask_to(ty); }
-        // NZCV individual-flag: extract bit (idx=1..4 → bit 31/30/29/28).
-        if f.0 == 2 && idx >= 1 {
-            let bit = 32 - idx;
+        // Flag file: extract bit at layout.flag_bit(idx). aarch64 idx=0 = whole-word read.
+        if f.0 == self.layout.flag_file && !(self.layout.flag_file == 2 && idx == 0) {
+            let bit = (self.layout.flag_bit)(idx);
             self.enc.mov_imm64(X_B, bit as u64);
             self.enc.lsrv(X_A, X_A, X_B);
             self.enc.mov_imm64(X_B, 1);
@@ -207,26 +238,27 @@ impl Builder for Tier0 {
     }
     fn reg_write(&mut self, f: RegFile, idx: u32, v: u32) {
         self.load(X_A, v);
-        let off = self.state_off(f, idx);
-        // NZCV individual-flag write: read-modify-write the whole word.
-        if f.0 == 2 && idx >= 1 {
-            let bit = 32 - idx;
-            self.enc.ldr_x(X_B, X_STATE, OFF_NZCV);
+        // Flag-file bit-write: RMW the flags word at layout.flag_bit(idx). aarch64
+        // idx=0 = whole-word write (falls through to plain str below).
+        if f.0 == self.layout.flag_file && !(self.layout.flag_file == 2 && idx == 0) {
+            let bit = (self.layout.flag_bit)(idx);
+            let off_flags = self.layout.off_flags;
+            self.enc.ldr_x(X_B, X_STATE, off_flags);
             self.enc.mov_imm64(X_C, !(1u64 << bit));
-            self.enc.and_r(X_B, X_B, X_C);            // clear bit
+            self.enc.and_r(X_B, X_B, X_C);
             self.enc.mov_imm64(X_C, bit as u64);
-            self.enc.lslv(X_A, X_A, X_C);             // v << bit
+            self.enc.lslv(X_A, X_A, X_C);
             self.enc.orr_r(X_A, X_B, X_A);
-            self.enc.str_x(X_A, X_STATE, OFF_NZCV);
+            self.enc.str_x(X_A, X_STATE, off_flags);
             return;
         }
-        // GPR W-write zero-extends (the emit already casts to U32 for gpr32; here mask).
-        if f.0 == 0 && matches!(self.tys[v as usize], IlType::I{width:32, ..}) {
-            self.enc.mov_r(X_A, X_A);  // ‡ actually need `mov w9, w9` (32-bit) to zero-ext.
-            // Aarch64Enc doesn't have mov_w yet; a `and x9,x9,#0xFFFFFFFF` via mask:
+        // aarch64 GPR W-write zero-extends here. x64 does partial-write semantics in
+        // operand.rs BEFORE reg_write (already u64), so gpr_w_zext=false skips this.
+        if self.layout.gpr_w_zext && f.0 == 0 && matches!(self.tys[v as usize], IlType::I{width:32, ..}) {
             self.enc.mov_imm64(X_B, 0xFFFF_FFFF);
             self.enc.and_r(X_A, X_A, X_B);
         }
+        let off = self.state_off(f, idx);
         self.enc.str_x(X_A, X_STATE, off);
     }
     fn mem_read(&mut self, a: u32, ty: IlType) -> u32 {
@@ -235,7 +267,7 @@ impl Builder for Tier0 {
         //   (which is where the SMC write-protect fault also routes).
         let s = self.slot(ty);
         self.load(X_A, a);                            // guest addr
-        self.enc.ldr_x(X_B, X_STATE, OFF_MEMBASE);    // host base
+        self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);  // host base
         self.enc.add_r(X_A, X_B, X_A);                // host addr
         // Width-select the load. Encoder has ldr_x/ldr_w; add byte/half + Q for wide.
         match ty {
@@ -258,7 +290,7 @@ impl Builder for Tier0 {
     fn mem_write(&mut self, a: u32, v: u32) {
         let ty = self.tys[v as usize];
         self.load(X_A, a);
-        self.enc.ldr_x(X_B, X_STATE, OFF_MEMBASE);
+        self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
         self.enc.add_r(X_A, X_B, X_A);
         match ty {
             IlType::I{width: 8, ..}  => { self.load(X_B, v); self.enc.put_raw(0x38000000 | (X_A<<5) | X_B); }  // strb
@@ -499,15 +531,16 @@ impl Builder for Tier0 {
     fn vzero_top(&mut self, _: u32) -> u32 { panic!("tier-0 v1: vec") }
 
     fn branch(&mut self, target: u32, link: bool) {
-        // link FIRST (reads OLD pc from state), THEN write target. (Order bug caught by
-        // BL tier0-diff: interp lr=0x1004, tier0 lr=0x1014 = target+4.)
         if link {
-            self.enc.ldr_x(X_A, X_STATE, OFF_PC);
+            // ‡ aarch64-only (lr=x30, +4). x64 CALL emits push+branch via .isa — tier-0
+            //   sees mem_write+branch(link=false), never link=true.
+            debug_assert_eq!(self.layout.flag_file, 2, "branch(link=true) is aarch64-only");
+            self.enc.ldr_x(X_A, X_STATE, self.layout.off_pc);
             self.enc.add_i(X_A, X_A, 4);
-            self.enc.str_x(X_A, X_STATE, OFF_GPR + 30 * 8);
+            self.enc.str_x(X_A, X_STATE, (self.layout.reg_off)(RegFile(0), 30));
         }
         self.load(X_A, target);
-        self.enc.str_x(X_A, X_STATE, OFF_PC);
+        self.enc.str_x(X_A, X_STATE, self.layout.off_pc);
         self.branched = true;
     }
     fn cond(&mut self, c: u32, then: &mut dyn FnMut(&mut Self), else_: &mut dyn FnMut(&mut Self)) {
@@ -573,7 +606,14 @@ impl CompiledBlock {
 }
 
 impl CompiledBlock {
-    /// Execute against a flat u64[STATE_WORDS] state array.
+    /// Execute against a flat u64[layout.state_words] state array.
+    /// Also allocates the spill area (`n_slots` words) on the caller's stack behalf.
+    /// Slice-based (not fixed-size array) so aarch64 (68) and x64 (90) both work.
+    pub fn exec_slice(&self, flat: &mut [u64]) {
+        let mut spill = vec![0u64; self.n_slots as usize + 1];
+        (self.entry)(flat.as_mut_ptr(), spill.as_mut_ptr());
+    }
+    /// Legacy fixed-size aarch64 form.
     pub fn exec(&self, flat: &mut [u64; STATE_WORDS]) {
         let mut spill = vec![0u64; self.n_slots.max(1) as usize];
         (self.entry)(flat.as_mut_ptr(), spill.as_mut_ptr());

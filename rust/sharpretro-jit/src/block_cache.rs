@@ -8,7 +8,7 @@
 
 #![cfg(target_arch = "aarch64")]
 
-use crate::tier0::{Tier0, CompiledBlock, STATE_WORDS};
+use crate::tier0::{Tier0, CompiledBlock, StateLayout, AARCH64_LAYOUT};
 use crate::{Builder, IlType};
 use std::collections::HashMap;
 
@@ -45,20 +45,24 @@ pub struct BlockCache {
     pub max_block_insns: usize,
     pub n_compiles: usize,
     pub n_execs: usize,
+    layout: &'static StateLayout,
 }
 
 impl BlockCache {
-    pub fn new() -> Self {
-        Self { map: HashMap::new(), max_block_insns: 32, n_compiles: 0, n_execs: 0 }
+    pub fn new() -> Self { Self::with_layout(&AARCH64_LAYOUT) }
+    pub fn with_layout(layout: &'static StateLayout) -> Self {
+        Self { map: HashMap::new(), max_block_insns: 32, n_compiles: 0, n_execs: 0, layout }
     }
 
     /// Run guest code from `state[OFF_PC]` until a stop-insn or `max_execs` blocks.
     /// Returns the reason.
-    pub fn run<C: BlockCompiler>(&mut self, compiler: &C, state: &mut [u64; STATE_WORDS],
+    pub fn run<C: BlockCompiler>(&mut self, compiler: &C, state: &mut [u64],
                                  mode: u32, max_execs: usize) -> RunResult
     {
+        debug_assert_eq!(state.len(), self.layout.state_words);
+        let pc_idx = (self.layout.off_pc / 8) as usize;
         for _ in 0..max_execs {
-            let pc = state[33];
+            let pc = state[pc_idx];
             // Stop-check BEFORE compile (a block that ended AT a BRK branch()es to it,
             // so the next iteration's fetch sees it here).
             if compiler.is_stop(compiler.fetch(pc)) {
@@ -67,11 +71,17 @@ impl BlockCache {
             let entry = match self.map.get(&(pc, mode)) {
                 Some(_) => self.map.get_mut(&(pc, mode)).unwrap(),
                 None => {
-                    let mut t0 = Tier0::new();
+                    let mut t0 = Tier0::with_layout(self.layout);
                     let (n, _stop) = compiler.compile_block(&mut t0, pc, mode);
                     // Ensure the block terminates: if compile_block didn't emit a branch
                     // (e.g. hit max-cap on a non-branch), append a fallthrough-branch.
+                    // ‡ x64: `n * 4` is aarch64-specific (fixed 4-byte insns). For x64 the
+                    //   BlockCompiler must ALWAYS emit a branch (compile_block returns the
+                    //   fallthrough-pc via a branch it emits itself), so this arm is aarch64-only.
+                    //   Assert instead of miscomputing.
                     if !t0.branched() {
+                        debug_assert_eq!(self.layout.flag_file, 2,
+                            "non-aarch64 BlockCompiler must emit branch (variable-length)");
                         let next = pc + (n as u64 * 4);
                         let t = t0.literal(IlType::U64, next as u128);
                         t0.branch(t, false);
@@ -87,7 +97,7 @@ impl BlockCache {
                     self.map.get_mut(&(pc, mode)).unwrap()
                 }
             };
-            entry.block.exec(state);
+            entry.block.exec_slice(state);
             entry.exec_count = entry.exec_count.saturating_add(1);
             self.n_execs += 1;
         }
@@ -132,9 +142,9 @@ mod tests {
     #[test]
     fn invalidate_intersecting() {
         let mut c = BlockCache::new();
-        let mut st = [0u64; STATE_WORDS];
+        let mut st = [0u64; crate::tier0::STATE_WORDS];
         st[33] = 0x1000;
-        c.run(&StubCompiler, &mut st, 0, 100);
+        c.run(&StubCompiler, &mut st[..], 0, 100);
         assert_eq!(c.n_compiles, 4);  // 4 blocks: 0x1000, 0x1004, 0x1008, 0x100C
         assert_eq!(c.len(), 4);
         // Invalidate [0x1004, 0x100C) → drops 2 blocks (@1004, @1008).
@@ -144,7 +154,7 @@ mod tests {
         // Re-run: recompiles the 2 dropped.
         st[33] = 0x1000;
         let before = c.n_compiles;
-        c.run(&StubCompiler, &mut st, 0, 100);
+        c.run(&StubCompiler, &mut st[..], 0, 100);
         assert_eq!(c.n_compiles - before, 2);
     }
 }

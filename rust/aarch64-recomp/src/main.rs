@@ -184,7 +184,7 @@ fn main() {
         let mut flat = [0u64; STATE_WORDS];
         flat[33] = entry;
         flat[66] = host_base;
-        let result = cache.run(&compiler, &mut flat, 0, max_insns);
+        let result = cache.run(&compiler, &mut flat[..], 0, max_insns);
         println!("[tier0: {} block-execs, {} compiles, x0=0x{:X} x1=0x{:X} pc=0x{:X}, {:?}]",
             cache.n_execs, cache.n_compiles, flat[0], flat[1], flat[33], result);
 
