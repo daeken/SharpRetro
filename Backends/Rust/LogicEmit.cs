@@ -40,13 +40,17 @@ public static class LogicEmit {
 
         Expression("signext",
             list => {
-                // ct: sign-extend from src-width to target-width. Rust: cast to signed src-width,
-                // then to target signed, then to target unsigned if needed.
+                // ct: sign-extend from src-width to target. For non-8/16/32/64 src-widths
+                // (e.g. u21 in B.cond's addr), Rust's `as iN` sexts from bit N-1, not the
+                // .isa width — so use the shift-pair (shl to top of i64, asr back). This
+                // was giving addr=0x200FF4 instead of pc-12 (bug found by the block-driver
+                // test — fuzz never hit it because branches are excluded from native-diff).
                 var srcW = list[1].Type is EInt(_, var w) ? w : throw new();
-                var (ts, tw) = list.Type is EInt(var s, var wi) ? (s, wi) : throw new();
-                var srcRust = $"i{(srcW<=8?8:srcW<=16?16:srcW<=32?32:64)}";
-                var tgtRust = $"{(ts?"i":"u")}{(tw<=8?8:tw<=16?16:tw<=32?32:tw<=64?64:128)}";
-                return $"((({GenerateExpression(list[1])}) as {srcRust}) as {tgtRust})";
+                var e = GenerateExpression(list[1]);
+                var tgtRust = CtType(list.Type);
+                // Shift-pair sexts from EXACTLY srcW regardless of Rust type width.
+                // (Also masks off any bits above srcW that the no-mask-shl left there.)
+                return $"((((({e}) as i64) << (64-{srcW})) >> (64-{srcW})) as {tgtRust})";
             },
             list => $"bd.sext({Lift(list[1])}, {TypeShort(list.Type)})");
 

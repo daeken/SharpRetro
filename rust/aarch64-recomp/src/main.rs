@@ -38,6 +38,142 @@ fn interp_one(pre: &Aarch64State, mem: &mut FlatMem, insn: u32, pc: u64) -> (Aar
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+    // --run <program> — the block-driver: load a small program into guest memory,
+    // run via interp AND tier-0-block-cache, diff final state. THE step-④ oracle.
+    // <program> = a name ("sum10") or a comma-sep hex-insn list.
+    #[cfg(target_arch = "aarch64")]
+    if args.get(1).map(|s| s.as_str()) == Some("--run") {
+        use sharpretro_jit::interp::GuestMem;
+        // ── the test program(s) ────────────────────────────────────────────
+        // sum10: x0 = Σ 1..10 = 55. Exercises MOVZ, ADD-reg, ADD-imm, SUBS(CMP),
+        // B.cond, and the block-driver's branch-following.
+        let sum10: &[u32] = &[
+            0xD2800000,  // mov x0, #0        (sum)
+            0xD2800021,  // mov x1, #1        (i)
+            0xD2800162,  // mov x2, #11       (N+1, so loop runs 1..10 inclusive)
+            // loop:
+            0x8B010000,  // add x0, x0, x1
+            0x91000421,  // add x1, x1, #1
+            0xEB02003F,  // cmp x1, x2  (subs xzr, x1, x2)
+            0x54FFFFAB,  // b.lt loop  (-3 insns = -12 bytes)
+            0xD4200000,  // brk #0  (stop signal)
+        ];
+        // fib: x0 = fib(N) via iterative loop. x3=N.
+        let fib: &[u32] = &[
+            0xD2800000,  // mov x0, #0  (a)
+            0xD2800021,  // mov x1, #1  (b)
+            0xD2800183,  // mov x3, #12 (N)
+            // loop:
+            0x8B010002,  // add x2, x0, x1
+            0xAA0103E0,  // mov x0, x1
+            0xAA0203E1,  // mov x1, x2
+            0xD1000463,  // sub x3, x3, #1
+            0xF100047F,  // cmp x3, #1  (subs xzr, x3, #1)
+            0x54FFFF6C,  // b.gt loop  (-5 insns)
+            0xD4200000,  // brk #0
+        ];
+        let prog = match args.get(2).map(|s| s.as_str()) {
+            Some("sum10") | None => sum10,
+            Some("fib") => fib,
+            Some(hex) => {
+                // Parse comma-sep hex insns
+                let v: Vec<u32> = hex.split(',').map(|s|
+                    u32::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap()).collect();
+                Box::leak(v.into_boxed_slice())
+            }
+        };
+        let entry: u64 = 0x10000;
+        let max_insns = 1000;
+
+        // ── interp driver ──────────────────────────────────────────────────
+        let mut mem_i = FlatMem::new(entry, 0x1000);
+        for (i, &w) in prog.iter().enumerate() { mem_i.write(entry + (i as u64)*4, 32, w as u128); }
+        let mut si = Aarch64State::default();
+        si.pc = entry;
+        let mut n_i = 0;
+        loop {
+            let insn = mem_i.read(si.pc, 32) as u32;
+            // BRK = stop.
+            if (insn & 0xFFE00000) == 0xD4200000 { break; }
+            let (post, branched) = interp_one(&si, &mut mem_i, insn, si.pc);
+            let next = if branched { post.pc } else { si.pc + 4 };
+            si = post; si.pc = next;
+            n_i += 1;
+            if n_i > max_insns { println!("interp: max_insns hit"); break; }
+        }
+        println!("[interp: {} insns, x0=0x{:X} x1=0x{:X} pc=0x{:X}]", n_i, si.x[0], si.x[1], si.pc);
+
+        // ── tier-0 block driver ────────────────────────────────────────────
+        use sharpretro_jit::tier0::{Tier0, STATE_WORDS};
+        use std::collections::HashMap;
+        let mut mem_t = FlatMem::new(entry, 0x1000);
+        for (i, &w) in prog.iter().enumerate() { mem_t.write(entry + (i as u64)*4, 32, w as u128); }
+        let mut cache: HashMap<u64, sharpretro_jit::tier0::CompiledBlock> = HashMap::new();
+        let mut flat = [0u64; STATE_WORDS];
+        flat[33] = entry;  // pc
+        let mut n_t = 0; let mut n_compiles = 0;
+        loop {
+            let pc = flat[33];
+            // Stop-check: peek the insn at pc for BRK before compiling.
+            let first_insn = mem_t.read(pc, 32) as u32;
+            if (first_insn & 0xFFE00000) == 0xD4200000 { break; }
+            // Compile-or-lookup a block starting at pc.
+            let block = cache.entry(pc).or_insert_with(|| {
+                n_compiles += 1;
+                let mut t0 = Tier0::new();
+                let mut cur = pc;
+                let mut n = 0;
+                loop {
+                    let insn = mem_t.read(cur, 32) as u32;
+                    if (insn & 0xFFE00000) == 0xD4200000 {
+                        // BRK inside a block → emit a branch-to-self so pc=cur, driver
+                        // loop's BRK-check catches it next iteration.
+                        // Actually simpler: just stop compiling here; block ends at
+                        // cur (fallthrough), driver sees BRK at cur next.
+                        // But tier-0 needs to write pc=cur so the driver knows. Use
+                        // branch(cur, false) to set pc + terminate block.
+                        use sharpretro_jit::Builder;
+                        let t = t0.literal(sharpretro_jit::IlType::U64, cur as u128);
+                        t0.branch(t, false);
+                        break;
+                    }
+                    let ok = recompile_one(&mut t0, insn, cur);
+                    if !ok {
+                        panic!("block@0x{pc:X}+{n}: insn 0x{insn:08X} not decoded");
+                    }
+                    n += 1;
+                    if t0.branched() { break; }
+                    cur += 4;
+                    if n >= 32 {
+                        // Block-size cap: emit a fallthrough-branch to cur.
+                        use sharpretro_jit::Builder;
+                        let t = t0.literal(sharpretro_jit::IlType::U64, cur as u128);
+                        t0.branch(t, false);
+                        break;
+                    }
+                }
+                t0.finalize()
+            });
+            block.exec(&mut flat);
+            n_t += 1;
+            if n_t > max_insns { println!("tier0: max_blocks hit"); break; }
+        }
+        println!("[tier0: {} block-execs, {} compiles, x0=0x{:X} x1=0x{:X} pc=0x{:X}]",
+            n_t, n_compiles, flat[0], flat[1], flat[33]);
+
+        // ── diff ───────────────────────────────────────────────────────────
+        let mut d = vec![];
+        for r in 0..31 { if si.x[r] != flat[r] {
+            d.push(format!("x{r}: interp=0x{:X} tier0=0x{:X}", si.x[r], flat[r])); } }
+        if d.is_empty() {
+            println!("✓ MATCH");
+        } else {
+            println!("✗ DIFF:");
+            for l in &d { println!("    {l}"); }
+        }
+        return;
+    }
+
     // --interp <hex-insn> [<hex-insn>...] — execute a sequence via InterpretingBuilder,
     // dump changed regs. Optional `x<N>=<hex>` args set initial state.
     if args.get(1).map(|s| s.as_str()) == Some("--interp") {

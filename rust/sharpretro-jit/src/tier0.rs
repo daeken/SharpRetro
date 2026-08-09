@@ -59,6 +59,12 @@ impl Tier0 {
         Self { enc, next_slot: 0, tys: vec![], branched: false }
     }
 
+    /// Whether this block emitted a `branch` (= it terminates itself; the driver
+    /// doesn't append a fallthrough). NB: b.cond emits `cond(c, |b| branch(taken),
+    /// |b| branch(fallthrough))` per the .isa — so BOTH arms branch, and the driver
+    /// sees branched=true regardless of which arm fires at runtime.
+    pub fn branched(&self) -> bool { self.branched }
+
     /// Finalize: emit epilogue, mmap RWX, return the callable block.
     pub fn finalize(mut self) -> CompiledBlock {
         // Epilogue: restore callee-saved, ret.
