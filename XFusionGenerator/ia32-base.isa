@@ -128,28 +128,32 @@
 ; --- BT family ---
 (instruction BT (src bit)
     "bt $src, $bit"
-    (= CF (& (>> src bit) 1)))
+    (mlet (b (& bit (- (bitwidth src) 1)))
+        (= CF (& (>> src b) 1))))
 (encoding BT (Ev Gv) (0x0F 0xA3))
 (encoding BT (Ev Ib) (0x0F 0xBA /4))
 
 (instruction BTS (lval bit)
     "bts $lval, $bit"
-    (= CF (& (>> lval bit) 1))
-    (= lval (| lval (<< 1 bit))))
+    (mlet (b (& bit (- (bitwidth lval) 1)))
+        (= CF (& (>> lval b) 1))
+        (= lval (| lval (<< 1 b)))))
 (encoding BTS (Ev Gv) (0x0F 0xAB))
 (encoding BTS (Ev Ib) (0x0F 0xBA /5))
 
 (instruction BTR (lval bit)
     "btr $lval, $bit"
-    (= CF (& (>> lval bit) 1))
-    (= lval (& lval (~ (<< 1 bit)))))
+    (mlet (b (& bit (- (bitwidth lval) 1)))
+        (= CF (& (>> lval b) 1))
+        (= lval (& lval (~ (<< 1 b))))))
 (encoding BTR (Ev Gv) (0x0F 0xB3))
 (encoding BTR (Ev Ib) (0x0F 0xBA /6))
 
 (instruction BTC (lval bit)
     "btc $lval, $bit"
-    (= CF (& (>> lval bit) 1))
-    (= lval (^ lval (<< 1 bit))))
+    (mlet (b (& bit (- (bitwidth lval) 1)))
+        (= CF (& (>> lval b) 1))
+        (= lval (^ lval (<< 1 b)))))
 (encoding BTC (Ev Gv) (0x0F 0xBB))
 (encoding BTC (Ev Ib) (0x0F 0xBA /7))
 

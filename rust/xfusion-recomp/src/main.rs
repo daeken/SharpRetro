@@ -246,7 +246,8 @@ fn main() {
                 |"IN"|"OUT"|"INS"|"OUTS"|"LODS"|"STOS"|"MOVS"|"CMPS"|"SCAS"
                 |"LGDT"|"LIDT"|"LTR"|"LMSW"|"WRMSR"|"RDMSR"|"CPUID"|"RDTSC"
                 |"XSAVE"|"XRSTOR"|"FXSAVE"|"FXRSTOR"|"CLFLUSH"|"PREFETCH"
-                |"CMPXCHG"|"XADD"|"XCHG")
+                |"CMPXCHG"|"XADD"|"XCHG"|"RETI"|"RETF"|"RETFI"
+                |"BOUND"|"ARPL"|"LDS"|"LES"|"LFS"|"LGS"|"LSS")
             || m.starts_with('J')  // Jcc, JMP handled above but J* = branches
             || m.starts_with("LOOP")
             || m.starts_with("SET")  // ‡ SETcc writes Eb — could be reg-only, but skip v1
