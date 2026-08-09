@@ -1,0 +1,36 @@
+; xfusion.isa — root of the XFusion x86-family ISA definition.
+; Feature flags select the CPU at codegen time: pick a flag set, get THAT cpu.
+; (featuring flag ...body) and (include "file.isa") are preprocessor primitives
+; (CoreArchCompiler/Preprocessor.cs) — included files may carry their own defms/defs,
+; and disabled regions are pruned before macro processing.
+
+(define-feature x86-16)
+(define-feature x87)
+(define-feature ia32)
+(define-feature x86-64)
+(define-feature mmx)
+(define-feature 3dnow)
+(define-feature sse)
+(define-feature sse2)
+(define-feature sse3)
+(define-feature ssse3)
+(define-feature sse4.1)
+(define-feature sse4.2)
+(define-feature avx)
+(define-feature avx2)
+(define-feature avx512)
+
+(include "cpuid.isa")
+(featuring ia32
+    (include "ia32-base.isa"))
+(featuring sse
+    (include "sse.isa"))
+(featuring sse2
+    (include "sse2.isa"))
+(featuring x87
+    (include "x87.isa"))
+(include "sse3plus.isa") ; self-gated per-feature inside
+(featuring avx
+    (include "avx.isa"))
+(featuring avx512
+    (include "avx512.isa"))

@@ -1,0 +1,938 @@
+(defm u1  (v) (cast v u1))
+(defm u8  (v) (cast v u8))
+(defm u16 (v) (cast v u16))
+(defm u32 (v) (cast v u32))
+
+(defm i8  (v) (cast v i8))
+(defm i16 (v) (cast v i16))
+(defm i32 (v) (cast v i32))
+
+(defm reg-b () (reg 0b000))
+(defm reg-c () (reg 0b001))
+(defm reg-d () (reg 0b010))
+(defm reg-e () (reg 0b011))
+(defm reg-h () (reg 0b100))
+(defm reg-l () (reg 0b101))
+(defm reg-a () (reg 0b111))
+
+(defm reg-flag-z () (>> (reg-flags) 7))
+(defm reg-flag-n () (& (>> (reg-flags) 6) 1))
+(defm reg-flag-h () (& (>> (reg-flags) 5) 1))
+(defm reg-flag-c () (& (>> (reg-flags) 4) 1))
+
+(defm reg-name (r)
+    (match r
+        0b000 "B"
+        0b001 "C"
+        0b010 "D"
+        0b011 "E"
+        0b100 "H"
+        0b101 "L"
+        0b111 "A"
+              "(HL)"))
+
+(defm reg16-name (r)
+    (match r
+        0b00 "BC"
+        0b01 "DE"
+        0b10 "HL"
+        "SP"))
+
+(defm reg16-or-af-name (r)
+    (if (== r 0b11)
+        "AF"
+        (reg16-name r)))
+
+(def LD-rd-rs
+    "01 ddd sss"
+    "ld $(reg-name rd), $(reg-name rs)"
+    (names (rd d) (rs s))
+    (cycles 1)
+    (requires (& (!= rd 0b110) (!= rs 0b110)))
+    (= (reg rd) (reg rs)))
+
+(def LD-rd-imm8
+    "00 ddd 110 iiiiiiii"
+    "ld $(reg-name rd), $(hex imm)"
+    (names (rd d) (imm i))
+    (cycles 2)
+    (requires (!= rd 0b110))
+    (= (reg rd) imm))
+
+(def LD-rd-HL
+    "01 ddd 110"
+    "ld $(reg-name rd), (HL)"
+    (names (rd d))
+    (cycles 2)
+    (requires (!= rd 0b110))
+    (= (reg rd) (load (reg-hl) u8)))
+
+(def LD-HL-rs
+    "01 110 sss"
+    "ld (HL), $(reg-name rs)"
+    (names (rs s))
+    (cycles 2)
+    (requires (!= rs 0b110))
+    (store (reg-hl) (reg rs)))
+
+(def LD-HL-imm8
+    "00 110 110 iiiiiiii"
+    "ld (HL), $(hex imm)"
+    (names (imm i))
+    (cycles 3)
+    (block)
+    (store (reg-hl) imm))
+
+(def LD-A-BC
+    "00001010"
+    "ld A, (BC)"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-a) (load (reg-bc) u8)))
+
+(def LD-A-DE
+    "00011010"
+    "ld A, (DE)"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-a) (load (reg-de) u8)))
+
+(def LD-BC-A
+    "00000010"
+    "ld (BC), A"
+    (names)
+    (cycles 2)
+    (block)
+    (store (reg-bc) (reg-a)))
+
+(def LD-DE-A
+    "00010010"
+    "ld (DE), A"
+    (names)
+    (cycles 2)
+    (block)
+    (store (reg-de) (reg-a)))
+
+(def LD-A-imm16
+    "11111010 LLLLLLLL MMMMMMMM"
+    "ld A, ($(hex addr))"
+    (names (lsb L) (msb M))
+    (cycles 4)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (= (reg-a) (load addr u8)))
+
+(def LD-imm16-A
+    "11101010 LLLLLLLL MMMMMMMM"
+    "ld ($(hex addr)), A"
+    (names (lsb L) (msb M))
+    (cycles 4)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (store addr (reg-a)))
+
+(def LDH-A-C
+    "11110010"
+    "ldh A, (C)"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-a) (load (| (u16 0xFF00) (reg-c)) u8)))
+
+(def LDH-C-A
+    "11100010"
+    "ldh (C), A"
+    (names)
+    (cycles 2)
+    (block)
+    (store (| (u16 0xFF00) (reg-c)) (reg-a)))
+
+(def LDH-A-imm8
+    "11110000 iiiiiiii"
+    "ldh A, ($(hex addr))"
+    (names (imm i))
+    (cycles 3)
+    (let addr (| (u16 0xFF00) imm))
+    (= (reg-a) (load addr u8)))
+
+(def LDH-imm8-A
+    "11100000 iiiiiiii"
+    "ldh ($(hex addr)), A"
+    (names (imm i))
+    (cycles 3)
+    (let addr (| (u16 0xFF00) imm))
+    (store addr (reg-a)))
+
+(def LD-A-HL-
+    "00111010"
+    "ld A, (HL-)"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (= (reg-a) (load hl u8))
+        (= (reg-hl) (- hl 1))))
+
+(def LD-HL--A
+    "00110010"
+    "ld (HL-), A"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (store hl (reg-a))
+        (= (reg-hl) (- hl 1))))
+
+(def LD-A-HL+
+    "00101010"
+    "ld A, (HL+)"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (= (reg-a) (load hl u8))
+        (= (reg-hl) (+ hl 1))))
+
+(def LD-HL+-A
+    "00100010"
+    "ld (HL+), A"
+    (names)
+    (cycles 2)
+    (block)
+    (let hl (reg-hl)
+        (store hl (reg-a))
+        (= (reg-hl) (+ hl 1))))
+
+(def LD-rr-imm16
+    "00rr0001 LLLLLLLL MMMMMMMM"
+    "ld $(reg16-name r), $(hex imm)"
+    (names (r r) (lsb L) (msb M))
+    (cycles 3)
+    (let imm (| (<< (u16 msb) 8) lsb))
+    (match r
+        0b00 (= (reg-bc) imm)
+        0b01 (= (reg-de) imm)
+        0b10 (= (reg-hl) imm)
+             (= (reg-sp) imm)))
+
+(def LD-imm16-SP
+    "00001000 LLLLLLLL MMMMMMMM"
+    "ld ($(hex addr)), SP"
+    (names (r r) (lsb L) (msb M))
+    (cycles 5)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (store addr (reg-sp)))
+
+(def LD-SP-HL
+    "11111001"
+    "ld SP, HL"
+    (names)
+    (cycles 2)
+    (block)
+    (= (reg-sp) (reg-hl)))
+
+(def PUSH-rr
+    "11rr0101"
+    "push $(reg16-or-af-name r)"
+    (names (r r))
+    (cycles 4)
+    (block)
+    (let sp (- (reg-sp) 2)
+        (= (reg-sp) sp)
+        (store sp (match r
+            0b00 (reg-bc)
+            0b01 (reg-de)
+            0b10 (reg-hl)
+                 (reg-af)))))
+
+(def POP-rr
+    "11rr0001"
+    "pop $(reg16-or-af-name r)"
+    (names (r r))
+    (cycles 4)
+    (block)
+    (mlet (sp (reg-sp) v (load sp u16))
+        (match r
+            0b00 (= (reg-bc) v)
+            0b01 (= (reg-de) v)
+            0b10 (= (reg-hl) v)
+                 (= (reg-af) v))
+        (= (reg-sp) (+ sp 2))))
+
+(def JP-nn
+    "11000011 LLLLLLLL MMMMMMMM"
+    "jp $(hex addr)"
+    (names (lsb L) (msb M))
+    (cycles 4)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (branch addr))
+
+(def JP-HL
+    "11101001"
+    "jp HL"
+    (names)
+    (cycles 1)
+    (block)
+    (branch (reg-hl)))
+
+(defm cc-name (cc)
+    (match cc
+        0b00 "NZ"
+        0b01 "Z"
+        0b10 "NC"
+             "C"))
+
+(defm cc-taken (cc)
+    (match (>> cc 1)
+        0 (== (>> (reg-flags) 7) (& cc 1))
+          (== (& (>> (reg-flags) 4) 1) (& cc 1))))
+
+(def JP-cc-imm16
+    "110cc010 LLLLLLLL MMMMMMMM"
+    "jp $(cc-name cc), $(hex addr)"
+    (names (cc c) (lsb L) (msb M))
+    (cycles (if (cc-taken cc) 4 3))
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (if (cc-taken cc)
+        (branch addr)
+        (branch-default)))
+
+(def JR-simm8
+    "00011000 eeeeeeee"
+    "jr $(hex (+ (pc) offset))"
+    (names (e e))
+    (cycles 3)
+    (let offset (i8 e))
+    (branch (+ (pc) offset)))
+
+(def JR-cc-simm8
+    "001cc000 eeeeeeee"
+    "jr $(cc-name cc), $(hex (+ (pc) offset))"
+    (names (cc c) (e e))
+    (cycles (if (cc-taken cc) 3 2))
+    (let offset (i8 e))
+    (if (cc-taken cc)
+        (branch (+ (pc) offset))
+        (branch-default)))
+
+(def CALL-imm16
+    "11001101 LLLLLLLL MMMMMMMM"
+    "call $(hex addr)"
+    (names (lsb L) (msb M))
+    (cycles 6)
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (let sp (- (reg-sp) 2)
+        (= (reg-sp) sp)
+        (store sp (pc))
+        (branch addr)))
+
+(def CALL-cc-imm16
+    "110cc100 LLLLLLLL MMMMMMMM"
+    "call $(cc-name cc), $(hex addr)"
+    (names (cc c) (lsb L) (msb M))
+    (cycles (if (cc-taken cc) 6 3))
+    (let addr (| (<< (u16 msb) 8) lsb))
+    (if (cc-taken cc)
+        (let sp (- (reg-sp) 2)
+            (= (reg-sp) sp)
+            (store sp (pc))
+            (branch addr))
+        (branch-default)))
+
+(def RET
+    "11001001"
+    "ret"
+    (names)
+    (cycles 4)
+    (block)
+    (mlet (sp (reg-sp)
+          ra (load sp u16))
+        (= (reg-sp) (+ sp 2))
+        (branch ra)))
+
+(def RET-cc
+    "110cc000"
+    "ret $(cc-name cc)"
+    (names (cc c))
+    (cycles (if (cc-taken cc) 5 2))
+    (block)
+    (if (cc-taken cc)
+        (mlet (sp (reg-sp)
+              ra (load sp u16))
+            (= (reg-sp) (+ sp 2))
+            (branch ra))
+        (branch-default)))
+
+(def RETI
+    "11011001"
+    "reti"
+    (names)
+    (cycles 4)
+    (block)
+    (mlet (sp (reg-sp)
+          ra (load sp u16))
+        (= (reg-sp) (+ sp 2))
+        (= (reg-ime) true)
+        (branch ra)))
+
+(def RST
+    "11nnn111"
+    "rst $(hex addr)"
+    (names (n n))
+    (cycles 4)
+    (let addr (<< n 3))
+    (let sp (- (reg-sp) 2)
+        (= (reg-sp) sp)
+        (store sp (pc))
+        (branch addr)))
+
+(def DI
+    "11110011"
+    "di"
+    (names)
+    (cycles 1)
+    (block)
+    (block
+        (= (reg-ime) false)
+        (= (reg-ime-schedule) false)))
+
+(def EI
+    "11111011"
+    "ei"
+    (names)
+    (cycles 1)
+    (block)
+    (= (reg-ime-schedule) true))
+
+(def CCF
+    "00111111"
+    "ccf"
+    (names)
+    (cycles 1)
+    (block)
+    (let flags (reg-flags)
+        (= flags (& flags 0b10011111))
+        (= (reg-flags) (^ flags 0b00010000))))
+
+(def SCF
+    "00110111"
+    "scf"
+    (names)
+    (cycles 1)
+    (block)
+    (let flags (reg-flags)
+        (= flags (& flags 0b10001111))
+        (= (reg-flags) (| flags 0b00010000))))
+
+(def CPL
+    "00101111"
+    "cpl"
+    (names)
+    (cycles 1)
+    (block)
+    (block
+        (= (reg-flags) (| (reg-flags) 0b01100000))
+        (= (reg-a) (~ (reg-a)))))
+
+(def NOP
+    "00000000"
+    "nop"
+    (names)
+    (cycles 1)
+    (block)
+    (block))
+
+(defm arith-value (r)
+    (match r
+        0b000 (reg-b)
+        0b001 (reg-c)
+        0b010 (reg-d)
+        0b011 (reg-e)
+        0b100 (reg-h)
+        0b101 (reg-l)
+        0b110 (load (reg-hl) u8)
+              (reg-a)))
+
+(defm z-from (v) (== (u8 v) (u8 0)))
+(defm h-from (a b) (> (+ (& a 0xF) (& b 0xF)) 0xF))
+(defm h-from-sub (a b) (< (& a 0xF) (& b 0xF)))
+(defm h-from-carry (a b) (>= (+ (& a 0xF) (& b 0xF)) 0xF))
+(defm h-from-sub-carry (a b) (< (& a 0xF) (+ (& b 0xF) 1)))
+(defm h-from-wide (a b) (> (+ (& a 0xFFF) (& b 0xFFF)) 0xFFF))
+(defm c-from (v) (>= v 0x100))
+
+(defm set-znhc (z n h c)
+    (= (reg-flags) (|
+        (& (reg-flags) 0b00001111)
+        (<< (u8 z) 7)
+        (<< (u8 n) 6)
+        (<< (u8 h) 5)
+        (<< (u8 c) 4))))
+
+(defm set-znh (z n h)
+    (= (reg-flags) (|
+        (& (reg-flags) 0b00011111)
+        (<< (u8 z) 7)
+        (<< (u8 n) 6)
+        (<< (u8 h) 5))))
+
+(defm set-nhc (n h c)
+    (= (reg-flags) (|
+        (& (reg-flags) 0b10001111)
+        (<< (u8 n) 6)
+        (<< (u8 h) 5)
+        (<< (u8 c) 4))))
+
+(defm reg-or-hl (r)
+    (if (== r 0b110)
+        (load (reg-hl) u8)
+        (reg r)))
+
+(defm set-reg-or-hl (r v)
+    (if (== r 0b110)
+        (store (reg-hl) v)
+        (= (reg r) v)))
+
+(defm reg16 (r)
+    (match r
+        0b00 (reg-bc)
+        0b01 (reg-de)
+        0b10 (reg-hl)
+             (reg-sp)))
+
+(defm set-reg16 (r v)
+    (match r
+        0b00 (= (reg-bc) v)
+        0b01 (= (reg-de) v)
+        0b10 (= (reg-hl) v)
+             (= (reg-sp) v)))
+
+(def INC
+    "00rrr100"
+    "inc $(reg-name rd)"
+    (names (rd r))
+    (cycles (if (== rd 0b110) 3 1))
+    (block)
+    (mlet (lhs (reg-or-hl rd)
+           result (+ lhs 1))
+        (set-znh
+            (z-from result)
+            0
+            (h-from lhs 1))
+        (set-reg-or-hl rd result)))
+
+(def DEC
+    "00rrr101"
+    "dec $(reg-name rd)"
+    (names (rd r))
+    (cycles (if (== rd 0b110) 3 1))
+    (block)
+    (mlet (lhs (reg-or-hl rd)
+           result (- lhs 1))
+        (set-znh
+            (z-from result)
+            1
+            (h-from-sub lhs 1))
+        (set-reg-or-hl rd result)))
+
+(def INC-16
+    "00rr0011"
+    "inc $(reg16-name rd)"
+    (names (rd r))
+    (cycles 2)
+    (block)
+    (set-reg16 rd (+ (reg16 rd) 1)))
+
+(def DEC-16
+    "00rr1011"
+    "dec $(reg16-name rd)"
+    (names (rd r))
+    (cycles 2)
+    (block)
+    (set-reg16 rd (- (reg16 rd) 1)))
+
+(def ADD-HL
+    "00rr1001"
+    "add HL, $(reg16-name rs)"
+    (names (rs r))
+    (cycles 2)
+    (block)
+    (mlet (lhs (reg-hl)
+           rhs (reg16 rs)
+           result (+ (u32 lhs) (u32 rhs)))
+        (set-nhc
+            0
+            (h-from-wide lhs rhs)
+            (!= (>> result 16) 0))
+        (= (reg-hl) (u16 result))))
+
+(def ADD-SP-r8
+    "11101000 iiiiiiii"
+    "add SP, $(hex imm)"
+    (names (rimm i))
+    (cycles 4)
+    (let imm (i8 rimm))
+    (let sp (reg-sp)
+        (set-znhc
+            0
+            0
+            (h-from (u8 sp) rimm)
+            (c-from (+ (& sp 0xff) rimm)))
+        (= (reg-sp) (u16 (+ (u32 sp) (u32 (i32 imm)))))))
+
+(def LD-HL-SP-r8
+    "11111000 iiiiiiii"
+    "ld HL, SP+$(hex imm)"
+    (names (rimm i))
+    (cycles 3)
+    (let imm (i8 rimm))
+    (let sp (reg-sp)
+        (set-znhc
+            0
+            0
+            (h-from (u8 sp) rimm)
+            (c-from (+ (& sp 0xff) rimm)))
+        (= (reg-hl) (u16 (+ (u32 sp) (u32 (i32 imm)))))))
+
+(defm arith-insn (name mnem pattern eval) (block
+    (def name
+        (string-concat "10" pattern "rrr")
+        "$mnem $(reg-name rs)"
+        (names (rs r))
+        (cycles (if (== rs 0b110) 2 1))
+        (block)
+        (mlet (lhs (reg-a)
+               rhs (arith-value rs))
+            eval))
+    (def (string-concat name "-imm8")
+        (string-concat "11" pattern "110 iiiiiiii")
+        "$mnem $(hex imm)"
+        (names (imm i))
+        (cycles 2)
+        (block)
+        (mlet (lhs (reg-a)
+               rhs imm)
+            eval))))
+
+(arith-insn
+    "ADD" "add A," "000"
+    (let result (+ (u16 lhs) (u16 rhs))
+        (set-znhc
+            (z-from result)
+            0
+            (h-from lhs rhs)
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "ADC" "adc A," "001"
+    (mlet (carry (reg-flag-c)
+           result (+ (+ (u16 lhs) (u16 rhs)) (u16 carry)))
+        (set-znhc
+            (z-from result)
+            0
+            (if carry (h-from-carry lhs rhs) (h-from lhs rhs))
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "SUB" "sub" "010"
+    (let result (- (u16 lhs) (u16 rhs))
+        (set-znhc
+            (z-from result)
+            1
+            (h-from-sub lhs rhs)
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "SBC" "sbc A," "011"
+    (mlet (carry (reg-flag-c)
+           result (- (- (u16 lhs) (u16 rhs)) (u16 carry)))
+        (set-znhc
+            (z-from result)
+            1
+            (if carry (h-from-sub-carry lhs rhs) (h-from-sub lhs rhs))
+            (c-from result))
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "AND" "and" "100"
+    (let result (& lhs rhs)
+        (set-znhc
+            (z-from result)
+            0
+            1
+            0)
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "XOR" "xor" "101"
+    (let result (^ lhs rhs)
+        (set-znhc
+            (z-from result)
+            0
+            0
+            0)
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "OR" "or" "110"
+    (let result (| lhs rhs)
+        (set-znhc
+            (z-from result)
+            0
+            0
+            0)
+        (= (reg-a) (u8 result))))
+
+(arith-insn
+    "CP" "cp" "111"
+    (let result (- (u16 lhs) (u16 rhs))
+        (set-znhc
+            (z-from result)
+            1
+            (h-from-sub lhs rhs)
+            (c-from result))))
+
+(def RLCA
+    "00000111"
+    "rlca"
+    (names)
+    (cycles 1)
+    (block)
+    (let a (reg-a)
+        (set-znhc
+            0
+            0
+            0
+            (>> a 7))
+        (= (reg-a) (| (<< a 1) (>> a 7)))))
+
+(def RLA
+    "00010111"
+    "rla"
+    (names)
+    (cycles 1)
+    (block)
+    (mlet (v (reg-a)
+           result (| (<< v 1) (reg-flag-c)))
+        (set-znhc
+            0
+            0
+            0
+            (>> v 7))
+        (= (reg-a) result)))
+
+(def RLC
+    "11001011 00000rrr"
+    "rlc $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (<< v 1) (>> v 7)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (>> v 7))
+        (set-reg-or-hl reg result)))
+
+(def RL
+    "11001011 00010rrr"
+    "rl $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (<< v 1) (reg-flag-c)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (>> v 7))
+        (set-reg-or-hl reg result)))
+
+(def RRCA
+    "00001111"
+    "rrca"
+    (names)
+    (cycles 1)
+    (block)
+    (let a (reg-a)
+        (set-znhc
+            0
+            0
+            0
+            (& a 1))
+        (= (reg-a) (| (>> a 1) (<< a 7)))))
+
+(def RRC
+    "11001011 00001rrr"
+    "rrc $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (>> v 1) (<< v 7)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (& v 1))
+        (set-reg-or-hl reg result)))
+
+(def RRA
+    "00011111"
+    "rra"
+    (names)
+    (cycles 1)
+    (block)
+    (mlet (v (reg-a)
+           result (| (>> v 1) (<< (reg-flag-c) 7)))
+        (set-znhc
+            0
+            0
+            0
+            (& v 1))
+        (= (reg-a) result)))
+
+(def RR
+    "11001011 00011rrr"
+    "rr $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (>> v 1) (<< (reg-flag-c) 7)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (& v 1))
+        (set-reg-or-hl reg result)))
+
+(def SLA
+    "11001011 00100rrr"
+    "sla $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (<< v 1))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (>> v 7))
+        (set-reg-or-hl reg result)))
+
+(def SRA
+    "11001011 00101rrr"
+    "sra $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (>> v 1) (& v 0b10000000)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (& v 1))
+        (set-reg-or-hl reg result)))
+
+(def SWAP
+    "11001011 00110rrr"
+    "swap $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (| (>> v 4) (<< v 4)))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            0)
+        (set-reg-or-hl reg result)))
+
+(def SRL
+    "11001011 00111rrr"
+    "srl $(reg-name reg)"
+    (names (reg r))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (mlet (v (reg-or-hl reg)
+           result (>> v 1))
+        (set-znhc
+            (z-from result)
+            0
+            0
+            (& v 1))
+        (set-reg-or-hl reg result)))
+
+(def BIT
+    "11001011 01bbbrrr"
+    "bit $bit, $(reg-name reg)"
+    (names (reg r) (bit b))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (set-znh
+        (^ (& (>> (reg-or-hl reg) bit) 1) 1)
+        0
+        1))
+
+(def RES
+    "11001011 10bbbrrr"
+    "res $bit, $(reg-name reg)"
+    (names (reg r) (bit b))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (set-reg-or-hl reg (& (reg-or-hl reg) (~ (<< (u8 1) bit)))))
+
+(def SET
+    "11001011 11bbbrrr"
+    "set $bit, $(reg-name reg)"
+    (names (reg r) (bit b))
+    (cycles (if (== reg 0b110) 4 2))
+    (block)
+    (set-reg-or-hl reg (| (reg-or-hl reg) (<< (u8 1) bit))))
+
+(def DAA
+    "00100111"
+    "daa"
+    (names)
+    (cycles 1)
+    (block)
+    (mlet (n (reg-flag-n)
+           h (reg-flag-h)
+           c (reg-flag-c)
+           a (reg-a))
+        (= (reg-a) (+ a (if n
+            (+ (if c -0x60 0)
+               (if h -0x6 0))
+            (+ (if (| c (> a 0x99)) (block (= c 1) 0x60) 0)
+               (if (| h (> (& a 0xF) 0x9)) 0x6 0)))))
+        (set-znhc
+            (z-from (reg-a))
+            n
+            0
+            c)))
+
+(def HALT
+    "01110110"
+    "halt"
+    (names)
+    (cycles 1)
+    (block)
+    (halt))
+
+(def STOP
+    "00010000"
+    "stop"
+    (names)
+    (cycles 1)
+    (block)
+    (block))

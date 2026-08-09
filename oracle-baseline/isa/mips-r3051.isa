@@ -1,0 +1,435 @@
+(defm u1  (v) (cast v u1))
+(defm u8  (v) (cast v u8))
+(defm u16 (v) (cast v u16))
+(defm u32 (v) (cast v u32))
+(defm u64 (v) (cast v u64))
+
+(defm i8  (v) (cast v i8))
+(defm i16 (v) (cast v i16))
+(defm i32 (v) (cast v i32))
+(defm i64 (v) (cast v i64))
+
+(defm check-overflow-add (lhs rhs)
+    (let r (u32 (+ lhs rhs))
+        (when (& (~ (^ lhs rhs)) (^ lhs r) 0x80000000)
+            (exception OV))))
+
+(defm check-overflow-sub (lhs rhs)
+    (let r (u32 (- lhs rhs))
+        (when (& (^ lhs rhs) (^ lhs r) 0x80000000)
+            (exception OV))))
+
+(defm set-link () (= (reg 31) (+ (pc) 8)))
+(defm branch-with-link (target) (block (set-link) (branch target)))
+(defm branch-default () (branch (+ (pc) 8)))
+
+(defm branch-if (cond target)
+    (if cond
+        (branch target)
+        (branch-default)))
+
+(defm check-load-alignment (addr type)
+    (when (!= 0 (& addr (- (/ (bitwidth type) 8) 1)))
+        (exception ADEL)))
+
+(defm check-store-alignment (addr type)
+    (when (!= 0 (& addr (- (/ (bitwidth type) 8) 1)))
+        (exception ADES)))
+
+(defm itype (name op dasm decode eval)
+    (block
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "$op sssss ttttt iiiiiiiiiiiiiiii"
+            dasm
+            (names (rs s) (rt t) (imm i))
+            decode
+            eval)))
+(defm itype (name op dasm eval) (itype name op dasm (block) eval))
+
+(defm ritype (name op funct dasm decode eval)
+    (block
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length funct)")
+        (def name
+            "$op sssss $funct iiiiiiiiiiiiiiii"
+            dasm
+            (names (rs s) (imm i))
+            decode
+            eval)))
+(defm ritype (name op funct dasm eval) (ritype name op funct dasm (block) eval))
+
+(defm jtype (name op dasm decode eval)
+    (block
+        (assert (== (string-length op) 6) "Expected 6 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "$op iiiiiiiiiiiiiiiiiiiiiiiiii"
+            dasm
+            (names (imm i))
+            decode
+            eval)))
+(defm jtype (name op dasm eval) (jtype name op dasm (block) eval))
+
+(defm rtype (name funct dasm decode eval)
+    (block
+        (assert (== (string-length funct) 6) "Expected 6 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "000000 sssss ttttt ddddd aaaaa $funct"
+            dasm
+            (names (rs s) (rt t) (rd d) (shamt a))
+            decode
+            eval)))
+(defm rtype (name funct dasm eval) (rtype name funct dasm (block) eval))
+
+(defm stype (name funct dasm decode eval)
+    (block
+        (assert (== (string-length funct) 6) "Expected 6 funct bits for instruction '$(as-string name)', got $(string-length op)")
+        (def name
+            "000000 cccccccccccccccccccc $funct"
+            dasm
+            (names (code c))
+            decode
+            eval)))
+(defm stype (name funct dasm eval) (stype name funct dasm (block) eval))
+
+(defm cftype (name op funct dasm decode eval)
+    (block
+        (assert (== (string-length op) 4) "Expected 4 opcode bits for instruction '$(as-string name)', got $(string-length op)")
+        (assert (== (string-length funct) 5) "Expected 5 funct bits for instruction '$(as-string name)', got $(string-length funct)")
+        (def name
+            "$op cc $funct ttttt ddddd fffffffffff"
+            dasm
+            (names (cop c) (rt t) (rd d) (cofun f))
+            decode
+            eval)))
+(defm cftype (name op funct dasm eval) (cftype name op funct dasm (block) eval))
+
+(rtype ADD "100000" "add %$rd, %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt))
+        (check-overflow-add lhs rhs)
+        (= (reg rd) (+ lhs rhs))))
+
+(itype ADDI "001000" "addi %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (let lhs (reg rs)
+        (check-overflow-add lhs eimm)
+        (= (reg rt) (+ lhs eimm))))
+
+(itype ADDIU "001001" "addiu %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (= (reg rt) (+ (reg rs) eimm)))
+
+(rtype ADDU "100001" "addu %$rd, %$rs, %$rt"
+    (= (reg rd) (+ (reg rs) (reg rt))))
+
+(rtype AND "100100" "and %$rd, %$rs, %$rt"
+    (= (reg rd) (& (reg rs) (reg rt))))
+
+(itype ANDI "001100" "andi %$rt, %$rs, $(hex imm)"
+    (= (reg rt) (& (reg rs) imm)))
+
+(itype BEQ "000100" "beq %$rs, %$rt, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (== (reg rs) (reg rt)) target))
+
+(ritype BGEZ "000001" "0###1" "bgez %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (>= (i32 (reg rs)) 0) target))
+
+(ritype BGEZAL "000001" "1###1" "bgezal %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (block
+        (set-link)
+        (branch-if (>= (i32 (reg rs)) 0) target)))
+
+(ritype BGTZ "000111" "00000" "bgtz %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (> (i32 (reg rs)) 0) target))
+
+(ritype BLEZ "000110" "00000" "blez %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (<= (i32 (reg rs)) 0) target))
+
+(ritype BLTZ "000001" "0###0" "bltz %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (< (i32 (reg rs)) 0) target))
+
+(ritype BLTZAL "000001" "1###0" "bltzal %$rs, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (block
+        (set-link)
+        (branch-if (< (i32 (reg rs)) 0) target)))
+
+(itype BNE "000101" "bne %$rs, %$rt, $(hex target)"
+    (let target (+ (pcd) (<< (signext imm u32) 2)))
+    (branch-if (!= (reg rs) (reg rt)) target))
+
+(stype BREAK "001101" "break $code"
+    (exception Break))
+
+(cftype CFC "0100" "00010" "cfc$cop %$rt, $rd"
+    (= (reg rt) (copcreg cop rd)))
+
+(def COP
+    "0100oo1 ccccccccccccccccccccccccc"
+    "cop$cop $(hex command)"
+    (names (cop o) (command c))
+    (block)
+    (copfun cop command))
+
+(cftype CTC "0100" "00110" "ctc$cop %$rt, $rd"
+    (= (copcreg cop rd) (reg rt)))
+
+(rtype DIV "011010" "div %$rs, %$rt"
+    (mlet (rsv (reg rs)
+           rtv (reg rt))
+        (if (== rtv 0)
+            (block
+                (= (reg-lo) (if (!= (& rsv 0x80000000) 0) 1 0xFFFFFFFF))
+                (= (reg-hi) rsv))
+            (if (& (== rsv 0x80000000) (== rtv 0xFFFFFFFF))
+                (block
+                    (= (reg-lo) 0x80000000)
+                    (= (reg-hi) 0))
+                (block
+                    (= (reg-lo) (/ (i32 rsv) (i32 rtv)))
+                    (= (reg-hi) (% (i32 rsv) (i32 rtv)))
+                    (div-delay))))))
+
+(rtype DIVU "011011" "divu %$rs, %$rt"
+    (mlet (rsv (reg rs)
+           rtv (reg rt))
+        (if (== rtv 0)
+            (block
+                (= (reg-lo) 0xFFFFFFFF)
+                (= (reg-hi) rsv))
+            (block
+                (= (reg-lo) (/ rsv rtv))
+                (= (reg-hi) (% rsv rtv))
+                (div-delay)))))
+
+(jtype J "000010" "j $(hex target)"
+    (let target (+ (& (pcd) 0xF0000000) (<< (u32 imm) 2)))
+    (branch target))
+
+(jtype JAL "000011" "jal $(hex target)"
+    (let target (+ (& (pcd) 0xF0000000) (<< (u32 imm) 2)))
+    (branch-with-link target))
+
+(rtype JALR "001001" "jalr %$rd, %$rs"
+    (let target (reg rs)
+        (= (reg rd) (+ (pc) 8))
+        (check-load-alignment target u32)
+        (branch target)))
+
+(rtype JR "001000" "jr %$rs"
+    (let target (reg rs)
+        (check-load-alignment target u32)
+        (branch target)))
+
+(itype LB "100000" "lb %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (defer= (reg rt) (load (+ (reg rs) offset) i8)))
+
+(itype LBU "100100" "lbu %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (defer= (reg rt) (load (+ (reg rs) offset) u8)))
+
+(itype LH "100001" "lh %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u16)
+        (defer= (reg rt) (load addr i16))))
+
+(itype LHU "100101" "lhu %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u16)
+        (defer= (reg rt) (load addr u16))))
+
+(itype LUI "001111" "lui %$rt, $(hex imm)"
+    (= (reg rt) (<< (u32 imm) 16)))
+
+(itype LW "100011" "lw %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u32)
+        (defer= (reg rt) (load addr u32))))
+
+(itype LWL "100010" "lwl %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (block
+        (do-load rt)
+        (mlet (addr (+ (reg rs) offset)
+               raddr (& addr 0xFFFFFFFC)
+               ert (reg rt))
+            (defer= (reg rt) (match (& addr 3)
+                0 (| (& ert 0x00FFFFFF) (<< (u32 (load raddr u8)) 24))
+                1 (| (& ert 0x0000FFFF) (<< (u32 (load raddr u16)) 16))
+                2 (| (& ert 0x000000FF) (<< (load raddr u32) 8))
+                  (load raddr u32))))))
+
+(itype LWR "100110" "lwr %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (block
+        (do-load rt)
+        (mlet (addr (+ (reg rs) offset)
+               raddr (& addr 0xFFFFFFFC)
+               ert (reg rt))
+            (defer= (reg rt) (match (& addr 3)
+                0 (load raddr u32)
+                1 (| (& ert 0xFF000000) (& (load addr u32) 0x00FFFFFF))
+                2 (| (& ert 0xFFFF0000) (load addr u16))
+                  (| (& ert 0xFFFFFF00) (load addr u8)))))))
+
+(itype LWC2 "110010" "lwc2 $rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-load-alignment addr u32)
+        (= (copreg 2 rt) (load addr u32))))
+
+(cftype MFC "0100" "00000" "mfc$cop %$rt, $rd"
+    (defer= (reg rt) (copreg cop rd)))
+
+(rtype MFHI "010000" "mfhi %$rd"
+    (block
+        (= (reg rd) (reg-hi))
+        (absorb-muldiv-delay)))
+
+(rtype MFLO "010010" "mflo %$rd"
+    (block
+        (= (reg rd) (reg-lo))
+        (absorb-muldiv-delay)))
+
+(cftype MTC "0100" "00100" "mtc$cop %$rt, $rd"
+    (= (copreg cop rd) (reg rt)))
+
+(rtype MTHI "010001" "mthi %$rs"
+    (= (reg-hi) (reg rs)))
+
+(rtype MTLO "010011" "mtlo %$rs"
+    (= (reg-lo) (reg rs)))
+
+(rtype MULT "011000" "mult %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt)
+           result (u64 (* (i64 lhs) (i64 rhs))))
+        (= (reg-lo) result)
+        (= (reg-hi) (>> result 32))
+        (mul-delay lhs rhs 1)))
+
+(rtype MULTU "011001" "multu %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt)
+           result (* (u64 lhs) (u64 rhs)))
+        (= (reg-lo) result)
+        (= (reg-hi) (>> result 32))
+        (mul-delay lhs rhs 0)))
+
+(rtype NOR "100111" "nor %$rd, %$rs, %$rt"
+    (= (reg rd) (~ (| (reg rs) (reg rt)))))
+
+(rtype OR "100101" "or %$rd, %$rs, %$rt"
+    (= (reg rd) (| (reg rs) (reg rt))))
+
+(itype ORI "001101" "ori %$rt, %$rs, $(hex imm)"
+    (= (reg rt) (| (reg rs) (u32 imm))))
+
+(itype SB "101000" "sb %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (store (+ (reg rs) offset) (u8 (reg rt))))
+
+(itype SH "101001" "sh %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-store-alignment addr u16)
+        (store addr (u16 (reg rt)))))
+
+(rtype SLL "000000" "sll %$rd, %$rt, $shamt"
+    (= (reg rd) (<< (reg rt) shamt)))
+
+(rtype SLLV "000100" "sllv %$rd, %$rt, %$rs"
+    (= (reg rd) (<< (reg rt) (reg rs))))
+
+(rtype SLT "101010" "slt %$rd, %$rs, %$rt"
+    (= (reg rd) (< (i32 (reg rs)) (i32 (reg rt)))))
+
+(itype SLTI "001010" "slti %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm i32))
+    (= (reg rt) (< (i32 (reg rs)) eimm)))
+
+(itype SLTIU "001011" "sltiu %$rt, %$rs, $(hex eimm)"
+    (let eimm (signext imm u32))
+    (= (reg rt) (< (reg rs) eimm)))
+
+(rtype SLTU "101011" "tltu %$rd, %$rs, %$rt"
+    (= (reg rd) (< (reg rs) (reg rt))))
+
+(rtype SRA "000011" "sra %$rd, %$rt, $shamt"
+    (= (reg rd) (>> (i32 (reg rt)) shamt)))
+
+(rtype SRAV "000111" "srav %$rd, %$rt, %$rs"
+    (= (reg rd) (>> (i32 (reg rt)) (i32 (reg rs)))))
+
+(rtype SRL "000010" "srl %$rd, %$rt, $shamt"
+    (= (reg rd) (>> (reg rt) shamt)))
+
+(rtype SRLV "000110" "srlv %$rd, %$rt, %$rs"
+    (= (reg rd) (>> (reg rt) (reg rs))))
+
+(rtype SUB "100010" "sub %$rd, %$rs, %$rt"
+    (mlet (lhs (reg rs)
+           rhs (reg rt))
+        (check-overflow-sub lhs rhs)
+        (= (reg rd) (- lhs rhs))))
+
+(rtype SUBU "100011" "subu %$rd, %$rs, %$rt"
+    (= (reg rd) (- (reg rs) (reg rt))))
+
+(itype SW "101011" "sw %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-store-alignment addr u32)
+        (store addr (reg rt))))
+
+(itype SWC2 "111010" "swc2 $rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (let addr (+ (reg rs) offset)
+        (check-store-alignment addr u32)
+        (store addr (copreg 2 rt))))
+
+(itype SWL "101010" "swl %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (mlet (addr (+ (reg rs) offset)
+           raddr (& addr 0xFFFFFFFC)
+           rtv (reg rt))
+        (match (& addr 3)
+            0 (store raddr (u8 (>> rtv 24)))
+            1 (store raddr (u16 (>> rtv 16)))
+            3 (store raddr rtv)
+              (block
+                (store raddr (u16 (>> rtv 8)))
+                (store (+ raddr 2) (u8 (>> rtv 24)))))))
+
+(itype SWR "101110" "swr %$rt, $(hex offset)(%$rs)"
+    (let offset (signext imm i32))
+    (mlet (addr (+ (reg rs) offset)
+           raddr (& addr 0xFFFFFFFC)
+           rtv (reg rt))
+        (match (& addr 3)
+            0 (store raddr rtv)
+            2 (store raddr (u16 rtv))
+            3 (store raddr (u8 rtv))
+              (block
+                (store raddr (u16 rtv))
+                (store (+ raddr 2) (u8 (>> rtv 16)))))))
+
+(stype SYSCALL "001100" "syscall $code"
+    (exception Syscall))
+
+(rtype XOR "100110" "xor %$rd, %$rs, %$rt"
+    (= (reg rd) (^ (reg rs) (reg rt))))
+
+(itype XORI "001110" "xori %$rt, %$rs, $(hex imm)"
+    (= (reg rt) (^ (reg rs) (u32 imm))))
