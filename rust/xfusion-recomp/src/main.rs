@@ -5,6 +5,43 @@ use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+    // --corpus <file> [<hex-off> <hex-len>] — linear-sweep bytes through decode_insn,
+    // count decoded/undecoded + dump per-insn (offset, len, mnem) for C#-diff.
+    // With --dump: print `offset len def_id mnem` per insn (the diff-target format).
+    if args.get(1).map(|s| s.as_str()) == Some("--corpus") {
+        let path = &args[2];
+        let all = std::fs::read(path).expect("read corpus");
+        let off = args.get(3).map(|s| usize::from_str_radix(s.trim_start_matches("0x"), 16).unwrap()).unwrap_or(0);
+        let len = args.get(4).map(|s| usize::from_str_radix(s.trim_start_matches("0x"), 16).unwrap()).unwrap_or(all.len() - off);
+        let dump = args.iter().any(|a| a == "--dump");
+        let bytes = &all[off..off+len];
+        let mut i = 0usize;
+        let (mut n_ok, mut n_fail, mut fail_at) = (0usize, 0usize, vec![]);
+        while i < bytes.len() {
+            match decode_insn(&bytes[i..], XMode::Bits64) {
+                Some(d) if d.len > 0 => {
+                    if dump { println!("{:x} {} {} {}", off+i, d.len, d.def_id, DEF_MNEMONICS[d.def_id as usize]); }
+                    n_ok += 1;
+                    i += d.len as usize;
+                }
+                _ => {
+                    // Undecoded byte — record + skip 1 (linear-sweep resync).
+                    if fail_at.len() < 20 { fail_at.push((off+i, bytes[i])); }
+                    n_fail += 1;
+                    i += 1;
+                }
+            }
+        }
+        eprintln!("[corpus {}: off=0x{:x} len=0x{:x}]", path, off, len);
+        eprintln!("  decoded: {} insns  undecoded: {} bytes  ({:.2}% coverage by count)",
+            n_ok, n_fail, 100.0 * n_ok as f64 / (n_ok + n_fail).max(1) as f64);
+        if !fail_at.is_empty() {
+            eprintln!("  first undecoded bytes:");
+            for (o, b) in &fail_at { eprintln!("    0x{:x}: 0x{:02X}", o, b); }
+        }
+        return;
+    }
+
     // <hex-bytes> — decode one insn, dump DecodedInsn.
     if args.len() >= 2 && args[1] != "--corpus" {
         let bytes: Vec<u8> = args[1].split(|c| c == ',' || c == ' ')
