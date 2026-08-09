@@ -6,6 +6,8 @@ public class Program : Core {
 	public static void Main(string[] args) {
 		// Feature set = the CPU we're compiling. CLI args override the default (ia32 dev set).
 		var census = args.Contains("--lower-census");
+		var rustOut = args.SkipWhile(a => a != "--rust").Skip(1).FirstOrDefault();
+		args = args.Where(a => a != "--lower-census" && a != "--rust" && a != rustOut).ToArray();
 		if(census) args = args.Where(a => a != "--lower-census").ToArray();
 		var features = args.Length != 0 ? args : ["ia32"];
 		Console.WriteLine($"XFusion: compiling with features [{string.Join(", ", features)}]");
@@ -20,6 +22,13 @@ public class Program : Core {
 		Console.WriteLine($"{templates.Count} instruction templates, {defs.Count} encodings.");
 
 		if(census) { LowerCensus.Run(templates); return; }
+
+		if(rustOut != null) {
+			Directory.CreateDirectory(rustOut);
+			File.WriteAllText(Path.Combine(rustOut, "disassembler.rs"), RustDisasmGen.Generate(defs));
+			Console.WriteLine($"Wrote {Path.Combine(rustOut, "disassembler.rs")} ({RustDisasmGen.BodyOrder.Count} def-bodies)");
+			return;
+		}
 
 		var outDir = FindOutDir();
 		Directory.CreateDirectory(outDir);
