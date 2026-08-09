@@ -35,6 +35,83 @@ fn interp_one_x64(pre: &X86State, mem: &mut impl GuestMem, code: &[u8], pc: u64)
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+    // --run-x64 <program> — the x64 block-driver: load a small x64 program into
+    // guest memory, run pc-driven via interp until INT3. Proves the block-loop
+    // shape for x64 (variable-length fetch + branch-following + RET-via-stack).
+    // Tier-0-x64 needs a StateLayout refactor (Tier0's state offsets are aarch64-
+    // shaped); this interp-driver proves the loop independent of that.
+    if args.get(1).map(|s| s.as_str()) == Some("--run-x64") {
+        // sum10: eax = Σ 1..10 = 55. mov/add/inc/cmp/jl/int3.
+        let sum10: &[u8] = &[
+            0xB8, 0x00,0,0,0,       // mov eax, 0
+            0xB9, 0x01,0,0,0,       // mov ecx, 1
+            0xBA, 0x0B,0,0,0,       // mov edx, 11
+            // loop:
+            0x01, 0xC8,             // add eax, ecx
+            0xFF, 0xC1,             // inc ecx
+            0x39, 0xD1,             // cmp ecx, edx
+            0x7C, 0xF8,             // jl loop  (rel8 = -8)
+            0xCC,                   // int3
+        ];
+        // fib(N) with call/ret — exercises push/pop/call/ret stack-mem.
+        let fib: &[u8] = &[
+            // main: mov edi, 12; call fib; int3
+            0xBF, 0x0C,0,0,0,       // mov edi, 12
+            0xE8, 0x01,0,0,0,       // call +1 (fib)
+            0xCC,                   // int3
+            // fib: rax=0 rcx=1; loop N-1 times: rdx=rax+rcx; rax=rcx; rcx=rdx; dec edi; jg loop; ret
+            0xB8, 0x00,0,0,0,       // mov eax, 0
+            0xB9, 0x01,0,0,0,       // mov ecx, 1
+            // loop:
+            0x48, 0x8D, 0x14, 0x08, // lea rdx, [rax+rcx]
+            0x48, 0x89, 0xC8,       // mov rax, rcx
+            0x48, 0x89, 0xD1,       // mov rcx, rdx
+            0xFF, 0xCF,             // dec edi
+            0x83, 0xFF, 0x01,       // cmp edi, 1
+            0x7F, 0xEF,             // jg loop  (rel8 = -17)
+            0xC3,                   // ret
+        ];
+        let prog: &[u8] = match args.get(2).map(|s| s.as_str()) {
+            Some("sum10") | None => sum10,
+            Some("fib") => fib,
+            Some(hex) => Box::leak(hex.split(',')
+                .map(|s| u8::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap())
+                .collect::<Vec<_>>().into_boxed_slice()),
+        };
+        let entry = 0x10000u64;
+        let mut mem = FlatMem::new(0, 0x100000);
+        // Load program at entry.
+        for (i, &b) in prog.iter().enumerate() { mem.write(entry + i as u64, 8, b as u128); }
+
+        let mut s = X86State::default();
+        s.rip = entry;
+        s.gpr[4] = 0x80000;  // rsp
+        let max_insns = 10000;
+        let mut n = 0;
+        loop {
+            let pc = s.rip;
+            // Fetch up to 15 bytes from guest mem.
+            let mut buf = [0u8; 15];
+            for i in 0..15 { buf[i] = mem.read(pc + i as u64, 8) as u8; }
+            // INT3 = stop.
+            if buf[0] == 0xCC { break; }
+            let (post, len, branched, handled) = interp_one_x64(&s, &mut mem, &buf, pc);
+            if !handled {
+                let mnem = decode_insn(&buf, XMode::Bits64)
+                    .map(|d| DEF_MNEMONICS[d.def_id as usize]).unwrap_or("?");
+                println!("  UNHANDLED @0x{pc:x}: {:02X?} {}", &buf[..len as usize], mnem);
+                break;
+            }
+            s = post;
+            if !branched { s.rip = pc + len as u64; }
+            n += 1;
+            if n > max_insns { println!("  max_insns hit"); break; }
+        }
+        println!("[run-x64: {} insns, rax=0x{:X} rcx=0x{:X} rip=0x{:X}]",
+            n, s.gpr[0], s.gpr[1], s.rip);
+        return;
+    }
+
     // --interp <hex-bytes> [reg=val ...] — decode + lift + execute one insn (or a
     // sequence separated by /), dump changed regs. Phase-2/3 first-execute.
     if args.get(1).map(|s| s.as_str()) == Some("--interp") {
