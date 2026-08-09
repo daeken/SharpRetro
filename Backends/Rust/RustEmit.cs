@@ -50,8 +50,21 @@ public static class RustEmit {
         EInt(var s, var w) => $"IlType::I {{ signed: {(s ? "true" : "false")}, width: {w} }}",
         EFloat(var w) => $"IlType::F {{ width: {w} }}",
         EVector => "IlType::V128",
-        EString => throw new NotSupportedException("string types don't reach the recompiler"),
+        // EString values (disasm-name pieces) don't reach the tier — but they're in the
+        // typed tree and the ct-arm may hit them (e.g. `if size == 0 { "W" } else { "X" }`
+        // in a decode-let). Emit as `IlType::Unit` so the code typechecks; the binding
+        // is dead in the recompiler target and Rust DCEs it.
+        EString => "IlType::Unit /* string, disasm-only */",
         _ => throw new NotImplementedException($"GenerateType {type}")
+    };
+
+    /// EType → the Rust PRIMITIVE type name (u32/i64/f32/bool). For ct-arithmetic casts.
+    public static string CtType(EType t) => t switch {
+        EInt(var s, var w) => $"{(s ? "i" : "u")}{(w<=8?8:w<=16?16:w<=32?32:w<=64?64:128)}",
+        EFloat(32) => "f32", EFloat(64) => "f64",
+        EBool => "bool",
+        EVector => "u128",  // ct vector-arithmetic doesn't happen; placeholder
+        _ => "u64"
     };
 
     /// EType → the Rust IlType const shorthand where one exists (U32/I64/etc), else the full form.
@@ -92,7 +105,9 @@ public static class RustEmit {
         // (`(insn >> N) & M`), and Rust doesn't auto-widen (u8 vs u32 = type error), so let
         // the ct-arithmetic infer from the field's type. Runtime lifts (`Lift()`) use
         // TypeShort() explicitly, so the type is carried there.
-        return i.Value < 0 ? $"(-0x{-i.Value:X}i64 as _)" : $"0x{i.Value:X}";
+        // Negative literals: emit as concrete i64 (the outer cast handles width). Rust
+        // needs a concrete type before `as` chains — `-0x1i64 as _` has no inference target.
+        return i.Value < 0 ? $"(-0x{-i.Value:X}i64)" : $"0x{i.Value:X}";
     }
 
     public static string GenerateListExpression(PList list, bool lhs = false) {
@@ -122,10 +137,29 @@ public static class RustEmit {
 
     // Compile-time value → runtime Val (the Rust equivalent of `builder.EnsureRuntime(x)`).
     // Emit-lambdas call this on any child that's compiletime but the parent needs a runtime Val.
-    public static string Lift(PTree child) =>
-        child.Type.Runtime
-            ? GenerateExpression(child)
-            : $"bd.literal({TypeShort(child.Type)}, ({GenerateExpression(child)}) as u128)";
+    public static string Lift(PTree child) {
+        if(child.Type.Runtime) return GenerateExpression(child);
+        // Non-numeric ct values (EString disasm-names, bare type-name PName args like `u32`
+        // to intrinsics) can't be `as u128`. They're metadata, not values — the intrinsic
+        // body interprets them. Emit a typed-zero placeholder; ‡ rung-4b: pass the type-info
+        // via a proper mechanism (an IlType arg to call_intrinsic) instead of a fake Val.
+        if(child.Type is EString or EUnit or null)
+            return $"bd.literal(IlType::U32, 0 /* non-numeric arg */)";
+        // Bool ct → cast to u128 via u32 (Rust: `true as u128` works, but be explicit).
+        var expr = GenerateExpression(child);
+        var cast = child.Type is EBool ? $"({expr}) as u32 as u128"
+                 : child.Type is EFloat ? $"({expr}).to_bits() as u128"
+                 : $"({expr}) as u128";
+        return $"bd.literal({TypeShort(child.Type)}, {cast})";
+    }
 
     public static string TempName() => Temp.Name();
+
+    /// A ct expression in bool-position (`if cond` / `!(cond)` / `while cond`).
+    /// The .isa treats 1-bit int fields as truthy; Rust needs explicit `!= 0`.
+    public static string CtBool(PTree e) => e.Type switch {
+        EBool => GenerateExpression(e),
+        EInt _ => $"(({GenerateExpression(e)}) != 0)",
+        _ => throw new NotSupportedException($"bool-position {e.Type}")
+    };
 }
