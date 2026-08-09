@@ -33,10 +33,50 @@ public static class Aarch64Scaffold {
         c += "// the encoded-immediate bits — should fold at generated-code const-eval. Rung-4a";
         c += "// declares them extern; rung-4b: ArchCompilerCore's compiletime-eval leg folds them";
         c += "// to constants pre-emit (the .isa's `literal` heads = the fold-hint).";
-        // Rung-4a stubs (fold to constants at rung-4b via ArchCompilerCore's ct-eval).
-        c += "fn aarch64_wmask(_n: u32, _imms: u32, _immr: u32, _imm: u32, _m: u32) -> u64 { todo!() }";
-        c += "fn aarch64_tmask(_n: u32, _imms: u32, _immr: u32, _imm: u32, _m: u32) -> u64 { todo!() }";
-        c += "fn aarch64_replicate(_bits: u64, _w: u32, _c: u32) -> u64 { todo!() }";
+        // aarch64 bitmask-immediate decode. Ported verbatim from Aarch64Common.Common.
+        // .isa arg-order is (n imms immr immediate m); C# fn takes (n imms immr m immediate)
+        // and the legacy emit swaps [4]/[5] — this signature matches the .isa order directly.
+        // BailoutException → returns None; the .isa's `requires` should have caught it, but
+        // if it didn't (over-permissive), the caller will `unreachable!()` on the None.
+        c += @"fn ones(bits: u32) -> u64 { if bits >= 64 { u64::MAX } else { (1u64 << bits) - 1 } }
+fn highest_set_bit(v: u64, bits: u32) -> i32 {
+    for i in (0..bits as i32).rev() { if (v >> i) & 1 != 0 { return i; } }
+    -1
+}
+fn roll_right(v: u64, size: u32, rot: u32) -> u64 {
+    if rot == 0 { return v & ones(size); }
+    ((v << (size - rot)) | (v >> rot)) & ones(size)
+}
+fn replicate_(v: u64, esize: u32, m: u32) -> u64 {
+    // esize can be 64 (when N=1, len=6) → u64<<64 panics in Rust debug (C# tolerates →0).
+    if esize >= 64 { return v & ones(64); }
+    let times = m / esize; let mut r = 0u64;
+    for _ in 0..times { r = (r << esize) | (v & ones(esize)); }
+    r
+}
+fn make_masks(n: u32, imms: u32, immr: u32, m: u32, immediate: bool) -> Option<(u64, u64)> {
+    let len = highest_set_bit(((n << 6) | (imms ^ 0b111111)) as u64, 7);
+    if !(len > 0 && m >= (1u32 << len)) { return None; }
+    let levels = ones(len as u32) & 0x3F;
+    if immediate && (imms as u64 & levels) == levels { return None; }
+    let s = imms as u64 & levels; let r = immr as u64 & levels;
+    let diff = (s.wrapping_sub(r)) & 0x3F;
+    let esize = 1u32 << len;
+    let d = diff & ones(len as u32);
+    let welem = ones((s + 1) as u32) & ones(esize);
+    let telem = ones((d + 1) as u32) & ones(esize);
+    let wmask = replicate_(roll_right(welem, esize, r as u32), esize, m);
+    let tmask = replicate_(telem, esize, m);
+    Some((wmask, tmask))
+}
+fn aarch64_wmask(n: u32, imms: u32, immr: u32, immediate: u32, m: u32) -> u64 {
+    make_masks(n, imms, immr, m, immediate != 0).map(|(w,_)| w).unwrap_or_else(|| unreachable!())
+}
+fn aarch64_tmask(n: u32, imms: u32, immr: u32, immediate: u32, m: u32) -> u64 {
+    make_masks(n, imms, immr, m, immediate != 0).map(|(_,t)| t).unwrap_or_else(|| unreachable!())
+}
+fn aarch64_replicate(bits: u64, w: u32, c: u32) -> u64 { replicate_(bits, w, w * c) }
+";
         c += "";
         c += "// Register-file ids (aarch64). The frontend declares these; the tier is opaque to them.";
         c += "pub const GPR: RegFile = RegFile(0);";

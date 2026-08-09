@@ -59,7 +59,7 @@ extern "C" fn sig_handler(sig: libc::c_int, _info: *mut libc::siginfo_t, _ctx: *
 fn install_handlers() {
     unsafe {
         let mut sa: libc::sigaction = std::mem::zeroed();
-        sa.sa_sigaction = sig_handler as usize;
+        sa.sa_sigaction = sig_handler as *const () as usize;
         sa.sa_flags = libc::SA_SIGINFO | libc::SA_NODEFER;
         libc::sigemptyset(&mut sa.sa_mask);
         for &s in &[libc::SIGILL, libc::SIGSEGV, libc::SIGBUS, libc::SIGFPE] {
