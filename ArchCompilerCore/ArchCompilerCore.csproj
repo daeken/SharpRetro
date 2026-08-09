@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LibSharpRetro/LibSharpRetro.csproj" />
+    <PackageReference Include="DoubleSharp" Version="0.0.3" />
+    <PackageReference Include="PrettyPrinter" Version="1.0.0" />
+    <PackageReference Include="UltimateOrb.Int128" Version="1.0.8" />
+  </ItemGroup>
+</Project>
