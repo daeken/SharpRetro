@@ -105,6 +105,17 @@ impl Aarch64Enc {
     pub fn add_w(&mut self, wd: u32, wn: u32, wm: u32)  { self.put(0x0B000000 | (wm<<16) | (wn<<5) | wd); }
     pub fn sub_w(&mut self, wd: u32, wn: u32, wm: u32)  { self.put(0x4B000000 | (wm<<16) | (wn<<5) | wd); }
     pub fn mul_w(&mut self, wd: u32, wn: u32, wm: u32)  { self.put(0x1B007C00 | (wm<<16) | (wn<<5) | wd); }
+    // Division + bit-manipulation
+    pub fn udiv(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x9AC00800 | (xm<<16) | (xn<<5) | xd); }
+    pub fn sdiv(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x9AC00C00 | (xm<<16) | (xn<<5) | xd); }
+    pub fn udiv_w(&mut self, wd: u32, wn: u32, wm: u32) { self.put(0x1AC00800 | (wm<<16) | (wn<<5) | wd); }
+    pub fn sdiv_w(&mut self, wd: u32, wn: u32, wm: u32) { self.put(0x1AC00C00 | (wm<<16) | (wn<<5) | wd); }
+    // MSUB Xd = Xa - Xn*Xm  (for rem: rem = a - (a/b)*b)
+    pub fn msub(&mut self, xd: u32, xn: u32, xm: u32, xa: u32) { self.put(0x9B008000 | (xm<<16) | (xa<<10) | (xn<<5) | xd); }
+    pub fn rbit(&mut self, xd: u32, xn: u32) { self.put(0xDAC00000 | (xn<<5) | xd); }
+    pub fn rbit_w(&mut self, wd: u32, wn: u32) { self.put(0x5AC00000 | (wn<<5) | wd); }
+    pub fn clz(&mut self, xd: u32, xn: u32) { self.put(0xDAC01000 | (xn<<5) | xd); }
+    pub fn clz_w(&mut self, wd: u32, wn: u32) { self.put(0x5AC01000 | (wn<<5) | wd); }
     // SMULH/UMULH — 64×64 → high 64 bits.
     pub fn smulh(&mut self, xd: u32, xn: u32, xm: u32)  { self.put(0x9B407C00 | (xm<<16) | (xn<<5) | xd); }
     pub fn umulh(&mut self, xd: u32, xn: u32, xm: u32)  { self.put(0x9BC07C00 | (xm<<16) | (xn<<5) | xd); }
@@ -199,6 +210,8 @@ mod tests {
         e.lslv(0, 1, 2); e.lsrv(3, 4, 5); e.asrv(6, 7, 8); e.rorv(9, 10, 11);
         e.lsrv_w(0, 1, 2); e.asrv_w(3, 4, 5); e.rorv_w(6, 7, 8);
         e.smulh(0, 1, 2); e.umulh(3, 4, 5);
+        e.udiv(0, 1, 2); e.sdiv(3, 4, 5); e.msub(6, 7, 8, 9);
+        e.rbit(0, 1); e.rbit_w(2, 3); e.clz(4, 5); e.clz_w(6, 7);
         e.cmp_r(1, 2); e.csel(0, 1, 2, Cond::EQ); e.cset(3, Cond::LT);
         e.cbz(4, 16); e.b(-8);
         e.mrs_nzcv(5); e.msr_nzcv(5);
@@ -217,6 +230,8 @@ mod tests {
             "lsl x0, x1, x2", "lsr x3, x4, x5", "asr x6, x7, x8", "ror x9, x10, x11",
             "lsr w0, w1, w2", "asr w3, w4, w5", "ror w6, w7, w8",
             "smulh x0, x1, x2", "umulh x3, x4, x5",
+            "udiv x0, x1, x2", "sdiv x3, x4, x5", "msub x6, x7, x8, x9",
+            "rbit x0, x1", "rbit w2, w3", "clz x4, x5", "clz w6, w7",
             "cmp x1, x2", "csel x0, x1, x2, eq", "cset x3, lt",
             "cbz x4,", "b ",
             "mrs x5, nzcv", "msr nzcv, x5",

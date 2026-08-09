@@ -267,8 +267,35 @@ impl Builder for Tier0 {
             return s;
         }
         self.bin(a, b, t, |e| e.mul_r(X_A, X_A, X_B)) }
-    fn div(&mut self, _a: u32, _b: u32) -> u32 { panic!("tier-0 v1: div not wired") }
-    fn rem(&mut self, _a: u32, _b: u32) -> u32 { panic!("tier-0 v1: rem not wired") }
+    fn div(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        // Silicon udiv/sdiv: divide-by-0 → result 0 (no fault) — matches interp's
+        // `if y==0 {0} else {x/y}`. So no zero-guard needed.
+        let signed = matches!(t, IlType::I{signed:true, ..});
+        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
+        self.bin(a, b, t, move |e| match (signed, w32) {
+            (true, true) => e.sdiv_w(X_A, X_A, X_B),
+            (true, false) => e.sdiv(X_A, X_A, X_B),
+            (false, true) => e.udiv_w(X_A, X_A, X_B),
+            (false, false) => e.udiv(X_A, X_A, X_B),
+        }) }
+    fn rem(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        // rem = a - (a/b)*b via msub. Same div-by-0 semantics (0 - 0*b = 0).
+        // ‡ signed-rem sign convention: aarch64 sdiv truncates toward zero, so
+        // a - trunc(a/b)*b = C's `%` semantics = interp's wrapping_rem. Matches.
+        let signed = matches!(t, IlType::I{signed:true, ..});
+        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
+        self.bin(a, b, t, move |e| {
+            // x11 = a/b (X_A,X_B still hold a,b after this since bin loaded them)
+            // Actually bin's f gets called with X_A=a, X_B=b in-place. Compute q=x11=a/b,
+            // then X_A = a - q*b via msub.
+            match (signed, w32) {
+                (true, true) => e.sdiv_w(X_C, X_A, X_B),
+                (true, false) => e.sdiv(X_C, X_A, X_B),
+                (false, true) => e.udiv_w(X_C, X_A, X_B),
+                (false, false) => e.udiv(X_C, X_A, X_B),
+            }
+            e.msub(X_A, X_C, X_B, X_A);  // x9 = x9 - x11*x10
+        }) }
     fn neg(&mut self, a: u32) -> u32 { let t = self.tys[a as usize]; self.una(a, t, |e| { e.mov_imm64(X_B, 0); e.sub_r(X_A, X_B, X_A); }) }
     fn and(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.and_r(X_A, X_A, X_B)) }
     fn or (&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.orr_r(X_A, X_A, X_B)) }
@@ -344,8 +371,15 @@ impl Builder for Tier0 {
             64 => e.rorv(X_A, X_A, X_B),
             _ => panic!("tier-0: rotr at width={w} (non-32/64)"),
         }) }
-    fn rbit(&mut self, _a: u32) -> u32 { panic!("tier-0 v1: rbit") }
-    fn clz(&mut self, _a: u32) -> u32 { panic!("tier-0 v1: clz") }
+    fn rbit(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
+        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
+        self.una(a, t, move |e| if w32 { e.rbit_w(X_A, X_A) } else { e.rbit(X_A, X_A) }) }
+    fn clz(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
+        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
+        // ‡ non-32/64 widths: interp does `(bits<<(128-w)).leading_zeros().min(w)`.
+        // For width≠{32,64} (rare in aarch64.isa — CLZ is X/W-only), would need shift-
+        // adjust. Panic if hit; the fuzz-diff will name it.
+        self.una(a, t, move |e| if w32 { e.clz_w(X_A, X_A) } else { e.clz(X_A, X_A) }) }
 
     fn eq(&mut self, a: u32, b: u32) -> u32 { self.cmp_op(a, b, Cond::EQ) }
     fn ne(&mut self, a: u32, b: u32) -> u32 { self.cmp_op(a, b, Cond::NE) }
