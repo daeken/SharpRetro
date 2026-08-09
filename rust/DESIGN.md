@@ -239,3 +239,39 @@ context-swap at the boundary; only ABI-remap.
 
 x64-guest (via XFusion frontend) rides the same generated-recompiler shape once aarch64-guest
 proves the pipeline; x64-host `Emit` when a consumer needs it.
+
+---
+
+## x64-guest port (XFusion)
+
+The x86 architecture differs from aarch64 structurally, so the port shape differs:
+
+- **Variable-length decode** — no mask/match u32 dispatch. Prefix loop → opcode-map
+  escape → (map, opcode) → discriminate by mandatory-prefix / VEX / /N-extension.
+- **Semantics templates separate from encoding rows** — `(instruction MNEM (params) eval)`
+  + N× `(encoding MNEM (Ev Gv) (0x01))`. One template, many encodings. Decode produces
+  `DecodedInsn{def_id, len, op, PrefixState, ModRm, imm0, imm1}`; lift binds operands
+  (Ev/Gv/Ib per SDM Appendix-A width-parameterized notation) then walks the eval-template.
+- **Hand-written decode primitives** — `scan_prefixes` / `read_modrm` / `read_imm` in
+  `xfusion-recomp/src/decode.rs`, transcribed from the C# `Decode.cs` (which is
+  XED-verified at 99.87%/100% on glibc corpora).
+
+### Phasing
+
+1. **`disassembler.rs` generator** (`XFusionGenerator/RustDisasmGen.cs`) — mirrors
+   `DisassemblerGenerator.Generate`'s (map,op)-switch dispatch, emits Rust. Uses only
+   concrete `XFusionDef` fields (no PTree), so lives in XFusionGenerator's own project.
+   Output: `decode_insn(bytes, mode) -> Option<DecodedInsn>`.
+   **Gate**: XED-diff on real x64 corpora (the day-1 census loop, Rust decode arm).
+2. **`Frontends/XFusion` port** — XFusionDef/OperandSpec → ArchCompilerCore's PTree types
+   (so RustEmit's shared heads see the same tree). Then `Backends/Rust/XFusionEmit.cs`
+   (x86-specific heads: flags OF/SF/ZF/AF/PF/CF, push/pop, gpr8-hi AH/BH bank,
+   operand-bind Ev/Gv/M→address-computation) + `XFusionScaffold` → generated `lift.rs`
+   (per-def_id: bind operands, walk eval via SHARED ScalarMath/Logic/ControlFlow heads).
+3. **`X86State`** (RegState impl: gpr[16] u64, eflags, seg[6], xmm[32] V128, rip) +
+   wire InterpretingBuilder → first x64 IL-seq via RecordingBuilder.
+   **Gate**: interp × Rosetta-NativeStub-on-Mac (the independent silicon-tier oracle;
+   Rosetta = Apple's own from-SDM x86 impl, zero shared lineage with the .isa).
+4. Tier-0 x64-guest reuses the aarch64-host `Aarch64Enc`+`Tier0` unchanged (guest-ISA
+   varies the recompile_one/lift_one; host machine-code emit is invariant). BlockCache
+   already arch-neutral via the `BlockCompiler` trait.
