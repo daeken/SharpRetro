@@ -35,8 +35,10 @@ public static class CSharpEmit {
     }
     public static void Statement(string name, Action<CodeBuilder, PList> ct, Action<CodeBuilder, PList> rt = null) =>
         Statements[name] = (ct, rt ?? ct);
-    static int TempI;
-    public static string TempName() => $"temp_{TempI++}";
+    // Forwards to ArchCompilerCore.Temp.Name() — legacy Core.cs had ONE counter shared by
+    // frontend tree-rewriting (MipsDef branch-slot reg-defer) AND backend emit (mlet lowering).
+    // Both must draw from the same counter in the same order for byte-identical output.
+    public static string TempName() => Temp.Name();
 
     // Standalone Interpret("name", exec) calls in legacy Define() bodies are the exec-half —
     // they now live in ArchCompilerCore/Modules/*.cs via Heads.Register(name, sig, exec).

@@ -40,6 +40,17 @@ for f in Disassembler.cs Recompiler.cs; do
 done
 
 echo ""
+echo "=== rung-3b: emit mips (Disassembler.cs + Interpreter.cs + Recompiler.cs) ==="
+$RUN ArchCompiler -- SharpStationGenerator/mips-r3051.isa --stage emit --arch mips --out /tmp/ac-mips 2>/dev/null >/dev/null
+for f in Disassembler.cs Interpreter.cs Recompiler.cs; do
+  if diff -q oracle-baseline/mips/$f /tmp/ac-mips/$f >/dev/null 2>&1; then
+    echo "  ✓ mips $f byte-identical"
+  else
+    echo "  ✗ mips $f DIFFERS"; diff oracle-baseline/mips/$f /tmp/ac-mips/$f | head -10; FAIL=1
+  fi
+done
+
+echo ""
 echo "=== rung-3: emit dmg (Disassembler.cs + Interpreter.cs) ==="
 $RUN ArchCompiler -- DamageGenerator/sm83.isa --stage emit --arch dmg --out /tmp/ac-dmg 2>/dev/null >/dev/null
 for f in Disassembler.cs Interpreter.cs; do

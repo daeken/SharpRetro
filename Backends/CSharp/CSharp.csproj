@@ -17,5 +17,6 @@
     <ProjectReference Include="../../Aarch64Common/Aarch64Common.csproj" />
     <ProjectReference Include="../../Frontends/Aarch64/Aarch64.csproj" />
     <ProjectReference Include="../../Frontends/Dmg/Dmg.csproj" />
+    <ProjectReference Include="../../Frontends/Mips/Mips.csproj" />
   </ItemGroup>
 </Project>

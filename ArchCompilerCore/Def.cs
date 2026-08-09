@@ -136,3 +136,12 @@ public static class RuntimeInference {
         return tree.Type;
     }
 }
+
+
+// Fresh-identifier generator (legacy Core.cs:195). Used by frontend tree-rewriting
+// (MipsDef's branch-slot reg-defer pass) AND by backend emit (mlet lowering) — both
+// call sites share ONE counter in the legacy compiler, so temps never collide.
+public static class Temp {
+    static int I;
+    public static string Name() => $"temp_{I++}";
+}

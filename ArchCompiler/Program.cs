@@ -42,6 +42,17 @@ if(stage == "emit") {
       Backends.CSharp.Aarch64Scaffold.BuildRecompiler(adefs, "Aarch64Generator", Path.Combine(outDir, "Recompiler.cs"));
       break;
     }
+    case "mips": {
+      new Frontends.Mips.MipsHeads().Define();
+      var mdefs = Def.ParseAll(expanded, Frontends.Mips.MipsDef.Parse)
+        .Select(RuntimeInference.InferRuntime)
+        .Cast<Frontends.Mips.MipsDef>().ToList();
+      Backends.CSharp.MipsScaffold.RegisterAll();
+      Backends.CSharp.MipsScaffold.BuildDisassembler(mdefs, "SharpStationGenerator", Path.Combine(outDir, "Disassembler.cs"));
+      Backends.CSharp.MipsScaffold.BuildInterpreter(mdefs, "SharpStationGenerator", Path.Combine(outDir, "Interpreter.cs"));
+      Backends.CSharp.MipsScaffold.BuildRecompiler(mdefs, "SharpStationGenerator", Path.Combine(outDir, "Recompiler.cs"));
+      break;
+    }
     case "dmg": {
       new Frontends.Dmg.DmgHeads().Define();
       var ddefs = Def.ParseAll(expanded, Frontends.Dmg.DmgDef.Parse)
