@@ -62,6 +62,25 @@ for f in Disassembler.cs Interpreter.cs; do
 done
 
 echo ""
+echo "=== rung-4 gate-(a): recompiler.rs compiles against Builder trait ==="
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --arch aarch64-rust --out /tmp/ac-rust 2>/dev/null >/dev/null
+mkdir -p rust/aarch64-recomp/src
+cp /tmp/ac-rust/recompiler.rs rust/aarch64-recomp/src/lib.rs
+if [ ! -f rust/aarch64-recomp/Cargo.toml ]; then
+  printf '[package]\nname = "aarch64-recomp"\nversion = "0.1.0"\nedition = "2024"\n[dependencies]\nsharpretro-jit = { path = "../sharpretro-jit" }\n' > rust/aarch64-recomp/Cargo.toml
+fi
+# NB: verify via direct exit-code (a timeout+grep-count reads a truncated stream as 0).
+(cd rust/aarch64-recomp && cargo check 2>/tmp/r4.err)
+r4=$?
+if [ $r4 -eq 0 ]; then
+  echo "  ✓ recompiler.rs cargo check clean ($(wc -l < /tmp/ac-rust/recompiler.rs) lines)"
+else
+  echo "  ✗ cargo check FAILED (exit $r4):"
+  grep -E "^error" /tmp/r4.err | sort | uniq -c | sort -rn | head -5
+  FAIL=1
+fi
+
+echo ""
 echo "=== pre-push: house-vocab check (public repo — no seat-names/channel-cites/kt-refs) ==="
 if grep -rn 'barrow\|fuchi\|coram\|kt\[\|own #\|·[0-9]\|#alky\|corpse' \
      ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ rust/ oracle-baseline/README.md 2>/dev/null \
