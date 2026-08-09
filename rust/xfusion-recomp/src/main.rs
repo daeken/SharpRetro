@@ -236,6 +236,20 @@ fn main() {
         }
         eprintln!("[fuzz-x64: {} distinct encodings sampled from Bedrock 1MB]", sample_by_def.len());
 
+        // v4 boundary-value corpus (--boundary): TrackingState discovers each insn's
+        // read-set, then sweep boundary values over EXACTLY those inputs (per libmoonage
+        // TestGen.cs:121-193 lazy-precondition-discovery). Denser bug-surface than random:
+        // {0, 1, 1<<(i*16), ~that, sign-bits} = the edges where flag/carry/sext bugs live.
+        let use_boundary = args.iter().any(|a| a == "--boundary");
+        // Boundary values per libmoonage (X-reg set adapted for x64 GPRs):
+        const BOUNDARY_VALS: &[u64] = &[
+            0, 1, 0xFF, 0xFFFF, 0xFFFF_FFFF, u64::MAX,           // width edges
+            1u64<<7, 1u64<<15, 1u64<<31, 1u64<<63,               // sign bits per width
+            0x8000_0000_0000_0000, 0x7FFF_FFFF_FFFF_FFFF,        // i64 min/max
+            0x0F, 0x10,                                          // AF nibble-carry edge
+            0xDEAD_BEEF_CAFE_BABE,                               // one dense random
+        ];
+
         // v1 exclusions (same rationale as aarch64 native-diff): mem-touching insns need
         // a controlled address (random regs → random guest-addr → segfault); branches
         // change rip; system insns. Filter by mnemonic + def_id class.
@@ -255,9 +269,86 @@ fn main() {
 
         let (mut n_ok, mut n_ipanic, mut n_skip) = (0, 0, 0);
         let mut skip_by: std::collections::BTreeMap<&str, usize> = Default::default();
+        // v4 boundary-mode helper: discover an insn's GPR read-set via TrackingState.
+        // Returns None if the tracking pass panics/hits an unwired intrinsic (= skip).
+        let discover_reads = |insn_bytes: &[u8]| -> Option<(Vec<u32>, Vec<u32>, bool)> {
+            use xfusion_recomp::state::TrackingState;
+            let d = decode_insn(insn_bytes, XMode::Bits64)?;
+            let mut ts = TrackingState::default();
+            ts.inner.gpr[4] = 0x80000;
+            let mut mem = FlatMem::new(0, 0x1000);
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let mut b = InterpretingBuilder::new(&mut ts, &mut mem, 0x1000);
+                b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
+                lift_one(&mut b, &d, 0x1000, XMode::Bits64)
+            }));
+            if r.is_err() { return None; }
+            Some((ts.gpr_reads(), ts.flag_reads(), ts.reads_xmm()))
+        };
+
         for (&def_id, sample) in &sample_by_def {
             let mnem = DEF_MNEMONICS[def_id as usize];
             if excluded_mnem(mnem) { *skip_by.entry("mnem").or_default() += n; n_skip += n; continue; }
+
+            // ── v4 boundary-mode: discover read-set once, sweep boundary values ──
+            if use_boundary {
+                let insn_bytes = sample.clone();
+                let d = decode_insn(&insn_bytes, XMode::Bits64).unwrap();
+                let has_modrm = d.m.mod_ != 0 || d.m.reg != 0 || d.m.rm != 0 || d.m.is_reg;
+                if has_modrm && !d.m.is_reg { *skip_by.entry("mem-form").or_default() += 1; n_skip += 1; continue; }
+                if has_modrm && (d.m.reg == 4 || d.m.rm == 4) { *skip_by.entry("rsp").or_default() += 1; n_skip += 1; continue; }
+                let Some((gpr_reads, flag_reads, reads_xmm)) = discover_reads(&insn_bytes)
+                    else { *skip_by.entry("track-panic").or_default() += 1; n_skip += 1; continue; };
+                if reads_xmm { *skip_by.entry("xmm").or_default() += 1; n_skip += 1; continue; }
+                if gpr_reads.iter().any(|&r| r == 4) { *skip_by.entry("rsp-read").or_default() += 1; n_skip += 1; continue; }
+
+                // Anchor state: all read-regs = a mid-value; then sweep ONE reg at a time
+                // through BOUNDARY_VALS. Per libmoonage's shape (one dimension varied,
+                // rest fixed) — not full cartesian (that's O(vals^n_regs)).
+                let anchor: u64 = 0x1122_3344_5566_7788;
+                // Also sweep flag-reads if any (ADC/SBB/CMOVcc) — {0, all-1s} for eflags.
+                let flag_states: &[u32] = if flag_reads.is_empty() { &[0x202] }
+                                          else { &[0x202, 0x202 | 0x8D5] };
+
+                for &fs in flag_states {
+                    for (sweep_i, &sweep_reg) in gpr_reads.iter().enumerate() {
+                        for &bv in BOUNDARY_VALS {
+                            let mut pre = X86State::default();
+                            for &r in &gpr_reads { pre.gpr[r as usize] = anchor; }
+                            pre.gpr[sweep_reg as usize] = bv;
+                            pre.gpr[4] = 0x80000;
+                            pre.eflags = fs;
+                            // If sweeping the FIRST read-reg: also sweep the anchor for
+                            // the OTHERS across a couple of values (0, MAX) so 2-arg edges
+                            // like (0,0)/(MAX,MAX)/(MAX,0) get hit.
+                            // v4.0: skip that; v4.1 adds the pairwise pass.
+
+                            let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+                                interp_one_x64(&pre, &mut mem, &insn_bytes, 0x1000)));
+                            let (i_post, _len, _br, handled) = match ir {
+                                Ok(r) => r, Err(_) => { n_ipanic += 1; continue; }
+                            };
+                            if !handled { *skip_by.entry("no-lift").or_default() += 1; n_skip += 1; continue; }
+                            n_ok += 1;
+                            if let Some(f) = &mut corpus {
+                                let (stub, _slot) = emit_stub(&insn_bytes);
+                                let flags_mask = DEF_FLAGS_MASK.get(def_id as usize).copied().unwrap_or(0);
+                                f.write_all(&(def_id as u32).to_le_bytes()).unwrap();
+                                f.write_all(&flags_mask.to_le_bytes()).unwrap();
+                                f.write_all(&(stub.len() as u32).to_le_bytes()).unwrap();
+                                f.write_all(&stub).unwrap();
+                                for w in &pre.to_flat() { f.write_all(&w.to_le_bytes()).unwrap(); }
+                                for w in &i_post.to_flat() { f.write_all(&w.to_le_bytes()).unwrap(); }
+                                n_triples += 1;
+                            }
+                        }
+                        // For 1-reg-read insns (INC/DEC/NOT etc), sweep_i loop is 1 iter.
+                        let _ = sweep_i;
+                    }
+                }
+                continue;
+            }
+
             for _ in 0..n {
                 // ‡ v1: use the sample bytes verbatim (real encoding), randomize pre-state.
                 //   v2: mutate ModRM.reg/rm/imm within the sample to widen coverage.
