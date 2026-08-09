@@ -13,6 +13,8 @@
 
 pub mod recording;
 pub mod interp;
+#[cfg(target_arch = "aarch64")]
+pub mod aarch64_enc;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
