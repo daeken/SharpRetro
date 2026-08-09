@@ -12,12 +12,20 @@ namespace Backends.Rust;
 
 public static class VectorMathEmit {
     public static void Register() {
-        // (vector e0 e1 ... eN) — construct a V128 from lanes.
-        Expression("vector", list =>
-            list.Skip(1).Select((e, i) =>
-                    $"bd.velement_write(_v, bd.literal(IlType::U32, {i}), {Lift(e)})")
-                .Aggregate("bd.literal(IlType::V128, 0)",
-                    (acc, w) => $"{{ let _v = {acc}; {w} }}"));
+        // (vector e0 e1 ... eN) — construct a V128 from lanes. LINEARIZED: each velement_write
+        // + its literal-index emit as own-line Rt() calls; the fold accumulates over temps,
+        // no nesting. (The prior Aggregate form nested bd.velement_write(bd.literal(...)) —
+        // 7767× E0499 double-borrow, the entire remaining error class.)
+        Expression("vector", list => {
+            var v = Rt("bd.literal(IlType::V128, 0)");
+            var elems = list.Skip(1).ToList();
+            for(var i = 0; i < elems.Count; i++) {
+                var idx = Rt($"bd.literal(IlType::U32, {i})");
+                var e = Lift(elems[i]);
+                v = Rt($"bd.velement_write({v}, {idx}, {e})");
+            }
+            return v;
+        });
         // (vector-all x) — broadcast scalar x to all lanes.
         Expression("vector-all", list =>
             $"bd.call_intrinsic(IntrinsicId(100/*vec_broadcast*/), &[{Lift(list[1])}]).unwrap()");

@@ -12,12 +12,15 @@ public static class ControlFlowEmit {
             foreach(var e in list.Skip(1))
                 if(e is PList pl) GenerateStatement(c, pl);
         });
-        // Expression-position: emit `{ s1; ...; eN }` inline.
+        // Expression-position: FLATTEN into RtSink (no `{...}` string — the linearize's
+        // Rt-temps for body children go to RtSink at outer scope, so a `{}` block-string
+        // would put bindings inside where the temps can't see them). Write each stmt
+        // directly to RtSink, return the last expr.
         Expression("block", list => {
             var lines = list.Skip(1).ToList();
-            var stmts = lines.Take(lines.Count - 1)
-                .Select(e => e is PList pl ? StmtToString(pl) : "");
-            return $"{{ {string.Join(" ", stmts)} {GenerateExpression(lines.Last())} }}";
+            foreach(var e in lines.Take(lines.Count - 1))
+                if(e is PList pl) GenerateStatement(RtSink, pl);
+            return GenerateExpression(lines.Last());
         });
 
         // (let name value body...) → `let name = value; body...`
@@ -30,11 +33,11 @@ public static class ControlFlowEmit {
         });
         Expression("let", list => {
             var name = RustEmit.SafeIdent(((PName) list[1]).Name);
+            RtSink += $"let {name} = {GenerateExpression(list[2])};";
             var body = list.Skip(3).ToList();
-            var stmts = body.Take(body.Count - 1)
-                .Select(e => e is PList pl ? StmtToString(pl) : "");
-            return $"{{ let {name} = {GenerateExpression(list[2])}; "
-                 + $"{string.Join(" ", stmts)} {GenerateExpression(body.Last())} }}";
+            foreach(var e in body.Take(body.Count - 1))
+                if(e is PList pl) GenerateStatement(RtSink, pl);
+            return GenerateExpression(body.Last());
         });
 
         // (mlet (n1 v1 n2 v2 ...) body...) → `let n1=v1; let n2=v2; ...; body...`
@@ -48,14 +51,12 @@ public static class ControlFlowEmit {
         });
         Expression("mlet", list => {
             var binds = (PList) list[1];
-            var bs = new List<string>();
             for(var i = 0; i < binds.Count; i += 2)
-                bs.Add($"let {RustEmit.SafeIdent(((PName) binds[i]).Name)} = {GenerateExpression(binds[i+1])};");
+                RtSink += $"let {RustEmit.SafeIdent(((PName) binds[i]).Name)} = {GenerateExpression(binds[i+1])};";
             var body = list.Skip(2).ToList();
-            var stmts = body.Take(body.Count - 1)
-                .Select(e => e is PList pl ? StmtToString(pl) : "");
-            return $"{{ {string.Join(" ", bs)} "
-                 + $"{string.Join(" ", stmts)} {GenerateExpression(body.Last())} }}";
+            foreach(var e in body.Take(body.Count - 1))
+                if(e is PList pl) GenerateStatement(RtSink, pl);
+            return GenerateExpression(body.Last());
         });
 
         // (if cond then else) — statement-form. Compiletime cond → Rust `if`; runtime cond
@@ -138,9 +139,11 @@ public static class ControlFlowEmit {
             }
             // .isa match may lack a default (all encodable values covered by domain
             // knowledge). Rust requires exhaustive — add an unreachable! arm.
-            if(list.Count % 2 == 0)  // even = all arms are (key,val) pairs, no default
-                arms.Add(lift ? "_ => { bd.unimplemented(\"match-default\"); unreachable!() }"
-                              : "_ => unreachable!()");
+            // Even count = all (key,val) pairs, no .isa default. Rust needs exhaustive.
+            // `unreachable!()` returns `!` which coerces to B::Val, so unifies with lifted
+            // arms without a bd.* call (which would nest inside whatever consumes the match).
+            if(list.Count % 2 == 0)
+                arms.Add("_ => unreachable!()");
             return $"match {GenerateExpression(list[1])} {{ {string.Join(", ", arms)} }}";
         });
 
@@ -194,9 +197,15 @@ public static class ControlFlowEmit {
     }
 
     // Emit a statement to a string (for closure-body positions like bd.cond arms).
+    // Emit a statement to a string (for closure-body positions like bd.cond arms).
+    // CRITICAL: swap RtSink to the local buffer for the duration — the closure body's
+    // Rt-temps must land INSIDE the closure `|bd| { ... }`, not at outer scope
+    // (which lands between `bd.cond(_c,` and the closure arg = `let` in arg-position).
     static string StmtToString(PList pl) {
         var sb = new CodeBuilder();
-        GenerateStatement(sb, pl);
+        var saved = RtSink; RtSink = sb;
+        try { GenerateStatement(sb, pl); }
+        finally { RtSink = saved; }
         return sb.Code.Trim().Replace("\n", " ").Replace("\t", "");
     }
 }

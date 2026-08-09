@@ -22,7 +22,7 @@ public static class Aarch64Emit {
         Expression("gpr64", RegRead("GPR", "IlType::U64", zr: true), RegRead("GPR", "IlType::U64", zr: true));
         Expression("gpr-or-sp32", RegRead("GPR", "IlType::U32", zr: false), RegRead("GPR", "IlType::U32", zr: false));
         Expression("gpr-or-sp64", RegRead("GPR", "IlType::U64", zr: false), RegRead("GPR", "IlType::U64", zr: false));
-        Expression("vec", list => $"bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128)");
+        Expression("vec", list => Rt($"bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128)"));
         Expression("vec-b", list => VecLane(list, "IlType::U8"));
         Expression("vec-h", list => VecLane(list, "IlType::U16"));
         Expression("vec-s", list => VecLane(list, "IlType::F32"));
@@ -42,8 +42,10 @@ public static class Aarch64Emit {
         // ── branch / intrinsics ──
         Statement("branch-linked", (c, list) =>
             c += $"bd.branch({Lift(list[1])}, true);");
-        Statement("branch-default", (c, list) =>
-            c += $"bd.branch(bd.literal(IlType::U64, (pc + 4) as u128), false);");
+        Statement("branch-default", (c, list) => {
+            var t = Rt("bd.literal(IlType::U64, (pc + 4) as u128)");
+            c += $"bd.branch({t}, false);";
+        });
         Expression("svc", list => "bd.call_intrinsic(IntrinsicId(1/*svc*/), &[]).map(|_|()).unwrap_or(())");
         Statement("breakpoint", (c, list) =>
             c += "bd.call_intrinsic(IntrinsicId(2/*breakpoint*/), &[]);");
@@ -53,8 +55,10 @@ public static class Aarch64Emit {
             $"bd.call_intrinsic(IntrinsicId(4/*store_excl*/), &[{Lift(list[1])}, {Lift(list[2])}]).unwrap()");
         Expression("float-to-fixed-point", list =>
             $"bd.call_intrinsic(IntrinsicId(5/*ftfp*/), &[{string.Join(", ", list.Skip(1).Select(Lift))}]).unwrap()");
-        Expression("vector-insert", list =>
-            $"bd.velement_write(bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128), {Lift(list[2])}, {Lift(list[3])})");
+        Expression("vector-insert", list => {
+            var v = Rt($"bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128)");
+            return $"bd.velement_write({v}, {Lift(list[2])}, {Lift(list[3])})";
+        });
 
         // ── compiletime-only (fold-out — but not folded yet in this pipeline; see ‡ below) ──
         // make-wmask/tmask are pure functions of encoded-immediate bits (all compiletime).
@@ -77,16 +81,29 @@ public static class Aarch64Emit {
     // NB: idx is compiletime (an insn field), so the ternary is a Rust-compile-time branch.
     static Func<PList, string> RegRead(string file, string ilty, bool zr) => list => {
         var idx = $"({Ge(list[1])}) as u32";
-        var read = $"bd.reg_read({file}, {idx}, {ilty})";
-        return zr
-            ? $"if {idx} == 31 {{ bd.literal({ilty}, 0) }} else {{ {read} }}"
-            : read;  // gpr-or-sp: idx==31 reads SP, which the tier's reg_read handles
-                     // (RegFile GPR idx=31 = SP by convention; the tier maps it).
+        // Linearize: emit both arms into RtSink under a ct-if (idx is a bit-field = ct),
+        // return the chosen temp-name. Rust's `if` is an expression so we pick which
+        // temp; both bd.* calls go via Rt() so they're on their own lines.
+        if(!zr) return Rt($"bd.reg_read({file}, {idx}, {ilty})");
+        // XZR case: emit `let _tN = if idx==31 { bd.literal(0) } else { bd.reg_read(...) };`
+        // — but that STILL nests bd.* inside `if{}`. Instead: since idx is ct, emit the
+        // ct-if to RtSink at STATEMENT grain (like Statement-if does), each arm Rt()s
+        // its own call, converge on a shared temp via `let _tN;` predeclare + assign.
+        var t = RtName();
+        RtSink += $"let {t};";
+        RtSink += $"if {idx} == 31 {{";
+        RtSink += $"    {t} = bd.literal({ilty}, 0);";
+        RtSink += $"}} else {{";
+        RtSink += $"    {t} = bd.reg_read({file}, {idx}, {ilty});";
+        RtSink += $"}}";
+        return t;
     };
 
-    static string VecLane(PList list, string elemTy) =>
-        $"bd.velement_read(bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128), "
-        + $"bd.literal(IlType::U32, 0), {elemTy})";
+    static string VecLane(PList list, string elemTy) {
+        var v = Rt($"bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128)");
+        var i0 = Rt("bd.literal(IlType::U32, 0)");
+        return $"bd.velement_read({v}, {i0}, {elemTy})";
+    }
 
     static string NzcvFlag(PTree p) => ((PName) p).Name switch {
         "n" => "1", "z" => "2", "c" => "3", "v" => "4",
@@ -100,27 +117,27 @@ public static class Aarch64Emit {
             switch(head) {
                 case "gpr32" or "gpr64": {
                     var w = head == "gpr32" ? "IlType::U32" : "IlType::U64";
-                    // idx==31 = XZR write = discard (aarch64). idx is compiletime.
-                    c += $"if {idx} != 31 {{ bd.reg_write(GPR, {idx}, {(head == "gpr32" ? $"bd.cast({rhs}, {w})" : rhs)}); }}";
+                    var v = head == "gpr32" ? Rt($"bd.cast({rhs}, {w})") : rhs;
+                    c += $"if {idx} != 31 {{ bd.reg_write(GPR, {idx}, {v}); }}";
                     return;
                 }
                 case "gpr-or-sp32" or "gpr-or-sp64": {
                     var w = head.EndsWith("32") ? "IlType::U32" : "IlType::U64";
-                    c += $"bd.reg_write(GPR, {idx}, {(head.EndsWith("32") ? $"bd.cast({rhs}, {w})" : rhs)});";
+                    var v = head.EndsWith("32") ? Rt($"bd.cast({rhs}, {w})") : rhs;
+                    c += $"bd.reg_write(GPR, {idx}, {v});";
                     return;
                 }
                 case "vec":
                     c += $"bd.reg_write(VEC, {idx}, {rhs});";
                     return;
                 case "vec-b" or "vec-h" or "vec-s" or "vec-d": {
-                    // Write element 0 of a fresh V128 (matching legacy's `{v, 0, 0, ...}` semantics
-                    // — the whole vector is replaced, not lane-inserted). ‡ verify: legacy zeros
-                    // upper lanes (per the reinterpret_cast<...>{v,0,...}) — so vzero + velement_write.
                     var elemTy = head switch { "vec-b" => "IlType::U8", "vec-h" => "IlType::U16",
                                                "vec-s" => "IlType::F32", _ => "IlType::F64" };
-                    c += $"bd.reg_write(VEC, {idx}, "
-                       + $"bd.velement_write(bd.literal(IlType::V128, 0), bd.literal(IlType::U32, 0), "
-                       + $"bd.cast({rhs}, {elemTy})));";
+                    var z = Rt("bd.literal(IlType::V128, 0)");
+                    var i0 = Rt("bd.literal(IlType::U32, 0)");
+                    var e = Rt($"bd.cast({rhs}, {elemTy})");
+                    var v = Rt($"bd.velement_write({z}, {i0}, {e})");
+                    c += $"bd.reg_write(VEC, {idx}, {v});";
                     return;
                 }
                 case "nzcv" when sub.Count == 1:

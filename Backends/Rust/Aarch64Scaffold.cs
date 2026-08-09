@@ -33,11 +33,10 @@ public static class Aarch64Scaffold {
         c += "// the encoded-immediate bits — should fold at generated-code const-eval. Rung-4a";
         c += "// declares them extern; rung-4b: ArchCompilerCore's compiletime-eval leg folds them";
         c += "// to constants pre-emit (the .isa's `literal` heads = the fold-hint).";
-        c += "extern \"Rust\" {";
-        c += "    fn aarch64_wmask(n: u32, imms: u32, immr: u32, immediate: u32, m: u32) -> u64;";
-        c += "    fn aarch64_tmask(n: u32, imms: u32, immr: u32, immediate: u32, m: u32) -> u64;";
-        c += "    fn aarch64_replicate(bits: u64, width: u32, count: u32) -> u64;";
-        c += "}";
+        // Rung-4a stubs (fold to constants at rung-4b via ArchCompilerCore's ct-eval).
+        c += "fn aarch64_wmask(_n: u32, _imms: u32, _immr: u32, _imm: u32, _m: u32) -> u64 { todo!() }";
+        c += "fn aarch64_tmask(_n: u32, _imms: u32, _immr: u32, _imm: u32, _m: u32) -> u64 { todo!() }";
+        c += "fn aarch64_replicate(_bits: u64, _w: u32, _c: u32) -> u64 { todo!() }";
         c += "";
         c += "// Register-file ids (aarch64). The frontend declares these; the tier is opaque to them.";
         c += "pub const GPR: RegFile = RegFile(0);";
@@ -60,6 +59,9 @@ public static class Aarch64Scaffold {
             // leaves partial `{`/indent debris otherwise. On success, splice each buffered
             // line into `c` (which re-indents per its own operator+).
             var body = new CodeBuilder();
+            RtReset(body);  // temps from Rt() write into the same buffer as statements —
+                            // eval order (children first via recursion) → temps land above
+                            // the statement that consumes them.
             try {
                 GenerateStatement(body, def.Decode);
                 GenerateStatement(body, def.Eval);

@@ -120,40 +120,85 @@ public static class RustEmit {
         // Runtime-vs-compiletime: at Recompiler context, .Type.Runtime nodes emit the RunTime
         // lambda (which produces `b.method(...)` calls); compiletime nodes emit bare Rust exprs
         // that fold at generated-code compile-time.
-        return Context == ContextTypes.Recompiler && list.Type.Runtime
-            ? e.RunTime(list) : e.CompileTime(list);
+        var rt = Context == ContextTypes.Recompiler && list.Type.Runtime;
+        var s = rt ? e.RunTime(list) : e.CompileTime(list);
+        // rt-path: linearize any `bd.*(...)` result — emit as `let _tN = <s>;`, return `_tN`.
+        // (Central linearization at the dispatch point instead of touching every rt-lambda.
+        //  Children eval first via recursion → their _tN already in RtSink → this call's
+        //  args are all _tN references, no nesting.)
+        // ct-path: some ct-lambdas ALSO emit bd.* (e.g. gpr-reads whose sig doesn't AsRuntime
+        //  but semantics is a runtime read) — linearize those too. Discriminator = the
+        //  string starts with `bd.` (a builder call) or `{` (a Rust block-expr containing
+        //  bd.* — those are already braced-scoped, leave as-is for now).
+        if(s.StartsWith("bd.")) return Rt(s);
+        return s;
     }
 
     public static void GenerateStatement(CodeBuilder c, PList list) {
         if(list[0] is not PName(var name))
             throw new NotSupportedException($"Non-name head: {list[0]}");
-        if(Statements.TryGetValue(name, out var s)) {
-            (Context == ContextTypes.Recompiler && list.Type.Runtime ? s.RunTime : s.CompileTime)(c, list);
-        } else {
-            // Expression-in-statement-position → emit + discard (`let _ = ...;`)
-            c += $"let _ = {GenerateExpression(list)};";
-        }
+        // Invariant: RtSink follows the current statement's CodeBuilder, so any Rt-temps
+        // this statement's expressions produce land in the SAME scope, right before the
+        // statement that consumes them. (A ct-if arm gets its own `c` at deeper indent —
+        // temps for that arm's bd.* calls must land INSIDE the arm, not hoisted outside.)
+        var saved = RtSink; RtSink = c;
+        try {
+            if(Statements.TryGetValue(name, out var s)) {
+                (Context == ContextTypes.Recompiler && list.Type.Runtime ? s.RunTime : s.CompileTime)(c, list);
+            } else {
+                c += $"let _ = {GenerateExpression(list)};";
+            }
+        } finally { RtSink = saved; }
     }
 
     // Compile-time value → runtime Val (the Rust equivalent of `builder.EnsureRuntime(x)`).
     // Emit-lambdas call this on any child that's compiletime but the parent needs a runtime Val.
     public static string Lift(PTree child) {
         if(child.Type.Runtime) return GenerateExpression(child);
+        // ct → rt lift: linearize the `bd.literal` too (it's a bd.* call).
         // Non-numeric ct values (EString disasm-names, bare type-name PName args like `u32`
         // to intrinsics) can't be `as u128`. They're metadata, not values — the intrinsic
         // body interprets them. Emit a typed-zero placeholder; ‡ rung-4b: pass the type-info
         // via a proper mechanism (an IlType arg to call_intrinsic) instead of a fake Val.
         if(child.Type is EString or EUnit or null)
-            return $"bd.literal(IlType::U32, 0 /* non-numeric arg */)";
+            return Rt("bd.literal(IlType::U32, 0 /* non-numeric arg */)");
         // Bool ct → cast to u128 via u32 (Rust: `true as u128` works, but be explicit).
         var expr = GenerateExpression(child);
         var cast = child.Type is EBool ? $"({expr}) as u32 as u128"
                  : child.Type is EFloat ? $"({expr}).to_bits() as u128"
                  : $"({expr}) as u128";
-        return $"bd.literal({TypeShort(child.Type)}, {cast})";
+        return Rt($"bd.literal({TypeShort(child.Type)}, {cast})");
     }
 
     public static string TempName() => Temp.Name();
+
+    // ── SSA linearization side-channel (rung-4 gate-(a) fix) ──────────────────
+    // Nested `bd.add(bd.reg_read(...), bd.literal(...))` HANGS rustc (trait-resolution
+    // on deep associated-Val nesting) AND is a double-`&mut self` borrow at each nest.
+    // Fix: rt-emit accumulates each `bd.*` call as `let _tN = ...;` into a per-def
+    // side-channel; the rt-lambda returns just `_tN`. Children eval first (their _tN
+    // land above the parent's line), so no nesting. This is the SSA form the IL wants
+    // anyway — each _tN is a Val handle.
+    //
+    // GenerateStatement flushes the side-channel BEFORE its own line (children's temps
+    // precede the statement that consumes them).
+    public static CodeBuilder RtSink;
+    public static int RtN;
+
+    /// Fresh _tN name without emitting a `let` (for the predeclare+ct-if-assign pattern).
+    public static string RtName() => $"_t{RtN++}";
+
+    /// Emit `let _tN = <call>;` into RtSink, return `_tN`. Call this from every rt-emit
+    /// arm that produces a `bd.*(...)` expression. The <call> string may reference
+    /// prior _tN (children evaluated first via GenerateExpression recursion).
+    public static string Rt(string call) {
+        var t = $"_t{RtN++}";
+        RtSink += $"let {t} = {call};";
+        return t;
+    }
+
+    /// Reset the side-channel for a fresh def. Called by the scaffold per-def.
+    public static void RtReset(CodeBuilder sink) { RtSink = sink; RtN = 0; }
 
     /// A ct expression in bool-position (`if cond` / `!(cond)` / `while cond`).
     /// The .isa treats 1-bit int fields as truthy; Rust needs explicit `!= 0`.
