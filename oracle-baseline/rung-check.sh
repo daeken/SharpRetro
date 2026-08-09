@@ -29,13 +29,24 @@ else
   echo "  ✗ DIFFERS"; diff /tmp/c.typed /tmp/n.typed | head -20; FAIL=1
 fi
 echo ""
-echo "=== rung-2: emit (aarch64 Disassembler.cs + Recompiler.cs) ==="
-$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --out /tmp/ac-out 2>/dev/null >/dev/null
+echo "=== rung-2: emit aarch64 (Disassembler.cs + Recompiler.cs) ==="
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --arch aarch64 --out /tmp/ac-out 2>/dev/null >/dev/null
 for f in Disassembler.cs Recompiler.cs; do
   if diff -q oracle-baseline/aarch64/$f /tmp/ac-out/$f >/dev/null 2>&1; then
-    echo "  ✓ $f byte-identical"
+    echo "  ✓ aarch64 $f byte-identical"
   else
-    echo "  ✗ $f DIFFERS"; diff oracle-baseline/aarch64/$f /tmp/ac-out/$f | head -10; FAIL=1
+    echo "  ✗ aarch64 $f DIFFERS"; diff oracle-baseline/aarch64/$f /tmp/ac-out/$f | head -10; FAIL=1
+  fi
+done
+
+echo ""
+echo "=== rung-3: emit dmg (Disassembler.cs + Interpreter.cs) ==="
+$RUN ArchCompiler -- DamageGenerator/sm83.isa --stage emit --arch dmg --out /tmp/ac-dmg 2>/dev/null >/dev/null
+for f in Disassembler.cs Interpreter.cs; do
+  if diff -q oracle-baseline/dmg/$f /tmp/ac-dmg/$f >/dev/null 2>&1; then
+    echo "  ✓ dmg $f byte-identical"
+  else
+    echo "  ✗ dmg $f DIFFERS"; diff oracle-baseline/dmg/$f /tmp/ac-dmg/$f | head -10; FAIL=1
   fi
 done
 

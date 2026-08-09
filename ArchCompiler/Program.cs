@@ -27,18 +27,34 @@ var expanded = MacroProcessor.Rewrite(tree);
 if(stage == "macro") { Dump(expanded); return 0; }
 
 if(stage == "emit") {
-  // rung-2: full pipeline through Backends/CSharp → byte-diff vs oracle-baseline/aarch64/
-  Builtin.DefineAll();
-  new Frontends.Aarch64.Aarch64Heads().Define();
-  var adefs = Def.ParseAll(expanded, Frontends.Aarch64.Aarch64Def.Parse)
-    .Select(RuntimeInference.InferRuntime)
-    .Cast<Frontends.Aarch64.Aarch64Def>().ToList();
-  Backends.CSharp.Aarch64Scaffold.RegisterAll();
+  var arch = args.SkipWhile(a => a != "--arch").Skip(1).FirstOrDefault() ?? "aarch64";
   var outDir = args.SkipWhile(a => a != "--out").Skip(1).FirstOrDefault() ?? "/tmp/ac-out";
   Directory.CreateDirectory(outDir);
-  Backends.CSharp.Aarch64Scaffold.BuildDisassembler(adefs, "Aarch64Generator", Path.Combine(outDir, "Disassembler.cs"));
-  Backends.CSharp.Aarch64Scaffold.BuildRecompiler(adefs, "Aarch64Generator", Path.Combine(outDir, "Recompiler.cs"));
-  Console.Error.WriteLine($"[emit → {outDir}]");
+  Builtin.DefineAll();
+  switch(arch) {
+    case "aarch64": {
+      new Frontends.Aarch64.Aarch64Heads().Define();
+      var adefs = Def.ParseAll(expanded, Frontends.Aarch64.Aarch64Def.Parse)
+        .Select(RuntimeInference.InferRuntime)
+        .Cast<Frontends.Aarch64.Aarch64Def>().ToList();
+      Backends.CSharp.Aarch64Scaffold.RegisterAll();
+      Backends.CSharp.Aarch64Scaffold.BuildDisassembler(adefs, "Aarch64Generator", Path.Combine(outDir, "Disassembler.cs"));
+      Backends.CSharp.Aarch64Scaffold.BuildRecompiler(adefs, "Aarch64Generator", Path.Combine(outDir, "Recompiler.cs"));
+      break;
+    }
+    case "dmg": {
+      new Frontends.Dmg.DmgHeads().Define();
+      var ddefs = Def.ParseAll(expanded, Frontends.Dmg.DmgDef.Parse)
+        .Select(RuntimeInference.InferRuntime)
+        .Cast<Frontends.Dmg.DmgDef>().ToList();
+      Backends.CSharp.DmgScaffold.RegisterAll();
+      Backends.CSharp.DmgScaffold.BuildDisassembler(ddefs, "DamageGenerator", Path.Combine(outDir, "Disassembler.cs"));
+      Backends.CSharp.DmgScaffold.BuildInterpreter(ddefs, "DamageGenerator", Path.Combine(outDir, "Interpreter.cs"));
+      break;
+    }
+    default: throw new NotSupportedException($"--arch {arch}");
+  }
+  Console.Error.WriteLine($"[emit {arch} → {outDir}]");
   return 0;
 }
 
