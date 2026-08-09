@@ -173,7 +173,11 @@ fn main() {
                 let mut pre = X86State::default();
                 for r in 0..16 { if r != 4 { pre.gpr[r] = rand(); } }
                 pre.gpr[4] = 0x80000;  // rsp = mid-mem (unused, but sane)
-                pre.eflags = ((rand() as u32) & 0x8D5) | 0x202;
+                // Fixed pre-eflags (bit-1 reserved-1 + IF only) — DON'T randomize AF/PF.
+                // Logical ops (OR/AND/XOR) leave AF SDM-undefined; interp preserves it,
+                // Rosetta clears it. Random pre-AF → false diff. (First corpus emitted
+                // before this + before the rsp-exclusion below applied — v2 fixes both.)
+                pre.eflags = 0x202;
 
                 // Interp side.
                 let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(||

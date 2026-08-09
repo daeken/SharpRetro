@@ -166,8 +166,20 @@ public class RustLiftGen {
 
     string Expr(PTree t, object ctxW) {
         switch(t) {
-            case PInt(var v):
-                return Rt($"bd.literal(ilty({ctxW}), {(ulong)(long)v}u128)");
+            case PInt(var v): {
+                // Literal width = wide enough to HOLD the value, not ctxW. The .isa relies
+                // on C#-style int-promotion (e.g. PF's `(>> 0x9669 idx)` — a 16-bit lookup
+                // table). Emitting 0x9669 at ilty(op_w=8) → literal(U8) truncates to 0x69
+                // → PF wrong on all byte-form insns. Caught by the Rosetta silicon-oracle
+                // (SUB cl,dl → PF=0 vs silicon PF=1); invisible to interp-vs-C# only if C#
+                // shares the truncation (it doesn't — IlLower uses IlInt at natural width).
+                // Fix: literals ≥256 → U32 (fits every .isa constant); <256 → ctxW (so
+                // small immediates still participate at operand-width for cmp/etc).
+                var lv = (long) v;
+                var w = (ulong)lv < 256 ? $"ilty({ctxW})"
+                      : (ulong)lv <= uint.MaxValue ? "IlType::U32" : "IlType::U64";
+                return Rt($"bd.literal({w}, {(ulong)lv}u128)");
+            }
             case PName(var n):
                 if(Env.TryGetValue(n, out var bound)) return bound;
                 if(Params.Contains(n)) return Rt($"read_operand(bd, {ParamOp(n)})");
