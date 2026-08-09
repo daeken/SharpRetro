@@ -71,6 +71,106 @@ fn main() {
         return;
     }
 
+    // --tier0-fuzz [N] — the tier-0 GATE: same corpus/pre-state as --fuzz, but
+    // tier-0-JIT'd-machine-code vs interp (instead of native-silicon vs interp).
+    // Per DESIGN.md §Oracles: "tier-0 vs interpreter → state diff = 0".
+    #[cfg(target_arch = "aarch64")]
+    if args.get(1).map(|s| s.as_str()) == Some("--tier0-fuzz") {
+        use sharpretro_jit::tier0::{Tier0, STATE_WORDS};
+        let n: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+        let seed: u64 = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(0xC0FFEE);
+        let mut mem = FlatMem::new(0x10000, 0x10000);
+        let src = include_str!("lib.rs");
+        let mut defs = vec![];
+        let mut cur_name = "";
+        for line in src.lines() {
+            if let Some(n) = line.trim().strip_prefix("/* ").and_then(|s| s.strip_suffix(" */")) {
+                cur_name = n;
+            }
+            if let Some(rest) = line.trim().strip_prefix("if (insn & 0x") {
+                let mask_end = rest.find(')').unwrap();
+                let mask = u32::from_str_radix(&rest[..mask_end], 16).unwrap();
+                let ms = rest[mask_end..].find("0x").unwrap() + mask_end + 2;
+                let me = rest[ms..].find(' ').unwrap() + ms;
+                let mat = u32::from_str_radix(&rest[ms..me], 16).unwrap();
+                defs.push((cur_name.to_string(), mask, mat));
+            }
+        }
+        let mut rng = seed;
+        let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
+        let (mut n_ok, mut n_diff, mut n_ipanic, mut n_t0panic) = (0usize, 0usize, 0usize, 0usize);
+        let mut diff_by_def: std::collections::BTreeMap<String, usize> = Default::default();
+        let mut t0panic_by: std::collections::BTreeMap<String, usize> = Default::default();
+        for (name, mask, mat) in &defs {
+            for _ in 0..n {
+                let mut fields = (rand() as u32) & !mask;
+                for sh in [0, 5, 10, 16] {
+                    if (fields >> sh) & 0x1F == 31 { fields &= !(1u32 << sh); }
+                }
+                let insn = mat | fields;
+                let mut pre = Aarch64State::default();
+                for r in 1..=28 { pre.x[r] = rand(); }
+                pre.nzcv = ((rand() as u32) & 0xF) << 28;
+                // interp side
+                let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+                    interp_one(&pre, &mut mem, insn, 0x1000).0));
+                let i_post = match ir { Ok(s) => s, Err(_) => { n_ipanic += 1; continue; } };
+                // tier-0 side
+                let t0r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let mut t0 = Tier0::new();
+                    if !recompile_one(&mut t0, insn, 0x1000) { panic!("not decoded"); }
+                    let block = t0.finalize();
+                    let mut flat = [0u64; STATE_WORDS];
+                    for i in 0..32 { flat[i] = pre.x[i]; }
+                    flat[32] = pre.nzcv as u64;
+                    flat[33] = 0x1000;
+                    block.exec(&mut flat);
+                    flat
+                }));
+                let flat = match t0r {
+                    Ok(f) => f,
+                    Err(e) => {
+                        n_t0panic += 1;
+                        let msg = e.downcast_ref::<String>().map(|s| s.as_str())
+                            .or_else(|| e.downcast_ref::<&str>().copied()).unwrap_or("?");
+                        // Tally by panic-reason (which tier-0 op is unwired) — the coverage frontier.
+                        let key = msg.split(':').next().unwrap_or(msg).to_string();
+                        *t0panic_by.entry(key).or_default() += 1;
+                        continue;
+                    }
+                };
+                let mut d = false;
+                for r in 0..31 { if i_post.x[r] != flat[r] { d = true; break; } }
+                if (i_post.nzcv & 0xF0000000) != ((flat[32] as u32) & 0xF0000000) { d = true; }
+                let interp_branched = i_post.pc != 0x1004;
+                if interp_branched && i_post.pc != flat[33] { d = true; }
+                if d {
+                    n_diff += 1; *diff_by_def.entry(name.clone()).or_default() += 1;
+                    if diff_by_def[name] == 1 {
+                        eprintln!("DIFF {name} insn=0x{insn:08X}:");
+                        for r in 0..31 { if i_post.x[r] != flat[r] {
+                            eprintln!("    x{r}: interp=0x{:X} tier0=0x{:X} (pre=0x{:X})",
+                                i_post.x[r], flat[r], pre.x[r]); } }
+                        if (i_post.nzcv & 0xF0000000) != ((flat[32] as u32) & 0xF0000000) {
+                            eprintln!("    nzcv: interp=0x{:08X} tier0=0x{:08X}",
+                                i_post.nzcv, flat[32] as u32); }
+                    }
+                } else { n_ok += 1; }
+            }
+        }
+        println!("[tier0-fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
+        println!("  ok={n_ok}  diff={n_diff}  interp-panic={n_ipanic}  tier0-panic={n_t0panic}");
+        if n_t0panic > 0 {
+            println!("  ── tier-0 unwired ops (the coverage frontier) ──");
+            for (msg, c) in &t0panic_by { println!("    {c:4}× {msg}"); }
+        }
+        if n_diff > 0 {
+            println!("  ── diffs by def ──");
+            for (name, c) in &diff_by_def { println!("    {c:4}× {name}"); }
+        }
+        return;
+    }
+
     // --fuzz [N] — for each of the 344 defs' mask/match: synthesize N random-fielded
     // valid encodings + random pre-state, diff interp vs silicon. The exec-truth ladder
     // (my day-1's census-diff loop, applied to semantics instead of decode).

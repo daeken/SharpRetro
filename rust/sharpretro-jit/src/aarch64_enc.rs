@@ -72,6 +72,12 @@ impl Aarch64Enc {
     // ── arithmetic (register, shifted-register with shift=0) ──────────────
     pub fn add_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x8B000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn sub_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xCB000000 | (xm<<16) | (xn<<5) | xd); }
+    // ADDS/SUBS (set flags) + ADC/SBC (with carry) — for u128 arithmetic (the .isa's
+    // carry-flag computation via widen-add-shr).
+    pub fn adds_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xAB000000 | (xm<<16) | (xn<<5) | xd); }
+    pub fn adc_r(&mut self, xd: u32, xn: u32, xm: u32)  { self.put(0x9A000000 | (xm<<16) | (xn<<5) | xd); }
+    pub fn subs_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xEB000000 | (xm<<16) | (xn<<5) | xd); }
+    pub fn sbc_r(&mut self, xd: u32, xn: u32, xm: u32)  { self.put(0xDA000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn and_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x8A000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn orr_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xAA000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn eor_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xCA000000 | (xm<<16) | (xn<<5) | xd); }
@@ -174,6 +180,7 @@ mod tests {
         e.movz(7, 0x1234, 0); e.movk(7, 0x5678, 1);
         e.mov_r(9, 10);
         e.add_r(0, 1, 2); e.sub_r(3, 4, 5); e.and_r(6, 7, 8);
+        e.adds_r(0, 1, 2); e.adc_r(3, 4, 5); e.subs_r(6, 7, 8); e.sbc_r(9, 10, 11);
         e.orr_r(9, 10, 11); e.eor_r(12, 13, 14); e.mul_r(15, 16, 17);
         e.lslv(0, 1, 2); e.lsrv(3, 4, 5); e.asrv(6, 7, 8); e.rorv(9, 10, 11);
         e.cmp_r(1, 2); e.csel(0, 1, 2, Cond::EQ); e.cset(3, Cond::LT);
@@ -189,6 +196,7 @@ mod tests {
             "mov x7, #0x1234", "movk x7, #0x5678, lsl #16",
             "mov x9, x10",
             "add x0, x1, x2", "sub x3, x4, x5", "and x6, x7, x8",
+            "adds x0, x1, x2", "adc x3, x4, x5", "subs x6, x7, x8", "sbc x9, x10, x11",
             "orr x9, x10, x11", "eor x12, x13, x14", "mul x15, x16, x17",
             "lsl x0, x1, x2", "lsr x3, x4, x5", "asr x6, x7, x8", "ror x9, x10, x11",
             "cmp x1, x2", "csel x0, x1, x2, eq", "cset x3, lt",

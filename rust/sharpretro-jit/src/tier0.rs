@@ -89,11 +89,31 @@ impl Tier0 {
     }
 
     // ── helpers ────────────────────────────────────────────────────────────
+    // width>64 (u128/i128 + V128) Vals occupy TWO consecutive spill-slots (lo@s, hi@s+1).
+    // `tys` still keys by the LEADING slot; hi-slot gets a Unit placeholder to keep
+    // indices monotone. is_wide(ty) drives 2-slot alloc + 2-word load/store.
+    fn is_wide(ty: IlType) -> bool {
+        matches!(ty, IlType::I{width, ..} if width > 64) || matches!(ty, IlType::V128)
+    }
     fn slot(&mut self, ty: IlType) -> u32 {
-        let s = self.next_slot; self.next_slot += 1; self.tys.push(ty); s
+        let s = self.next_slot;
+        if Self::is_wide(ty) {
+            self.next_slot += 2; self.tys.push(ty); self.tys.push(IlType::Unit);
+        } else {
+            self.next_slot += 1; self.tys.push(ty);
+        }
+        s
     }
     fn load(&mut self, xt: u32, slot: u32) { self.enc.ldr_x(xt, X_SPILL, slot * 8); }
     fn store(&mut self, xt: u32, slot: u32) { self.enc.str_x(xt, X_SPILL, slot * 8); }
+    fn load2(&mut self, xt: u32, xt_hi: u32, slot: u32) {
+        self.enc.ldr_x(xt, X_SPILL, slot * 8);
+        self.enc.ldr_x(xt_hi, X_SPILL, (slot + 1) * 8);
+    }
+    fn store2(&mut self, xt: u32, xt_hi: u32, slot: u32) {
+        self.enc.str_x(xt, X_SPILL, slot * 8);
+        self.enc.str_x(xt_hi, X_SPILL, (slot + 1) * 8);
+    }
     fn state_off(&self, f: RegFile, idx: u32) -> u32 {
         match f.0 {
             0 => OFF_GPR + idx * 8,
@@ -135,8 +155,13 @@ impl Builder for Tier0 {
 
     fn literal(&mut self, ty: IlType, bits: u128) -> u32 {
         let s = self.slot(ty);
-        self.enc.mov_imm64(X_A, bits as u64);   // ‡ >64b (V128 literals) at v2
-        self.store(X_A, s);
+        self.enc.mov_imm64(X_A, bits as u64);
+        if Self::is_wide(ty) {
+            self.enc.mov_imm64(X_C, (bits >> 64) as u64);
+            self.store2(X_A, X_C, s);
+        } else {
+            self.store(X_A, s);
+        }
         s
     }
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 {
@@ -185,8 +210,30 @@ impl Builder for Tier0 {
         panic!("tier-0 v1: mem_write not wired")
     }
 
-    fn add(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.add_r(X_A, X_A, X_B)) }
-    fn sub(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.sub_r(X_A, X_A, X_B)) }
+    fn add(&mut self, a: u32, b: u32) -> u32 {
+        let t = self.tys[a as usize];
+        if Self::is_wide(t) {
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a); self.load2(X_B, 12, b);
+            self.enc.adds_r(X_A, X_A, X_B);
+            self.enc.adc_r(X_C, X_C, 12);
+            self.store2(X_A, X_C, s);
+            return s;
+        }
+        self.bin(a, b, t, |e| e.add_r(X_A, X_A, X_B))
+    }
+    fn sub(&mut self, a: u32, b: u32) -> u32 {
+        let t = self.tys[a as usize];
+        if Self::is_wide(t) {
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a); self.load2(X_B, 12, b);
+            self.enc.subs_r(X_A, X_A, X_B);
+            self.enc.sbc_r(X_C, X_C, 12);
+            self.store2(X_A, X_C, s);
+            return s;
+        }
+        self.bin(a, b, t, |e| e.sub_r(X_A, X_A, X_B))
+    }
     fn mul(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.mul_r(X_A, X_A, X_B)) }
     fn div(&mut self, _a: u32, _b: u32) -> u32 { panic!("tier-0 v1: div not wired") }
     fn rem(&mut self, _a: u32, _b: u32) -> u32 { panic!("tier-0 v1: rem not wired") }
@@ -195,12 +242,48 @@ impl Builder for Tier0 {
     fn or (&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.orr_r(X_A, X_A, X_B)) }
     fn xor(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.eor_r(X_A, X_A, X_B)) }
     fn not(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
-        // Bool: eor #1. Int: mvn (= orn xd, xzr, xn — encoder lacks it; use eor with all-1s).
-        self.una(a, t, |e| { e.mov_imm64(X_B, u64::MAX); e.eor_r(X_A, X_A, X_B); }) }
+        // Bool: eor #1 (logical negate — CSEL fuzz caught this: eor-all-1s on Bool gives
+        // 0xFF..FE which is truthy). Int: bitwise complement within width.
+        let mask = match t {
+            IlType::Bool => 1u64,
+            IlType::I{width, ..} if width < 64 => (1u64 << width) - 1,
+            _ => u64::MAX,
+        };
+        self.una(a, t, move |e| { e.mov_imm64(X_B, mask); e.eor_r(X_A, X_A, X_B); }) }
     fn shl(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.lslv(X_A, X_A, X_B)) }
     fn shr(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
-        // Signed → asrv, unsigned → lsrv (per a's type).
         let signed = matches!(t, IlType::I{signed:true, ..});
+        if Self::is_wide(t) {
+            // u128 >> N. The .isa's ONLY runtime u128-shr is by ct-const `bits` (32 or 64) to
+            // extract carry-out. Emit both arms with a b.cond on N>=64.
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a);
+            self.load(X_B, b);
+            self.enc.mov_imm64(12, 64);
+            self.enc.cmp_r(X_B, 12);
+            let bcond_at = self.enc.here();
+            self.enc.nop();  // placeholder for b.hs → ge-arm
+            // <64: lo = (lo>>N)|(hi<<(64-N)); hi >>= N
+            self.enc.sub_r(13, 12, X_B);
+            self.enc.lsrv(X_A, X_A, X_B);
+            self.enc.lslv(14, X_C, 13);
+            self.enc.orr_r(X_A, X_A, 14);
+            if signed { self.enc.asrv(X_C, X_C, X_B); } else { self.enc.lsrv(X_C, X_C, X_B); }
+            let b_end_at = self.enc.here();
+            self.enc.nop();  // placeholder for b → end
+            // >=64: lo = hi>>(N-64); hi = 0 (or asr 63 for signed)
+            let ge_at = self.enc.here();
+            self.enc.sub_r(X_B, X_B, 12);
+            if signed { self.enc.asrv(X_A, X_C, X_B); } else { self.enc.lsrv(X_A, X_C, X_B); }
+            if signed { self.enc.mov_imm64(X_B, 63); self.enc.asrv(X_C, X_C, X_B); }
+            else { self.enc.mov_imm64(X_C, 0); }
+            let end_at = self.enc.here();
+            // Patch b.hs (CS = unsigned >=)
+            self.enc.patch(bcond_at, 0x54000000 | ((((ge_at - bcond_at) as u32) & 0x7FFFF) << 5) | (Cond::CS as u32));
+            self.enc.patch(b_end_at, 0x14000000 | (((end_at - b_end_at) as u32) & 0x03FFFFFF));
+            self.store2(X_A, X_C, s);
+            return s;
+        }
         self.bin(a, b, t, |e| if signed { e.asrv(X_A, X_A, X_B) } else { e.lsrv(X_A, X_A, X_B) }) }
     fn rotr(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.rorv(X_A, X_A, X_B)) }
     fn rbit(&mut self, _a: u32) -> u32 { panic!("tier-0 v1: rbit") }
@@ -222,16 +305,28 @@ impl Builder for Tier0 {
         self.cmp_op(a, b, if s { Cond::GE } else { Cond::CS }) }
 
     fn cast(&mut self, a: u32, to: IlType) -> u32 {
-        // v1: mask to target width for I→I narrow; wider = pass-through (bits already ≤64).
+        let from = self.tys[a as usize];
         let s = self.slot(to);
+        if Self::is_wide(to) && !Self::is_wide(from) {
+            // u64→u128 widen: lo=a, hi=0 (or sext-fill for i128).
+            self.load(X_A, a);
+            if matches!(to, IlType::I{signed:true, ..}) {
+                self.enc.mov_imm64(X_B, 63);
+                self.enc.asrv(X_C, X_A, X_B);
+            } else {
+                self.enc.mov_imm64(X_C, 0);
+            }
+            self.store2(X_A, X_C, s);
+            return s;
+        }
+        // wide→narrow: read lo, mask; narrow→narrow: read, mask.
         self.load(X_A, a);
         if let IlType::I{width, ..} = to {
             if width < 64 {
-                self.enc.mov_imm64(X_B, if width == 64 { u64::MAX } else { (1u64 << width) - 1 });
+                self.enc.mov_imm64(X_B, (1u64 << width) - 1);
                 self.enc.and_r(X_A, X_A, X_B);
             }
         }
-        // ‡ signed I→I widen (sext), I↔F, Bool↔I at v2.
         self.store(X_A, s);
         s
     }
