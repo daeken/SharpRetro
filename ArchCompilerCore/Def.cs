@@ -99,3 +99,40 @@ public class Def {
 		Locals = locals;
 	}
 }
+
+
+// Post-pass runtime-propagation (legacy Core.cs:141 InferRuntime → InferList → InferExpression).
+// Def.ctor's InferType computes each node's type via Signature; this pass then propagates
+// .Runtime UPWARD: if any child is runtime, the parent becomes runtime (regardless of what
+// Signature returned). This is why e.g. (vector-insert rd i (gpr64 rn)) — sig=EType.Unit —
+// ends up .Runtime=true at recompile-context: gpr64 is .AsRuntime(), InferExpression lifts it.
+// Rung-1b matched WITHOUT this because the tree-dump showed sig-computed types; rung-2's
+// Recompiler.cs diverged on exactly the heads whose sigs don't AsRuntime(list.AnyRuntime).
+public static class RuntimeInference {
+    public static Def InferRuntime(Def def) {
+        InferList(def.Decode);
+        InferList(def.Eval);
+        return def;
+    }
+    static void InferList(PList list) {
+        // Statement-heads: recurse children only, then re-eval Signature (matches legacy Core.cs:115-119).
+        // Expression-heads: InferExpression (bottom-up runtime propagation).
+        if(list[0] is PName(var name) && Heads.All.TryGetValue(name, out var h) && h.IsStatement) {
+            foreach(var elem in list.Skip(1))
+                if(elem is PList sub) InferList(sub);
+            list.Type = h.Signature(list);
+        } else {
+            InferExpression(list);
+        }
+    }
+    static EType InferExpression(PTree tree) {
+        if(tree.Type.Runtime) return tree.Type;
+        if(tree is PList list) {
+            var set = false;
+            foreach(var elem in list)
+                if(InferExpression(elem).Runtime) set = true;
+            return list.Type = set ? list.Type.AsRuntime() : list.Type;
+        }
+        return tree.Type;
+    }
+}

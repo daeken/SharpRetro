@@ -10,5 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="../../ArchCompilerCore/ArchCompilerCore.csproj" />
     <ProjectReference Include="../../Aarch64Common/Aarch64Common.csproj" />
+    <ProjectReference Include="../../Frontends/Aarch64/Aarch64.csproj" />
   </ItemGroup>
 </Project>

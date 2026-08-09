@@ -26,6 +26,22 @@ if(stage == "parse" || stage == "pp") { Dump(tree); return 0; }
 var expanded = MacroProcessor.Rewrite(tree);
 if(stage == "macro") { Dump(expanded); return 0; }
 
+if(stage == "emit") {
+  // rung-2: full pipeline through Backends/CSharp → byte-diff vs oracle-baseline/aarch64/
+  Builtin.DefineAll();
+  new Frontends.Aarch64.Aarch64Heads().Define();
+  var adefs = Def.ParseAll(expanded, Frontends.Aarch64.Aarch64Def.Parse)
+    .Select(RuntimeInference.InferRuntime)
+    .Cast<Frontends.Aarch64.Aarch64Def>().ToList();
+  Backends.CSharp.Aarch64Scaffold.RegisterAll();
+  var outDir = args.SkipWhile(a => a != "--out").Skip(1).FirstOrDefault() ?? "/tmp/ac-out";
+  Directory.CreateDirectory(outDir);
+  Backends.CSharp.Aarch64Scaffold.BuildDisassembler(adefs, "Aarch64Generator", Path.Combine(outDir, "Disassembler.cs"));
+  Backends.CSharp.Aarch64Scaffold.BuildRecompiler(adefs, "Aarch64Generator", Path.Combine(outDir, "Recompiler.cs"));
+  Console.Error.WriteLine($"[emit → {outDir}]");
+  return 0;
+}
+
 // stage == "typed": rung-1b — run InferType via Def.ParseAll, dump defs w/ types annotated.
 Builtin.DefineAll();  // core heads
 new Frontends.Aarch64.Aarch64Heads().Define();  // aarch64 per-ISA heads (rung-1b: as-is; rung-2+: → primitives/intrinsics)
