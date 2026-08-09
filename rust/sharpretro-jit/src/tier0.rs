@@ -123,11 +123,21 @@ impl Tier0 {
         }
     }
 
-    /// Binary op template: ldr a, ldr b, <op x9,x9,x10>, str result.
+    /// Post-op mask to `ty`'s width (matches interp's ibin mask). Skip for width≥64.
+    fn mask_to(&mut self, ty: IlType) {
+        if let IlType::I{width, ..} = ty {
+            if width < 64 {
+                self.enc.mov_imm64(X_B, (1u64 << width) - 1);
+                self.enc.and_r(X_A, X_A, X_B);
+            }
+        }
+    }
+    /// Binary op template: ldr a, ldr b, <op x9,x9,x10>, mask-to-width, str result.
     fn bin(&mut self, a: u32, b: u32, ty: IlType, f: impl FnOnce(&mut Aarch64Enc)) -> u32 {
         let s = self.slot(ty);
         self.load(X_A, a); self.load(X_B, b);
         f(&mut self.enc);
+        self.mask_to(ty);
         self.store(X_A, s);
         s
     }
@@ -135,6 +145,7 @@ impl Tier0 {
         let s = self.slot(ty);
         self.load(X_A, a);
         f(&mut self.enc);
+        self.mask_to(ty);
         self.store(X_A, s);
         s
     }
@@ -167,7 +178,9 @@ impl Builder for Tier0 {
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 {
         let s = self.slot(ty);
         let off = self.state_off(f, idx);
+        // GPR at U32 = W-read (mask to 32 bits — matches Aarch64State.reg_read).
         self.enc.ldr_x(X_A, X_STATE, off);
+        if f.0 == 0 { self.mask_to(ty); }
         // NZCV individual-flag: extract bit (idx=1..4 → bit 31/30/29/28).
         if f.0 == 2 && idx >= 1 {
             let bit = 32 - idx;
@@ -234,7 +247,26 @@ impl Builder for Tier0 {
         }
         self.bin(a, b, t, |e| e.sub_r(X_A, X_A, X_B))
     }
-    fn mul(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.mul_r(X_A, X_A, X_B)) }
+    fn mul(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) {
+            // u128 mul (128×128→low-128): lo = a.lo*b.lo; hi = umulh(a.lo,b.lo)
+            //   + a.lo*b.hi + a.hi*b.lo (all mod 2^64 — the standard schoolbook low-128).
+            // This is CORRECT for u128 (all bits unsigned). For i128 it's ALSO correct
+            // — low-128 of a signed product = low-128 of unsigned product (two's-comp).
+            // The prior version used smulh for the signed arm, which double-corrected
+            // (smulh already applies the sign-correction that the a.hi/b.hi cross-terms
+            // also encode when hi = sext-fill). Fixed: ALWAYS umulh + cross-terms.
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a); self.load2(X_B, 12, b);
+            self.enc.umulh(13, X_A, X_B);
+            self.enc.mul_r(14, X_A, 12);   self.enc.add_r(13, 13, 14);
+            self.enc.mul_r(14, X_C, X_B);  self.enc.add_r(13, 13, 14);
+            self.enc.mul_r(X_A, X_A, X_B);
+            self.enc.mov_r(X_C, 13);
+            self.store2(X_A, X_C, s);
+            return s;
+        }
+        self.bin(a, b, t, |e| e.mul_r(X_A, X_A, X_B)) }
     fn div(&mut self, _a: u32, _b: u32) -> u32 { panic!("tier-0 v1: div not wired") }
     fn rem(&mut self, _a: u32, _b: u32) -> u32 { panic!("tier-0 v1: rem not wired") }
     fn neg(&mut self, a: u32) -> u32 { let t = self.tys[a as usize]; self.una(a, t, |e| { e.mov_imm64(X_B, 0); e.sub_r(X_A, X_B, X_A); }) }
@@ -250,7 +282,15 @@ impl Builder for Tier0 {
             _ => u64::MAX,
         };
         self.una(a, t, move |e| { e.mov_imm64(X_B, mask); e.eor_r(X_A, X_A, X_B); }) }
-    fn shl(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.lslv(X_A, X_A, X_B)) }
+    fn shl(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        // Per interp: shl DOESN'T mask (int-promote semantics for the FCMP nzcv-shl).
+        // So skip mask_to here — emit lslv only.
+        let s = self.slot(t);
+        self.load(X_A, a); self.load(X_B, b);
+        self.enc.lslv(X_A, X_A, X_B);
+        self.store(X_A, s);
+        s
+    }
     fn shr(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
         let signed = matches!(t, IlType::I{signed:true, ..});
         if Self::is_wide(t) {
@@ -284,8 +324,26 @@ impl Builder for Tier0 {
             self.store2(X_A, X_C, s);
             return s;
         }
-        self.bin(a, b, t, |e| if signed { e.asrv(X_A, X_A, X_B) } else { e.lsrv(X_A, X_A, X_B) }) }
-    fn rotr(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.rorv(X_A, X_A, X_B)) }
+        // Width-aware: for width≤32 use W-form (asrv_w/lsrv_w) so the shift bounds
+        // and sign-bit position are correct (asrv-X on a W-value shifts from bit-63,
+        // not bit-31 — the shifted-register-ASR fuzz diff).
+        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
+        self.bin(a, b, t, move |e| match (signed, w32) {
+            (true, true) => e.asrv_w(X_A, X_A, X_B),
+            (true, false) => e.asrv(X_A, X_A, X_B),
+            (false, true) => e.lsrv_w(X_A, X_A, X_B),
+            (false, false) => e.lsrv(X_A, X_A, X_B),
+        }) }
+    fn rotr(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        // Width-aware: rotr at 32-bit uses rorv_w (rotate within 32 bits, not 64).
+        // Non-power-of-2 widths (the .isa's u1/u5/u6 etc) don't hit rotr in practice;
+        // if they did, would need mod-width — ‡ assert for now.
+        let w = match t { IlType::I{width, ..} => width, _ => 64 };
+        self.bin(a, b, t, move |e| match w {
+            32 => e.rorv_w(X_A, X_A, X_B),
+            64 => e.rorv(X_A, X_A, X_B),
+            _ => panic!("tier-0: rotr at width={w} (non-32/64)"),
+        }) }
     fn rbit(&mut self, _a: u32) -> u32 { panic!("tier-0 v1: rbit") }
     fn clz(&mut self, _a: u32) -> u32 { panic!("tier-0 v1: clz") }
 
