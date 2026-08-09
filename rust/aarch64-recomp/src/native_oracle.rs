@@ -21,6 +21,60 @@
 #![cfg(target_arch = "aarch64")]
 
 use crate::state::Aarch64State;
+use std::cell::Cell;
+
+// ── signal-recovery: SIGILL/SIGSEGV/SIGBUS/SIGFPE during a stub call → siglongjmp back ──
+// The .isa is over-permissive (e.g. ADD-shifted-register shift=3 → silicon #UD but the
+// .isa emits the rotr arm), and random-fielded fuzz encodings will hit those. Rather than
+// let the process die, catch the signal and report it — that's a "silicon-rejects, .isa-
+// accepts" datum (= a missing `requires` in the .isa), which is exactly what the exec-truth
+// oracle exists to find.
+
+// glibc's sigsetjmp/siglongjmp are macros; the underlying symbols are __sigsetjmp/siglongjmp.
+// sigjmp_buf on aarch64-glibc is opaque; over-allocate (glibc's is ~312 bytes).
+type SigJmpBuf = [u64; 64];
+unsafe extern "C" {
+    fn __sigsetjmp(env: *mut SigJmpBuf, savesigs: libc::c_int) -> libc::c_int;
+    fn siglongjmp(env: *mut SigJmpBuf, val: libc::c_int) -> !;
+}
+
+thread_local! {
+    static JMP: Cell<*mut SigJmpBuf> = const { Cell::new(std::ptr::null_mut()) };
+}
+
+extern "C" fn sig_handler(sig: libc::c_int, _info: *mut libc::siginfo_t, _ctx: *mut libc::c_void) {
+    JMP.with(|j| {
+        let p = j.get();
+        if !p.is_null() {
+            unsafe { siglongjmp(p, sig) };
+        }
+    });
+    // Not inside a guarded exec_one → re-raise default (shouldn't happen in practice).
+    unsafe {
+        libc::signal(sig, libc::SIG_DFL);
+        libc::raise(sig);
+    }
+}
+
+fn install_handlers() {
+    unsafe {
+        let mut sa: libc::sigaction = std::mem::zeroed();
+        sa.sa_sigaction = sig_handler as usize;
+        sa.sa_flags = libc::SA_SIGINFO | libc::SA_NODEFER;
+        libc::sigemptyset(&mut sa.sa_mask);
+        for &s in &[libc::SIGILL, libc::SIGSEGV, libc::SIGBUS, libc::SIGFPE] {
+            libc::sigaction(s, &sa, std::ptr::null_mut());
+        }
+    }
+}
+
+/// Result of a native exec attempt.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NativeResult {
+    Ran,
+    Excluded,          // v1 exclusion set (branch/load-store/system/pc-dependent)
+    SiliconRejects(i32),  // signal number — .isa accepted, silicon didn't = a .isa gap
+}
 
 const PAGE: usize = 4096;
 // Words into the stub where the test-insn slot lives. Derivation (verified via
@@ -46,14 +100,14 @@ impl NativeStub {
             assert!(!page.is_null() && page as isize != -1, "mmap RWX failed");
             let mut w = StubWriter { page, i: 0 };
             w.emit_stub();
+            install_handlers();
             Self { page, entry: std::mem::transmute(page) }
         }
     }
 
     /// Execute `insn` against `state` on real silicon. Mutates `state` in place.
-    /// Returns false if the insn is excluded (touches SP / is a branch — v1 skip-set).
-    pub fn exec_one(&self, state: &mut Aarch64State, insn: u32) -> bool {
-        if excluded(insn) { return false; }
+    pub fn exec_one(&self, state: &mut Aarch64State, insn: u32) -> NativeResult {
+        if excluded(insn) { return NativeResult::Excluded; }
         unsafe {
             // Rewrite the test-insn slot + flush I-cache for that word.
             *self.page.add(SLOT_OFF) = insn;
@@ -63,12 +117,21 @@ impl NativeStub {
             for i in 0..31 { flat[i] = state.x[i]; }
             flat[31] = state.nzcv as u64;
             for i in 0..32 { flat[32 + i] = state.v[i] as u64; }  // ‡ low-64 only
+            // sigsetjmp — if the insn traps, sig_handler siglongjmps here with the signal.
+            let mut jb: SigJmpBuf = std::mem::zeroed();
+            JMP.with(|j| j.set(&mut jb));
+            let sig = __sigsetjmp(&mut jb, 1);
+            if sig != 0 {
+                JMP.with(|j| j.set(std::ptr::null_mut()));
+                return NativeResult::SiliconRejects(sig);
+            }
             (self.entry)(flat.as_mut_ptr());
+            JMP.with(|j| j.set(std::ptr::null_mut()));
             for i in 0..31 { state.x[i] = flat[i]; }
             state.nzcv = flat[31] as u32;
             for i in 0..32 { state.v[i] = flat[32 + i] as u128; }  // ‡ low-64
         }
-        true
+        NativeResult::Ran
     }
 }
 

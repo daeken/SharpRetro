@@ -100,8 +100,9 @@ fn main() {
         // Reproducible PRNG (xorshift64 — no dep). Seeded → same corpus every run.
         let mut rng = seed;
         let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
-        let (mut n_ok, mut n_diff, mut n_skip, mut n_ipanic) = (0usize, 0usize, 0usize, 0usize);
+        let (mut n_ok, mut n_diff, mut n_skip, mut n_ipanic, mut n_reject) = (0usize, 0usize, 0usize, 0usize, 0usize);
         let mut diff_by_def: std::collections::BTreeMap<String, usize> = Default::default();
+        let mut reject_by_def: std::collections::BTreeMap<String, usize> = Default::default();
         // v1 def-level exclusions (oracle-limitations, not semantics bugs):
         //   - vec-* / F* defs: stub doesn't load V-regs yet (‡ v2: LDR/STR Q0-Q31)
         //   - defs whose gpr-or-sp operand can be rn=31: native reads real host SP.
@@ -132,10 +133,17 @@ fn main() {
                 let mut n_post = pre.clone();
                 // Name the insn BEFORE feeding it to silicon — if the stub segfaults,
                 // the last stderr line names the killer (v1 debug; v2 = signal handler).
-                if std::env::var("FUZZ_TRACE").is_ok() {
-                    eprintln!("→ stub {name} 0x{insn:08X}");
+                match stub.exec_one(&mut n_post, insn) {
+                    native_oracle::NativeResult::Excluded => { n_skip += 1; continue; }
+                    native_oracle::NativeResult::SiliconRejects(sig) => {
+                        // .isa accepted (interp didn't panic) but silicon trapped = a
+                        // missing `requires` in the .isa. Tally by def.
+                        n_reject += 1;
+                        *reject_by_def.entry(format!("{name} (sig={sig})")).or_default() += 1;
+                        continue;
+                    }
+                    native_oracle::NativeResult::Ran => {}
                 }
-                if !stub.exec_one(&mut n_post, insn) { n_skip += 1; continue; }
                 let mut d = false;
                 for r in 0..31 { if i_post.x[r] != n_post.x[r] { d = true; break; } }
                 if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) { d = true; }
@@ -160,7 +168,11 @@ fn main() {
             }
         }
         println!("[fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
-        println!("  ok={n_ok}  diff={n_diff}  skip(v1-excl)={n_skip}  interp-panic={n_ipanic}");
+        println!("  ok={n_ok}  diff={n_diff}  silicon-rejects={n_reject}  skip(v1-excl)={n_skip}  interp-panic={n_ipanic}");
+        if n_reject > 0 {
+            println!("  ── silicon-rejects (.isa over-permissive) ──");
+            for (name, c) in &reject_by_def { println!("    {c:4}× {name}"); }
+        }
         if n_diff > 0 {
             println!("  ── diffs by def ──");
             for (name, c) in &diff_by_def { println!("    {c:4}× {name}"); }
@@ -191,9 +203,16 @@ fn main() {
         for &insn in &insns {
             let (i_post, _) = interp_one(&pre, &mut mem, insn, 0x1000);
             let mut n_post = pre.clone();
-            if !stub.exec_one(&mut n_post, insn) {
-                println!("0x{insn:08X}  SKIP (branch/load-store/system — v1 exclusion)");
-                skip += 1; continue;
+            match stub.exec_one(&mut n_post, insn) {
+                native_oracle::NativeResult::Excluded => {
+                    println!("0x{insn:08X}  SKIP (branch/load-store/system/pc-dep — v1 exclusion)");
+                    skip += 1; continue;
+                }
+                native_oracle::NativeResult::SiliconRejects(sig) => {
+                    println!("0x{insn:08X}  SILICON-REJECTS (sig={sig}) — .isa accepted, silicon trapped");
+                    skip += 1; continue;
+                }
+                native_oracle::NativeResult::Ran => {}
             }
             // diff x[0..31] + nzcv (SP/pc excluded — stub doesn't model them)
             let mut d = vec![];
