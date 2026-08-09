@@ -185,7 +185,12 @@ struct Signature {
 it. The loader wraps outgoing guest fn-ptrs in a **reverse thunk** — a native aarch64 stub
 that loads the `GuestState` ptr, sets up guest args from host x0-x7 → guest-ABI slots, calls
 `block_cache.enter(guest_fn_ptr, mode)`, returns guest-rax → host-x0. Re-entrancy: `enter()`
-saves/restores the JIT's host-reg allocation around the nested execution.
+saves/restores the JIT's host-reg allocation around the nested execution — **as a STACK, not
+a scalar**: native → guest-callback → native → guest-callback nests 2-3 deep in real async
+completion graphs, so each `enter()` pushes the current allocation and pops on return.
+Concretely: the tier's live host-reg map + the state-ptr reg go onto a per-thread
+`SmallVec<SavedAlloc>`; a re-entered `enter()` at depth N sees a fresh allocation and the
+depth-(N-1) allocation restores on unwind.
 
 **Table indirection vs inlining**: tier-0/1 always call through the table (`ldr x16, [table, #slot*8]; blr x16`)
 so a `native_table.set(slot, new_fn)` takes effect immediately with no invalidate. tier-2 MAY
