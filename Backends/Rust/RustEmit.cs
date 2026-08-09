@@ -66,20 +66,33 @@ public static class RustEmit {
         _ => GenerateType(type)
     };
 
+    // Rust keywords the .isa uses as identifiers (fields/locals) → prefix `r#` (raw-ident)
+    // or rename. `type` is the common one (aarch64 uses `let type = ...` heavily).
+    static readonly HashSet<string> RustKeywords = [
+        "type", "as", "fn", "let", "mut", "ref", "match", "if", "else", "for", "while",
+        "loop", "return", "true", "false", "in", "move", "box", "self", "Self", "use",
+        "mod", "pub", "impl", "trait", "struct", "enum", "const", "static", "where",
+    ];
+    public static string SafeIdent(string name) =>
+        RustKeywords.Contains(name) ? $"r#{name}" : name.Replace("-", "_");
+
     public static string GenerateExpression(PTree v, bool lhs = false) => v switch {
-        PName name => name.Name,   // locals/fields — the scaffold declares them as `let name = ...`
+        PName name => SafeIdent(name.Name),   // locals/fields — the scaffold declares them as `let name = ...`
         PInt i => IntLiteral(i),
-        PString s => throw new NotSupportedException("recompiler emit doesn't emit string literals"),
+        // string literals appear in decode-blocks for disasm-name pieces (e.g. `let r "W"`).
+        // The recompiler doesn't consume them, but the binding is still in the tree — emit
+        // as a Rust &'static str so `let r = "W";` typechecks and gets DCE'd.
+        PString s => $"\"{s.String}\"",
         PList list => GenerateListExpression(list, lhs),
         _ => throw new NotImplementedException()
     };
 
     static string IntLiteral(PInt i) {
-        // Compile-time integer → a bare Rust literal (used for field-extract arithmetic,
-        // not a `b.literal()` call — those are for RUNTIME values via the runtime-emit arm).
-        var (signed, width) = i.Type is EInt ei ? (ei.Signed, ei.Width) : (false, 64);
-        var suffix = width switch { <= 8 => "8", <= 16 => "16", <= 32 => "32", <= 64 => "64", _ => "128" };
-        return $"0x{i.Value:X}{(signed ? "i" : "u")}{suffix}";
+        // Compile-time integer → an UNSUFFIXED Rust literal. All insn-fields extract as u32
+        // (`(insn >> N) & M`), and Rust doesn't auto-widen (u8 vs u32 = type error), so let
+        // the ct-arithmetic infer from the field's type. Runtime lifts (`Lift()`) use
+        // TypeShort() explicitly, so the type is carried there.
+        return i.Value < 0 ? $"(-0x{-i.Value:X}i64 as _)" : $"0x{i.Value:X}";
     }
 
     public static string GenerateListExpression(PList list, bool lhs = false) {
@@ -112,7 +125,7 @@ public static class RustEmit {
     public static string Lift(PTree child) =>
         child.Type.Runtime
             ? GenerateExpression(child)
-            : $"b.literal({TypeShort(child.Type)}, ({GenerateExpression(child)}) as u128)";
+            : $"bd.literal({TypeShort(child.Type)}, ({GenerateExpression(child)}) as u128)";
 
     public static string TempName() => Temp.Name();
 }

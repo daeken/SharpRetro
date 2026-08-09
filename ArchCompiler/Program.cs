@@ -63,6 +63,15 @@ if(stage == "emit") {
       Backends.CSharp.DmgScaffold.BuildInterpreter(ddefs, "DamageGenerator", Path.Combine(outDir, "Interpreter.cs"));
       break;
     }
+    case "aarch64-rust": {
+      new Frontends.Aarch64.Aarch64Heads().Define();
+      var rdefs = Def.ParseAll(expanded, Frontends.Aarch64.Aarch64Def.Parse)
+        .Select(RuntimeInference.InferRuntime)
+        .Cast<Frontends.Aarch64.Aarch64Def>().ToList();
+      Backends.Rust.Aarch64Scaffold.RegisterAll();
+      Backends.Rust.Aarch64Scaffold.BuildRecompiler(rdefs, Path.Combine(outDir, "recompiler.rs"));
+      break;
+    }
     default: throw new NotSupportedException($"--arch {arch}");
   }
   Console.Error.WriteLine($"[emit {arch} → {outDir}]");
