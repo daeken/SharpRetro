@@ -92,6 +92,7 @@ fn main() {
     if args.get(1).map(|s| s.as_str()) == Some("--fuzz-x64") {
         use xfusion_recomp::x64_stub::emit_stub;
         use xfusion_recomp::state::X86State;
+        use xfusion_recomp::lift::DEF_FLAGS_MASK;
         use std::io::Write;
 
         let n: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
@@ -106,9 +107,11 @@ fn main() {
         let mut corpus: Option<std::io::BufWriter<std::fs::File>> =
             corpus_path.as_ref().map(|p| std::io::BufWriter::new(std::fs::File::create(p).unwrap()));
         let mut n_triples = 0u32;
-        // Header placeholder (rewound at end).
+        // v3 header: X64D magic → per-triple defined_flags_mask (which eflags bits
+        // this insn's template WRITES; runner ANDs into the eflags-diff so SDM-
+        // undefined flags don't false-diff). Runner detects X64C vs X64D.
         if let Some(f) = &mut corpus {
-            f.write_all(&0x43343658u32.to_le_bytes()).unwrap();  // 'X64C'
+            f.write_all(&0x44343658u32.to_le_bytes()).unwrap();  // 'X64D'
             f.write_all(&0u32.to_le_bytes()).unwrap();  // n_triples (patched)
         }
 
@@ -191,7 +194,9 @@ fn main() {
                 // Emit triple to corpus.
                 if let Some(f) = &mut corpus {
                     let (stub, _slot) = emit_stub(&insn_bytes);
+                    let flags_mask = DEF_FLAGS_MASK.get(def_id as usize).copied().unwrap_or(0);
                     f.write_all(&(def_id as u32).to_le_bytes()).unwrap();
+                    f.write_all(&flags_mask.to_le_bytes()).unwrap();
                     f.write_all(&(stub.len() as u32).to_le_bytes()).unwrap();
                     f.write_all(&stub).unwrap();
                     let pre_flat = pre.to_flat();

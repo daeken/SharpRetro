@@ -18,6 +18,10 @@ public class RustLiftGen {
     int RtN;
     readonly Dictionary<string, string> Env = new();  // let/mlet-bound name → Rust expr (usually a _tN)
     readonly List<string> Params = new();             // template param names (positional → ops[i])
+    /// Which eflags bits this template's eval body WRITES (via `(= FLAG ...)`).
+    /// Emitted as DEF_FLAGS_MASK[def_id] — the per-triple diff-mask (only compare
+    /// flags the insn DEFINES; SDM-undefined flags may differ interp vs silicon).
+    uint FlagsWritten;
     string OpW = "op_w";                               // the operand v-width (Rust var name)
     string Ind = "        ";
 
@@ -70,6 +74,7 @@ public class RustLiftGen {
                 if(Flags.TryGetValue(target, out var fbit)) {
                     // Flag write: coerce to Bool (canonicalize like IlLower.CanonFlag).
                     Emit($"bd.reg_write(EFLAGS, {fbit}, {CanonFlag(e)});");
+                    FlagsWritten |= 1u << fbit;
                 } else if(Params.Contains(target)) {
                     Emit($"write_operand(bd, {ParamOp(target)}, {e});");
                 } else if(ArchRegs.TryGetValue(target, out var ar)) {
@@ -291,6 +296,7 @@ public class RustLiftGen {
         // Per-template body fns. Key by (Mnemonic, arity) — templates with the same
         // mnemonic but different param-counts (rare) get separate bodies.
         var tmplId = new Dictionary<(string, int), int>();
+        var tmplFlagsMask = new Dictionary<int, uint>();
         var tid = 0;
         var nUnhandled = 0;
         foreach(var t in templates) {
@@ -318,6 +324,7 @@ public class RustLiftGen {
             sb.Append(g.Sb);
             sb.AppendLine("}");
             sb.AppendLine();
+            tmplFlagsMask[tid] = g.FlagsWritten;
             tid++;
         }
 
@@ -380,6 +387,24 @@ public class RustLiftGen {
         sb.AppendLine("        _ => false,");
         sb.AppendLine("    }");
         sb.AppendLine("}");
+        sb.AppendLine();
+
+        // Per-def_id defined-flags mask: which eflags bits the insn's template
+        // WRITES. The Rosetta-oracle diff-mask — only compare flags the insn
+        // DEFINES (SDM-undefined flags may legitimately differ interp vs silicon;
+        // e.g. AF after AND/OR/XOR, OF after shift-by-N≠1, SF/ZF/AF/PF after MUL).
+        // [0] unused (def_ids are 1-based).
+        sb.AppendLine("pub const DEF_FLAGS_MASK: &[u32] = &[");
+        sb.Append("    0,");
+        var col = 1;
+        foreach(var def in RustDisasmGen.BodyOrder) {
+            var key = (def.Mnemonic, def.Operands.Count);
+            var mask = tmplId.TryGetValue(key, out var tt) ? tmplFlagsMask[tt] : 0u;
+            sb.Append($" 0x{mask:X3},");
+            if(++col % 12 == 0) { sb.AppendLine(); sb.Append("   "); }
+        }
+        sb.AppendLine();
+        sb.AppendLine("];");
 
         Console.Error.WriteLine($"[lift-gen: {tid} templates ({nUnhandled} UNHANDLED), {RustDisasmGen.BodyOrder.Count} def-arms]");
         return sb.ToString();
