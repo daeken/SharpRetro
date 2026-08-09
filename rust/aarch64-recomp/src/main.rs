@@ -102,10 +102,23 @@ fn main() {
         let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
         let (mut n_ok, mut n_diff, mut n_skip, mut n_ipanic) = (0usize, 0usize, 0usize, 0usize);
         let mut diff_by_def: std::collections::BTreeMap<String, usize> = Default::default();
+        // v1 def-level exclusions (oracle-limitations, not semantics bugs):
+        //   - vec-* / F* defs: stub doesn't load V-regs yet (‡ v2: LDR/STR Q0-Q31)
+        //   - defs whose gpr-or-sp operand can be rn=31: native reads real host SP.
+        //     Coarse filter: exclude any triple where ANY 5-bit field == 31.
+        let vec_def = |n: &str| n.starts_with('F') || n.contains("vector") || n.contains("VEC")
+            || n.contains("SIMD") || matches!(n, "DUP-general"|"UMOV"|"INS-general"|"INS-element"
+                |"MOVI"|"MVNI"|"SCVTF-scalar-integer"|"UCVTF-scalar-integer");
         for (name, mask, mat) in &defs {
+            if vec_def(name) { n_skip += n; continue; }  // ‡ v2: enable when stub loads V-regs
             for _ in 0..n {
-                // Random field-bits in the un-masked positions (= a valid encoding for THIS def).
-                let insn = mat | ((rand() as u32) & !mask);
+                let mut fields = (rand() as u32) & !mask;
+                // Force any 5-bit-aligned field ==31 → 30 (avoids SP-anchor collision).
+                // Coarse; misses non-aligned reg-fields, but covers the common rd@0/rn@5/rm@16.
+                for sh in [0, 5, 10, 16] {
+                    if (fields >> sh) & 0x1F == 31 { fields &= !(1u32 << sh); }
+                }
+                let insn = mat | fields;
                 // Random pre-state (x1-x28; leave x0/x29-x30/SP as 0 to reduce accidental
                 // stub-frame corruption if a def slips the exclusion; NZCV random top-4).
                 let mut pre = Aarch64State::default();
@@ -117,11 +130,32 @@ fn main() {
                 }));
                 let i_post = match ir { Ok(s) => s, Err(_) => { n_ipanic += 1; continue; } };
                 let mut n_post = pre.clone();
+                // Name the insn BEFORE feeding it to silicon — if the stub segfaults,
+                // the last stderr line names the killer (v1 debug; v2 = signal handler).
+                if std::env::var("FUZZ_TRACE").is_ok() {
+                    eprintln!("→ stub {name} 0x{insn:08X}");
+                }
                 if !stub.exec_one(&mut n_post, insn) { n_skip += 1; continue; }
                 let mut d = false;
                 for r in 0..31 { if i_post.x[r] != n_post.x[r] { d = true; break; } }
                 if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) { d = true; }
-                if d { n_diff += 1; *diff_by_def.entry(name.clone()).or_default() += 1; }
+                if d {
+                    n_diff += 1; *diff_by_def.entry(name.clone()).or_default() += 1;
+                    // First diff for this def → dump the reproducer.
+                    if diff_by_def[name] == 1 {
+                        eprintln!("DIFF {name} insn=0x{insn:08X}:");
+                        for r in 0..31 { if i_post.x[r] != n_post.x[r] {
+                            eprintln!("    x{r}: interp=0x{:X} native=0x{:X} (pre=0x{:X})",
+                                i_post.x[r], n_post.x[r], pre.x[r]); } }
+                        if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) {
+                            eprintln!("    nzcv: interp=0x{:08X} native=0x{:08X} (pre=0x{:08X})",
+                                i_post.nzcv, n_post.nzcv, pre.nzcv); }
+                        // dump pre-state args for repro
+                        let regs: Vec<_> = (1..=28).map(|r| format!("x{r}=0x{:X}", pre.x[r])).collect();
+                        eprintln!("    repro: --native-diff {} nzcv=0x{:X} 0x{insn:08X}",
+                            regs.join(" "), pre.nzcv);
+                    }
+                }
                 else { n_ok += 1; }
             }
         }

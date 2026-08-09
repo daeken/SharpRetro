@@ -150,12 +150,23 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         IlType::I{width, ..} => IVal { ty: a.ty, bits: mask(!a.bits, width) },
         _ => panic!("not {:?}", a.ty) } }
     fn shl(&mut self, a: IVal, b: IVal) -> IVal { let s = (b.bits & 127) as u32;
-        IVal { ty: a.ty, bits: mask(a.bits.wrapping_shl(s), width_of(a.ty)) } }
+        // NO mask-to-a.width: the .isa (and C# `IRuntimeValue<byte>.LeftShift`, and silicon)
+        // treat shift as int-promoting — `(u8)6 << 28` shifts into a wider space, and the
+        // consumer casts to destination width. Masking here loses the high bits before
+        // the cast can see them (FCMP: `(cast (<< u8 28) u32)` → 0 instead of 0x60000000).
+        // The result TYPE stays a.ty (per FirstType sig); the bits carry the full shift.
+        // A JIT tier that DOES need width-bounded shift emits `and dst, mask` after.
+        IVal { ty: a.ty, bits: a.bits.wrapping_shl(s) } }
     fn shr(&mut self, a: IVal, b: IVal) -> IVal { let s = (b.bits & 127) as u32;
         match a.ty {
             IlType::I{signed:true, width} => IVal { ty: a.ty, bits: mask((sext(a.bits, width) >> s) as u128, width) },
             _ => IVal { ty: a.ty, bits: a.bits >> s },
         } }
+    fn rotr(&mut self, a: IVal, b: IVal) -> IVal { let w = width_of(a.ty) as u32;
+        let s = (b.bits as u32) % w.max(1);
+        if s == 0 { return a; }
+        let m = mask(a.bits, w as u8);
+        IVal { ty: a.ty, bits: mask((m >> s) | (m << (w - s)), w as u8) } }
     fn rbit(&mut self, a: IVal) -> IVal { let w = width_of(a.ty);
         IVal { ty: a.ty, bits: a.bits.reverse_bits() >> (128 - w) } }
     fn clz(&mut self, a: IVal) -> IVal { let w = width_of(a.ty);

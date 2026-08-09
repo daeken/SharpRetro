@@ -120,6 +120,8 @@ pub trait Builder {
     fn shl(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;
     /// Right-shift. Signedness of `a`'s IlType selects arithmetic vs logical.
     fn shr(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;
+    /// Rotate-right by `b` bits within `a`'s width.
+    fn rotr(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;
     fn rbit(&mut self, a: Self::Val) -> Self::Val;
     fn clz(&mut self, a: Self::Val) -> Self::Val;
 

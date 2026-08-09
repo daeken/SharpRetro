@@ -23,7 +23,14 @@ public static class ScalarMathEmit {
         Bin("^", null, "xor", ctop: "^");
         Bin("<<", null, "shl", ctop: "<<");
         Bin(">>", null, "shr", ctop: ">>");
-        Bin(">>>", null, "shr", ctop: ">>");  // .isa rotate-right — ‡ needs rotr; shr for rung-4a
+        // .isa rotate-right. ct: Rust's rotate_right (width-aware on the concrete uN type).
+        // rt: bd.rotr. (Was ‡-stubbed as shr; the exec-truth oracle caught it at RORV.)
+        Expression(new[] { ">>>" },
+            list => {
+                var ty = CtType(list.Type);
+                return $"(({GenerateExpression(list[1])}) as {ty}).rotate_right(({GenerateExpression(list[2])}) as u32)";
+            },
+            list => list.Skip(1).Select(Lift).Aggregate((l, r) => Rt($"bd.rotr({l}, {r})")));
         // compares → Bool
         Cmp("==", "eq"); Cmp("!=", "ne");
         Cmp("<", "lt"); Cmp("<=", "le");
@@ -92,18 +99,19 @@ public static class ScalarMathEmit {
             + $"({(list.Count > 3 ? GenerateExpression(list[3]) : "1")}) as u32)");
     }
 
-    // ct-emit: anchor both operands to the RESULT type (list.Type) via `as`. This kills
-    // Rust's ambiguous-{integer} class (unsuffixed literals + wrapping_* need a concrete ty)
-    // and normalizes mixed-width operands (the .isa's type-inference computed the result ty).
+    // ct-emit: anchor operands to the RESULT type (list.Type) via `as`. VARIADIC: the .isa's
+    // (| a b c d ...) stays variadic through macro-expansion (unlike +/- which the legacy's
+    // Debug.Assert(Count==3) confirms binary). Fold left over list.Skip(1). The exec-truth
+    // oracle caught this at REV (only 2 of 8 or-terms emitted → 0x0807000000000000).
     static void Bin(string head, string ctMethod, string rtMethod, string ctop = null) =>
         Expression(new[] { head },
             list => {
                 var ty = CtType(list.Type);
-                var l = $"(({GenerateExpression(list[1])}) as {ty})";
-                var r = $"(({GenerateExpression(list[2])}) as {ty})";
-                return ctMethod != null ? $"{l}.{ctMethod}({r})" : $"({l} {ctop} {r})";
+                var terms = list.Skip(1).Select(x => $"(({GenerateExpression(x)}) as {ty})").ToList();
+                return terms.Aggregate((l, r) =>
+                    ctMethod != null ? $"({l}).{ctMethod}({r})" : $"({l} {ctop} {r})");
             },
-            list => $"bd.{rtMethod}({Lift(list[1])}, {Lift(list[2])})");
+            list => list.Skip(1).Select(Lift).Aggregate((l, r) => Rt($"bd.{rtMethod}({l}, {r})")));
 
     static void Cmp(string head, string rtMethod) =>
         Expression(new[] { head },

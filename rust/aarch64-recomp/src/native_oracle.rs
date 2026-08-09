@@ -183,4 +183,8 @@ fn excluded(insn: u32) -> bool {
     // System insns (MSR/MRS/SVC/HVC/BRK/HLT etc — bits [28:25]=1101, op0)
     || (insn & 0xFFC00000) == 0xD5000000
     || (insn & 0xFFE00000) == 0xD4000000  // exception-gen (SVC/BRK/…)
+    // pc-dependent (ADR/ADRP): interp uses synthetic pc=0x1000, native = real stub va.
+    // Not a semantics bug — an oracle limitation. v2: normalize (subtract stub-va from
+    // native result); v1: exclude. Bits [28:24]=10000 for ADR, [31]=op selects ADRP.
+    || (insn & 0x1F000000) == 0x10000000
 }
