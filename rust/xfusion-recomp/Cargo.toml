@@ -1,0 +1,8 @@
+[package]
+name = "xfusion-recomp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sharpretro-jit = { path = "../sharpretro-jit" }
+libc = "0.2"
