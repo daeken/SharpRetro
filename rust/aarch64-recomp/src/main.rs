@@ -14,6 +14,9 @@ use sharpretro_jit::interp::{InterpretingBuilder, FlatMem};
 mod state;
 use state::Aarch64State;
 
+#[cfg(target_arch = "aarch64")]
+mod native_oracle;
+
 /// Execute one insn via InterpretingBuilder → return post-state.
 fn interp_one(pre: &Aarch64State, mem: &mut FlatMem, insn: u32, pc: u64) -> (Aarch64State, bool) {
     let mut s = pre.clone();
@@ -65,6 +68,116 @@ fn main() {
         if s.nzcv != pre.nzcv { println!("  nzcv= 0x{:08X}  N={} Z={} C={} V={}",
             s.nzcv, s.n() as u8, s.z() as u8, s.c() as u8, s.vf() as u8); }
         println!("  pc  = 0x{:X}", s.pc);
+        return;
+    }
+
+    // --fuzz [N] — for each of the 344 defs' mask/match: synthesize N random-fielded
+    // valid encodings + random pre-state, diff interp vs silicon. The exec-truth ladder
+    // (my day-1's census-diff loop, applied to semantics instead of decode).
+    #[cfg(target_arch = "aarch64")]
+    if args.get(1).map(|s| s.as_str()) == Some("--fuzz") {
+        let n: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+        let seed: u64 = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(0xC0FFEE);
+        let stub = native_oracle::NativeStub::new();
+        let mut mem = FlatMem::new(0x10000, 0x10000);
+        // Walk mask/match set from lib.rs (same as corpus mode) + capture def NAME too
+        let src = include_str!("lib.rs");
+        let mut defs = vec![];
+        let mut cur_name = "";
+        for line in src.lines() {
+            if let Some(n) = line.trim().strip_prefix("/* ").and_then(|s| s.strip_suffix(" */")) {
+                cur_name = n;
+            }
+            if let Some(rest) = line.trim().strip_prefix("if (insn & 0x") {
+                let mask_end = rest.find(')').unwrap();
+                let mask = u32::from_str_radix(&rest[..mask_end], 16).unwrap();
+                let ms = rest[mask_end..].find("0x").unwrap() + mask_end + 2;
+                let me = rest[ms..].find(' ').unwrap() + ms;
+                let mat = u32::from_str_radix(&rest[ms..me], 16).unwrap();
+                defs.push((cur_name.to_string(), mask, mat));
+            }
+        }
+        // Reproducible PRNG (xorshift64 — no dep). Seeded → same corpus every run.
+        let mut rng = seed;
+        let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
+        let (mut n_ok, mut n_diff, mut n_skip, mut n_ipanic) = (0usize, 0usize, 0usize, 0usize);
+        let mut diff_by_def: std::collections::BTreeMap<String, usize> = Default::default();
+        for (name, mask, mat) in &defs {
+            for _ in 0..n {
+                // Random field-bits in the un-masked positions (= a valid encoding for THIS def).
+                let insn = mat | ((rand() as u32) & !mask);
+                // Random pre-state (x1-x28; leave x0/x29-x30/SP as 0 to reduce accidental
+                // stub-frame corruption if a def slips the exclusion; NZCV random top-4).
+                let mut pre = Aarch64State::default();
+                for r in 1..=28 { pre.x[r] = rand(); }
+                pre.nzcv = ((rand() as u32) & 0xF) << 28;
+                // Interp side (may panic on unwired intrinsic / unreachable-match / todo-wmask).
+                let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    interp_one(&pre, &mut mem, insn, 0x1000).0
+                }));
+                let i_post = match ir { Ok(s) => s, Err(_) => { n_ipanic += 1; continue; } };
+                let mut n_post = pre.clone();
+                if !stub.exec_one(&mut n_post, insn) { n_skip += 1; continue; }
+                let mut d = false;
+                for r in 0..31 { if i_post.x[r] != n_post.x[r] { d = true; break; } }
+                if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) { d = true; }
+                if d { n_diff += 1; *diff_by_def.entry(name.clone()).or_default() += 1; }
+                else { n_ok += 1; }
+            }
+        }
+        println!("[fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
+        println!("  ok={n_ok}  diff={n_diff}  skip(v1-excl)={n_skip}  interp-panic={n_ipanic}");
+        if n_diff > 0 {
+            println!("  ── diffs by def ──");
+            for (name, c) in &diff_by_def { println!("    {c:4}× {name}"); }
+        }
+        return;
+    }
+
+    // --native-diff <hex-insn> [x<N>=<hex>...] — run one insn on BOTH the
+    // InterpretingBuilder AND real silicon (NativeStub), diff the post-states.
+    // The exec-truth oracle: silicon = the independent verifier (interp+recompiler
+    // are co-blind to .isa/emit bugs; silicon isn't).
+    #[cfg(target_arch = "aarch64")]
+    if args.get(1).map(|s| s.as_str()) == Some("--native-diff") {
+        let mut pre = Aarch64State::default();
+        let mut insns = vec![];
+        for a in &args[2..] {
+            if let Some((r, v)) = a.split_once('=') {
+                let val = u64::from_str_radix(v.trim_start_matches("0x"), 16).unwrap();
+                if let Some(n) = r.strip_prefix('x') { pre.x[n.parse::<usize>().unwrap()] = val; }
+                else if r == "nzcv" { pre.nzcv = val as u32; }
+            } else {
+                insns.push(u32::from_str_radix(a.trim_start_matches("0x"), 16).unwrap());
+            }
+        }
+        let stub = native_oracle::NativeStub::new();
+        let mut mem = FlatMem::new(0x10000, 0x10000);
+        let mut ok = 0; let mut skip = 0; let mut diffs = 0;
+        for &insn in &insns {
+            let (i_post, _) = interp_one(&pre, &mut mem, insn, 0x1000);
+            let mut n_post = pre.clone();
+            if !stub.exec_one(&mut n_post, insn) {
+                println!("0x{insn:08X}  SKIP (branch/load-store/system — v1 exclusion)");
+                skip += 1; continue;
+            }
+            // diff x[0..31] + nzcv (SP/pc excluded — stub doesn't model them)
+            let mut d = vec![];
+            for r in 0..31 { if i_post.x[r] != n_post.x[r] {
+                d.push(format!("x{r}: interp=0x{:X} native=0x{:X}", i_post.x[r], n_post.x[r])); } }
+            if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) {
+                d.push(format!("nzcv: interp=0x{:08X} native=0x{:08X}", i_post.nzcv, n_post.nzcv));
+            }
+            if d.is_empty() {
+                println!("0x{insn:08X}  ✓ (match)");
+                ok += 1;
+            } else {
+                println!("0x{insn:08X}  ✗ DIFF:");
+                for l in &d { println!("    {l}"); }
+                diffs += 1;
+            }
+        }
+        println!("[native-diff: {ok} match, {diffs} diff, {skip} skip]");
         return;
     }
 
