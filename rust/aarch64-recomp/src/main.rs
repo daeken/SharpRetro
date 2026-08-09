@@ -180,6 +180,77 @@ fn main() {
         return;
     }
 
+    // --tier0-diff <hex-insn> [x<N>=<hex>...] — compile one insn via Tier0, execute the
+    // JIT'd machine-code, diff post-state vs InterpretingBuilder. THE tier-0 oracle
+    // (per DESIGN.md: "tier-0 vs interpreter → state diff = 0").
+    #[cfg(target_arch = "aarch64")]
+    if args.get(1).map(|s| s.as_str()) == Some("--tier0-diff") {
+        use sharpretro_jit::tier0::{Tier0, STATE_WORDS};
+        let mut pre = Aarch64State::default();
+        let mut insns = vec![];
+        for a in &args[2..] {
+            if let Some((r, v)) = a.split_once('=') {
+                let val = u64::from_str_radix(v.trim_start_matches("0x"), 16).unwrap();
+                if let Some(n) = r.strip_prefix('x') { pre.x[n.parse::<usize>().unwrap()] = val; }
+                else if r == "nzcv" { pre.nzcv = val as u32; }
+            } else {
+                insns.push(u32::from_str_radix(a.trim_start_matches("0x"), 16).unwrap());
+            }
+        }
+        let mut mem = FlatMem::new(0x10000, 0x10000);
+        let (mut ok, mut diffs) = (0, 0);
+        for &insn in &insns {
+            // interp side
+            let (i_post, _) = interp_one(&pre, &mut mem, insn, 0x1000);
+            // tier-0 side: compile the ONE insn, exec against a flat state array
+            let mut t0 = Tier0::new();
+            let decoded = std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+                recompile_one(&mut t0, insn, 0x1000)));
+            match decoded {
+                Ok(true) => {},
+                Ok(false) => { println!("0x{insn:08X}  not decoded"); continue; }
+                Err(_) => { println!("0x{insn:08X}  tier-0 PANIC (unwired op)"); continue; }
+            }
+            let block = t0.finalize();
+            let mut flat = [0u64; STATE_WORDS];
+            for i in 0..32 { flat[i] = pre.x[i]; }
+            flat[32] = pre.nzcv as u64;
+            flat[33] = 0x1000;  // pc
+            block.exec(&mut flat);
+            // diff GPR + nzcv + pc
+            let mut d = vec![];
+            for r in 0..31 { if i_post.x[r] != flat[r] {
+                d.push(format!("x{r}: interp=0x{:X} tier0=0x{:X}", i_post.x[r], flat[r])); } }
+            if (i_post.nzcv & 0xF0000000) != ((flat[32] as u32) & 0xF0000000) {
+                d.push(format!("nzcv: interp=0x{:08X} tier0=0x{:08X}", i_post.nzcv, flat[32] as u32));
+            }
+            // tier-0 doesn't advance pc for non-branching insns (that's the block-driver's
+            // job — recompile_one compiles ONE insn; the driver bumps pc if !branched).
+            // Only diff pc when the interp branched (= .isa emitted a `branch` head).
+            let interp_branched = i_post.pc != 0x1004;  // interp_one sets pc=pc+4 if !branched
+            if interp_branched && i_post.pc != flat[33] {
+                d.push(format!("pc: interp=0x{:X} tier0=0x{:X}", i_post.pc, flat[33]));
+            }
+            if d.is_empty() {
+                println!("0x{insn:08X}  ✓ (tier0 == interp)  [{} host-insns, {} slots]",
+                    block.code_len / 4, block.n_slots);
+                if std::env::var("TIER0_DUMP").is_ok() {
+                    std::fs::write("/tmp/tier0_block.bin", block.code_bytes()).unwrap();
+                    eprintln!("(dumped {} bytes → /tmp/tier0_block.bin)", block.code_len);
+                }
+                ok += 1;
+            } else {
+                println!("0x{insn:08X}  ✗ DIFF:");
+                for l in &d { println!("    {l}"); }
+                diffs += 1;
+            }
+        }
+        println!("[tier0-diff: {ok} match, {diffs} diff]");
+        return;
+    }
+
+    #[cfg(target_arch = "aarch64")]
+
     // --native-diff <hex-insn> [x<N>=<hex>...] — run one insn on BOTH the
     // InterpretingBuilder AND real silicon (NativeStub), diff the post-states.
     // The exec-truth oracle: silicon = the independent verifier (interp+recompiler
