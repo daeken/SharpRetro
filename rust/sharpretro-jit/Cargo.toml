@@ -1,0 +1,9 @@
+[package]
+name = "sharpretro-jit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# dashmap = "6"       # BlockCache concurrent map — add when cache lands
+# smallvec = "1"      # SavedAlloc stack, inlined_slots
+# inkwell = { ... }   # tier-2 LLVM — add when tier-2 lands
