@@ -75,6 +75,53 @@ impl X86State {
     }
 }
 
+/// Read-set tracker — a RegState wrapper that records which (RegFile, idx) slots
+/// an insn's eval READS, then delegates to an inner X86State. The libmoonage
+/// TestGen.cs lazy-precondition-discovery loop's Rust equivalent: instead of
+/// throw-on-missing (their MissingRegisterException), record the read-set on a
+/// first pass with a zeroed inner state, then enumerate boundary-value pre-states
+/// over exactly those slots. Also gives the corpus a principled exclusion: skip
+/// if the read-set includes a mem_read (vs the v1-v3 mnemonic heuristic).
+#[derive(Default)]
+pub struct TrackingState {
+    pub inner: X86State,
+    /// (RegFile.0, idx) pairs read by the insn's eval. RefCell for &self reg_read.
+    pub reads: std::cell::RefCell<Vec<(u8, u32)>>,
+    /// (RegFile.0, idx) pairs written.
+    pub writes: Vec<(u8, u32)>,
+}
+
+impl RegState for TrackingState {
+    fn reg_read(&self, f: RegFile, idx: u32, ty: IlType) -> IVal {
+        let mut r = self.reads.borrow_mut();
+        if !r.contains(&(f.0, idx)) { r.push((f.0, idx)); }
+        self.inner.reg_read(f, idx, ty)
+    }
+    fn reg_write(&mut self, f: RegFile, idx: u32, v: IVal) {
+        if !self.writes.contains(&(f.0, idx)) { self.writes.push((f.0, idx)); }
+        self.inner.reg_write(f, idx, v);
+    }
+    fn pc(&self) -> u64 { self.inner.pc() }
+    fn set_pc(&mut self, pc: u64) { self.inner.set_pc(pc) }
+    fn set_lr(&mut self, lr: u64) { self.inner.set_lr(lr) }
+}
+
+impl TrackingState {
+    /// GPR indices this insn reads (RegFile 0 only).
+    pub fn gpr_reads(&self) -> Vec<u32> {
+        self.reads.borrow().iter().filter(|(f,_)| *f == 0).map(|(_,i)| *i).collect()
+    }
+    /// eflags bits this insn reads (RegFile 1).
+    pub fn flag_reads(&self) -> Vec<u32> {
+        self.reads.borrow().iter().filter(|(f,_)| *f == 1).map(|(_,i)| *i).collect()
+    }
+    /// Whether this insn reads XMM (RegFile 3) — v1 corpus excludes these until
+    /// the stub loads xmm state (movdqu prologue at v2).
+    pub fn reads_xmm(&self) -> bool {
+        self.reads.borrow().iter().any(|(f,_)| *f == 3)
+    }
+}
+
 impl RegState for X86State {
     fn reg_read(&self, f: RegFile, idx: u32, ty: IlType) -> IVal {
         match f.0 {

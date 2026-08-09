@@ -112,6 +112,31 @@ fn main() {
         return;
     }
 
+    // --track <hex-bytes> — dump the insn's read/write-set via TrackingState.
+    // (The libmoonage lazy-precondition-discovery foundation: first pass discovers
+    //  which regs an insn READS, then v4 corpus enumerates boundary-values over
+    //  exactly those regs.)
+    if args.get(1).map(|s| s.as_str()) == Some("--track") {
+        use xfusion_recomp::state::TrackingState;
+        let bytes: Vec<u8> = args[2].split(',')
+            .map(|s| u8::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap())
+            .collect();
+        let d = decode_insn(&bytes, XMode::Bits64).unwrap();
+        let mut ts = TrackingState::default();
+        let mut mem = FlatMem::new(0, 0x1000);
+        {
+            let mut b = InterpretingBuilder::new(&mut ts, &mut mem, 0x1000);
+            b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
+            lift_one(&mut b, &d, 0x1000, XMode::Bits64);
+        }
+        println!("{} (def_id={}):", DEF_MNEMONICS[d.def_id as usize], d.def_id);
+        println!("  reads:  {:?}", ts.reads.borrow());
+        println!("  writes: {:?}", ts.writes);
+        println!("  gpr_reads: {:?}  flag_reads: {:?}  reads_xmm: {}",
+            ts.gpr_reads(), ts.flag_reads(), ts.reads_xmm());
+        return;
+    }
+
     // --interp <hex-bytes> [reg=val ...] — decode + lift + execute one insn (or a
     // sequence separated by /), dump changed regs. Phase-2/3 first-execute.
     if args.get(1).map(|s| s.as_str()) == Some("--interp") {

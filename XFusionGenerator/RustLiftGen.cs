@@ -259,9 +259,14 @@ public class RustLiftGen {
             "rotl" => ("rotl", true),
             _ => throw new NotSupportedException($"op {head}")
         };
-        // >>a: cast operand to signed then shr (Builder.shr picks asr on signed type).
-        // ‡ this needs the interp to see a signed IlType — for now emit shr and note.
+        // >>a: arithmetic right-shift. Builder.shr does asr when the operand's IlType is
+        // signed — so cast to signed at op_w, shr, cast back. (SAR Ev,Ib silicon-caught:
+        // was stubbed as logical shr → top bits zero-filled instead of sign-filled.)
         var acc = Expr(l[1], ctxW);
+        if(head == ">>a") {
+            var sty = $"IlType::I{{signed:true, width:{OpW} as u8}}";
+            acc = Rt($"bd.cast({acc}, {sty})");
+        }
         for(var i = 2; i < l.Count; i++) {
             var rhs = Expr(l[i], ctxW);
             if(rtop == "rotl") {
@@ -272,6 +277,10 @@ public class RustLiftGen {
             } else {
                 acc = Rt($"bd.{rtop}({acc}, {rhs})");
             }
+        }
+        if(head == ">>a") {
+            // Cast back to unsigned so downstream ops see the expected type.
+            acc = Rt($"bd.cast({acc}, ilty({OpW}))");
         }
         return acc;
     }
@@ -369,7 +378,7 @@ public class RustLiftGen {
                     OpClass.MmxRm => $"bind_xmm_rm(bd, d, pc, mode, 64)",
                     OpClass.ModRmSeg => $"Operand::Reg{{idx: d.m.reg, width:16, high8:false}}",  // ‡ seg-reg via SEG file at v2
                     OpClass.FarPtr => $"bind_imm(d, {(immSlot += 2) - 2}, {w})",  // ‡ far-ptr = imm0 offset only
-                    OpClass.FixedInt => $"Operand::Imm{{value:{spec.FixedRegIndex},width:{w}}}",
+                    OpClass.FixedInt => $"Operand::Imm{{value:{spec.FixedValue},width:{w}}}",
                     OpClass.StrSrc or OpClass.StrDst => $"Operand::Mem{{addr: bd.reg_read(GPR, {(spec.Class==OpClass.StrSrc?6:7)}, IlType::U64), width:{w}}}",
                     OpClass.XmmVvvv => $"Operand::Xmm{{idx: d.p.vex_vvvv, width:{w}}}",
                     OpClass.GprVvvv => $"gpr(d.p.vex_vvvv, {w}, true)",
