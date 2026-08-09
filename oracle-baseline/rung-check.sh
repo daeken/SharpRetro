@@ -22,6 +22,17 @@ else
   echo "  ✗ DIFFERS"; diff /tmp/c.typed /tmp/n.typed | head -20; FAIL=1
 fi
 echo ""
+echo "=== rung-2: emit (aarch64 Disassembler.cs + Recompiler.cs) ==="
+dotnet run --project ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --out /tmp/ac-out 2>/dev/null >/dev/null
+for f in Disassembler.cs Recompiler.cs; do
+  if diff -q oracle-baseline/aarch64/$f /tmp/ac-out/$f >/dev/null 2>&1; then
+    echo "  ✓ $f byte-identical"
+  else
+    echo "  ✗ $f DIFFERS"; diff oracle-baseline/aarch64/$f /tmp/ac-out/$f | head -10; FAIL=1
+  fi
+done
+
+echo ""
 echo "=== pre-push: house-vocab check (public repo — no seat-names/channel-cites/kt-refs) ==="
 if grep -rn 'barrow\|fuchi\|coram\|kt\[\|own #\|·[0-9]\|#alky\|corpse' \
      ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ oracle-baseline/README.md 2>/dev/null \
@@ -31,9 +42,14 @@ if grep -rn 'barrow\|fuchi\|coram\|kt\[\|own #\|·[0-9]\|#alky\|corpse' \
 else
   echo "  ✓ clean"
 fi
-if git log origin/main..HEAD --format='%s%n%b' 2>/dev/null | grep -qE '·[0-9]+|barrow|fuchi|kt\[|own #|#alky|corpse'; then
+if git log origin/main..HEAD --format='%s%n%b' 2>/dev/null | grep -E '·[0-9]+|barrow|fuchi|kt\[|own #|#alky|corpse'; then
   echo "  ✗ house-vocab in unpushed commit messages — reword before push"
   FAIL=1
 fi
 
+# The gate must actually GATE. A hit above sets FAIL=1; callers do:
+#   bash oracle-baseline/rung-check.sh && git push
+# so a non-zero exit blocks the push structurally. (A prior version printed the hit,
+# then the caller read past it to their own "empty = clean" echo and pushed anyway —
+# the guard's-own-output-not-consumed failure. The && form removes the reading step.)
 exit $FAIL
