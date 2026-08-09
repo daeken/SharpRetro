@@ -23,6 +23,10 @@ impl Aarch64Enc {
     pub fn bytes(&self) -> Vec<u8> { self.buf.iter().flat_map(|w| w.to_le_bytes()).collect() }
     pub fn len_bytes(&self) -> usize { self.buf.len() * 4 }
     #[inline] fn put(&mut self, w: u32) { self.buf.push(w); }
+    /// Escape hatch: emit a raw insn word (for one-off encodings not worth a fn yet).
+    /// The tier-0 caller must comment WHAT it encodes (the decode-back discipline still
+    /// applies — put_raw sites should get objdump-verified in a #[test]).
+    pub fn put_raw(&mut self, w: u32) { self.buf.push(w); }
 
     // ── load/store (unsigned imm, imm scaled by access-size) ──────────────
     // LDR Xt, [Xn, #imm]  — imm bytes, 8-aligned, 0..32760

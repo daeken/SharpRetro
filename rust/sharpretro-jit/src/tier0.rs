@@ -33,8 +33,15 @@ const OFF_GPR: u32 = 0;         // + idx*8
 const OFF_NZCV: u32 = 32 * 8;
 const OFF_PC: u32 = 33 * 8;
 const OFF_VEC: u32 = 34 * 8;    // + idx*8 (‡ low-64 only)
+const OFF_MEMBASE: u32 = 66 * 8;  // *mut u8 host-base of guest memory (identity-map:
+                                  //   guest_addr N → host addr mem_base+N). The consumer's
+                                  //   loader maps the guest image + sets this. For paged/
+                                  //   protected models, this becomes a call_intrinsic; the
+                                  //   flat identity-map is tier-0's fast path.
+const OFF_MEMLEN: u32 = 67 * 8;   // guest-address-space size (for the bounds-check;
+                                  //   0 = unchecked, the trusted-loader case).
 
-pub const STATE_WORDS: usize = 66;
+pub const STATE_WORDS: usize = 68;
 
 pub struct Tier0 {
     pub enc: Aarch64Enc,
@@ -222,11 +229,49 @@ impl Builder for Tier0 {
         }
         self.enc.str_x(X_A, X_STATE, off);
     }
-    fn mem_read(&mut self, _a: u32, _ty: IlType) -> u32 {
-        panic!("tier-0 v1: mem_read not wired (guest-mem sandbox at v2)")
+    fn mem_read(&mut self, a: u32, ty: IlType) -> u32 {
+        // Identity-map: host_addr = state.mem_base + guest_addr. Load at width.
+        // ‡ v1: unchecked (mem_len=0). v2: bounds-check → fault-intrinsic on OOB
+        //   (which is where the SMC write-protect fault also routes).
+        let s = self.slot(ty);
+        self.load(X_A, a);                            // guest addr
+        self.enc.ldr_x(X_B, X_STATE, OFF_MEMBASE);    // host base
+        self.enc.add_r(X_A, X_B, X_A);                // host addr
+        // Width-select the load. Encoder has ldr_x/ldr_w; add byte/half + Q for wide.
+        match ty {
+            IlType::I{width: 8, ..}  => self.enc.put_raw(0x38400000 | (X_A<<5) | X_A),  // ldrb w9,[x9]
+            IlType::I{width: 16, ..} => self.enc.put_raw(0x78400000 | (X_A<<5) | X_A),  // ldrh w9,[x9]
+            IlType::I{width: 32, ..} | IlType::F{width: 32} => self.enc.ldr_w(X_A, X_A, 0),
+            IlType::I{width: 64, ..} | IlType::F{width: 64} => self.enc.ldr_x(X_A, X_A, 0),
+            IlType::I{width: 128, ..} | IlType::V128 => {
+                // 2-word load: lo, hi.
+                self.enc.ldr_x(X_C, X_A, 8);
+                self.enc.ldr_x(X_A, X_A, 0);
+                self.store2(X_A, X_C, s);
+                return s;
+            }
+            _ => panic!("tier-0 mem_read: {:?}", ty),
+        }
+        self.store(X_A, s);
+        s
     }
-    fn mem_write(&mut self, _a: u32, _v: u32) {
-        panic!("tier-0 v1: mem_write not wired")
+    fn mem_write(&mut self, a: u32, v: u32) {
+        let ty = self.tys[v as usize];
+        self.load(X_A, a);
+        self.enc.ldr_x(X_B, X_STATE, OFF_MEMBASE);
+        self.enc.add_r(X_A, X_B, X_A);
+        match ty {
+            IlType::I{width: 8, ..}  => { self.load(X_B, v); self.enc.put_raw(0x38000000 | (X_A<<5) | X_B); }  // strb
+            IlType::I{width: 16, ..} => { self.load(X_B, v); self.enc.put_raw(0x78000000 | (X_A<<5) | X_B); }  // strh
+            IlType::I{width: 32, ..} | IlType::F{width: 32} => { self.load(X_B, v); self.enc.str_w(X_B, X_A, 0); }
+            IlType::I{width: 64, ..} | IlType::F{width: 64} => { self.load(X_B, v); self.enc.str_x(X_B, X_A, 0); }
+            IlType::I{width: 128, ..} | IlType::V128 => {
+                self.load2(X_B, X_C, v);
+                self.enc.str_x(X_B, X_A, 0);
+                self.enc.str_x(X_C, X_A, 8);
+            }
+            _ => panic!("tier-0 mem_write: {:?}", ty),
+        }
     }
 
     fn add(&mut self, a: u32, b: u32) -> u32 {

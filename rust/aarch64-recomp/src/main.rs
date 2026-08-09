@@ -9,7 +9,7 @@
 
 use aarch64_recomp::recompile_one;
 use sharpretro_jit::recording::RecordingBuilder;
-use sharpretro_jit::interp::{InterpretingBuilder, FlatMem};
+use sharpretro_jit::interp::{InterpretingBuilder, FlatMem, GuestMem};
 
 mod state;
 use state::Aarch64State;
@@ -18,7 +18,7 @@ use state::Aarch64State;
 mod native_oracle;
 
 /// Execute one insn via InterpretingBuilder → return post-state.
-fn interp_one(pre: &Aarch64State, mem: &mut FlatMem, insn: u32, pc: u64) -> (Aarch64State, bool) {
+fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) -> (Aarch64State, bool) {
     let mut s = pre.clone();
     s.pc = pc;
     let branched;
@@ -43,7 +43,6 @@ fn main() {
     // <program> = a name ("sum10") or a comma-sep hex-insn list.
     #[cfg(target_arch = "aarch64")]
     if args.get(1).map(|s| s.as_str()) == Some("--run") {
-        use sharpretro_jit::interp::GuestMem;
         // ── the test program(s) ────────────────────────────────────────────
         // sum10: x0 = Σ 1..10 = 55. Exercises MOVZ, ADD-reg, ADD-imm, SUBS(CMP),
         // B.cond, and the block-driver's branch-following.
@@ -57,6 +56,19 @@ fn main() {
             0xEB02003F,  // cmp x1, x2  (subs xzr, x1, x2)
             0x54FFFFAB,  // b.lt loop  (-3 insns = -12 bytes)
             0xD4200000,  // brk #0  (stop signal)
+        ];
+        // memsum: x0 = Σ mem[x1..x1+N*8] as u64s. Exercises LDR (load) + branch loop.
+        // Setup: x1=array_base, x3=N. Data at guest_base+0x100.
+        let memsum: &[u32] = &[
+            0xD2800000,  // mov x0, #0
+            0xD2802001,  // mov x1, #0x100  (array base = guest+0x100)
+            0xD28000A3,  // mov x3, #5
+            // loop:
+            0xF8408424,  // ldr x4, [x1], #8   (post-index: load + x1+=8)
+            0x8B040000,  // add x0, x0, x4
+            0xD1000463,  // sub x3, x3, #1
+            0xB5FFFFA3,  // cbnz x3, loop  (-3 insns)
+            0xD4200000,  // brk #0
         ];
         // fib: x0 = fib(N) via iterative loop. x3=N.
         let fib: &[u32] = &[
@@ -75,6 +87,7 @@ fn main() {
         let prog = match args.get(2).map(|s| s.as_str()) {
             Some("sum10") | None => sum10,
             Some("fib") => fib,
+            Some("memsum") => memsum,
             Some(hex) => {
                 // Parse comma-sep hex insns
                 let v: Vec<u32> = hex.split(',').map(|s|
@@ -86,8 +99,34 @@ fn main() {
         let max_insns = 1000;
 
         // ── interp driver ──────────────────────────────────────────────────
-        let mut mem_i = FlatMem::new(entry, 0x1000);
-        for (i, &w) in prog.iter().enumerate() { mem_i.write(entry + (i as u64)*4, 32, w as u128); }
+        // GuestMem: FlatMem at base=0 (guest addresses ARE offsets into the vec).
+        // The tier-0 side sets mem_base = the same vec's host ptr, so both sides
+        // read the same bytes at the same guest addrs.
+        let mut guest_bytes = vec![0u8; 0x20000];
+        // Load program at `entry`.
+        for (i, &w) in prog.iter().enumerate() {
+            guest_bytes[entry as usize + i*4 .. entry as usize + i*4 + 4]
+                .copy_from_slice(&w.to_le_bytes());
+        }
+        // memsum test data: 5 u64s at guest+0x100 = {10,20,30,40,50} → sum=150.
+        for (i, &v) in [10u64, 20, 30, 40, 50].iter().enumerate() {
+            guest_bytes[0x100 + i*8 .. 0x100 + i*8 + 8].copy_from_slice(&v.to_le_bytes());
+        }
+        struct SharedMem<'a>(&'a mut [u8]);
+        impl<'a> GuestMem for SharedMem<'a> {
+            fn read(&self, addr: u64, w: u8) -> u128 {
+                let n = ((w as usize)+7)/8; let off = addr as usize;
+                let mut v = 0u128;
+                for i in 0..n { v |= (self.0[off+i] as u128) << (i*8); }
+                v
+            }
+            fn write(&mut self, addr: u64, w: u8, bits: u128) {
+                let n = ((w as usize)+7)/8; let off = addr as usize;
+                for i in 0..n { self.0[off+i] = (bits >> (i*8)) as u8; }
+            }
+        }
+        let host_base = guest_bytes.as_mut_ptr() as u64;
+        let mut mem_i = SharedMem(&mut guest_bytes);
         let mut si = Aarch64State::default();
         si.pc = entry;
         let mut n_i = 0;
@@ -106,16 +145,17 @@ fn main() {
         // ── tier-0 block driver ────────────────────────────────────────────
         use sharpretro_jit::tier0::{Tier0, STATE_WORDS};
         use std::collections::HashMap;
-        let mut mem_t = FlatMem::new(entry, 0x1000);
-        for (i, &w) in prog.iter().enumerate() { mem_t.write(entry + (i as u64)*4, 32, w as u128); }
+        // tier-0 reads from the SAME guest_bytes via mem_base (identity-map).
         let mut cache: HashMap<u64, sharpretro_jit::tier0::CompiledBlock> = HashMap::new();
         let mut flat = [0u64; STATE_WORDS];
-        flat[33] = entry;  // pc
+        flat[33] = entry;      // pc
+        flat[66] = host_base;  // mem_base (host ptr; guest_addr N → host_base+N)
+        flat[67] = 0;          // mem_len=0 = unchecked
         let mut n_t = 0; let mut n_compiles = 0;
         loop {
             let pc = flat[33];
             // Stop-check: peek the insn at pc for BRK before compiling.
-            let first_insn = mem_t.read(pc, 32) as u32;
+            let first_insn = mem_i.read(pc, 32) as u32;
             if (first_insn & 0xFFE00000) == 0xD4200000 { break; }
             // Compile-or-lookup a block starting at pc.
             let block = cache.entry(pc).or_insert_with(|| {
@@ -124,7 +164,7 @@ fn main() {
                 let mut cur = pc;
                 let mut n = 0;
                 loop {
-                    let insn = mem_t.read(cur, 32) as u32;
+                    let insn = mem_i.read(cur, 32) as u32;
                     if (insn & 0xFFE00000) == 0xD4200000 {
                         // BRK inside a block → emit a branch-to-self so pc=cur, driver
                         // loop's BRK-check catches it next iteration.
@@ -234,10 +274,27 @@ fn main() {
         }
         let mut rng = seed;
         let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
-        let (mut n_ok, mut n_diff, mut n_ipanic, mut n_t0panic) = (0usize, 0usize, 0usize, 0usize);
+        let (mut n_ok, mut n_diff, mut n_ipanic, mut n_t0panic, mut n_skip) = (0usize, 0usize, 0usize, 0usize, 0usize);
         let mut diff_by_def: std::collections::BTreeMap<String, usize> = Default::default();
         let mut t0panic_by: std::collections::BTreeMap<String, usize> = Default::default();
+        // Defs whose emit contains bd.mem_read/write — random reg-values give random
+        // guest-addrs → interp FlatMem panics (caught), tier-0 segfaults (not). SKIP;
+        // mem is covered by --run memsum (which controls addresses). Extract from
+        // the generated lib.rs directly.
+        let mem_defs: std::collections::HashSet<String> = {
+            let mut cur = ""; let mut set = std::collections::HashSet::new();
+            for line in src.lines() {
+                if let Some(n) = line.trim().strip_prefix("/* ").and_then(|s| s.strip_suffix(" */")) {
+                    cur = n;
+                }
+                if line.contains("bd.mem_read") || line.contains("bd.mem_write") {
+                    set.insert(cur.to_string());
+                }
+            }
+            set
+        };
         for (name, mask, mat) in &defs {
+            if mem_defs.contains(name) { n_skip += n; continue; }
             for _ in 0..n {
                 let mut fields = (rand() as u32) & !mask;
                 for sh in [0, 5, 10, 16] {
@@ -295,7 +352,7 @@ fn main() {
             }
         }
         println!("[tier0-fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
-        println!("  ok={n_ok}  diff={n_diff}  interp-panic={n_ipanic}  tier0-panic={n_t0panic}");
+        println!("  ok={n_ok}  diff={n_diff}  interp-panic={n_ipanic}  tier0-panic={n_t0panic}  skip(mem)={n_skip}");
         if n_t0panic > 0 {
             println!("  ── tier-0 unwired ops (the coverage frontier) ──");
             for (msg, c) in &t0panic_by { println!("    {c:4}× {msg}"); }
