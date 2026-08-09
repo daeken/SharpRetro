@@ -125,23 +125,15 @@ public class RustLiftGen {
             case PName("branch"):
                 Emit($"bd.branch({Expr(l[1], 64)}, false);");
                 break;
-            case PName("call"): {
-                // push next_pc; branch. (link=false — x86 has no lr; the pushed ret-addr IS the link.)
-                var np = Rt("bd.literal(IlType::U64, next_pc as u128)");
-                var rsp = Rt("bd.reg_read(GPR, 4, IlType::U64)");
-                var eight = Rt("bd.literal(IlType::U64, 8)");
-                var rsp2 = Rt($"bd.sub({rsp}, {eight})");
-                Emit($"bd.reg_write(GPR, 4, {rsp2});");
-                Emit($"bd.mem_write({rsp2}, {np});");
+            case PName("call"):
+            case PName("ret"):
+                // Per IlLower: call/ret are BRANCH MARKERS only (BranchKind.Call/Ret for
+                // the arch-neutral CFG scanner). The .isa body does the push/pop as a
+                // SEPARATE `(push (next-pc))` / `(pop)` stmt. Composed-from-memory bug
+                // (had this arm doing push+branch → double-push, rsp-16 not -8; caught
+                // by the loader integration's rsp-delta observation).
                 Emit($"bd.branch({Expr(l[1], 64)}, false);");
                 break;
-            }
-            case PName("ret"): {
-                // The .isa's RET body is `(ret (pop))` — pop already yields the target;
-                // this stmt just branches to it.
-                Emit($"bd.branch({Expr(l[1], 64)}, false);");
-                break;
-            }
             case PName("branch-if"): {
                 var cond = CanonFlag(Expr(l[1]));
                 var tgt = Expr(l[2], 64);
