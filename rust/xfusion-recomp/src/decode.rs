@@ -191,20 +191,94 @@ fn apply_vex_pp(pp: u8, p: &mut PrefixState) {
 /// Decode ModRM + SIB + displacement. `code` starts AT the ModRM byte.
 /// Returns Some(bytes_consumed) or None if truncated. Transcribed from Decode.ReadModRm.
 pub fn read_modrm(code: &[u8], mode: XMode, p: &PrefixState) -> Option<(usize, ModRm)> {
-    // ‡ TRANSCRIBE from Decode.cs:183-260 next. Stub for scaffold-compiles.
     if code.is_empty() { return None; }
-    let b = code[0];
+    let modrm = code[0];
+    let mut i = 1usize;
     let mut m = ModRm {
-        mod_: b >> 6,
-        reg: ((b >> 3) & 7) | if p.rex_r() { 8 } else { 0 },
-        rm:  (b & 7) | if p.rex_b() { 8 } else { 0 },
-        is_reg: (b >> 6) == 3,
+        mod_: modrm >> 6,
+        reg: ((modrm >> 3) & 7) | if p.rex_r() { 8 } else { 0 },
+        rm:  (modrm & 7) | if p.rex_b() { 8 } else { 0 },
+        is_reg: (modrm >> 6) == 3,
         base_reg: -1, index_reg: -1, scale: 1, disp: 0, rip_relative: false,
     };
     if m.is_reg { return Some((1, m)); }
-    let _ = mode;
-    // memory form: SIB + disp — full body next commit.
-    todo!("read_modrm memory-form: transcribe Decode.cs:183-260")
+
+    let aw = p.a_width(mode);
+    if aw == 16 {
+        // 16-bit addressing table (SDM 2.1.5 Table 2-1)
+        let rm = modrm & 7;
+        let (b, x): (i8, i8) = match rm {
+            0 => (3, 6),   // BX+SI
+            1 => (3, 7),   // BX+DI
+            2 => (5, 6),   // BP+SI
+            3 => (5, 7),   // BP+DI
+            4 => (6, -1),  // SI
+            5 => (7, -1),  // DI
+            6 => (5, -1),  // BP (or disp16 if mod==00)
+            _ => (3, -1),  // BX
+        };
+        m.base_reg = b; m.index_reg = x;
+        if m.mod_ == 0 && rm == 6 {
+            if i + 2 > code.len() { return None; }
+            m.base_reg = -1;
+            m.disp = (code[i] as u16 | ((code[i+1] as u16) << 8)) as i16 as i64;
+            i += 2;
+        } else if m.mod_ == 1 {
+            if i + 1 > code.len() { return None; }
+            m.disp = code[i] as i8 as i64; i += 1;
+        } else if m.mod_ == 2 {
+            if i + 2 > code.len() { return None; }
+            m.disp = (code[i] as u16 | ((code[i+1] as u16) << 8)) as i16 as i64;
+            i += 2;
+        }
+        return Some((i, m));
+    }
+
+    // 32/64-bit addressing
+    let rm_low = modrm & 7;
+    if rm_low == 4 {
+        // SIB
+        if i >= code.len() { return None; }
+        let sib = code[i]; i += 1;
+        m.scale = 1 << (sib >> 6);
+        let idx = ((sib >> 3) & 7) | if p.rex_x() { 8 } else { 0 };
+        m.index_reg = if idx == 4 { -1 } else { idx as i8 };  // index=100 (no REX.X) = none
+        let bse = (sib & 7) | if p.rex_b() { 8 } else { 0 };
+        if (sib & 7) == 5 && m.mod_ == 0 {
+            if i + 4 > code.len() { return None; }
+            m.base_reg = -1;
+            m.disp = read_i32(code, &mut i);
+        } else {
+            m.base_reg = bse as i8;
+        }
+    } else if rm_low == 5 && m.mod_ == 0 {
+        if i + 4 > code.len() { return None; }
+        if mode == XMode::Bits64 {
+            m.rip_relative = true;
+            m.disp = read_i32(code, &mut i);
+        } else {
+            m.base_reg = -1;
+            m.disp = read_i32(code, &mut i);
+        }
+    } else {
+        m.base_reg = m.rm as i8;
+    }
+
+    if m.mod_ == 1 {
+        if i + 1 > code.len() { return None; }
+        m.disp = code[i] as i8 as i64; i += 1;
+    } else if m.mod_ == 2 {
+        if i + 4 > code.len() { return None; }
+        m.disp = read_i32(code, &mut i);
+    }
+    Some((i, m))
+}
+
+fn read_i32(code: &[u8], i: &mut usize) -> i64 {
+    let v = (code[*i] as u32) | ((code[*i+1] as u32) << 8)
+          | ((code[*i+2] as u32) << 16) | ((code[*i+3] as u32) << 24);
+    *i += 4;
+    v as i32 as i64
 }
 
 pub fn mask_to_width(v: i64, bits: u32) -> u64 {
@@ -279,6 +353,36 @@ mod tests {
         assert_eq!(p.vex_map, 1);
         assert_eq!(p.vex_vvvv, 0);  // 1111 inverted
         assert!(!p.vex_l);
+    }
+
+    #[test]
+    fn modrm_mem_forms() {
+        let p = PrefixState::default();
+        // [rax]: mod=00 rm=000 → base=0, no disp
+        let (n, m) = read_modrm(&[0x00], XMode::Bits64, &p).unwrap();
+        assert_eq!((n, m.base_reg, m.disp, m.rip_relative), (1, 0i8, 0i64, false));
+        // [rbp+8]: mod=01 rm=101 disp8=08 → base=5, disp=8
+        let (n, m) = read_modrm(&[0x45, 0x08], XMode::Bits64, &p).unwrap();
+        assert_eq!((n, m.base_reg, m.disp), (2, 5i8, 8i64));
+        // [rip+0x1234]: mod=00 rm=101 disp32 → RIP-relative in Bits64
+        let (n, m) = read_modrm(&[0x05, 0x34, 0x12, 0x00, 0x00], XMode::Bits64, &p).unwrap();
+        assert_eq!((n, m.rip_relative, m.disp), (5, true, 0x1234i64));
+        // Same in Bits32 → NOT rip-relative, base=-1 disp32
+        let (n, m) = read_modrm(&[0x05, 0x34, 0x12, 0x00, 0x00], XMode::Bits32, &p).unwrap();
+        assert_eq!((n, m.rip_relative, m.base_reg, m.disp), (5, false, -1i8, 0x1234i64));
+        // SIB [rax + rcx*4 + 0x10]: mod=01 rm=100 SIB=88(scale=10 idx=001 base=000) disp8=10
+        let (n, m) = read_modrm(&[0x44, 0x88, 0x10], XMode::Bits64, &p).unwrap();
+        assert_eq!((n, m.base_reg, m.index_reg, m.scale, m.disp), (3, 0i8, 1i8, 4u8, 0x10i64));
+        // SIB with REX.X: index becomes r9 (idx=001 + REX.X → 9)
+        let mut px = p; px.rex = 0x42;
+        let (_, m) = read_modrm(&[0x44, 0x88, 0x10], XMode::Bits64, &px).unwrap();
+        assert_eq!(m.index_reg, 9);
+        // SIB idx=100 = no index (RSP can't be index)
+        let (_, m) = read_modrm(&[0x04, 0x20], XMode::Bits64, &p).unwrap();
+        assert_eq!((m.base_reg, m.index_reg), (0i8, -1i8));
+        // 16-bit: [bx+si] = mod=00 rm=000
+        let (n, m) = read_modrm(&[0x00], XMode::Bits16, &p).unwrap();
+        assert_eq!((n, m.base_reg, m.index_reg), (1, 3i8, 6i8));
     }
 
     #[test]
