@@ -559,7 +559,16 @@ public class RustLiftGen {
                     OpClass.ModRmReg => $"bind_modrm_reg(d, {w})",
                     OpClass.OpcodeReg => $"bind_opcode_reg(d, {w})",
                     OpClass.FixedReg => $"bind_fixed_reg({spec.FixedRegIndex}, {w})",
-                    OpClass.Imm => $"bind_imm(d, {immSlot++}, {w})",
+                    // Imm operand: bind at op_w, NOT the encoded imm width. d.imm0/1 are
+                    // already sign-extended to i64 by the decoder (Ib-sx in an Ev context
+                    // per SDM: opcode-83 arith, C1 shifts, etc). The template consumes the
+                    // imm at the DESTINATION's width (add/cmp/mov to op_w-wide reg), so the
+                    // Operand::Imm.width should be op_w — otherwise bd.literal(U8, sext'd-i64)
+                    // masks to 8 bits and loses the sign (add r64, -4 → adds 0xFC not
+                    // 0xFF..FC). tier-0 was correct-by-accident (its literal doesn't mask);
+                    // interp+tier-1 mask and were both silently wrong on negative imm8.
+                    // Byte-form encodings (Eb,Ib) have op_w=8 anyway → no change there.
+                    OpClass.Imm => $"bind_imm(d, {immSlot++}, op_w)",
                     OpClass.RelBranch => $"bind_rel_branch(d, {immSlot++}, pc, mode)",
                     OpClass.MemOffset => $"Operand::Mem{{addr: {{let a=bd.literal(IlType::U64,d.imm{immSlot++} as u128); a}}, width:{w}}}",
                     OpClass.XmmReg => $"bind_xmm_reg(d, {w})",
