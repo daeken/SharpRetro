@@ -870,6 +870,9 @@ impl CompiledBlock {
     pub fn code_bytes(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.page, self.code_len) }
     }
+    /// Raw entry fn (for a driver that manages its own shared spill area
+    /// instead of exec_slice's per-call vec![] alloc).
+    pub fn entry_fn(&self) -> extern "C" fn(*mut u64, *mut u64) { self.entry }
 }
 
 impl CompiledBlock {

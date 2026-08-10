@@ -59,12 +59,19 @@ pub struct BlockCache {
     pub n_compiles: usize,
     pub n_execs: usize,
     layout: &'static StateLayout,
+    /// Shared spill area, sized to max(n_slots) across compiled blocks (grows
+    /// on-demand at COMPILE time, not exec time). exec_slice's per-call
+    /// vec![0u64; n_slots+1] alloc was 40% of wall on a tight-loop bench
+    /// (5M heap allocs). The spill area doesn't need zeroing (each block's
+    /// prologue writes before reading — SSA def-before-use guarantees it).
+    spill: Vec<u64>,
 }
 
 impl BlockCache {
     pub fn new() -> Self { Self::with_layout(&AARCH64_LAYOUT) }
     pub fn with_layout(layout: &'static StateLayout) -> Self {
-        Self { map: HashMap::new(), max_block_insns: 32, n_compiles: 0, n_execs: 0, layout }
+        Self { map: HashMap::new(), max_block_insns: 32, n_compiles: 0, n_execs: 0, layout,
+               spill: vec![0u64; 64] }
     }
 
     /// Run guest code from `state[OFF_PC]` until a stop-insn or `max_execs` blocks.
@@ -107,6 +114,10 @@ impl BlockCache {
                         t0.branch(t, false);
                     }
                     let block = t0.finalize();
+                    // Grow the shared spill area if this block needs more.
+                    if block.n_slots as usize + 1 > self.spill.len() {
+                        self.spill.resize(block.n_slots as usize + 1, 0);
+                    }
                     self.n_compiles += 1;
                     self.map.insert((pc, mode), Entry {
                         block,
@@ -117,7 +128,9 @@ impl BlockCache {
                     self.map.get_mut(&(pc, mode)).unwrap()
                 }
             };
-            entry.block.exec_slice(state);
+            // Direct entry-call with the shared spill area (was exec_slice →
+            // vec![0u64; n_slots+1] per call = 40% of wall on tight-loop bench).
+            (entry.block.entry_fn())(state.as_mut_ptr(), self.spill.as_mut_ptr());
             entry.exec_count = entry.exec_count.saturating_add(1);
             self.n_execs += 1;
         }

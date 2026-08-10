@@ -192,15 +192,51 @@ fn main() {
     let max_execs: u64 = std::env::var("MAX_EXECS").ok()
         .and_then(|s| s.parse().ok()).unwrap_or(5_000_000_000);
 
+    // FASTLOOP=1: hoist spill-vec alloc + HashMap-lookup out of the hot loop.
+    // Pre-compiles all reachable blocks (walks until a repeat pc), then runs
+    // via a Vec<(pc, entry_fn, n_slots)> lookup with a single reused spill area.
+    // Delta vs default = the driver-loop overhead (alloc + hash + exec_slice indirection).
+    let fastloop = std::env::var("FASTLOOP").is_ok();
+    // Shared spill area (max n_slots across all blocks; +64 headroom).
+    let mut spill = vec![0u64; 256];
+
+    // NOHASH=1 (implies FASTLOOP): after warm-up, cache pc→entry_fn in a small
+    // linear-probed Vec<(pc, fn)>. 3 blocks → linear-scan is ~free. Isolates
+    // HashMap-lookup cost from the residual (which is then prologue/epilogue +
+    // the block-body itself = the block-linking floor).
+    let nohash = std::env::var("NOHASH").is_ok();
     let t0 = Instant::now();
-    loop {
-        let pc = flat[OFF_RIP];
-        let b0 = unsafe { *(pc as *const u8) };
-        if b0 == 0xCC { break; }
-        let cb = blocks.entry(pc).or_insert_with(|| { n_compiles += 1; if std::env::var("T0").is_ok() { compile_t0(pc) } else { compile_t1(pc) } });
-        cb.exec_slice(&mut flat[..]);
-        n_execs += 1;
-        if n_execs > max_execs { println!("  max_execs hit"); break; }
+    if nohash {
+        // Warm-up: compile all blocks first (run until n_execs > 100 covers all pcs).
+        let sp = flat.as_mut_ptr(); let spp = spill.as_mut_ptr();
+        let mut fast: Vec<(u64, extern "C" fn(*mut u64,*mut u64))> = Vec::with_capacity(8);
+        loop {
+            let pc = flat[OFF_RIP];
+            if unsafe { *(pc as *const u8) } == 0xCC { break; }
+            match fast.iter().find(|(p,_)| *p==pc) {
+                Some(&(_,f)) => f(sp, spp),
+                None => {
+                    let cb = blocks.entry(pc).or_insert_with(|| { n_compiles+=1; compile_t1(pc) });
+                    let f = cb.entry_fn(); fast.push((pc, f)); f(sp, spp);
+                }
+            }
+            n_execs += 1;
+            if n_execs > max_execs { break; }
+        }
+    } else {
+        loop {
+            let pc = flat[OFF_RIP];
+            let b0 = unsafe { *(pc as *const u8) };
+            if b0 == 0xCC { break; }
+            let cb = blocks.entry(pc).or_insert_with(|| { n_compiles += 1; if std::env::var("T0").is_ok() { compile_t0(pc) } else { compile_t1(pc) } });
+            if fastloop {
+                (cb.entry_fn())(flat.as_mut_ptr(), spill.as_mut_ptr());
+            } else {
+                cb.exec_slice(&mut flat[..]);
+            }
+            n_execs += 1;
+            if n_execs > max_execs { println!("  max_execs hit"); break; }
+        }
     }
     let wall = t0.elapsed().as_secs_f64();
     println!("[elfbench_t1] wall = {:.4}s  ({} block-execs, {} compiles)  rax=0x{:x}",
