@@ -130,6 +130,10 @@ impl Builder for IlRecorder {
     }
     fn cast(&mut self, v: u32, ty: IlType) -> u32 { self.produce(IlOpKind::Cast, ty, &[v], 0) }
     fn sext(&mut self, v: u32, ty: IlType) -> u32 { self.produce(IlOpKind::Sext, ty, &[v], 0) }
+    fn pair128(&mut self, hi: u32, lo: u32) -> u32 {
+        self.produce(IlOpKind::Cast, IlType::I{signed:false,width:128}, &[hi, lo], 2 /*pair marker*/)
+    }
+    fn hi64(&mut self, a: u32) -> u32 { self.produce(IlOpKind::Cast, IlType::U64, &[a], 3 /*hi64 marker*/) }
 
     bin!(add, Add); bin!(sub, Sub); bin!(mul, Mul); bin!(div, Div); bin!(rem, Rem);
     bin!(and, And); bin!(or, Or); bin!(xor, Xor);

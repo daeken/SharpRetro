@@ -149,6 +149,14 @@ pub trait Builder {
     fn bitcast(&mut self, a: Self::Val, to: IlType) -> Self::Val;
     /// Sign-extend from `a`'s current width to `to` (which must be wider signed int).
     fn sext(&mut self, a: Self::Val, to: IlType) -> Self::Val;
+    /// Assemble a u128 from two u64 halves (hi<<64 | lo). The Builder-level form
+    /// of the `.isa`'s `(:` bit-concat, specialized to the 64+64→128 case that
+    /// x86 DIV/MUL need. tier-0: 2-slot with hi@slot+1, lo@slot (no shl needed).
+    fn pair128(&mut self, hi: Self::Val, lo: Self::Val) -> Self::Val;
+    /// Extract low-64 of a u128. (cast to U64 does this too; explicit for symmetry.)
+    fn lo64(&mut self, a: Self::Val) -> Self::Val { self.cast(a, IlType::U64) }
+    /// Extract high-64 of a u128.
+    fn hi64(&mut self, a: Self::Val) -> Self::Val;
 
     // ── float (Abs/Sqrt/Round*/Ceil/Floor/IsNaN) ────────────────────────────
     fn fabs(&mut self, a: Self::Val) -> Self::Val;

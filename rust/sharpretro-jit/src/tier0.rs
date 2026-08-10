@@ -27,6 +27,7 @@ const X_SPILL: u32 = 27;   // x27 = spill-base
 const X_A: u32 = 9;        // scratch A
 const X_B: u32 = 10;       // scratch B
 const X_C: u32 = 11;       // scratch C (for 3-arg ops / temp)
+const X_D: u32 = 12;       // scratch D (rare 4-value ops — wide-div guard)
 
 // State offsets (in bytes from x28).
 /// Per-guest-arch state layout — parameterizes Tier0's flat u64[] offsets so the
@@ -365,11 +366,57 @@ impl Builder for Tier0 {
             return s;
         }
         self.bin(a, b, t, |e| e.mul_r(X_A, X_A, X_B)) }
+    fn pair128(&mut self, hi: u32, lo: u32) -> u32 {
+        // Direct slot placement: result is a 2-slot Val with lo@s, hi@s+1. No shl.
+        let s = self.slot(IlType::I{signed:false, width:128});
+        self.load(X_A, lo);
+        self.load(X_C, hi);
+        self.store2(X_A, X_C, s);
+        s
+    }
+    fn hi64(&mut self, a: u32) -> u32 {
+        let s = self.slot(IlType::U64);
+        self.load2(X_A, X_C, a);
+        self.store(X_C, s);
+        s
+    }
     fn div(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
         // Silicon udiv/sdiv: divide-by-0 → result 0 (no fault) — matches interp's
         // `if y==0 {0} else {x/y}`. So no zero-guard needed.
         let signed = matches!(t, IlType::I{signed:true, ..});
         let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
+        if Self::is_wide(t) {
+            // 128÷N: aarch64 has no wide udiv. The x86 `div r64` common case is
+            // `xor edx,edx; div rbx` (rdx=0 → dividend fits in 64) — do 64÷64 then.
+            // If hi≠0 (or, signed: hi≠sext(lo)), we'd silently truncate → WRONG.
+            // Die-loud instead (BRK #0xD1): the recon names it and we build the
+            // full 128÷64 helper (bit-by-bit or __udivti3 callout) when it fires.
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a);   // X_A=lo X_C=hi (dividend)
+            self.load(X_B, b);         // divisor low-64 (b is also 128-wide here; hi ignored — divisor always fits op_w)
+            // Guard: hi must be 0 (unsigned) or sign-fill of lo (signed) for the
+            // dividend to fit in 64 bits. Signed: check hi == asr(lo, 63).
+            // cbz/cbnz doesn't do eq-to-reg, so: eor tmp, hi, expected; cbz tmp, ok.
+            if signed {
+                self.enc.mov_imm64(X_B, 63);
+                self.enc.asrv(X_D, X_A, X_B);         // X_D = asr(lo, 63) = 0 or -1
+                self.enc.eor_r(X_D, X_C, X_D);        // X_D = hi ^ expected → 0 iff match
+                self.load(X_B, b);                    // reload divisor (clobbered X_B)
+            } else {
+                // unsigned: expected hi = 0, so X_D = X_C directly.
+                self.enc.mov_r(X_D, X_C);
+            }
+            let cbz_at = self.enc.buf.len();
+            self.enc.put_raw(0xB4000000 | (X_D as u32));   // cbz xD, +? (patched below)
+            self.enc.put_raw(0xD4200000 | (0xD1u32 << 5)); // brk #0xD1 (die-loud on wide dividend)
+            let off = ((self.enc.buf.len() - cbz_at)) as u32;
+            let w0 = self.enc.buf[cbz_at]; self.enc.buf[cbz_at] = w0 | (off << 5);
+            // 64÷64 (correct since hi==0 verified).
+            if signed { self.enc.sdiv(X_A, X_A, X_B); } else { self.enc.udiv(X_A, X_A, X_B); }
+            self.enc.mov_imm64(X_C, 0);  // result-hi = 0
+            self.store2(X_A, X_C, s);
+            return s;
+        }
         self.bin(a, b, t, move |e| match (signed, w32) {
             (true, true) => e.sdiv_w(X_A, X_A, X_B),
             (true, false) => e.sdiv(X_A, X_A, X_B),
@@ -377,6 +424,33 @@ impl Builder for Tier0 {
             (false, false) => e.udiv(X_A, X_A, X_B),
         }) }
     fn rem(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) {
+            // Same guard as div: dividend must fit in 64 (hi==0 or ==sign-fill).
+            // Under that, rem64 = a_lo - (a_lo/b_lo)*b_lo is correct.
+            // ‡ emits the guard TWICE (div then rem in the DIV template) — fine
+            //   for correctness; tier-1 CSE would collapse it. Alternatively the
+            //   template could compute q then r=dvd-q*dvs — v2.
+            let signed = matches!(t, IlType::I{signed:true, ..});
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a); self.load(X_B, b);
+            if signed {
+                self.enc.mov_imm64(X_D, 63);
+                self.enc.asrv(X_D, X_A, X_D);
+                self.enc.eor_r(X_D, X_C, X_D);
+            } else { self.enc.mov_r(X_D, X_C); }
+            let cbz_at = self.enc.buf.len();
+            self.enc.put_raw(0xB4000000 | (X_D as u32));
+            self.enc.put_raw(0xD4200000 | (0xD1u32 << 5));
+            let off = (self.enc.buf.len() - cbz_at) as u32;
+            let w0 = self.enc.buf[cbz_at]; self.enc.buf[cbz_at] = w0 | (off << 5);
+            if signed { self.enc.sdiv(X_C, X_A, X_B); } else { self.enc.udiv(X_C, X_A, X_B); }
+            self.enc.msub(X_A, X_C, X_B, X_A);
+            // Result-hi: signed → sign-fill of rem; unsigned → 0.
+            if signed { self.enc.mov_imm64(X_C, 63); self.enc.asrv(X_C, X_A, X_C); }
+            else { self.enc.mov_imm64(X_C, 0); }
+            self.store2(X_A, X_C, s);
+            return s;
+        }
         // rem = a - (a/b)*b via msub. Same div-by-0 semantics (0 - 0*b = 0).
         // ‡ signed-rem sign convention: aarch64 sdiv truncates toward zero, so
         // a - trunc(a/b)*b = C's `%` semantics = interp's wrapping_rem. Matches.
@@ -521,7 +595,13 @@ impl Builder for Tier0 {
         s
     }
     fn bitcast(&mut self, a: u32, to: IlType) -> u32 {
-        let s = self.slot(to); self.load(X_A, a); self.store(X_A, s); s
+        let s = self.slot(to);
+        if Self::is_wide(to) || Self::is_wide(self.tys[a as usize]) {
+            self.load2(X_A, X_C, a); self.store2(X_A, X_C, s);
+        } else {
+            self.load(X_A, a); self.store(X_A, s);
+        }
+        s
     }
     fn sext(&mut self, a: u32, to: IlType) -> u32 {
         // sbfm — encoder lacks it; template via shift-pair (shl to top, asr back).

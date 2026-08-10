@@ -207,6 +207,10 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
             _ => panic!("cast {:?} → {:?}", a.ty, to),
         }
     }
+    fn pair128(&mut self, hi: IVal, lo: IVal) -> IVal {
+        IVal { ty: IlType::I{signed:false, width:128}, bits: (hi.bits << 64) | (lo.bits & u64::MAX as u128) }
+    }
+    fn hi64(&mut self, a: IVal) -> IVal { IVal { ty: IlType::U64, bits: a.bits >> 64 } }
     fn bitcast(&mut self, a: IVal, to: IlType) -> IVal { IVal { ty: to, bits: a.bits } }
     fn sext(&mut self, a: IVal, to: IlType) -> IVal {
         let sw = width_of(a.ty); let tw = width_of(to);

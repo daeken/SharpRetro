@@ -141,6 +141,69 @@ public class RustLiftGen {
             case PName("branch"):
                 Emit($"bd.branch({Expr(l[1], 64)}, false);");
                 break;
+            case PName("div-wide"): {
+                // rDX:rAX / src → rAX=quot rDX=rem. 2×op_w dividend. l[2]=#t/#f = signed.
+                var signed = l[2] is PName("#t");
+                var w2s = $"IlType::I{{signed:{(signed?"true":"false")}, width:(op_w*2) as u8}}";
+                Emit("let _dax = bd.reg_read(GPR, 0, IlType::U64);");
+                Emit("let _ddx = bd.reg_read(GPR, 2, IlType::U64);");
+                // op_w=64: pair128(rdx,rax) directly. op_w=32: dividend is edx:eax = a
+                // 64-bit value, fits in u64 → shl(edx,32)|eax then cast to 2×op_w=64.
+                // op_w=16 similar. Handle both via a match on op_w.
+                Emit($"let _dvd = if op_w == 64 {{");
+                Emit($"    let p = bd.pair128(_ddx, _dax);");
+                Emit(signed ? $"    bd.bitcast(p, {w2s})" : "    p");
+                Emit($"}} else {{");
+                Emit($"    let sh = bd.literal(IlType::U64, op_w as u128);");
+                Emit($"    let hs = bd.shl(_ddx, sh);");
+                Emit($"    let d64 = bd.or(hs, _dax);");
+                Emit($"    bd.cast(d64, {w2s})");
+                Emit($"}};");
+                var srcE = Expr(l[1]);
+                var srcW = signed ? $"bd.sext({srcE}, {w2s})" : $"bd.cast({srcE}, {w2s})";
+                Emit($"let _dvs = {srcW};");
+                Emit($"let _q = bd.div(_dvd, _dvs);");
+                Emit($"let _r = bd.rem(_dvd, _dvs);");
+                Emit($"let _qn = bd.cast(_q, ilty(op_w));");
+                Emit($"let _rn = bd.cast(_r, ilty(op_w));");
+                Emit("bd.reg_write(GPR, 0, _qn);");
+                Emit("bd.reg_write(GPR, 2, _rn);");
+                // ‡ #DE on div-by-0 / overflow not raised — result 0 (aarch64 udiv semantics).
+                break;
+            }
+            case PName("mul-wide"): {
+                // rAX × src → rDX:rAX (2×op_w product). CF=OF = hi≠0.
+                var signed = l[2] is PName("#t");
+                var w2 = $"IlType::I{{signed:{(signed?"true":"false")}, width:(op_w*2) as u8}}";
+                var wu = $"ilty(op_w)";
+                Emit($"let _max = bd.reg_read(GPR, 0, {wu});");
+                var maxW = signed ? $"bd.sext(_max, {w2})" : $"bd.cast(_max, {w2})";
+                Emit($"let _mA = {maxW};");
+                var srcE = Expr(l[1]);
+                var srcW = signed ? $"bd.sext({srcE}, {w2})" : $"bd.cast({srcE}, {w2})";
+                Emit($"let _mB = {srcW};");
+                Emit($"let _p = bd.mul(_mA, _mB);");
+                // Extract hi/lo: at op_w=64 use hi64/lo64 (2-slot direct); at op_w<64
+                // the product fits in u64 → shr by op_w for hi.
+                Emit($"let (_lo, _hi) = if op_w == 64 {{");
+                Emit($"    let l = bd.lo64(_p); let h = bd.hi64(_p); (l, h)");
+                Emit($"}} else {{");
+                Emit($"    let l = bd.cast(_p, {wu});");
+                Emit($"    let sh = bd.literal({w2}, op_w as u128);");
+                Emit($"    let ph = bd.shr(_p, sh);");
+                Emit($"    let h = bd.cast(ph, {wu}); (l, h)");
+                Emit($"}};");
+                Emit("bd.reg_write(GPR, 0, _lo);");
+                Emit("bd.reg_write(GPR, 2, _hi);");
+                // CF=OF = hi≠0 (unsigned) or hi≠sext(lo>>op_w-1, op_w) (signed — meaning the
+                // full product doesn't fit in op_w). ‡ v1: unsigned form only; IMUL-1arg later.
+                Emit($"let _z = bd.literal({wu}, 0);");
+                Emit($"let _hnz = bd.ne(_hi, _z);");
+                Emit($"if live_flags & 0x1 != 0 {{ bd.reg_write(EFLAGS, 0, _hnz); }}");
+                Emit($"if live_flags & 0x800 != 0 {{ bd.reg_write(EFLAGS, 11, _hnz); }}");
+                FlagsWritten |= 0x801;
+                break;
+            }
             case PName("call"):
             case PName("ret"):
                 // Per IlLower: call/ret are BRANCH MARKERS only (BranchKind.Call/Ret for
@@ -236,6 +299,23 @@ public class RustLiftGen {
                 var w = l.Count > 2 && l[2] is PInt(var wv) ? wv.ToString() : OpW;
                 return Rt($"bd.sext({a}, ilty({w}))");
             }
+            case ":": {
+                // Bit-concat, MSB-first: (: hi lo) → (widen(hi) << width(lo)) | widen(lo).
+                // Widths from the type-inferred sum (CoreArchCompiler ScalarMath's ':'
+                // sig = EInt(false, sum-of-widths)). For DIV: (: DX AX) at op_w=64 → u128.
+                // Emit iteratively L→R (each: acc = (widen(acc) << w_i) | widen(elem_i)).
+                var totalW = ((EInt) l.Type).Width;
+                var wideT = totalW switch { <=32 => "IlType::U32", <=64 => "IlType::U64",
+                                            _ => "IlType::I{signed:false, width:128}" };
+                var cacc = Rt($"bd.cast({Expr(l[1])}, {wideT})");
+                for(var i = 2; i < l.Count; i++) {
+                    var elemW = l[i].Type is EInt(_, var ew) ? ew : 1;
+                    var sh = Rt($"bd.literal({wideT}, {elemW})");
+                    var elem = Rt($"bd.cast({Expr(l[i])}, {wideT})");
+                    cacc = Rt($"bd.or(bd.shl({cacc}, {sh}), {elem})");
+                }
+                return cacc;
+            }
             case "zext": {
                 var a = Expr(l[1]);
                 var w = l.Count > 2 && l[2] is PInt(var wv2) ? wv2.ToString() : OpW;
@@ -265,6 +345,7 @@ public class RustLiftGen {
         // binary/nary
         var (rtop, isShift) = head switch {
             "+" => ("add", false), "-" => ("sub", false), "*" => ("mul", false),
+            "/" => ("div", false), "%" => ("rem", false),
             "&" => ("and", false), "|" => ("or", false), "^" => ("xor", false),
             ">>" => ("shr", true), "<<" => ("shl", true), ">>a" => ("shr", true), "rotr" => ("rotr", true),
             "rotl" => ("rotl", true),

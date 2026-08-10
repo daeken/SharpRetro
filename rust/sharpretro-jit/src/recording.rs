@@ -67,6 +67,8 @@ impl Builder for RecordingBuilder {
     fn cast(&mut self, a: u32, to: IlType) -> u32 { self.v(format!("cast v{} → {}", a, ty(to))) }
     fn bitcast(&mut self, a: u32, to: IlType) -> u32 { self.v(format!("bitcast v{} → {}", a, ty(to))) }
     fn sext(&mut self, a: u32, to: IlType) -> u32 { self.v(format!("sext v{} → {}", a, ty(to))) }
+    fn pair128(&mut self, hi: u32, lo: u32) -> u32 { self.v(format!("pair128 v{hi}:v{lo}")) }
+    fn hi64(&mut self, a: u32) -> u32 { self.v(format!("hi64 v{a}")) }
 
     un!(fabs); un!(fsqrt); un!(fceil); un!(ffloor); un!(fisnan);
     fn fround(&mut self, a: u32, m: RoundMode) -> u32 { self.v(format!("fround v{} {:?}", a, m)) }

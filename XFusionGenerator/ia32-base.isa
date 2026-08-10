@@ -438,9 +438,15 @@
 (encoding NEG (Eb) (0xF6 /3))
 (encoding NEG (Ev) (0xF7 /3))
 
+; MUL/DIV/IDIV wide forms: rDX:rAX at 2×op_w. The .isa can't express type-at-
+; runtime-width cleanly (op_w is a per-encoding runtime Rust const, not a
+; DSL compile-time int), so these use dedicated RustLiftGen heads that emit
+; the widen/narrow directly using op_w. ‡ op_w=8 forms (AX/AL/AH-split) not
+; handled yet; F6-encodings will hit tier-0's div/mul at width=16 which
+; produces wrong hi/lo split — flag if the recon surfaces one.
 (instruction MUL (src)
     "mul $src"
-    (intrinsic mul-wide (bitwidth src) src))
+    (mul-wide src #f))
 (encoding MUL (Eb) (0xF6 /4))
 (encoding MUL (Ev) (0xF7 /4))
 
@@ -452,13 +458,13 @@
 
 (instruction DIV (src)
     "div $src"
-    (intrinsic div-wide (bitwidth src) src))
+    (div-wide src #f))
 (encoding DIV (Eb) (0xF6 /6))
 (encoding DIV (Ev) (0xF7 /6))
 
 (instruction IDIV (src)
     "idiv $src"
-    (intrinsic idiv-wide (bitwidth src) src))
+    (div-wide src #t))
 (encoding IDIV (Eb) (0xF6 /7))
 (encoding IDIV (Ev) (0xF7 /7))
 
