@@ -1000,6 +1000,22 @@ impl Builder for Tier0 {
 
     fn cast(&mut self, a: u32, to: IlType) -> u32 {
         let from = self.tys[a as usize];
+        // Own #135: cast(V128,V128) fell through to the 1-word int arm → hi-word
+        // LOST. My write_operand Mem-arm cast (@f16570f) made EVERY V128 mem-store
+        // go through cast → MOVDQA-to-mem wrote only lo-64 → memory corruption at
+        // ~234 shims → once-guard read garbage → contended-spin → PAUSE. Caught by
+        // MOVDQA-round-trip test + JIT regression 15.9M→234.
+        //
+        // Own #136: my first fix was full identity (from==to → return a). That
+        // regressed tier0-fuzz 3446→3435/11 on aarch64: the fall-through I→I arm
+        // MASKS to width<64, and some producers leave dirty bits above their
+        // declared width — cast(I32,I32) was cleaning them. Full-identity is
+        // semantically-correct but exposed the dirty producers (‡ they're the
+        // real bugs; a slot's bits should match its type — but that's a whole
+        // audit, not tonight). NARROW the fast-path to what #135 actually needs:
+        // wide→wide identity (V128/I128/U128 = 2-slot values the 1-word fall-
+        // through can't handle). Narrow same-type still masks (belt+braces).
+        if from == to && Self::is_wide(to) { return a; }
         let s = self.slot(to);
         if Self::is_wide(to) && !Self::is_wide(from) {
             // u64→u128 widen: lo=a, hi=0 (or sext-fill for i128).

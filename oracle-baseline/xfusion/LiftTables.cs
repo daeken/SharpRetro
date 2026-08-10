@@ -115,7 +115,7 @@ public static class LiftTables {
 		("LEA", "dst src", "(block (= dst (addr-of src)))"),
 		("XCHG", "a b", "(block (mlet (t a) (= a b) (= b t)))"),
 		("NOP", "", "(block (block))"),
-		("PAUSE", "", "(block (intrinsic pause))"),
+		("PAUSE", "", "(block (block))"),
 		("NOPL", "src", "(block (block))"),
 		("CALL", "target", "(block (push (next-pc)) (call target))"),
 		("JMP", "target", "(block (branch target))"),
