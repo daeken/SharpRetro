@@ -272,6 +272,9 @@ impl Aarch64Enc {
         debug_assert!(size < 3, "MUL vector has no .2D form");
         self.put(0x4E209C00 | (size<<22) | (vm<<16) | (vn<<5) | vd);
     }
+    // REV Xd,Xn (reverse bytes in 64-bit) = 0xDAC00C00; REV Wd,Wn (32-bit) = 0x5AC00800.
+    pub fn rev_x(&mut self, rd: u32, rn: u32) { self.put(0xDAC00C00 | (rn<<5) | rd); }
+    pub fn rev_w(&mut self, rd: u32, rn: u32) { self.put(0x5AC00800 | (rn<<5) | rd); }
     // CMEQ (register): per-lane == → all-1s/0. size 0-3.
     pub fn cmeq_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
         self.put(0x6E208C00 | (size<<22) | (vm<<16) | (vn<<5) | vd);

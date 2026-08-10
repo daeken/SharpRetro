@@ -410,6 +410,16 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn bswap(&mut self, a: u32) -> u32 {
+        let ty = self.tys[a as usize];
+        let w = match ty { IlType::I{width,..} => width, _ => panic!("bswap non-int") };
+        let s = self.slot(ty);
+        self.load(X_A, a);
+        match w { 64 => self.enc.rev_x(X_A, X_A), 32 => self.enc.rev_w(X_A, X_A),
+                  _ => panic!("bswap width={w} (SDM-undefined at 16)") }
+        self.store(X_A, s);
+        s
+    }
     fn vhadd(&mut self, a: u32, b: u32, ew: u32) -> u32 {
         // x86 HADDPS dst,src ≡ ARM FADDP Vd, q(dst), q(src) — SAME lane pairing.
         let s = self.slot(IlType::V128);

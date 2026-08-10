@@ -135,6 +135,10 @@ pub trait Builder {
     fn rbit(&mut self, a: Self::Val) -> Self::Val;
     fn clz(&mut self, a: Self::Val) -> Self::Val;
     fn popcnt(&mut self, a: Self::Val) -> Self::Val;
+    /// BSWAP: reverse byte order within a's width (32 or 64). Result same width.
+    /// ‡ x86 BSWAP with 16-bit operand-size = SDM-undefined (real hw typically
+    /// zeroes); .isa's Zv can encode it via 66-prefix but no game emits it.
+    fn bswap(&mut self, a: Self::Val) -> Self::Val;
 
     // ── compares (LT/LTE/EQ/NE/GTE/GT — signedness from operand IlType) → Bool ──
     fn eq(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;

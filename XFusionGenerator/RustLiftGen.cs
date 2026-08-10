@@ -503,6 +503,10 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var kind = ((PInt)l[2]).Value;
                 return Rt($"bd.vcvt({a}, {kind})");
             }
+            case "bswap": {
+                var a = Expr(l[1]);
+                return Rt($"bd.bswap({a})");
+            }
             case "vhadd": {
                 var a = Expr(l[1]); var b = Expr(l[2]); var ew = ((PInt)l[3]).Value;
                 return Rt($"bd.vhadd({a}, {b}, {ew})");

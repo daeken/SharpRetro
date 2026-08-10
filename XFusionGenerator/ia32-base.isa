@@ -153,9 +153,11 @@
 (encoding XADD (Eb Gb) (0x0F 0xC0))
 (encoding XADD (Ev Gv) (0x0F 0xC1))
 
+; BSWAP: reverse byte-order within dst (32 or 64-bit). aarch64 REV = 1:1.
+; ‡ 16-bit form (66 0F C8+r) is SDM-undefined; die-loud if it ever appears.
 (instruction BSWAP (dst)
     "bswap $dst"
-    (intrinsic bswap dst))
+    (= dst (bswap dst)))
 (encoding BSWAP (Zv) (0x0F 0xC8 +r))
 
 ; --- BT family ---

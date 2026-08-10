@@ -87,6 +87,7 @@ impl Builder for RecordingBuilder {
         self.v(format!("vfcmpp[{p}] v{a} v{b} @{ew}b"))
     }
     fn vhadd(&mut self, a: u32, b: u32, ew: u32) -> u32 { self.v(format!("vhadd v{a} v{b} @{ew}b")) }
+    fn bswap(&mut self, a: u32) -> u32 { self.v(format!("bswap v{a}")) }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
         self.v(format!("vshuf v{a} v{b} @{ew}b sel=0x{sel:02x}"))
     }

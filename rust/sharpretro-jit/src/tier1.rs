@@ -140,6 +140,7 @@ impl Builder for Tier1 {
     fn vfminmax(&mut self, a: u32, b: u32, ew: u32, m: bool) -> u32 { self.rec.vfminmax(a, b, ew, m) }
     fn vfcmpp(&mut self, a: u32, b: u32, ew: u32, p: u32) -> u32 { self.rec.vfcmpp(a, b, ew, p) }
     fn vhadd(&mut self, a: u32, b: u32, ew: u32) -> u32 { self.rec.vhadd(a, b, ew) }
+    fn bswap(&mut self, a: u32) -> u32 { self.rec.bswap(a) }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 { self.rec.vshuf(a, b, ew, sel) }
     fn vshufw(&mut self, a: u32, sel: u32, hi: bool) -> u32 { self.rec.vshufw(a, sel, hi) }
     fn vcvt(&mut self, a: u32, k: u32) -> u32 { self.rec.vcvt(a, k) }

@@ -298,6 +298,13 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn bswap(&mut self, a: IVal) -> IVal {
+        let w = match a.ty { IlType::I{width,..} => width, _ => panic!("bswap non-int") };
+        let r = match w { 64 => (a.bits as u64).swap_bytes() as u128,
+                          32 => (a.bits as u32).swap_bytes() as u128,
+                          _ => panic!("bswap width={w}") };
+        IVal { ty: a.ty, bits: r }
+    }
     fn vhadd(&mut self, a: IVal, b: IVal, ew: u32) -> IVal {
         let r = match ew {
             32 => {

@@ -215,6 +215,7 @@ impl Builder for IlRecorder {
     fn vfminmax(&mut self, _: u32, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vfminmax (V128)") }
     fn vfcmpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfcmpp (V128)") }
     fn vhadd(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vhadd (V128)") }
+    fn bswap(&mut self, _: u32) -> u32 { panic!("tier-1 v1: bswap") }
     fn vshuf(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vshuf (V128)") }
     fn vshufw(&mut self, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vshufw (V128)") }
     fn vcvt(&mut self, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vcvt (V128)") }

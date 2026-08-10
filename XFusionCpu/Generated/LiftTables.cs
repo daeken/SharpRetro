@@ -19,7 +19,7 @@ public static class LiftTables {
 		("POPCNT", "dst src", "(block (mlet (r (popcnt src)) (= dst r) (= ZF (== r 0x0)) (= CF 0x0) (= OF 0x0) (= SF 0x0) (= AF 0x0) (= PF 0x0)))"),
 		("CMPXCHG", "dst src", "(block (mlet (t dst eq (== AX t)) (= ZF eq) (if eq (= dst src) (= AX t))))"),
 		("XADD", "dst src", "(block (mlet (t (+ dst src)) (= src dst) (= dst t)))"),
-		("BSWAP", "dst", "(block (intrinsic bswap dst))"),
+		("BSWAP", "dst", "(block (= dst (bswap dst)))"),
 		("BT", "src bit", "(block (mlet (b (& bit (- (bitwidth src) 0x1))) (= CF (& (>> src b) 0x1))))"),
 		("BTS", "lval bit", "(block (mlet (b (& bit (- (bitwidth lval) 0x1))) (= CF (& (>> lval b) 0x1)) (= lval (| lval (<< 0x1 b)))))"),
 		("BTR", "lval bit", "(block (mlet (b (& bit (- (bitwidth lval) 0x1))) (= CF (& (>> lval b) 0x1)) (= lval (& lval (~ (<< 0x1 b))))))"),
