@@ -206,6 +206,85 @@ fn main() {
             }
             if d.is_empty() { println!("✓ MATCH"); }
             else { println!("✗ DIFF:"); for l in &d { println!("    {l}"); } }
+
+            // ── tier-1 (register-allocated) via XF_TIER1=1 env ──────────────
+            // Same compile_block logic but drives Tier1 (which records via
+            // IlRecorder, then linear_scan+emit at .compile()). No BlockCache
+            // yet (v1 test drives blocks by hand); when this MATCHes on the
+            // scalar-int programs (sum10/fib), tier-1 emit is proven.
+            if std::env::var("XF_TIER1").is_ok() {
+                use sharpretro_jit::tier1::Tier1;
+                use sharpretro_jit::tier0::CompiledBlock;
+                use xfusion_recomp::lift::{DEF_FLAGS_MASK, DEF_FLAGS_READ};
+
+                let mut guest_bytes = vec![0u8; 0x100000];
+                for (i, &b) in prog.iter().enumerate() { guest_bytes[entry as usize + i] = b; }
+                let host_base = guest_bytes.as_mut_ptr() as u64;
+
+                let is_branch = |m: &str| m.starts_with('J') || m == "CALL" || m == "RET"
+                    || m == "RETI" || m == "RETF" || m.starts_with("LOOP");
+
+                // Compile-and-cache blocks by hand (no BlockCache — Tier0-specific for now).
+                let mut blocks: std::collections::HashMap<u64, CompiledBlock> =
+                    std::collections::HashMap::new();
+                let mut flat1 = [0u64; STATE_WORDS_X64];
+                flat1[OFF_RIP] = entry;
+                flat1[4] = 0x80000;
+                flat1[OFF_MEMBASE] = host_base;
+
+                let mut n_execs = 0usize; let mut n_compiles = 0usize;
+                loop {
+                    let pc = flat1[OFF_RIP];
+                    let b0 = unsafe { *((host_base + pc) as *const u8) };
+                    if b0 == 0xCC { break; }
+                    let cb = blocks.entry(pc).or_insert_with(|| {
+                        n_compiles += 1;
+                        let mut t1 = Tier1::with_layout(&X64_LAYOUT);
+                        // 3-pass: decode-collect / backward-liveness / forward-emit.
+                        let mut insns = vec![]; let mut cur = pc;
+                        for _ in 0..32 {
+                            let bytes = unsafe {
+                                std::slice::from_raw_parts((host_base + cur) as *const u8, 15) };
+                            if bytes[0] == 0xCC { break; }
+                            let d = decode_insn(bytes, XMode::Bits64).unwrap();
+                            let mnem = DEF_MNEMONICS[d.def_id as usize];
+                            cur += d.len as u64;
+                            let br = is_branch(mnem);
+                            insns.push((d, cur - d.len as u64));
+                            if br { break; }
+                        }
+                        let mut per = vec![0u32; insns.len()];
+                        let mut live = FLAGS_ALL_LIVE;
+                        for i in (0..insns.len()).rev() {
+                            let did = insns[i].0.def_id as usize;
+                            per[i] = live;
+                            live = (live & !DEF_FLAGS_MASK.get(did).copied().unwrap_or(0))
+                                 | DEF_FLAGS_READ.get(did).copied().unwrap_or(0);
+                        }
+                        for (i, (d, ipc)) in insns.iter().enumerate() {
+                            lift_one(&mut t1, d, *ipc, XMode::Bits64, per[i]);
+                        }
+                        if !t1.rec.branched() {
+                            let tv = t1.literal(IlType::U64, cur as u128);
+                            t1.branch(tv, false);
+                        }
+                        t1.compile()
+                    });
+                    cb.exec_slice(&mut flat1[..]);
+                    n_execs += 1;
+                    if n_execs > max_insns { println!("  tier-1: max_execs hit"); break; }
+                }
+                println!("[tier1: {} block-execs, {} compiles, rax=0x{:X} rcx=0x{:X} rip=0x{:X}]",
+                    n_execs, n_compiles, flat1[0], flat1[1], flat1[OFF_RIP]);
+                let mut d1 = vec![];
+                for r in 0..16 { if s.gpr[r] != flat1[r] {
+                    d1.push(format!("r{r}: interp=0x{:X} tier1=0x{:X}", s.gpr[r], flat1[r])); } }
+                if (s.eflags & 0x8D5) != ((flat1[16] as u32) & 0x8D5) {
+                    d1.push(format!("eflags: interp=0x{:X} tier1=0x{:X}", s.eflags, flat1[16]));
+                }
+                if d1.is_empty() { println!("  ✓ TIER-1 MATCH"); }
+                else { println!("  ✗ TIER-1 DIFF:"); for l in &d1 { println!("    {l}"); } }
+            }
         }
         return;
     }

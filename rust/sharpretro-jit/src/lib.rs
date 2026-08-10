@@ -20,6 +20,7 @@ pub mod aarch64_enc;
 pub mod x64_enc;
 #[cfg(target_arch = "aarch64")]
 pub mod tier0;
+pub mod tier1;
 #[cfg(target_arch = "aarch64")]
 pub mod block_cache;
 

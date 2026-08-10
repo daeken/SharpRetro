@@ -117,25 +117,7 @@ impl Tier0 {
         self.enc.ldr_x(30, 31, 16);
         self.enc.add_i(31, 31, 32);
         self.enc.ret();
-        let n_slots = self.next_slot;
-        let words = self.enc.words();
-        unsafe {
-            let len = words.len() * 4;
-            let page_len = (len + 4095) & !4095;
-            let page = libc::mmap(std::ptr::null_mut(), page_len,
-                libc::PROT_READ | libc::PROT_WRITE | libc::PROT_EXEC,
-                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS, -1, 0) as *mut u32;
-            assert!(page as isize != -1, "mmap RWX failed");
-            std::ptr::copy_nonoverlapping(words.as_ptr(), page, words.len());
-            // I-cache flush for the whole block.
-            unsafe extern "C" { fn __clear_cache(s: *const u8, e: *const u8); }
-            __clear_cache(page as *const u8, (page as *const u8).add(len));
-            CompiledBlock {
-                page: page as *mut u8, page_len, code_len: len,
-                entry: std::mem::transmute(page),
-                n_slots,
-            }
-        }
+        compile_from_enc(self.enc, self.next_slot)
     }
 
     // ── helpers ────────────────────────────────────────────────────────────
@@ -852,6 +834,28 @@ impl Builder for Tier0 {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// Shared finalization: mmap RWX, copy code, __clear_cache, wrap as CompiledBlock.
+/// Tier-0 and tier-1 both produce an Aarch64Enc + n_slots; this seals it.
+pub fn compile_from_enc(enc: Aarch64Enc, n_slots: u32) -> CompiledBlock {
+    let words = enc.words();
+    unsafe {
+        let len = words.len() * 4;
+        let page_len = (len + 4095) & !4095;
+        let page = libc::mmap(std::ptr::null_mut(), page_len,
+            libc::PROT_READ | libc::PROT_WRITE | libc::PROT_EXEC,
+            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS, -1, 0) as *mut u32;
+        assert!(page as isize != -1, "mmap RWX failed");
+        std::ptr::copy_nonoverlapping(words.as_ptr(), page, words.len());
+        unsafe extern "C" { fn __clear_cache(s: *const u8, e: *const u8); }
+        __clear_cache(page as *const u8, (page as *const u8).add(len));
+        CompiledBlock {
+            page: page as *mut u8, page_len, code_len: len,
+            entry: std::mem::transmute(page),
+            n_slots,
+        }
+    }
+}
 
 pub struct CompiledBlock {
     page: *mut u8,

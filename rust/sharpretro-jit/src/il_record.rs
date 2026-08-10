@@ -65,6 +65,12 @@ impl IlRecorder {
         self.ops.push(IlOp { kind, out: Some(out), args: a, n_args: args.len() as u8, ty, imm });
         out
     }
+    /// Public marker-emit for wrappers that can't delegate cond/loop_n
+    /// (Tier1 forwards Builder to IlRecorder, but its cond closures take
+    /// &mut Tier1 — so Tier1 emits the markers directly and runs closures on self).
+    pub fn stmt_marker(&mut self, kind: IlOpKind, ty: IlType, args: &[u32], imm: u128) {
+        self.stmt(kind, ty, args, imm);
+    }
     fn stmt(&mut self, kind: IlOpKind, ty: IlType, args: &[u32], imm: u128) {
         let mut a = [NA; 3];
         for (i, &v) in args.iter().enumerate() { a[i] = v; }
