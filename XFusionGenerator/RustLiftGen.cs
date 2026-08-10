@@ -141,6 +141,43 @@ public class RustLiftGen {
             case PName("branch"):
                 Emit($"bd.branch({Expr(l[1], 64)}, false);");
                 break;
+            case PName("str-op"): {
+                // String-op ONE ITERATION body (movs/stos/lods). rsi/rdi read at u64
+                // (address, not op_w); the value is at op_w. DF: step = ±(op_w/8).
+                // The REP-wrap happens at def-arm dispatch (below), which emits
+                // bd.loop_n(rcx, |bd| tmpl_N(bd, ...)) when d.p.rep, then rcx=0.
+                var kind = ((PName) l[1]).Name;
+                Emit("let _rdi = bd.reg_read(GPR, 7, IlType::U64);");
+                if(kind is "movs" or "lods")
+                    Emit("let _rsi = bd.reg_read(GPR, 6, IlType::U64);");
+                Emit("let _df = bd.reg_read(EFLAGS, 10, IlType::Bool);");
+                Emit($"let _step_p = bd.literal(IlType::U64, (op_w/8) as u128);");
+                Emit($"let _step_n = bd.neg(_step_p);");
+                Emit("let _step = bd.ternary(_df, _step_n, _step_p);");
+                switch(kind) {
+                    case "stos":
+                        Emit($"let _val = read_operand(bd, &Operand::Reg{{idx:0, width:op_w, high8:false}});");
+                        Emit("bd.mem_write(_rdi, _val);");
+                        Emit("let _rdi2 = bd.add(_rdi, _step);");
+                        Emit("bd.reg_write(GPR, 7, _rdi2);");
+                        break;
+                    case "movs":
+                        Emit($"let _val = bd.mem_read(_rsi, ilty(op_w));");
+                        Emit("bd.mem_write(_rdi, _val);");
+                        Emit("let _rdi2 = bd.add(_rdi, _step);");
+                        Emit("let _rsi2 = bd.add(_rsi, _step);");
+                        Emit("bd.reg_write(GPR, 7, _rdi2);");
+                        Emit("bd.reg_write(GPR, 6, _rsi2);");
+                        break;
+                    case "lods":
+                        Emit($"let _val = bd.mem_read(_rsi, ilty(op_w));");
+                        Emit($"write_operand(bd, &Operand::Reg{{idx:0, width:op_w, high8:false}}, _val);");
+                        Emit("let _rsi2 = bd.add(_rsi, _step);");
+                        Emit("bd.reg_write(GPR, 6, _rsi2);");
+                        break;
+                }
+                break;
+            }
             case PName("div-wide"): {
                 // rDX:rAX / src → rAX=quot rDX=rem. 2×op_w dividend. l[2]=#t/#f = signed.
                 var signed = l[2] is PName("#t");
@@ -489,7 +526,22 @@ public class RustLiftGen {
                 binds.Add(b);
             }
             sb.AppendLine($"            let ops: &[Operand<B::Val>] = &[{string.Join(", ", binds)}];");
-            sb.AppendLine($"            tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
+            // String-ops: wrap the single-iter template in a rcx-loop when d.p.rep.
+            // (movs/stos/lods take plain rep. scas/cmps still intrinsic — repe/repne
+            //  need ZF early-exit; wire when the recon surfaces one.)
+            var isStringOp = def.Operands.Any(o => o.Class is OpClass.StrSrc or OpClass.StrDst);
+            if(isStringOp) {
+                sb.AppendLine($"            if d.p.rep || d.p.rep_nz {{");
+                sb.AppendLine($"                let rcx = bd.reg_read(GPR, 1, IlType::U64);");
+                sb.AppendLine($"                bd.loop_n(rcx, &mut |bd| {{ tmpl_{tt}(bd, ops, op_w, next_pc, live_flags); }});");
+                sb.AppendLine($"                let z = bd.literal(IlType::U64, 0);");
+                sb.AppendLine($"                bd.reg_write(GPR, 1, z);");
+                sb.AppendLine($"            }} else {{");
+                sb.AppendLine($"                tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
+                sb.AppendLine($"            }}");
+            } else {
+                sb.AppendLine($"            tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
+            }
             sb.AppendLine($"            true");
             sb.AppendLine($"        }}");
         }

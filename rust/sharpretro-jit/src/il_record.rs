@@ -134,6 +134,13 @@ impl Builder for IlRecorder {
         self.produce(IlOpKind::Cast, IlType::I{signed:false,width:128}, &[hi, lo], 2 /*pair marker*/)
     }
     fn hi64(&mut self, a: u32) -> u32 { self.produce(IlOpKind::Cast, IlType::U64, &[a], 3 /*hi64 marker*/) }
+    fn loop_n(&mut self, n: u32, body: &mut dyn FnMut(&mut Self)) {
+        // ‡ v1 tier-1: treat as opaque (emit body once, mark loop-N in imm). Real
+        //   handling (allocator sees ranges cross the loop-back-edge) at v2.
+        self.stmt(IlOpKind::CondBegin, IlType::U64, &[n], 4 /*loop_n marker*/);
+        body(self);
+        self.stmt(IlOpKind::CondEnd, IlType::Unit, &[], 4);
+    }
 
     bin!(add, Add); bin!(sub, Sub); bin!(mul, Mul); bin!(div, Div); bin!(rem, Rem);
     bin!(and, And); bin!(or, Or); bin!(xor, Xor);

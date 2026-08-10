@@ -380,6 +380,37 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn loop_n(&mut self, n: u32, body: &mut dyn FnMut(&mut Self)) {
+        // In-block loop:
+        //   ldr xD, [spill+n]      ; ctr = n
+        //   head:
+        //     cbz xD, exit
+        //     str xD, [spill+ctr_slot]   ; save ctr (body may clobber X_D)
+        //     <body>
+        //     ldr xD, [spill+ctr_slot]
+        //     sub xD, xD, #1
+        //     b head
+        //   exit:
+        // Body's tmpl_N re-reads rdi/rsi from state each iter, so no cross-iter
+        // Val dataflow needed. The ctr slot survives body's slot-alloc because
+        // slots are monotone (body allocs after ctr_slot).
+        let ctr_slot = self.slot(IlType::U64);
+        self.load(X_D, n);
+        let head = self.enc.buf.len();
+        // cbz xD, exit — patched after body emits.
+        let cbz_at = self.enc.buf.len();
+        self.enc.put_raw(0xB4000000 | (X_D as u32));
+        self.store(X_D, ctr_slot);
+        body(self);
+        self.load(X_D, ctr_slot);
+        self.enc.sub_i(X_D, X_D, 1);
+        // b head
+        let off_back = ((head as i64 - self.enc.buf.len() as i64)) as i32;
+        self.enc.put_raw(0x14000000 | ((off_back as u32) & 0x03FF_FFFF));
+        // patch cbz imm19
+        let off_fwd = (self.enc.buf.len() - cbz_at) as u32;
+        let w0 = self.enc.buf[cbz_at]; self.enc.buf[cbz_at] = w0 | (off_fwd << 5);
+    }
     fn div(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
         // Silicon udiv/sdiv: divide-by-0 → result 0 (no fault) — matches interp's
         // `if y==0 {0} else {x/y}`. So no zero-guard needed.

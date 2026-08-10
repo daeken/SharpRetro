@@ -159,34 +159,33 @@
 
 ; --- string ops: X = DS:[rSI], Y = ES:[rDI]; rep renders (semantic there).
 ; v-forms are width-suffix-mnemonic'd (movsw/movsd/movsq) per XED.
+; String ops: (str-op stos|movs|lods) is a Stmt head that emits ONE iteration
+; (mem_write [rdi] / mem_read [rsi] / advance rdi/rsi by op_w/8, DF-aware).
+; The REP prefix is decode-time (d.p.rep) — the def-arm dispatch wraps the
+; template in bd.loop_n(rcx, |bd| { one-iter; }) when set, and writes rcx=0.
+; Non-REP = one iter (rare in real code; MSVC always emits with rep).
 (instruction MOVSB (dst src)
-    "movsb $dst, $src"
-    (intrinsic movs 8 dst src))
+    "movsb $dst, $src" (str-op movs))
 (encoding MOVSB (Yb Xb) (0xA4))
 
 (instruction MOVSV (dst src)
-    "$(wname movsw movsd movsq) $dst, $src"
-    (intrinsic movs (bitwidth dst) dst src))
+    "$(wname movsw movsd movsq) $dst, $src" (str-op movs))
 (encoding MOVSV (Yv Xv) (0xA5))
 
 (instruction STOSB (dst)
-    "stosb $dst"
-    (intrinsic stos 8 dst))
+    "stosb $dst" (str-op stos))
 (encoding STOSB (Yb) (0xAA))
 
 (instruction STOSV (dst)
-    "$(wname stosw stosd stosq) $dst"
-    (intrinsic stos (bitwidth dst) dst))
+    "$(wname stosw stosd stosq) $dst" (str-op stos))
 (encoding STOSV (Yv) (0xAB))
 
 (instruction LODSB (src)
-    "lodsb $src"
-    (intrinsic lods 8 src))
+    "lodsb $src" (str-op lods))
 (encoding LODSB (Xb) (0xAC))
 
 (instruction LODSV (src)
-    "$(wname lodsw lodsd lodsq) $src"
-    (intrinsic lods (bitwidth src) src))
+    "$(wname lodsw lodsd lodsq) $src" (str-op lods))
 (encoding LODSV (Xv) (0xAD))
 
 (instruction SCASB (dst)

@@ -181,6 +181,11 @@ pub trait Builder {
     /// Ends the current block. `link` = record return-address (BL/CALL).
     fn branch(&mut self, target: Self::Val, link: bool);
     /// If/else — both arms emitted. `then`/`else_` receive the same builder.
+    /// Bounded-count loop: execute `body` `n` times. tier-0 emits an in-block
+    /// loop (mov ctr,n; head: cbz ctr,exit; body; sub ctr,#1; b head; exit:).
+    /// interp: for _ in 0..n { body(self) }. Body writes to state (rdi/rsi/mem);
+    /// no cross-iter Val dataflow (each iter re-reads rdi from state).
+    fn loop_n(&mut self, n: Self::Val, body: &mut dyn FnMut(&mut Self));
     fn cond(&mut self, c: Self::Val,
             then: &mut dyn FnMut(&mut Self), else_: &mut dyn FnMut(&mut Self));
     /// Value-typed conditional (the `ternary`/`if-expr` form).
