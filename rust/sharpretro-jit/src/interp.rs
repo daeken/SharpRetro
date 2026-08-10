@@ -197,8 +197,14 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
                 IVal::f32(if signed { a.as_i() as f32 } else { a.bits as f32 }),
             (IlType::I{signed, ..}, IlType::F{width:64}) =>
                 IVal::f64(if signed { a.as_i() as f64 } else { a.bits as f64 }),
-            (IlType::F{..}, IlType::I{signed:false, width}) => IVal { ty: to, bits: mask(a.as_f64() as u128, width) },
-            (IlType::F{..}, IlType::I{signed:true,  width}) => IVal { ty: to, bits: mask(a.as_f64() as i128 as u128, width) },
+            (IlType::F{width:fw}, IlType::I{signed:false, width}) => {
+                let v = if fw == 32 { a.as_f32() as f64 } else { a.as_f64() };
+                IVal { ty: to, bits: mask(v as u128, width) }
+            }
+            (IlType::F{width:fw}, IlType::I{signed:true, width}) => {
+                let v = if fw == 32 { a.as_f32() as f64 } else { a.as_f64() };
+                IVal { ty: to, bits: mask(v as i128 as u128, width) }
+            }
             (IlType::F{width:32}, IlType::F{width:64}) => IVal::f64(a.as_f32() as f64),
             (IlType::F{width:64}, IlType::F{width:32}) => IVal::f32(a.as_f64() as f32),
             // I↔V128: V128 is a raw 128-bit bag — same bits, retyped (zext for narrower).
