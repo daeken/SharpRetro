@@ -9,6 +9,7 @@
 //! rung-4b golden-diff instrument. This records STRUCTURE for the allocator.
 
 use crate::{Builder, IlType, RegFile, LocalId, NativeSlot, IntrinsicId, RoundMode};
+use std::collections::{HashMap, HashSet};
 
 /// One recorded IL operation. `out` = the SSA-id this op produces (None for stmts
 /// like reg_write/mem_write/branch). `args` = SSA-id inputs. `ty` = result type
@@ -49,11 +50,35 @@ pub struct IlRecorder {
     next: u32,
     branched: bool,
     tys: Vec<IlType>,
+    /// State-value-numbering cache: (regfile, idx) → (SSA val, ty). reg_read
+    /// returns the cached val on exact-ty hit (no RegRead op emitted); reg_write
+    /// updates it (write-forwarding: a subsequent read sees the just-written val
+    /// directly, no state[] round-trip). Cleared at CondBegin (v1-conservative:
+    /// vals written inside a cond-arm aren't valid after; proper phi-merge = v2).
+    /// The LCG block: r8/r9 written once (mov imm), read 4× each = 8 state-ldr
+    /// eliminated by write-forwarding alone; rdi/rax write-then-read chains also
+    /// forward. env XF_SVN=0 disables (for A/B measurement).
+    reg_cache: HashMap<(u8, u32), (u32, IlType)>,
+    /// Snapshot stack for cond: (cache-at-CondBegin, regs-written-during-this-cond).
+    /// CondBegin: push (clone, ∅). reg_write inside: mark written. CondElse:
+    /// restore cache to snapshot (else-arm sees pre-cond, not then's writes).
+    /// CondEnd: pop; cache = snapshot MINUS written-set (any reg written in
+    /// either arm is stale post-cond; unwritten regs' pre-cond val is still
+    /// valid). SHR-with-dead-flags: empty body → written=∅ → cache preserved.
+    cond_snap: Vec<(HashMap<(u8,u32),(u32,IlType)>, HashSet<(u8,u32)>)>,
+    svn: bool,
 }
 
 impl IlRecorder {
-    pub fn new() -> Self { Self::default() }
-    pub fn reset(&mut self) { self.ops.clear(); self.next = 0; self.branched = false; self.tys.clear(); }
+    pub fn new() -> Self {
+        let mut r = Self::default();
+        r.svn = std::env::var("XF_SVN").map(|v| v != "0").unwrap_or(true);
+        r
+    }
+    pub fn reset(&mut self) {
+        self.ops.clear(); self.next = 0; self.branched = false;
+        self.tys.clear(); self.reg_cache.clear();
+    }
     pub fn branched(&self) -> bool { self.branched }
     pub fn n_vals(&self) -> u32 { self.next }
 
@@ -69,6 +94,23 @@ impl IlRecorder {
     /// (Tier1 forwards Builder to IlRecorder, but its cond closures take
     /// &mut Tier1 — so Tier1 emits the markers directly and runs closures on self).
     pub fn stmt_marker(&mut self, kind: IlOpKind, ty: IlType, args: &[u32], imm: u128) {
+        // Tier1's cond forwards via stmt_marker (not rec.cond) — mirror the SVN
+        // snapshot/restore so both paths preserve cache through empty conds.
+        if self.svn { match kind {
+            IlOpKind::CondBegin => {
+                self.cond_snap.push((self.reg_cache.clone(), HashSet::new()));
+            }
+            IlOpKind::CondElse => {
+                self.reg_cache = self.cond_snap.last().unwrap().0.clone();
+            }
+            IlOpKind::CondEnd => {
+                let (snap, dirty) = self.cond_snap.pop().unwrap();
+                self.reg_cache = snap;
+                for k in &dirty { self.reg_cache.remove(k); }
+                if let Some((_, outer)) = self.cond_snap.last_mut() { outer.extend(dirty); }
+            }
+            _ => {}
+        }}
         self.stmt(kind, ty, args, imm);
     }
     fn stmt(&mut self, kind: IlOpKind, ty: IlType, args: &[u32], imm: u128) {
@@ -123,11 +165,36 @@ impl Builder for IlRecorder {
         self.produce(IlOpKind::Literal, ty, &[], bits)
     }
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 {
-        self.produce(IlOpKind::RegRead, ty, &[], ((f.0 as u128) << 32) | idx as u128)
+        // SVN: cache hit (exact ty) → return cached val, NO op emitted.
+        // v1: exact-ty match only. A U64-cached rax read as U8 (al) misses —
+        //   could emit cast(cached, U8) instead of a state-ldr, but that needs
+        //   knowing the arch's partial-read semantics (x86: low bits; ok). v2.
+        // Flag-file (per-bit reads) doesn't participate — the flag-RMW compaction
+        //   is a separate v1.2; caching individual bits here would be correct but
+        //   the RegWrite-flag-RMW is where the cost lives.
+        if self.svn && f.0 == 0 {   // GPR file only v1
+            if let Some(&(cv, cty)) = self.reg_cache.get(&(f.0, idx)) {
+                if cty == ty { return cv; }
+            }
+        }
+        let v = self.produce(IlOpKind::RegRead, ty, &[], ((f.0 as u128) << 32) | idx as u128);
+        if self.svn && f.0 == 0 { self.reg_cache.insert((f.0, idx), (v, ty)); }
+        v
     }
     fn reg_write(&mut self, f: RegFile, idx: u32, v: u32) {
         let ty = self.tys[v as usize];
-        self.stmt(IlOpKind::RegWrite, ty, &[v], ((f.0 as u128) << 32) | idx as u128)
+        self.stmt(IlOpKind::RegWrite, ty, &[v], ((f.0 as u128) << 32) | idx as u128);
+        // Write-forward: subsequent reads of (f,idx) see v directly.
+        // ‡ partial-width writes: for x86 GPR, write_operand upstream does the
+        //   read-mask-insert for width<32 and passes the merged-to-full-width
+        //   result here, so v is authoritative for the full reg. width=32 zeroes
+        //   upper (also upstream). So caching (v, ty) is safe — but a subsequent
+        //   read at DIFFERENT ty misses (v1 exact-match), which is correct-if-wasteful.
+        if self.svn && f.0 == 0 {
+            self.reg_cache.insert((f.0, idx), (v, ty));
+            // Inside a cond: mark (f,idx) written so CondEnd drops it.
+            if let Some((_, dirty)) = self.cond_snap.last_mut() { dirty.insert((f.0, idx)); }
+        }
     }
     fn mem_read(&mut self, a: u32, ty: IlType) -> u32 { self.produce(IlOpKind::MemRead, ty, &[a], 0) }
     fn mem_write(&mut self, a: u32, v: u32) {
@@ -175,11 +242,24 @@ impl Builder for IlRecorder {
         // lift.rs's structure: cond bodies write to state, don't produce Vals used
         // after). ‡ v1: no cross-arm value-merge (phi). If a template needs one,
         // it's via ternary(), not cond().
+        // SVN: snapshot at CondBegin; restore at CondElse (else sees pre-cond,
+        //   not then's writes); at CondEnd restore snapshot MINUS regs written
+        //   in either arm. Cache survives EMPTY conds (SHR w/ dead-flags = 4×
+        //   in the LCG loop) untouched.
+        if self.svn { self.cond_snap.push((self.reg_cache.clone(), HashSet::new())); }
         self.stmt(IlOpKind::CondBegin, IlType::Bool, &[c], 0);
         then_(self);
+        if self.svn { self.reg_cache = self.cond_snap.last().unwrap().0.clone(); }
         self.stmt(IlOpKind::CondElse, IlType::Unit, &[], 0);
         else_(self);
         self.stmt(IlOpKind::CondEnd, IlType::Unit, &[], 0);
+        if self.svn {
+            let (snap, dirty) = self.cond_snap.pop().unwrap();
+            self.reg_cache = snap;
+            for k in &dirty { self.reg_cache.remove(k); }
+            // Nested cond: propagate dirty-set upward.
+            if let Some((_, outer)) = self.cond_snap.last_mut() { outer.extend(dirty); }
+        }
     }
     fn bitcast(&mut self, a: u32, ty: IlType) -> u32 { self.produce(IlOpKind::Cast, ty, &[a], 1 /*bitcast marker*/) }
     fn call_intrinsic(&mut self, id: IntrinsicId, args: &[u32]) -> Option<u32> {
