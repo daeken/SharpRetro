@@ -410,6 +410,23 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vibin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let size = match ew { 8=>0, 16=>1, 32=>2, 64=>3, _=>panic!("vibin ew={ew}") };
+        match op {
+            0 => self.enc.add_v(2, 0, 1, size),
+            1 => self.enc.sub_v(2, 0, 1, size),
+            2 => self.enc.mul_v(2, 0, 1, size),  // panics on ew=64 via debug_assert
+            _ => panic!("vibin op={op}"),
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
         // Same X↔Q dance as vzip: build q0/q1 from 2×X-word slots, NEON op → q2,
         // extract q2 → 2×X, store2. sz: 32→0(.4S), 64→1(.2D).

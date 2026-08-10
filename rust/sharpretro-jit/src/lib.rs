@@ -165,6 +165,11 @@ pub trait Builder {
     /// Packed-float binary: per-lane float op on V128, elem_bits ∈ {32,64}
     /// (= 4×f32 or 2×f64), op ∈ {0=add,1=sub,2=mul,3=div}. MULPS/ADDPD/etc.
     fn vfbin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
+    /// Packed-integer binary: per-lane wrapping int op on V128,
+    /// elem_bits ∈ {8,16,32,64}, op ∈ {0=add,1=sub,2=mul}. PADDB/W/D/Q,
+    /// PSUBB/W/D/Q, PMULLW/PMULLD. ‡ mul at ew=64 (PMULLQ) doesn't exist
+    /// in SSE (only in AVX512-DQ), and NEON has no MUL.2D — die-loud.
+    fn vibin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
     /// Lane shuffle on V128: n=128/elem_bits lanes, result[i] = pick lane
     /// `(sel >> (i*bits_per_sel)) & mask` from `a` (i < n/2) or `b` (i ≥ n/2).
     /// SHUFPS: elem_bits=32, bits_per_sel=2, dst=a, src=b.

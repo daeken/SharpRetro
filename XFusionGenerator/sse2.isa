@@ -159,22 +159,23 @@
 (encoding PMOVMSKB (Gd Udq) (opsize 0x0F 0xD7))
 
 ; --- integer xmm: arithmetic/logic ---
-(instruction PADDB (dst src) "paddb $dst, $src" (intrinsic paddb dst src))
+; PADD*/PSUB*: per-lane wrapping integer add/sub. (vibin dst src ew op) op:0=add 1=sub 2=mul.
+(instruction PADDB (dst src) "paddb $dst, $src" (= dst (vibin dst src 8 0)))
 (encoding PADDB (Vdq Wdq) (opsize 0x0F 0xFC))
-(instruction PADDW (dst src) "paddw $dst, $src" (intrinsic paddw dst src))
+(instruction PADDW (dst src) "paddw $dst, $src" (= dst (vibin dst src 16 0)))
 (encoding PADDW (Vdq Wdq) (opsize 0x0F 0xFD))
-(instruction PADDD (dst src) "paddd $dst, $src" (intrinsic paddd dst src))
+(instruction PADDD (dst src) "paddd $dst, $src" (= dst (vibin dst src 32 0)))
 (encoding PADDD (Vdq Wdq) (opsize 0x0F 0xFE))
-(instruction PADDQ (dst src) "paddq $dst, $src" (intrinsic paddq dst src))
+(instruction PADDQ (dst src) "paddq $dst, $src" (= dst (vibin dst src 64 0)))
 (encoding PADDQ (Vdq Wdq) (opsize 0x0F 0xD4))
 
-(instruction PSUBB (dst src) "psubb $dst, $src" (intrinsic psubb dst src))
+(instruction PSUBB (dst src) "psubb $dst, $src" (= dst (vibin dst src 8 1)))
 (encoding PSUBB (Vdq Wdq) (opsize 0x0F 0xF8))
-(instruction PSUBW (dst src) "psubw $dst, $src" (intrinsic psubw dst src))
+(instruction PSUBW (dst src) "psubw $dst, $src" (= dst (vibin dst src 16 1)))
 (encoding PSUBW (Vdq Wdq) (opsize 0x0F 0xF9))
-(instruction PSUBD (dst src) "psubd $dst, $src" (intrinsic psubd dst src))
+(instruction PSUBD (dst src) "psubd $dst, $src" (= dst (vibin dst src 32 1)))
 (encoding PSUBD (Vdq Wdq) (opsize 0x0F 0xFA))
-(instruction PSUBQ (dst src) "psubq $dst, $src" (intrinsic psubq dst src))
+(instruction PSUBQ (dst src) "psubq $dst, $src" (= dst (vibin dst src 64 1)))
 (encoding PSUBQ (Vdq Wdq) (opsize 0x0F 0xFB))
 
 (instruction PAND (dst src) "pand $dst, $src" (= dst (& dst src)))

@@ -72,6 +72,9 @@ impl Builder for RecordingBuilder {
     fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
         self.v(format!("vfbin[{op}] v{a} v{b} @{ew}b"))
     }
+    fn vibin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
+        self.v(format!("vibin[{op}] v{a} v{b} @{ew}b"))
+    }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
         self.v(format!("vshuf v{a} v{b} @{ew}b sel=0x{sel:02x}"))
     }

@@ -182,6 +182,17 @@ impl Aarch64Enc {
         self.put(0x4E007800 | (size<<22) | (vm<<16) | (vn<<5) | vd);
     }
     // EOR/AND/ORR Vd.16B, Vn.16B, Vm.16B — bitwise on the whole 128.
+    // Integer vector ADD/SUB/MUL: size 0=16B 1=8H 2=4S 3=2D (MUL: 0-2 only, no .2D)
+    pub fn add_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        self.put(0x4E208400 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    pub fn sub_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        self.put(0x6E208400 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    pub fn mul_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        debug_assert!(size < 3, "MUL vector has no .2D form");
+        self.put(0x4E209C00 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
     pub fn eor_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x6E201C00 | (vm<<16) | (vn<<5) | vd); }
     pub fn and_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x4E201C00 | (vm<<16) | (vn<<5) | vd); }
     pub fn orr_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x4EA01C00 | (vm<<16) | (vn<<5) | vd); }

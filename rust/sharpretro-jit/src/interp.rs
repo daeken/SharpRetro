@@ -279,6 +279,23 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vibin(&mut self, a: IVal, b: IVal, ew: u32, op: u32) -> IVal {
+        let n = 128 / ew;
+        let m = if ew == 128 { u128::MAX } else { (1u128 << ew) - 1 };
+        let mut r = 0u128;
+        for i in 0..n {
+            let la = (a.bits >> (i*ew)) & m;
+            let lb = (b.bits >> (i*ew)) & m;
+            let lr = match op {
+                0 => la.wrapping_add(lb),
+                1 => la.wrapping_sub(lb),
+                2 => la.wrapping_mul(lb),
+                _ => panic!("vibin op={op}"),
+            } & m;
+            r |= lr << (i*ew);
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vshufw(&mut self, src: IVal, sel: u32, hi: bool) -> IVal {
         let base = if hi { 4u32 } else { 0 };
         let mut r = src.bits;

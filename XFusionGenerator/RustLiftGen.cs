@@ -468,6 +468,12 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var kind = ((PInt)l[2]).Value;
                 return Rt($"bd.vcvt({a}, {kind})");
             }
+            case "vibin": {
+                // (vibin a b ew op) — packed-int add/sub/mul.
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var ew = ((PInt)l[3]).Value; var op = ((PInt)l[4]).Value;
+                return Rt($"bd.vibin({a}, {b}, {ew}, {op})");
+            }
             case "vfbin": {
                 // (vfbin a b elw op) — packed-float per-lane arith on V128 → V128.
                 // Expression head; .isa does (= dst (vfbin dst src elw op)) for RMW.
