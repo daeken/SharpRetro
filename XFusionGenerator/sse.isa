@@ -153,9 +153,17 @@
 (instruction MOVNTPS (dst src) "movntps $dst, $src" (= dst src))
 (encoding MOVNTPS (Mps Vps) (0x0F 0x2B))
 
-(instruction LDMXCSR (src) "ldmxcsr $src" (intrinsic ldmxcsr src))
+; STMXCSR/LDMXCSR — the JIT doesn't model MXCSR (‡ round-mode fixed at nearest,
+; per the vcvt commit). STMXCSR stores the DEFAULT 0x1F80 (all masks set, RC=00,
+; FTZ/DAZ=0 = a fresh-thread's MXCSR); LDMXCSR reads mem and discards (no-op).
+; The typical game-engine pattern (verified at CP2077 0x140a24e14): stmxcsr;
+; read; bts bit-15 (FTZ flush-to-zero, denormal-perf-hint); ldmxcsr — round-trip
+; of the default with FTZ set. Not semantics-load-bearing. ‡ MXCSR state not
+; carried — if a game later re-STMXCSR expecting its FTZ set, it reads default
+; again; the ptrace-oracle would flag that on the re-read.
+(instruction LDMXCSR (src) "ldmxcsr $src" (block))
 (encoding LDMXCSR (Md) (0x0F 0xAE /2))
-(instruction STMXCSR (dst) "stmxcsr $dst" (intrinsic stmxcsr dst))
+(instruction STMXCSR (dst) "stmxcsr $dst" (= dst 0x1F80))
 (encoding STMXCSR (Md) (0x0F 0xAE /3))
 
 (instruction SFENCE () "sfence" (block))
