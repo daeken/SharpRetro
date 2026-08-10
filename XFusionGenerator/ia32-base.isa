@@ -223,16 +223,20 @@
     "$(wname lodsw lodsd lodsq) $src" (str-op lods))
 (encoding LODSV (Xv) (0xAD))
 
+; SCAS: CMP rax@op_w, [rdi]; rdi ±= op_w/8. Under REPE/REPNE: rcx-loop with
+; ZF early-exit + rcx = REMAINING count. The wcslen idiom (or rcx,-1; xor eax;
+; repnz scasw; not rcx; dec rcx). ‡ v1 sets only ZF (the loop-exit + jz/jnz).
 (instruction SCASB (dst)
     "scasb $dst"
-    (intrinsic scas 8 dst))
+    (str-op scas))
 (encoding SCASB (Yb) (0xAE))
 
 (instruction SCASV (dst)
     "$(wname scasw scasd scasq) $dst"
-    (intrinsic scas (bitwidth dst) dst))
+    (str-op scas))
 (encoding SCASV (Yv) (0xAF))
 
+; CMPS: CMP [rsi], [rdi]; both ±= op_w/8. Same REPE/REPNE loop_while wrap.
 (instruction CMPSB (src dst)
     "cmpsb $src, $dst"
     (intrinsic cmps 8 src dst))

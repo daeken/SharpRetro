@@ -298,6 +298,15 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn loop_while(&mut self, n: IVal, exit_on: bool, body: &mut dyn FnMut(&mut Self) -> IVal) -> IVal {
+        let mut c = n.bits as u64;
+        while c != 0 {
+            let flag = body(self);
+            c = c.wrapping_sub(1);
+            if (flag.bits != 0) == exit_on { break; }
+        }
+        IVal { ty: IlType::U64, bits: c as u128 }
+    }
     fn bswap(&mut self, a: IVal) -> IVal {
         let w = match a.ty { IlType::I{width,..} => width, _ => panic!("bswap non-int") };
         let r = match w { 64 => (a.bits as u64).swap_bytes() as u128,

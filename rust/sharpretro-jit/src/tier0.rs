@@ -745,6 +745,36 @@ impl Builder for Tier0 {
         let off_fwd = (self.enc.buf.len() - cbz_at) as u32;
         let w0 = self.enc.buf[cbz_at]; self.enc.buf[cbz_at] = w0 | (off_fwd << 5);
     }
+    fn loop_while(&mut self, n: u32, exit_on: bool, body: &mut dyn FnMut(&mut Self) -> u32) -> u32 {
+        // Same shape as loop_n plus: body returns a Bool slot; after decrement,
+        // load it → cbnz/cbz to exit. ctr_slot always holds the current count
+        // (stored before body, re-stored after decrement) so exit-from-either-
+        // branch reads the right value.
+        let ctr_slot = self.slot(IlType::U64);
+        self.load(X_D, n);
+        self.store(X_D, ctr_slot);            // init (so count=0 → exit reads 0)
+        let head = self.enc.buf.len();
+        self.load(X_D, ctr_slot);
+        let cbz1_at = self.enc.buf.len();
+        self.enc.put_raw(0xB4000000 | (X_D as u32));   // cbz xD, exit — patched
+        let flag = body(self);               // body writes ZF to state + returns it
+        self.load(X_D, ctr_slot);
+        self.enc.sub_i(X_D, X_D, 1);
+        self.store(X_D, ctr_slot);
+        self.load(X_A, flag);
+        // exit_on=true → exit when flag≠0 → cbnz; exit_on=false → cbz.
+        let cb2_base = if exit_on { 0xB5000000u32 } else { 0xB4000000 };
+        let cbz2_at = self.enc.buf.len();
+        self.enc.put_raw(cb2_base | (X_A as u32));     // cb[n]z xA, exit — patched
+        // b head
+        let off_back = (head as i64 - self.enc.buf.len() as i64) as i32;
+        self.enc.put_raw(0x14000000 | ((off_back as u32) & 0x03FF_FFFF));
+        // exit: patch both
+        let exit_at = self.enc.buf.len();
+        self.enc.buf[cbz1_at] |= ((exit_at - cbz1_at) as u32) << 5;
+        self.enc.buf[cbz2_at] |= ((exit_at - cbz2_at) as u32) << 5;
+        ctr_slot
+    }
     fn div(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
         if let IlType::F{width:fw} = t {
             return self.fbin(a, b, t, move |e| if fw==64 {e.fdiv_d(0,0,1)} else {e.fdiv_s(0,0,1)});

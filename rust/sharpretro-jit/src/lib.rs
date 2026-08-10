@@ -262,6 +262,13 @@ pub trait Builder {
     /// interp: for _ in 0..n { body(self) }. Body writes to state (rdi/rsi/mem);
     /// no cross-iter Val dataflow (each iter re-reads rdi from state).
     fn loop_n(&mut self, n: Self::Val, body: &mut dyn FnMut(&mut Self));
+    /// Counted loop with early-exit: while count≠0 { flag = body(); count-=1;
+    /// if flag==exit_on { break; } }. Returns REMAINING count. body returns a
+    /// Bool. REPE/REPNE SCAS/CMPS: body sets ZF + returns it; exit_on = rep_nz
+    /// (F2=REPNE exits when ZF=1; F3=REPE exits when ZF=0). The remaining-count
+    /// return = the wcslen idiom (rcx=-1; repnz scasw; not rcx; dec rcx → len).
+    fn loop_while(&mut self, count: Self::Val, exit_on: bool,
+                  body: &mut dyn FnMut(&mut Self) -> Self::Val) -> Self::Val;
     fn cond(&mut self, c: Self::Val,
             then: &mut dyn FnMut(&mut Self), else_: &mut dyn FnMut(&mut Self));
     /// Value-typed conditional (the `ternary`/`if-expr` form).

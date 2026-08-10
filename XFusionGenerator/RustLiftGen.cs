@@ -198,7 +198,7 @@ public class RustLiftGen {
                 // bd.loop_n(rcx, |bd| tmpl_N(bd, ...)) when d.p.rep, then rcx=0.
                 var kind = ((PName) l[1]).Name;
                 Emit("let _rdi = bd.reg_read(GPR, 7, IlType::U64);");
-                if(kind is "movs" or "lods")
+                if(kind is "movs" or "lods" or "cmps")
                     Emit("let _rsi = bd.reg_read(GPR, 6, IlType::U64);");
                 Emit("let _df = bd.reg_read(EFLAGS, 10, IlType::Bool);");
                 Emit($"let _step_p = bd.literal(IlType::U64, (op_w/8) as u128);");
@@ -224,6 +224,30 @@ public class RustLiftGen {
                         Emit($"write_operand(bd, &Operand::Reg{{idx:0, width:op_w, high8:false}}, _val);");
                         Emit("let _rsi2 = bd.add(_rsi, _step);");
                         Emit("bd.reg_write(GPR, 6, _rsi2);");
+                        break;
+                    case "scas":
+                        // SCAS = CMP rax@op_w, [rdi]. ‡ v1: only ZF (the loop-exit flag +
+                        // what post-scas jz/jnz reads). SDM says full CMP flags; a post-
+                        // scas ja/jb would need CF/SF — not seen in corpus.
+                        Emit("let _rax = read_operand(bd, &Operand::Reg{idx:0, width:op_w, high8:false});");
+                        Emit("let _mem = bd.mem_read(_rdi, ilty(op_w));");
+                        Emit("let _eq = bd.eq(_rax, _mem);");
+                        Emit("bd.reg_write(EFLAGS, 6, _eq);");
+                        Emit("let _rdi2 = bd.add(_rdi, _step);");
+                        Emit("bd.reg_write(GPR, 7, _rdi2);");
+                        FlagsWritten |= 0x40;
+                        break;
+                    case "cmps":
+                        // CMPS = CMP [rsi], [rdi]. ‡ v1: only ZF (same as scas).
+                        Emit("let _s = bd.mem_read(_rsi, ilty(op_w));");
+                        Emit("let _d = bd.mem_read(_rdi, ilty(op_w));");
+                        Emit("let _eq = bd.eq(_s, _d);");
+                        Emit("bd.reg_write(EFLAGS, 6, _eq);");
+                        Emit("let _rsi2 = bd.add(_rsi, _step);");
+                        Emit("let _rdi2 = bd.add(_rdi, _step);");
+                        Emit("bd.reg_write(GPR, 6, _rsi2);");
+                        Emit("bd.reg_write(GPR, 7, _rdi2);");
+                        FlagsWritten |= 0x40;
                         break;
                 }
                 break;
@@ -738,10 +762,23 @@ public class RustLiftGen {
             }
             sb.AppendLine($"            let ops: &[Operand<B::Val>] = &[{string.Join(", ", binds)}];");
             // String-ops: wrap the single-iter template in a rcx-loop when d.p.rep.
-            // (movs/stos/lods take plain rep. scas/cmps still intrinsic — repe/repne
-            //  need ZF early-exit; wire when the recon surfaces one.)
+            // movs/stos/lods take plain rep → loop_n. scas/cmps take repe/repne →
+            // loop_while (early-exit on ZF, remaining-count → rcx = the wcslen idiom).
             var isStringOp = def.Operands.Any(o => o.Class is OpClass.StrSrc or OpClass.StrDst);
-            if(isStringOp) {
+            var isScanOp = def.Name.StartsWith("SCAS") || def.Name.StartsWith("CMPS");
+            if(isStringOp && isScanOp) {
+                sb.AppendLine($"            if d.p.rep || d.p.rep_nz {{");
+                sb.AppendLine($"                let rcx = bd.reg_read(GPR, 1, IlType::U64);");
+                // exit_on = rep_nz: F2=REPNE exits when ZF=1 (found equal); F3=REPE exits when ZF=0.
+                sb.AppendLine($"                let rem = bd.loop_while(rcx, d.p.rep_nz, &mut |bd| {{");
+                sb.AppendLine($"                    tmpl_{tt}(bd, ops, op_w, next_pc, live_flags | 0x40);");
+                sb.AppendLine($"                    bd.reg_read(EFLAGS, 6, IlType::Bool)");
+                sb.AppendLine($"                }});");
+                sb.AppendLine($"                bd.reg_write(GPR, 1, rem);");
+                sb.AppendLine($"            }} else {{");
+                sb.AppendLine($"                tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
+                sb.AppendLine($"            }}");
+            } else if(isStringOp) {
                 sb.AppendLine($"            if d.p.rep || d.p.rep_nz {{");
                 sb.AppendLine($"                let rcx = bd.reg_read(GPR, 1, IlType::U64);");
                 sb.AppendLine($"                bd.loop_n(rcx, &mut |bd| {{ tmpl_{tt}(bd, ops, op_w, next_pc, live_flags); }});");
