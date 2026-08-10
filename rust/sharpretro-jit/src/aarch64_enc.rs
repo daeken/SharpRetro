@@ -60,12 +60,36 @@ impl Aarch64Enc {
         self.put(0xF2800000 | (hw << 21) | (imm16 << 5) | xd);
     }
     /// Load a 64-bit constant into Xd (1-4 movz/movk insns; skips zero halfwords).
+    // MOVN Xd, #imm16, LSL #(hw*16) — Xd = ~(imm16 << hw*16).
+    pub fn movn(&mut self, xd: u32, imm16: u32, hw: u32) {
+        debug_assert!(imm16 < 0x10000 && hw < 4);
+        self.put(0x92800000 | (hw<<21) | (imm16<<5) | xd);
+    }
+    /// Materialize a u64 into Xd in the fewest movz/movn/movk. Chooses movz-
+    /// vs movn-base by which leaves fewer movk fixups (nonzero halfwords of
+    /// v vs of ~v). Negative small constants (0xFF..FC etc) → 1× movn instead
+    /// of movz+3×movk. LCG-block: 54 movk#0xffff → ~0.
     pub fn mov_imm64(&mut self, xd: u32, v: u64) {
-        let mut first = true;
-        for hw in 0..4 {
-            let h = ((v >> (hw*16)) & 0xFFFF) as u32;
-            if first { self.movz(xd, h, hw); first = false; }
-            else if h != 0 { self.movk(xd, h, hw); }
+        let hw = |x: u64, i: u32| ((x >> (i*16)) & 0xFFFF) as u32;
+        let nz  = (0..4).filter(|&i| hw(v,  i) != 0).count();
+        let nzn = (0..4).filter(|&i| hw(!v, i) != 0).count();  // = # non-0xFFFF chunks of v
+        if nzn < nz {
+            // movn-base: pick a hw where v's chunk ≠ 0xFFFF (i.e. ~v's chunk ≠ 0),
+            // emit movn xd, #(~chunk), then movk each remaining non-0xFFFF chunk.
+            // If all-0xFFFF (v = -1): movn xd, #0.
+            let base = (0..4).find(|&i| hw(v, i) != 0xFFFF).unwrap_or(0);
+            self.movn(xd, (!hw(v, base)) & 0xFFFF, base);
+            for i in 0..4 {
+                if i != base && hw(v, i) != 0xFFFF { self.movk(xd, hw(v, i), i); }
+            }
+        } else {
+            // movz-base (existing path): pick a hw where chunk ≠ 0, emit movz
+            // there, movk each remaining nonzero. All-zero → movz xd,#0.
+            let base = (0..4).find(|&i| hw(v, i) != 0).unwrap_or(0);
+            self.movz(xd, hw(v, base), base);
+            for i in 0..4 {
+                if i != base && hw(v, i) != 0 { self.movk(xd, hw(v, i), i); }
+            }
         }
     }
     // MOV Xd, Xm  (= ORR Xd, XZR, Xm)

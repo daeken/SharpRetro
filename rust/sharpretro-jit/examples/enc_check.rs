@@ -14,7 +14,7 @@ fn main() {
     e.orr_v16b(2, 0, 1);
     let bytes: Vec<u8> = e.buf.iter().flat_map(|w| w.to_le_bytes()).collect();
     std::fs::write("/tmp/enc_neon.bin", &bytes).unwrap();
-    println!("wrote {} words", e.buf.len()); _batch2(); _batch3(); _batch4();
+    println!("wrote {} words", e.buf.len()); _batch2(); _batch3(); _batch4(); _batch5();
 }
 // Second batch: INS/UMOV
 fn _batch2() {
@@ -45,4 +45,20 @@ fn _batch4() {
     e.fcmp_d(0,1); e.fcmp_s(0,1); e.mrs_nzcv(9);
     let bytes: Vec<u8> = e.buf.iter().flat_map(|w| w.to_le_bytes()).collect();
     std::fs::write("/tmp/enc_neon4.bin", &bytes).unwrap();
+}
+fn _batch5() {
+    let mut e = sharpretro_jit::aarch64_enc::Aarch64Enc::new();
+    // movn direct
+    e.movn(9, 3, 0);           // movn x9, #3       → x9 = 0xFF..FC = -4
+    e.movn(9, 0, 0);           // movn x9, #0       → x9 = -1
+    // mov_imm64 negative — should emit movn
+    e.mov_imm64(10, 0xFFFFFFFFFFFFFFFCu64);   // -4 → movn x10,#3
+    e.mov_imm64(11, 0xFFFFFFFFFFFFFFFFu64);   // -1 → movn x11,#0
+    e.mov_imm64(12, 0xFFFFFFFF00000000u64);   // hi=all-1, lo=0 → movn+movk
+    // mov_imm64 positive — movz base
+    e.mov_imm64(13, 0);                       // movz x13,#0
+    e.mov_imm64(14, 0x42);                    // movz x14,#0x42
+    e.mov_imm64(15, 0x100000000u64);          // movz x15,#1,lsl#32 (skip lo hws)
+    let bytes: Vec<u8> = e.buf.iter().flat_map(|w| w.to_le_bytes()).collect();
+    std::fs::write("/tmp/enc_movn.bin", &bytes).unwrap();
 }
