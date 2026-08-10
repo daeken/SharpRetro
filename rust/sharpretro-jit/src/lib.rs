@@ -12,6 +12,7 @@
 #![allow(dead_code)]
 
 pub mod recording;
+pub mod il_record;
 pub mod interp;
 #[cfg(target_arch = "aarch64")]
 pub mod aarch64_enc;
