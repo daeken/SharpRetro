@@ -7,7 +7,7 @@
 (encoding MOVUPS (Vps Wps) (0x0F 0x10))
 (encoding MOVUPS (Wps Vps) (0x0F 0x11))
 
-(instruction MOVSS (dst src) "movss $dst, $src" (intrinsic movss dst src))
+(instruction MOVSS (dst src) "movss $dst, $src" (= dst src))
 (encoding MOVSS (Vss Wss) (rep 0x0F 0x10))
 (encoding MOVSS (Wss Vss) (rep 0x0F 0x11))
 

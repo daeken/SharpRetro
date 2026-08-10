@@ -7,7 +7,13 @@
 (encoding MOVUPD (Vpd Wpd) (opsize 0x0F 0x10))
 (encoding MOVUPD (Wpd Vpd) (opsize 0x0F 0x11))
 
-(instruction MOVSD-X (dst src) "movsd $dst, $src" (intrinsic movsd-x dst src))
+; MOVSD scalar-double: lane-0 move. SDM: reg←mem ZEROES upper; reg←reg MERGES
+; upper (preserves dst[127:64]). ‡ v1: (= dst src) at width=64 → tier-0 does
+; single str_x on state[xmm+i*2] = MERGE for both (reg←mem should zero). The
+; divergence bites when a game relies on reg←mem clearing hi — flag when the
+; recon surfaces a UCOMISD/etc reading garbage-hi. Follow-on: template splits
+; on (is-mem src) → wrap in (zext ... 128) for mem-src.
+(instruction MOVSD-X (dst src) "movsd $dst, $src" (= dst src))
 (encoding MOVSD-X (Vsd Wsd) (repnz 0x0F 0x10))
 (encoding MOVSD-X (Wsd Vsd) (repnz 0x0F 0x11))
 
