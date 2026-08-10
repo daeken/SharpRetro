@@ -283,8 +283,6 @@
 (instruction MOVNTI (dst src) "movnti $dst, $src" (= dst src))
 (encoding MOVNTI (Mv Gv) (0x0F 0xC3))
 
-(instruction LFENCE () "lfence" (intrinsic lfence))
-(encoding LFENCE () (0x0F 0xAE /5))
 ; Fences: memory-ordering barriers. Under mem_base=0 single-guest-thread,
 ; there's no reordering to fence — semantically a NOP. When SMP-guest
 ; arrives (multi-thread), these need real dmb sy/ld/st.
