@@ -130,8 +130,24 @@ impl BlockCache {
             };
             // Direct entry-call with the shared spill area (was exec_slice →
             // vec![0u64; n_slots+1] per call = 40% of wall on tight-loop bench).
-            (entry.block.entry_fn())(state.as_mut_ptr(), self.spill.as_mut_ptr());
+            let ef = entry.block.entry_fn();
+            let sp = state.as_mut_ptr(); let spp = self.spill.as_mut_ptr();
+            ef(sp, spp);
             entry.exec_count = entry.exec_count.saturating_add(1);
+            // SAME-PC FAST-LOOP: if the block back-branched to its own entry
+            // (a loop-body block), tight-loop calling its entry_fn directly —
+            // skip dispatch_native + is_stop + HashMap for the self-loop hot
+            // path. Safe: a compiled-block pc is never a native-target nor a
+            // stop-insn (both would've been caught on the FIRST iteration).
+            // ‡ v1: self-loop only. General block-linking (A→B chain) needs
+            //   a 2-entry cache or in-code patching.
+            let mut hot = 0u64;
+            while unsafe { *sp.add(pc_idx) } == pc {
+                ef(sp, spp);
+                hot += 1;
+            }
+            entry.exec_count = entry.exec_count.saturating_add(hot);
+            self.n_execs += hot as usize;
             self.n_execs += 1;
         }
         RunResult::MaxExecs
