@@ -575,6 +575,34 @@ impl Builder for Tier0 {
         };
         self.una(a, t, move |e| { e.mov_imm64(X_B, mask); e.eor_r(X_A, X_A, X_B); }) }
     fn shl(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) {
+            // u128 << N. Mirror shr's structure: N<64 vs N>=64 branch.
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a);
+            self.load(X_B, b);
+            self.enc.mov_imm64(12, 64);
+            self.enc.cmp_r(X_B, 12);
+            let bcond_at = self.enc.here();
+            self.enc.nop();
+            // <64: hi = (hi<<N)|(lo>>(64-N)); lo <<= N
+            self.enc.sub_r(13, 12, X_B);
+            self.enc.lslv(X_C, X_C, X_B);
+            self.enc.lsrv(14, X_A, 13);
+            self.enc.orr_r(X_C, X_C, 14);
+            self.enc.lslv(X_A, X_A, X_B);
+            let b_end_at = self.enc.here();
+            self.enc.nop();
+            // >=64: hi = lo<<(N-64); lo = 0
+            let ge_at = self.enc.here();
+            self.enc.sub_r(X_B, X_B, 12);
+            self.enc.lslv(X_C, X_A, X_B);
+            self.enc.mov_imm64(X_A, 0);
+            let end_at = self.enc.here();
+            self.enc.patch(bcond_at, 0x54000000 | ((((ge_at - bcond_at) as u32) & 0x7FFFF) << 5) | (Cond::CS as u32));
+            self.enc.patch(b_end_at, 0x14000000 | (((end_at - b_end_at) as u32) & 0x03FFFFFF));
+            self.store2(X_A, X_C, s);
+            return s;
+        }
         // Per interp: shl DOESN'T mask (int-promote semantics for the FCMP nzcv-shl).
         // So skip mask_to here — emit lslv only.
         let s = self.slot(t);

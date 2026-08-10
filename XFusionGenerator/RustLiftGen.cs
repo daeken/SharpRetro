@@ -141,6 +141,27 @@ public class RustLiftGen {
             case PName("branch"):
                 Emit($"bd.branch({Expr(l[1], 64)}, false);");
                 break;
+            case PName("vshift-bytes"): {
+                // PSRLDQ/PSLLDQ: whole-128 byte-shift by a COMPILE-TIME imm8 (Ib operand).
+                // count>15 → 0 per SDM. Since count is known at emit-time (from d.imm),
+                // do a Rust-side match: >=16 → literal 0; ==0 → dst unchanged; ==8 → the
+                // hi/lo64 swap (common — the wall insn is imm=8); else bd.shr on u128.
+                var target = ((PName)l[1]).Name;
+                var right = ((PName)l[3]).Name == "r";
+                // Get the imm as a Rust-side u8 (Ib operand → d.imm as u8).
+                Emit($"let _cnt = if let Operand::Imm{{value,..}} = {ParamOp(((PName)l[2]).Name)} {{ *value as u32 }} else {{ unreachable!() }};");
+                var dstE = Expr(l[1]);
+                Emit($"let _rv: B::Val = if _cnt >= 16 {{");
+                Emit($"    bd.literal(IlType::V128, 0)");
+                Emit($"}} else if _cnt == 0 {{ {dstE} }} else {{");
+                Emit($"    let vd = bd.bitcast({dstE}, IlType::I{{signed:false,width:128}});");
+                Emit($"    let sh = bd.literal(IlType::U64, (_cnt as u128) * 8);");
+                Emit($"    let r = bd.{(right?"shr":"shl")}(vd, sh);");
+                Emit($"    bd.bitcast(r, IlType::V128)");
+                Emit($"}};");
+                Emit($"write_operand(bd, {ParamOp(target)}, _rv);");
+                break;
+            }
             case PName("str-op"): {
                 // String-op ONE ITERATION body (movs/stos/lods). rsi/rdi read at u64
                 // (address, not op_w); the value is at op_w. DF: step = ±(op_w/8).

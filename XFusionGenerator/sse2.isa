@@ -196,11 +196,13 @@
 
 (instruction PSRLQ-I (dst count) "psrlq $dst, $count" (intrinsic psrlq dst count))
 (encoding PSRLQ-I (Udq Ib) (opsize 0x0F 0x73 /2))
-(instruction PSRLDQ-I (dst count) "psrldq $dst, $count" (intrinsic psrldq dst count))
+; PSRLDQ/PSLLDQ: byte-shift the whole 128-bit reg. count is BYTES (imm8);
+; SDM: count>15 → dst=0. Semantically = u128 >> (count*8) bitcast back to V128.
+(instruction PSRLDQ-I (dst count) "psrldq $dst, $count" (vshift-bytes dst count r))
 (encoding PSRLDQ-I (Udq Ib) (opsize 0x0F 0x73 /3))
 (instruction PSLLQ-I (dst count) "psllq $dst, $count" (intrinsic psllq dst count))
 (encoding PSLLQ-I (Udq Ib) (opsize 0x0F 0x73 /6))
-(instruction PSLLDQ-I (dst count) "pslldq $dst, $count" (intrinsic pslldq dst count))
+(instruction PSLLDQ-I (dst count) "pslldq $dst, $count" (vshift-bytes dst count l))
 (encoding PSLLDQ-I (Udq Ib) (opsize 0x0F 0x73 /7))
 
 ; --- unpacks ---
