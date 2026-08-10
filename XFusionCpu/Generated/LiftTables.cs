@@ -17,7 +17,7 @@ public static class LiftTables {
 		("BSR", "dst src", "(block (intrinsic bsr dst src))"),
 		("LZCNT", "dst src", "(block (intrinsic lzcnt dst src))"),
 		("POPCNT", "dst src", "(block (intrinsic popcnt dst src))"),
-		("CMPXCHG", "dst src", "(block (intrinsic cmpxchg dst src))"),
+		("CMPXCHG", "dst src", "(block (mlet (t dst eq (== AX t)) (= ZF eq) (if eq (= dst src) (= AX t))))"),
 		("XADD", "dst src", "(block (mlet (t (+ dst src)) (= src dst) (= dst t)))"),
 		("BSWAP", "dst", "(block (intrinsic bswap dst))"),
 		("BT", "src bit", "(block (mlet (b (& bit (- (bitwidth src) 0x1))) (= CF (& (>> src b) 0x1))))"),

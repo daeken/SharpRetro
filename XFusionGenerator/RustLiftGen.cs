@@ -115,14 +115,21 @@ public class RustLiftGen {
                     Emit($"write_operand(bd, {ParamOp(dn)}, {sel});");
                     break;
                 }
-                // General: emit cond closure. Nested Stmts write into a fresh RtSink.
+                // General: emit cond closure. Two forms:
+                //   (if cond then)       — then-only; else empty.
+                //   (if cond then else)  — both arms (l.Count==4).
+                // Multi-stmt bodies wrap in (block ...).
+                var thenS = l[2];
+                var elseS = l.Count > 3 ? l[3] : null;
                 Emit($"bd.cond({cond},");
                 var savedSink = new List<string>(RtSink); RtSink.Clear();
                 var savedInd = Ind; Ind = savedInd + "    ";
                 Emit("&mut |bd| {");
-                foreach(var f in l.Skip(2)) Stmt(f);
+                Stmt(thenS);
                 Emit("},");
-                Emit("&mut |bd| { });");
+                Emit("&mut |bd| {");
+                if(elseS != null) Stmt(elseS);
+                Emit("});");
                 var innerSink = new List<string>(RtSink);
                 RtSink.Clear(); RtSink.AddRange(savedSink); RtSink.AddRange(innerSink);
                 Ind = savedInd;

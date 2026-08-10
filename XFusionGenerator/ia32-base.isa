@@ -106,9 +106,20 @@
 (encoding POPCNT (Gv Ev) (rep 0x0F 0xB8))
 
 ; --- atomics ---
+; CMPXCHG dst,src: if rAX==dst { ZF=1; dst=src } else { ZF=0; rAX=dst }.
+; LOCK prefix ignored (single-guest-thread + mem_base=0 identity map = no
+; atomicity needed; the RMW is naturally atomic wrt itself). Also sets
+; the CMP-flags per rAX-dst compare (SF/CF/OF/AF/PF) — ‡ v1 sets ZF only
+; (the flag every InterlockedCompareExchange caller reads); other flags
+; are SDM-defined but rarely consumed.
 (instruction CMPXCHG (dst src)
     "cmpxchg $dst, $src"
-    (intrinsic cmpxchg dst src))
+    (mlet (t dst
+           eq (== AX t))
+        (= ZF eq)
+        (if eq
+            (= dst src)
+            (= AX t))))
 (encoding CMPXCHG (Eb Gb) (0x0F 0xB0))
 (encoding CMPXCHG (Ev Gv) (0x0F 0xB1))
 
