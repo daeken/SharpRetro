@@ -26,7 +26,7 @@ use sharpretro_jit::{Builder, IlType};
 use xfusion_recomp::state::{X64_LAYOUT, STATE_WORDS_X64, OFF_RIP, OFF_MEMBASE};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
-use xfusion_recomp::lift::lift_one;
+use xfusion_recomp::lift::{lift_one, FLAGS_ALL_LIVE};
 
 struct X64Compiler { max_block: usize }
 impl BlockCompiler for X64Compiler {
@@ -42,7 +42,7 @@ impl BlockCompiler for X64Compiler {
             }
             let d = decode_insn(bytes, XMode::Bits64)
                 .unwrap_or_else(|| panic!("undecoded @0x{cur:x}"));
-            if !lift_one(t0, &d, cur, XMode::Bits64) { panic!("no lift @0x{cur:x}: {}", DEF_MNEMONICS[d.def_id as usize]); }
+            if !lift_one(t0, &d, cur, XMode::Bits64, FLAGS_ALL_LIVE) { panic!("no lift @0x{cur:x}: {}", DEF_MNEMONICS[d.def_id as usize]); }
             cur += d.len as u64;
             if t0.branched() { return (n + 1, StopReason::Branched); }
         }

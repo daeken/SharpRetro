@@ -5,7 +5,7 @@ use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::state::X86State;
 // Generated lift.rs (278 templates × 506 defs). hand_lift stays as the reference
 // (spot-checkable per-mnemonic) but the primary path is the generated one.
-use xfusion_recomp::lift::lift_one;
+use xfusion_recomp::lift::{lift_one, FLAGS_ALL_LIVE};
 #[allow(unused_imports)]
 use xfusion_recomp::hand_lift as _;
 use sharpretro_jit::interp::{InterpretingBuilder, FlatMem, GuestMem};
@@ -25,7 +25,7 @@ fn interp_one_x64(pre: &X86State, mem: &mut impl GuestMem, code: &[u8], pc: u64)
     {
         let mut b = InterpretingBuilder::new(&mut s, mem, pc);
         b.intrinsic = |_,_,id,_| panic!("intrinsic id={id} not wired");
-        handled = lift_one(&mut b, &d, pc, XMode::Bits64);
+        handled = lift_one(&mut b, &d, pc, XMode::Bits64, FLAGS_ALL_LIVE);
         branched = b.branched;
     }
     if !branched { s.rip = pc + d.len as u64; }
@@ -133,31 +133,57 @@ fn main() {
                     (first_word & 0xFF) == 0xCC  // INT3
                 }
                 fn compile_block(&self, t0: &mut Tier0, pc: u64, _mode: u32) -> (usize, StopReason) {
+                    use xfusion_recomp::lift::{DEF_FLAGS_MASK, DEF_FLAGS_READ};
+                    // Pass 1: decode the block, collect (DecodedInsn, pc) until stop/branch.
+                    // (Branch detection: any def whose template calls bd.branch — for x64
+                    //  that's Jcc/JMP/CALL/RET/branch-if. Detect via mnemonic class since
+                    //  we can't lift-into-tier-0 twice. ‡ v2: DEF_IS_BRANCH[def_id] table.)
+                    let is_branch = |m: &str| m.starts_with('J') || m == "CALL" || m == "RET"
+                        || m == "RETI" || m == "RETF" || m.starts_with("LOOP");
+                    let mut insns: Vec<(xfusion_recomp::decode::DecodedInsn, u64)> = vec![];
                     let mut cur = pc;
-                    for n in 0..self.max_block {
-                        // Fetch up to 15 bytes at cur.
+                    let mut stop_reason = StopReason::MaxInsns;
+                    for _ in 0..self.max_block {
                         let bytes = unsafe {
                             std::slice::from_raw_parts((self.host_base + cur) as *const u8, 15)
                         };
-                        if bytes[0] == 0xCC {
-                            let t = t0.literal(IlType::U64, cur as u128);
-                            t0.branch(t, false);
-                            return (n, StopReason::StopInsn);
-                        }
+                        if bytes[0] == 0xCC { stop_reason = StopReason::StopInsn; break; }
                         let d = decode_insn(bytes, XMode::Bits64)
                             .unwrap_or_else(|| panic!("undecoded @0x{cur:x}: {:02X?}", &bytes[..4]));
-                        if !lift_one(t0, &d, cur, XMode::Bits64) {
-                            panic!("no lift @0x{cur:x}: {} def_id={}",
+                        let mnem = DEF_MNEMONICS[d.def_id as usize];
+                        cur += d.len as u64;
+                        let br = is_branch(mnem);
+                        insns.push((d, cur - d.len as u64));  // (d, pc-of-this-insn)
+                        if br { stop_reason = StopReason::Branched; break; }
+                    }
+                    // Pass 2: BACKWARD liveness. Block-exit = ALL live (conservative — the
+                    // successor block may read anything). For each insn i (last→first):
+                    //   live_out[i] = live_in[i+1] (or ALL at block-exit)
+                    //   live_in[i]  = (live_out[i] & !WRITTEN[i]) | READ[i]
+                    // A flag-write in insn i is DEAD if its bit ∉ live_out[i].
+                    let mut live_flags_per: Vec<u32> = vec![0; insns.len()];
+                    let mut live: u32 = FLAGS_ALL_LIVE;  // block-exit
+                    for i in (0..insns.len()).rev() {
+                        let did = insns[i].0.def_id as usize;
+                        live_flags_per[i] = live;  // = live_out[i]
+                        let w = DEF_FLAGS_MASK.get(did).copied().unwrap_or(0);
+                        let r = DEF_FLAGS_READ.get(did).copied().unwrap_or(0);
+                        live = (live & !w) | r;
+                    }
+                    // Pass 3: forward emit with per-insn live_flags.
+                    for (i, (d, ipc)) in insns.iter().enumerate() {
+                        if !lift_one(t0, d, *ipc, XMode::Bits64, live_flags_per[i]) {
+                            panic!("no lift @0x{ipc:x}: {} def_id={}",
                                 DEF_MNEMONICS[d.def_id as usize], d.def_id);
                         }
-                        cur += d.len as u64;
-                        if t0.branched() { return (n + 1, StopReason::Branched); }
                     }
-                    // Max-cap: emit fallthrough-branch to `cur` (variable-length ⟹ we
-                    // can't compute it externally; the block MUST emit its own).
-                    let t = t0.literal(IlType::U64, cur as u128);
-                    t0.branch(t, false);
-                    (self.max_block, StopReason::MaxInsns)
+                    // If the block didn't end on a branch (StopInsn / MaxInsns), emit the
+                    // fallthrough-branch to `cur`.
+                    if !t0.branched() {
+                        let t = t0.literal(IlType::U64, cur as u128);
+                        t0.branch(t, false);
+                    }
+                    (insns.len(), stop_reason)
                 }
             }
 
@@ -199,7 +225,7 @@ fn main() {
         {
             let mut b = InterpretingBuilder::new(&mut ts, &mut mem, 0x1000);
             b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
-            lift_one(&mut b, &d, 0x1000, XMode::Bits64);
+            lift_one(&mut b, &d, 0x1000, XMode::Bits64, FLAGS_ALL_LIVE);
         }
         println!("{} (def_id={}):", DEF_MNEMONICS[d.def_id as usize], d.def_id);
         println!("  reads:  {:?}", ts.reads.borrow());
@@ -352,7 +378,7 @@ fn main() {
             let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut b = InterpretingBuilder::new(&mut ts, &mut mem, 0x1000);
                 b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
-                lift_one(&mut b, &d, 0x1000, XMode::Bits64)
+                lift_one(&mut b, &d, 0x1000, XMode::Bits64, FLAGS_ALL_LIVE)
             }));
             if r.is_err() { return None; }
             Some((ts.gpr_reads(), ts.flag_reads(), ts.reads_xmm()))
@@ -587,3 +613,4 @@ fn main() {
     }
     println!("[spot-checks: {ok} ok, {fail} fail]");
 }
+

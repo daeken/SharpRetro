@@ -22,7 +22,7 @@ use sharpretro_jit::{Builder, IlType};
 use xfusion_recomp::state::{X64_LAYOUT, STATE_WORDS_X64, OFF_RIP, OFF_MEMBASE};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
-use xfusion_recomp::lift::lift_one;
+use xfusion_recomp::lift::{lift_one, FLAGS_ALL_LIVE};
 
 // ── the native shim (the "library code" the guest calls). Normal aarch64 fn, AAPCS x0-x3→x0. ──
 extern "C" fn native_add(a: u64, b: u64, _c: u64, _d: u64) -> u64 { a + b }
@@ -98,7 +98,7 @@ fn main() {
                 }
                 let d = decode_insn(bytes, XMode::Bits64)
                     .unwrap_or_else(|| panic!("undecoded @0x{cur:x}: {:02X?}", &bytes[..4]));
-                if !lift_one(t0, &d, cur, XMode::Bits64) {
+                if !lift_one(t0, &d, cur, XMode::Bits64, FLAGS_ALL_LIVE) {
                     panic!("no lift @0x{cur:x}: {} def_id={}", DEF_MNEMONICS[d.def_id as usize], d.def_id);
                 }
                 cur += d.len as u64;

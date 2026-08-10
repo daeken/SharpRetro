@@ -22,6 +22,12 @@ public class RustLiftGen {
     /// Emitted as DEF_FLAGS_MASK[def_id] — the per-triple diff-mask (only compare
     /// flags the insn DEFINES; SDM-undefined flags may differ interp vs silicon).
     uint FlagsWritten;
+    /// Which eflags bits this template's eval body READS (via bare flag-name in Expr).
+    /// Emitted as DEF_FLAGS_READ[def_id] — for block-local dead-flag liveness:
+    /// backward-scan `live = (live & ~WRITTEN[i]) | READ[i]`; a flag-write whose bit
+    /// isn't in the successor's live-set is DEAD (skip its emit → kills ~5/6 of the
+    /// eflags-RMW tax on straight-line code, tier-agnostic).
+    uint FlagsRead;
     string OpW = "op_w";                               // the operand v-width (Rust var name)
     string Ind = "        ";
 
@@ -70,12 +76,22 @@ public class RustLiftGen {
                 break;
             case PName("="): {
                 var target = ((PName) l[1]).Name;
-                var e = Expr(l[2]);
                 if(Flags.TryGetValue(target, out var fbit)) {
-                    // Flag write: coerce to Bool (canonicalize like IlLower.CanonFlag).
-                    Emit($"bd.reg_write(EFLAGS, {fbit}, {CanonFlag(e)});");
+                    // Flag write: gate the WHOLE compute on live_flags — if this bit
+                    // isn't live at the successor, skip the compute AND the RMW-store.
+                    // (Dead-flag-elim: on straight-line code ~5/6 flag-writes are dead
+                    //  by the next flag-writer; this kills the biggest tier-0 tax.)
                     FlagsWritten |= 1u << fbit;
-                } else if(Params.Contains(target)) {
+                    Emit($"if live_flags & 0x{1u << fbit:X} != 0 {{");
+                    var si = Ind; Ind = si + "    ";
+                    var ef = Expr(l[2]);
+                    Emit($"bd.reg_write(EFLAGS, {fbit}, {CanonFlag(ef)});");
+                    Ind = si;
+                    Emit("}");
+                    break;
+                }
+                var e = Expr(l[2]);
+                if(Params.Contains(target)) {
                     Emit($"write_operand(bd, {ParamOp(target)}, {e});");
                 } else if(ArchRegs.TryGetValue(target, out var ar)) {
                     // Direct arch-reg write (SP/AX etc named in .isa) — always at op_w
@@ -180,7 +196,10 @@ public class RustLiftGen {
             case PName(var n):
                 if(Env.TryGetValue(n, out var bound)) return bound;
                 if(Params.Contains(n)) return Rt($"read_operand(bd, {ParamOp(n)})");
-                if(Flags.TryGetValue(n, out var fb)) return Rt($"bd.reg_read(EFLAGS, {fb}, IlType::Bool)");
+                if(Flags.TryGetValue(n, out var fb)) {
+                    FlagsRead |= 1u << fb;
+                    return Rt($"bd.reg_read(EFLAGS, {fb}, IlType::Bool)");
+                }
                 if(ArchRegs.TryGetValue(n, out var ar))
                     return Rt($"read_operand(bd, &Operand::Reg{{idx:{ar}, width:{OpW}, high8:false}})");
                 throw new NotSupportedException($"name {n}");
@@ -298,6 +317,7 @@ public class RustLiftGen {
         // mnemonic but different param-counts (rare) get separate bodies.
         var tmplId = new Dictionary<(string, int), int>();
         var tmplFlagsMask = new Dictionary<int, uint>();
+        var tmplFlagsRead = new Dictionary<int, uint>();
         var tid = 0;
         var nUnhandled = 0;
         foreach(var t in templates) {
@@ -307,7 +327,7 @@ public class RustLiftGen {
             tmplId[(t.Mnemonic, t.Params.Count)] = tid;
 
             sb.AppendLine($"/// {t.Mnemonic} ({string.Join(", ", t.Params)})");
-            sb.AppendLine($"fn tmpl_{tid}<B: Builder>(bd: &mut B, ops: &[Operand<B::Val>], op_w: u32, next_pc: u64)");
+            sb.AppendLine($"fn tmpl_{tid}<B: Builder>(bd: &mut B, ops: &[Operand<B::Val>], op_w: u32, next_pc: u64, live_flags: u32)");
             sb.AppendLine($"    where B::Val: Copy");
             sb.AppendLine($"{{");
             try {
@@ -326,13 +346,20 @@ public class RustLiftGen {
             sb.AppendLine("}");
             sb.AppendLine();
             tmplFlagsMask[tid] = g.FlagsWritten;
+            tmplFlagsRead[tid] = g.FlagsRead;
             tid++;
         }
 
         // Dispatch: def_id → bind operands + call template.
         // BodyOrder from RustDisasmGen (must have run FIRST in this Generate call —
         // Program.cs drives disasm before lift).
-        sb.AppendLine("pub fn lift_one<B: Builder>(bd: &mut B, d: &DecodedInsn, pc: u64, mode: XMode) -> bool");
+        // `live_flags`: which eflags bits are LIVE at this insn's exit (i.e. read by
+        // some successor before overwritten). A flag-write whose bit isn't live is
+        // dead → its compute+store is skipped. Callers that don't do liveness pass
+        // FLAGS_ALL_LIVE (= emit everything, the pre-dead-flag-elim behavior).
+        sb.AppendLine("pub const FLAGS_ALL_LIVE: u32 = 0xFFF;");
+        sb.AppendLine();
+        sb.AppendLine("pub fn lift_one<B: Builder>(bd: &mut B, d: &DecodedInsn, pc: u64, mode: XMode, live_flags: u32) -> bool");
         sb.AppendLine("    where B::Val: Copy");
         sb.AppendLine("{");
         sb.AppendLine("    let next_pc = pc.wrapping_add(d.len as u64);");
@@ -381,7 +408,7 @@ public class RustLiftGen {
                 binds.Add(b);
             }
             sb.AppendLine($"            let ops: &[Operand<B::Val>] = &[{string.Join(", ", binds)}];");
-            sb.AppendLine($"            tmpl_{tt}(bd, ops, op_w, next_pc);");
+            sb.AppendLine($"            tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
             sb.AppendLine($"            true");
             sb.AppendLine($"        }}");
         }
@@ -395,17 +422,25 @@ public class RustLiftGen {
         // DEFINES (SDM-undefined flags may legitimately differ interp vs silicon;
         // e.g. AF after AND/OR/XOR, OF after shift-by-N≠1, SF/ZF/AF/PF after MUL).
         // [0] unused (def_ids are 1-based).
-        sb.AppendLine("pub const DEF_FLAGS_MASK: &[u32] = &[");
-        sb.Append("    0,");
-        var col = 1;
-        foreach(var def in RustDisasmGen.BodyOrder) {
-            var key = (def.Mnemonic, def.Operands.Count);
-            var mask = tmplId.TryGetValue(key, out var tt) ? tmplFlagsMask[tt] : 0u;
-            sb.Append($" 0x{mask:X3},");
-            if(++col % 12 == 0) { sb.AppendLine(); sb.Append("   "); }
+        void EmitFlagsTable(string name, Dictionary<int, uint> src) {
+            sb.AppendLine($"pub const {name}: &[u32] = &[");
+            sb.Append("    0,");
+            var col = 1;
+            foreach(var def in RustDisasmGen.BodyOrder) {
+                var key = (def.Mnemonic, def.Operands.Count);
+                var mask = tmplId.TryGetValue(key, out var tt) ? src[tt] : 0u;
+                sb.Append($" 0x{mask:X3},");
+                if(++col % 12 == 0) { sb.AppendLine(); sb.Append("   "); }
+            }
+            sb.AppendLine();
+            sb.AppendLine("];");
         }
-        sb.AppendLine();
-        sb.AppendLine("];");
+        EmitFlagsTable("DEF_FLAGS_MASK", tmplFlagsMask);
+        // Which eflags bits each def's template READS. For block-local backward liveness:
+        //   live_out = ALL (conservative at block boundary);
+        //   for i in (n-1)..=0: live_in[i] = (live_out & !MASK[i]) | READ[i]; live_out = live_in[i];
+        // A flag-write whose bit isn't in live_out (the NEXT insn's live_in) is dead → skip emit.
+        EmitFlagsTable("DEF_FLAGS_READ", tmplFlagsRead);
 
         Console.Error.WriteLine($"[lift-gen: {tid} templates ({nUnhandled} UNHANDLED), {RustDisasmGen.BodyOrder.Count} def-arms]");
         return sb.ToString();
