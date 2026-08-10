@@ -379,6 +379,8 @@ public class RustLiftGen {
                 var predv = Rt($"if let Operand::Imm{{value,..}} = {predOp} {{ *value as u32 }} else {{ unreachable!() }}");
                 return Rt($"bd.fcmpp({a}, {b}, {predv}, {w})");
             }
+            case "fmax": return Rt($"bd.fminmax({Expr(l[1])}, {Expr(l[2])}, true)");
+            case "fmin": return Rt($"bd.fminmax({Expr(l[1])}, {Expr(l[2])}, false)");
             case "flt": return Rt($"bd.lt({Expr(l[1])}, {Expr(l[2])})");
             case "feq": return Rt($"bd.eq({Expr(l[1])}, {Expr(l[2])})");
             case "as-f64": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:64}})");

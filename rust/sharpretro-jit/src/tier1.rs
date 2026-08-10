@@ -134,6 +134,7 @@ impl Builder for Tier1 {
     fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 { self.rec.vfbin(a, b, ew, op) }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 { self.rec.vshuf(a, b, ew, sel) }
     fn fcmpp(&mut self, a: u32, b: u32, p: u32, w: u32) -> u32 { self.rec.fcmpp(a, b, p, w) }
+    fn fminmax(&mut self, a: u32, b: u32, m: bool) -> u32 { self.rec.fminmax(a, b, m) }
     fn ternary(&mut self, c: u32, a: u32, b: u32) -> u32 { self.rec.ternary(c, a, b) }
     fn cond(&mut self, c: u32, then: &mut dyn FnMut(&mut Self), els: &mut dyn FnMut(&mut Self)) {
         // Record CondBegin/Else/End markers around the arms. Closures take

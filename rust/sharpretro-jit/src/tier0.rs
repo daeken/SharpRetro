@@ -875,6 +875,23 @@ impl Builder for Tier0 {
         // NaN is unordered vs itself → fcmp a,a sets V=1 iff NaN.
         self.fcmp_op(a, a, Cond::VS)
     }
+    fn fminmax(&mut self, a: u32, b: u32, is_max: bool) -> u32 {
+        // FCMP a,b → NZCV; FCSEL d0, a, b, cond. cond=GT for MAX (a>b→a,
+        // else b — NaN/eq/±0 all → b=src per x86 SDM). cond=MI for MIN
+        // (a<b→a, else b — MI=N-set, only ordered-lt sets N; NaN N=0→b).
+        let ty = self.tys[a as usize];
+        let s = self.slot(ty);
+        let f64 = matches!(ty, IlType::F{width:64});
+        self.load(X_A, a);
+        if f64 { self.enc.fmov_d_x(0, X_A); } else { self.enc.fmov_s_w(0, X_A); }
+        self.load(X_A, b);
+        if f64 { self.enc.fmov_d_x(1, X_A); } else { self.enc.fmov_s_w(1, X_A); }
+        if f64 { self.enc.fcmp_d(0, 1); } else { self.enc.fcmp_s(0, 1); }
+        self.enc.fcsel(0, 0, 1, if is_max { Cond::GT } else { Cond::MI }, f64);
+        if f64 { self.enc.fmov_x_d(X_A, 0); } else { self.enc.fmov_w_s(X_A, 0); }
+        self.store(X_A, s);
+        s
+    }
     fn fcmpp(&mut self, a: u32, b: u32, pred: u32, w: u32) -> u32 {
         // x86 CMPSS/SD predicate → ARM FCMP+cond, 1:1 (verified against the
         // NZCV table: eq→0110 lt→1000 gt→0010 unord→0011). All 8 preds map

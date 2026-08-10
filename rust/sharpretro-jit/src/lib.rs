@@ -185,6 +185,10 @@ pub trait Builder {
     /// 4=NEQ 5=NLT 6=NLE 7=ORD. Preds 0-2 are ordered (NaN→false), 4-6
     /// are their inverses (NaN→true). a,b are F{w}-typed scalars.
     fn fcmpp(&mut self, a: Self::Val, b: Self::Val, pred: u32, w: u32) -> Self::Val;
+    /// x86 MAXSS/MINSS semantics: `(a op b) ? a : b` with IEEE compare
+    /// (NaN→false → returns b=src; ±0 equal → returns b=src). NOT the same
+    /// as ARM FMAX/FMIN (which propagate NaN). is_max: true=MAX, false=MIN.
+    fn fminmax(&mut self, a: Self::Val, b: Self::Val, is_max: bool) -> Self::Val;
 
     // ── vector (Element/ZeroTop/VectorSumUnsigned + the VectorMath heads) ───
     /// Read lane `i` of a V128 as `elem_ty`.

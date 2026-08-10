@@ -78,6 +78,9 @@ impl Builder for RecordingBuilder {
     fn fcmpp(&mut self, a: u32, b: u32, p: u32, w: u32) -> u32 {
         self.v(format!("fcmpp[{p}] v{a} v{b} → mask@{w}"))
     }
+    fn fminmax(&mut self, a: u32, b: u32, m: bool) -> u32 {
+        self.v(format!("f{} v{a} v{b}", if m {"max"} else {"min"}))
+    }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         self.v(format!("vzip{} v{a} v{b} @{ew}b", if hi {"H"} else {"L"}))
     }

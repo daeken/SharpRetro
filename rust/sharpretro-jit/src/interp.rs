@@ -300,6 +300,20 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         IlType::F{width:32} => IVal::f32(a.as_f32().ceil()), _ => IVal::f64(a.as_f64().ceil()) } }
     fn ffloor(&mut self, a: IVal) -> IVal { match a.ty {
         IlType::F{width:32} => IVal::f32(a.as_f32().floor()), _ => IVal::f64(a.as_f64().floor()) } }
+    fn fminmax(&mut self, a: IVal, b: IVal, is_max: bool) -> IVal {
+        // x86: (a op b) ? a : b, IEEE cmp. Rust `>`/`<` on f64 are IEEE
+        // (NaN→false, ±0 equal→false) → returns b in both cases = SDM.
+        match a.ty {
+            IlType::F{width:32} => {
+                let (fa, fb) = (a.as_f32(), b.as_f32());
+                if (is_max && fa > fb) || (!is_max && fa < fb) { a } else { b }
+            }
+            _ => {
+                let (fa, fb) = (a.as_f64(), b.as_f64());
+                if (is_max && fa > fb) || (!is_max && fa < fb) { a } else { b }
+            }
+        }
+    }
     fn fcmpp(&mut self, a: IVal, b: IVal, pred: u32, w: u32) -> IVal {
         // Rust f64 comparison ops are IEEE (NaN-aware): NaN<x=false,
         // NaN==x=false, NaN!=x=true. Preds 0-2 ordered (NaN→false),

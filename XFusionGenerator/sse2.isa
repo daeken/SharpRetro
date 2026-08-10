@@ -56,7 +56,7 @@
 
 (instruction MINPD (dst src) "minpd $dst, $src" (intrinsic minpd dst src))
 (encoding MINPD (Vpd Wpd) (opsize 0x0F 0x5D))
-(instruction MINSD (dst src) "minsd $dst, $src" (intrinsic minsd dst src))
+(instruction MINSD (dst src) "minsd $dst, $src" (= dst (fmin (as-f64 dst) (as-f64 src))))
 (encoding MINSD (Vsd Wsd) (repnz 0x0F 0x5D))
 
 (instruction DIVPD (dst src) "divpd $dst, $src" (= dst (vfbin dst src 64 3)))
@@ -66,7 +66,7 @@
 
 (instruction MAXPD (dst src) "maxpd $dst, $src" (intrinsic maxpd dst src))
 (encoding MAXPD (Vpd Wpd) (opsize 0x0F 0x5F))
-(instruction MAXSD (dst src) "maxsd $dst, $src" (intrinsic maxsd dst src))
+(instruction MAXSD (dst src) "maxsd $dst, $src" (= dst (fmax (as-f64 dst) (as-f64 src))))
 (encoding MAXSD (Vsd Wsd) (repnz 0x0F 0x5F))
 
 (instruction SQRTPD (dst src) "sqrtpd $dst, $src" (intrinsic sqrtpd dst src))

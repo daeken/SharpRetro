@@ -59,7 +59,7 @@
 
 (instruction MINPS (dst src) "minps $dst, $src" (intrinsic minps dst src))
 (encoding MINPS (Vps Wps) (0x0F 0x5D))
-(instruction MINSS (dst src) "minss $dst, $src" (intrinsic minss dst src))
+(instruction MINSS (dst src) "minss $dst, $src" (= dst (fmin (as-f32 dst) (as-f32 src))))
 (encoding MINSS (Vss Wss) (rep 0x0F 0x5D))
 
 (instruction DIVPS (dst src) "divps $dst, $src" (= dst (vfbin dst src 32 3)))
@@ -69,7 +69,9 @@
 
 (instruction MAXPS (dst src) "maxps $dst, $src" (intrinsic maxps dst src))
 (encoding MAXPS (Vps Wps) (0x0F 0x5F))
-(instruction MAXSS (dst src) "maxss $dst, $src" (intrinsic maxss dst src))
+; MAXSS: dst = (dst>src)?dst:src, IEEE cmp → NaN/±0 return src. NOT ARM FMAX (which
+; propagates NaN). tier-0 = FCMP+FCSEL cond=GT (unord→N≠V→GT false→src). x86-exact.
+(instruction MAXSS (dst src) "maxss $dst, $src" (= dst (fmax (as-f32 dst) (as-f32 src))))
 (encoding MAXSS (Vss Wss) (rep 0x0F 0x5F))
 
 (instruction SQRTPS (dst src) "sqrtps $dst, $src" (intrinsic sqrtps dst src))
