@@ -386,6 +386,14 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
                 0 => la.wrapping_add(lb),
                 1 => la.wrapping_sub(lb),
                 2 => la.wrapping_mul(lb),
+                3 => if la == lb { m } else { 0 },
+                4 => {
+                    // Signed compare within ew: sign-extend both to i128, compare.
+                    let sb = 1u128 << (ew - 1);
+                    let sa = if la & sb != 0 { la | !m } else { la } as i128;
+                    let sbv = if lb & sb != 0 { lb | !m } else { lb } as i128;
+                    if sa > sbv { m } else { 0 }
+                }
                 _ => panic!("vibin op={op}"),
             } & m;
             r |= lr << (i*ew);

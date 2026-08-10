@@ -560,6 +560,8 @@ impl Builder for Tier0 {
             0 => self.enc.add_v(2, 0, 1, size),
             1 => self.enc.sub_v(2, 0, 1, size),
             2 => self.enc.mul_v(2, 0, 1, size),  // panics on ew=64 via debug_assert
+            3 => self.enc.cmeq_v(2, 0, 1, size),
+            4 => self.enc.cmgt_v(2, 0, 1, size), // signed (matches x86 PCMPGT)
             _ => panic!("vibin op={op}"),
         }
         self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);

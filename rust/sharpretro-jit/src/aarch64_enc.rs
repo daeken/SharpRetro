@@ -256,6 +256,14 @@ impl Aarch64Enc {
         debug_assert!(size < 3, "MUL vector has no .2D form");
         self.put(0x4E209C00 | (size<<22) | (vm<<16) | (vn<<5) | vd);
     }
+    // CMEQ (register): per-lane == → all-1s/0. size 0-3.
+    pub fn cmeq_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        self.put(0x6E208C00 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    // CMGT (register, signed): per-lane signed > → all-1s/0. size 0-3.
+    pub fn cmgt_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        self.put(0x4E203400 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
     pub fn eor_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x6E201C00 | (vm<<16) | (vn<<5) | vd); }
     pub fn and_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x4E201C00 | (vm<<16) | (vn<<5) | vd); }
     pub fn orr_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x4EA01C00 | (vm<<16) | (vn<<5) | vd); }

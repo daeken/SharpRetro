@@ -167,9 +167,11 @@ pub trait Builder {
     /// (= 4×f32 or 2×f64), op ∈ {0=add,1=sub,2=mul,3=div}. MULPS/ADDPD/etc.
     fn vfbin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
     /// Packed-integer binary: per-lane wrapping int op on V128,
-    /// elem_bits ∈ {8,16,32,64}, op ∈ {0=add,1=sub,2=mul}. PADDB/W/D/Q,
-    /// PSUBB/W/D/Q, PMULLW/PMULLD. ‡ mul at ew=64 (PMULLQ) doesn't exist
-    /// in SSE (only in AVX512-DQ), and NEON has no MUL.2D — die-loud.
+    /// elem_bits ∈ {8,16,32,64}, op ∈ {0=add,1=sub,2=mul,3=cmpeq,4=cmpgt}.
+    /// PADDB/W/D/Q, PSUBB/W/D/Q, PMULLW/PMULLD, PCMPEQ*/PCMPGT* (→ mask).
+    /// ‡ mul at ew=64 (PMULLQ) doesn't exist in SSE (only in AVX512-DQ),
+    /// and NEON has no MUL.2D — die-loud. cmpgt is SIGNED (x86 PCMPGT is
+    /// always signed; NEON CMGT is signed, CMHI is unsigned — matched).
     fn vibin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
     /// Packed integer shift by IMMEDIATE count on V128. ew∈{8,16,32,64},
     /// dir∈{0=shl,1=lshr,2=ashr}. count is compile-time-known (Ib).

@@ -141,18 +141,19 @@
 (encoding MOVQ-XS (Wq Vq) (opsize 0x0F 0xD6))
 
 ; --- integer xmm: compare/extract ---
-(instruction PCMPEQB (dst src) "pcmpeqb $dst, $src" (intrinsic pcmpeqb dst src))
+; PCMPEQ*/PCMPGT*: per-lane integer compare → all-1s/0 mask. cmpgt is SIGNED. vibin op=3/4.
+(instruction PCMPEQB (dst src) "pcmpeqb $dst, $src" (= dst (vibin dst src 8 3)))
 (encoding PCMPEQB (Vdq Wdq) (opsize 0x0F 0x74))
-(instruction PCMPEQW (dst src) "pcmpeqw $dst, $src" (intrinsic pcmpeqw dst src))
+(instruction PCMPEQW (dst src) "pcmpeqw $dst, $src" (= dst (vibin dst src 16 3)))
 (encoding PCMPEQW (Vdq Wdq) (opsize 0x0F 0x75))
-(instruction PCMPEQD (dst src) "pcmpeqd $dst, $src" (intrinsic pcmpeqd dst src))
+(instruction PCMPEQD (dst src) "pcmpeqd $dst, $src" (= dst (vibin dst src 32 3)))
 (encoding PCMPEQD (Vdq Wdq) (opsize 0x0F 0x76))
 
-(instruction PCMPGTB (dst src) "pcmpgtb $dst, $src" (intrinsic pcmpgtb dst src))
+(instruction PCMPGTB (dst src) "pcmpgtb $dst, $src" (= dst (vibin dst src 8 4)))
 (encoding PCMPGTB (Vdq Wdq) (opsize 0x0F 0x64))
-(instruction PCMPGTW (dst src) "pcmpgtw $dst, $src" (intrinsic pcmpgtw dst src))
+(instruction PCMPGTW (dst src) "pcmpgtw $dst, $src" (= dst (vibin dst src 16 4)))
 (encoding PCMPGTW (Vdq Wdq) (opsize 0x0F 0x65))
-(instruction PCMPGTD (dst src) "pcmpgtd $dst, $src" (intrinsic pcmpgtd dst src))
+(instruction PCMPGTD (dst src) "pcmpgtd $dst, $src" (= dst (vibin dst src 32 4)))
 (encoding PCMPGTD (Vdq Wdq) (opsize 0x0F 0x66))
 
 (instruction PMOVMSKB (dst src) "pmovmskb $dst, $src" (intrinsic pmovmskb dst src))
