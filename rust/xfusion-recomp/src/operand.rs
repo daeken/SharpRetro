@@ -101,8 +101,15 @@ pub fn write_operand<B: Builder>(bd: &mut B, op: &Operand<B::Val>, v: B::Val)
             bd.reg_write(GPR, idx as u32, v);
         }
         Operand::Reg { idx, width: 32, .. } => {
-            // 32-bit write ZERO-extends to 64 (SDM 3.4.1.1).
-            let z = bd.cast(v, IlType::U64);
+            // 32-bit write ZERO-extends to 64 (SDM 3.4.1.1). TRUNCATE to U32
+            // first — most callers pass a U32 already (arith at op_w=32),
+            // but LEA passes a U64 addr; without the truncate, cast(U64→U64)
+            // is a no-op → upper 32 leak through. Found by the ptrace-silicon
+            // diff: `lea r8d,[rdx-0x61]` at rdx=0 gave r8=0xFF..FF9F not
+            // 0xFFFFFF9F; both interp and tier-0 agreed-wrong (only silicon
+            // caught it — 129 sites in a real game's CRT hex-parse loop).
+            let t = bd.cast(v, IlType::U32);
+            let z = bd.cast(t, IlType::U64);
             bd.reg_write(GPR, idx as u32, z);
         }
         Operand::Reg { idx, width, high8 } => {
