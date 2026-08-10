@@ -253,6 +253,16 @@ impl<'a> Emitter<'a> {
         self.enc.and_lowmask(xd, xd, w);
     }
 
+    /// Float-bin: xa/xb hold the F-typed bits in X-regs; fmov X→d0/d1, op→d0,
+    /// fmov d0→xd. Same pattern as tier-0's fbin. F32 uses s0/s1 via fmov_s_w.
+    fn emit_fbin(&mut self, xd: u32, xa: u32, xb: u32, fw: u32,
+                 f: impl FnOnce(&mut Aarch64Enc)) {
+        if fw == 64 { self.enc.fmov_d_x(0, xa); self.enc.fmov_d_x(1, xb); }
+        else { self.enc.fmov_s_w(0, xa); self.enc.fmov_s_w(1, xb); }
+        f(&mut self.enc);
+        if fw == 64 { self.enc.fmov_x_d(xd, 0); } else { self.enc.fmov_w_s(xd, 0); }
+    }
+
     fn emit_op(&mut self, op_idx: usize, op: &IlOp) {
         use IlOpKind::*;
         // Dead-store-elim marked this RegWrite dead → skip.
@@ -263,10 +273,24 @@ impl<'a> Emitter<'a> {
         }
         let ty = op.ty;
         let w = self.width_bits(ty);
-        // Wide/vec/float — v1 is scalar-int-only. Die loud (block should route
-        // to tier-0 instead; the tier-selection at compile-time picks).
+        // Wide/vec: v1 is scalar-only (F32/F64 handled below, w≤64). RegRead/
+        // RegWrite of XMM at width≤64 (Vsd/Vss lane-0) IS a single state[]
+        // word — handled below. V128 xmm access + u128/i128 arith → die-loud
+        // (block routes to tier-0 via tier-selection).
+        // v2 float-arm: F32/F64 handled below (w≤64). V128/u128 arith → die-loud.
+        // RegRead xmm@V128: emit as LO64-only (single ldr_x from state[xmm_off]).
+        //   ‡ UNSAFE for any consumer that reads hi64 — but every V128-arith op
+        //   (Xor/And/Or/vzip) has w>64 on the OP itself → dies below. So the
+        //   only V128-RegRead consumers that survive are Cast V128→U64
+        //   (movq r,xmm = take lo64, correct) and RegWrite lane-0. The guard on
+        //   binops/Cast catches everything hi64-consuming.
         if w > 64 {
-            panic!("tier-1 v1: wide ty {ty:?} at op {:?} — use tier-0 for this block", op.kind);
+            match op.kind {
+                RegRead => { /* lo64-only ldr below; consumer's w>64 guard catches hi64 uses */ }
+                RegWrite if self.width_bits(self.rec.ty_of(op.args[0])) <= 64 => { /* lane-0 str_x */ }
+                Cast if op.imm == 0 && w <= 64 => unreachable!(),  // handled by fw>64 in Cast below
+                _ => panic!("tier-1 v1: wide ty {ty:?} at op {:?} — use tier-0 for this block", op.kind),
+            }
         }
 
         match op.kind {
@@ -291,6 +315,11 @@ impl<'a> Emitter<'a> {
                     self.enc.lsrv(xd, xd, X_S1);
                     self.enc.mov_imm64(X_S1, 1);
                     self.enc.and_r(xd, xd, X_S1);
+                } else if f.0 == 3 {
+                    // XMM lane-0 read at width≤64 (Vsd/Vss). state[xmm_off] = lo64.
+                    // reg_off(3, idx) already points at word 0. w=32 (Vss) needs mask.
+                    if w < 64 { self.mask_to(xd, w); }
+                    // ‡ V128 read (w=128) would need 2 words → wide-guard catches above.
                 } else if w < 64 {
                     // GPR at op_w<64: mask (partial-reg read).
                     if f.0 == 0 { self.mask_to(xd, w); }
@@ -362,6 +391,18 @@ impl<'a> Emitter<'a> {
                 let (xd, sp) = self.dest(out);
                 let xa = self.get(op.args[0], X_S0);
                 let xb = self.get(op.args[1], X_S1);
+                // Float arm: F32/F64 route through fadd_d/s etc via emit_fbin.
+                if let IlType::F{width: fw} = ty {
+                    self.emit_fbin(xd, xa, xb, fw as u32, |e| match (op.kind, fw) {
+                        (Add, 64) => e.fadd_d(0,0,1), (Add, 32) => e.fadd_s(0,0,1),
+                        (Sub, 64) => e.fsub_d(0,0,1), (Sub, 32) => e.fsub_s(0,0,1),
+                        (Mul, 64) => e.fmul_d(0,0,1), (Mul, 32) => e.fmul_s(0,0,1),
+                        (Div, 64) => e.fdiv_d(0,0,1), (Div, 32) => e.fdiv_s(0,0,1),
+                        _ => panic!("tier-1 float bin: {:?} F{fw}", op.kind),
+                    });
+                    self.put(out, xd, sp);
+                    return;
+                }
                 let signed = matches!(ty, IlType::I{signed:true,..});
                 let w32 = w <= 32;
                 match op.kind {
@@ -434,6 +475,64 @@ impl<'a> Emitter<'a> {
                 let xa = self.get(op.args[0], X_S0);
                 let from_ty = self.rec.ty_of(op.args[0]);
                 let fw = self.width_bits(from_ty);
+                // imm=1 → BITCAST (retype only, no bit-change): just move.
+                //   Covers (as-f64)/(as-f32)/(signed W v). Bits unchanged; the
+                //   type-tag is compile-time-only. imm=2/3 (pair128/hi64) are
+                //   wide → caught by the w>64 guard above.
+                if op.imm == 1 {
+                    if xd != xa { self.enc.mov_r(xd, xa); }
+                    self.put(out, xd, sp);
+                    return;
+                }
+                // V128 → U64 (movq r,xmm's Cast): take lo64. RegRead V128 above
+                //   emitted lo64-only into xa; here just move (the val's already
+                //   the lo64 in a 1-reg Loc).
+                if matches!(from_ty, IlType::V128) && matches!(ty, IlType::I{width:64,..}) {
+                    if xd != xa { self.enc.mov_r(xd, xa); }
+                    self.put(out, xd, sp);
+                    return;
+                }
+                // I↔F numerical converts (imm=0 Cast, ty crosses I/F).
+                let from_f = matches!(from_ty, IlType::F{..});
+                let to_f = matches!(ty, IlType::F{..});
+                if from_f || to_f {
+                    match (from_f, to_f, from_ty, ty) {
+                        // I → F: scvtf. iw≤32→_w form, fw picks d/s.
+                        (false, true, IlType::I{width:iw,..}, IlType::F{width:fwd}) => {
+                            match (iw > 32, fwd) {
+                                (true, 64) => self.enc.scvtf_d_x(0, xa),
+                                (true, 32) => self.enc.scvtf_s_x(0, xa),
+                                (false,64) => self.enc.scvtf_d_w(0, xa),
+                                (false,32) => self.enc.scvtf_s_w(0, xa),
+                                _ => panic!("tier-1 cast I{iw}→F{fwd}"),
+                            }
+                            if fwd==64 { self.enc.fmov_x_d(xd,0); } else { self.enc.fmov_w_s(xd,0); }
+                        }
+                        // F → I: fcvtzs (truncate). Matches tier-0.
+                        (true, false, IlType::F{width:fws}, IlType::I{width:iw,..}) => {
+                            if fws==64 { self.enc.fmov_d_x(0,xa); } else { self.enc.fmov_s_w(0,xa); }
+                            match (iw > 32, fws) {
+                                (true, 64) => self.enc.fcvtzs_x_d(xd, 0),
+                                (true, 32) => self.enc.fcvtzs_x_s(xd, 0),
+                                (false,64) => self.enc.fcvtzs_w_d(xd, 0),
+                                (false,32) => { self.enc.fcvtzs_x_s(xd, 0); },
+                                _ => panic!("tier-1 cast F{fws}→I{iw}"),
+                            }
+                            if iw < 64 { self.mask_to(xd, iw as u32); }
+                        }
+                        // F32↔F64: fcvt.
+                        (true, true, IlType::F{width:32}, IlType::F{width:64}) => {
+                            self.enc.fmov_s_w(0, xa); self.enc.fcvt_d_s(0, 0); self.enc.fmov_x_d(xd, 0);
+                        }
+                        (true, true, IlType::F{width:64}, IlType::F{width:32}) => {
+                            self.enc.fmov_d_x(0, xa); self.enc.fcvt_s_d(0, 0); self.enc.fmov_w_s(xd, 0);
+                        }
+                        // F→F same-width or Bool→F etc: die-loud.
+                        _ => panic!("tier-1 cast {:?}→{:?}", from_ty, ty),
+                    }
+                    self.put(out, xd, sp);
+                    return;
+                }
                 match (op.kind, fw, w) {
                     (Cast, _, tw) if tw >= fw => {
                         // Widen (zext) or same: value's already zero-above-fw (invariant),
