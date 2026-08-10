@@ -76,13 +76,22 @@ pub struct InterpretingBuilder<'a, S: RegState, M: GuestMem> {
     pub branched: bool,
     /// pc of the CURRENT insn (recompile_one's `pc` arg). branch() reads it for link.
     pub insn_pc: u64,
+    /// Optional memory-write watchpoint: (target_addr, range_bytes). When a
+    /// mem_write's [addr, addr+width) overlaps [target, target+range), prints
+    /// {insn_pc, addr, width, value} to stderr. Insn-grain — the exact
+    /// instruction that touched the address. For arena-init/who-wrote-this
+    /// tracing. Set via the constructor or directly on the struct.
+    pub watch: Option<(u64, u64)>,
 }
 
 impl<'a, S: RegState, M: GuestMem> InterpretingBuilder<'a, S, M> {
     pub fn new(state: &'a mut S, mem: &'a mut M, insn_pc: u64) -> Self {
         Self { state, mem, locals: vec![], intrinsic: |_,_,id,_| panic!("intrinsic {id} not wired"),
-               branched: false, insn_pc }
+               branched: false, insn_pc, watch: None }
     }
+    /// Set a memory-write watchpoint on [addr, addr+range). Prints {insn_pc,
+    /// addr, width, value} to stderr on any overlapping mem_write. Insn-grain.
+    pub fn set_watch(&mut self, addr: u64, range: u64) { self.watch = Some((addr, range)); }
 }
 
 // ── the arithmetic core ────────────────────────────────────────────────────
@@ -129,7 +138,16 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
     }
     fn mem_write(&mut self, a: IVal, v: IVal) {
         let w = match v.ty { IlType::I{width,..} => width, IlType::F{width} => width, IlType::V128 => 128, _ => 64 };
-        self.mem.write(a.as_u64(), w, v.bits)
+        let addr = a.as_u64();
+        if let Some((wa, wr)) = self.watch {
+            let wb = (w / 8) as u64;
+            // Overlap: [addr, addr+wb) ∩ [wa, wa+wr) ≠ ∅
+            if addr < wa + wr && wa < addr + wb {
+                eprintln!("[MEM-WATCH] pc=0x{:x} write [0x{:x}..+{}] = 0x{:x} (ty={:?})",
+                    self.insn_pc, addr, wb, v.bits, v.ty);
+            }
+        }
+        self.mem.write(addr, w, v.bits)
     }
 
     fn add(&mut self, a: IVal, b: IVal) -> IVal { ibin(a,b, |x,y|x.wrapping_add(y), |x,y|x.wrapping_add(y), |x,y|x+y, |x,y|x+y) }
@@ -308,6 +326,37 @@ fn width_of(t: IlType) -> u8 {
 // ─────────────────────────────────────────────────────────────────────────────
 // A minimal GuestMem for tests — flat Vec<u8> at a fixed base.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// GuestMem for mem_base=0 (shared-VA): guest addresses ARE host addresses.
+/// Reads/writes go direct to host memory via raw ptr. For interp-mode runs
+/// against a real mmap'd PE/ELF (the loader's mem_base=0 model). UNSAFE by
+/// nature — the caller guarantees the guest's whole address space is mapped.
+pub struct HostMem;
+impl GuestMem for HostMem {
+    fn read(&self, addr: u64, w: u8) -> u128 {
+        unsafe { match w {
+            8  => *(addr as *const u8)  as u128,
+            16 => (addr as *const u16).read_unaligned() as u128,
+            32 => (addr as *const u32).read_unaligned() as u128,
+            64 => (addr as *const u64).read_unaligned() as u128,
+            128 => { let lo = (addr as *const u64).read_unaligned() as u128;
+                     let hi = ((addr+8) as *const u64).read_unaligned() as u128;
+                     (hi << 64) | lo }
+            _ => panic!("HostMem read w={w}"),
+        } }
+    }
+    fn write(&mut self, addr: u64, w: u8, v: u128) {
+        unsafe { match w {
+            8  => *(addr as *mut u8) = v as u8,
+            16 => (addr as *mut u16).write_unaligned(v as u16),
+            32 => (addr as *mut u32).write_unaligned(v as u32),
+            64 => (addr as *mut u64).write_unaligned(v as u64),
+            128 => { (addr as *mut u64).write_unaligned(v as u64);
+                     ((addr+8) as *mut u64).write_unaligned((v>>64) as u64); }
+            _ => panic!("HostMem write w={w}"),
+        } }
+    }
+}
 
 pub struct FlatMem { pub base: u64, pub bytes: Vec<u8> }
 impl FlatMem {
