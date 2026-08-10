@@ -241,21 +241,31 @@
 ; (+ZF condition for e/ne); E3 branches if CX==0 WITHOUT dec. Machine-native
 ; intrinsics (CX width = address size — same problem/solution as string ops;
 ; the machine masks by AWidth). Target pre-resolved to absolute by the binder.
+; LOOP: rcx -= 1; branch if rcx != 0. LOOPE/LOOPNE also test ZF.
+; d64 encoding → op_w=64 in 64-bit mode → CX means RCX (SDM: address-size,
+; not operand-size, decides the counter width; ‡ addr-size override 67h
+; → ecx not modeled — rare² in x64, compilers don't emit it).
 (instruction LOOP (target)
     "loop $target"
-    (intrinsic loop target))
+    (mlet (c (- CX 1))
+        (= CX c)
+        (branch-if (!= c 0) target)))
 (encoding LOOP (Jb) (0xE2 d64))
 (instruction LOOPE (target)
     "loope $target"
-    (intrinsic loope target))
+    (mlet (c (- CX 1))
+        (= CX c)
+        (branch-if (& (!= c 0) ZF) target)))
 (encoding LOOPE (Jb) (0xE1 d64))
 (instruction LOOPNE (target)
     "loopne $target"
-    (intrinsic loopne target))
+    (mlet (c (- CX 1))
+        (= CX c)
+        (branch-if (& (!= c 0) (! ZF)) target)))
 (encoding LOOPNE (Jb) (0xE0 d64))
 (instruction JCXZ (target)
     "$(aname jcxz jecxz jrcxz) $target"
-    (intrinsic jcxz target))
+    (branch-if (== CX 0) target))
 (encoding JCXZ (Jb) (0xE3 d64))
 
 ; --- moffs forms: AL/rAX <-> [disp] with no ModRM (A0-A3) ---
