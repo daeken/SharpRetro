@@ -82,13 +82,13 @@
 (encoding RCPSS (Vss Wss) (rep 0x0F 0x53))
 
 ; --- logicals ---
-(instruction ANDPS (dst src) "andps $dst, $src" (intrinsic andps dst src))
+(instruction ANDPS (dst src) "andps $dst, $src" (= dst (& dst src)))
 (encoding ANDPS (Vps Wps) (0x0F 0x54))
-(instruction ANDNPS (dst src) "andnps $dst, $src" (intrinsic andnps dst src))
+(instruction ANDNPS (dst src) "andnps $dst, $src" (= dst (& (~ dst) src)))
 (encoding ANDNPS (Vps Wps) (0x0F 0x55))
-(instruction ORPS (dst src) "orps $dst, $src" (intrinsic orps dst src))
+(instruction ORPS (dst src) "orps $dst, $src" (= dst (| dst src)))
 (encoding ORPS (Vps Wps) (0x0F 0x56))
-(instruction XORPS (dst src) "xorps $dst, $src" (intrinsic xorps dst src))
+(instruction XORPS (dst src) "xorps $dst, $src" (= dst (^ dst src)))
 (encoding XORPS (Vps Wps) (0x0F 0x57))
 
 ; --- compares ---

@@ -67,13 +67,13 @@
 (encoding SQRTSD (Vsd Wsd) (repnz 0x0F 0x51))
 
 ; --- pd logicals ---
-(instruction ANDPD (dst src) "andpd $dst, $src" (intrinsic andpd dst src))
+(instruction ANDPD (dst src) "andpd $dst, $src" (= dst (& dst src)))
 (encoding ANDPD (Vpd Wpd) (opsize 0x0F 0x54))
-(instruction ANDNPD (dst src) "andnpd $dst, $src" (intrinsic andnpd dst src))
+(instruction ANDNPD (dst src) "andnpd $dst, $src" (= dst (& (~ dst) src)))
 (encoding ANDNPD (Vpd Wpd) (opsize 0x0F 0x55))
-(instruction ORPD (dst src) "orpd $dst, $src" (intrinsic orpd dst src))
+(instruction ORPD (dst src) "orpd $dst, $src" (= dst (| dst src)))
 (encoding ORPD (Vpd Wpd) (opsize 0x0F 0x56))
-(instruction XORPD (dst src) "xorpd $dst, $src" (intrinsic xorpd dst src))
+(instruction XORPD (dst src) "xorpd $dst, $src" (= dst (^ dst src)))
 (encoding XORPD (Vpd Wpd) (opsize 0x0F 0x57))
 
 ; --- compares ---
