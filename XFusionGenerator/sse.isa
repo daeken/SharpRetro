@@ -125,5 +125,5 @@
 (instruction STMXCSR (dst) "stmxcsr $dst" (intrinsic stmxcsr dst))
 (encoding STMXCSR (Md) (0x0F 0xAE /3))
 
-(instruction SFENCE () "sfence" (intrinsic sfence))
+(instruction SFENCE () "sfence" (block))
 (encoding SFENCE () (0x0F 0xAE /7))

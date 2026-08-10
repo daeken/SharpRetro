@@ -285,14 +285,27 @@
 
 (instruction LFENCE () "lfence" (intrinsic lfence))
 (encoding LFENCE () (0x0F 0xAE /5))
-(instruction MFENCE () "mfence" (intrinsic mfence))
+; Fences: memory-ordering barriers. Under mem_base=0 single-guest-thread,
+; there's no reordering to fence — semantically a NOP. When SMP-guest
+; arrives (multi-thread), these need real dmb sy/ld/st.
+(instruction MFENCE () "mfence" (block))
 (encoding MFENCE () (0x0F 0xAE /6))
+(instruction LFENCE () "lfence" (block))
+(encoding LFENCE () (0x0F 0xAE /5))
 
-(instruction PREFETCHT0 (src) "prefetcht0 $src" (intrinsic prefetcht0 src))
+; Prefetch hints: pure cache-timing hints, ZERO architectural effect. NOPs.
+(instruction PREFETCHT0 (src) "prefetcht0 $src" (block))
 (encoding PREFETCHT0 (M) (0x0F 0x18 /1))
-(instruction PREFETCHT1 (src) "prefetcht1 $src" (intrinsic prefetcht1 src))
+(instruction PREFETCHT1 (src) "prefetcht1 $src" (block))
 (encoding PREFETCHT1 (M) (0x0F 0x18 /2))
-(instruction PREFETCHT2 (src) "prefetcht2 $src" (intrinsic prefetcht2 src))
+(instruction PREFETCHT2 (src) "prefetcht2 $src" (block))
 (encoding PREFETCHT2 (M) (0x0F 0x18 /3))
-(instruction PREFETCHNTA (src) "prefetchnta $src" (intrinsic prefetchnta src))
+(instruction PREFETCHNTA (src) "prefetchnta $src" (block))
 (encoding PREFETCHNTA (M) (0x0F 0x18 /0))
+; PREFETCHW (0F 0D /1): prefetch-for-write (3DNow! → PRFCHW leaf7). Games
+; emit it before atomic-RMW to reduce cache-line ping-pong. Also NOP.
+; 0F 0D /0 = PREFETCH (AMD-only, obsolete); /2 = PREFETCHWT1 (deprecated).
+(instruction PREFETCHW (src) "prefetchw $src" (block))
+(encoding PREFETCHW (M) (0x0F 0x0D /1))
+(instruction PREFETCH-A (src) "prefetch $src" (block))
+(encoding PREFETCH-A (M) (0x0F 0x0D /0))
