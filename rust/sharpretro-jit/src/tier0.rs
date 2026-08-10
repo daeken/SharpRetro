@@ -735,12 +735,22 @@ impl Builder for Tier0 {
             _ => {}
         }
         // wide→narrow: read lo, mask; narrow→narrow: read, mask.
+        // cast(_, Bool): reduce to 0/1 (cmp #0; cset ne). Was falling through
+        //   unmasked → OF-flag's `(& … (1<<31))` value 0x80000000 stored as
+        //   Bool then flag-RMW's `lslv v,bit` shifted it to bit 42 not bit 11
+        //   → OF=0 always at the INT_MIN boundary → jle wrong → EVERY MSVC
+        //   magic-static init skipped. The CP2077 691-vs-46K divergence root.
+        //   interp's cast I→Bool = (bits!=0) → 1, so interp was correct.
         self.load(X_A, a);
-        if let IlType::I{width, ..} = to {
-            if width < 64 {
-                self.enc.mov_imm64(X_B, (1u64 << width) - 1);
-                self.enc.and_r(X_A, X_A, X_B);
+        match to {
+            IlType::Bool => {
+                self.enc.cmp_r(X_A, 31);   // subs xzr, x9, xzr → Z=(x9==0)
+                self.enc.cset(X_A, Cond::NE);
             }
+            IlType::I{width, ..} if width < 64 => {
+                self.enc.and_lowmask(X_A, X_A, width as u32);
+            }
+            _ => {}
         }
         self.store(X_A, s);
         s

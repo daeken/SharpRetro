@@ -534,6 +534,12 @@ impl<'a> Emitter<'a> {
                     return;
                 }
                 match (op.kind, fw, w) {
+                    (Cast, _, _) if matches!(ty, IlType::Bool) => {
+                        // to-Bool: reduce to 0/1 via cmp+cset. NOT mask-to-1 (that
+                        // tests bit-0; we want !=0 — same class as tier-0's cast).
+                        self.enc.cmp_r(xa, 31);
+                        self.enc.cset(xd, Cond::NE);
+                    }
                     (Cast, _, tw) if tw >= fw => {
                         // Widen (zext) or same: value's already zero-above-fw (invariant),
                         // so just move.
