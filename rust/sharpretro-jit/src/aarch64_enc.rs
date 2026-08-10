@@ -211,6 +211,15 @@ impl Aarch64Enc {
     pub fn fcvtzs_v(&mut self, vd: u32, vn: u32, sz: u32) {
         self.put(0x4EA1B800 | (sz<<22) | (vn<<5) | vd);
     }
+    // FCVTNS Vd.T,Vn.T (f→int, round-to-nearest-ties-even) = 0x4E21A800 | sz<<22
+    pub fn fcvtns_v(&mut self, vd: u32, vn: u32, sz: u32) {
+        self.put(0x4E21A800 | (sz<<22) | (vn<<5) | vd);
+    }
+    // XTN Vd.2S, Vn.2D (narrow i64→i32, low half, upper zeroed) = 0x0E212800 | size<<22
+    // size=2 for 2D→2S. (Q=0.)
+    pub fn xtn_2s_2d(&mut self, vd: u32, vn: u32) {
+        self.put(0x0EA12800 | (vn<<5) | vd);
+    }
     // FCVTL Vd.2D,Vn.2S (widen low 2× f32→f64) = 0x0E617800 (Q=0, sz=1)
     pub fn fcvtl_2d_2s(&mut self, vd: u32, vn: u32) {
         self.put(0x0E617800 | (vn<<5) | vd);

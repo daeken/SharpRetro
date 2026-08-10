@@ -278,6 +278,22 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
             2 => for i in 0..2 { r |= ((f32::from_bits(lane32(i)) as f64).to_bits() as u128) << (i*64); },
             3 => for i in 0..2 { r |= ((f64::from_bits(lane64(i)) as f32).to_bits() as u128) << (i*32); },
             4 => for i in 0..2 { r |= ((lane32(i) as i32 as f64).to_bits() as u128) << (i*64); },
+            5 | 6 => for i in 0..2 {
+                // 5=truncate, 6=round-nearest-ties-even (MXCSR default).
+                // ‡ x86 indefinite (0x80000000) on NaN/overflow.
+                let f = f64::from_bits(lane64(i));
+                let fi = if kind == 5 { f.trunc() } else { f.round_ties_even() };
+                let v = if f.is_nan() || fi >= 2147483648.0 || fi < -2147483648.0 { 0x8000_0000u32 }
+                        else { fi as i32 as u32 };
+                r |= (v as u128) << (i*32);
+            },
+            7 => for i in 0..4 {
+                let f = f32::from_bits(lane32(i));
+                let fi = f.round_ties_even();
+                let v = if f.is_nan() || fi >= 2147483648.0 || fi < -2147483648.0 { 0x8000_0000u32 }
+                        else { fi as i32 as u32 };
+                r |= (v as u128) << (i*32);
+            },
             _ => panic!("vcvt kind={kind}"),
         }
         IVal { ty: IlType::V128, bits: r }

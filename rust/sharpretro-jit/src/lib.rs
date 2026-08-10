@@ -208,6 +208,9 @@ pub trait Builder {
     ///   2 = CVTPS2PD  (low 2× f32 → 2× f64)
     ///   3 = CVTPD2PS  (2× f64 → low 2× f32, upper 64 zeroed)
     ///   4 = CVTDQ2PD  (low 2× i32 → 2× f64)
+    ///   5 = CVTTPD2DQ (2× f64 → low 2× i32, truncate; upper 64 zeroed)
+    ///   6 = CVTPD2DQ  (2× f64 → low 2× i32, round-nearest ‡MXCSR-fixed)
+    ///   7 = CVTPS2DQ  (4× f32 → 4× i32, round-nearest ‡MXCSR-fixed)
     /// ‡ CVTPS2DQ (round-per-MXCSR, not truncate) parked — needs FCVTNS or
     ///   FPCR-mode; games rarely rely on it (compilers emit CVTTPS2DQ for
     ///   int-cast). ‡ Overflow saturation differs (x86 → 0x80000000 indefinite,

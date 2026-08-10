@@ -287,7 +287,8 @@
 ; CVTDQ2PS: 4× i32 → 4× f32.
 (instruction CVTDQ2PS (dst src) "cvtdq2ps $dst, $src" (= dst (vcvt src 0)))
 (encoding CVTDQ2PS (Vps Wdq) (0x0F 0x5B))
-(instruction CVTPS2DQ (dst src) "cvtps2dq $dst, $src" (intrinsic cvtps2dq dst src))
+; CVTPS2DQ: 4× f32→i32 round-per-MXCSR. ‡ hardcodes round-nearest (MXCSR default).
+(instruction CVTPS2DQ (dst src) "cvtps2dq $dst, $src" (= dst (vcvt src 7)))
 (encoding CVTPS2DQ (Vdq Wps) (opsize 0x0F 0x5B))
 ; CVTTPS2DQ: 4× f32 → 4× i32 truncate. ‡ overflow: x86→0x80000000, ARM saturates.
 (instruction CVTTPS2DQ (dst src) "cvttps2dq $dst, $src" (= dst (vcvt src 1)))
@@ -296,9 +297,11 @@
 ; CVTDQ2PD: low 2× i32 → 2× f64.
 (instruction CVTDQ2PD (dst src) "cvtdq2pd $dst, $src" (= dst (vcvt src 4)))
 (encoding CVTDQ2PD (Vpd Wq) (rep 0x0F 0xE6))
-(instruction CVTPD2DQ (dst src) "cvtpd2dq $dst, $src" (intrinsic cvtpd2dq dst src))
+; CVTPD2DQ: 2× f64→low 2× i32 round-per-MXCSR. ‡ hardcodes round-nearest.
+(instruction CVTPD2DQ (dst src) "cvtpd2dq $dst, $src" (= dst (vcvt src 6)))
 (encoding CVTPD2DQ (Vdq Wpd) (repnz 0x0F 0xE6))
-(instruction CVTTPD2DQ (dst src) "cvttpd2dq $dst, $src" (intrinsic cvttpd2dq dst src))
+; CVTTPD2DQ: 2× f64→low 2× i32 truncate, upper 64 zeroed.
+(instruction CVTTPD2DQ (dst src) "cvttpd2dq $dst, $src" (= dst (vcvt src 5)))
 (encoding CVTTPD2DQ (Vdq Wpd) (opsize 0x0F 0xE6))
 
 ; --- non-temporal + fences ---

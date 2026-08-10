@@ -621,6 +621,11 @@ impl Builder for Tier0 {
             3 => { self.enc.fcvtn_2s_2d(2, 0); }             // 2× f64→low 2× f32, hi=0
             4 => { self.enc.sxtl_2d_2s(2, 0);                // low 2× i32→i64
                    self.enc.scvtf_v(2, 2, 1); }              //   → 2× f64
+            5 => { self.enc.fcvtzs_v(2, 0, 1);               // 2× f64→i64 truncate
+                   self.enc.xtn_2s_2d(2, 2); }               //   → low 2× i32, hi=0
+            6 => { self.enc.fcvtns_v(2, 0, 1);               // 2× f64→i64 round-nearest
+                   self.enc.xtn_2s_2d(2, 2); }               //   → low 2× i32
+            7 => { self.enc.fcvtns_v(2, 0, 0); }             // 4× f32→i32 round-nearest
             _ => panic!("vcvt kind={kind}"),
         }
         self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
