@@ -566,7 +566,7 @@
 ;   a REX.W-only encoding split if it walls; 558 corpus occ (mostly CDQE).
 (instruction CWDE ()
     "$(wname cbw cwde cdqe)"
-    (intrinsic cwde))
+    (cdq-cwde 0))
 (encoding CWDE () (0x98))
 ; CWD/CDQ/CQO (0x99): RDX = sign-fill of RAX top bit. All 3 widths verified.
 

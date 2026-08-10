@@ -1086,6 +1086,12 @@ impl Builder for Tier0 {
             self.enc.asrv(X_C, X_A, X_B);
             self.store2(X_A, X_C, s);
         } else {
+            // Own #119 (tier-0 half): asrv sign-fills to full 64. If to.width
+            // < 64, the slot is now typed I{to.width} but holds 0xFF..FF above
+            // to.width. Consumers that DON'T re-mask (e.g. a raw reg_write)
+            // leak the fill. Mask here so the slot's bits match its type.
+            let tw = match to { IlType::I{width,..} => width, _ => 64 };
+            if tw < 64 { self.enc.and_lowmask(X_A, X_A, tw as u32); }
             self.store(X_A, s);
         }
         s

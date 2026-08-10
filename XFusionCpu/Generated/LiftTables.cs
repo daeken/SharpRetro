@@ -70,7 +70,7 @@ public static class LiftTables {
 		("IMUL3", "dst src imm", "(block (= dst (* src imm)))"),
 		("INC", "lval", "(block (mlet (tval (+ lval 0x1)) (= lval tval) (= SF (>> tval (- (bitwidth tval) 0x1))) (= ZF (== tval 0x0))))"),
 		("DEC", "lval", "(block (mlet (tval (- lval 0x1)) (= lval tval) (= SF (>> tval (- (bitwidth tval) 0x1))) (= ZF (== tval 0x0))))"),
-		("CWDE", "", "(block (intrinsic cwde))"),
+		("CWDE", "", "(block (cdq-cwde 0x0))"),
 		("CDQ", "", "(block (cdq-cwde 0x1))"),
 		("SETO", "dst", "(block (= dst OF))"),
 		("SETNO", "dst", "(block (= dst (! OF)))"),

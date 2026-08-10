@@ -146,7 +146,17 @@ impl TrackingState {
 impl RegState for X86State {
     fn reg_read(&self, f: RegFile, idx: u32, ty: IlType) -> IVal {
         match f.0 {
-            0 /*GPR*/ => IVal { ty, bits: self.gpr[idx as usize] as u128 },
+            // Own #119 (interp half): GPR reads at width<64 must MASK. The
+            // sext() xor-sub form assumes clean upper bits; unmasked, e.g.
+            // reg_read(rax@I16) with rax=0x1234FFFB → sext(0x1234FFFB,16) =
+            // ((v^0x8000)-0x8000) = 0x1233FFFB. Every partial-reg read into
+            // sext was affected. tier-0's read_operand→Reg{width} path already
+            // masks (via mask_to in the emitted code). Caught by the CWDE test.
+            0 /*GPR*/ => {
+                let v = self.gpr[idx as usize] as u128;
+                let w = match ty { IlType::I{width,..} => width, _ => 64 };
+                IVal { ty, bits: if w < 64 { v & ((1u128<<w)-1) } else { v } }
+            },
             1 /*EFLAGS*/ => IVal::b((self.eflags >> idx) & 1 != 0),
             2 /*SEG*/ => IVal { ty, bits: self.seg_base[idx as usize] as u128 },
             3 /*XMM*/ => IVal { ty, bits: self.xmm[idx as usize] },
