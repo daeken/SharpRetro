@@ -838,7 +838,16 @@ impl Builder for Tier0 {
     }
 
     fn fabs(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
-    fn fsqrt(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
+    fn fsqrt(&mut self, a: u32) -> u32 {
+        let ty = self.tys[a as usize];
+        let s = self.slot(ty);
+        let f64 = matches!(ty, IlType::F{width:64});
+        self.load(X_A, a);
+        if f64 { self.enc.fmov_d_x(0, X_A); self.enc.fsqrt_d(0, 0); self.enc.fmov_x_d(X_A, 0); }
+        else   { self.enc.fmov_s_w(0, X_A); self.enc.fsqrt_s(0, 0); self.enc.fmov_w_s(X_A, 0); }
+        self.store(X_A, s);
+        s
+    }
     fn fceil(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
     fn ffloor(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
     fn fisnan(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }

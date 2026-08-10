@@ -134,6 +134,11 @@ impl Aarch64Enc {
     // NEON packed-float arith (Q=1). sz: 0=.4S (f32×4), 1=.2D (f64×2).
     // FADD Vd.T,Vn.T,Vm.T = 0x4E20D400 | sz<<22 | Rm<<16 | Rn<<5 | Rd
     // FSUB = 0x4EA0D400 | sz<<22   FMUL = 0x6E20DC00 | sz<<22   FDIV = 0x6E20FC00 | sz<<22
+    // FSQRT vector: Vd.4S = 0x6EA1F800; Vd.2D = 0x6EE1F800 (sz bit22).
+    // (Scalar fsqrt_s/fsqrt_d already exist below at :232.)
+    pub fn fsqrt_v(&mut self, vd: u32, vn: u32, sz: u32) {
+        self.put(0x6EA1F800 | (sz<<22) | (vn<<5) | vd);
+    }
     pub fn fadd_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
         self.put(0x4E20D400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
     }

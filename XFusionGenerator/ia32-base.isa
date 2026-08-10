@@ -361,9 +361,13 @@
 
 ; --- shifts/rotates: C0/C1 (imm8), D0/D1 (by 1), D2/D3 (by CL) ---
 ; OF semantics are 1-bit-shift-only per SDM; modeled at interpreter tier.
+; ROL: CF = LSB of result (= last bit rotated out from top into bit-0).
 (instruction ROL (lval count)
     "rol $lval, $count"
-    (= lval (rotl lval count)))
+    (mlet (c (& count (- (bitwidth lval) 1)) tval (rotl lval c))
+        (= lval tval)
+        (if (!= c 0)
+            (= CF (& tval 1)))))
 (encoding ROL (Eb Ib) (0xC0 /0))
 (encoding ROL (Ev Ib) (0xC1 /0))
 (encoding ROL (Eb 1)  (0xD0 /0))
@@ -371,9 +375,16 @@
 (encoding ROL (Eb CL) (0xD2 /0))
 (encoding ROL (Ev CL) (0xD3 /0))
 
+; ROR: CF = MSB of result (= last bit rotated out from bit-0 into top).
+; OF = MSB^MSB-1 for count==1 only (undefined for count>1). Both gated on
+; count!=0 (SDM: unaffected if masked count is 0). isa_diff on 200K CP2077
+; found 103× CF divergences at the CRT security-cookie ROR (0x1929da1).
 (instruction ROR (lval count)
     "ror $lval, $count"
-    (= lval (rotr lval count)))
+    (mlet (c (& count (- (bitwidth lval) 1)) tval (rotr lval c))
+        (= lval tval)
+        (if (!= c 0)
+            (= CF (>> tval (- (bitwidth tval) 1))))))
 (encoding ROR (Eb Ib) (0xC0 /1))
 (encoding ROR (Ev Ib) (0xC1 /1))
 (encoding ROR (Eb 1)  (0xD0 /1))

@@ -21,7 +21,7 @@
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::lift::{lift_one, FLAGS_ALL_LIVE};
-use xfusion_recomp::state::X86State;
+use xfusion_recomp::state::{X86State, TrackingState};
 use sharpretro_jit::interp::{InterpretingBuilder, GuestMem};
 use std::io::{BufRead, BufReader};
 
@@ -153,11 +153,13 @@ fn main() {
         };
         let mnem = DEF_MNEMONICS[d.def_id as usize];
 
-        // Seed interp state from silicon (line N).
-        let mut st = X86State::default();
-        st.gpr = prev.gpr;
-        st.eflags = prev.eflags;
-        st.rip = IMAGE_BASE + pc_rva;
+        // Seed interp state from silicon (line N). Use TrackingState so we
+        // can detect XMM/SEG reads (trace v1 doesn't carry those — an insn
+        // that reads xmm0 sees zero, so it's a false-diverge; skip like mem).
+        let mut st = TrackingState::default();
+        st.inner.gpr = prev.gpr;
+        st.inner.eflags = prev.eflags;
+        st.inner.rip = IMAGE_BASE + pc_rva;
         // seg_base[GS] doesn't matter for pure-GPR insns; gs-relative loads → mem → skip.
 
         // Silence catch_unwind's default panic-print (we report cleanly).
@@ -178,6 +180,10 @@ fn main() {
         drop(ib);
         std::panic::set_hook(saved_hook);
         let mem_touched = mem.touched.get();
+        // XMM (file 3) or SEG (file 2) read → skip (trace v1 = GPR+eflags only;
+        // seeded xmm=0 = false-diverge). SEG read via gs:[..] is mem-touched
+        // anyway, but a gs-base-only-computed addr with no deref would slip.
+        let unseeded_read = st.reads.borrow().iter().any(|&(f,_)| f == 2 || f == 3);
 
         if panicked {
             // Intrinsic-stub / unimplemented. Report + skip (this is a WALL,
@@ -189,12 +195,13 @@ fn main() {
             n_skip_other += 1;
             prev = cur; continue;
         }
-        if mem_touched {
+        if mem_touched || unseeded_read {
             n_skip_mem += 1;
             prev = cur; continue;
         }
 
         // Compare: GPRs + eflags(masked) + next-pc. branch() wrote st.rip via set_pc.
+        let st = &st.inner;
         let interp_next_pc = if branched { st.rip } else { insn_pc + d.len as u64 };
         let expect_next_pc = IMAGE_BASE + cur.pc_rva;
 

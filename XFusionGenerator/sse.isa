@@ -74,7 +74,10 @@
 
 (instruction SQRTPS (dst src) "sqrtps $dst, $src" (intrinsic sqrtps dst src))
 (encoding SQRTPS (Vps Wps) (0x0F 0x51))
-(instruction SQRTSS (dst src) "sqrtss $dst, $src" (intrinsic sqrtss dst src))
+; SQRTSS: dst[31:0] = sqrt(src[31:0]), dst[127:32] preserved. Same lane-0
+; scalar-float pattern as ADDSS (as-f32 → op → write dst, which the Vss
+; operand-write handles as lane-0 merge).
+(instruction SQRTSS (dst src) "sqrtss $dst, $src" (= dst (fsqrt (as-f32 src))))
 (encoding SQRTSS (Vss Wss) (rep 0x0F 0x51))
 
 (instruction RSQRTPS (dst src) "rsqrtps $dst, $src" (intrinsic rsqrtps dst src))

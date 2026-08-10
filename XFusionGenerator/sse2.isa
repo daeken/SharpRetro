@@ -71,7 +71,7 @@
 
 (instruction SQRTPD (dst src) "sqrtpd $dst, $src" (intrinsic sqrtpd dst src))
 (encoding SQRTPD (Vpd Wpd) (opsize 0x0F 0x51))
-(instruction SQRTSD (dst src) "sqrtsd $dst, $src" (intrinsic sqrtsd dst src))
+(instruction SQRTSD (dst src) "sqrtsd $dst, $src" (= dst (fsqrt (as-f64 src))))
 (encoding SQRTSD (Vsd Wsd) (repnz 0x0F 0x51))
 
 ; --- pd logicals ---
