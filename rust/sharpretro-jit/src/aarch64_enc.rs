@@ -144,6 +144,13 @@ impl Aarch64Enc {
     // NEON packed-float arith (Q=1). sz: 0=.4S (f32×4), 1=.2D (f64×2).
     // FADD Vd.T,Vn.T,Vm.T = 0x4E20D400 | sz<<22 | Rm<<16 | Rn<<5 | Rd
     // FSUB = 0x4EA0D400 | sz<<22   FMUL = 0x6E20DC00 | sz<<22   FDIV = 0x6E20FC00 | sz<<22
+    // FADDP (vector, float) Vd.T,Vn.T,Vm.T — pairwise-add:
+    //   Vd[0]=Vn[0]+Vn[1], Vd[1]=Vn[2]+Vn[3], Vd[2]=Vm[0]+Vm[1], Vd[3]=Vm[2]+Vm[3] (.4S)
+    //   Vd[0]=Vn[0]+Vn[1], Vd[1]=Vm[0]+Vm[1] (.2D)
+    // 0x6E20D400 | sz<<22 | Rm<<16 | Rn<<5 | Rd
+    pub fn faddp_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x6E20D400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
     // FCMEQ/FCMGT/FCMGE (register) Vd.T,Vn.T,Vm.T: per-lane ORDERED compare
     // → all-1s/0 mask. NaN in either → 0-mask. .4S / .2D via sz bit22.
     // FCMEQ: 0x4E20E400 | sz<<22.

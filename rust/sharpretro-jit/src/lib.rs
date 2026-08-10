@@ -190,6 +190,10 @@ pub trait Builder {
     /// CMPPS/CMPPD packed: per-lane 8-predicate compare → per-lane
     /// all-1s/all-0 mask. Same predicate table as scalar fcmpp.
     fn vfcmpp(&mut self, a: Self::Val, b: Self::Val, ew: u32, pred: u32) -> Self::Val;
+    /// HADDPS/HADDPD: horizontal pairwise-add. r[0]=a[0]+a[1], r[1]=a[2]+a[3],
+    /// r[2]=b[0]+b[1], r[3]=b[2]+b[3] (.4S); r[0]=a[0]+a[1], r[1]=b[0]+b[1] (.2D).
+    /// Maps 1:1 to NEON FADDP Vd,Vn=a,Vm=b.
+    fn vhadd(&mut self, a: Self::Val, b: Self::Val, ew: u32) -> Self::Val;
     /// Lane shuffle on V128: n=128/elem_bits lanes, result[i] = pick lane
     /// `(sel >> (i*bits_per_sel)) & mask` from `a` (i < n/2) or `b` (i ≥ n/2).
     /// SHUFPS: elem_bits=32, bits_per_sel=2, dst=a, src=b.

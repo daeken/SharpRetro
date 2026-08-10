@@ -11,9 +11,11 @@
     (encoding MOVDDUP (Vpd Wsd) (repnz 0x0F 0x12))
     (instruction LDDQU (dst src) "lddqu $dst, $src" (intrinsic lddqu dst src))
     (encoding LDDQU (Vdq Mdq) (repnz 0x0F 0xF0))
-    (instruction HADDPS (dst src) "haddps $dst, $src" (intrinsic haddps dst src))
+    ; HADDPS: dst[0]=dst[0]+dst[1], dst[1]=dst[2]+dst[3], dst[2]=src[0]+src[1], dst[3]=src[2]+src[3].
+    ; NEON FADDP Vd,Vn,Vm has the SAME pairing (Vn-pairs → lo, Vm-pairs → hi) → 1:1.
+    (instruction HADDPS (dst src) "haddps $dst, $src" (= dst (vhadd dst src 32)))
     (encoding HADDPS (Vps Wps) (repnz 0x0F 0x7C))
-    (instruction HADDPD (dst src) "haddpd $dst, $src" (intrinsic haddpd dst src))
+    (instruction HADDPD (dst src) "haddpd $dst, $src" (= dst (vhadd dst src 64)))
     (encoding HADDPD (Vpd Wpd) (opsize 0x0F 0x7C)))
 
 (featuring ssse3

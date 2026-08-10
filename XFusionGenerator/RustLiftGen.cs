@@ -503,6 +503,10 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var kind = ((PInt)l[2]).Value;
                 return Rt($"bd.vcvt({a}, {kind})");
             }
+            case "vhadd": {
+                var a = Expr(l[1]); var b = Expr(l[2]); var ew = ((PInt)l[3]).Value;
+                return Rt($"bd.vhadd({a}, {b}, {ew})");
+            }
             case "vfcmpp": {
                 // (vfcmpp a b pred-op ew) — CMPPS/CMPPD packed 8-pred → mask.
                 var a = Expr(l[1]); var b = Expr(l[2]);

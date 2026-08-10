@@ -298,6 +298,23 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vhadd(&mut self, a: IVal, b: IVal, ew: u32) -> IVal {
+        let r = match ew {
+            32 => {
+                let l = |v: u128, i: u32| f32::from_bits((v >> (i*32)) as u32);
+                let p = |x: f32, i: u32| (x.to_bits() as u128) << (i*32);
+                p(l(a.bits,0)+l(a.bits,1), 0) | p(l(a.bits,2)+l(a.bits,3), 1)
+                  | p(l(b.bits,0)+l(b.bits,1), 2) | p(l(b.bits,2)+l(b.bits,3), 3)
+            }
+            64 => {
+                let l = |v: u128, i: u32| f64::from_bits((v >> (i*64)) as u64);
+                let p = |x: f64, i: u32| (x.to_bits() as u128) << (i*64);
+                p(l(a.bits,0)+l(a.bits,1), 0) | p(l(b.bits,0)+l(b.bits,1), 1)
+            }
+            _ => panic!("vhadd ew={ew}"),
+        };
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vfcmpp(&mut self, a: IVal, b: IVal, ew: u32, pred: u32) -> IVal {
         // Same 8-pred table as scalar fcmpp, per-lane.
         let mut r = 0u128;

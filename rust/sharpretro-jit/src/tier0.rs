@@ -410,6 +410,19 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vhadd(&mut self, a: u32, b: u32, ew: u32) -> u32 {
+        // x86 HADDPS dst,src ≡ ARM FADDP Vd, q(dst), q(src) — SAME lane pairing.
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let sz = if ew == 64 { 1 } else { 0 };
+        self.enc.faddp_v(2, 0, 1, sz);
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vfcmpp(&mut self, a: u32, b: u32, ew: u32, pred: u32) -> u32 {
         // NEON FCM* are ORDERED (NaN → 0). For x86 preds:
         //   0 EQ    = fcmeq(a,b)
