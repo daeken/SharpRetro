@@ -223,6 +223,13 @@ impl Builder for Tier0 {
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 {
         let s = self.slot(ty);
         let off = self.state_off(f, idx);
+        // XMM/vector regfile at V128: 2-word read from state[off, off+8].
+        if Self::is_wide(ty) {
+            self.enc.ldr_x(X_A, X_STATE, off);
+            self.enc.ldr_x(X_C, X_STATE, off + 8);
+            self.store2(X_A, X_C, s);
+            return s;
+        }
         self.enc.ldr_x(X_A, X_STATE, off);
         if f.0 == 0 { self.mask_to(ty); }
         // Flag file: extract bit at layout.flag_bit(idx). aarch64 idx=0 = whole-word read.
@@ -237,6 +244,14 @@ impl Builder for Tier0 {
         s
     }
     fn reg_write(&mut self, f: RegFile, idx: u32, v: u32) {
+        // XMM/vector regfile at V128: 2-word store to state[off, off+8].
+        if Self::is_wide(self.tys[v as usize]) {
+            let off = self.state_off(f, idx);
+            self.load2(X_A, X_C, v);
+            self.enc.str_x(X_A, X_STATE, off);
+            self.enc.str_x(X_C, X_STATE, off + 8);
+            return;
+        }
         self.load(X_A, v);
         // Flag-file bit-write: RMW the flags word at layout.flag_bit(idx). aarch64
         // idx=0 = whole-word write (falls through to plain str below).

@@ -198,6 +198,11 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
             (IlType::F{..}, IlType::I{signed:true,  width}) => IVal { ty: to, bits: mask(a.as_f64() as i128 as u128, width) },
             (IlType::F{width:32}, IlType::F{width:64}) => IVal::f64(a.as_f32() as f64),
             (IlType::F{width:64}, IlType::F{width:32}) => IVal::f32(a.as_f64() as f32),
+            // I↔V128: V128 is a raw 128-bit bag — same bits, retyped (zext for narrower).
+            // (SSE MOVD-X: gpr → zext(u64) → V128 upper-zeroed; MOVD-XS: V128 → u64 → gpr.)
+            (IlType::I{..}, IlType::V128) => IVal { ty: IlType::V128, bits: a.bits },
+            (IlType::V128, IlType::I{width, ..}) => IVal { ty: to, bits: mask(a.bits, width) },
+            (IlType::V128, IlType::Bool) => IVal::b(a.bits != 0),
             (from, to) if from == to => a,
             _ => panic!("cast {:?} → {:?}", a.ty, to),
         }

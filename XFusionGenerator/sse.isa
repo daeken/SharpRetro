@@ -3,7 +3,7 @@
 ; Semantics at interpreter tier are intrinsics for now (packed-lane IL = a design
 ; conversation with the consumer before committing shape).
 
-(instruction MOVUPS (dst src) "movups $dst, $src" (intrinsic movups dst src))
+(instruction MOVUPS (dst src) "movups $dst, $src" (= dst src))
 (encoding MOVUPS (Vps Wps) (0x0F 0x10))
 (encoding MOVUPS (Wps Vps) (0x0F 0x11))
 
@@ -11,7 +11,7 @@
 (encoding MOVSS (Vss Wss) (rep 0x0F 0x10))
 (encoding MOVSS (Wss Vss) (rep 0x0F 0x11))
 
-(instruction MOVAPS (dst src) "movaps $dst, $src" (intrinsic movaps dst src))
+(instruction MOVAPS (dst src) "movaps $dst, $src" (= dst src))
 (encoding MOVAPS (Vps Wps) (0x0F 0x28))
 (encoding MOVAPS (Wps Vps) (0x0F 0x29))
 

@@ -91,24 +91,33 @@
 (encoding SHUFPD (Vpd Wpd Ib) (opsize 0x0F 0xC6))
 
 ; --- integer xmm: movement (the census bulk — memcpy/strlen inner loops) ---
-(instruction MOVDQA (dst src) "movdqa $dst, $src" (intrinsic movdqa dst src))
+; SSE mov-family: pure data movement. Alignment-fault on MOVDQA/APS is a
+; hardware property (misaligned → #GP); the emulator's identity-map memory
+; model doesn't distinguish, so both are a plain 128-bit move.
+(instruction MOVDQA (dst src) "movdqa $dst, $src" (= dst src))
 (encoding MOVDQA (Vdq Wdq) (opsize 0x0F 0x6F))
 (encoding MOVDQA (Wdq Vdq) (opsize 0x0F 0x7F))
 
-(instruction MOVDQU (dst src) "movdqu $dst, $src" (intrinsic movdqu dst src))
+(instruction MOVDQU (dst src) "movdqu $dst, $src" (= dst src))
 (encoding MOVDQU (Vdq Wdq) (rep 0x0F 0x6F))
 (encoding MOVDQU (Wdq Vdq) (rep 0x0F 0x7F))
 
 ; MOVD/MOVQ gpr<->xmm (66 0F 6E/7E; REX.W makes it movq)
-(instruction MOVD-X (dst src) "$(wname movd movd movq) $dst, $src" (intrinsic movd-x dst src))
+; MOVD/MOVQ gpr↔xmm: xmm-dest zeroes upper (SDM: "the destination operand's
+; upper bits are cleared to all 0s"). op_w = 32 (movd) or 64 (movq via REX.W).
+(instruction MOVD-X (dst src) "$(wname movd movd movq) $dst, $src"
+    (= dst (zext (u64 src) 128)))
 (encoding MOVD-X (Vdq Ev) (opsize 0x0F 0x6E))
-(instruction MOVD-XS (dst src) "$(wname movd movd movq) $dst, $src" (intrinsic movd-xs dst src))
+(instruction MOVD-XS (dst src) "$(wname movd movd movq) $dst, $src"
+    (= dst (u64 src)))
 (encoding MOVD-XS (Ev Vdq) (opsize 0x0F 0x7E))
 
 ; MOVQ xmm<->xmm/m64 (F3 0F 7E load, 66 0F D6 store)
-(instruction MOVQ-X (dst src) "movq $dst, $src" (intrinsic movq-x dst src))
+(instruction MOVQ-X (dst src) "movq $dst, $src"
+    (= dst (zext (u64 src) 128)))
 (encoding MOVQ-X (Vq Wq) (rep 0x0F 0x7E))
-(instruction MOVQ-XS (dst src) "movq $dst, $src" (intrinsic movq-xs dst src))
+(instruction MOVQ-XS (dst src) "movq $dst, $src"
+    (= dst (u64 src)))
 (encoding MOVQ-XS (Wq Vq) (opsize 0x0F 0xD6))
 
 ; --- integer xmm: compare/extract ---
