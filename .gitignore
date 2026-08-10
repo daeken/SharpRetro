@@ -1,8 +1,7 @@
 ﻿.idea
-# bin/ over-matched Rust src/bin/ — anchor to actual build-output dirs
-/bin/
-**/obj/bin/
-!**/src/bin/
+bin/
+# but NOT Rust's src/bin/ convention (cargo binary sources live there):
+!src/bin/
 obj/
 *.DotSettings.user
 *.log
