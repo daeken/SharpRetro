@@ -133,6 +133,7 @@ impl Builder for Tier1 {
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 { self.rec.vzip(a, b, ew, hi) }
     fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 { self.rec.vfbin(a, b, ew, op) }
     fn vibin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 { self.rec.vibin(a, b, ew, op) }
+    fn vmovmsk(&mut self, a: u32, ew: u32) -> u32 { self.rec.vmovmsk(a, ew) }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 { self.rec.vshuf(a, b, ew, sel) }
     fn vshufw(&mut self, a: u32, sel: u32, hi: bool) -> u32 { self.rec.vshufw(a, sel, hi) }
     fn vcvt(&mut self, a: u32, k: u32) -> u32 { self.rec.vcvt(a, k) }

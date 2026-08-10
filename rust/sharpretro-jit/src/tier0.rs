@@ -410,6 +410,40 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vmovmsk(&mut self, a: u32, ew: u32) -> u32 {
+        // Load the V128 as two X-halves (X_A=lo, X_C=hi) — DON'T go through
+        // Q-regs; the sign bits are at fixed X-reg positions. Extract each
+        // via lsr_i + and_lowmask(1), pack via orr_lsl.
+        let s = self.slot(IlType::I{signed:false, width:32});
+        self.load2(X_A, X_C, a);
+        match ew {
+            64 => {
+                // bit0 = X_A>>63, bit1 = X_C>>63 → X_A | (X_C<<1)
+                self.enc.lsr_i(X_A, X_A, 63);
+                self.enc.lsr_i(X_C, X_C, 63);
+                self.enc.orr_lsl(X_A, X_A, X_C, 1);
+            }
+            32 => {
+                // Per half: bit@31 + bit@63. Extract to 2-bit, then combine
+                // halves via orr_lsl #2.
+                // lo half → X_A holds {b0,b1}:
+                self.enc.lsr_i(X_D, X_A, 63);              // b1
+                self.enc.lsr_i(X_A, X_A, 31);
+                self.enc.and_lowmask(X_A, X_A, 1);         // b0
+                self.enc.orr_lsl(X_A, X_A, X_D, 1);        // b0|b1<<1
+                // hi half → X_C holds {b2,b3}:
+                self.enc.lsr_i(X_D, X_C, 63);
+                self.enc.lsr_i(X_C, X_C, 31);
+                self.enc.and_lowmask(X_C, X_C, 1);
+                self.enc.orr_lsl(X_C, X_C, X_D, 1);
+                // combine:
+                self.enc.orr_lsl(X_A, X_A, X_C, 2);
+            }
+            _ => panic!("vmovmsk ew={ew}"),
+        }
+        self.store(X_A, s);
+        s
+    }
     fn vibin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
         let s = self.slot(IlType::V128);
         self.load2(X_A, X_C, a);

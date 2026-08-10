@@ -279,6 +279,14 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vmovmsk(&mut self, a: IVal, ew: u32) -> IVal {
+        let n = 128 / ew;
+        let mut r = 0u32;
+        for i in 0..n {
+            r |= (((a.bits >> (i*ew + (ew-1))) & 1) as u32) << i;
+        }
+        IVal { ty: IlType::I{signed:false, width:32}, bits: r as u128 }
+    }
     fn vibin(&mut self, a: IVal, b: IVal, ew: u32, op: u32) -> IVal {
         let n = 128 / ew;
         let m = if ew == 128 { u128::MAX } else { (1u128 << ew) - 1 };

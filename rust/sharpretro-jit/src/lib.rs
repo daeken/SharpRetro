@@ -170,6 +170,11 @@ pub trait Builder {
     /// PSUBB/W/D/Q, PMULLW/PMULLD. ‡ mul at ew=64 (PMULLQ) doesn't exist
     /// in SSE (only in AVX512-DQ), and NEON has no MUL.2D — die-loud.
     fn vibin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
+    /// MOVMSKPS/PD: extract per-lane sign bit → GPR bitmask. ew=32 → 4-bit
+    /// mask (bit i = lane i's sign), ew=64 → 2-bit. Result is U32-typed.
+    /// PMOVMSKB (ew=8 → 16-bit) not covered here (needs a different NEON
+    /// path — CMLT.16B+bit-gather; separate primitive when it walls).
+    fn vmovmsk(&mut self, a: Self::Val, ew: u32) -> Self::Val;
     /// Lane shuffle on V128: n=128/elem_bits lanes, result[i] = pick lane
     /// `(sel >> (i*bits_per_sel)) & mask` from `a` (i < n/2) or `b` (i ≥ n/2).
     /// SHUFPS: elem_bits=32, bits_per_sel=2, dst=a, src=b.

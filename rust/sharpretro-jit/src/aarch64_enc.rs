@@ -116,6 +116,16 @@ impl Aarch64Enc {
     pub fn sbc_r(&mut self, xd: u32, xn: u32, xm: u32)  { self.put(0xDA000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn and_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x8A000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn orr_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xAA000000 | (xm<<16) | (xn<<5) | xd); }
+    // ORR Xd, Xn, Xm, LSL #imm  (shift-type=00 @[23:22], imm6 @[15:10])
+    pub fn orr_lsl(&mut self, xd: u32, xn: u32, xm: u32, sh: u32) {
+        debug_assert!(sh < 64);
+        self.put(0xAA000000 | (xm<<16) | (sh<<10) | (xn<<5) | xd);
+    }
+    // LSR Xd, Xn, #imm = UBFM Xd,Xn,#imm,#63 = 0xD340FC00 | imm<<16 | Rn<<5 | Rd
+    pub fn lsr_i(&mut self, xd: u32, xn: u32, sh: u32) {
+        debug_assert!(sh < 64);
+        self.put(0xD340FC00 | (sh<<16) | (xn<<5) | xd);
+    }
     pub fn eor_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xCA000000 | (xm<<16) | (xn<<5) | xd); }
 
     // ── NEON / Q-reg (V128 ops via q-scratch: q0/q1 in, q2 out) ──────────────

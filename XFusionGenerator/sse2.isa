@@ -21,7 +21,7 @@
 (encoding MOVAPD (Vpd Wpd) (opsize 0x0F 0x28))
 (encoding MOVAPD (Wpd Vpd) (opsize 0x0F 0x29))
 
-(instruction MOVMSKPD (dst src) "movmskpd $dst, $src" (intrinsic movmskpd dst src))
+(instruction MOVMSKPD (dst src) "movmskpd $dst, $src" (= dst (vmovmsk src 64)))
 (encoding MOVMSKPD (Gd Upd) (opsize 0x0F 0x50))
 
 (instruction UNPCKLPD (dst src) "unpcklpd $dst, $src" (= dst (vzip dst src 64 #f)))

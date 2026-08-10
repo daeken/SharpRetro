@@ -31,7 +31,8 @@
 (encoding MOVHPS (Vq Mq) (0x0F 0x16))
 (encoding MOVHPS (Mq Vq) (0x0F 0x17))
 
-(instruction MOVMSKPS (dst src) "movmskps $dst, $src" (intrinsic movmskps dst src))
+; MOVMSKPS: dst = 4-bit mask, bit i = sign of src.f32[i]. Upper GPR bits zeroed.
+(instruction MOVMSKPS (dst src) "movmskps $dst, $src" (= dst (vmovmsk src 32)))
 (encoding MOVMSKPS (Gd Ups) (0x0F 0x50))
 
 ; UNPCKLPS/HPS: bit-identical to PUNPCKLDQ/PUNPCKHDQ (32-bit lane interleave,
