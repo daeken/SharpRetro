@@ -100,7 +100,7 @@
         (= OF 0) (= SF 0) (= AF 0)))
 (encoding COMISD (Vsd Wsd) (opsize 0x0F 0x2F))
 
-(instruction CMPPD (dst src pred) "cmppd $dst, $src, $pred" (intrinsic cmppd dst src pred))
+(instruction CMPPD (dst src pred) "cmppd $dst, $src, $pred" (= dst (vfcmpp dst src pred 64)))
 (encoding CMPPD (Vpd Wpd Ib) (opsize 0x0F 0xC2))
 (instruction CMPSD-X (dst src pred) "cmpsd $dst, $src, $pred"
     (= dst (fcmpp (as-f64 dst) (as-f64 src) pred 64)))

@@ -410,6 +410,43 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vfcmpp(&mut self, a: u32, b: u32, ew: u32, pred: u32) -> u32 {
+        // NEON FCM* are ORDERED (NaN → 0). For x86 preds:
+        //   0 EQ    = fcmeq(a,b)
+        //   1 LT    = fcmgt(b,a)
+        //   2 LE    = fcmge(b,a)
+        //   3 UNORD = NOT(ordered) = mvn(fcmge(a,b) | fcmgt(b,a))
+        //             — ordered iff a>=b OR b>a (both fail only when NaN in either)
+        //   4-7     = NOT of 0-3 (SDM: NEQ/NLT/NLE/ORD are the exact inverses,
+        //             including NaN behavior — NEQ w/ NaN = true, ORD = ordered).
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let sz = if ew == 64 { 1 } else { 0 };
+        let base = pred & 3;
+        match base {
+            0 => self.enc.fcmeq_v(2, 0, 1, sz),
+            1 => self.enc.fcmgt_v(2, 1, 0, sz),   // a<b = b>a
+            2 => self.enc.fcmge_v(2, 1, 0, sz),   // a<=b = b>=a
+            3 => {
+                // ordered = fcmge(a,b) | fcmgt(b,a); UNORD = NOT that
+                self.enc.fcmge_v(2, 0, 1, sz);
+                self.enc.fcmgt_v(3, 1, 0, sz);
+                self.enc.orr_v16b(2, 2, 3);
+                self.enc.mvn_v16b(2, 2);
+            }
+            _ => unreachable!(),
+        }
+        if pred & 4 != 0 {
+            // 4-7 = NOT of 0-3
+            self.enc.mvn_v16b(2, 2);
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vfminmax(&mut self, a: u32, b: u32, ew: u32, is_max: bool) -> u32 {
         // x86 semantics: dst[i] = (a[i] op b[i]) ? a[i] : b[i]. FCMGT is
         // ORDERED (NaN→0), matches x86 (NaN → cond false → b=src). For MIN

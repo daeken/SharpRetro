@@ -124,8 +124,8 @@
         (= OF 0) (= SF 0) (= AF 0)))
 (encoding COMISS (Vss Wss) (0x0F 0x2F))
 
-; CMPPS packed — v1 stays intrinsic (needs per-lane fcmpp; 338 corpus).
-(instruction CMPPS (dst src pred) "cmpps $dst, $src, $pred" (intrinsic cmpps dst src pred))
+; CMPPS: per-lane 8-predicate compare → per-lane all-1s/0 mask. Same table as CMPSS.
+(instruction CMPPS (dst src pred) "cmpps $dst, $src, $pred" (= dst (vfcmpp dst src pred 32)))
 (encoding CMPPS (Vps Wps Ib) (0x0F 0xC2))
 ; CMPSS: dst[31:0] = mask(pred(dst.f32, src.f32)), dst[127:32] preserved.
 ; pred = imm8[2:0] (0=EQ 1=LT 2=LE 3=UNORD 4=NEQ 5=NLT 6=NLE 7=ORD).

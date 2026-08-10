@@ -144,10 +144,23 @@ impl Aarch64Enc {
     // NEON packed-float arith (Q=1). sz: 0=.4S (f32×4), 1=.2D (f64×2).
     // FADD Vd.T,Vn.T,Vm.T = 0x4E20D400 | sz<<22 | Rm<<16 | Rn<<5 | Rd
     // FSUB = 0x4EA0D400 | sz<<22   FMUL = 0x6E20DC00 | sz<<22   FDIV = 0x6E20FC00 | sz<<22
-    // FCMGT (register) Vd.T,Vn.T,Vm.T: mask[i] = (Vn[i] > Vm[i]) ? all-1 : 0.
-    // Ordered (NaN → 0). .4S = 0x6EA0E400; .2D = 0x6EE0E400 (Q=1, sz bit22).
+    // FCMEQ/FCMGT/FCMGE (register) Vd.T,Vn.T,Vm.T: per-lane ORDERED compare
+    // → all-1s/0 mask. NaN in either → 0-mask. .4S / .2D via sz bit22.
+    // FCMEQ: 0x4E20E400 | sz<<22.
+    pub fn fcmeq_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x4E20E400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
     pub fn fcmgt_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
         self.put(0x6EA0E400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    // FCMGE: 0x6E20E400 | sz<<22
+    pub fn fcmge_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x6E20E400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    // (orr_v16b already exists below.)
+    // MVN Vd.16B, Vn.16B (= NOT) = 0x6E205800
+    pub fn mvn_v16b(&mut self, vd: u32, vn: u32) {
+        self.put(0x6E205800 | (vn<<5) | vd);
     }
     // BIT Vd.16B, Vn.16B, Vm.16B: Vd = (Vn & Vm) | (Vd & ~Vm)  (bit-insert-if-true)
     // = "where Vm bit is set, take Vn's bit; else keep Vd's". 0x6EA01C00.

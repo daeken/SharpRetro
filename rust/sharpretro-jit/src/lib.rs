@@ -182,6 +182,9 @@ pub trait Builder {
     /// fminmax: (a op b) ? a : b, IEEE cmp → NaN/±0-equal → returns b=src.
     /// NOT ARM FMAX (which propagates NaN). tier-0 = FCMGT + BIT.
     fn vfminmax(&mut self, a: Self::Val, b: Self::Val, ew: u32, is_max: bool) -> Self::Val;
+    /// CMPPS/CMPPD packed: per-lane 8-predicate compare → per-lane
+    /// all-1s/all-0 mask. Same predicate table as scalar fcmpp.
+    fn vfcmpp(&mut self, a: Self::Val, b: Self::Val, ew: u32, pred: u32) -> Self::Val;
     /// Lane shuffle on V128: n=128/elem_bits lanes, result[i] = pick lane
     /// `(sel >> (i*bits_per_sel)) & mask` from `a` (i < n/2) or `b` (i ≥ n/2).
     /// SHUFPS: elem_bits=32, bits_per_sel=2, dst=a, src=b.

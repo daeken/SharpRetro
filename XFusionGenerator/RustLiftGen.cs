@@ -468,6 +468,14 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var kind = ((PInt)l[2]).Value;
                 return Rt($"bd.vcvt({a}, {kind})");
             }
+            case "vfcmpp": {
+                // (vfcmpp a b pred-op ew) — CMPPS/CMPPD packed 8-pred → mask.
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var predOp = ParamOp(((PName)l[3]).Name);
+                var ew = ((PInt)l[4]).Value;
+                var predv = Rt($"if let Operand::Imm{{value,..}} = {predOp} {{ *value as u32 }} else {{ unreachable!() }}");
+                return Rt($"bd.vfcmpp({a}, {b}, {ew}, {predv})");
+            }
             case "vfmax": case "vfmin": {
                 var a = Expr(l[1]); var b = Expr(l[2]); var ew = ((PInt)l[3]).Value;
                 var m = head == "vfmax" ? "true" : "false";

@@ -279,6 +279,28 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vfcmpp(&mut self, a: IVal, b: IVal, ew: u32, pred: u32) -> IVal {
+        // Same 8-pred table as scalar fcmpp, per-lane.
+        let mut r = 0u128;
+        let n = 128 / ew;
+        let m = if ew == 64 { u64::MAX as u128 } else { u32::MAX as u128 };
+        for i in 0..n {
+            let (fa, fb) = match ew {
+                32 => (f32::from_bits((a.bits>>(i*32)) as u32) as f64,
+                       f32::from_bits((b.bits>>(i*32)) as u32) as f64),
+                _  => (f64::from_bits((a.bits>>(i*64)) as u64),
+                       f64::from_bits((b.bits>>(i*64)) as u64)),
+            };
+            let unord = fa.is_nan() || fb.is_nan();
+            let hit = match pred & 7 {
+                0 => fa == fb, 1 => fa < fb, 2 => fa <= fb, 3 => unord,
+                4 => !(fa == fb), 5 => !(fa < fb), 6 => !(fa <= fb), 7 => !unord,
+                _ => unreachable!(),
+            };
+            if hit { r |= m << (i*ew); }
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vfminmax(&mut self, a: IVal, b: IVal, ew: u32, is_max: bool) -> IVal {
         let mut r = 0u128;
         match ew {
