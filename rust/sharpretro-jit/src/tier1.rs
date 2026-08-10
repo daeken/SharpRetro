@@ -44,8 +44,47 @@ impl Tier1 {
     /// After the block's been emitted into `.rec` (via the Builder trait forward
     /// below), allocate + emit + finalize into a CompiledBlock.
     pub fn compile(self) -> CompiledBlock {
+        // Dead-RegWrite elimination (v1.2): for each GPR (f=0,idx), a RegWrite
+        // followed by a LATER RegWrite(same) with no state-observing RegRead
+        // and no cond-boundary between = the earlier one is dead. Post-SVN,
+        // write-forwarding eliminated intermediate RegReads, so this is common
+        // (LCG: rax written 12×, rdi 9× — only the last-per-reg reaches exit).
+        // v1-conservative: cond boundaries flush last_write (RegWrites inside
+        // conds never dropped; a write BEFORE a cond isn't dropped either since
+        // a post-cond read of a cond-dirtied reg hits state[]). XF_DSE=0 disables.
+        let dse = std::env::var("XF_DSE").map(|v| v != "0").unwrap_or(true);
+        let mut dead_ops: std::collections::HashSet<usize> = std::collections::HashSet::new();
+        if dse {
+            let mut cond_depth = 0i32;
+            let mut last_write: std::collections::HashMap<(u8, u32), usize> =
+                std::collections::HashMap::new();
+            for (i, op) in self.rec.ops.iter().enumerate() {
+                match op.kind {
+                    IlOpKind::CondBegin => { cond_depth += 1; last_write.clear(); }
+                    IlOpKind::CondEnd   => { cond_depth -= 1; last_write.clear(); }
+                    IlOpKind::RegWrite if cond_depth == 0 => {
+                        let f = (op.imm >> 32) as u8; let idx = op.imm as u32;
+                        if f == 0 {   // GPR only v1 (flag-RMW compaction is separate)
+                            if let Some(&prev) = last_write.get(&(f, idx)) {
+                                dead_ops.insert(prev);
+                            }
+                            last_write.insert((f, idx), i);
+                        }
+                    }
+                    IlOpKind::RegRead => {
+                        // A surviving RegRead(f,idx) observes state[] — the last
+                        // write to it is live (the read needs it). Post-SVN this
+                        // only fires on cross-cond reads or ty-mismatch misses.
+                        let f = (op.imm >> 32) as u8; let idx = op.imm as u32;
+                        last_write.remove(&(f, idx));
+                    }
+                    _ => {}
+                }
+            }
+        }
         let alloc = linear_scan(&self.rec, N_ALLOC_REGS);
         let mut e = Emitter::new(self.layout, &self.rec, &alloc);
+        e.dead_ops = dead_ops;
         for (i, op) in self.rec.ops.iter().enumerate() {
             e.emit_op(i, op);
         }
@@ -140,6 +179,8 @@ struct Emitter<'a> {
     alloc: &'a AllocResult,
     /// Cond patch-stack: (cbz_at, xc_reg, b_at). See CondBegin/Else/End.
     cond_stack: Vec<(usize, u32, usize)>,
+    /// Op-indices to skip (dead-RegWrite-elim marked them; emit_op checks first).
+    dead_ops: std::collections::HashSet<usize>,
 }
 
 impl<'a> Emitter<'a> {
@@ -152,7 +193,7 @@ impl<'a> Emitter<'a> {
         enc.str_x(30, 31, 80);
         enc.mov_r(X_STATE, 0);
         enc.mov_r(X_SPILL, 1);
-        Self { enc, layout, rec, alloc, cond_stack: vec![] }
+        Self { enc, layout, rec, alloc, cond_stack: vec![], dead_ops: Default::default() }
     }
 
     fn finalize(mut self, n_spill_slots: u32) -> CompiledBlock {
@@ -212,8 +253,10 @@ impl<'a> Emitter<'a> {
         self.enc.and_r(xd, xd, X_S2);
     }
 
-    fn emit_op(&mut self, _op_idx: usize, op: &IlOp) {
+    fn emit_op(&mut self, op_idx: usize, op: &IlOp) {
         use IlOpKind::*;
+        // Dead-store-elim marked this RegWrite dead → skip.
+        if self.dead_ops.contains(&op_idx) { return; }
         // If this op produces a value that's Dead → skip entirely (DCE-at-emit).
         if let Some(out) = op.out {
             if matches!(self.alloc.locs[out as usize], Loc::Dead) { return; }
