@@ -455,6 +455,11 @@ public class RustLiftGen {
                 var selv = Rt($"if let Operand::Imm{{value,..}} = {selOp} {{ *value as u32 }} else {{ unreachable!() }}");
                 return Rt($"bd.vshuf({a}, {b}, {ew}, {selv})");
             }
+            case "vcvt": {
+                // (vcvt a kind) — packed convert on V128. kind 0..4.
+                var a = Expr(l[1]); var kind = ((PInt)l[2]).Value;
+                return Rt($"bd.vcvt({a}, {kind})");
+            }
             case "vfbin": {
                 // (vfbin a b elw op) — packed-float per-lane arith on V128 → V128.
                 // Expression head; .isa does (= dst (vfbin dst src elw op)) for RMW.

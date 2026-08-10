@@ -269,19 +269,24 @@
 (instruction CVTSD2SS (dst src) "cvtsd2ss $dst, $src"
     (= dst (f32 (as-f64 src))))
 (encoding CVTSD2SS (Vss Wsd) (repnz 0x0F 0x5A))
-(instruction CVTPS2PD (dst src) "cvtps2pd $dst, $src" (intrinsic cvtps2pd dst src))
+; CVTPS2PD: low 2× f32 → 2× f64.
+(instruction CVTPS2PD (dst src) "cvtps2pd $dst, $src" (= dst (vcvt src 2)))
 (encoding CVTPS2PD (Vpd Wps) (0x0F 0x5A))
-(instruction CVTPD2PS (dst src) "cvtpd2ps $dst, $src" (intrinsic cvtpd2ps dst src))
+; CVTPD2PS: 2× f64 → low 2× f32, upper 64 zeroed.
+(instruction CVTPD2PS (dst src) "cvtpd2ps $dst, $src" (= dst (vcvt src 3)))
 (encoding CVTPD2PS (Vps Wpd) (opsize 0x0F 0x5A))
 
-(instruction CVTDQ2PS (dst src) "cvtdq2ps $dst, $src" (intrinsic cvtdq2ps dst src))
+; CVTDQ2PS: 4× i32 → 4× f32.
+(instruction CVTDQ2PS (dst src) "cvtdq2ps $dst, $src" (= dst (vcvt src 0)))
 (encoding CVTDQ2PS (Vps Wdq) (0x0F 0x5B))
 (instruction CVTPS2DQ (dst src) "cvtps2dq $dst, $src" (intrinsic cvtps2dq dst src))
 (encoding CVTPS2DQ (Vdq Wps) (opsize 0x0F 0x5B))
-(instruction CVTTPS2DQ (dst src) "cvttps2dq $dst, $src" (intrinsic cvttps2dq dst src))
+; CVTTPS2DQ: 4× f32 → 4× i32 truncate. ‡ overflow: x86→0x80000000, ARM saturates.
+(instruction CVTTPS2DQ (dst src) "cvttps2dq $dst, $src" (= dst (vcvt src 1)))
 (encoding CVTTPS2DQ (Vdq Wps) (rep 0x0F 0x5B))
 
-(instruction CVTDQ2PD (dst src) "cvtdq2pd $dst, $src" (intrinsic cvtdq2pd dst src))
+; CVTDQ2PD: low 2× i32 → 2× f64.
+(instruction CVTDQ2PD (dst src) "cvtdq2pd $dst, $src" (= dst (vcvt src 4)))
 (encoding CVTDQ2PD (Vpd Wq) (rep 0x0F 0xE6))
 (instruction CVTPD2DQ (dst src) "cvtpd2dq $dst, $src" (intrinsic cvtpd2dq dst src))
 (encoding CVTPD2DQ (Vdq Wpd) (repnz 0x0F 0xE6))

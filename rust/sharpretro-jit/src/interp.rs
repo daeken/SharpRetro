@@ -257,6 +257,28 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vcvt(&mut self, a: IVal, kind: u32) -> IVal {
+        let lane32 = |i: u32| (a.bits >> (i*32)) as u32;
+        let lane64 = |i: u32| (a.bits >> (i*64)) as u64;
+        let mut r = 0u128;
+        match kind {
+            0 => for i in 0..4 { r |= ((lane32(i) as i32 as f32).to_bits() as u128) << (i*32); },
+            1 => for i in 0..4 {
+                // ‡ x86 indefinite-integer on overflow/NaN = 0x80000000; Rust
+                // `as i32` truncates + also gives INT_MIN on NaN/overflow-neg
+                // but INT_MAX on overflow-pos. Handle explicitly.
+                let f = f32::from_bits(lane32(i));
+                let v = if f.is_nan() || f >= 2147483648.0 || f < -2147483648.0 { 0x8000_0000u32 }
+                        else { f as i32 as u32 };
+                r |= (v as u128) << (i*32);
+            },
+            2 => for i in 0..2 { r |= ((f32::from_bits(lane32(i)) as f64).to_bits() as u128) << (i*64); },
+            3 => for i in 0..2 { r |= ((f64::from_bits(lane64(i)) as f32).to_bits() as u128) << (i*32); },
+            4 => for i in 0..2 { r |= ((lane32(i) as i32 as f64).to_bits() as u128) << (i*64); },
+            _ => panic!("vcvt kind={kind}"),
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vshuf(&mut self, a: IVal, b: IVal, ew: u32, sel: u32) -> IVal {
         let n = 128 / ew;
         let m = (1u128 << ew) - 1;

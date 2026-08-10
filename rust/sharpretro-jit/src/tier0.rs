@@ -430,6 +430,24 @@ impl Builder for Tier0 {
         self.store2(X_A, X_C, s);
         s
     }
+    fn vcvt(&mut self, a: u32, kind: u32) -> u32 {
+        // X↔Q + one/two NEON convert insns → q2 → extract → store2.
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        match kind {
+            0 => { self.enc.scvtf_v(2, 0, 0); }              // 4× i32→f32
+            1 => { self.enc.fcvtzs_v(2, 0, 0); }             // 4× f32→i32 truncate
+            2 => { self.enc.fcvtl_2d_2s(2, 0); }             // low 2× f32→f64
+            3 => { self.enc.fcvtn_2s_2d(2, 0); }             // 2× f64→low 2× f32, hi=0
+            4 => { self.enc.sxtl_2d_2s(2, 0);                // low 2× i32→i64
+                   self.enc.scvtf_v(2, 2, 1); }              //   → 2× f64
+            _ => panic!("vcvt kind={kind}"),
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
         // Build q0=a, q1=b via X↔Q (same as vzip). Then N× INS q2.T[i], qS.T[j]
         // where S=(0 for i<N/2 else 1), j=(sel>>(i*bp))&mask. Extract q2 → store2.

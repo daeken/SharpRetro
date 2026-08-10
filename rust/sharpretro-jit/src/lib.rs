@@ -172,6 +172,17 @@ pub trait Builder {
     /// PSHUFD: elem_bits=32, a==b (both from src), 4 lanes.
     /// sel is compile-time-constant (Ib) — tier-0/1 branch on it in codegen.
     fn vshuf(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, sel: u32) -> Self::Val;
+    /// Packed convert on V128. `kind`:
+    ///   0 = CVTDQ2PS  (4× i32 → 4× f32)
+    ///   1 = CVTTPS2DQ (4× f32 → 4× i32, truncate)
+    ///   2 = CVTPS2PD  (low 2× f32 → 2× f64)
+    ///   3 = CVTPD2PS  (2× f64 → low 2× f32, upper 64 zeroed)
+    ///   4 = CVTDQ2PD  (low 2× i32 → 2× f64)
+    /// ‡ CVTPS2DQ (round-per-MXCSR, not truncate) parked — needs FCVTNS or
+    ///   FPCR-mode; games rarely rely on it (compilers emit CVTTPS2DQ for
+    ///   int-cast). ‡ Overflow saturation differs (x86 → 0x80000000 indefinite,
+    ///   ARM FCVTZS → saturate) — matters only at |f|>2^31.
+    fn vcvt(&mut self, a: Self::Val, kind: u32) -> Self::Val;
 
     // ── float (Abs/Sqrt/Round*/Ceil/Floor/IsNaN) ────────────────────────────
     fn fabs(&mut self, a: Self::Val) -> Self::Val;

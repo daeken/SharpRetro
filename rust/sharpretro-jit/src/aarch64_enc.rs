@@ -139,6 +139,27 @@ impl Aarch64Enc {
     pub fn fsqrt_v(&mut self, vd: u32, vn: u32, sz: u32) {
         self.put(0x6EA1F800 | (sz<<22) | (vn<<5) | vd);
     }
+    // Packed convert (all Q=1 unless noted). For CVTDQ2PS/CVTTPS2DQ/etc.
+    // SCVTF Vd.4S,Vn.4S (i32→f32) = 0x4E21D800; Vd.2D,Vn.2D (i64→f64) = 0x4E61D800
+    pub fn scvtf_v(&mut self, vd: u32, vn: u32, sz: u32) {
+        self.put(0x4E21D800 | (sz<<22) | (vn<<5) | vd);
+    }
+    // FCVTZS Vd.4S,Vn.4S (f32→i32 truncate) = 0x4EA1B800; .2D = 0x4EE1B800
+    pub fn fcvtzs_v(&mut self, vd: u32, vn: u32, sz: u32) {
+        self.put(0x4EA1B800 | (sz<<22) | (vn<<5) | vd);
+    }
+    // FCVTL Vd.2D,Vn.2S (widen low 2× f32→f64) = 0x0E617800 (Q=0, sz=1)
+    pub fn fcvtl_2d_2s(&mut self, vd: u32, vn: u32) {
+        self.put(0x0E617800 | (vn<<5) | vd);
+    }
+    // FCVTN Vd.2S,Vn.2D (narrow 2× f64→f32, upper zeroed) = 0x0E616800 (Q=0, sz=1)
+    pub fn fcvtn_2s_2d(&mut self, vd: u32, vn: u32) {
+        self.put(0x0E616800 | (vn<<5) | vd);
+    }
+    // SSHLL Vd.2D,Vn.2S,#0 (= SXTL: sign-extend low 2× i32→i64) = 0x0F20A400
+    pub fn sxtl_2d_2s(&mut self, vd: u32, vn: u32) {
+        self.put(0x0F20A400 | (vn<<5) | vd);
+    }
     pub fn fadd_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
         self.put(0x4E20D400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
     }
