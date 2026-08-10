@@ -63,7 +63,7 @@ public static class LiftTables {
 		("NOT", "lval", "(block (= lval (~ lval)))"),
 		("NEG", "lval", "(block (mlet (_v lval tval (- 0x0 _v)) (= lval tval) (= CF (!= _v 0x0)) (= SF (>> tval (- (bitwidth tval) 0x1))) (= ZF (== tval 0x0))))"),
 		("MUL", "src", "(block (mul-wide src #f))"),
-		("IMUL1", "src", "(block (intrinsic imul-wide (bitwidth src) src))"),
+		("IMUL1", "src", "(block (mul-wide src #t))"),
 		("DIV", "src", "(block (div-wide src #f))"),
 		("IDIV", "src", "(block (div-wide src #t))"),
 		("IMUL", "dst src", "(block (= dst (* dst src)))"),

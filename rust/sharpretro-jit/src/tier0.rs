@@ -769,10 +769,22 @@ impl Builder for Tier0 {
         let sw = match self.tys[a as usize] { IlType::I{width,..} => width, _ => 64 };
         let s = self.slot(to);
         self.load(X_A, a);
-        self.enc.mov_imm64(X_B, (64 - sw) as u64);
-        self.enc.lslv(X_A, X_A, X_B);
-        self.enc.asrv(X_A, X_A, X_B);
-        self.store(X_A, s);
+        if sw < 64 {
+            self.enc.mov_imm64(X_B, (64 - sw) as u64);
+            self.enc.lslv(X_A, X_A, X_B);
+            self.enc.asrv(X_A, X_A, X_B);
+        }
+        if Self::is_wide(to) {
+            // sext to i128/u128: hi = sign-fill = asr(lo, 63). Was writing
+            // lo-word only → hi-slot left garbage from a prior slot-user →
+            // mul's load2 read stale hi → wrong cross-terms → IMUL1 negative
+            // gave rdx=0x4 (garbage) not 0xFF..FF. Own #118.
+            self.enc.mov_imm64(X_B, 63);
+            self.enc.asrv(X_C, X_A, X_B);
+            self.store2(X_A, X_C, s);
+        } else {
+            self.store(X_A, s);
+        }
         s
     }
 
