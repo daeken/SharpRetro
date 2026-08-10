@@ -165,6 +165,13 @@ pub trait Builder {
     /// Packed-float binary: per-lane float op on V128, elem_bits ∈ {32,64}
     /// (= 4×f32 or 2×f64), op ∈ {0=add,1=sub,2=mul,3=div}. MULPS/ADDPD/etc.
     fn vfbin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
+    /// Lane shuffle on V128: n=128/elem_bits lanes, result[i] = pick lane
+    /// `(sel >> (i*bits_per_sel)) & mask` from `a` (i < n/2) or `b` (i ≥ n/2).
+    /// SHUFPS: elem_bits=32, bits_per_sel=2, dst=a, src=b.
+    /// SHUFPD: elem_bits=64, bits_per_sel=1 (2 lanes, sel is 2 bits).
+    /// PSHUFD: elem_bits=32, a==b (both from src), 4 lanes.
+    /// sel is compile-time-constant (Ib) — tier-0/1 branch on it in codegen.
+    fn vshuf(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, sel: u32) -> Self::Val;
 
     // ── float (Abs/Sqrt/Round*/Ceil/Floor/IsNaN) ────────────────────────────
     fn fabs(&mut self, a: Self::Val) -> Self::Val;

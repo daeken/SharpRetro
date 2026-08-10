@@ -95,7 +95,8 @@
 (instruction CMPSD-X (dst src pred) "cmpsd $dst, $src, $pred" (intrinsic cmpsd-x dst src pred))
 (encoding CMPSD-X (Vsd Wsd Ib) (repnz 0x0F 0xC2))
 
-(instruction SHUFPD (dst src sel) "shufpd $dst, $src, $sel" (intrinsic shufpd dst src sel))
+; SHUFPD: dst[0]=dst[sel[0]], dst[1]=src[sel[1]]. vshuf @ew=64.
+(instruction SHUFPD (dst src sel) "shufpd $dst, $src, $sel" (= dst (vshuf dst src sel 64)))
 (encoding SHUFPD (Vpd Wpd Ib) (opsize 0x0F 0xC6))
 
 ; --- integer xmm: movement (the census bulk — memcpy/strlen inner loops) ---
@@ -226,7 +227,9 @@
 (encoding PUNPCKHQDQ (Vdq Wdq) (opsize 0x0F 0x6D))
 
 ; --- shuffles ---
-(instruction PSHUFD (dst src sel) "pshufd $dst, $src, $sel" (intrinsic pshufd dst src sel))
+; PSHUFD: dst[i]=src[sel[2i+1:2i]] for all 4 lanes (all from src; not RMW).
+; vshuf w/ a=b=src → low+high halves both source from src.
+(instruction PSHUFD (dst src sel) "pshufd $dst, $src, $sel" (= dst (vshuf src src sel 32)))
 (encoding PSHUFD (Vdq Wdq Ib) (opsize 0x0F 0x70))
 (instruction PSHUFLW (dst src sel) "pshuflw $dst, $src, $sel" (intrinsic pshuflw dst src sel))
 (encoding PSHUFLW (Vdq Wdq Ib) (repnz 0x0F 0x70))

@@ -165,6 +165,23 @@ impl Aarch64Enc {
         // INS Vd.D[i], Xn: 0x4E081C00 | (imm5=1<<3|i<<4)<<16 | Rn<<5 | Rd
         self.put(0x4E081C00 | ((i<<4)<<16) | (xn<<5) | vd);
     }
+    /// INS Vd.S[i], Vn.S[j] — copy one 32-bit lane between vector regs.
+    /// Encoding: 0x6E000400 | imm5<<16 | imm4<<11 | Rn<<5 | Rd, where for
+    /// size=S: imm5 = (i<<3)|0b100, imm4 = j<<2. (Arm ARM C7.2.176 INS-elem.)
+    pub fn ins_vs_vs(&mut self, vd: u32, i: u32, vn: u32, j: u32) {
+        debug_assert!(i < 4 && j < 4);
+        let imm5 = (i << 3) | 0b100;
+        let imm4 = j << 2;
+        self.put(0x6E000400 | (imm5<<16) | (imm4<<11) | (vn<<5) | vd);
+    }
+    /// INS Vd.D[i], Vn.D[j] — copy one 64-bit lane between vector regs.
+    /// size=D: imm5 = (i<<4)|0b1000, imm4 = j<<3.
+    pub fn ins_vd_vd(&mut self, vd: u32, i: u32, vn: u32, j: u32) {
+        debug_assert!(i < 2 && j < 2);
+        let imm5 = (i << 4) | 0b1000;
+        let imm4 = j << 3;
+        self.put(0x6E000400 | (imm5<<16) | (imm4<<11) | (vn<<5) | vd);
+    }
     // UMOV Xd, Vn.D[i] — extract vector lane to X-reg.
     pub fn umov_x_vd(&mut self, xd: u32, vn: u32, i: u32) {
         debug_assert!(i < 2);

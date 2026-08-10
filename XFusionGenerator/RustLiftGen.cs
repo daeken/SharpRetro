@@ -428,6 +428,18 @@ public class RustLiftGen {
                 var hi = l[4] is PName("#t") ? "true" : "false";
                 return Rt($"bd.vzip({a}, {b}, {ew}, {hi})");
             }
+            case "vshuf": {
+                // (vshuf a b sel-op elw) — SHUFPS/PSHUFD/SHUFPD lane-select.
+                // sel-op is the Ib operand (compile-time-known); extract its
+                // .value at RUST-runtime (per-decode) and pass as u32.
+                // a supplies low-half lanes, b supplies high-half. PSHUFD passes
+                // src as BOTH a and b (all lanes from src). SHUFPS passes dst,src.
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var selOp = ParamOp(((PName)l[3]).Name);
+                var ew = ((PInt)l[4]).Value;
+                var selv = Rt($"if let Operand::Imm{{value,..}} = {selOp} {{ *value as u32 }} else {{ unreachable!() }}");
+                return Rt($"bd.vshuf({a}, {b}, {ew}, {selv})");
+            }
             case "vfbin": {
                 // (vfbin a b elw op) — packed-float per-lane arith on V128 → V128.
                 // Expression head; .isa does (= dst (vfbin dst src elw op)) for RMW.

@@ -108,7 +108,9 @@
 (instruction CMPSS (dst src pred) "cmpss $dst, $src, $pred" (intrinsic cmpss dst src pred))
 (encoding CMPSS (Vss Wss Ib) (rep 0x0F 0xC2))
 
-(instruction SHUFPS (dst src sel) "shufps $dst, $src, $sel" (intrinsic shufps dst src sel))
+; SHUFPS: dst[0,1] from dst[sel[1:0],sel[3:2]], dst[2,3] from src[sel[5:4],sel[7:6]].
+; vshuf's a=low-half-source, b=high-half-source, so a=dst b=src.
+(instruction SHUFPS (dst src sel) "shufps $dst, $src, $sel" (= dst (vshuf dst src sel 32)))
 (encoding SHUFPS (Vps Wps Ib) (0x0F 0xC6))
 
 ; --- converts (SSE1 half: cvt*si2ss / ss2si / ps<->pi) ---

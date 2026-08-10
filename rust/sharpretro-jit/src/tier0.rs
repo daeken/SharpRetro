@@ -414,6 +414,35 @@ impl Builder for Tier0 {
         self.store2(X_A, X_C, s);
         s
     }
+    fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
+        // Build q0=a, q1=b via X↔Q (same as vzip). Then N× INS q2.T[i], qS.T[j]
+        // where S=(0 for i<N/2 else 1), j=(sel>>(i*bp))&mask. Extract q2 → store2.
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        match ew {
+            32 => {
+                for i in 0..4u32 {
+                    let src = if i < 2 { 0 } else { 1 };
+                    let j = (sel >> (i*2)) & 3;
+                    self.enc.ins_vs_vs(2, i, src, j);
+                }
+            }
+            64 => {
+                for i in 0..2u32 {
+                    let src = if i < 1 { 0 } else { 1 };
+                    let j = (sel >> i) & 1;
+                    self.enc.ins_vd_vd(2, i, src, j);
+                }
+            }
+            _ => panic!("vshuf ew={ew}"),
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         // load2 a→(X_A,X_C), b→(X_B,X_D); INS q0.d[0/1]←X_A/X_C, q1←X_B/X_D;
         // zip1/2 q2, q0, q1; UMOV X_A←q2.d[0], X_C←q2.d[1]; store2.

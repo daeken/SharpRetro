@@ -257,6 +257,19 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vshuf(&mut self, a: IVal, b: IVal, ew: u32, sel: u32) -> IVal {
+        let n = 128 / ew;
+        let m = (1u128 << ew) - 1;
+        let bits_per = match ew { 32 => 2, 64 => 1, _ => panic!("vshuf ew={ew}") };
+        let smask = (1u32 << bits_per) - 1;
+        let mut r = 0u128;
+        for i in 0..n {
+            let src = if i < n/2 { a.bits } else { b.bits };
+            let j = (sel >> (i * bits_per)) & smask;
+            r |= ((src >> (j * ew)) & m) << (i * ew);
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vzip(&mut self, a: IVal, b: IVal, ew: u32, hi: bool) -> IVal {
         let n = 128 / ew;   // total lanes at this elem-width
         let m = if ew < 128 { (1u128 << ew) - 1 } else { u128::MAX };
