@@ -85,6 +85,44 @@ impl Aarch64Enc {
     pub fn and_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x8A000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn orr_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xAA000000 | (xm<<16) | (xn<<5) | xd); }
     pub fn eor_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0xCA000000 | (xm<<16) | (xn<<5) | xd); }
+
+    // ── NEON / Q-reg (V128 ops via q-scratch: q0/q1 in, q2 out) ──────────────
+    // LDR Qt, [Xn, #imm]  (imm scaled by 16, unsigned imm12)
+    pub fn ldr_q(&mut self, qt: u32, xn: u32, imm: u32) {
+        debug_assert!(imm % 16 == 0 && imm/16 < 4096);
+        self.put(0x3DC00000 | ((imm/16)<<10) | (xn<<5) | qt);
+    }
+    // STR Qt, [Xn, #imm]
+    pub fn str_q(&mut self, qt: u32, xn: u32, imm: u32) {
+        debug_assert!(imm % 16 == 0 && imm/16 < 4096);
+        self.put(0x3D800000 | ((imm/16)<<10) | (xn<<5) | qt);
+    }
+    // ZIP1 Vd.<T>, Vn.<T>, Vm.<T> — interleave LOW halves. size 0/1/2/3 = B/H/S/D.
+    // T = 16B/8H/4S/2D (Q=1). Exactly x86's PUNPCKL{BW,WD,DQ,QDQ}.
+    pub fn zip1_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        debug_assert!(size < 4);
+        self.put(0x4E003800 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    // ZIP2 (interleave HIGH halves) = PUNPCKH*.
+    pub fn zip2_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
+        debug_assert!(size < 4);
+        self.put(0x4E007800 | (size<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    // EOR/AND/ORR Vd.16B, Vn.16B, Vm.16B — bitwise on the whole 128.
+    pub fn eor_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x6E201C00 | (vm<<16) | (vn<<5) | vd); }
+    pub fn and_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x4E201C00 | (vm<<16) | (vn<<5) | vd); }
+    pub fn orr_v16b(&mut self, vd: u32, vn: u32, vm: u32) { self.put(0x4EA01C00 | (vm<<16) | (vn<<5) | vd); }
+    // MOV Vd.D[i], Xn — insert X-reg into vector lane (i=0 or 1). Building Q from 2× X.
+    pub fn ins_vd_x(&mut self, vd: u32, i: u32, xn: u32) {
+        debug_assert!(i < 2);
+        // INS Vd.D[i], Xn: 0x4E081C00 | (imm5=1<<3|i<<4)<<16 | Rn<<5 | Rd
+        self.put(0x4E081C00 | ((i<<4)<<16) | (xn<<5) | vd);
+    }
+    // UMOV Xd, Vn.D[i] — extract vector lane to X-reg.
+    pub fn umov_x_vd(&mut self, xd: u32, vn: u32, i: u32) {
+        debug_assert!(i < 2);
+        self.put(0x4E083C00 | ((i<<4)<<16) | (vn<<5) | xd);
+    }
     pub fn mul_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x9B007C00 | (xm<<16) | (xn<<5) | xd); }
     // ADD Xd, Xn, #imm12
     pub fn add_i(&mut self, xd: u32, xn: u32, imm12: u32) {

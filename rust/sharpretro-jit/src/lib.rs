@@ -157,6 +157,10 @@ pub trait Builder {
     fn lo64(&mut self, a: Self::Val) -> Self::Val { self.cast(a, IlType::U64) }
     /// Extract high-64 of a u128.
     fn hi64(&mut self, a: Self::Val) -> Self::Val;
+    /// V128 interleave-low: for elem_bits ∈ {8,16,32,64}, result[2i]=a[i],
+    /// result[2i+1]=b[i] over the LOW half's elements. = x86 PUNPCKL{BW,WD,DQ,QDQ}
+    /// = aarch64 ZIP1. `hi=true` gives interleave-high (PUNPCKH*/ZIP2).
+    fn vzip(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, hi: bool) -> Self::Val;
 
     // ── float (Abs/Sqrt/Round*/Ceil/Floor/IsNaN) ────────────────────────────
     fn fabs(&mut self, a: Self::Val) -> Self::Val;

@@ -353,6 +353,12 @@ public class RustLiftGen {
                 }
                 return cacc;
             }
+            case "vzip": {
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var ew = ((PInt)l[3]).Value;
+                var hi = l[4] is PName("#t") ? "true" : "false";
+                return Rt($"bd.vzip({a}, {b}, {ew}, {hi})");
+            }
             case "zext": {
                 var a = Expr(l[1]);
                 var w = l.Count > 2 && l[2] is PInt(var wv2) ? wv2.ToString() : OpW;

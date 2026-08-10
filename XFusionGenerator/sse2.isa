@@ -157,13 +157,13 @@
 (instruction PSUBQ (dst src) "psubq $dst, $src" (intrinsic psubq dst src))
 (encoding PSUBQ (Vdq Wdq) (opsize 0x0F 0xFB))
 
-(instruction PAND (dst src) "pand $dst, $src" (intrinsic pand dst src))
+(instruction PAND (dst src) "pand $dst, $src" (= dst (& dst src)))
 (encoding PAND (Vdq Wdq) (opsize 0x0F 0xDB))
-(instruction PANDN (dst src) "pandn $dst, $src" (intrinsic pandn dst src))
+(instruction PANDN (dst src) "pandn $dst, $src" (= dst (& (~ dst) src)))
 (encoding PANDN (Vdq Wdq) (opsize 0x0F 0xDF))
-(instruction POR (dst src) "por $dst, $src" (intrinsic por dst src))
+(instruction POR (dst src) "por $dst, $src" (= dst (| dst src)))
 (encoding POR (Vdq Wdq) (opsize 0x0F 0xEB))
-(instruction PXOR (dst src) "pxor $dst, $src" (intrinsic pxor dst src))
+(instruction PXOR (dst src) "pxor $dst, $src" (= dst (^ dst src)))
 (encoding PXOR (Vdq Wdq) (opsize 0x0F 0xEF))
 
 (instruction PMINUB (dst src) "pminub $dst, $src" (intrinsic pminub dst src))
@@ -196,21 +196,23 @@
 (encoding PSLLDQ-I (Udq Ib) (opsize 0x0F 0x73 /7))
 
 ; --- unpacks ---
-(instruction PUNPCKLBW (dst src) "punpcklbw $dst, $src" (intrinsic punpcklbw dst src))
+; PUNPCKL*: interleave-low = aarch64 zip1 exactly. (vzip dst src W hi?) is a
+; Builder-primitive; W = elem-bits (8/16/32/64), hi=#f=zip1=PUNPCKL, #t=zip2=PUNPCKH.
+(instruction PUNPCKLBW (dst src) "punpcklbw $dst, $src" (= dst (vzip dst src 8 #f)))
 (encoding PUNPCKLBW (Vdq Wdq) (opsize 0x0F 0x60))
-(instruction PUNPCKLWD (dst src) "punpcklwd $dst, $src" (intrinsic punpcklwd dst src))
+(instruction PUNPCKLWD (dst src) "punpcklwd $dst, $src" (= dst (vzip dst src 16 #f)))
 (encoding PUNPCKLWD (Vdq Wdq) (opsize 0x0F 0x61))
-(instruction PUNPCKLDQ (dst src) "punpckldq $dst, $src" (intrinsic punpckldq dst src))
+(instruction PUNPCKLDQ (dst src) "punpckldq $dst, $src" (= dst (vzip dst src 32 #f)))
 (encoding PUNPCKLDQ (Vdq Wdq) (opsize 0x0F 0x62))
-(instruction PUNPCKLQDQ (dst src) "punpcklqdq $dst, $src" (intrinsic punpcklqdq dst src))
+(instruction PUNPCKLQDQ (dst src) "punpcklqdq $dst, $src" (= dst (vzip dst src 64 #f)))
 (encoding PUNPCKLQDQ (Vdq Wdq) (opsize 0x0F 0x6C))
-(instruction PUNPCKHBW (dst src) "punpckhbw $dst, $src" (intrinsic punpckhbw dst src))
+(instruction PUNPCKHBW (dst src) "punpckhbw $dst, $src" (= dst (vzip dst src 8 #t)))
 (encoding PUNPCKHBW (Vdq Wdq) (opsize 0x0F 0x68))
-(instruction PUNPCKHWD (dst src) "punpckhwd $dst, $src" (intrinsic punpckhwd dst src))
+(instruction PUNPCKHWD (dst src) "punpckhwd $dst, $src" (= dst (vzip dst src 16 #t)))
 (encoding PUNPCKHWD (Vdq Wdq) (opsize 0x0F 0x69))
-(instruction PUNPCKHDQ (dst src) "punpckhdq $dst, $src" (intrinsic punpckhdq dst src))
+(instruction PUNPCKHDQ (dst src) "punpckhdq $dst, $src" (= dst (vzip dst src 32 #t)))
 (encoding PUNPCKHDQ (Vdq Wdq) (opsize 0x0F 0x6A))
-(instruction PUNPCKHQDQ (dst src) "punpckhqdq $dst, $src" (intrinsic punpckhqdq dst src))
+(instruction PUNPCKHQDQ (dst src) "punpckhqdq $dst, $src" (= dst (vzip dst src 64 #t)))
 (encoding PUNPCKHQDQ (Vdq Wdq) (opsize 0x0F 0x6D))
 
 ; --- shuffles ---

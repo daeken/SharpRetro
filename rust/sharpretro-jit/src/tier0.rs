@@ -187,6 +187,15 @@ impl Tier0 {
         self.store(X_A, s);
         s
     }
+    /// 2-slot bin: a=(X_A,X_C) b=(X_B,X_D), f operates on both halves, store2.
+    fn bin_wide(&mut self, a: u32, b: u32, f: impl FnOnce(&mut Aarch64Enc)) -> u32 {
+        let ty = self.tys[a as usize];
+        let s = self.slot(ty);
+        self.load2(X_A, X_C, a); self.load2(X_B, X_D, b);
+        f(&mut self.enc);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn una(&mut self, a: u32, ty: IlType, f: impl FnOnce(&mut Aarch64Enc)) -> u32 {
         let s = self.slot(ty);
         self.load(X_A, a);
@@ -380,6 +389,20 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
+        // load2 a→(X_A,X_C), b→(X_B,X_D); INS q0.d[0/1]←X_A/X_C, q1←X_B/X_D;
+        // zip1/2 q2, q0, q1; UMOV X_A←q2.d[0], X_C←q2.d[1]; store2.
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let sz = match ew { 8=>0, 16=>1, 32=>2, 64=>3, _=>panic!("vzip ew={ew}") };
+        if hi { self.enc.zip2_v(2, 0, 1, sz); } else { self.enc.zip1_v(2, 0, 1, sz); }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn loop_n(&mut self, n: u32, body: &mut dyn FnMut(&mut Self)) {
         // In-block loop:
         //   ldr xD, [spill+n]      ; ctr = n
@@ -500,10 +523,24 @@ impl Builder for Tier0 {
             e.msub(X_A, X_C, X_B, X_A);  // x9 = x9 - x11*x10
         }) }
     fn neg(&mut self, a: u32) -> u32 { let t = self.tys[a as usize]; self.una(a, t, |e| { e.mov_imm64(X_B, 0); e.sub_r(X_A, X_B, X_A); }) }
-    fn and(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.and_r(X_A, X_A, X_B)) }
-    fn or (&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.orr_r(X_A, X_A, X_B)) }
-    fn xor(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize]; self.bin(a, b, t, |e| e.eor_r(X_A, X_A, X_B)) }
+    fn and(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) { return self.bin_wide(a, b, |e| { e.and_r(X_A,X_A,X_B); e.and_r(X_C,X_C,X_D); }); }
+        self.bin(a, b, t, |e| e.and_r(X_A, X_A, X_B)) }
+    fn or (&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) { return self.bin_wide(a, b, |e| { e.orr_r(X_A,X_A,X_B); e.orr_r(X_C,X_C,X_D); }); }
+        self.bin(a, b, t, |e| e.orr_r(X_A, X_A, X_B)) }
+    fn xor(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) { return self.bin_wide(a, b, |e| { e.eor_r(X_A,X_A,X_B); e.eor_r(X_C,X_C,X_D); }); }
+        self.bin(a, b, t, |e| e.eor_r(X_A, X_A, X_B)) }
     fn not(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
+        if Self::is_wide(t) {
+            let s = self.slot(t);
+            self.load2(X_A, X_C, a);
+            self.enc.mov_imm64(X_B, u64::MAX);
+            self.enc.eor_r(X_A, X_A, X_B); self.enc.eor_r(X_C, X_C, X_B);
+            self.store2(X_A, X_C, s);
+            return s;
+        }
         // Bool: eor #1 (logical negate — CSEL fuzz caught this: eor-all-1s on Bool gives
         // 0xFF..FE which is truthy). Int: bitwise complement within width.
         let mask = match t {

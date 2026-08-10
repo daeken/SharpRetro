@@ -97,6 +97,8 @@ fn ibin(a: IVal, b: IVal, fu: impl Fn(u128,u128)->u128, fi: impl Fn(i128,i128)->
         IlType::F{width:32} => IVal::f32(ff32(a.as_f32(), b.as_f32())),
         IlType::F{width:64} => IVal::f64(ff64(a.as_f64(), b.as_f64())),
         IlType::Bool => IVal::b(fu(a.bits, b.bits) & 1 != 0),
+        // V128 bitwise (PXOR/PAND/POR): treat as u128 (bits are already u128).
+        IlType::V128 => IVal { ty: IlType::V128, bits: fu(a.bits, b.bits) },
         _ => panic!("ibin on {:?}", a.ty),
     }
 }
@@ -147,6 +149,7 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
     fn xor(&mut self, a: IVal, b: IVal) -> IVal { ibin(a,b, |x,y|x^y, |x,y|x^y, |_,_|panic!(), |_,_|panic!()) }
     fn not(&mut self, a: IVal) -> IVal { match a.ty {
         IlType::Bool => IVal::b(!a.as_bool()),
+        IlType::V128 => IVal { ty: a.ty, bits: !a.bits },
         IlType::I{width, ..} => IVal { ty: a.ty, bits: mask(!a.bits, width) },
         _ => panic!("not {:?}", a.ty) } }
     fn shl(&mut self, a: IVal, b: IVal) -> IVal { let s = (b.bits & 127) as u32;
@@ -211,6 +214,19 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         IVal { ty: IlType::I{signed:false, width:128}, bits: (hi.bits << 64) | (lo.bits & u64::MAX as u128) }
     }
     fn hi64(&mut self, a: IVal) -> IVal { IVal { ty: IlType::U64, bits: a.bits >> 64 } }
+    fn vzip(&mut self, a: IVal, b: IVal, ew: u32, hi: bool) -> IVal {
+        let n = 128 / ew;   // total lanes at this elem-width
+        let m = if ew < 128 { (1u128 << ew) - 1 } else { u128::MAX };
+        let base = if hi { n/2 } else { 0 };
+        let mut r = 0u128;
+        for k in 0..(n/2) {
+            let ea = (a.bits >> ((base+k) * ew)) & m;
+            let eb = (b.bits >> ((base+k) * ew)) & m;
+            r |= ea << (2*k * ew);
+            r |= eb << ((2*k+1) * ew);
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn loop_n(&mut self, n: IVal, body: &mut dyn FnMut(&mut Self)) {
         for _ in 0..n.bits as u64 { body(self); }
     }
