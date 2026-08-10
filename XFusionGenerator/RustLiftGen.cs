@@ -468,6 +468,15 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var kind = ((PInt)l[2]).Value;
                 return Rt($"bd.vcvt({a}, {kind})");
             }
+            case "vfmax": case "vfmin": {
+                var a = Expr(l[1]); var b = Expr(l[2]); var ew = ((PInt)l[3]).Value;
+                var m = head == "vfmax" ? "true" : "false";
+                return Rt($"bd.vfminmax({a}, {b}, {ew}, {m})");
+            }
+            case "vfun": {
+                var a = Expr(l[1]); var ew = ((PInt)l[2]).Value; var op = ((PInt)l[3]).Value;
+                return Rt($"bd.vfun({a}, {ew}, {op})");
+            }
             case "vmovmsk": {
                 // (vmovmsk src ew) → U32 bitmask of per-lane sign bits.
                 var a = Expr(l[1]); var ew = ((PInt)l[2]).Value;

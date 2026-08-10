@@ -210,6 +210,8 @@ impl Builder for IlRecorder {
     fn vfbin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfbin (V128)") }
     fn vibin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vibin (V128)") }
     fn vmovmsk(&mut self, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vmovmsk (V128)") }
+    fn vfun(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfun (V128)") }
+    fn vfminmax(&mut self, _: u32, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vfminmax (V128)") }
     fn vshuf(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vshuf (V128)") }
     fn vshufw(&mut self, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vshufw (V128)") }
     fn vcvt(&mut self, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vcvt (V128)") }

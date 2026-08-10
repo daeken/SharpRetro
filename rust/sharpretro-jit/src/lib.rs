@@ -175,6 +175,13 @@ pub trait Builder {
     /// PMOVMSKB (ew=8 → 16-bit) not covered here (needs a different NEON
     /// path — CMLT.16B+bit-gather; separate primitive when it walls).
     fn vmovmsk(&mut self, a: Self::Val, ew: u32) -> Self::Val;
+    /// Packed-float unary: per-lane float op on V128, ew∈{32,64},
+    /// op ∈ {0=sqrt}. SQRTPS/SQRTPD. (fabs/fneg later via op=1/2.)
+    fn vfun(&mut self, a: Self::Val, ew: u32, op: u32) -> Self::Val;
+    /// Packed x86 MAXPS/MINPS/MAXPD/MINPD. Same NaN semantics as scalar
+    /// fminmax: (a op b) ? a : b, IEEE cmp → NaN/±0-equal → returns b=src.
+    /// NOT ARM FMAX (which propagates NaN). tier-0 = FCMGT + BIT.
+    fn vfminmax(&mut self, a: Self::Val, b: Self::Val, ew: u32, is_max: bool) -> Self::Val;
     /// Lane shuffle on V128: n=128/elem_bits lanes, result[i] = pick lane
     /// `(sel >> (i*bits_per_sel)) & mask` from `a` (i < n/2) or `b` (i ≥ n/2).
     /// SHUFPS: elem_bits=32, bits_per_sel=2, dst=a, src=b.

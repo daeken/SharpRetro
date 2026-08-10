@@ -144,6 +144,16 @@ impl Aarch64Enc {
     // NEON packed-float arith (Q=1). sz: 0=.4S (f32×4), 1=.2D (f64×2).
     // FADD Vd.T,Vn.T,Vm.T = 0x4E20D400 | sz<<22 | Rm<<16 | Rn<<5 | Rd
     // FSUB = 0x4EA0D400 | sz<<22   FMUL = 0x6E20DC00 | sz<<22   FDIV = 0x6E20FC00 | sz<<22
+    // FCMGT (register) Vd.T,Vn.T,Vm.T: mask[i] = (Vn[i] > Vm[i]) ? all-1 : 0.
+    // Ordered (NaN → 0). .4S = 0x6EA0E400; .2D = 0x6EE0E400 (Q=1, sz bit22).
+    pub fn fcmgt_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x6EA0E400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    // BIT Vd.16B, Vn.16B, Vm.16B: Vd = (Vn & Vm) | (Vd & ~Vm)  (bit-insert-if-true)
+    // = "where Vm bit is set, take Vn's bit; else keep Vd's". 0x6EA01C00.
+    pub fn bit_v16b(&mut self, vd: u32, vn: u32, vm: u32) {
+        self.put(0x6EA01C00 | (vm<<16) | (vn<<5) | vd);
+    }
     // FSQRT vector: Vd.4S = 0x6EA1F800; Vd.2D = 0x6EE1F800 (sz bit22).
     // (Scalar fsqrt_s/fsqrt_d already exist below at :232.)
     pub fn fsqrt_v(&mut self, vd: u32, vn: u32, sz: u32) {

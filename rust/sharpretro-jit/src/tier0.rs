@@ -410,6 +410,40 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vfminmax(&mut self, a: u32, b: u32, ew: u32, is_max: bool) -> u32 {
+        // x86 semantics: dst[i] = (a[i] op b[i]) ? a[i] : b[i]. FCMGT is
+        // ORDERED (NaN→0), matches x86 (NaN → cond false → b=src). For MIN
+        // use FCMGT b,a (= a<b, ordered → NaN→false→b). Then BIT: q2 starts
+        // as b, insert a where mask is set.
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let sz = if ew == 64 { 1 } else { 0 };
+        // mask q3: MAX → fcmgt(a,b); MIN → fcmgt(b,a) (= a<b ordered)
+        if is_max { self.enc.fcmgt_v(3, 0, 1, sz); }
+        else      { self.enc.fcmgt_v(3, 1, 0, sz); }
+        // q2 = b; where mask, take a
+        self.enc.mov_v(2, 1);
+        self.enc.bit_v16b(2, 0, 3);
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
+    fn vfun(&mut self, a: u32, ew: u32, op: u32) -> u32 {
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        let sz = if ew == 64 { 1 } else { 0 };
+        match op {
+            0 => self.enc.fsqrt_v(2, 0, sz),
+            _ => panic!("vfun op={op}"),
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vmovmsk(&mut self, a: u32, ew: u32) -> u32 {
         // Load the V128 as two X-halves (X_A=lo, X_C=hi) — DON'T go through
         // Q-regs; the sign bits are at fixed X-reg positions. Extract each

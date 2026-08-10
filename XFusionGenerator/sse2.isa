@@ -54,7 +54,7 @@
 (instruction SUBSD (dst src) "subsd $dst, $src" (= dst (- (as-f64 dst) (as-f64 src))))
 (encoding SUBSD (Vsd Wsd) (repnz 0x0F 0x5C))
 
-(instruction MINPD (dst src) "minpd $dst, $src" (intrinsic minpd dst src))
+(instruction MINPD (dst src) "minpd $dst, $src" (= dst (vfmin dst src 64)))
 (encoding MINPD (Vpd Wpd) (opsize 0x0F 0x5D))
 (instruction MINSD (dst src) "minsd $dst, $src" (= dst (fmin (as-f64 dst) (as-f64 src))))
 (encoding MINSD (Vsd Wsd) (repnz 0x0F 0x5D))
@@ -64,12 +64,12 @@
 (instruction DIVSD (dst src) "divsd $dst, $src" (= dst (/ (as-f64 dst) (as-f64 src))))
 (encoding DIVSD (Vsd Wsd) (repnz 0x0F 0x5E))
 
-(instruction MAXPD (dst src) "maxpd $dst, $src" (intrinsic maxpd dst src))
+(instruction MAXPD (dst src) "maxpd $dst, $src" (= dst (vfmax dst src 64)))
 (encoding MAXPD (Vpd Wpd) (opsize 0x0F 0x5F))
 (instruction MAXSD (dst src) "maxsd $dst, $src" (= dst (fmax (as-f64 dst) (as-f64 src))))
 (encoding MAXSD (Vsd Wsd) (repnz 0x0F 0x5F))
 
-(instruction SQRTPD (dst src) "sqrtpd $dst, $src" (intrinsic sqrtpd dst src))
+(instruction SQRTPD (dst src) "sqrtpd $dst, $src" (= dst (vfun src 64 0)))
 (encoding SQRTPD (Vpd Wpd) (opsize 0x0F 0x51))
 (instruction SQRTSD (dst src) "sqrtsd $dst, $src" (= dst (fsqrt (as-f64 src))))
 (encoding SQRTSD (Vsd Wsd) (repnz 0x0F 0x51))

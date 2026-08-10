@@ -279,6 +279,44 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vfminmax(&mut self, a: IVal, b: IVal, ew: u32, is_max: bool) -> IVal {
+        let mut r = 0u128;
+        match ew {
+            32 => for i in 0..4u32 {
+                let (fa, fb) = (f32::from_bits((a.bits>>(i*32)) as u32),
+                                f32::from_bits((b.bits>>(i*32)) as u32));
+                let pick_a = if is_max { fa > fb } else { fa < fb };
+                let v = if pick_a { fa.to_bits() } else { fb.to_bits() };
+                r |= (v as u128) << (i*32);
+            },
+            64 => for i in 0..2u32 {
+                let (fa, fb) = (f64::from_bits((a.bits>>(i*64)) as u64),
+                                f64::from_bits((b.bits>>(i*64)) as u64));
+                let pick_a = if is_max { fa > fb } else { fa < fb };
+                let v = if pick_a { fa.to_bits() } else { fb.to_bits() };
+                r |= (v as u128) << (i*64);
+            },
+            _ => panic!("vfminmax ew={ew}"),
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
+    fn vfun(&mut self, a: IVal, ew: u32, op: u32) -> IVal {
+        let mut r = 0u128;
+        match ew {
+            32 => for i in 0..4u32 {
+                let f = f32::from_bits((a.bits >> (i*32)) as u32);
+                let fr = match op { 0 => f.sqrt(), _ => panic!("vfun op={op}") };
+                r |= (fr.to_bits() as u128) << (i*32);
+            },
+            64 => for i in 0..2u32 {
+                let f = f64::from_bits((a.bits >> (i*64)) as u64);
+                let fr = match op { 0 => f.sqrt(), _ => panic!("vfun op={op}") };
+                r |= (fr.to_bits() as u128) << (i*64);
+            },
+            _ => panic!("vfun ew={ew}"),
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vmovmsk(&mut self, a: IVal, ew: u32) -> IVal {
         let n = 128 / ew;
         let mut r = 0u32;
