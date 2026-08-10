@@ -1,5 +1,8 @@
 ﻿.idea
-bin/
+# bin/ over-matched Rust src/bin/ — anchor to actual build-output dirs
+/bin/
+**/obj/bin/
+!**/src/bin/
 obj/
 *.DotSettings.user
 *.log
