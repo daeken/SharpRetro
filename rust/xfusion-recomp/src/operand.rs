@@ -129,8 +129,16 @@ pub fn write_operand<B: Builder>(bd: &mut B, op: &Operand<B::Val>, v: B::Val)
             let merged = bd.or(kept, vm);
             bd.reg_write(GPR, idx as u32, merged);
         }
-        Operand::Mem { addr, width: _ } => {
-            bd.mem_write(addr, v);
+        Operand::Mem { addr, width } => {
+            // Cast v to the operand's width first — mem_write's dispatch is on
+            // v's TYPE, and callers may pass Bool (SETcc: `(= dst OF)` where dst
+            // is Eb-mem → flag-read is Bool → tier-0 mem_write panics; wall #27
+            // @0x14086b45e `setz [rbp+0x67]` inside CP2077's step-10 Renderer).
+            // The reg-arms already cast (8/16 RMW does cast(v,U64); 32 does
+            // cast(v,U32)); the mem-arm didn't. cast(Bool,U8) → cmp+cset (own
+            // #117's fix). Also normalizes any ill-typed v to the store width.
+            let vc = bd.cast(v, ilty(width as u32));
+            bd.mem_write(addr, vc);
         }
         Operand::Imm { .. } => panic!("write to Imm operand"),
         Operand::Xmm { idx, .. } => {
