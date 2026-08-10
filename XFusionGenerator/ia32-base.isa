@@ -80,24 +80,42 @@
 
 ; --- bit scan: bare = bsf/bsr; F3-prefixed = tzcnt/lzcnt (BMI/LZCNT feature-wise,
 ; but present in the base map as prefix-discriminated rows) ---
+; BSR/BSF: bit-scan reverse/forward. src==0 → ZF=1, dst UNDEFINED per SDM
+; (Intel: unchanged; AMD: undefined; compilers always guard with test-first).
+; v1 = Intel behavior (dst unchanged on src==0). ‡ CF/OF/SF/AF/PF undefined — not written.
+; BSF = position of LOWEST set bit = clz(rbit(src)) (aarch64 has no ctz).
+; BSR = position of HIGHEST set bit = (opw-1) - clz(src).
 (instruction BSF (dst src)
     "bsf $dst, $src"
-    (intrinsic bsf dst src))
+    (mlet (z (== src 0))
+        (= ZF z)
+        (if (! z) (= dst (clz (rbit src))))))
 (encoding BSF (Gv Ev) (0x0F 0xBC))
 
+; TZCNT/LZCNT (BMI/LZCNT features, F3-prefixed BSF/BSR): DEFINED on src==0
+; (returns opw). CF = (src==0), ZF = (result==0).
 (instruction TZCNT (dst src)
     "tzcnt $dst, $src"
-    (intrinsic tzcnt dst src))
+    (mlet (r (clz (rbit src)))
+        (= dst r)
+        (= CF (== src 0))
+        (= ZF (== r 0))))
 (encoding TZCNT (Gv Ev) (rep 0x0F 0xBC))
 
 (instruction BSR (dst src)
     "bsr $dst, $src"
-    (intrinsic bsr dst src))
+    (mlet (z (== src 0)
+           w1 (- (bitwidth src) 1))
+        (= ZF z)
+        (if (! z) (= dst (- w1 (clz src))))))
 (encoding BSR (Gv Ev) (0x0F 0xBD))
 
 (instruction LZCNT (dst src)
     "lzcnt $dst, $src"
-    (intrinsic lzcnt dst src))
+    (mlet (r (clz src))
+        (= dst r)
+        (= CF (== src 0))
+        (= ZF (== r 0))))
 (encoding LZCNT (Gv Ev) (rep 0x0F 0xBD))
 
 (instruction POPCNT (dst src)

@@ -340,6 +340,8 @@ public class RustLiftGen {
         var head = l[0] is PName(var h) ? h : throw new NotSupportedException(l[0].ToString());
         switch(head) {
             case "u8":  return Rt($"bd.cast({Expr(l[1])}, IlType::U8)");
+            case "clz": return Rt($"bd.clz({Expr(l[1])})");
+            case "rbit": return Rt($"bd.rbit({Expr(l[1])})");
             case "f64": return Rt($"bd.cast({Expr(l[1])}, IlType::F{{width:64}})");
             case "f32": return Rt($"bd.cast({Expr(l[1])}, IlType::F{{width:32}})");
             // (as-f64 x): reinterpret u64 bits AS f64 (bitcast, no conversion).
