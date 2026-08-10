@@ -146,7 +146,7 @@ impl BlockCache {
                 ef(sp, spp);
                 hot += 1;
             }
-            entry.exec_count = entry.exec_count.saturating_add(hot);
+            entry.exec_count = entry.exec_count.saturating_add(hot as u32);
             self.n_execs += hot as usize;
             self.n_execs += 1;
         }
