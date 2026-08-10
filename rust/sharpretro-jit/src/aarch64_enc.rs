@@ -144,6 +144,23 @@ impl Aarch64Enc {
     // FCVT Dd, Sn / FCVT Sd, Dn — f32↔f64.
     pub fn fcvt_d_s(&mut self, dd: u32, sn: u32) { self.put(0x1E22C000 | (sn<<5) | dd); }
     pub fn fcvt_s_d(&mut self, sd: u32, dn: u32) { self.put(0x1E624000 | (dn<<5) | sd); }
+    // Scalar float arith: FADD/FSUB/FMUL/FDIV Dd,Dn,Dm and Sd,Sn,Sm.
+    pub fn fadd_d(&mut self, dd: u32, dn: u32, dm: u32) { self.put(0x1E602800 | (dm<<16) | (dn<<5) | dd); }
+    pub fn fsub_d(&mut self, dd: u32, dn: u32, dm: u32) { self.put(0x1E603800 | (dm<<16) | (dn<<5) | dd); }
+    pub fn fmul_d(&mut self, dd: u32, dn: u32, dm: u32) { self.put(0x1E600800 | (dm<<16) | (dn<<5) | dd); }
+    pub fn fdiv_d(&mut self, dd: u32, dn: u32, dm: u32) { self.put(0x1E601800 | (dm<<16) | (dn<<5) | dd); }
+    pub fn fadd_s(&mut self, sd: u32, sn: u32, sm: u32) { self.put(0x1E202800 | (sm<<16) | (sn<<5) | sd); }
+    pub fn fsub_s(&mut self, sd: u32, sn: u32, sm: u32) { self.put(0x1E203800 | (sm<<16) | (sn<<5) | sd); }
+    pub fn fmul_s(&mut self, sd: u32, sn: u32, sm: u32) { self.put(0x1E200800 | (sm<<16) | (sn<<5) | sd); }
+    pub fn fdiv_s(&mut self, sd: u32, sn: u32, sm: u32) { self.put(0x1E201800 | (sm<<16) | (sn<<5) | sd); }
+    // FSQRT/FNEG/FABS Dd,Dn (scalar).
+    pub fn fsqrt_d(&mut self, dd: u32, dn: u32) { self.put(0x1E61C000 | (dn<<5) | dd); }
+    pub fn fneg_d(&mut self, dd: u32, dn: u32)  { self.put(0x1E614000 | (dn<<5) | dd); }
+    pub fn fabs_d(&mut self, dd: u32, dn: u32)  { self.put(0x1E60C000 | (dn<<5) | dd); }
+    pub fn fsqrt_s(&mut self, sd: u32, sn: u32) { self.put(0x1E21C000 | (sn<<5) | sd); }
+    // FCMP Dn,Dm — sets NZCV. For UCOMISD → eflags mapping.
+    pub fn fcmp_d(&mut self, dn: u32, dm: u32) { self.put(0x1E602000 | (dm<<16) | (dn<<5)); }
+    pub fn fcmp_s(&mut self, sn: u32, sm: u32) { self.put(0x1E202000 | (sm<<16) | (sn<<5)); }
     pub fn mul_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x9B007C00 | (xm<<16) | (xn<<5) | xd); }
     // ADD Xd, Xn, #imm12
     pub fn add_i(&mut self, xd: u32, xn: u32, imm12: u32) {
