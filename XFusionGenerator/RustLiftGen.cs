@@ -369,6 +369,18 @@ public class RustLiftGen {
             // (as-f64 x): reinterpret u64 bits AS f64 (bitcast, no conversion).
             // For reading Wsd/Wss operands (xmm-lane bits) as float before fcvtzs/fcvt.
             case "fsqrt": return Rt($"bd.fsqrt({Expr(l[1])})");
+            case "fisnan": return Rt($"bd.fisnan({Expr(l[1])})");
+            case "fcmpp": {
+                // (fcmpp a b pred-op w) — CMPSS/SD 8-predicate compare → mask.
+                // pred-op is the Ib operand; extract its .value at Rust-runtime.
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var predOp = ParamOp(((PName)l[3]).Name);
+                var w = ((PInt)l[4]).Value;
+                var predv = Rt($"if let Operand::Imm{{value,..}} = {predOp} {{ *value as u32 }} else {{ unreachable!() }}");
+                return Rt($"bd.fcmpp({a}, {b}, {predv}, {w})");
+            }
+            case "flt": return Rt($"bd.lt({Expr(l[1])}, {Expr(l[2])})");
+            case "feq": return Rt($"bd.eq({Expr(l[1])}, {Expr(l[2])})");
             case "as-f64": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:64}})");
             case "as-f32": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:32}})");
             case "int-of": {

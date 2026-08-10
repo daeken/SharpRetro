@@ -208,6 +208,22 @@ impl Tier0 {
         self.store(X_A, s);
         s
     }
+    /// Float compare → NZCV → cset(cond) → 0/1. FCMP NZCV: eq→0110 lt→1000
+    /// gt→0010 unord→0011. So: EQ(Z=1)=eq, MI(N=1)=lt, GT(!Z&&N==V)=gt,
+    /// VS(V=1)=unord, LS(!C||Z)=le-ordered, HI(C&&!Z)=gt-or-unord,
+    /// LT(N!=V)=lt-or-unord (= x86 COMISS's CF).
+    fn fcmp_op(&mut self, a: u32, b: u32, cond: Cond) -> u32 {
+        let s = self.slot(IlType::Bool);
+        let f64 = matches!(self.tys[a as usize], IlType::F{width:64});
+        self.load(X_A, a);
+        if f64 { self.enc.fmov_d_x(0, X_A); } else { self.enc.fmov_s_w(0, X_A); }
+        self.load(X_A, b);
+        if f64 { self.enc.fmov_d_x(1, X_A); } else { self.enc.fmov_s_w(1, X_A); }
+        if f64 { self.enc.fcmp_d(0, 1); } else { self.enc.fcmp_s(0, 1); }
+        self.enc.cset(X_A, cond);
+        self.store(X_A, s);
+        s
+    }
 }
 
 impl Builder for Tier0 {
@@ -706,9 +722,14 @@ impl Builder for Tier0 {
         // adjust. Panic if hit; the fuzz-diff will name it.
         self.una(a, t, move |e| if w32 { e.clz_w(X_A, X_A) } else { e.clz(X_A, X_A) }) }
 
-    fn eq(&mut self, a: u32, b: u32) -> u32 { self.cmp_op(a, b, Cond::EQ) }
-    fn ne(&mut self, a: u32, b: u32) -> u32 { self.cmp_op(a, b, Cond::NE) }
+    fn eq(&mut self, a: u32, b: u32) -> u32 {
+        if matches!(self.tys[a as usize], IlType::F{..}) { return self.fcmp_op(a, b, Cond::EQ); }
+        self.cmp_op(a, b, Cond::EQ) }
+    fn ne(&mut self, a: u32, b: u32) -> u32 {
+        if matches!(self.tys[a as usize], IlType::F{..}) { return self.fcmp_op(a, b, Cond::NE); }
+        self.cmp_op(a, b, Cond::NE) }
     fn lt(&mut self, a: u32, b: u32) -> u32 {
+        if matches!(self.tys[a as usize], IlType::F{..}) { return self.fcmp_op(a, b, Cond::MI); }
         let s = matches!(self.tys[a as usize], IlType::I{signed:true, ..});
         self.cmp_op(a, b, if s { Cond::LT } else { Cond::CC }) }
     fn le(&mut self, a: u32, b: u32) -> u32 {
@@ -850,7 +871,35 @@ impl Builder for Tier0 {
     }
     fn fceil(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
     fn ffloor(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
-    fn fisnan(&mut self, _: u32) -> u32 { panic!("tier-0 v1: float ops") }
+    fn fisnan(&mut self, a: u32) -> u32 {
+        // NaN is unordered vs itself → fcmp a,a sets V=1 iff NaN.
+        self.fcmp_op(a, a, Cond::VS)
+    }
+    fn fcmpp(&mut self, a: u32, b: u32, pred: u32, w: u32) -> u32 {
+        // x86 CMPSS/SD predicate → ARM FCMP+cond, 1:1 (verified against the
+        // NZCV table: eq→0110 lt→1000 gt→0010 unord→0011). All 8 preds map
+        // to a SINGLE cond — no compound needed:
+        //   0 EQ→EQ   1 LT→MI   2 LE→LS   3 UNORD→VS
+        //   4 NEQ→NE  5 NLT→PL  6 NLE→HI  7 ORD→VC
+        // Then 0/1 → all-0/all-1 mask at width w via neg.
+        let cond = match pred & 7 {
+            0 => Cond::EQ, 1 => Cond::MI, 2 => Cond::LS, 3 => Cond::VS,
+            4 => Cond::NE, 5 => Cond::PL, 6 => Cond::HI, 7 => Cond::VC,
+            _ => unreachable!(),
+        };
+        let s = self.slot(IlType::I{signed:false, width: w as u8});
+        let f64 = matches!(self.tys[a as usize], IlType::F{width:64});
+        self.load(X_A, a);
+        if f64 { self.enc.fmov_d_x(0, X_A); } else { self.enc.fmov_s_w(0, X_A); }
+        self.load(X_A, b);
+        if f64 { self.enc.fmov_d_x(1, X_A); } else { self.enc.fmov_s_w(1, X_A); }
+        if f64 { self.enc.fcmp_d(0, 1); } else { self.enc.fcmp_s(0, 1); }
+        self.enc.cset(X_A, cond);
+        self.enc.sub_r(X_A, 31, X_A);   // neg: 0→0, 1→0xFF..FF (all-1s)
+        if w < 64 { self.enc.and_lowmask(X_A, X_A, w); }
+        self.store(X_A, s);
+        s
+    }
     fn fround(&mut self, _: u32, _: RoundMode) -> u32 { panic!("tier-0 v1: float ops") }
     fn velement_read(&mut self, _: u32, _: u32, _: IlType) -> u32 { panic!("tier-0 v1: vec") }
     fn velement_write(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-0 v1: vec") }

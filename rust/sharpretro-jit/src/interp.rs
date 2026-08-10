@@ -300,6 +300,29 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         IlType::F{width:32} => IVal::f32(a.as_f32().ceil()), _ => IVal::f64(a.as_f64().ceil()) } }
     fn ffloor(&mut self, a: IVal) -> IVal { match a.ty {
         IlType::F{width:32} => IVal::f32(a.as_f32().floor()), _ => IVal::f64(a.as_f64().floor()) } }
+    fn fcmpp(&mut self, a: IVal, b: IVal, pred: u32, w: u32) -> IVal {
+        // Rust f64 comparison ops are IEEE (NaN-aware): NaN<x=false,
+        // NaN==x=false, NaN!=x=true. Preds 0-2 ordered (NaN→false),
+        // 4-6 = NOT(0-2) so NaN→true. Matches x86 SDM exactly.
+        let (fa, fb) = match a.ty {
+            IlType::F{width:32} => (a.as_f32() as f64, b.as_f32() as f64),
+            _ => (a.as_f64(), b.as_f64()),
+        };
+        let unord = fa.is_nan() || fb.is_nan();
+        let r = match pred & 7 {
+            0 => fa == fb,          // EQ (ordered)
+            1 => fa < fb,           // LT (ordered)
+            2 => fa <= fb,          // LE (ordered)
+            3 => unord,             // UNORD
+            4 => !(fa == fb),       // NEQ (= a≠b || unord, since NaN==x is false)
+            5 => !(fa < fb),        // NLT (= a>=b || unord)
+            6 => !(fa <= fb),       // NLE (= a>b || unord)
+            7 => !unord,            // ORD
+            _ => unreachable!(),
+        };
+        let mask = if r { (1u128 << w) - 1 } else { 0 };
+        IVal { ty: IlType::I{signed:false, width: w as u8}, bits: mask }
+    }
     fn fisnan(&mut self, a: IVal) -> IVal { IVal::b(match a.ty {
         IlType::F{width:32} => a.as_f32().is_nan(), _ => a.as_f64().is_nan() }) }
     fn fround(&mut self, a: IVal, m: RoundMode) -> IVal {

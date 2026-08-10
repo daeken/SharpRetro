@@ -85,14 +85,25 @@
 (encoding XORPD (Vpd Wpd) (opsize 0x0F 0x57))
 
 ; --- compares ---
-(instruction UCOMISD (a b) "ucomisd $a, $b" (intrinsic ucomisd a b))
+(instruction UCOMISD (a b) "ucomisd $a, $b"
+    (mlet (fa (as-f64 a) fb (as-f64 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
 (encoding UCOMISD (Vsd Wsd) (opsize 0x0F 0x2E))
-(instruction COMISD (a b) "comisd $a, $b" (intrinsic comisd a b))
+(instruction COMISD (a b) "comisd $a, $b"
+    (mlet (fa (as-f64 a) fb (as-f64 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
 (encoding COMISD (Vsd Wsd) (opsize 0x0F 0x2F))
 
 (instruction CMPPD (dst src pred) "cmppd $dst, $src, $pred" (intrinsic cmppd dst src pred))
 (encoding CMPPD (Vpd Wpd Ib) (opsize 0x0F 0xC2))
-(instruction CMPSD-X (dst src pred) "cmpsd $dst, $src, $pred" (intrinsic cmpsd-x dst src pred))
+(instruction CMPSD-X (dst src pred) "cmpsd $dst, $src, $pred"
+    (= dst (fcmpp (as-f64 dst) (as-f64 src) pred 64)))
 (encoding CMPSD-X (Vsd Wsd Ib) (repnz 0x0F 0xC2))
 
 ; SHUFPD: dst[0]=dst[sel[0]], dst[1]=src[sel[1]]. vshuf @ew=64.

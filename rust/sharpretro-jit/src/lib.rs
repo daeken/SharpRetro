@@ -180,6 +180,11 @@ pub trait Builder {
     fn fceil(&mut self, a: Self::Val) -> Self::Val;
     fn ffloor(&mut self, a: Self::Val) -> Self::Val;
     fn fisnan(&mut self, a: Self::Val) -> Self::Val;
+    /// x86 CMPSS/CMPSD/CMPPS/CMPPD predicate compare → all-1s/all-0 mask
+    /// at width `w` (32 or 64). pred (imm8[2:0]): 0=EQ 1=LT 2=LE 3=UNORD
+    /// 4=NEQ 5=NLT 6=NLE 7=ORD. Preds 0-2 are ordered (NaN→false), 4-6
+    /// are their inverses (NaN→true). a,b are F{w}-typed scalars.
+    fn fcmpp(&mut self, a: Self::Val, b: Self::Val, pred: u32, w: u32) -> Self::Val;
 
     // ── vector (Element/ZeroTop/VectorSumUnsigned + the VectorMath heads) ───
     /// Read lane `i` of a V128 as `elem_ty`.

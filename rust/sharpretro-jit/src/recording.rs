@@ -75,6 +75,9 @@ impl Builder for RecordingBuilder {
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
         self.v(format!("vshuf v{a} v{b} @{ew}b sel=0x{sel:02x}"))
     }
+    fn fcmpp(&mut self, a: u32, b: u32, p: u32, w: u32) -> u32 {
+        self.v(format!("fcmpp[{p}] v{a} v{b} → mask@{w}"))
+    }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         self.v(format!("vzip{} v{a} v{b} @{ew}b", if hi {"H"} else {"L"}))
     }

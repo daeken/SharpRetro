@@ -101,14 +101,32 @@
 (encoding XORPS (Vps Wps) (0x0F 0x57))
 
 ; --- compares ---
-(instruction UCOMISS (a b) "ucomiss $a, $b" (intrinsic ucomiss a b))
+(instruction UCOMISS (a b) "ucomiss $a, $b"
+    (mlet (fa (as-f32 a) fb (as-f32 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
 (encoding UCOMISS (Vss Wss) (0x0F 0x2E))
-(instruction COMISS (a b) "comiss $a, $b" (intrinsic comiss a b))
+; COMISS/UCOMISS: compare scalar single, set eflags:
+;   unord (either NaN): ZF=PF=CF=1 | a>b: 0,0,0 | a<b: 0,0,1 | a==b: 1,0,0.
+; OF/SF/AF cleared. UCOMISS = same flags (differs only on SNaN #IA — not modeled).
+; PF = unordered; CF = a<b || unord; ZF = a==b || unord.
+(instruction COMISS (a b) "comiss $a, $b"
+    (mlet (fa (as-f32 a) fb (as-f32 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
 (encoding COMISS (Vss Wss) (0x0F 0x2F))
 
+; CMPPS packed — v1 stays intrinsic (needs per-lane fcmpp; 338 corpus).
 (instruction CMPPS (dst src pred) "cmpps $dst, $src, $pred" (intrinsic cmpps dst src pred))
 (encoding CMPPS (Vps Wps Ib) (0x0F 0xC2))
-(instruction CMPSS (dst src pred) "cmpss $dst, $src, $pred" (intrinsic cmpss dst src pred))
+; CMPSS: dst[31:0] = mask(pred(dst.f32, src.f32)), dst[127:32] preserved.
+; pred = imm8[2:0] (0=EQ 1=LT 2=LE 3=UNORD 4=NEQ 5=NLT 6=NLE 7=ORD).
+(instruction CMPSS (dst src pred) "cmpss $dst, $src, $pred"
+    (= dst (fcmpp (as-f32 dst) (as-f32 src) pred 32)))
 (encoding CMPSS (Vss Wss Ib) (rep 0x0F 0xC2))
 
 ; SHUFPS: dst[0,1] from dst[sel[1:0],sel[3:2]], dst[2,3] from src[sel[5:4],sel[7:6]].
