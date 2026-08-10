@@ -224,7 +224,7 @@ public static class LiftTables {
 		("PCMPGTB", "dst src", "(block (= dst (vibin dst src 0x8 0x4)))"),
 		("PCMPGTW", "dst src", "(block (= dst (vibin dst src 0x10 0x4)))"),
 		("PCMPGTD", "dst src", "(block (= dst (vibin dst src 0x20 0x4)))"),
-		("PMOVMSKB", "dst src", "(block (intrinsic pmovmskb dst src))"),
+		("PMOVMSKB", "dst src", "(block (= dst (vmovmsk src 0x8)))"),
 		("PADDB", "dst src", "(block (= dst (vibin dst src 0x8 0x0)))"),
 		("PADDW", "dst src", "(block (= dst (vibin dst src 0x10 0x0)))"),
 		("PADDD", "dst src", "(block (= dst (vibin dst src 0x20 0x0)))"),

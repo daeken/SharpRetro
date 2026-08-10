@@ -156,7 +156,10 @@
 (instruction PCMPGTD (dst src) "pcmpgtd $dst, $src" (= dst (vibin dst src 32 4)))
 (encoding PCMPGTD (Vdq Wdq) (opsize 0x0F 0x66))
 
-(instruction PMOVMSKB (dst src) "pmovmskb $dst, $src" (intrinsic pmovmskb dst src))
+; PMOVMSKB: dst = 16-bit mask, bit i = sign of src.b[i]. Upper GPR bits zeroed.
+; (The pcmpeqb+pmovmskb pair = SSE2 strlen/memchr — the fallback path from
+; dropping SSE4.2/PCMPISTRI in cpuid.)
+(instruction PMOVMSKB (dst src) "pmovmskb $dst, $src" (= dst (vmovmsk src 8)))
 (encoding PMOVMSKB (Gd Udq) (opsize 0x0F 0xD7))
 
 ; --- integer xmm: arithmetic/logic ---

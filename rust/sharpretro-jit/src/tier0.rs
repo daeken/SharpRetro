@@ -488,6 +488,27 @@ impl Builder for Tier0 {
         let s = self.slot(IlType::I{signed:false, width:32});
         self.load2(X_A, X_C, a);
         match ew {
+            8 => {
+                // PMOVMSKB: 16 byte-signs → 16-bit mask. Per-half 8-bit
+                // extract (bit i = bit 8i+7 of the u64), then combine
+                // hi<<8 | lo. tier-0 dumb-correct (~48 insns); the smart
+                // NEON path (sshr#7 + AND-mask-const + ADDV) is a later
+                // opt (needs a rodata constant or movi cmode games).
+                // Inline half-extract macro (can't be a self-method inside
+                // the trait impl):
+                macro_rules! half { ($xd:expr, $xs:expr) => {{
+                    self.enc.lsr_i($xd, $xs, 7);
+                    self.enc.and_lowmask($xd, $xd, 1);
+                    for i in 1..8u32 {
+                        self.enc.lsr_i(X_D, $xs, 8*i + 7);
+                        self.enc.and_lowmask(X_D, X_D, 1);
+                        self.enc.orr_lsl($xd, $xd, X_D, i);
+                    }
+                }}}
+                half!(X_B, X_A);   // lo 8 bits → X_B
+                half!(X_A, X_C);   // hi 8 bits → X_A (X_C source, X_A dest — X_A no longer needed as lo-src)
+                self.enc.orr_lsl(X_A, X_B, X_A, 8); // X_A = lo | hi<<8
+            }
             64 => {
                 // bit0 = X_A>>63, bit1 = X_C>>63 → X_A | (X_C<<1)
                 self.enc.lsr_i(X_A, X_A, 63);

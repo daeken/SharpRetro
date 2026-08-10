@@ -177,10 +177,8 @@ pub trait Builder {
     /// dir∈{0=shl,1=lshr,2=ashr}. count is compile-time-known (Ib).
     /// x86 semantics: count >= ew → result=0 (shl/lshr) or all-sign (ashr).
     fn vishi(&mut self, a: Self::Val, ew: u32, count: u32, dir: u32) -> Self::Val;
-    /// MOVMSKPS/PD: extract per-lane sign bit → GPR bitmask. ew=32 → 4-bit
-    /// mask (bit i = lane i's sign), ew=64 → 2-bit. Result is U32-typed.
-    /// PMOVMSKB (ew=8 → 16-bit) not covered here (needs a different NEON
-    /// path — CMLT.16B+bit-gather; separate primitive when it walls).
+    /// MOVMSKPS/PD/PMOVMSKB: extract per-lane sign bit → GPR bitmask.
+    /// ew=32 → 4-bit mask, ew=64 → 2-bit, ew=8 → 16-bit. Result is U32.
     fn vmovmsk(&mut self, a: Self::Val, ew: u32) -> Self::Val;
     /// Packed-float unary: per-lane float op on V128, ew∈{32,64},
     /// op ∈ {0=sqrt}. SQRTPS/SQRTPD. (fabs/fneg later via op=1/2.)
