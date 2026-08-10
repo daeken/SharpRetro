@@ -155,8 +155,9 @@ impl Tier0 {
     fn mask_to(&mut self, ty: IlType) {
         if let IlType::I{width, ..} = ty {
             if width < 64 {
-                self.enc.mov_imm64(X_B, (1u64 << width) - 1);
-                self.enc.and_r(X_A, X_A, X_B);
+                // Logical-immediate AND: (1<<w)-1 encodes as N=1,immr=0,imms=w-1.
+                // Was mov_imm64(mask)+and_r (2-3 insns) → 1 insn.
+                self.enc.and_lowmask(X_A, X_A, width as u32);
             }
         }
     }

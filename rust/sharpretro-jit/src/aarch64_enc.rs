@@ -60,6 +60,14 @@ impl Aarch64Enc {
         self.put(0xF2800000 | (hw << 21) | (imm16 << 5) | xd);
     }
     /// Load a 64-bit constant into Xd (1-4 movz/movk insns; skips zero halfwords).
+    /// AND Xd, Xn, #(1<<w)-1 — mask to low w bits, ONE insn via the logical-
+    /// immediate encoding (N=1, immr=0, imms=w-1 for a w-run of 1s from bit 0).
+    /// w ∈ [1,63]. The mask_to() workhorse: was mov_imm64+and_r (2-3 insns).
+    pub fn and_lowmask(&mut self, xd: u32, xn: u32, w: u32) {
+        debug_assert!(w >= 1 && w < 64);
+        // AND (immediate), 64-bit: sf=1 opc=00 100100 N=1 immr=0 imms=w-1 Rn Rd
+        self.put(0x92400000 | ((w-1)<<10) | (xn<<5) | xd);
+    }
     // MOVN Xd, #imm16, LSL #(hw*16) — Xd = ~(imm16 << hw*16).
     pub fn movn(&mut self, xd: u32, imm16: u32, hw: u32) {
         debug_assert!(imm16 < 0x10000 && hw < 4);

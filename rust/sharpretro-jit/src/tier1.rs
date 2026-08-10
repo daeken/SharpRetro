@@ -248,9 +248,9 @@ impl<'a> Emitter<'a> {
 
     fn mask_to(&mut self, xd: u32, w: u32) {
         if w >= 64 { return; }
-        // For w<64: and xd, xd, #(1<<w)-1. mov_imm64 into scratch then and.
-        self.enc.mov_imm64(X_S2, (1u64 << w) - 1);
-        self.enc.and_r(xd, xd, X_S2);
+        // (1<<w)-1 encodes as a single logical-immediate AND (N=1,immr=0,imms=w-1).
+        // Was mov_imm64+and_r (2-3 insns).
+        self.enc.and_lowmask(xd, xd, w);
     }
 
     fn emit_op(&mut self, op_idx: usize, op: &IlOp) {
