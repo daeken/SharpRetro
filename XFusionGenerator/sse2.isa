@@ -242,9 +242,10 @@
 ; vshuf w/ a=b=src → low+high halves both source from src.
 (instruction PSHUFD (dst src sel) "pshufd $dst, $src, $sel" (= dst (vshuf src src sel 32)))
 (encoding PSHUFD (Vdq Wdq Ib) (opsize 0x0F 0x70))
-(instruction PSHUFLW (dst src sel) "pshuflw $dst, $src, $sel" (intrinsic pshuflw dst src sel))
+; PSHUFLW: dst.w[0..3] = src.w[sel[2i+1:2i]], dst.w[4..7] = src.w[4..7] (copied). All from src.
+(instruction PSHUFLW (dst src sel) "pshuflw $dst, $src, $sel" (= dst (vshufw src sel #f)))
 (encoding PSHUFLW (Vdq Wdq Ib) (repnz 0x0F 0x70))
-(instruction PSHUFHW (dst src sel) "pshufhw $dst, $src, $sel" (intrinsic pshufhw dst src sel))
+(instruction PSHUFHW (dst src sel) "pshufhw $dst, $src, $sel" (= dst (vshufw src sel #t)))
 (encoding PSHUFHW (Vdq Wdq Ib) (rep 0x0F 0x70))
 
 ; --- converts ---

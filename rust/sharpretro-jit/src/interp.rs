@@ -279,6 +279,20 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::V128, bits: r }
     }
+    fn vshufw(&mut self, src: IVal, sel: u32, hi: bool) -> IVal {
+        let base = if hi { 4u32 } else { 0 };
+        let mut r = src.bits;
+        // Clear the target half, then fill from sel-picked words of the
+        // SAME half of src.
+        let half_mask: u128 = 0xFFFF_FFFF_FFFF_FFFF;
+        r &= !(half_mask << (base*16));
+        for i in 0..4u32 {
+            let j = (sel >> (i*2)) & 3;
+            let w = (src.bits >> ((base+j)*16)) & 0xFFFF;
+            r |= w << ((base+i)*16);
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vshuf(&mut self, a: IVal, b: IVal, ew: u32, sel: u32) -> IVal {
         let n = 128 / ew;
         let m = (1u128 << ew) - 1;

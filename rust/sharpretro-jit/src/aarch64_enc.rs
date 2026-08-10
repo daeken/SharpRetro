@@ -191,6 +191,18 @@ impl Aarch64Enc {
         // INS Vd.D[i], Xn: 0x4E081C00 | (imm5=1<<3|i<<4)<<16 | Rn<<5 | Rd
         self.put(0x4E081C00 | ((i<<4)<<16) | (xn<<5) | vd);
     }
+    /// INS Vd.H[i], Vn.H[j] — copy one 16-bit lane between vector regs.
+    /// size=H: imm5 = (i<<2)|0b10, imm4 = j<<1.
+    pub fn ins_vh_vh(&mut self, vd: u32, i: u32, vn: u32, j: u32) {
+        debug_assert!(i < 8 && j < 8);
+        let imm5 = (i << 2) | 0b10;
+        let imm4 = j << 1;
+        self.put(0x6E000400 | (imm5<<16) | (imm4<<11) | (vn<<5) | vd);
+    }
+    /// MOV Vd.16B, Vn.16B (= ORR Vd.16B, Vn.16B, Vn.16B) — full vector copy.
+    pub fn mov_v(&mut self, vd: u32, vn: u32) {
+        self.put(0x4EA01C00 | (vn<<16) | (vn<<5) | vd);
+    }
     /// INS Vd.S[i], Vn.S[j] — copy one 32-bit lane between vector regs.
     /// Encoding: 0x6E000400 | imm5<<16 | imm4<<11 | Rn<<5 | Rd, where for
     /// size=S: imm5 = (i<<3)|0b100, imm4 = j<<2. (Arm ARM C7.2.176 INS-elem.)

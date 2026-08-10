@@ -443,6 +443,14 @@ public class RustLiftGen {
                 var hi = l[4] is PName("#t") ? "true" : "false";
                 return Rt($"bd.vzip({a}, {b}, {ew}, {hi})");
             }
+            case "vshufw": {
+                // (vshufw src sel-op hi) — PSHUFLW/PSHUFHW.
+                var a = Expr(l[1]);
+                var selOp = ParamOp(((PName)l[2]).Name);
+                var hi = l[3] is PName("#t") ? "true" : "false";
+                var selv = Rt($"if let Operand::Imm{{value,..}} = {selOp} {{ *value as u32 }} else {{ unreachable!() }}");
+                return Rt($"bd.vshufw({a}, {selv}, {hi})");
+            }
             case "vshuf": {
                 // (vshuf a b sel-op elw) — SHUFPS/PSHUFD/SHUFPD lane-select.
                 // sel-op is the Ib operand (compile-time-known); extract its

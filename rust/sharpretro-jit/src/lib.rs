@@ -172,6 +172,11 @@ pub trait Builder {
     /// PSHUFD: elem_bits=32, a==b (both from src), 4 lanes.
     /// sel is compile-time-constant (Ib) — tier-0/1 branch on it in codegen.
     fn vshuf(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, sel: u32) -> Self::Val;
+    /// PSHUFLW/PSHUFHW: shuffle 4× u16 words in ONE half of src per sel
+    /// (4×2-bit lane indices, each ∈0..3 within that half). Other half
+    /// COPIED from src unchanged. hi=false→PSHUFLW (shuffle words 0-3),
+    /// hi=true→PSHUFHW (words 4-7). All from src (not RMW).
+    fn vshufw(&mut self, src: Self::Val, sel: u32, hi: bool) -> Self::Val;
     /// Packed convert on V128. `kind`:
     ///   0 = CVTDQ2PS  (4× i32 → 4× f32)
     ///   1 = CVTTPS2DQ (4× f32 → 4× i32, truncate)

@@ -448,6 +448,22 @@ impl Builder for Tier0 {
         self.store2(X_A, X_C, s);
         s
     }
+    fn vshufw(&mut self, src: u32, sel: u32, hi: bool) -> u32 {
+        // Build q0=src, MOV q2←q0 (whole copy, preserves the un-shuffled half),
+        // then 4× INS v2.H[base+i], v0.H[base+j] (j from sel bits).
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, src);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.enc.mov_v(2, 0);
+        let base = if hi { 4 } else { 0 };
+        for i in 0..4u32 {
+            let j = (sel >> (i*2)) & 3;
+            self.enc.ins_vh_vh(2, base+i, 0, base+j);
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
         // Build q0=a, q1=b via X↔Q (same as vzip). Then N× INS q2.T[i], qS.T[j]
         // where S=(0 for i<N/2 else 1), j=(sel>>(i*bp))&mask. Extract q2 → store2.

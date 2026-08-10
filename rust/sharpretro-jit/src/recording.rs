@@ -75,6 +75,9 @@ impl Builder for RecordingBuilder {
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 {
         self.v(format!("vshuf v{a} v{b} @{ew}b sel=0x{sel:02x}"))
     }
+    fn vshufw(&mut self, a: u32, sel: u32, hi: bool) -> u32 {
+        self.v(format!("vshuf{}w v{a} sel=0x{sel:02x}", if hi {"H"} else {"L"}))
+    }
     fn vcvt(&mut self, a: u32, k: u32) -> u32 { self.v(format!("vcvt[{k}] v{a}")) }
     fn fcmpp(&mut self, a: u32, b: u32, p: u32, w: u32) -> u32 {
         self.v(format!("fcmpp[{p}] v{a} v{b} → mask@{w}"))
