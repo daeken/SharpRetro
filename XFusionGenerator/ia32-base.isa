@@ -118,9 +118,13 @@
         (= ZF (== r 0))))
 (encoding LZCNT (Gv Ev) (rep 0x0F 0xBD))
 
+; POPCNT: dst = number of set bits in src. Sets ZF=(result==0), CF=OF=SF=AF=PF=0.
 (instruction POPCNT (dst src)
     "popcnt $dst, $src"
-    (intrinsic popcnt dst src))
+    (mlet (r (popcnt src))
+        (= dst r)
+        (= ZF (== r 0))
+        (= CF 0) (= OF 0) (= SF 0) (= AF 0) (= PF 0)))
 (encoding POPCNT (Gv Ev) (rep 0x0F 0xB8))
 
 ; --- atomics ---

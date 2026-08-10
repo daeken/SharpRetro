@@ -871,6 +871,21 @@ impl Builder for Tier0 {
     fn rbit(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
         let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
         self.una(a, t, move |e| if w32 { e.rbit_w(X_A, X_A) } else { e.rbit(X_A, X_A) }) }
+    fn popcnt(&mut self, a: u32) -> u32 {
+        // aarch64 has no scalar popcnt. Idiom: X→d0 (upper bytes zeroed by
+        // fmov), CNT v0.8B (per-byte popcount), ADDV b0,v0.8B (sum → byte 0),
+        // fmov w←s0. Result ≤64 always fits u8 → any dst width. For width<64,
+        // the input is already masked to width by the caller (op_w-typed).
+        let ty = self.tys[a as usize];
+        let s = self.slot(ty);
+        self.load(X_A, a);
+        self.enc.fmov_d_x(0, X_A);
+        self.enc.cnt_v8b(0, 0);
+        self.enc.addv_b_8b(0, 0);
+        self.enc.fmov_w_s(X_A, 0);
+        self.store(X_A, s);
+        s
+    }
     fn clz(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
         let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
         // ‡ non-32/64 widths: interp does `(bits<<(128-w)).leading_zeros().min(w)`.

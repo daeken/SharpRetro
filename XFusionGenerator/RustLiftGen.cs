@@ -368,6 +368,7 @@ public class RustLiftGen {
             case "f32": return Rt($"bd.cast({Expr(l[1])}, IlType::F{{width:32}})");
             // (as-f64 x): reinterpret u64 bits AS f64 (bitcast, no conversion).
             // For reading Wsd/Wss operands (xmm-lane bits) as float before fcvtzs/fcvt.
+            case "popcnt": return Rt($"bd.popcnt({Expr(l[1])})");
             case "fsqrt": return Rt($"bd.fsqrt({Expr(l[1])})");
             case "fisnan": return Rt($"bd.fisnan({Expr(l[1])})");
             case "fcmpp": {

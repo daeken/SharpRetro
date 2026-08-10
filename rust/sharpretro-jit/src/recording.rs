@@ -61,7 +61,7 @@ impl Builder for RecordingBuilder {
     fn mem_write(&mut self, a: u32, v: u32) { self.stmt(format!("mem_write v{} v{}", a, v)) }
 
     bin!(add); bin!(sub); bin!(mul); bin!(div); bin!(rem); un!(neg);
-    bin!(and); bin!(or); bin!(xor); un!(not); bin!(shl); bin!(shr); bin!(rotr); un!(rbit); un!(clz);
+    bin!(and); bin!(or); bin!(xor); un!(not); bin!(shl); bin!(shr); bin!(rotr); un!(rbit); un!(clz); un!(popcnt);
     bin!(eq); bin!(ne); bin!(lt); bin!(le); bin!(gt); bin!(ge);
 
     fn cast(&mut self, a: u32, to: IlType) -> u32 { self.v(format!("cast v{} → {}", a, ty(to))) }

@@ -158,6 +158,14 @@ impl Aarch64Enc {
         self.put(0x6E20E400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
     }
     // (orr_v16b already exists below.)
+    // CNT Vd.8B, Vn.8B — per-byte popcount (Q=0, 8B) = 0x0E205800
+    pub fn cnt_v8b(&mut self, vd: u32, vn: u32) {
+        self.put(0x0E205800 | (vn<<5) | vd);
+    }
+    // ADDV Bd, Vn.8B — sum all 8 bytes into Bd = 0x0E31B800
+    pub fn addv_b_8b(&mut self, bd: u32, vn: u32) {
+        self.put(0x0E31B800 | (vn<<5) | bd);
+    }
     // MVN Vd.16B, Vn.16B (= NOT) = 0x6E205800
     pub fn mvn_v16b(&mut self, vd: u32, vn: u32) {
         self.put(0x6E205800 | (vn<<5) | vd);

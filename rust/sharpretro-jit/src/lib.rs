@@ -134,6 +134,7 @@ pub trait Builder {
     fn rotr(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;
     fn rbit(&mut self, a: Self::Val) -> Self::Val;
     fn clz(&mut self, a: Self::Val) -> Self::Val;
+    fn popcnt(&mut self, a: Self::Val) -> Self::Val;
 
     // ── compares (LT/LTE/EQ/NE/GTE/GT — signedness from operand IlType) → Bool ──
     fn eq(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;

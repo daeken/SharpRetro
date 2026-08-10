@@ -119,6 +119,7 @@ impl Builder for Tier1 {
     fn rotr(&mut self, a: u32, b: u32) -> u32 { self.rec.rotr(a, b) }
     fn rbit(&mut self, a: u32) -> u32 { self.rec.rbit(a) }
     fn clz(&mut self, a: u32) -> u32 { self.rec.clz(a) }
+    fn popcnt(&mut self, a: u32) -> u32 { self.rec.popcnt(a) }
     fn eq(&mut self, a: u32, b: u32) -> u32 { self.rec.eq(a, b) }
     fn ne(&mut self, a: u32, b: u32) -> u32 { self.rec.ne(a, b) }
     fn lt(&mut self, a: u32, b: u32) -> u32 { self.rec.lt(a, b) }

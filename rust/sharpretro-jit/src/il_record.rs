@@ -234,6 +234,7 @@ impl Builder for IlRecorder {
     bin!(and, And); bin!(or, Or); bin!(xor, Xor);
     bin!(shl, Shl); bin!(shr, Shr); bin!(rotr, Rotr);
     un!(neg, Neg); un!(not, Not); un!(rbit, Rbit); un!(clz, Clz);
+    fn popcnt(&mut self, _: u32) -> u32 { panic!("tier-1 v1: popcnt (needs V-reg)") }
     cmp!(eq, Eq); cmp!(ne, Ne); cmp!(lt, Lt); cmp!(le, Le); cmp!(gt, Gt); cmp!(ge, Ge);
 
     fn ternary(&mut self, c: u32, a: u32, b: u32) -> u32 {

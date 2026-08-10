@@ -190,6 +190,9 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         IVal { ty: a.ty, bits: mask((m >> s) | (m << (w - s)), w as u8) } }
     fn rbit(&mut self, a: IVal) -> IVal { let w = width_of(a.ty);
         IVal { ty: a.ty, bits: a.bits.reverse_bits() >> (128 - w) } }
+    fn popcnt(&mut self, a: IVal) -> IVal {
+        IVal { ty: a.ty, bits: a.bits.count_ones() as u128 }
+    }
     fn clz(&mut self, a: IVal) -> IVal { let w = width_of(a.ty);
         IVal::u(w, (a.bits << (128 - w)).leading_zeros().min(w as u32) as u128) }
 
