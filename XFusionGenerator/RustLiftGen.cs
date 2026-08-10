@@ -491,6 +491,14 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var ew = ((PInt)l[2]).Value;
                 return Rt($"bd.vmovmsk({a}, {ew})");
             }
+            case "vishi": {
+                // (vishi dst count-op ew dir) — packed shift-by-imm.
+                var a = Expr(l[1]);
+                var cntOp = ParamOp(((PName)l[2]).Name);
+                var ew = ((PInt)l[3]).Value; var dir = ((PInt)l[4]).Value;
+                var cntv = Rt($"if let Operand::Imm{{value,..}} = {cntOp} {{ *value as u32 }} else {{ unreachable!() }}");
+                return Rt($"bd.vishi({a}, {ew}, {cntv}, {dir})");
+            }
             case "vibin": {
                 // (vibin a b ew op) — packed-int add/sub/mul.
                 var a = Expr(l[1]); var b = Expr(l[2]);

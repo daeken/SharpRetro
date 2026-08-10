@@ -350,6 +350,31 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::I{signed:false, width:32}, bits: r as u128 }
     }
+    fn vishi(&mut self, a: IVal, ew: u32, count: u32, dir: u32) -> IVal {
+        let n = 128 / ew;
+        let m = if ew == 64 { u64::MAX as u128 } else { (1u128 << ew) - 1 };
+        let sign_bit = 1u128 << (ew - 1);
+        let mut r = 0u128;
+        for i in 0..n {
+            let la = (a.bits >> (i*ew)) & m;
+            let lr = if count >= ew {
+                match dir { 0|1 => 0, 2 => if la & sign_bit != 0 { m } else { 0 }, _ => panic!() }
+            } else {
+                match dir {
+                    0 => (la << count) & m,
+                    1 => la >> count,
+                    2 => {
+                        // Arithmetic: sign-extend within ew, shift, mask back.
+                        let sla = if la & sign_bit != 0 { la | !m } else { la };
+                        (sla >> count) & m
+                    }
+                    _ => panic!("vishi dir={dir}"),
+                }
+            };
+            r |= lr << (i*ew);
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vibin(&mut self, a: IVal, b: IVal, ew: u32, op: u32) -> IVal {
         let n = 128 / ew;
         let m = if ew == 128 { u128::MAX } else { (1u128 << ew) - 1 };

@@ -515,6 +515,40 @@ impl Builder for Tier0 {
         self.store(X_A, s);
         s
     }
+    fn vishi(&mut self, a: u32, ew: u32, count: u32, dir: u32) -> u32 {
+        let s = self.slot(IlType::V128);
+        // x86 semantics: count >= ew → shl/lshr = 0, ashr = sign-fill (= sshr by ew-1).
+        // NEON imm ranges: SHL 0..ew-1, USHR/SSHR 1..ew. count is compile-time-
+        // known (Ib) so we branch in codegen, not at runtime.
+        if count == 0 {
+            // Identity — just copy through (all dirs).
+            self.load2(X_A, X_C, a);
+            self.store2(X_A, X_C, s);
+            return s;
+        }
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        if count >= ew {
+            match dir {
+                0 | 1 => self.enc.movi_zero(2),
+                2 => self.enc.sshr_vi(2, 0, ew, ew - 1),  // fill with sign bit
+                                                          // ‡ SDM: PSRA count>=ew → each lane = sign-bit-replicated.
+                                                          // sshr #(ew-1) gives -1/0 per sign, but proper is #ew…
+                                                          // Actually sshr by ew-1: e.g. 0x80000000>>31 = 0xFFFFFFFF, 0x7F..>>31=0. Correct.
+                _ => panic!("vishi dir={dir}"),
+            }
+        } else {
+            match dir {
+                0 => self.enc.shl_vi(2, 0, ew, count),
+                1 => self.enc.ushr_vi(2, 0, ew, count),
+                2 => self.enc.sshr_vi(2, 0, ew, count),
+                _ => panic!("vishi dir={dir}"),
+            }
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vibin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
         let s = self.slot(IlType::V128);
         self.load2(X_A, X_C, a);

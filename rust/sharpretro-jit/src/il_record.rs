@@ -209,6 +209,7 @@ impl Builder for IlRecorder {
     fn hi64(&mut self, a: u32) -> u32 { self.produce(IlOpKind::Cast, IlType::U64, &[a], 3 /*hi64 marker*/) }
     fn vfbin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfbin (V128)") }
     fn vibin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vibin (V128)") }
+    fn vishi(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vishi (V128)") }
     fn vmovmsk(&mut self, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vmovmsk (V128)") }
     fn vfun(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfun (V128)") }
     fn vfminmax(&mut self, _: u32, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vfminmax (V128)") }

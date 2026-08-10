@@ -193,27 +193,29 @@
 (encoding PMAXUB (Vdq Wdq) (opsize 0x0F 0xDE))
 
 ; --- integer xmm: shifts (imm forms are /N on 71/72/73) ---
-(instruction PSRLW-I (dst count) "psrlw $dst, $count" (intrinsic psrlw dst count))
+; PSLL*/PSRL*/PSRA*-I: packed shift by IMMEDIATE. (vishi dst count-op ew dir) dir:0=shl 1=lshr 2=ashr.
+; count>=ew → 0 (shl/lshr) or sign-fill (ashr) per SDM.
+(instruction PSRLW-I (dst count) "psrlw $dst, $count" (= dst (vishi dst count 16 1)))
 (encoding PSRLW-I (Udq Ib) (opsize 0x0F 0x71 /2))
-(instruction PSRAW-I (dst count) "psraw $dst, $count" (intrinsic psraw dst count))
+(instruction PSRAW-I (dst count) "psraw $dst, $count" (= dst (vishi dst count 16 2)))
 (encoding PSRAW-I (Udq Ib) (opsize 0x0F 0x71 /4))
-(instruction PSLLW-I (dst count) "psllw $dst, $count" (intrinsic psllw dst count))
+(instruction PSLLW-I (dst count) "psllw $dst, $count" (= dst (vishi dst count 16 0)))
 (encoding PSLLW-I (Udq Ib) (opsize 0x0F 0x71 /6))
 
-(instruction PSRLD-I (dst count) "psrld $dst, $count" (intrinsic psrld dst count))
+(instruction PSRLD-I (dst count) "psrld $dst, $count" (= dst (vishi dst count 32 1)))
 (encoding PSRLD-I (Udq Ib) (opsize 0x0F 0x72 /2))
-(instruction PSRAD-I (dst count) "psrad $dst, $count" (intrinsic psrad dst count))
+(instruction PSRAD-I (dst count) "psrad $dst, $count" (= dst (vishi dst count 32 2)))
 (encoding PSRAD-I (Udq Ib) (opsize 0x0F 0x72 /4))
-(instruction PSLLD-I (dst count) "pslld $dst, $count" (intrinsic pslld dst count))
+(instruction PSLLD-I (dst count) "pslld $dst, $count" (= dst (vishi dst count 32 0)))
 (encoding PSLLD-I (Udq Ib) (opsize 0x0F 0x72 /6))
 
-(instruction PSRLQ-I (dst count) "psrlq $dst, $count" (intrinsic psrlq dst count))
+(instruction PSRLQ-I (dst count) "psrlq $dst, $count" (= dst (vishi dst count 64 1)))
 (encoding PSRLQ-I (Udq Ib) (opsize 0x0F 0x73 /2))
 ; PSRLDQ/PSLLDQ: byte-shift the whole 128-bit reg. count is BYTES (imm8);
 ; SDM: count>15 → dst=0. Semantically = u128 >> (count*8) bitcast back to V128.
 (instruction PSRLDQ-I (dst count) "psrldq $dst, $count" (vshift-bytes dst count r))
 (encoding PSRLDQ-I (Udq Ib) (opsize 0x0F 0x73 /3))
-(instruction PSLLQ-I (dst count) "psllq $dst, $count" (intrinsic psllq dst count))
+(instruction PSLLQ-I (dst count) "psllq $dst, $count" (= dst (vishi dst count 64 0)))
 (encoding PSLLQ-I (Udq Ib) (opsize 0x0F 0x73 /6))
 (instruction PSLLDQ-I (dst count) "pslldq $dst, $count" (vshift-bytes dst count l))
 (encoding PSLLDQ-I (Udq Ib) (opsize 0x0F 0x73 /7))

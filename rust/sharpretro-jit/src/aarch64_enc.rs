@@ -158,6 +158,28 @@ impl Aarch64Enc {
         self.put(0x6E20E400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
     }
     // (orr_v16b already exists below.)
+    // Vector shift by IMMEDIATE (Q=1). immh:immb (7 bits @[22:16]) encodes
+    // BOTH element-size and shift-amount:
+    //   SHL:  immh:immb = ew + sh    (sh ∈ 0..ew-1)
+    //   USHR/SSHR: immh:immb = 2*ew - sh  (sh ∈ 1..ew)
+    // ew: 8→immh=0001, 16→001x, 32→01xx, 64→1xxx.
+    pub fn shl_vi(&mut self, vd: u32, vn: u32, ew: u32, sh: u32) {
+        debug_assert!(sh < ew);
+        self.put(0x4F005400 | ((ew + sh)<<16) | (vn<<5) | vd);
+    }
+    pub fn ushr_vi(&mut self, vd: u32, vn: u32, ew: u32, sh: u32) {
+        debug_assert!(sh >= 1 && sh <= ew);
+        self.put(0x6F000400 | ((2*ew - sh)<<16) | (vn<<5) | vd);
+    }
+    pub fn sshr_vi(&mut self, vd: u32, vn: u32, ew: u32, sh: u32) {
+        debug_assert!(sh >= 1 && sh <= ew);
+        self.put(0x4F000400 | ((2*ew - sh)<<16) | (vn<<5) | vd);
+    }
+    // MOVI Vd.16B, #0 = 0x4F000400 conflicts w/ SSHR — use EOR self for zero.
+    // (Actually for zero: `movi Vd.2D, #0` = 0x6F00E400 | Rd.)
+    pub fn movi_zero(&mut self, vd: u32) {
+        self.put(0x6F00E400 | vd);
+    }
     // CNT Vd.8B, Vn.8B — per-byte popcount (Q=0, 8B) = 0x0E205800
     pub fn cnt_v8b(&mut self, vd: u32, vn: u32) {
         self.put(0x0E205800 | (vn<<5) | vd);

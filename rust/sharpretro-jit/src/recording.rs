@@ -75,6 +75,9 @@ impl Builder for RecordingBuilder {
     fn vibin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
         self.v(format!("vibin[{op}] v{a} v{b} @{ew}b"))
     }
+    fn vishi(&mut self, a: u32, ew: u32, c: u32, d: u32) -> u32 {
+        self.v(format!("vishi[{d}] v{a} @{ew}b #{c}"))
+    }
     fn vmovmsk(&mut self, a: u32, ew: u32) -> u32 { self.v(format!("vmovmsk v{a} @{ew}b")) }
     fn vfun(&mut self, a: u32, ew: u32, op: u32) -> u32 { self.v(format!("vfun[{op}] v{a} @{ew}b")) }
     fn vfminmax(&mut self, a: u32, b: u32, ew: u32, m: bool) -> u32 {
