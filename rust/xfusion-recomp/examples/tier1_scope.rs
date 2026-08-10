@@ -5,7 +5,7 @@ use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::lift::{lift_one, FLAGS_ALL_LIVE, DEF_FLAGS_MASK, DEF_FLAGS_READ};
 use sharpretro_jit::il_record::{IlRecorder, IlOpKind};
 
-fn main() {
+fn main() { if std::env::var("ALLOC").is_ok() { main2_alloc(); return; }
     // sum10 loop body under dead-flag-elim liveness (ADD/INC's flags dead, CMP's kept).
     let bytes: &[u8] = &[0x01,0xC8, 0xFF,0xC1, 0x39,0xD1, 0x7C,0xF8];  // add;inc;cmp;jl
     let mut insns = vec![]; let mut cur = 0usize;
@@ -50,4 +50,35 @@ fn main() {
     }
     println!("MAX SIMULTANEOUS LIVE = {max_alive}  (aarch64 has ~14 allocatable → {} spills needed)",
         if max_alive <= 14 { "ZERO".to_string() } else { format!("{}", max_alive-14) });
+}
+
+// Also fire the allocator (called as a separate example arg).
+#[allow(dead_code)]
+fn main2_alloc() {
+    use sharpretro_jit::regalloc::{linear_scan, Loc};
+    let bytes: &[u8] = &[0x01,0xC8, 0xFF,0xC1, 0x39,0xD1, 0x7C,0xF8];
+    let mut insns = vec![]; let mut cur = 0usize;
+    while cur < bytes.len() {
+        let d = decode_insn(&bytes[cur..], XMode::Bits64).unwrap();
+        cur += d.len as usize; insns.push(d);
+    }
+    let mut live = FLAGS_ALL_LIVE;
+    let mut per = vec![0u32; insns.len()];
+    for i in (0..insns.len()).rev() {
+        let did = insns[i].def_id as usize;
+        per[i] = live;
+        live = (live & !DEF_FLAGS_MASK[did]) | DEF_FLAGS_READ[did];
+    }
+    let mut r = IlRecorder::new();
+    let mut cur = 0u64;
+    for (i, d) in insns.iter().enumerate() {
+        lift_one(&mut r, d, 0x1000F+cur, XMode::Bits64, per[i]);
+        cur += d.len as u64;
+    }
+    for n_regs in [4, 8, 12, 14] {
+        let a = linear_scan(&r, n_regs);
+        let n_reg = a.locs.iter().filter(|l| matches!(l, Loc::Reg(_))).count();
+        println!("n_regs={n_regs:2}: {n_reg} in-reg, {} spilled, {} dead, max_alive={}",
+            a.n_spilled, a.n_dead, a.max_alive);
+    }
 }
