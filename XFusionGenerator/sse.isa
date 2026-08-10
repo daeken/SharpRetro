@@ -106,11 +106,14 @@
 (encoding SHUFPS (Vps Wps Ib) (0x0F 0xC6))
 
 ; --- converts (SSE1 half: cvt*si2ss / ss2si / ps<->pi) ---
-(instruction CVTSI2SS (dst src) "cvtsi2ss $dst, $src" (intrinsic cvtsi2ss dst src))
+(instruction CVTSI2SS (dst src) "cvtsi2ss $dst, $src"
+    (= dst (f32 (signed (bitwidth src) src))))
 (encoding CVTSI2SS (Vss Ev) (rep 0x0F 0x2A))
-(instruction CVTSS2SI (dst src) "cvtss2si $dst, $src" (intrinsic cvtss2si dst src))
+(instruction CVTSS2SI (dst src) "cvtss2si $dst, $src"
+    (= dst (int-of (bitwidth dst) (as-f32 src))))
 (encoding CVTSS2SI (Gv Wss) (rep 0x0F 0x2D))
-(instruction CVTTSS2SI (dst src) "cvttss2si $dst, $src" (intrinsic cvttss2si dst src))
+(instruction CVTTSS2SI (dst src) "cvttss2si $dst, $src"
+    (= dst (int-of (bitwidth dst) (as-f32 src))))
 (encoding CVTTSS2SI (Gv Wss) (rep 0x0F 0x2C))
 
 ; --- non-temporal + fences (SSE1) ---

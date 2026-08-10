@@ -224,16 +224,26 @@
 (encoding PSHUFHW (Vdq Wdq Ib) (rep 0x0F 0x70))
 
 ; --- converts ---
-(instruction CVTSI2SD (dst src) "cvtsi2sd $dst, $src" (intrinsic cvtsi2sd dst src))
+; Scalar float↔int conversions. src is Ev (op_w=32/64 signed int), dst is Vsd
+; (xmm lane-0 double, upper preserved). (signed W src) reinterprets src as
+; signed at op_w BEFORE the float-cast (SDM: source is a signed integer).
+; ‡ CVTSI2SD's upper-preserve: write_operand Xmm at width=64 does str_x on
+;   state[OFF_XMM+i*2] = lane-0 only, upper (word +1) untouched. ✓
+(instruction CVTSI2SD (dst src) "cvtsi2sd $dst, $src"
+    (= dst (f64 (signed (bitwidth src) src))))
 (encoding CVTSI2SD (Vsd Ev) (repnz 0x0F 0x2A))
-(instruction CVTSD2SI (dst src) "cvtsd2si $dst, $src" (intrinsic cvtsd2si dst src))
+(instruction CVTSD2SI (dst src) "cvtsd2si $dst, $src"
+    (= dst (int-of (bitwidth dst) (as-f64 src))))
 (encoding CVTSD2SI (Gv Wsd) (repnz 0x0F 0x2D))
-(instruction CVTTSD2SI (dst src) "cvttsd2si $dst, $src" (intrinsic cvttsd2si dst src))
+(instruction CVTTSD2SI (dst src) "cvttsd2si $dst, $src"
+    (= dst (int-of (bitwidth dst) (as-f64 src))))
 (encoding CVTTSD2SI (Gv Wsd) (repnz 0x0F 0x2C))
 
-(instruction CVTSS2SD (dst src) "cvtss2sd $dst, $src" (intrinsic cvtss2sd dst src))
+(instruction CVTSS2SD (dst src) "cvtss2sd $dst, $src"
+    (= dst (f64 (as-f32 src))))
 (encoding CVTSS2SD (Vsd Wss) (rep 0x0F 0x5A))
-(instruction CVTSD2SS (dst src) "cvtsd2ss $dst, $src" (intrinsic cvtsd2ss dst src))
+(instruction CVTSD2SS (dst src) "cvtsd2ss $dst, $src"
+    (= dst (f32 (as-f64 src))))
 (encoding CVTSD2SS (Vss Wsd) (repnz 0x0F 0x5A))
 (instruction CVTPS2PD (dst src) "cvtps2pd $dst, $src" (intrinsic cvtps2pd dst src))
 (encoding CVTPS2PD (Vpd Wps) (0x0F 0x5A))

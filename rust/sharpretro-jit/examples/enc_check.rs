@@ -14,7 +14,7 @@ fn main() {
     e.orr_v16b(2, 0, 1);
     let bytes: Vec<u8> = e.buf.iter().flat_map(|w| w.to_le_bytes()).collect();
     std::fs::write("/tmp/enc_neon.bin", &bytes).unwrap();
-    println!("wrote {} words", e.buf.len()); _batch2();
+    println!("wrote {} words", e.buf.len()); _batch2(); _batch3();
 }
 // Second batch: INS/UMOV
 fn _batch2() {
@@ -25,4 +25,15 @@ fn _batch2() {
     e.umov_x_vd(11, 2, 1); // mov x11, v2.d[1]
     let bytes: Vec<u8> = e.buf.iter().flat_map(|w| w.to_le_bytes()).collect();
     std::fs::write("/tmp/enc_neon2.bin", &bytes).unwrap();
+}
+fn _batch3() {
+    let mut e = sharpretro_jit::aarch64_enc::Aarch64Enc::new();
+    e.fmov_d_x(0, 9); e.fmov_x_d(9, 0);
+    e.fmov_s_w(0, 9); e.fmov_w_s(9, 0);
+    e.scvtf_d_x(0, 9); e.scvtf_s_x(0, 9); e.scvtf_d_w(0, 9); e.scvtf_s_w(0, 9);
+    e.ucvtf_d_x(0, 9);
+    e.fcvtzs_x_d(9, 0); e.fcvtzs_x_s(9, 0); e.fcvtzs_w_d(9, 0);
+    e.fcvt_d_s(0, 1); e.fcvt_s_d(0, 1);
+    let bytes: Vec<u8> = e.buf.iter().flat_map(|w| w.to_le_bytes()).collect();
+    std::fs::write("/tmp/enc_neon3.bin", &bytes).unwrap();
 }

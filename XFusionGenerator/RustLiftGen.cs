@@ -312,6 +312,23 @@ public class RustLiftGen {
         var head = l[0] is PName(var h) ? h : throw new NotSupportedException(l[0].ToString());
         switch(head) {
             case "u8":  return Rt($"bd.cast({Expr(l[1])}, IlType::U8)");
+            case "f64": return Rt($"bd.cast({Expr(l[1])}, IlType::F{{width:64}})");
+            case "f32": return Rt($"bd.cast({Expr(l[1])}, IlType::F{{width:32}})");
+            // (as-f64 x): reinterpret u64 bits AS f64 (bitcast, no conversion).
+            // For reading Wsd/Wss operands (xmm-lane bits) as float before fcvtzs/fcvt.
+            case "as-f64": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:64}})");
+            case "as-f32": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:32}})");
+            case "int-of": {
+                // (int-of W v) — float→signed-int-of-W-bits (truncate). CVTTSD2SI etc.
+                var w = l[1] is PInt(var wv3) ? wv3.ToString() : OpW;
+                return Rt($"bd.cast({Expr(l[2])}, IlType::I{{signed:true, width:{w} as u8}})");
+            }
+            case "signed": {
+                // (signed W v) — reinterpret v as signed int of W bits (no bit change,
+                //  just type; used before div/rem for IDIV, and before f64 for CVTSI2SD).
+                var w = l[1] is PInt(var wv4) ? wv4.ToString() : OpW;
+                return Rt($"bd.bitcast({Expr(l[2])}, IlType::I{{signed:true, width:{w} as u8}})");
+            }
             case "u16": return Rt($"bd.cast({Expr(l[1])}, IlType::U16)");
             case "u32": return Rt($"bd.cast({Expr(l[1])}, IlType::U32)");
             case "u64": return Rt($"bd.cast({Expr(l[1])}, IlType::U64)");

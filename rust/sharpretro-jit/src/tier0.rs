@@ -651,6 +651,53 @@ impl Builder for Tier0 {
             self.store2(X_A, X_C, s);
             return s;
         }
+        // I↔F (via d0/s0 scratch): the bits stay in an X-reg slot; the
+        // conversion goes through fmov X↔D + scvtf/fcvtzs.
+        match (from, to) {
+            (IlType::I{signed, width:iw}, IlType::F{width:fw}) => {
+                self.load(X_A, a);
+                match (signed, iw > 32, fw) {
+                    (_, true, 64) => self.enc.scvtf_d_x(0, X_A),
+                    (_, true, 32) => self.enc.scvtf_s_x(0, X_A),
+                    (_, false, 64) => self.enc.scvtf_d_w(0, X_A),
+                    (_, false, 32) => self.enc.scvtf_s_w(0, X_A),
+                    _ => panic!("cast I{iw}→F{fw}"),
+                }
+                // ‡ unsigned: SDM CVTSI2SD is signed-only, so signed=true always
+                //   for x86 uses. If a template does unsigned int→float, ucvtf.
+                if fw == 64 { self.enc.fmov_x_d(X_A, 0); } else { self.enc.fmov_w_s(X_A, 0); }
+                self.store(X_A, s);
+                return s;
+            }
+            (IlType::F{width:fw}, IlType::I{width:iw, ..}) => {
+                self.load(X_A, a);
+                if fw == 64 { self.enc.fmov_d_x(0, X_A); } else { self.enc.fmov_s_w(0, X_A); }
+                match (iw > 32, fw) {
+                    (true, 64) => self.enc.fcvtzs_x_d(X_A, 0),
+                    (true, 32) => self.enc.fcvtzs_x_s(X_A, 0),
+                    (false, 64) => self.enc.fcvtzs_w_d(X_A, 0),
+                    (false, 32) => { self.enc.fcvtzs_x_s(X_A, 0); /* mask below */ }
+                    _ => panic!("cast F{fw}→I{iw}"),
+                }
+                if iw < 64 {
+                    self.enc.mov_imm64(X_B, (1u64 << iw) - 1);
+                    self.enc.and_r(X_A, X_A, X_B);
+                }
+                self.store(X_A, s);
+                return s;
+            }
+            (IlType::F{width:32}, IlType::F{width:64}) => {
+                self.load(X_A, a);
+                self.enc.fmov_s_w(0, X_A); self.enc.fcvt_d_s(0, 0); self.enc.fmov_x_d(X_A, 0);
+                self.store(X_A, s); return s;
+            }
+            (IlType::F{width:64}, IlType::F{width:32}) => {
+                self.load(X_A, a);
+                self.enc.fmov_d_x(0, X_A); self.enc.fcvt_s_d(0, 0); self.enc.fmov_w_s(X_A, 0);
+                self.store(X_A, s); return s;
+            }
+            _ => {}
+        }
         // wide→narrow: read lo, mask; narrow→narrow: read, mask.
         self.load(X_A, a);
         if let IlType::I{width, ..} = to {

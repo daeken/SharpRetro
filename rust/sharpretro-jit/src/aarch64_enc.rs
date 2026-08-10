@@ -123,6 +123,27 @@ impl Aarch64Enc {
         debug_assert!(i < 2);
         self.put(0x4E083C00 | ((i<<4)<<16) | (vn<<5) | xd);
     }
+
+    // ── scalar float ↔ int (X-reg ↔ D/S-reg) ─────────────────────────────────
+    // FMOV Dd, Xn / FMOV Xd, Dn — bitcast X↔D (64-bit).
+    pub fn fmov_d_x(&mut self, dd: u32, xn: u32) { self.put(0x9E670000 | (xn<<5) | dd); }
+    pub fn fmov_x_d(&mut self, xd: u32, dn: u32) { self.put(0x9E660000 | (dn<<5) | xd); }
+    // FMOV Sd, Wn / FMOV Wd, Sn — bitcast W↔S (32-bit).
+    pub fn fmov_s_w(&mut self, sd: u32, wn: u32) { self.put(0x1E270000 | (wn<<5) | sd); }
+    pub fn fmov_w_s(&mut self, wd: u32, sn: u32) { self.put(0x1E260000 | (sn<<5) | wd); }
+    // SCVTF Dd, Xn — signed int64 → double. (SCVTF Sd, Xn = f32; SCVTF Dd, Wn = i32→f64.)
+    pub fn scvtf_d_x(&mut self, dd: u32, xn: u32) { self.put(0x9E620000 | (xn<<5) | dd); }
+    pub fn scvtf_s_x(&mut self, sd: u32, xn: u32) { self.put(0x9E220000 | (xn<<5) | sd); }
+    pub fn scvtf_d_w(&mut self, dd: u32, wn: u32) { self.put(0x1E620000 | (wn<<5) | dd); }
+    pub fn scvtf_s_w(&mut self, sd: u32, wn: u32) { self.put(0x1E220000 | (wn<<5) | sd); }
+    pub fn ucvtf_d_x(&mut self, dd: u32, xn: u32) { self.put(0x9E630000 | (xn<<5) | dd); }
+    // FCVTZS Xd, Dn — double → signed int64 (truncate toward zero). = CVTTSD2SI.
+    pub fn fcvtzs_x_d(&mut self, xd: u32, dn: u32) { self.put(0x9E780000 | (dn<<5) | xd); }
+    pub fn fcvtzs_x_s(&mut self, xd: u32, sn: u32) { self.put(0x9E380000 | (sn<<5) | xd); }
+    pub fn fcvtzs_w_d(&mut self, wd: u32, dn: u32) { self.put(0x1E780000 | (dn<<5) | wd); }
+    // FCVT Dd, Sn / FCVT Sd, Dn — f32↔f64.
+    pub fn fcvt_d_s(&mut self, dd: u32, sn: u32) { self.put(0x1E22C000 | (sn<<5) | dd); }
+    pub fn fcvt_s_d(&mut self, sd: u32, dn: u32) { self.put(0x1E624000 | (dn<<5) | sd); }
     pub fn mul_r(&mut self, xd: u32, xn: u32, xm: u32) { self.put(0x9B007C00 | (xm<<16) | (xn<<5) | xd); }
     // ADD Xd, Xn, #imm12
     pub fn add_i(&mut self, xd: u32, xn: u32, imm12: u32) {
