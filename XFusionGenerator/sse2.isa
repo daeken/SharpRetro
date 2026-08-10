@@ -24,9 +24,9 @@
 (instruction MOVMSKPD (dst src) "movmskpd $dst, $src" (intrinsic movmskpd dst src))
 (encoding MOVMSKPD (Gd Upd) (opsize 0x0F 0x50))
 
-(instruction UNPCKLPD (dst src) "unpcklpd $dst, $src" (intrinsic unpcklpd dst src))
+(instruction UNPCKLPD (dst src) "unpcklpd $dst, $src" (= dst (vzip dst src 64 #f)))
 (encoding UNPCKLPD (Vpd Wpd) (opsize 0x0F 0x14))
-(instruction UNPCKHPD (dst src) "unpckhpd $dst, $src" (intrinsic unpckhpd dst src))
+(instruction UNPCKHPD (dst src) "unpckhpd $dst, $src" (= dst (vzip dst src 64 #t)))
 (encoding UNPCKHPD (Vpd Wpd) (opsize 0x0F 0x15))
 
 (instruction MOVLPD (dst src) "movlpd $dst, $src" (intrinsic movlpd dst src))

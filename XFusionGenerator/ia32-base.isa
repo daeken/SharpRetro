@@ -532,14 +532,22 @@
 (encoding DEC (Ev) (0xFF /1))
 
 ; --- sign-extend rAX: mnemonic is width-selected (SDM: 98 = CBW/CWDE/CDQE by opsize) ---
+; CBW/CWDE/CDQE (0x98): sign-extend AL→AX / AX→EAX / EAX→RAX (op_w = target width).
+; ‡ (cdq-cwde 0) SURFACES two pre-existing sext-width bugs at op_w<64 (interp:
+;   xor-sub sext on unmasked reg_read input; tier-0: asrv sign-fills to 64 then
+;   write@32 doesn't re-mask). CDQE (op_w=64, the common one) works via 0x99's
+;   arith-shr path OR is already-correct here. Reverted to intrinsic (die-loud
+;   > silent-wrong) until both sext paths fixed. CDQE alone can be enabled via
+;   a REX.W-only encoding split if it walls; 558 corpus occ (mostly CDQE).
 (instruction CWDE ()
     "$(wname cbw cwde cdqe)"
     (intrinsic cwde))
 (encoding CWDE () (0x98))
+; CWD/CDQ/CQO (0x99): RDX = sign-fill of RAX top bit. All 3 widths verified.
 
 (instruction CDQ ()
     "$(wname cwd cdq cqo)"
-    (intrinsic cdq))
+    (cdq-cwde 1))
 (encoding CDQ () (0x99))
 
 ; --- SETcc (0F 90-9F): store condition to r/m8 ---

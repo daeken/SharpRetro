@@ -169,6 +169,28 @@ public class RustLiftGen {
                 Emit($"write_operand(bd, {ParamOp(target)}, _rv);");
                 break;
             }
+            case PName("cdq-cwde"): {
+                // (cdq-cwde 0) = CBW/CWDE/CDQE: RAX@op_w = sext(RAX@op_w/2, op_w).
+                // (cdq-cwde 1) = CWD/CDQ/CQO: RDX@op_w = RAX >>a (op_w-1) = sign-fill.
+                // op_w-parameterized (16/32/64 via prefix/REX.W).
+                var which = ((PInt)l[1]).Value;
+                if (which == 0) {
+                    // Read RAX at half-width, sext to op_w, write RAX at op_w.
+                    Emit("let _hw = op_w / 2;");
+                    Emit("let _al = bd.reg_read(GPR, 0, ilty(_hw));");
+                    Emit("let _sx = bd.sext(_al, ilty(op_w));");
+                    Emit("write_operand(bd, &gpr(0, op_w, false), _sx);");
+                } else {
+                    // RDX@op_w = RAX@op_w >>arith (op_w-1).
+                    Emit("let _ra = bd.reg_read(GPR, 0, ilty(op_w));");
+                    Emit("let _sn = bd.bitcast(_ra, IlType::I{signed:true, width:op_w as u8});");
+                    Emit("let _sh = bd.literal(ilty(op_w), (op_w-1) as u128);");
+                    Emit("let _fd = bd.shr(_sn, _sh);");
+                    Emit("let _fu = bd.bitcast(_fd, ilty(op_w));");
+                    Emit("write_operand(bd, &gpr(2, op_w, false), _fu);");
+                }
+                return;
+            }
             case PName("str-op"): {
                 // String-op ONE ITERATION body (movs/stos/lods). rsi/rdi read at u64
                 // (address, not op_w); the value is at op_w. DF: step = ±(op_w/8).
