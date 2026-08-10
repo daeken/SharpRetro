@@ -3,7 +3,7 @@
 ; family (66-prefixed MMX opcodes) that dominates real binaries (memcpy/strlen).
 
 ; --- pd/sd movement ---
-(instruction MOVUPD (dst src) "movupd $dst, $src" (intrinsic movupd dst src))
+(instruction MOVUPD (dst src) "movupd $dst, $src" (= dst src))
 (encoding MOVUPD (Vpd Wpd) (opsize 0x0F 0x10))
 (encoding MOVUPD (Wpd Vpd) (opsize 0x0F 0x11))
 
@@ -11,7 +11,7 @@
 (encoding MOVSD-X (Vsd Wsd) (repnz 0x0F 0x10))
 (encoding MOVSD-X (Wsd Vsd) (repnz 0x0F 0x11))
 
-(instruction MOVAPD (dst src) "movapd $dst, $src" (intrinsic movapd dst src))
+(instruction MOVAPD (dst src) "movapd $dst, $src" (= dst src))
 (encoding MOVAPD (Vpd Wpd) (opsize 0x0F 0x28))
 (encoding MOVAPD (Wpd Vpd) (opsize 0x0F 0x29))
 
@@ -253,11 +253,12 @@
 (encoding CVTTPD2DQ (Vdq Wpd) (opsize 0x0F 0xE6))
 
 ; --- non-temporal + fences ---
-(instruction MOVNTDQ (dst src) "movntdq $dst, $src" (intrinsic movntdq dst src))
+; NT-stores: non-temporal is a cache hint (bypass L1); semantically a plain store.
+(instruction MOVNTDQ (dst src) "movntdq $dst, $src" (= dst src))
 (encoding MOVNTDQ (Mdq Vdq) (opsize 0x0F 0xE7))
-(instruction MOVNTPD (dst src) "movntpd $dst, $src" (intrinsic movntpd dst src))
+(instruction MOVNTPD (dst src) "movntpd $dst, $src" (= dst src))
 (encoding MOVNTPD (Mpd Vpd) (opsize 0x0F 0x2B))
-(instruction MOVNTI (dst src) "movnti $dst, $src" (intrinsic movnti dst src))
+(instruction MOVNTI (dst src) "movnti $dst, $src" (= dst src))
 (encoding MOVNTI (Mv Gv) (0x0F 0xC3))
 
 (instruction LFENCE () "lfence" (intrinsic lfence))

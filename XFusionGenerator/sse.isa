@@ -114,7 +114,7 @@
 (encoding CVTTSS2SI (Gv Wss) (rep 0x0F 0x2C))
 
 ; --- non-temporal + fences (SSE1) ---
-(instruction MOVNTPS (dst src) "movntps $dst, $src" (intrinsic movntps dst src))
+(instruction MOVNTPS (dst src) "movntps $dst, $src" (= dst src))
 (encoding MOVNTPS (Mps Vps) (0x0F 0x2B))
 
 (instruction LDMXCSR (src) "ldmxcsr $src" (intrinsic ldmxcsr src))
