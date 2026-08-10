@@ -258,6 +258,40 @@ public class RustLiftGen {
                 // ‡ #DE on div-by-0 / overflow not raised — result 0 (aarch64 udiv semantics).
                 break;
             }
+            case PName("imul-of"): {
+                // (imul-of dst a b) — 2/3-op IMUL. dst = truncate(a*b, op_w); CF=OF =
+                // signed-overflow (full product ≠ sext(truncated, 2*op_w)). Equivalently:
+                // hi_half != asr(lo_half, op_w-1)  (hi is all-sign-fill iff no overflow).
+                // op_w=64 uses pair128/hi64; op_w<64 the double product fits u64.
+                var w2 = "IlType::I{signed:true, width:(op_w*2) as u8}";
+                var wu = "ilty(op_w)";
+                var wi = "IlType::I{signed:true, width:op_w as u8}";
+                var a = Expr(l[2]); var b = Expr(l[3]);
+                Emit($"let _mA = bd.sext({a}, {w2});");
+                Emit($"let _mB = bd.sext({b}, {w2});");
+                Emit($"let _p = bd.mul(_mA, _mB);");
+                Emit($"let (_lo, _hi) = if op_w == 64 {{");
+                Emit($"    let l = bd.lo64(_p); let h = bd.hi64(_p); (l, h)");
+                Emit($"}} else {{");
+                Emit($"    let l = bd.cast(_p, {wu});");
+                Emit($"    let sh = bd.literal({w2}, op_w as u128);");
+                Emit($"    let ph = bd.shr(_p, sh);");
+                Emit($"    let h = bd.cast(ph, {wu}); (l, h)");
+                Emit($"}};");
+                // Write dst = truncated product.
+                var dstOp = ParamOp(((PName)l[1]).Name);
+                Emit($"write_operand(bd, {dstOp}, _lo);");
+                // overflow = hi != asr(lo, op_w-1)  (= hi differs from lo's sign-fill).
+                Emit($"let _sn = bd.bitcast(_lo, {wi});");
+                Emit($"let _sh = bd.literal({wu}, (op_w-1) as u128);");
+                Emit($"let _sr = bd.shr(_sn, _sh);");
+                Emit($"let _sf = bd.bitcast(_sr, {wu});");
+                Emit($"let _ov = bd.ne(_hi, _sf);");
+                Emit($"if live_flags & 0x1 != 0 {{ bd.reg_write(EFLAGS, 0, _ov); }}");
+                Emit($"if live_flags & 0x800 != 0 {{ bd.reg_write(EFLAGS, 11, _ov); }}");
+                FlagsWritten |= 0x801;
+                break;
+            }
             case PName("mul-wide"): {
                 // rAX × src → rDX:rAX (2×op_w product). CF=OF = hi≠0.
                 var signed = l[2] is PName("#t");

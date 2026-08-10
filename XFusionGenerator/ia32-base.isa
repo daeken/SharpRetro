@@ -526,14 +526,18 @@
 (encoding IDIV (Ev) (0xF7 /7))
 
 ; --- two/three-operand IMUL ---
+; CF=OF = signed overflow (product doesn't fit in op_w). SDM: 'set when the
+; signed integer value of the intermediate product differs from the sign-
+; extended operand-size-truncated product'. SF/ZF/AF/PF undefined.
+; (imul-of dst a b) computes the truncated product AND writes CF=OF.
 (instruction IMUL (dst src)
     "imul $dst, $src"
-    (= dst (* dst src)))
+    (imul-of dst dst src))
 (encoding IMUL (Gv Ev) (0x0F 0xAF))
 
 (instruction IMUL3 (dst src imm)
     "imul $dst, $src, $imm"
-    (= dst (* src imm)))
+    (imul-of dst src imm))
 (encoding IMUL3 (Gv Ev Ib-sx) (0x6B))
 (encoding IMUL3 (Gv Ev Iz)    (0x69))
 
