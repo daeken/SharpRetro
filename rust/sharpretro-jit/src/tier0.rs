@@ -187,6 +187,19 @@ impl Tier0 {
         self.store(X_A, s);
         s
     }
+    /// Float bin: bits stay in X-slots; fmov X→d0/d1, f(d0,d1)→d0, fmov d0→X.
+    fn fbin(&mut self, a: u32, b: u32, ty: IlType, f: impl FnOnce(&mut Aarch64Enc)) -> u32 {
+        let s = self.slot(ty);
+        let f64 = matches!(ty, IlType::F{width:64});
+        self.load(X_A, a);
+        if f64 { self.enc.fmov_d_x(0, X_A); } else { self.enc.fmov_s_w(0, X_A); }
+        self.load(X_A, b);
+        if f64 { self.enc.fmov_d_x(1, X_A); } else { self.enc.fmov_s_w(1, X_A); }
+        f(&mut self.enc);   // computes into d0/s0
+        if f64 { self.enc.fmov_x_d(X_A, 0); } else { self.enc.fmov_w_s(X_A, 0); }
+        self.store(X_A, s);
+        s
+    }
     /// 2-slot bin: a=(X_A,X_C) b=(X_B,X_D), f operates on both halves, store2.
     fn bin_wide(&mut self, a: u32, b: u32, f: impl FnOnce(&mut Aarch64Enc)) -> u32 {
         let ty = self.tys[a as usize];
@@ -333,6 +346,9 @@ impl Builder for Tier0 {
 
     fn add(&mut self, a: u32, b: u32) -> u32 {
         let t = self.tys[a as usize];
+        if let IlType::F{width:fw} = t {
+            return self.fbin(a, b, t, move |e| if fw==64 {e.fadd_d(0,0,1)} else {e.fadd_s(0,0,1)});
+        }
         if Self::is_wide(t) {
             let s = self.slot(t);
             self.load2(X_A, X_C, a); self.load2(X_B, 12, b);
@@ -345,6 +361,9 @@ impl Builder for Tier0 {
     }
     fn sub(&mut self, a: u32, b: u32) -> u32 {
         let t = self.tys[a as usize];
+        if let IlType::F{width:fw} = t {
+            return self.fbin(a, b, t, move |e| if fw==64 {e.fsub_d(0,0,1)} else {e.fsub_s(0,0,1)});
+        }
         if Self::is_wide(t) {
             let s = self.slot(t);
             self.load2(X_A, X_C, a); self.load2(X_B, 12, b);
@@ -356,6 +375,9 @@ impl Builder for Tier0 {
         self.bin(a, b, t, |e| e.sub_r(X_A, X_A, X_B))
     }
     fn mul(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if let IlType::F{width:fw} = t {
+            return self.fbin(a, b, t, move |e| if fw==64 {e.fmul_d(0,0,1)} else {e.fmul_s(0,0,1)});
+        }
         if Self::is_wide(t) {
             // u128 mul (128×128→low-128): lo = a.lo*b.lo; hi = umulh(a.lo,b.lo)
             //   + a.lo*b.hi + a.hi*b.lo (all mod 2^64 — the standard schoolbook low-128).
@@ -435,6 +457,9 @@ impl Builder for Tier0 {
         let w0 = self.enc.buf[cbz_at]; self.enc.buf[cbz_at] = w0 | (off_fwd << 5);
     }
     fn div(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
+        if let IlType::F{width:fw} = t {
+            return self.fbin(a, b, t, move |e| if fw==64 {e.fdiv_d(0,0,1)} else {e.fdiv_s(0,0,1)});
+        }
         // Silicon udiv/sdiv: divide-by-0 → result 0 (no fault) — matches interp's
         // `if y==0 {0} else {x/y}`. So no zero-guard needed.
         let signed = matches!(t, IlType::I{signed:true, ..});

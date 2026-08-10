@@ -38,17 +38,17 @@
 ; --- arithmetic: ps (bare) + ss (F3) rows share opcodes 58-5F ---
 (instruction ADDPS (dst src) "addps $dst, $src" (intrinsic addps dst src))
 (encoding ADDPS (Vps Wps) (0x0F 0x58))
-(instruction ADDSS (dst src) "addss $dst, $src" (intrinsic addss dst src))
+(instruction ADDSS (dst src) "addss $dst, $src" (= dst (+ (as-f32 dst) (as-f32 src))))
 (encoding ADDSS (Vss Wss) (rep 0x0F 0x58))
 
 (instruction MULPS (dst src) "mulps $dst, $src" (intrinsic mulps dst src))
 (encoding MULPS (Vps Wps) (0x0F 0x59))
-(instruction MULSS (dst src) "mulss $dst, $src" (intrinsic mulss dst src))
+(instruction MULSS (dst src) "mulss $dst, $src" (= dst (* (as-f32 dst) (as-f32 src))))
 (encoding MULSS (Vss Wss) (rep 0x0F 0x59))
 
 (instruction SUBPS (dst src) "subps $dst, $src" (intrinsic subps dst src))
 (encoding SUBPS (Vps Wps) (0x0F 0x5C))
-(instruction SUBSS (dst src) "subss $dst, $src" (intrinsic subss dst src))
+(instruction SUBSS (dst src) "subss $dst, $src" (= dst (- (as-f32 dst) (as-f32 src))))
 (encoding SUBSS (Vss Wss) (rep 0x0F 0x5C))
 
 (instruction MINPS (dst src) "minps $dst, $src" (intrinsic minps dst src))
@@ -58,7 +58,7 @@
 
 (instruction DIVPS (dst src) "divps $dst, $src" (intrinsic divps dst src))
 (encoding DIVPS (Vps Wps) (0x0F 0x5E))
-(instruction DIVSS (dst src) "divss $dst, $src" (intrinsic divss dst src))
+(instruction DIVSS (dst src) "divss $dst, $src" (= dst (/ (as-f32 dst) (as-f32 src))))
 (encoding DIVSS (Vss Wss) (rep 0x0F 0x5E))
 
 (instruction MAXPS (dst src) "maxps $dst, $src" (intrinsic maxps dst src))
