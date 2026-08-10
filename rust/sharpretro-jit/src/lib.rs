@@ -162,6 +162,9 @@ pub trait Builder {
     /// result[2i+1]=b[i] over the LOW half's elements. = x86 PUNPCKL{BW,WD,DQ,QDQ}
     /// = aarch64 ZIP1. `hi=true` gives interleave-high (PUNPCKH*/ZIP2).
     fn vzip(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, hi: bool) -> Self::Val;
+    /// Packed-float binary: per-lane float op on V128, elem_bits ∈ {32,64}
+    /// (= 4×f32 or 2×f64), op ∈ {0=add,1=sub,2=mul,3=div}. MULPS/ADDPD/etc.
+    fn vfbin(&mut self, a: Self::Val, b: Self::Val, elem_bits: u32, op: u32) -> Self::Val;
 
     // ── float (Abs/Sqrt/Round*/Ceil/Floor/IsNaN) ────────────────────────────
     fn fabs(&mut self, a: Self::Val) -> Self::Val;

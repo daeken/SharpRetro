@@ -69,6 +69,9 @@ impl Builder for RecordingBuilder {
     fn sext(&mut self, a: u32, to: IlType) -> u32 { self.v(format!("sext v{} → {}", a, ty(to))) }
     fn pair128(&mut self, hi: u32, lo: u32) -> u32 { self.v(format!("pair128 v{hi}:v{lo}")) }
     fn hi64(&mut self, a: u32) -> u32 { self.v(format!("hi64 v{a}")) }
+    fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
+        self.v(format!("vfbin[{op}] v{a} v{b} @{ew}b"))
+    }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         self.v(format!("vzip{} v{a} v{b} @{ew}b", if hi {"H"} else {"L"}))
     }

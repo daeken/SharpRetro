@@ -131,6 +131,21 @@ impl Aarch64Enc {
     }
     // ZIP1 Vd.<T>, Vn.<T>, Vm.<T> — interleave LOW halves. size 0/1/2/3 = B/H/S/D.
     // T = 16B/8H/4S/2D (Q=1). Exactly x86's PUNPCKL{BW,WD,DQ,QDQ}.
+    // NEON packed-float arith (Q=1). sz: 0=.4S (f32×4), 1=.2D (f64×2).
+    // FADD Vd.T,Vn.T,Vm.T = 0x4E20D400 | sz<<22 | Rm<<16 | Rn<<5 | Rd
+    // FSUB = 0x4EA0D400 | sz<<22   FMUL = 0x6E20DC00 | sz<<22   FDIV = 0x6E20FC00 | sz<<22
+    pub fn fadd_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x4E20D400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    pub fn fsub_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x4EA0D400 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    pub fn fmul_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x6E20DC00 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
+    pub fn fdiv_v(&mut self, vd: u32, vn: u32, vm: u32, sz: u32) {
+        self.put(0x6E20FC00 | (sz<<22) | (vm<<16) | (vn<<5) | vd);
+    }
     pub fn zip1_v(&mut self, vd: u32, vn: u32, vm: u32, size: u32) {
         debug_assert!(size < 4);
         self.put(0x4E003800 | (size<<22) | (vm<<16) | (vn<<5) | vd);

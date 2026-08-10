@@ -131,6 +131,7 @@ impl Builder for Tier1 {
     fn pair128(&mut self, hi: u32, lo: u32) -> u32 { self.rec.pair128(hi, lo) }
     fn hi64(&mut self, a: u32) -> u32 { self.rec.hi64(a) }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 { self.rec.vzip(a, b, ew, hi) }
+    fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 { self.rec.vfbin(a, b, ew, op) }
     fn ternary(&mut self, c: u32, a: u32, b: u32) -> u32 { self.rec.ternary(c, a, b) }
     fn cond(&mut self, c: u32, then: &mut dyn FnMut(&mut Self), els: &mut dyn FnMut(&mut Self)) {
         // Record CondBegin/Else/End markers around the arms. Closures take

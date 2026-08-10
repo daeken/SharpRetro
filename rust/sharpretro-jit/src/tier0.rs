@@ -394,6 +394,26 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vfbin(&mut self, a: u32, b: u32, ew: u32, op: u32) -> u32 {
+        // Same X↔Q dance as vzip: build q0/q1 from 2×X-word slots, NEON op → q2,
+        // extract q2 → 2×X, store2. sz: 32→0(.4S), 64→1(.2D).
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let sz = match ew { 32=>0, 64=>1, _=>panic!("vfbin ew={ew}") };
+        match op {
+            0 => self.enc.fadd_v(2, 0, 1, sz),
+            1 => self.enc.fsub_v(2, 0, 1, sz),
+            2 => self.enc.fmul_v(2, 0, 1, sz),
+            3 => self.enc.fdiv_v(2, 0, 1, sz),
+            _ => panic!("vfbin op={op}"),
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         // load2 a→(X_A,X_C), b→(X_B,X_D); INS q0.d[0/1]←X_A/X_C, q1←X_B/X_D;
         // zip1/2 q2, q0, q1; UMOV X_A←q2.d[0], X_C←q2.d[1]; store2.

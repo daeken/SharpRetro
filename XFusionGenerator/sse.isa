@@ -36,17 +36,17 @@
 (encoding UNPCKHPS (Vps Wps) (0x0F 0x15))
 
 ; --- arithmetic: ps (bare) + ss (F3) rows share opcodes 58-5F ---
-(instruction ADDPS (dst src) "addps $dst, $src" (intrinsic addps dst src))
+(instruction ADDPS (dst src) "addps $dst, $src" (= dst (vfbin dst src 32 0)))
 (encoding ADDPS (Vps Wps) (0x0F 0x58))
 (instruction ADDSS (dst src) "addss $dst, $src" (= dst (+ (as-f32 dst) (as-f32 src))))
 (encoding ADDSS (Vss Wss) (rep 0x0F 0x58))
 
-(instruction MULPS (dst src) "mulps $dst, $src" (intrinsic mulps dst src))
+(instruction MULPS (dst src) "mulps $dst, $src" (= dst (vfbin dst src 32 2)))
 (encoding MULPS (Vps Wps) (0x0F 0x59))
 (instruction MULSS (dst src) "mulss $dst, $src" (= dst (* (as-f32 dst) (as-f32 src))))
 (encoding MULSS (Vss Wss) (rep 0x0F 0x59))
 
-(instruction SUBPS (dst src) "subps $dst, $src" (intrinsic subps dst src))
+(instruction SUBPS (dst src) "subps $dst, $src" (= dst (vfbin dst src 32 1)))
 (encoding SUBPS (Vps Wps) (0x0F 0x5C))
 (instruction SUBSS (dst src) "subss $dst, $src" (= dst (- (as-f32 dst) (as-f32 src))))
 (encoding SUBSS (Vss Wss) (rep 0x0F 0x5C))
@@ -56,7 +56,7 @@
 (instruction MINSS (dst src) "minss $dst, $src" (intrinsic minss dst src))
 (encoding MINSS (Vss Wss) (rep 0x0F 0x5D))
 
-(instruction DIVPS (dst src) "divps $dst, $src" (intrinsic divps dst src))
+(instruction DIVPS (dst src) "divps $dst, $src" (= dst (vfbin dst src 32 3)))
 (encoding DIVPS (Vps Wps) (0x0F 0x5E))
 (instruction DIVSS (dst src) "divss $dst, $src" (= dst (/ (as-f32 dst) (as-f32 src))))
 (encoding DIVSS (Vss Wss) (rep 0x0F 0x5E))

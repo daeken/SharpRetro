@@ -37,19 +37,19 @@
 (encoding MOVHPD (Mq Vq) (opsize 0x0F 0x17))
 
 ; --- pd/sd arithmetic ---
-(instruction ADDPD (dst src) "addpd $dst, $src" (intrinsic addpd dst src))
+(instruction ADDPD (dst src) "addpd $dst, $src" (= dst (vfbin dst src 64 0)))
 (encoding ADDPD (Vpd Wpd) (opsize 0x0F 0x58))
 ; Scalar-double arith: retype dst/src bits as f64, op, write back (write_operand
 ; Xmm@width=64 stores lane-0, upper preserved). = aarch64 fadd/fsub/fmul/fdiv d0,d1,d2.
 (instruction ADDSD (dst src) "addsd $dst, $src" (= dst (+ (as-f64 dst) (as-f64 src))))
 (encoding ADDSD (Vsd Wsd) (repnz 0x0F 0x58))
 
-(instruction MULPD (dst src) "mulpd $dst, $src" (intrinsic mulpd dst src))
+(instruction MULPD (dst src) "mulpd $dst, $src" (= dst (vfbin dst src 64 2)))
 (encoding MULPD (Vpd Wpd) (opsize 0x0F 0x59))
 (instruction MULSD (dst src) "mulsd $dst, $src" (= dst (* (as-f64 dst) (as-f64 src))))
 (encoding MULSD (Vsd Wsd) (repnz 0x0F 0x59))
 
-(instruction SUBPD (dst src) "subpd $dst, $src" (intrinsic subpd dst src))
+(instruction SUBPD (dst src) "subpd $dst, $src" (= dst (vfbin dst src 64 1)))
 (encoding SUBPD (Vpd Wpd) (opsize 0x0F 0x5C))
 (instruction SUBSD (dst src) "subsd $dst, $src" (= dst (- (as-f64 dst) (as-f64 src))))
 (encoding SUBSD (Vsd Wsd) (repnz 0x0F 0x5C))
@@ -59,7 +59,7 @@
 (instruction MINSD (dst src) "minsd $dst, $src" (intrinsic minsd dst src))
 (encoding MINSD (Vsd Wsd) (repnz 0x0F 0x5D))
 
-(instruction DIVPD (dst src) "divpd $dst, $src" (intrinsic divpd dst src))
+(instruction DIVPD (dst src) "divpd $dst, $src" (= dst (vfbin dst src 64 3)))
 (encoding DIVPD (Vpd Wpd) (opsize 0x0F 0x5E))
 (instruction DIVSD (dst src) "divsd $dst, $src" (= dst (/ (as-f64 dst) (as-f64 src))))
 (encoding DIVSD (Vsd Wsd) (repnz 0x0F 0x5E))

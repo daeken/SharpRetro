@@ -406,6 +406,14 @@ public class RustLiftGen {
                 var hi = l[4] is PName("#t") ? "true" : "false";
                 return Rt($"bd.vzip({a}, {b}, {ew}, {hi})");
             }
+            case "vfbin": {
+                // (vfbin a b elw op) — packed-float per-lane arith on V128 → V128.
+                // Expression head; .isa does (= dst (vfbin dst src elw op)) for RMW.
+                // elw ∈ {32,64}, op ∈ {0=add,1=sub,2=mul,3=div}.
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var ew = ((PInt)l[3]).Value; var op = ((PInt)l[4]).Value;
+                return Rt($"bd.vfbin({a}, {b}, {ew}, {op})");
+            }
             case "zext": {
                 var a = Expr(l[1]);
                 var w = l.Count > 2 && l[2] is PInt(var wv2) ? wv2.ToString() : OpW;

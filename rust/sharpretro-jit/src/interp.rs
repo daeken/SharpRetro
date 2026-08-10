@@ -238,6 +238,25 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         IVal { ty: IlType::I{signed:false, width:128}, bits: (hi.bits << 64) | (lo.bits & u64::MAX as u128) }
     }
     fn hi64(&mut self, a: IVal) -> IVal { IVal { ty: IlType::U64, bits: a.bits >> 64 } }
+    fn vfbin(&mut self, a: IVal, b: IVal, ew: u32, op: u32) -> IVal {
+        // Per-lane float arith on the u128 bit-storage. ew=32→4×f32, ew=64→2×f64.
+        let n = 128 / ew;
+        let m = if ew < 128 { (1u128 << ew) - 1 } else { u128::MAX };
+        let mut r = 0u128;
+        for k in 0..n {
+            let ea = ((a.bits >> (k*ew)) & m) as u64;
+            let eb = ((b.bits >> (k*ew)) & m) as u64;
+            let er = if ew == 32 {
+                let (fa, fb) = (f32::from_bits(ea as u32), f32::from_bits(eb as u32));
+                (match op { 0=>fa+fb, 1=>fa-fb, 2=>fa*fb, 3=>fa/fb, _=>panic!() }).to_bits() as u64
+            } else {
+                let (fa, fb) = (f64::from_bits(ea), f64::from_bits(eb));
+                (match op { 0=>fa+fb, 1=>fa-fb, 2=>fa*fb, 3=>fa/fb, _=>panic!() }).to_bits()
+            };
+            r |= (er as u128 & m) << (k*ew);
+        }
+        IVal { ty: IlType::V128, bits: r }
+    }
     fn vzip(&mut self, a: IVal, b: IVal, ew: u32, hi: bool) -> IVal {
         let n = 128 / ew;   // total lanes at this elem-width
         let m = if ew < 128 { (1u128 << ew) - 1 } else { u128::MAX };

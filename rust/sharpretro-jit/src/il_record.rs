@@ -207,6 +207,7 @@ impl Builder for IlRecorder {
         self.produce(IlOpKind::Cast, IlType::I{signed:false,width:128}, &[hi, lo], 2 /*pair marker*/)
     }
     fn hi64(&mut self, a: u32) -> u32 { self.produce(IlOpKind::Cast, IlType::U64, &[a], 3 /*hi64 marker*/) }
+    fn vfbin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfbin (V128)") }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         self.produce(IlOpKind::Ternary, IlType::V128, &[a, b],
             (ew as u128) | if hi { 1<<8 } else { 0 } | 5<<16 /*vzip marker*/)
