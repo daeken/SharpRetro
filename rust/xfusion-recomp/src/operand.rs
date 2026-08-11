@@ -141,8 +141,33 @@ pub fn write_operand<B: Builder>(bd: &mut B, op: &Operand<B::Val>, v: B::Val)
             bd.mem_write(addr, vc);
         }
         Operand::Imm { .. } => panic!("write to Imm operand"),
-        Operand::Xmm { idx, .. } => {
+        Operand::Xmm { idx, width: 128 } => {
             bd.reg_write(XMM, idx as u32, v);
+        }
+        Operand::Xmm { idx, width } => {
+            // Scalar SS/SD (width 32/64): write low `width` bits ONLY, upper
+            // 128−width PRESERVED. SDM Vol 2A ADDSS: "The three high-order
+            // doublewords of the destination operand remain unchanged."
+            // Silicon-sweep phase-2 first-fire: ~1,350/1,600 diffs = this ONE
+            // bug (ADDSS/SUBSS/MULSS/DIVSS/SQRTSS/CMPSS + all SD + MOVSS/SD
+            // reg,reg + CVTSS2SD/SD2SS). addss xmm0,xmm0 w/ xmm0=[1,1,1,1]f:
+            // silicon xmm0=[2,1,1,1]f (upper preserved), interp was [2,0,0,0]
+            // (X86State::reg_write does self.xmm[idx]=v.bits, full replace).
+            //
+            // Also fixes MOVSS/MOVSD reg,reg (merges per SDM; the mem→reg
+            // ZEROES-upper case is Wss-mem-form = phase-3 mem-arm, separate).
+            let full = bd.reg_read(XMM, idx as u32, IlType::V128);
+            let mask: u128 = if width >= 128 { u128::MAX } else { (1u128 << width) - 1 };
+            let km = bd.literal(IlType::V128, !mask);
+            let kept = bd.and(full, km);
+            // v may be F32/F64/U32/U64 — bitcast to int (bit-preserve), then
+            // cast int→V128 (zext-into-128, upper zero per interp cast :233).
+            let vi = bd.bitcast(v, ilty(width));
+            let vv = bd.cast(vi, IlType::V128);
+            let lm = bd.literal(IlType::V128, mask);
+            let vlo = bd.and(vv, lm);            // defensive: mask low width
+            let merged = bd.or(kept, vlo);
+            bd.reg_write(XMM, idx as u32, merged);
         }
     }
 }
