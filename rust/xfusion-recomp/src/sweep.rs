@@ -53,8 +53,12 @@ pub fn phase1_skip(d: &SwDef) -> Option<&'static str> {
             | SwCls::Imm => {}
             SwCls::Rel => return Some("branch"),      // rip-changing, phase-2
             SwCls::StrS | SwCls::StrD => return Some("string-op"),
-            SwCls::Vxmm | SwCls::Wxmm | SwCls::Uxmm | SwCls::Hxmm
-                => return Some("xmm"),                 // phase-2 (xmm-idx sweep)
+            // Phase-2: Vxmm/Wxmm/Uxmm occupy the SAME ModRM.reg/.rm fields
+            // as Greg/Erm at the byte level (REX.R/B extend to xmm8-15
+            // identically). encode() treats them via has_vreg/has_wrm below.
+            SwCls::Vxmm | SwCls::Wxmm | SwCls::Uxmm => {}
+            // Hxmm = VEX.vvvv 3rd operand — needs VEX encoding (phase-3).
+            SwCls::Hxmm => return Some("vex-vvvv"),
             SwCls::Sreg => return Some("segreg"),
             SwCls::Moff => return Some("moffs"),
             SwCls::Preg | SwCls::Qrm => return Some("mmx"),
@@ -103,12 +107,23 @@ pub fn has_v_operand(d: &SwDef) -> bool {
 pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
     let mut b = Vec::with_capacity(15);
 
-    // Which operands drive which encoding fields:
+    // Which operands drive which encoding fields. Vxmm/Uxmm occupy ModRM.reg
+    // like Greg; Wxmm occupies ModRM.rm like Erm — same byte-level encoding,
+    // same REX.R/B extension for idx≥8. The XMM/GPR distinction is purely
+    // in the .isa's operand-class dispatch, not in the instruction bytes.
+    // ModRM field mapping: Vxmm=ModRM.reg (like Greg); Wxmm|Uxmm=ModRM.rm
+    // (Uxmm = XMM-in-rm mod=11-only, e.g. PSRLW-I `(Uxmm Ib) /2` — reg_ext
+    // in reg-field, XMM idx in rm). First-cut had Uxmm on the reg side →
+    // enumerated c.reg uselessly (reg_ext overrides) + rm always 0.
     let has_greg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Greg));
+    let has_vreg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Vxmm));
     let has_erm  = d.ops.iter().any(|o| matches!(o.cls, SwCls::Erm));
+    let has_wrm  = d.ops.iter().any(|o| matches!(o.cls, SwCls::Wxmm | SwCls::Uxmm));
     let has_zopc = d.plus_r || d.ops.iter().any(|o| matches!(o.cls, SwCls::Zopc));
     let imm_op   = d.ops.iter().find(|o| matches!(o.cls, SwCls::Imm));
-    let has_modrm = has_greg || has_erm || d.reg_ext >= 0;
+    let uses_reg = has_greg || has_vreg;
+    let uses_rm  = has_erm || has_wrm;
+    let has_modrm = uses_reg || uses_rm || d.reg_ext >= 0;
 
     // ── prefix bytes ──
     // Mandatory prefix (66/F2/F3) is a REAL prefix byte, before REX.
@@ -120,10 +135,13 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
 
     // REX byte. W = op_w==64 unless d64 (d64 rows are 64-bit by default in long
     // mode, no REX.W needed). R/B/X from high bits of reg/rm/zopc.
-    let rex_w = c.op_w == 64 && !d.d64;
-    let rex_r = has_greg && (c.reg & 8) != 0;
+    // REX.W: only for GPR V-coded rows at op_w=64. XMM-only rows never set
+    // REX.W from op_w (some SSE defs like MOVQ-X use REX.W as an OPCODE
+    // discriminator — that's captured in the def's own d64/mprefix, not here).
+    let rex_w = c.op_w == 64 && !d.d64 && has_v_operand(d);
+    let rex_r = uses_reg && (c.reg & 8) != 0;
     let rex_b = if has_zopc { (c.zopc & 8) != 0 }
-                else if has_erm { (c.rm & 8) != 0 }
+                else if uses_rm { (c.rm & 8) != 0 }
                 else { false };
     // REX.X unused in reg-form (no SIB).
     // Byte-reg SPL/BPL/SIL/DIL selection: any b-width GPR operand at index 4-7
@@ -160,10 +178,16 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
 
     // ── ModRM (reg-form: mod=11) ──
     if has_modrm {
+        // uses_reg/uses_rm (not has_greg/has_erm) — Vxmm/Wxmm occupy the
+        // same ModRM.reg/.rm fields. First-cut left the old gates here
+        // → every XMM row encoded reg=0,rm=0 (ModRM=0xC0). REX bits were
+        // correct (uses_reg/uses_rm at :138), so 45 0F 58 C0 = addps
+        // xmm8,xmm8 not xmm9,xmm10. objdump-spot-test caught it; round-
+        // trip gate DIDN'T (checks len+mnem only — xmm0,xmm0 has both).
         let reg3 = if d.reg_ext >= 0 { d.reg_ext as u8 }
-                   else if has_greg { c.reg & 7 }
+                   else if uses_reg { c.reg & 7 }
                    else { 0 };
-        let rm3 = if has_erm { c.rm & 7 } else { 0 };
+        let rm3 = if uses_rm { c.rm & 7 } else { 0 };
         b.push(0xC0 | (reg3 << 3) | rm3);
     }
 
@@ -196,6 +220,29 @@ pub fn verify_rt(d: &SwDef, c: &EncChoice) -> Result<Vec<u8>, String> {
             if dm != d.mnem {
                 return Err(format!("mnem-mismatch: encoded {} decoded {} bytes {:02X?} choice {c:?}",
                                    d.mnem, dm, bytes));
+            }
+            // Operand-match: len+mnem alone missed the ModRM=0xC0 bug (every
+            // XMM row encoded reg=0,rm=0; still same mnem+len — objdump caught
+            // it, this gate didn't until strengthened).
+            // Verify decoded ModRM.reg/.rm/plus_r-idx match the choice.
+            let uses_reg = d.ops.iter().any(|o|
+                matches!(o.cls, SwCls::Greg | SwCls::Vxmm));
+            let uses_rm = d.ops.iter().any(|o|
+                matches!(o.cls, SwCls::Erm | SwCls::Wxmm | SwCls::Uxmm));
+            if uses_reg && di.m.reg != c.reg {
+                return Err(format!("reg-mismatch: {} enc reg={} dec reg={} bytes {:02X?}",
+                                   d.mnem, c.reg, di.m.reg, bytes));
+            }
+            if uses_rm && di.m.rm != c.rm {
+                return Err(format!("rm-mismatch: {} enc rm={} dec rm={} bytes {:02X?}",
+                                   d.mnem, c.rm, di.m.rm, bytes));
+            }
+            if d.plus_r {
+                let dz = (di.op & 7) | if di.p.rex_b() { 8 } else { 0 };
+                if dz != c.zopc {
+                    return Err(format!("zopc-mismatch: {} enc zopc={} dec={} bytes {:02X?}",
+                                       d.mnem, c.zopc, dz, bytes));
+                }
             }
             Ok(bytes)
         }
@@ -235,15 +282,20 @@ pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
     d: &SwDef, mut f: F, mut on_fail: E) -> (u32, u32)
 {
     let has_greg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Greg));
+    let has_vreg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Vxmm));
     let has_erm  = d.ops.iter().any(|o| matches!(o.cls, SwCls::Erm));
+    let has_wrm  = d.ops.iter().any(|o| matches!(o.cls, SwCls::Wxmm | SwCls::Uxmm));
     let has_zopc = d.plus_r || d.ops.iter().any(|o| matches!(o.cls, SwCls::Zopc));
     let imm_op   = d.ops.iter().find(|o| matches!(o.cls, SwCls::Imm));
 
+    // op_w dimension: V/Z GPR operands ⇒ {16,32,64}; d64 ⇒ {64}; XMM-only or
+    // fixed-width ⇒ single point (op_w doesn't vary by prefix for SSE rows —
+    // the mprefix IS the discriminator).
     let opws: &[u8] = if d.d64 { &[64] }
                       else if has_v_operand(d) { &[16, 32, 64] }
                       else { &[32] };
-    let regs: Vec<u8> = if has_greg { (0..16).collect() } else { vec![0] };
-    let rms:  Vec<u8> = if has_erm  { (0..16).collect() } else { vec![0] };
+    let regs: Vec<u8> = if has_greg || has_vreg { (0..16).collect() } else { vec![0] };
+    let rms:  Vec<u8> = if has_erm || has_wrm  { (0..16).collect() } else { vec![0] };
     let zops: Vec<u8> = if has_zopc { (0..16).collect() } else { vec![0] };
     let (mut n_ok, mut n_fail) = (0u32, 0u32);
     for &op_w in opws {
@@ -331,6 +383,47 @@ mod tests {
         println!("  phase-1 eligible: {n_p1} / {} defs", SWEEP_DEFS.len());
         for (r, n) in &skip { println!("    skip {r}: {n}"); }
         assert!(n_p1 > 100, "expected >100 phase-1-eligible defs");
+    }
+
+    #[test]
+    fn xmm_encode_spot_objdump() {
+        // Own #67 discipline: round-trip through decode_insn = self-oracle.
+        // Verify a few XMM encodings against objdump (independent decoder).
+        use std::process::Command;
+        let cases: &[(&str, u8, u8, u8, u8, &str)] = &[
+            // (mnem, mprefix, opcode-in-map1, reg, rm, want-objdump-mnem)
+            ("ADDPS",  0x00, 0x58, 1, 2,  "addps"),   // 0F 58 CA
+            ("ADDPS",  0x00, 0x58, 9, 10, "addps"),   // 45 0F 58 CA
+            ("ADDSD",  0xF2, 0x58, 0, 7,  "addsd"),   // F2 0F 58 C7
+            ("MULPD",  0x66, 0x59, 3, 11, "mulpd"),   // 66 41 0F 59 DB
+            ("PXOR",   0x66, 0xEF, 15, 8, "pxor"),    // 66 45 0F EF F8
+        ];
+        let mut all = vec![];
+        for &(mnem, mp, op, reg, rm, _) in cases {
+            let d = SWEEP_DEFS.iter().find(|d|
+                d.mnem == mnem && d.mprefix == mp && d.opcode == op && d.map == 1
+            ).unwrap_or_else(|| panic!("no SwDef for {mnem}"));
+            let c = EncChoice { op_w: 32, reg, rm, zopc: 0, imm: 0 };
+            let bytes = encode(d, &c);
+            eprintln!("  {} reg={} rm={} → {:02X?}", mnem, reg, rm, &bytes);
+            all.extend_from_slice(&bytes);
+        }
+        std::fs::write("/tmp/sweep_xmm_spot.bin", &all).unwrap();
+        let out = Command::new("objdump")
+            .args(["-D","-b","binary","-m","i386:x86-64","-M","intel","/tmp/sweep_xmm_spot.bin"])
+            .output().unwrap();
+        let d = String::from_utf8_lossy(&out.stdout);
+        let insns: Vec<_> = d.lines().filter(|l| l.contains(":\t")).collect();
+        eprintln!("  objdump ({} insns):", insns.len());
+        for l in &insns { eprintln!("    {}", l.trim()); }
+        // One insn per case (no misdecodes = no split), each matches its want-mnem.
+        assert_eq!(insns.len(), cases.len(), "objdump insn count ≠ case count → misencoded");
+        for (i, &(mnem, _, _, reg, rm, want)) in cases.iter().enumerate() {
+            let l = insns[i];
+            assert!(l.contains(want), "{mnem}: objdump `{}` doesn't contain `{want}`", l.trim());
+            assert!(l.contains(&format!("xmm{reg}")) && l.contains(&format!("xmm{rm}")),
+                    "{mnem}: xmm{reg}/xmm{rm} not in `{}`", l.trim());
+        }
     }
 
     #[test]
