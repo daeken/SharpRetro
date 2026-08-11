@@ -472,7 +472,9 @@
         ; SDM: 'SF, ZF, and PF flags are set according to the RESULT.'
         (if (!= c 0)
             (block
-                (= CF (& (>> _lval (- (bitwidth _lval) c)) 1))
+                ; ⑨ dense-fire: (bitwidth _lval)=mlet-var → op_w (⑤'s class);
+                ; shl al,1 al=0x80 CF=(>>0x80 31)&1=0. (bitwidth lval)→width()=8 → 1.
+                (= CF (& (>> _lval (- (bitwidth lval) c)) 1))
                 (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
                 (= ZF (== lval 0))))))
 (encoding SHL (Eb Ib) (0xC0 /4))
@@ -504,7 +506,11 @@
         (= lval tval)
         (if (!= c 0)
             (block
-                (= CF (& (>> _lval (- c 1)) 1))
+                ; ⑩ 4th .isa-tier: SAR CF at count≥width w/ negative operand.
+                ; sar al,16 al=0x80 → sign-copies shift out → CF=1. (>> _lval 15)
+                ; = LOGICAL → 0. >>a = sign-fill → 0xFF..>>0 &1=1. Fire-7 dense
+                ; ×90 all at pre=0x80 (PRE_VALS[4], smoke's max-pre-3 never hit).
+                (= CF (& (>>a _lval (- c 1)) 1))
                 (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
                 (= ZF (== lval 0))))))
 (encoding SAR (Eb Ib) (0xC0 /7))
