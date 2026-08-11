@@ -1375,6 +1375,7 @@ pub fn compile_from_enc(enc: Aarch64Enc, n_slots: u32) -> CompiledBlock {
             page: page as *mut u8, page_len, code_len: len,
             entry: std::mem::transmute(page),
             n_slots,
+            link_sites: vec![], body_off: 0,
         }
     }
 }
@@ -1385,6 +1386,15 @@ pub struct CompiledBlock {
     pub code_len: usize,   // bytes of actual code (< page_len)
     entry: extern "C" fn(*mut u64, *mut u64),
     pub n_slots: u32,
+    /// Block-linking (tier-1): (byte_off_of_8B_slot, guest_target_pc) per
+    /// const-target exit thunk. Link A→B = write B's body address (page +
+    /// body_off) into A's slot — one aligned volatile u64 store (data, not
+    /// insn stream → no icache maintenance).
+    pub link_sites: Vec<(usize, u64)>,
+    /// Byte offset of the post-prologue body (uniform frame contract: chained
+    /// entries jump here, reusing the predecessor block's frame). 0 = tier-0
+    /// (not chainable).
+    pub body_off: usize,
 }
 
 impl CompiledBlock {
@@ -1395,6 +1405,24 @@ impl CompiledBlock {
     /// Raw entry fn (for a driver that manages its own shared spill area
     /// instead of exec_slice's per-call vec![] alloc).
     pub fn entry_fn(&self) -> extern "C" fn(*mut u64, *mut u64) { self.entry }
+    /// Page base address (block-linking: slot patches + body-address compute).
+    pub fn page_addr(&self) -> u64 { self.page as u64 }
+    /// Chained-entry address = page + body_off (post-prologue body under the
+    /// uniform tier-1 frame contract).
+    pub fn body_addr(&self) -> u64 { self.page as u64 + self.body_off as u64 }
+    /// Patch one link slot (byte offset from page) to jump to `target_addr`.
+    /// Aligned 8-byte data store — the thunk's ldr-literal reads DATA, so no
+    /// icache maintenance is required (ARMv8 data-side coherency suffices for
+    /// a subsequent ldr on the same PE; cross-thread patching would want
+    /// release ordering, which write_volatile+aligned gives us in practice —
+    /// single-thread drivers today anyway).
+    pub fn patch_link(&self, slot_byte_off: usize, target_addr: u64) {
+        debug_assert_eq!(slot_byte_off % 8, 0, "link slot must be 8-aligned");
+        unsafe {
+            let p = self.page.add(slot_byte_off) as *mut u64;
+            std::ptr::write_volatile(p, target_addr);
+        }
+    }
 }
 
 impl CompiledBlock {

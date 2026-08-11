@@ -21,6 +21,10 @@ use crate::il_record::{IlRecorder, IlOp, IlOpKind};
 use crate::regalloc::{linear_scan, Loc, AllocResult};
 use crate::tier0::{StateLayout, CompiledBlock};
 
+/// Uniform prologue size in BYTES: sub_i + 11× str + 2× mov = 14 insns.
+/// Every tier-1 block emits exactly this frame; block-linking jumps to
+/// page+BODY_OFF to skip it (chained blocks share the predecessor's frame).
+pub const BODY_OFF: usize = 14 * 4;
 const X_STATE: u32 = 28;
 const X_SPILL: u32 = 27;
 const X_S0: u32 = 9;    // scratch for materializing Spill/Literal arg 0
@@ -198,6 +202,14 @@ struct Emitter<'a> {
     cond_stack: Vec<(usize, u32, usize)>,
     /// Op-indices to skip (dead-RegWrite-elim marked them; emit_op checks first).
     dead_ops: std::collections::HashSet<usize>,
+    /// Block-linking (v1): SSA-id → Literal imm (so Branch sees const targets).
+    lit_of: std::collections::HashMap<u32, u128>,
+    /// Link sites: (literal_slot_word_idx, guest_target). Each = `ldr x17,<lit>;
+    /// br x17` + 8-byte inline slot the cache patches with the successor's body
+    /// address once compiled. Until then finalize points it at the epilogue.
+    link_sites: Vec<(usize, u64)>,
+    /// XF_LINK=0 disables (measurement + fallback).
+    link: bool,
 }
 
 impl<'a> Emitter<'a> {
@@ -210,17 +222,33 @@ impl<'a> Emitter<'a> {
         enc.str_x(30, 31, 80);
         enc.mov_r(X_STATE, 0);
         enc.mov_r(X_SPILL, 1);
-        Self { enc, layout, rec, alloc, cond_stack: vec![], dead_ops: Default::default() }
+        let link = std::env::var("XF_LINK").map(|v| v != "0").unwrap_or(true);
+        Self { enc, layout, rec, alloc, cond_stack: vec![], dead_ops: Default::default(),
+               lit_of: Default::default(), link_sites: vec![], link }
     }
 
     fn finalize(mut self, n_spill_slots: u32) -> CompiledBlock {
         // Epilogue: restore callee-saved + lr, ret.
+        let epi_word = self.enc.here();
         for (i, r) in (19..=28).enumerate() { self.enc.ldr_x(r, 31, (i as u32) * 8); }
         self.enc.ldr_x(30, 31, 80);
         self.enc.add_i(31, 31, 96);
         self.enc.ret();
         // Reuse tier-0's CompiledBlock finalization (mmap RWX + __clear_cache).
-        crate::tier0::compile_from_enc(self.enc, n_spill_slots)
+        let mut blk = crate::tier0::compile_from_enc(self.enc, n_spill_slots);
+        // Block-linking: default every link-slot to THIS block's epilogue
+        // (absolute address, known only post-mmap). Unlinked exit ≡ the old
+        // behavior exactly: state[pc] already written, restore-frame, ret.
+        let base = blk.page_addr();
+        for &(slot_w, guest_tgt) in &self.link_sites {
+            unsafe {
+                let slot = (base as *mut u8).add(slot_w * 4) as *mut u64;
+                std::ptr::write_volatile(slot, base + (epi_word as u64) * 4);
+            }
+            blk.link_sites.push((slot_w * 4, guest_tgt));
+        }
+        blk.body_off = BODY_OFF;
+        blk
     }
 
     /// Materialize SSA val `v` into host reg `into` (a scratch x9-x11 usually,
@@ -313,6 +341,7 @@ impl<'a> Emitter<'a> {
         match op.kind {
             Literal => {
                 let out = op.out.unwrap();
+                self.lit_of.insert(out, op.imm);   // block-linking: const-trace
                 let (xd, sp) = self.dest(out);
                 self.enc.mov_imm64(xd, op.imm as u64);
                 if w < 64 { self.mask_to(xd, w); }
@@ -595,19 +624,36 @@ impl<'a> Emitter<'a> {
                 self.put(out, xd, sp);
             }
             Branch | BranchLink => {
-                // Write state[pc] = target, then RET (via inline epilogue).
-                // Jcc emits Branch INSIDE a cond-then, followed by the
-                // fallthrough Branch outside — both need to reach the epilogue.
-                // v1: emit the epilogue INLINE at each branch site (2 branches
-                // per Jcc-block = 2 epilogues; small, correct). tier-0 does the
-                // same (finalize appends epilogue, but its cond arm never
-                // reaches it since Jcc's then-branch str_x's pc then falls
-                // through to the b-over-else which... actually tier-0's Branch
-                // just str_x's pc and the SINGLE epilogue at end serves both
-                // paths since both fall through). Same here: just str_x pc;
-                // both paths converge at the post-walk epilogue via cond's b.
+                // Write state[pc] = target (chains stay observable), then —
+                // when the target is CONST (Literal-traced) and linking's on —
+                // exit via a PATCHABLE literal-routed jump:
+                //     ldr x17, #8      ; load the 8-byte slot below
+                //     br  x17          ; → slot's address
+                //     .quad <addr>     ; own-epilogue (finalize) → successor's
+                //                      ;   BODY (cache patches when compiled)
+                // Chain-soundness: uniform frame contract — every tier-1 block
+                // has the identical BODY_OFF-byte prologue and reads inputs
+                // from state[]; X_STATE/X_SPILL are callee-saved and never
+                // reallocated, so jumping into a successor's post-prologue
+                // body reuses this frame; whichever block takes an unlinked
+                // exit restores it once. Patch = aligned 8-byte DATA write
+                // (ldr-literal reads data → no icache maintenance).
                 let target = self.get(op.args[0], X_S0);
                 self.enc.str_x(target, X_STATE, self.layout.off_pc);
+                if self.link && matches!(op.kind, IlOpKind::Branch) {
+                    if let Some(&t) = self.lit_of.get(&op.args[0]) {
+                        // Slot must be 8-aligned: it lands at (here+2) words;
+                        // pad with a NOP if (here+2) is odd.
+                        if (self.enc.here() + 2) % 2 != 0 { self.enc.nop(); }
+                        self.enc.ldr_lit(17, 2);      // x17 ← [pc + 8]
+                        self.enc.br(17);
+                        let slot_w = self.enc.here();
+                        self.enc.put_u64(0);          // patched at finalize/link
+                        self.link_sites.push((slot_w, t as u64));
+                    }
+                }
+                // Non-const target (RET/indirect): falls through to the shared
+                // epilogue as before.
                 // ‡ BranchLink: link semantics done upstream (x86 CALL = push
                 //   next_pc as separate ops before this Branch).
             }

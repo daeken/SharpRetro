@@ -459,6 +459,16 @@ impl Aarch64Enc {
     /// Patch a word at `idx` (for forward-branch fixups).
     pub fn patch(&mut self, idx: usize, w: u32) { self.buf[idx] = w; }
     pub fn here(&self) -> usize { self.buf.len() }
+    /// LDR Xt, <literal> — PC-relative load of a u64 at word-offset `off_words`
+    /// from THIS instruction (imm19, ±1MB). Decode-back-verified: 0x58000051 =
+    /// ldr x17, 0x8 (off_words=2).
+    pub fn ldr_lit(&mut self, xt: u32, off_words: i32) {
+        self.put(0x5800_0000 | (((off_words as u32) & 0x7FFFF) << 5) | xt);
+    }
+    /// BR Xn. Decode-back-verified: 0xD61F0220 = br x17.
+    pub fn br(&mut self, xn: u32) { self.put(0xD61F_0000 | (xn << 5)); }
+    /// Emit raw u64 as two data words (inline literal slots).
+    pub fn put_u64(&mut self, v: u64) { self.put(v as u32); self.put((v >> 32) as u32); }
 }
 
 /// aarch64 condition codes (for CSEL/B.cond/CSET).

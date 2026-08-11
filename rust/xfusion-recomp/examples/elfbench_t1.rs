@@ -205,7 +205,48 @@ fn main() {
     // HashMap-lookup cost from the residual (which is then prologue/epilogue +
     // the block-body itself = the block-linking floor).
     let nohash = std::env::var("NOHASH").is_ok();
+    // LINKED=1: block-linking. After each compile, cross-patch link-slots:
+    // new block's sites → existing blocks' bodies; existing blocks' sites
+    // aimed at the new pc → new block's body. Chained blocks share one frame
+    // (uniform prologue contract; entry at body_addr skips it) so a whole
+    // A→B→C→…→A loop runs without touching the driver, the HashMap, or the
+    // frame save/restore. Exit to driver happens ONLY at unlinked slots
+    // (default = own epilogue): stop-insns (INT3) never compile → never link
+    // → chains reaching them fall back to the driver, which sees the pc. ✓
+    let linked = std::env::var("LINKED").is_ok();
     let t0 = Instant::now();
+    if linked {
+        let sp = flat.as_mut_ptr(); let spp = spill.as_mut_ptr();
+        loop {
+            let pc = flat[OFF_RIP];
+            if unsafe { *(pc as *const u8) } == 0xCC { break; }
+            if !blocks.contains_key(&pc) {
+                n_compiles += 1;
+                let nb = compile_t1(pc);
+                // Cross-link: existing→new + new→existing (+ new→new self-loop).
+                for (opc, ob) in blocks.iter() {
+                    for &(off, tgt) in &ob.link_sites {
+                        if tgt == pc { ob.patch_link(off, nb.body_addr()); }
+                    }
+                    for &(off, tgt) in &nb.link_sites {
+                        if tgt == *opc { nb.patch_link(off, ob.body_addr()); }
+                    }
+                }
+                for &(off, tgt) in &nb.link_sites {
+                    if tgt == pc { nb.patch_link(off, nb.body_addr()); }
+                }
+                blocks.insert(pc, nb);
+            }
+            let f = blocks[&pc].entry_fn();
+            f(sp, spp);
+            n_execs += 1;
+            if n_execs > max_execs { break; }
+        }
+        let wall = t0.elapsed().as_secs_f64();
+        println!("[elfbench_t1] wall = {:.4}s  ({} DRIVER-execs (chains uncounted), {} compiles)  rax=0x{:x}",
+            wall, n_execs, n_compiles, flat[0]);
+        return;
+    }
     if nohash {
         // Warm-up: compile all blocks first (run until n_execs > 100 covers all pcs).
         let sp = flat.as_mut_ptr(); let spp = spill.as_mut_ptr();
