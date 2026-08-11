@@ -4,6 +4,19 @@
 set -e
 CORPUS="$1"; N="${2:-16}"; RUNNER="${3:-/tmp/oracle_runner_v4}"
 BASE="${CORPUS%.x64d}"
+# Stale-binary guard (retro-1 kill-①: "a banked lesson that isn't a GATE
+# doesn't hold under cadence"). If the runner SOURCE is on the box next to
+# the binary, REFUSE when the binary is older than the source — the exact
+# class that ran a whole day of v4 fires on a free()-crashing binary and
+# nearly fired v6 mem-rows through a v5 runner. Source absent = no check
+# (corpus-only boxes).
+SRC="$(dirname "$RUNNER")/ec2_x64_oracle_runner.c"
+if [ -f "$SRC" ] && [ "$SRC" -nt "$RUNNER" ]; then
+  echo "[parallel-fire] REFUSED: $RUNNER is OLDER than $SRC — rebuild first:"
+  echo "                gcc -O2 -o $RUNNER $SRC"
+  exit 9
+fi
+echo "[parallel-fire] runner: $RUNNER ($(stat -c %y "$RUNNER" 2>/dev/null | cut -d. -f1); $(sha256sum "$RUNNER" | cut -c1-12))"
 echo "[parallel-fire] $CORPUS → $N shards"
 python3 /tmp/split_x64d.py "$CORPUS" "$N" "${BASE}_shard" | head -3
 echo "[parallel-fire] launching $N runners..."
