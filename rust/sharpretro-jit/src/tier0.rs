@@ -996,15 +996,25 @@ impl Builder for Tier0 {
             self.store2(X_A, X_C, s);
             return s;
         }
-        // Width-aware: for width≤32 use W-form (asrv_w/lsrv_w) so the shift bounds
-        // and sign-bit position are correct (asrv-X on a W-value shifts from bit-63,
-        // not bit-31 — the shifted-register-ASR fuzz diff).
-        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
-        self.bin(a, b, t, move |e| match (signed, w32) {
-            (true, true) => e.asrv_w(X_A, X_A, X_B),
-            (true, false) => e.asrv(X_A, X_A, X_B),
-            (false, true) => e.lsrv_w(X_A, X_A, X_B),
-            (false, false) => e.lsrv(X_A, X_A, X_B),
+        // Width-aware. For SIGNED at width<32: asrv_w's sign-bit is bit-31, but
+        // the value's sign is bit-(w-1) with [31:w]=0 (caller-clean invariant) →
+        // asrv_w is effectively logical. Sign-extend X_A from bit-(w-1) to full 64
+        // first (lsl+asr pair, same as sext()), then 64-bit asrv; bin()'s mask_to
+        // truncates back to w after. sar al,3 al=0x80 → tier0 was 0x10 (asrv_w on
+        // zero-extended), interp/silicon 0xF0. For w=32 asrv_w is correct as-is
+        // (sign-bit IS bit-31). Unsigned at w≤32 uses lsrv_w (correct — [31:w]=0).
+        let w = match t { IlType::I{width, ..} => width as u32, _ => 64 };
+        self.bin(a, b, t, move |e| match (signed, w) {
+            (true, w) if w < 32 => {
+                e.mov_imm64(X_C, (64 - w) as u64);
+                e.lslv(X_A, X_A, X_C);
+                e.asrv(X_A, X_A, X_C);
+                e.asrv(X_A, X_A, X_B);
+            }
+            (true, 32) => e.asrv_w(X_A, X_A, X_B),
+            (true, _)  => e.asrv(X_A, X_A, X_B),
+            (false, w) if w <= 32 => e.lsrv_w(X_A, X_A, X_B),
+            (false, _) => e.lsrv(X_A, X_A, X_B),
         }) }
     fn rotr(&mut self, a: u32, b: u32) -> u32 { let t = self.tys[a as usize];
         // Width-aware: rotr at 32-bit uses rorv_w (rotate within 32 bits, not 64).
