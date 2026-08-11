@@ -8,19 +8,23 @@ echo "[parallel-fire] $CORPUS → $N shards"
 python3 /tmp/split_x64d.py "$CORPUS" "$N" "${BASE}_shard" | head -3
 echo "[parallel-fire] launching $N runners..."
 T0=$(date +%s)
-declare -a PIDS
+# PIDS via append (not PIDS[$k] — $k is zero-padded '08','09' from seq -f
+# '%02g' → bash arithmetic-context octal parse → "08: value too great for
+# base" → set -e aborts after 9 launches. Own #183: the #182-structural fix
+# broke the harness on its first fire, untested before scp.)
+declare -a PIDS=()
 for k in $(seq -f '%02g' 0 $((N-1))); do
   "$RUNNER" "${BASE}_shard.${k}" > "${BASE}_shard.${k}.log" 2>&1 &
-  PIDS[$k]=$!
+  PIDS+=($!)
 done
-# Own #182: `wait` alone discards per-child rc → a post-RESULT segfault (or
-# any nonzero exit that isn't the intended DIFF→rc=1) is invisible. Report
+# `wait` alone discards per-child rc → a post-RESULT segfault (or any
+# nonzero exit that isn't the intended DIFF→rc=1) is invisible. Report
 # per-shard rc; treat rc>1 as CRASH (rc=1 = intentional "diffs found").
 CRASH=0
-for k in $(seq -f '%02g' 0 $((N-1))); do
-  wait ${PIDS[$k]}; rc=$?
+for i in "${!PIDS[@]}"; do
+  wait "${PIDS[$i]}"; rc=$?
   if [ $rc -gt 1 ]; then
-    echo "[parallel-fire] ⚠ shard $k rc=$rc (>1 = crash/signal, NOT the diff-found rc=1)"
+    printf "[parallel-fire] ⚠ shard %02d rc=%d (>1 = crash/signal, NOT the diff-found rc=1)\n" "$i" "$rc"
     CRASH=1
   fi
 done
