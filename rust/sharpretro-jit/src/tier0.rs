@@ -1017,8 +1017,18 @@ impl Builder for Tier0 {
             _ => panic!("tier-0: rotr at width={w} (non-32/64)"),
         }) }
     fn rbit(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
-        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
-        self.una(a, t, move |e| if w32 { e.rbit_w(X_A, X_A) } else { e.rbit(X_A, X_A) }) }
+        let w = match t { IlType::I{width, ..} => width as u32, _ => 64 };
+        // width<32: rbit_w reverses full 32 → result lands in bits [31:32-w].
+        // Shift down by (32-w) to put it in [w-1:0]. Note: TZCNT = clz(rbit(x))
+        // used to CANCEL (rbit_w over-reverse ↔ clz_w over-count) for nonzero;
+        // both fixed → still cancel, and zero-case now correct (was 32, now 16).
+        self.una(a, t, move |e| {
+            if w > 32 { e.rbit(X_A, X_A); }
+            else {
+                e.rbit_w(X_A, X_A);
+                if w < 32 { e.lsr_i(X_A, X_A, 32 - w); }
+            }
+        }) }
     fn popcnt(&mut self, a: u32) -> u32 {
         // aarch64 has no scalar popcnt. Idiom: X→d0 (upper bytes zeroed by
         // fmov), CNT v0.8B (per-byte popcount), ADDV b0,v0.8B (sum → byte 0),
@@ -1035,11 +1045,19 @@ impl Builder for Tier0 {
         s
     }
     fn clz(&mut self, a: u32) -> u32 { let t = self.tys[a as usize];
-        let w32 = matches!(t, IlType::I{width, ..} if width <= 32);
-        // ‡ non-32/64 widths: interp does `(bits<<(128-w)).leading_zeros().min(w)`.
-        // For width≠{32,64} (rare in aarch64.isa — CLZ is X/W-only), would need shift-
-        // adjust. Panic if hit; the fuzz-diff will name it.
-        self.una(a, t, move |e| if w32 { e.clz_w(X_A, X_A) } else { e.clz(X_A, X_A) }) }
+        let w = match t { IlType::I{width, ..} => width as u32, _ => 64 };
+        // width<32: clz_w counts from bit-31 → off by (32-w). Emit clz_w then
+        // sub #(32-w). Assumes input width-masked (bits [31:w]=0 — the caller-
+        // clean invariant); dirty high bits → negative → the same audit ‡ as
+        // the cast-identity note. LZCNT ax,ax at ax=0 was 32 (want 16); ax=0x8000
+        // was clz_w=16 (want 0). Caught by tier-0-vs-interp on tzcnt/lzcnt tests.
+        self.una(a, t, move |e| {
+            if w > 32 { e.clz(X_A, X_A); }
+            else {
+                e.clz_w(X_A, X_A);
+                if w < 32 { e.sub_i(X_A, X_A, 32 - w); }
+            }
+        }) }
 
     fn eq(&mut self, a: u32, b: u32) -> u32 {
         if matches!(self.tys[a as usize], IlType::F{..}) { return self.fcmp_op(a, b, Cond::EQ); }
