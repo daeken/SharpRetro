@@ -760,8 +760,11 @@ public class RustLiftGen {
             foreach(var spec in def.Operands) {
                 var w = spec.ByteWidth() switch {
                     8 => "8", 16 => "16", 32 => "32", 64 => "64", 128 => "128",
-                    _ => "op_w",  // v-width parameterized
+                    _ => "op_w",  // v/z-width parameterized
                 };
+                // y-width: 32/64 by REX.W, 66 ignored. Not op_w (which reads 66).
+                // Ⓓ: CVTSS2SI Gy — 66 F3 0F 2C = still r32 dst on silicon.
+                if(spec.Width == WCode.y) w = "d.p.y_width(mode)";
                 var b = spec.Class switch {
                     OpClass.ModRmRm => $"bind_modrm_rm(bd, d, pc, mode, {w})",
                     OpClass.ModRmReg => $"bind_modrm_reg(d, {w})",

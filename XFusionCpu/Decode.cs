@@ -46,6 +46,11 @@ public struct PrefixState {
 	/// z-sized: like v but capped at 32 (immediates in 64-bit ops are imm32 sign-extended).
 	public int ZWidth(XMode mode) => Math.Min(VWidth(mode), 32);
 
+	/// y-sized: 32/64 by REX.W only; 0x66 IGNORED. SDM's Gy/Ey — CVT{,T}S{S,D}2SI
+	/// dst, CVTSI2S{S,D} src, BMI operands. 66 F3 0F 2C = still cvttss2si r32
+	/// (silicon; 66 is a data16 no-op). 32-bit-mode → 32 always (no REX).
+	public int YWidth(XMode mode) => mode == XMode.Bits64 && RexW ? 64 : 32;
+
 	/// v-width for D64-class ops (PUSH/POP/CALL/JMP near, etc.): in 64-bit mode the
 	/// default operand size is 64 and cannot be 32 (SDM Vol-2 D64/F64 attributes);
 	/// 0x66 still selects 16.

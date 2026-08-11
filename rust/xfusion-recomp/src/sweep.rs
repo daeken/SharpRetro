@@ -84,6 +84,7 @@ fn imm_bytes(w: SwW, op_w: u8) -> u8 {
         SwW::D => 4,
         SwW::Q => 8,   // rare (mov r64,imm64 = the one Iq)
         SwW::V => match op_w { 16 => 2, 32 => 4, 64 => 8, _ => unreachable!() },
+        SwW::Y => match op_w { 32 => 4, 64 => 8, _ => unreachable!() },
         SwW::Z => match op_w { 16 => 2, _ => 4 },
         _ => panic!("imm width {w:?}"),
     }
@@ -135,10 +136,11 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
 
     // REX byte. W = op_w==64 unless d64 (d64 rows are 64-bit by default in long
     // mode, no REX.W needed). R/B/X from high bits of reg/rm/zopc.
-    // REX.W: only for GPR V-coded rows at op_w=64. XMM-only rows never set
+    // REX.W: for V- or Y-coded rows at op_w=64. XMM-only rows never set
     // REX.W from op_w (some SSE defs like MOVQ-X use REX.W as an OPCODE
     // discriminator — that's captured in the def's own d64/mprefix, not here).
-    let rex_w = c.op_w == 64 && !d.d64 && has_v_operand(d);
+    let has_y = d.ops.iter().any(|o| matches!(o.w, SwW::Y));
+    let rex_w = c.op_w == 64 && !d.d64 && (has_v_operand(d) || has_y);
     let rex_r = uses_reg && (c.reg & 8) != 0;
     let rex_b = if has_zopc { (c.zopc & 8) != 0 }
                 else if uses_rm { (c.rm & 8) != 0 }
@@ -288,11 +290,12 @@ pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
     let has_zopc = d.plus_r || d.ops.iter().any(|o| matches!(o.cls, SwCls::Zopc));
     let imm_op   = d.ops.iter().find(|o| matches!(o.cls, SwCls::Imm));
 
-    // op_w dimension: V/Z GPR operands ⇒ {16,32,64}; d64 ⇒ {64}; XMM-only or
-    // fixed-width ⇒ single point (op_w doesn't vary by prefix for SSE rows —
-    // the mprefix IS the discriminator).
+    // op_w dimension: V/Z ⇒ {16,32,64}; Y ⇒ {32,64} (66 ignored, REX.W only);
+    // d64 ⇒ {64}; XMM-only or fixed-width ⇒ single point.
+    let has_y = d.ops.iter().any(|o| matches!(o.w, SwW::Y));
     let opws: &[u8] = if d.d64 { &[64] }
                       else if has_v_operand(d) { &[16, 32, 64] }
+                      else if has_y { &[32, 64] }
                       else { &[32] };
     let regs: Vec<u8> = if has_greg || has_vreg { (0..16).collect() } else { vec![0] };
     let rms:  Vec<u8> = if has_erm || has_wrm  { (0..16).collect() } else { vec![0] };

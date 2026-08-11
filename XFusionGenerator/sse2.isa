@@ -277,13 +277,13 @@
 ;   state[OFF_XMM+i*2] = lane-0 only, upper (word +1) untouched. ✓
 (instruction CVTSI2SD (dst src) "cvtsi2sd $dst, $src"
     (= dst (f64 (signed (bitwidth src) src))))
-(encoding CVTSI2SD (Vsd Ev) (repnz 0x0F 0x2A))
+(encoding CVTSI2SD (Vsd Ey) (repnz 0x0F 0x2A))
 (instruction CVTSD2SI (dst src) "cvtsd2si $dst, $src"
     (= dst (int-of (bitwidth dst) (as-f64 src))))
-(encoding CVTSD2SI (Gv Wsd) (repnz 0x0F 0x2D))
+(encoding CVTSD2SI (Gy Wsd) (repnz 0x0F 0x2D))
 (instruction CVTTSD2SI (dst src) "cvttsd2si $dst, $src"
     (= dst (int-of (bitwidth dst) (as-f64 src))))
-(encoding CVTTSD2SI (Gv Wsd) (repnz 0x0F 0x2C))
+(encoding CVTTSD2SI (Gy Wsd) (repnz 0x0F 0x2C))
 
 (instruction CVTSS2SD (dst src) "cvtss2sd $dst, $src"
     (= dst (f64 (as-f32 src))))

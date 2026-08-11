@@ -320,6 +320,7 @@ public static class DisassemblerGenerator {
 			WCode.b => "8",
 			WCode.w => "16",
 			WCode.v => vw,
+			WCode.y => "p.YWidth(mode)",
 			WCode.z when spec.Class == OpClass.RelBranch && def.D64 => "p.BranchZWidth(mode)",
 			WCode.z => "p.ZWidth(mode)",
 			WCode.d => "32",

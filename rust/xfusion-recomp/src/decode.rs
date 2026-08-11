@@ -62,6 +62,13 @@ impl PrefixState {
     }
     /// z-width = min(v-width, 32) — Iz-immediates are 32-bit even at REX.W=1.
     pub fn z_width(&self, mode: XMode) -> u32 { self.v_width(mode).min(32) }
+    /// y-width: 32/64 by REX.W only; 0x66 IGNORED. SDM's Gy/Ey (CVT{,T}S{S,D}2SI
+    /// dst, CVTSI2S{S,D} src, BMI). Silicon-sweep phase-2 Ⓓ: 66 F3 0F 2C C0 =
+    /// cvttss2si eax,xmm0 (32-bit result), NOT ax (silicon ignores 66; interp
+    /// was reading v_width→16). 32-bit-mode → 32 always (no REX).
+    pub fn y_width(&self, mode: XMode) -> u32 {
+        if mode == XMode::Bits64 && self.rex_w() { 64 } else { 32 }
+    }
     /// d64: default-64 in long-mode (push/pop/near-branch); 0x66 → 16.
     pub fn v_width_d64(&self, mode: XMode) -> u32 {
         if mode == XMode::Bits64 { if self.op_size { 16 } else { 64 } }

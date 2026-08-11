@@ -33,6 +33,7 @@ public enum WCode {
 	b,     // byte
 	w,     // word
 	v,     // 16/32/64 by effective operand size
+	y,     // 32/64 by REX.W ONLY (0x66 ignored) — SDM's Gy/Ey (CVT*2SI dst, BMI ops)
 	z,     // 16/32 (64-bit opsize still uses 32) — imm and some regs
 	d,     // dword
 	q,     // qword
@@ -134,7 +135,7 @@ public class OperandSpec {
 		}
 		spec.SignExtended = sx;
 		spec.Width = wstr switch {
-			"b" => WCode.b, "w" => WCode.w, "v" => WCode.v, "z" => WCode.z,
+			"b" => WCode.b, "w" => WCode.w, "v" => WCode.v, "y" => WCode.y, "z" => WCode.z,
 			"d" => WCode.d, "q" => WCode.q, "p" => WCode.p,
 			"ps" => WCode.ps, "pd" => WCode.pd, "ss" => WCode.ss, "sd" => WCode.sd,
 			"dq" => WCode.dq, "x" => WCode.x,

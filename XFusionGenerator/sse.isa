@@ -141,13 +141,16 @@
 ; --- converts (SSE1 half: cvt*si2ss / ss2si / ps<->pi) ---
 (instruction CVTSI2SS (dst src) "cvtsi2ss $dst, $src"
     (= dst (f32 (signed (bitwidth src) src))))
-(encoding CVTSI2SS (Vss Ev) (rep 0x0F 0x2A))
+(encoding CVTSI2SS (Vss Ey) (rep 0x0F 0x2A))
 (instruction CVTSS2SI (dst src) "cvtss2si $dst, $src"
     (= dst (int-of (bitwidth dst) (as-f32 src))))
-(encoding CVTSS2SI (Gv Wss) (rep 0x0F 0x2D))
+; Ⓓ 6th .isa-tier: Gv→Gy (32/64 by REX.W only, 0x66 IGNORED). SDM's own
+; Gy/Ey convention. Silicon-sweep phase-2: 66 F3 0F 2C C0 → silicon eax=
+; (i32)f (66 ignored), interp was ax=(i16)f. 54 diffs across the 6 CVT rows.
+(encoding CVTSS2SI (Gy Wss) (rep 0x0F 0x2D))
 (instruction CVTTSS2SI (dst src) "cvttss2si $dst, $src"
     (= dst (int-of (bitwidth dst) (as-f32 src))))
-(encoding CVTTSS2SI (Gv Wss) (rep 0x0F 0x2C))
+(encoding CVTTSS2SI (Gy Wss) (rep 0x0F 0x2C))
 
 ; --- non-temporal + fences (SSE1) ---
 (instruction MOVNTPS (dst src) "movntps $dst, $src" (= dst src))

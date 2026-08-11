@@ -66,6 +66,7 @@ public static class X86Lifter {
 		WCode.b => 8,
 		WCode.w => 16,
 		WCode.v => vw,
+		WCode.y => d.P.YWidth(mode),
 		WCode.z => d.P.ZWidth(mode),
 		WCode.d => 32,
 		WCode.q => 64,

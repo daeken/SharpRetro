@@ -41,7 +41,7 @@ public static class SweepGen {
 	};
 
 	static string WCodeRust(WCode w) => w switch {
-		WCode.b => "B", WCode.w => "W", WCode.v => "V", WCode.z => "Z",
+		WCode.b => "B", WCode.w => "W", WCode.v => "V", WCode.y => "Y", WCode.z => "Z",
 		WCode.d => "D", WCode.q => "Q", WCode.p => "P",
 		WCode.ps => "Ps", WCode.pd => "Pd", WCode.ss => "Ss", WCode.sd => "Sd",
 		WCode.dq => "Dq", WCode.x => "X", WCode.none => "N",
@@ -59,7 +59,7 @@ public static class SweepGen {
 		sb.AppendLine("pub enum SwCls { Erm, Greg, Sreg, Imm, Rel, FixR, FixI, Zopc, StrS, StrD,");
 		sb.AppendLine("                 Vxmm, Wxmm, Uxmm, Hxmm, Hgpr, FpuT, FpuI, Kreg, Krm, Preg, Qrm, Moff, FarP }");
 		sb.AppendLine("#[derive(Copy, Clone, Debug, PartialEq, Eq)]");
-		sb.AppendLine("pub enum SwW { B, W, V, Z, D, Q, P, Ps, Pd, Ss, Sd, Dq, X, N }");
+		sb.AppendLine("pub enum SwW { B, W, V, Y, Z, D, Q, P, Ps, Pd, Ss, Sd, Dq, X, N }");
 		sb.AppendLine();
 		sb.AppendLine("#[derive(Copy, Clone, Debug)]");
 		sb.AppendLine("pub struct SwOp {");
