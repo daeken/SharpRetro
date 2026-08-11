@@ -32,6 +32,25 @@ impl X64Enc {
     }
     fn rex_wb(&mut self, b: u32) { self.rex(true, 0, 0, b); }
     fn rex_wrb(&mut self, r: u32, b: u32) { self.rex(true, r, 0, b); }
+    fn rex_rb(&mut self, r: u32, b: u32) { self.rex(false, r, 0, b); }
+
+    /// MOVDQU xmm[xt], [rn + disp]  — F3 [rex.rb] 0F 6F modrm.
+    /// REX.W=0 (XMM); REX only when xt≥8 or rn≥8 (rex() drops 0x40).
+    /// Objdump-verified: F3 0F 6F 47 10 = movdqu xmm0,[rdi+0x10];
+    /// F3 45 0F 7F 8F F0 01 00 00 = movdqu [r15+0x1F0],xmm9.
+    pub fn movdqu_load(&mut self, xt: u32, rn: u32, disp: i32) {
+        self.b(0xF3);
+        self.rex_rb(xt, rn);
+        self.b(0x0F); self.b(0x6F);
+        self.modrm_mem(xt, rn, disp);
+    }
+    /// MOVDQU [rn + disp], xmm[xt]  — F3 [rex.rb] 0F 7F modrm.
+    pub fn movdqu_store(&mut self, rn: u32, disp: i32, xt: u32) {
+        self.b(0xF3);
+        self.rex_rb(xt, rn);
+        self.b(0x0F); self.b(0x7F);
+        self.modrm_mem(xt, rn, disp);
+    }
 
     /// ModRM for [rn + disp] with reg=rr. Handles the rsp-SIB and rbp-disp0 quirks.
     fn modrm_mem(&mut self, rr: u32, rn: u32, disp: i32) {
