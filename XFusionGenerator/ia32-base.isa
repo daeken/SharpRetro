@@ -384,7 +384,7 @@
 ; ROL: CF = LSB of result (= last bit rotated out from top into bit-0).
 (instruction ROL (lval count)
     "rol $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) tval (rotl lval c))
+    (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) tval (rotl lval c))
         (= lval tval)
         (if (!= c 0)
             (= CF (& tval 1)))))
@@ -401,7 +401,7 @@
 ; found 103× CF divergences at the CRT security-cookie ROR (0x1929da1).
 (instruction ROR (lval count)
     "ror $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) tval (rotr lval c))
+    (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) tval (rotr lval c))
         (= lval tval)
         (if (!= c 0)
             (= CF (>> tval (- (bitwidth tval) 1))))))
@@ -432,9 +432,17 @@
 (encoding RCR (Eb CL) (0xD2 /3))
 (encoding RCR (Ev CL) (0xD3 /3))
 
+; Shift/rotate count mask: SDM Vol 2B — count masked to 5 bits (0x1F) for
+; 8/16/32-bit operands, 6 bits (0x3F) for 64-bit. NOT (bitwidth-1). Inlined
+; as (| 31 (>> (bitwidth lval) 1)) at each site: bw∈{8,16,32} → >>1={4,8,16}
+; ⊂ 0x1F → mask=31; bw=64 → >>1=32 → 0x1F|0x20=0x3F. Found by silicon sweep
+; phase-1 first-fire: shl dl,0x55 → silicon dl=0 (0x55&0x1F=21, 1<<21 in 8b
+; =0), interp dl=0x20 (was: 0x55&7=5, 1<<5=32). First .isa-tier bug (both
+; interp+C# X86Machine share the formula via .isa; only bare-silicon-diff
+; catches it). (No user-macro form in the DSL — inlined at all 5 sites.)
 (instruction SHL (lval count)
     "shl $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) _lval lval tval (<< _lval c))
+    (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) _lval lval tval (<< _lval c))
         (= lval tval)
         (if (!= c 0)
             (block
@@ -450,7 +458,7 @@
 
 (instruction SHR (lval count)
     "shr $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) _lval lval tval (>> _lval c))
+    (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) _lval lval tval (>> _lval c))
         (= lval tval)
         (if (!= c 0)
             (block
@@ -466,7 +474,7 @@
 
 (instruction SAR (lval count)
     "sar $lval, $count"
-    (mlet (c (& count (- (bitwidth lval) 1)) _lval lval tval (>>a _lval c))
+    (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) _lval lval tval (>>a _lval c))
         (= lval tval)
         (if (!= c 0)
             (block
