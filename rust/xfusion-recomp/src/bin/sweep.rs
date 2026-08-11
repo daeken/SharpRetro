@@ -12,7 +12,7 @@ use std::io::Write;
 use std::collections::BTreeMap;
 
 use xfusion_recomp::sweep_defs::{SWEEP_DEFS, SwCls};
-use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice};
+use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice, phase3_skip, enumerate_p3};
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::state::{X86State, TrackingState};
@@ -60,8 +60,13 @@ const ANCHOR_XMM: u128 = 0x40800000_40400000_40000000_3F800000;  // f32 [1,2,3,4
 /// Phase-3 DATA_PAGE: the fixed low address every mem-form ea targets. Below
 /// rsp=0x8FED8, MAP_32BIT-reachable, in the interp's FlatMem 0..0x90000.
 pub const DATA_PAGE: u64 = 0x60000;
-/// mem window captured per-row (pre+post). 64B covers K∈{0..48} at op_w≤128.
-pub const MEM_LEN: usize = 64;
+/// mem window captured per-row (pre+post) = the WHOLE data page. First-fire
+/// taught why 64B isn't enough: BT-family bit-string addressing reaches
+/// ±bytes far beyond the operand (bts WORD w/ bitoff=0x7788 → ea+0xEF0,
+/// in-page but outside a 64B window) → the runner's page kept stale bits
+/// across triples → phantom CF diffs. Whole-page: runner memcpy resets ALL
+/// 4096 per triple, memcmp catches ANY in-page write.
+pub const MEM_LEN: usize = 4096;
 
 fn interp_one(pre: &X86State, insn: &[u8], mode: XMode,
               pre_mem: Option<&[u8; MEM_LEN]>)
@@ -70,13 +75,22 @@ fn interp_one(pre: &X86State, insn: &[u8], mode: XMode,
     let d = decode_insn(insn, mode)?;
     let mut st = pre.clone();
     st.rip = 0x1000;
-    // Sized to cover rsp=0x80000 (PUSH/POP touch stack even in reg-form).
-    // Any read/write beyond → index-panic → caught → skip-counted.
-    let mut mem = FlatMem::new(0, 0x90000);
-    if let Some(pm) = pre_mem {
-        mem.bytes[DATA_PAGE as usize .. DATA_PAGE as usize + MEM_LEN]
-            .copy_from_slice(pm);
-    }
+    // Reg-form rows: FlatMem covers 0..0x90000 (PUSH/POP touch stack even
+    // in reg-form; any access beyond → index-panic → caught → skip).
+    // Mem-form rows: FlatMem = EXACTLY the silicon mapping (the one data
+    // page at 0x60000). Any ea outside it — wild bit-string offsets, huge
+    // pre-val indexes, negative reaches below the page — panics → row
+    // SKIPPED → silicon never sees an unmappable address. First-fire's 465
+    // REJECTs (child SIGSEGV/hang on wild ea) were rows interp emitted
+    // because its 0x90000 arena accepted addresses silicon had no mapping
+    // for. The interp arena must model the silicon mapping exactly.
+    let mut mem = if let Some(pm) = pre_mem {
+        let mut m = FlatMem::new(DATA_PAGE, MEM_LEN);
+        m.bytes.copy_from_slice(pm);
+        m
+    } else {
+        FlatMem::new(0, 0x90000)
+    };
     let handled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut b = InterpretingBuilder::new(&mut st, &mut mem, 0x1000);
         b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
@@ -85,8 +99,9 @@ fn interp_one(pre: &X86State, insn: &[u8], mode: XMode,
     if !handled { return None; }
     st.rip = 0x1000 + d.len as u64;
     let mut post_mem = [0u8; MEM_LEN];
-    post_mem.copy_from_slice(
-        &mem.bytes[DATA_PAGE as usize .. DATA_PAGE as usize + MEM_LEN]);
+    if pre_mem.is_some() {
+        post_mem.copy_from_slice(&mem.bytes);   // narrow arena = the page itself
+    }
     Some((st, d.def_id, post_mem))
 }
 
@@ -236,6 +251,16 @@ fn main() {
         eprintln!("--bits32 --xmm not yet supported (32-bit XMM stub = separate)");
         std::process::exit(1);
     }
+    // --mem: phase-3 mem-form. Walks enumerate_p3 (addressing-mode shapes)
+    // instead of enumerate_p1; rows carry [pre_mem:64][post_mem:64] after the
+    // state blocks (X64E magic so the runner knows). GPR-only v1 (no --xmm
+    // composition yet); Bits64 + Bits32 both work (32-bit stub loads the
+    // solved base/idx values from state like any other GPR).
+    let phase3_mem = args.iter().any(|a| a == "--mem");
+    if phase3_mem && phase2_xmm {
+        eprintln!("--mem --xmm not yet composed (xmm-mem rows = later)");
+        std::process::exit(1);
+    }
 
     let mut n_defs_p1 = 0u32;
     let mut n_enc = 0u32;
@@ -248,7 +273,9 @@ fn main() {
     let mut fw: Option<std::io::BufWriter<std::fs::File>> = if !census_only {
         let f = std::fs::File::create(&out_path).expect("create corpus");
         let mut w = std::io::BufWriter::new(f);
-        w.write_all(&0x44343658u32.to_le_bytes()).unwrap();  // 'X64D' magic
+        // 'X64D' = state-only rows; 'X64E' = rows carry [pre_mem][post_mem].
+        let magic: u32 = if phase3_mem { 0x45343658 } else { 0x44343658 };
+        w.write_all(&magic.to_le_bytes()).unwrap();
         // Runner header = [u32 magic][u32 n]. We don't know n up-front (skip
         // predicates prune), so write a placeholder and seek-back to patch it.
         w.write_all(&0u32.to_le_bytes()).unwrap();
@@ -256,7 +283,8 @@ fn main() {
     } else { None };
 
     for (i, sd) in SWEEP_DEFS.iter().enumerate() {
-        if let Some(r) = phase1_skip(sd, mode) { *skip_by.entry(r).or_default() += 1; continue; }
+        let pskip = if phase3_mem { phase3_skip(sd, mode) } else { phase1_skip(sd, mode) };
+        if let Some(r) = pskip { *skip_by.entry(r).or_default() += 1; continue; }
         if let Some(r) = mnem_exec_skip(sd.mnem) { *skip_by.entry(r).or_default() += 1; continue; }
         // Def has ANY xmm-class operand? (read OR write side). Own #171:
         // the encoder change let XMM defs pass phase1_skip; without --xmm
@@ -269,12 +297,23 @@ fn main() {
         if def_has_xmm && !phase2_xmm {
             *skip_by.entry("xmm(use --xmm)").or_default() += 1; continue;
         }
+        // Phase-3 v1 extra skips: LEA (Erm w=N mem_only — computes the ea,
+        // no mem access; interp handles it but its "mem" is address-arith —
+        // include: it READS no mem so pre/post-mem trivially match; actually
+        // KEEP it, ea-arith is exactly what mem-form sweeps test).
         n_defs_p1 += 1;
 
         // For each ENCODING (reg-choice + opsize + imm), verify_rt-checked:
         if row_limit.map(|l| n_rows >= l).unwrap_or(false) { break; }
         let mut enc_i = 0u32;
-        let (ok, _fail) = enumerate_p1(sd, mode, |c: &EncChoice, insn: &[u8]| {
+        let enum_fn: fn(&xfusion_recomp::sweep_defs::SwDef, XMode,
+                        &mut dyn FnMut(&EncChoice, &[u8])) -> (u32, u32) =
+            if phase3_mem {
+                |d, m, f| enumerate_p3(d, m, f)
+            } else {
+                |d, m, f| enumerate_p1(d, m, f)
+            };
+        let (ok, _fail) = enum_fn(sd, mode, &mut |c: &EncChoice, insn: &[u8]| {
             n_enc += 1;
             enc_i += 1;
             if stride > 1 && (enc_i % stride) != 1 { return; }
@@ -349,7 +388,51 @@ fn main() {
                             pre.xmm[sweep_xr as usize] = bxv;
                         }
 
-                        let Some((post, _, _)) = interp_one(&pre, insn, mode, None) else {
+                        // Phase-3 mem-form: solve base/idx values so ea =
+                        // DATA_PAGE + K, override the anchor-filled GPRs, and
+                        // build the pre-mem window. K sweeps a few offsets
+                        // (0 / 8 / 0x30) — page-interior; boundary-cross = v2.
+                        // Mem pre-bytes: two patterns (0xCC-fill, and the
+                        // PRE_VALS-derived u64 at K) — the mem-side analogue
+                        // of the GPR pre-grid, kept small (encoding-space ×
+                        // shapes is already the phase-3 dimension).
+                        let mem_rows: Vec<(u32, Box<[u8; MEM_LEN]>)> = if let Some(mc) = &c.mem {
+                            let ks: &[u32] = if mc.base < 0 && mc.index < 0 { &[0] }
+                                             else { &[0, 8, 0x30] };
+                            let mut v = vec![];
+                            for &k in ks {
+                                if solve_mem(mc, k).is_none() { continue; }
+                                let mut pm = Box::new([0xCCu8; MEM_LEN]);
+                                pm[k as usize..k as usize+8]
+                                    .copy_from_slice(&bv.to_le_bytes());
+                                v.push((k, pm));
+                            }
+                            v
+                        } else {
+                            vec![(0, Box::new([0u8; MEM_LEN]))]  // reg-form: no mem window
+                        };
+                        if c.mem.is_some() && mem_rows.is_empty() {
+                            *skip_by.entry("mem-unsolvable").or_default() += 1; continue;
+                        }
+
+                        for &(k, ref pm) in &mem_rows {
+                        let mut pre = pre.clone();
+                        let pre_mem_opt = if c.mem.is_some() {
+                            let mc = c.mem.as_ref().unwrap();
+                            let (bvv, ivv) = solve_mem(mc, k).unwrap();
+                            if mc.base >= 0  { pre.gpr[mc.base as usize] = bvv; }
+                            if mc.index >= 0 { pre.gpr[mc.index as usize] = ivv; }
+                            // Bits32: solved values must fit u32 (DATA_PAGE
+                            // =0x60000 does; negative-disp solves wrap — mask
+                            // and verify the ea still lands right as u32 math).
+                            if mode == XMode::Bits32 {
+                                if mc.base >= 0  { pre.gpr[mc.base as usize] &= 0xFFFF_FFFF; }
+                                if mc.index >= 0 { pre.gpr[mc.index as usize] &= 0xFFFF_FFFF; }
+                            }
+                            Some(pm)
+                        } else { None };
+
+                        let Some((post, _, post_mem)) = interp_one(&pre, insn, mode, pre_mem_opt.map(|v| &**v)) else {
                             *skip_by.entry("interp-panic").or_default() += 1; continue;
                         };
                         if post.gpr[4] != pre.gpr[4] {
@@ -373,7 +456,13 @@ fn main() {
                             f.write_all(&stub).unwrap();
                             for w in &pre.to_flat()  { f.write_all(&w.to_le_bytes()).unwrap(); }
                             for w in &post.to_flat() { f.write_all(&w.to_le_bytes()).unwrap(); }
+                            if phase3_mem {
+                                // X64E: [pre_mem:64][post_mem:64] after states.
+                                f.write_all(pre_mem_opt.map(|p| &p[..]).unwrap_or(&[0u8; MEM_LEN])).unwrap();
+                                f.write_all(&post_mem).unwrap();
+                            }
                         }
+                        }  // mem_rows
                     }  // xmm_sweep
                         // 0-read insns: one row is enough.
                         if gpr_reads.is_empty() { break; }

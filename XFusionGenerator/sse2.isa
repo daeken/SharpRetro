@@ -325,7 +325,10 @@
 (instruction MOVNTPD (dst src) "movntpd $dst, $src" (= dst src))
 (encoding MOVNTPD (Mpd Vpd) (opsize 0x0F 0x2B))
 (instruction MOVNTI (dst src) "movnti $dst, $src" (= dst src))
-(encoding MOVNTI (Mv Gv) (0x0F 0xC3))
+; MOVNTI is Md/Mq,Gd/Gq — y-width (32/64 by REX.W ONLY; no 16-bit form,
+; 66 0F C3 = #UD on silicon). Caught by the mem-form sweep: 81 SIGILL
+; rejects on the 66-prefixed rows the old Mv/Gv width-code emitted.
+(encoding MOVNTI (My Gy) (0x0F 0xC3))
 
 ; Fences: memory-ordering barriers. Under mem_base=0 single-guest-thread,
 ; there's no reordering to fence — semantically a NOP. When SMP-guest

@@ -279,6 +279,46 @@ pub fn bind_modrm_rm<B: Builder>(bd: &mut B, d: &DecodedInsn, pc: u64, mode: XMo
     }
 }
 
+/// BT/BTS/BTR/BTC (Ev,Gv) mem-form: x86 BIT-STRING addressing. SDM Vol 2A
+/// (BT): "the instruction may access a memory address ± offset from the
+/// base" — with a REGISTER bit-index the offset is NOT masked to the operand
+/// width; the effective byte address is adjusted by the signed word-index:
+///     ea' = ea + (W/8) · floor(bitoff / W)      (bitoff signed, W=op width)
+/// then the template's own `& (W−1)` selects the bit within the word.
+/// Floor-division = arithmetic-shift-right by log2(W) (the QEMU/hardware
+/// form; floor not trunc so bitoff=−1 → last bit of the PREVIOUS word).
+/// Imm-form (Ev,Ib) DOES mask — imm8 is masked to width; no ea adjust.
+/// Reg-form masks too (the reg-form sweep verified that path silicon-clean).
+///
+/// Silicon-sweep phase-3 first-fire caught this: 77 DIFF + 465 REJECT, ALL
+/// in BT-family mem-form (mem[48]/mem[54] = silicon stepping bytes beyond
+/// the dword; REJECTs = huge pre-val bit-indexes → wild ea → child SIGSEGV).
+pub fn bind_modrm_rm_bitstring<B: Builder>(bd: &mut B, d: &DecodedInsn, pc: u64,
+                                           mode: XMode, width: u32)
+    -> Operand<B::Val>
+    where B::Val: Copy
+{
+    if d.m.is_reg {
+        return gpr(d.m.rm, width, d.p.rex != 0);
+    }
+    let ea = addr_from_modrm(bd, d, pc, mode);
+    // bitoff = the Gv index register, at operand width, sign-extended to 64.
+    // (Backends dispatch shr on the value's SIGNEDNESS — shr on I{signed}
+    // = arithmetic shift, the same form the .isa's >>a lowers to.)
+    let reg_idx = (d.m.reg | if d.p.rex_r() { 8 } else { 0 }) as u32;
+    let full = bd.reg_read(GPR, reg_idx, IlType::U64);
+    let bo_w = bd.cast(full, IlType::I{signed:true, width:width as u8});
+    let bo = bd.cast(bo_w, IlType::I{signed:true, width:64});
+    // word_idx = bo >>a log2(W)  (arith shift = floor); byte_off = word_idx << log2(W/8)
+    let l2w = bd.literal(IlType::U8, width.trailing_zeros() as u128);
+    let widx = bd.shr(bo, l2w);
+    let l2b = bd.literal(IlType::U8, (width / 8).trailing_zeros() as u128);
+    let boff = bd.shl(widx, l2b);
+    let boff_u = bd.cast(boff, IlType::U64);
+    let addr = bd.add(ea, boff_u);
+    Operand::Mem { addr, width }
+}
+
 pub fn bind_modrm_reg<V>(d: &DecodedInsn, width: u32) -> Operand<V> {
     gpr(d.m.reg, width, d.p.rex != 0)
 }

@@ -10970,7 +10970,7 @@ public static partial class Disassembler {
 			case 658: return Decode.MnemonicPrefix(in d.P) + $"cmppd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
 			case 659: return Decode.MnemonicPrefix(in d.P) + $"cmpsd {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
 			case 660: return Decode.MnemonicPrefix(in d.P) + $"cmpps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 661: return Decode.MnemonicPrefix(in d.P) + $"movnti {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len)}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 661: return Decode.MnemonicPrefix(in d.P) + $"movnti {Decode.MemOperandString(in d.M, in d.P, mode, d.P.YWidth(mode), pc + (ulong)d.Len)}, {Decode.GprName(d.M.Reg, d.P.YWidth(mode), d.P.Rex != 0)}";
 			case 662: return Decode.MnemonicPrefix(in d.P) + $"shufpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
 			case 663: return Decode.MnemonicPrefix(in d.P) + $"shufps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
 			case 664: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
@@ -11731,7 +11731,7 @@ public static partial class Disassembler {
 		"CMPPD-Vpd-Wpd-Ib",
 		"CMPSD-X-Vsd-Wsd-Ib",
 		"CMPPS-Vps-Wps-Ib",
-		"MOVNTI-Mv-Gv",
+		"MOVNTI-My-Gy",
 		"SHUFPD-Vpd-Wpd-Ib",
 		"SHUFPS-Vps-Wps-Ib",
 		"BSWAP-Zv",

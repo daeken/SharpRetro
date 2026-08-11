@@ -1183,7 +1183,7 @@ public static class LiftTables {
 		(205, "Vpd Wpd Ib", false),
 		(206, "Vsd Wsd Ib", false),
 		(167, "Vps Wps Ib", false),
-		(272, "Mv Gv", false),
+		(272, "My Gy", false),
 		(207, "Vpd Wpd Ib", false),
 		(169, "Vps Wps Ib", false),
 		(15, "Zv", false),

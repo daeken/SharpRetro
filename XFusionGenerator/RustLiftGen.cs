@@ -767,6 +767,11 @@ public class RustLiftGen {
         sb.AppendLine("    let next_pc = pc.wrapping_add(d.len as u64);");
         sb.AppendLine("    match d.def_id {");
         foreach(var (def, defId) in RustDisasmGen.BodyOrder.Select((d, i) => (d, i + 1))) {
+            static bool IsBtFamilyRegIdx(XFusionDef d) =>
+                (d.Mnemonic is "BT" or "BTS" or "BTR" or "BTC")
+                && d.Operands.Count == 2
+                && d.Operands[1].Class == OpClass.ModRmReg;  // Gv index (Ib form masks)
+
             var key = (def.Mnemonic, def.Operands.Count);
             if(!tmplId.TryGetValue(key, out var tt)) continue;  // no template for this arity — skip
             sb.AppendLine($"        {defId} => {{  // {def.Mnemonic} {string.Join(",", def.Operands.Select(o => o.Text))}");
@@ -789,6 +794,14 @@ public class RustLiftGen {
                 // Ⓓ: CVTSS2SI Gy — 66 F3 0F 2C = still r32 dst on silicon.
                 if(spec.Width == WCode.y) w = "d.p.y_width(mode)";
                 var b = spec.Class switch {
+                    // BT-family (Ev,Gv) mem-form = x86 bit-string addressing:
+                    // ea adjusted by signed word-index from the Gv register
+                    // (SDM: register bit-index is NOT masked in mem-form; the
+                    // silicon-sweep phase-3 first-fire caught this — 77 DIFF
+                    // + 465 wild-ea REJECTs, all four BT/BTS/BTR/BTC).
+                    // Imm-form (Ev,Ib) masks — plain bind stays.
+                    OpClass.ModRmRm when IsBtFamilyRegIdx(def) =>
+                        $"bind_modrm_rm_bitstring(bd, d, pc, mode, {w})",
                     OpClass.ModRmRm => $"bind_modrm_rm(bd, d, pc, mode, {w})",
                     OpClass.ModRmReg => $"bind_modrm_reg(d, {w})",
                     OpClass.OpcodeReg => $"bind_opcode_reg(d, {w})",
