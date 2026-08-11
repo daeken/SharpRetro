@@ -1,7 +1,11 @@
-﻿.idea
+.idea
 bin/
-# but NOT Rust's src/bin/ convention (cargo binary sources live there):
-!src/bin/
+# but NOT Rust's src/bin/ convention (cargo binary sources live there).
+# `!src/bin/` is depth-anchored (slash-in-middle → relative to THIS .gitignore's
+# dir only); `!**/src/bin/` matches at any depth. The depth-anchored form left
+# rust/xfusion-recomp/src/bin/sweep.rs silently never-tracked for a full session
+# (every commit that named it in the message included zero bytes of it).
+!**/src/bin/
 obj/
 *.DotSettings.user
 *.log
