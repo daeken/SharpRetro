@@ -345,9 +345,15 @@ public class RustLiftGen {
                 // Fire-7 dense ×395 (templates 243/244/250/251 = MUL/IMUL Eb/Ev).
                 // + op_w=8 SPECIAL (SDM): AL×src → AX (result in AX, rdx UNTOUCHED).
                 Emit($"if op_w == 8 {{");
-                Emit($"    let _sh = bd.literal({w2}, 8u128);");
-                Emit($"    let _hs = bd.shl(_hi, _sh);");
-                Emit($"    let _ax = bd.or(_hs, _lo);");
+                // Ⓖ: _hi/_lo are typed at op_w=8. shl(_hi:U8,8)|_lo → result type U8;
+                // write_operand's cast(v,U64) masks to SOURCE width (8) → AH lost.
+                // mul al al=0x7F → silicon AX=0x3F01, interp AX=0x0001. Full-p1 fire
+                // ×519 (all pre-vals ≥0x7F squared overflow into AH). Cast to U16 first.
+                Emit($"    let _lo16 = bd.cast(_lo, IlType::U16);");
+                Emit($"    let _hi16 = bd.cast(_hi, IlType::U16);");
+                Emit($"    let _sh = bd.literal(IlType::U16, 8u128);");
+                Emit($"    let _hs = bd.shl(_hi16, _sh);");
+                Emit($"    let _ax = bd.or(_hs, _lo16);");
                 Emit($"    write_operand(bd, &Operand::Reg{{idx:0, width:16, high8:false}}, _ax);");
                 Emit($"}} else {{");
                 Emit($"    write_operand(bd, &Operand::Reg{{idx:0, width:op_w, high8:false}}, _lo);");

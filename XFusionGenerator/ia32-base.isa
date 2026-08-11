@@ -722,9 +722,17 @@
 
 (instruction ADC (lval rval)
     "adc $lval, $rval"
-    (mlet (_lval lval _rval rval tval (+ _lval _rval CF))
+    ; Ⓕ 7th .isa-tier (full-p1 fire, ×871): CF-out formula `(< t a)|(< t b)`
+    ; misses exactly one case: a=b=max, CF-in=1. adc al,al al=0xFF CF=1 →
+    ; 0xFF+0xFF+1=0x1FF, masked=0xFF; (< 0xFF 0xFF)=false. Silicon CF=1.
+    ; Only fires at pre-val 0xFF (PRE_VALS[5]) — dense fire-7 (max-pre-5,
+    ; through 0x80) never hit it. Proof of correct form: with carry+cf=1,
+    ; masked t = a+b+1−2ⁿ; t<a iff b<2ⁿ−1; t==a iff b=2ⁿ−1. So (< t a) |
+    ; (cf & (== t a)) covers both. Without carry: t≥a strictly (b+cf≥0,
+    ; equal iff b=cf=0), and t==a ⟹ cf=0 ⟹ second term false.
+    (mlet (_lval lval _rval rval _cf CF tval (+ _lval _rval _cf))
         (= lval tval)
-        (= CF (| (< tval _lval) (< tval _rval)))
+        (= CF (| (< lval _lval) (& _cf (== lval _lval))))
         (= SF (>> tval (- (bitwidth tval) 1)))
         (= OF (& (^ tval _lval) (^ tval _rval) (<< 1 (- (bitwidth tval) 1))))
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
