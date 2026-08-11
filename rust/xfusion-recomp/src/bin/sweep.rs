@@ -17,6 +17,7 @@ use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::state::{X86State, TrackingState};
 use xfusion_recomp::x64_stub::{emit_stub, emit_stub_xmm, emit_stub_32};
+use xfusion_recomp::sweep::MemChoice;
 use xfusion_recomp::lift::{lift_one, DEF_FLAGS_MASK, FLAGS_ALL_LIVE};
 use sharpretro_jit::interp::{InterpretingBuilder, FlatMem};
 
@@ -56,13 +57,26 @@ const ANCHOR_XMM: u128 = 0x40800000_40400000_40000000_3F800000;  // f32 [1,2,3,4
 
 /// Interp one insn from a given pre-state. Returns (post_state, def_id) on
 /// success; None if the lift panics (intrinsic/unwired/mem — phase-1 skip).
-fn interp_one(pre: &X86State, insn: &[u8], mode: XMode) -> Option<(X86State, u32)> {
+/// Phase-3 DATA_PAGE: the fixed low address every mem-form ea targets. Below
+/// rsp=0x8FED8, MAP_32BIT-reachable, in the interp's FlatMem 0..0x90000.
+pub const DATA_PAGE: u64 = 0x60000;
+/// mem window captured per-row (pre+post). 64B covers K∈{0..48} at op_w≤128.
+pub const MEM_LEN: usize = 64;
+
+fn interp_one(pre: &X86State, insn: &[u8], mode: XMode,
+              pre_mem: Option<&[u8; MEM_LEN]>)
+    -> Option<(X86State, u32, [u8; MEM_LEN])>
+{
     let d = decode_insn(insn, mode)?;
     let mut st = pre.clone();
     st.rip = 0x1000;
     // Sized to cover rsp=0x80000 (PUSH/POP touch stack even in reg-form).
     // Any read/write beyond → index-panic → caught → skip-counted.
     let mut mem = FlatMem::new(0, 0x90000);
+    if let Some(pm) = pre_mem {
+        mem.bytes[DATA_PAGE as usize .. DATA_PAGE as usize + MEM_LEN]
+            .copy_from_slice(pm);
+    }
     let handled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut b = InterpretingBuilder::new(&mut st, &mut mem, 0x1000);
         b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
@@ -70,7 +84,59 @@ fn interp_one(pre: &X86State, insn: &[u8], mode: XMode) -> Option<(X86State, u32
     })).ok()?;
     if !handled { return None; }
     st.rip = 0x1000 + d.len as u64;
-    Some((st, d.def_id))
+    let mut post_mem = [0u8; MEM_LEN];
+    post_mem.copy_from_slice(
+        &mem.bytes[DATA_PAGE as usize .. DATA_PAGE as usize + MEM_LEN]);
+    Some((st, d.def_id, post_mem))
+}
+
+/// Phase-3 solve-backward: given a MemChoice + target offset K in DATA_PAGE,
+/// derive (base_val, index_val) such that effective_addr = DATA_PAGE + K.
+/// Returns None for silicon-unfireable shapes (base/idx = rsp — stub doesn't
+/// load rsp; rip_rel — stub page addr non-deterministic v1).
+///
+/// ea = (base_val if base>=0 else 0) + (index_val*scale if index>=0 else 0) + disp
+fn solve_mem(mc: &MemChoice, k: u32) -> Option<(u64, u64)> {
+    // rsp(4) not loaded by any stub (both modes' anchor). idx=4 unencodable
+    // anyway (bare 100=none), but base=4 IS encodable — just not fireable.
+    if mc.base == 4 || mc.index == 4 { return None; }
+    // rip-rel: ea = rip_after + disp; rip on silicon = stub_page + SLOT_OFF
+    // + insn_len (varies by mmap); on interp = 0x1000 + insn_len. Diverge.
+    // ‡ Fireable via MAP_FIXED stub page — v2.
+    if mc.rip_rel { return None; }
+    let target = DATA_PAGE.wrapping_add(k as u64);
+    let (bv, iv) = match (mc.base >= 0, mc.index >= 0) {
+        (true, true) => {
+            // Pick a small index_val; solve base_val.
+            let iv = 3u64;
+            let bv = target
+                .wrapping_sub(iv.wrapping_mul(mc.scale as u64))
+                .wrapping_sub(mc.disp as i64 as u64);
+            (bv, iv)
+        }
+        (true, false) => {
+            (target.wrapping_sub(mc.disp as i64 as u64), 0)
+        }
+        (false, true) => {
+            // ea = iv*scale + disp. Solve iv = (target − disp)/scale.
+            let num = target.wrapping_sub(mc.disp as i64 as u64);
+            if num % (mc.scale as u64) != 0 { return None; }
+            (0, num / (mc.scale as u64))
+        }
+        (false, false) => {
+            // ea = disp (absolute). Only fireable if disp already = target.
+            // The shape table's two no-base-no-idx entries have disp=0x60000
+            // = DATA_PAGE, so K=0 works; other K don't (encoding-fixed disp).
+            if mc.disp as i64 as u64 != target { return None; }
+            (0, 0)
+        }
+    };
+    // base==index (e.g. [rax+rax*2]): both must equal the SAME value. Only
+    // works if bv==iv from the solve above; usually won't. For v1, refuse
+    // (the shape-table doesn't emit base==index anyway; a full base×idx
+    // sweep would need this).
+    if mc.base >= 0 && mc.base == mc.index && bv != iv { return None; }
+    Some((bv, iv))
 }
 
 /// Discover an insn's read-set via TrackingState (which GPRs + which flags).
@@ -283,7 +349,7 @@ fn main() {
                             pre.xmm[sweep_xr as usize] = bxv;
                         }
 
-                        let Some((post, _)) = interp_one(&pre, insn, mode) else {
+                        let Some((post, _, _)) = interp_one(&pre, insn, mode, None) else {
                             *skip_by.entry("interp-panic").or_default() += 1; continue;
                         };
                         if post.gpr[4] != pre.gpr[4] {
