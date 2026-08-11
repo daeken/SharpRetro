@@ -11,8 +11,8 @@
 use std::io::Write;
 use std::collections::BTreeMap;
 
-use xfusion_recomp::sweep_defs::{SWEEP_DEFS, SwCls};
-use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice, phase3_skip, enumerate_p3};
+use xfusion_recomp::sweep_defs::{SWEEP_DEFS, SwCls, SwW};
+use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice, phase3_skip, enumerate_p3, verify_rt};
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::state::{X86State, TrackingState};
@@ -60,6 +60,18 @@ const ANCHOR_XMM: u128 = 0x40800000_40400000_40000000_3F800000;  // f32 [1,2,3,4
 /// Phase-3 DATA_PAGE: the fixed low address every mem-form ea targets. Below
 /// rsp=0x8FED8, MAP_32BIT-reachable, in the interp's FlatMem 0..0x90000.
 pub const DATA_PAGE: u64 = 0x60000;
+
+/// Fault-record rows (the fault-addr-record deliverable): fmask bit-31 set
+/// ⟹ the row's EXPECTED outcome is a FAULT, not a post-state. post[88] =
+/// expected signal (SIGFPE=8), post[89] = expected fault-rip offset from the
+/// stub page (= SLOT_OFF: the fault fires AT the test insn). The runner's
+/// child installs handlers, records {si_signo, rip−stub_page} into
+/// state[88..90], and exits; parent compares those two slots ONLY.
+/// v1 = #DE (DIV/IDIV divisor=0 + INT_MIN/−1) — deterministic, well-defined.
+/// #PF/si_addr rows (mem-fault addresses) = v2 once mechanics prove.
+pub const FMASK_FAULT_ROW: u32 = 0x8000_0000;
+pub const SLOT_SIGNO: usize = 88;
+pub const SLOT_FAULT_OFF: usize = 89;
 /// mem window captured per-row (pre+post) = the WHOLE data page. First-fire
 /// taught why 64B isn't enough: BT-family bit-string addressing reaches
 /// ±bytes far beyond the operand (bts WORD w/ bitoff=0x7788 → ea+0xEF0,
@@ -67,6 +79,109 @@ pub const DATA_PAGE: u64 = 0x60000;
 /// across triples → phantom CF diffs. Whole-page: runner memcpy resets ALL
 /// 4096 per triple, memcmp catches ANY in-page write.
 pub const MEM_LEN: usize = 4096;
+
+/// The fault-addr-record generator (v1: #DE). For each DIV/IDIV encoding ×
+/// op_w × rm-reg (a few, incl an r8-15), emit rows whose pre-state makes the
+/// insn FAULT deterministically:
+///   • divisor = 0                      → #DE (both DIV + IDIV)
+///   • IDIV: dividend = INT_MIN, divisor = −1 → #DE (quotient unrepresentable)
+///   • DIV: dividend ≥ divisor<<W (quotient overflow) → #DE
+/// Expected outcome: SIGFPE at the test insn (fault_off = SLOT_OFF — x86
+/// faults report the FAULTING insn's rip, not next-rip). fmask bit-31 marks
+/// the row; post[88]=8 (SIGFPE), post[89]=SLOT_OFF.
+fn gen_fault_rows(out_path: &str, mode: XMode) -> std::io::Result<()> {
+    use std::io::Write;
+    let is64 = mode == XMode::Bits64;
+    let slot_off: u64 = if is64 { 82 } else { 29 };  // v1-stub / 32-bit-stub
+    let mut w = std::io::BufWriter::new(std::fs::File::create(out_path)?);
+    w.write_all(&0x44343658u32.to_le_bytes())?;  // X64D (state-layout rows)
+    w.write_all(&0u32.to_le_bytes())?;           // count patched at end
+    let mut n_rows = 0u32;
+
+    for sd in SWEEP_DEFS {
+        if !(sd.mnem == "DIV" || sd.mnem == "IDIV") { continue; }
+        let signed = sd.mnem == "IDIV";
+        let opws: &[u8] = if sd.ops[0].w == SwW::B { &[8] }
+                          else if is64 { &[16, 32, 64] } else { &[16, 32] };
+        let rms: &[u8] = if is64 { &[1, 3, 9] } else { &[1, 3] };  // rcx/rbx/r9
+        for &op_w in opws {
+            for &rm in rms {
+                // op_w drives the ENCODING via EncChoice (Eb rows have op_w
+                // fixed by the encoder's B-width path; pass 32 there).
+                let c = EncChoice {
+                    mode, op_w: if op_w == 8 { 32 } else { op_w },
+                    reg: 0, rm, zopc: 0, imm: 0, mem: None,
+                };
+                let insn = match verify_rt(sd, &c) { Ok(b) => b, Err(_) => continue };
+                // Fault-classes: (divisor_val, rdx, rax) triples.
+                // Divisor lives in gpr[rm] (Eb: the byte of it; fine — 0 is 0).
+                let mut cases: Vec<(u64, u64, u64)> = vec![
+                    (0, 0x5, 0x1234),                    // ÷0
+                ];
+                if signed {
+                    // INT_MIN / −1 → #DE. dividend = rdx:rax sign-pattern:
+                    // op_w=8: AX=0x8000? No — Eb: dividend=AX, INT_MIN=0x80,
+                    // AH:AL... keep it simple: full-width INT_MIN via rdx:rax.
+                    let (rdx, rax) = match op_w {
+                        8  => (0, 0x8000u64),            // AX = i16::MIN? No:
+                        // Eb IDIV: dividend = AX (16b), quotient → AL (8b).
+                        // INT_MIN case: AX = 0x8000? / −1 → +0x8000 > i8 → #DE ✓
+                        16 => (0x8000, 0),               // DX:AX = 0x8000_0000? No:
+                        // Ev16: dividend = DX:AX (32b); DX=0x8000 AX=0 →
+                        // 0x8000_0000 / −1 → +2^31 > i16::MAX → #DE ✓
+                        32 => (0x8000_0000, 0),
+                        64 => (0x8000_0000_0000_0000, 0),
+                        _ => unreachable!(),
+                    };
+                    cases.push((u64::MAX, rdx, rax));    // ÷ −1 w/ min-dividend
+                } else {
+                    // DIV quotient-overflow: dividend = divisor << W exactly
+                    // (quotient = 1<<W > max). divisor=1: rdx:rax = 1<<W ⟹
+                    // rdx=1 rax=0 (or AH=1 for Eb — approximate w/ rdx=1;
+                    // Eb's dividend is AX: AH=1 AL=0, divisor=1 → q=256 > 255 → #DE ✓
+                    let (rdx, rax) = match op_w {
+                        8  => (0, 0x100),                // AX = 0x100, ÷1 → 256 → #DE
+                        _  => (1, 0),                    // rdx:rax = 1<<W ÷ 1 → #DE
+                    };
+                    cases.push((1, rdx, rax));
+                }
+                for &(dv, rdx, rax) in &cases {
+                    let mut pre = X86State::default();
+                    pre.gpr[4] = 0x8FED8;
+                    pre.eflags = 0x202;
+                    pre.gpr[0] = rax;
+                    pre.gpr[2] = rdx;
+                    pre.gpr[rm as usize] = dv;
+                    if !is64 {
+                        for r in 0..8 { pre.gpr[r] &= 0xFFFF_FFFF; }
+                        for r in 8..16 { pre.gpr[r] = 0; }
+                    }
+                    let mut post = pre.clone();  // regs unchanged at fault
+                    let mut post_flat = post.to_flat();
+                    post_flat[SLOT_SIGNO] = 8;             // SIGFPE
+                    post_flat[SLOT_FAULT_OFF] = slot_off;  // fault AT the insn
+                    let _ = &mut post;
+                    let (stub, _slot) = if is64 { emit_stub(&insn) } else { emit_stub_32(&insn) };
+                    let def_id = decode_insn(&insn, mode).map(|d| d.def_id).unwrap_or(0);
+                    w.write_all(&def_id.to_le_bytes())?;
+                    w.write_all(&FMASK_FAULT_ROW.to_le_bytes())?;
+                    w.write_all(&(stub.len() as u32).to_le_bytes())?;
+                    w.write_all(&stub)?;
+                    for v in &pre.to_flat() { w.write_all(&v.to_le_bytes())?; }
+                    for v in &post_flat { w.write_all(&v.to_le_bytes())?; }
+                    n_rows += 1;
+                }
+            }
+        }
+    }
+    let mut f = w.into_inner()?;
+    use std::io::Seek;
+    f.seek(std::io::SeekFrom::Start(4))?;
+    f.write_all(&n_rows.to_le_bytes())?;
+    println!("  fault rows emitted: {n_rows}");
+    println!("  → {out_path}");
+    Ok(())
+}
 
 fn interp_one(pre: &X86State, insn: &[u8], mode: XMode,
               pre_mem: Option<&[u8; MEM_LEN]>)
@@ -244,6 +359,13 @@ fn main() {
     let stride: u32 = args.iter().position(|a| a == "--stride")
         .and_then(|i| args.get(i+1)).and_then(|s| s.parse().ok()).unwrap_or(1);
     let census_only = args.iter().any(|a| a == "--census");
+    // --faults: the fault-addr-record arm (standalone generator — the row
+    // space is small + the outcome contract is different). v1 = #DE.
+    if args.iter().any(|a| a == "--faults") {
+        let mode = if args.iter().any(|a| a == "--bits32") { XMode::Bits32 } else { XMode::Bits64 };
+        gen_fault_rows(&out_path, mode).expect("fault-gen");
+        return;
+    }
     // --xmm: phase-2 mode. Enables XMM-reading defs (v1 skips via discover),
     // uses emit_stub_xmm (v2, SLOT_OFF=226, movdqu load/store around slot),
     // sweeps xmm_reads through PRE_VALS_XMM. Off = phase-1 (v1 stub, GPR only).
