@@ -141,6 +141,13 @@ impl TrackingState {
     pub fn reads_xmm(&self) -> bool {
         self.reads.borrow().iter().any(|(f,_)| *f == 3)
     }
+    /// Which XMM indices this insn reads (RegFile 3). Phase-2 sweep uses this
+    /// to drive the XMM pre-state boundary grid (like gpr_reads for GPR).
+    pub fn xmm_reads(&self) -> Vec<u32> {
+        let mut v: Vec<u32> = self.reads.borrow().iter()
+            .filter(|(f,_)| *f == 3).map(|(_,i)| *i).collect();
+        v.sort(); v.dedup(); v
+    }
 }
 
 impl RegState for X86State {
