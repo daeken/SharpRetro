@@ -101,6 +101,24 @@ public static class DisassemblerGenerator {
 				sb.AppendLine($"\t\t\t\tif({cond}) {{");
 				sb.AppendLine($"\t\t\t\t\t{clear}");
 				var pdefs = pg.ToList();
+				// mod-field discrimination inside a mprefix-group: two defs, same
+				// prefix+opcode, one U*(reg-only mod=11) + one M*(mem-only mod≠11).
+				// First case: MOVQ-XS(Udq)/MOVQ-XM(Mq) at 66 0F D6. Mirrors the
+				// byExt mod-split below (which only covers no-mprefix rows).
+				if(pdefs.Count == 2 && pdefs.All(d => d.RegExtension < 0)) {
+					var rF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+					var mF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+					if(rF != null && mF != null && rF != mF) {
+						sb.AppendLine("\t\t\t\t\tif(i >= code.Length) return false;");
+						sb.AppendLine("\t\t\t\t\tif((code[i] >> 6) == 3) {");
+						EmitDefBody(sb, rF, "\t\t\t\t\t\t");
+						sb.AppendLine("\t\t\t\t\t} else {");
+						EmitDefBody(sb, mF, "\t\t\t\t\t\t");
+						sb.AppendLine("\t\t\t\t\t}");
+						sb.AppendLine("\t\t\t\t}");
+						continue;
+					}
+				}
 				if(pdefs.Count > 1 || pdefs[0].RegExtension >= 0) {
 					// /N-discriminated within this prefix (opsize 0F 73 /2 /3 /6 /7 class)
 					sb.AppendLine("\t\t\t\t\tif(i >= code.Length) return false;");
