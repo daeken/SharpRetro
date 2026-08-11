@@ -1414,6 +1414,34 @@ impl CompiledBlock {
     /// Chained-entry address = page + body_off (post-prologue body under the
     /// uniform tier-1 frame contract).
     pub fn body_addr(&self) -> u64 { self.page as u64 + self.body_off as u64 }
+    /// Reconstruct a block from persisted code bytes (cross-run cache load).
+    /// Code must be position-independent except link slots (caller re-defaults
+    /// them — pass epi_byte_off so we can compute the fresh epilogue address).
+    /// mmap RWX + copy + icache-flush, then every link slot ← own epilogue.
+    pub fn from_code_bytes(code: &[u8], n_slots: u32, body_off: usize,
+                           epi_byte_off: usize, link_sites: Vec<(usize, u64)>) -> CompiledBlock {
+        unsafe {
+            let page_len = (code.len() + 0xFFF) & !0xFFF;
+            let page = libc::mmap(std::ptr::null_mut(), page_len,
+                libc::PROT_READ | libc::PROT_WRITE | libc::PROT_EXEC,
+                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS, -1, 0);
+            assert_ne!(page, libc::MAP_FAILED);
+            std::ptr::copy_nonoverlapping(code.as_ptr(), page as *mut u8, code.len());
+            let blk = CompiledBlock {
+                page: page as *mut u8, page_len, code_len: code.len(),
+                entry: std::mem::transmute(page),
+                n_slots,
+                link_sites, body_off,
+                epilogue_addr: page as u64 + epi_byte_off as u64,
+            };
+            for &(off, _) in &blk.link_sites {
+                blk.patch_link(off, blk.epilogue_addr);
+            }
+            unsafe extern "C" { fn __clear_cache(s: *const u8, e: *const u8); }
+            __clear_cache(page as *const u8, (page as *const u8).add(code.len()));
+            blk
+        }
+    }
     /// Patch one link slot (byte offset from page) to jump to `target_addr`.
     /// Aligned 8-byte data store — the thunk's ldr-literal reads DATA, so no
     /// icache maintenance is required (ARMv8 data-side coherency suffices for

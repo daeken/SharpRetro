@@ -281,11 +281,26 @@ fn main() {
         }
         let mut cache = BlockCache::with_layout(&X64_LAYOUT);
         cache.max_block_insns = 64;
+        // XFCACHE=path: cross-run persistence round-trip. Load-if-exists
+        // (compiles should be ~0 on a warm file), save after run.
+        let cache_path = std::env::var("XFCACHE").ok();
+        if let Some(p) = &cache_path {
+            if let Ok(data) = std::fs::read(p) {
+                match cache.load(&data) {
+                    Ok(n) => println!("[elfbench_t1] cache: loaded {n} blocks from {p}"),
+                    Err(e) => println!("[elfbench_t1] cache: load failed ({e}) — cold"),
+                }
+            }
+        }
         let t0c = Instant::now();
         let r = cache.run(&C, &mut flat[..], 0, u64::MAX as usize);
         let wall = t0c.elapsed().as_secs_f64();
         println!("[elfbench_t1] CACHE wall = {:.4}s  ({} driver-execs, {} compiles, {:?})  rax=0x{:x}",
             wall, cache.n_execs, cache.n_compiles, r, flat[0]);
+        if let Some(p) = &cache_path {
+            std::fs::write(p, cache.save()).unwrap();
+            println!("[elfbench_t1] cache: saved {} blocks to {p}", cache.len());
+        }
         return;
     }
     let nohash = std::env::var("NOHASH").is_ok();

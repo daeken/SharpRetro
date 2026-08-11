@@ -263,6 +263,133 @@ impl BlockCache {
         RunResult::MaxExecs
     }
 
+    // ── Cross-run persistence (JIT-perf item ④) ────────────────────────────
+    //
+    // Format v1 (little-endian, no compression):
+    //   magic "XFC1" | u32 n_records
+    //   per record: u64 pc | u64 end_pc | u64 peek_lo | u64 peek_hi |
+    //               u32 mode | u32 n_slots | u32 body_off | u32 epi_off |
+    //               u32 n_sites | n_sites × (u32 slot_off, u64 guest_tgt) |
+    //               u32 code_len | code bytes
+    // Only TIER-1 blocks persist (tier-0 = the rare bail class, recompiles in
+    // µs; and tier-0 blocks are frameless/unchainable anyway). Code is
+    // position-independent except link slots, which from_code_bytes re-
+    // defaults to the fresh epilogue. CALLER owns the key discipline: the
+    // file must be keyed by (guest-image identity, compiler version, codegen
+    // env) — a stale cache against changed guest bytes is silently wrong.
+    // What's in the map at save time is exactly the never-invalidated set
+    // (invalidate removes entries), so save() can't persist stale ranges.
+
+    fn fnv1a(data: &[u8]) -> u64 {
+        let mut h = 0xcbf29ce484222325u64;
+        for &b in data { h ^= b as u64; h = h.wrapping_mul(0x100000001b3); }
+        h
+    }
+
+    /// Serialize every tier-1 block. Returns bytes (caller writes the file).
+    /// Trailer = fnv1a of everything after the magic (bit-rot → loud load-fail
+    /// instead of executing corrupted machine code).
+    pub fn save(&self) -> Vec<u8> {
+        let mut out = Vec::with_capacity(1 << 20);
+        out.extend_from_slice(b"XFC1");
+        let recs: Vec<_> = self.map.iter().filter(|(_, e)| e.tier == 1).collect();
+        out.extend_from_slice(&(recs.len() as u32).to_le_bytes());
+        for (&(pc, mode), e) in recs {
+            let b = &e.block;
+            out.extend_from_slice(&pc.to_le_bytes());
+            out.extend_from_slice(&e.guest_range.1.to_le_bytes());
+            out.extend_from_slice(&e.peek_range.0.to_le_bytes());
+            out.extend_from_slice(&e.peek_range.1.to_le_bytes());
+            out.extend_from_slice(&mode.to_le_bytes());
+            out.extend_from_slice(&b.n_slots.to_le_bytes());
+            out.extend_from_slice(&(b.body_off as u32).to_le_bytes());
+            out.extend_from_slice(&((b.epilogue_addr - b.page_addr()) as u32).to_le_bytes());
+            out.extend_from_slice(&(b.link_sites.len() as u32).to_le_bytes());
+            for &(off, tgt) in &b.link_sites {
+                out.extend_from_slice(&(off as u32).to_le_bytes());
+                out.extend_from_slice(&tgt.to_le_bytes());
+            }
+            let code = b.code_bytes();
+            out.extend_from_slice(&(code.len() as u32).to_le_bytes());
+            out.extend_from_slice(code);
+        }
+        let h = Self::fnv1a(&out[4..]);
+        out.extend_from_slice(&h.to_le_bytes());
+        out
+    }
+
+    /// Load a save() image: reconstruct blocks, insert, then eagerly cross-
+    /// link (all members present → one pass; edges to absent pcs go to
+    /// pending_links as usual, same chainability rules). Returns blocks
+    /// loaded. (pc,mode) collisions: first wins. Corrupt input → Err (caller
+    /// falls back to cold compile).
+    pub fn load(&mut self, data: &[u8]) -> Result<usize, &'static str> {
+        fn rd_u32(d: &[u8], o: &mut usize) -> Option<u32> {
+            let v = d.get(*o..*o+4)?; *o += 4; Some(u32::from_le_bytes(v.try_into().unwrap())) }
+        fn rd_u64(d: &[u8], o: &mut usize) -> Option<u64> {
+            let v = d.get(*o..*o+8)?; *o += 8; Some(u64::from_le_bytes(v.try_into().unwrap())) }
+        if data.len() < 16 || &data[..4] != b"XFC1" { return Err("bad magic"); }
+        let (body, trailer) = data.split_at(data.len() - 8);
+        let want = u64::from_le_bytes(trailer.try_into().unwrap());
+        if Self::fnv1a(&body[4..]) != want { return Err("checksum mismatch"); }
+        let data = body;
+        let mut o = 4usize;
+        let n = rd_u32(data, &mut o).ok_or("truncated")? as usize;
+        let mut loaded = 0usize;
+        for _ in 0..n {
+            let pc = rd_u64(data, &mut o).ok_or("truncated")?;
+            let end_pc = rd_u64(data, &mut o).ok_or("truncated")?;
+            let peek = (rd_u64(data, &mut o).ok_or("truncated")?,
+                        rd_u64(data, &mut o).ok_or("truncated")?);
+            let mode = rd_u32(data, &mut o).ok_or("truncated")?;
+            let n_slots = rd_u32(data, &mut o).ok_or("truncated")?;
+            let body_off = rd_u32(data, &mut o).ok_or("truncated")? as usize;
+            let epi_off = rd_u32(data, &mut o).ok_or("truncated")? as usize;
+            let n_sites = rd_u32(data, &mut o).ok_or("truncated")? as usize;
+            let mut sites = Vec::with_capacity(n_sites);
+            for _ in 0..n_sites {
+                let off = rd_u32(data, &mut o).ok_or("truncated")? as usize;
+                let tgt = rd_u64(data, &mut o).ok_or("truncated")?;
+                sites.push((off, tgt));
+            }
+            let code_len = rd_u32(data, &mut o).ok_or("truncated")? as usize;
+            let code = data.get(o..o + code_len).ok_or("truncated code")?; o += code_len;
+            if self.map.contains_key(&(pc, mode)) { continue; }
+            let block = CompiledBlock::from_code_bytes(code, n_slots, body_off, epi_off, sites);
+            if block.n_slots as usize + 1 > self.spill.len() {
+                self.spill.resize(block.n_slots as usize + 1, 0);
+            }
+            self.map.insert((pc, mode), Entry {
+                block, guest_range: (pc, end_pc), peek_range: peek,
+                linked_from: vec![], exec_count: 0, tier: 1,
+            });
+            loaded += 1;
+        }
+        // Eager cross-link pass (same chainability rules as compile path).
+        if self.link {
+            let keys: Vec<(u64, u32)> = self.map.keys().copied().collect();
+            for k in keys {
+                let (sites, epi) = {
+                    let e = &self.map[&k];
+                    (e.block.link_sites.clone(), e.block.epilogue_addr)
+                };
+                for (off, tgt) in sites {
+                    let tkey = (tgt, k.1);
+                    if let Some(te) = self.map.get(&tkey) {
+                        if te.block.body_off != 0 {
+                            let addr = te.block.body_addr();
+                            self.map[&k].block.patch_link(off, addr);
+                            self.map.get_mut(&tkey).unwrap().linked_from.push((k, off, epi));
+                        }
+                    } else {
+                        self.pending_links.entry(tkey).or_default().push((k, off, epi));
+                    }
+                }
+            }
+        }
+        Ok(loaded)
+    }
+
     /// Drop every cached block whose guest_range intersects `[start, end)`.
     /// The loader↔JIT contract seam (per DESIGN.md §invalidate): callers are
     /// loader-side (bulk-patches ride free pre-first-compile; runtime-patches call
