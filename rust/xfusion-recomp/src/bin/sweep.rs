@@ -56,8 +56,8 @@ const ANCHOR_XMM: u128 = 0x40800000_40400000_40000000_3F800000;  // f32 [1,2,3,4
 
 /// Interp one insn from a given pre-state. Returns (post_state, def_id) on
 /// success; None if the lift panics (intrinsic/unwired/mem — phase-1 skip).
-fn interp_one(pre: &X86State, insn: &[u8]) -> Option<(X86State, u32)> {
-    let d = decode_insn(insn, XMode::Bits64)?;
+fn interp_one(pre: &X86State, insn: &[u8], mode: XMode) -> Option<(X86State, u32)> {
+    let d = decode_insn(insn, mode)?;
     let mut st = pre.clone();
     st.rip = 0x1000;
     // Sized to cover rsp=0x80000 (PUSH/POP touch stack even in reg-form).
@@ -66,7 +66,7 @@ fn interp_one(pre: &X86State, insn: &[u8]) -> Option<(X86State, u32)> {
     let handled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut b = InterpretingBuilder::new(&mut st, &mut mem, 0x1000);
         b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
-        lift_one(&mut b, &d, 0x1000, XMode::Bits64, FLAGS_ALL_LIVE)
+        lift_one(&mut b, &d, 0x1000, mode, FLAGS_ALL_LIVE)
     })).ok()?;
     if !handled { return None; }
     st.rip = 0x1000 + d.len as u64;
@@ -75,10 +75,10 @@ fn interp_one(pre: &X86State, insn: &[u8]) -> Option<(X86State, u32)> {
 
 /// Discover an insn's read-set via TrackingState (which GPRs + which flags).
 /// Phase-1: skip if reads XMM/mem (reg-form GPR only).
-fn discover(insn: &[u8], allow_xmm: bool)
+fn discover(insn: &[u8], allow_xmm: bool, mode: XMode)
     -> Option<(Vec<u32>, Vec<u32>, Vec<u32>, u32)>
 {
-    let d = decode_insn(insn, XMode::Bits64)?;
+    let d = decode_insn(insn, mode)?;
     let mut ts = TrackingState::default();
     ts.inner.gpr[4] = 0x8FED8;
     ts.inner.rip = 0x1000;
@@ -89,7 +89,7 @@ fn discover(insn: &[u8], allow_xmm: bool)
     let handled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut b = InterpretingBuilder::new(&mut ts, &mut mem, 0x1000);
         b.intrinsic = |_,_,id,_| panic!("intrinsic {id}");
-        lift_one(&mut b, &d, 0x1000, XMode::Bits64, FLAGS_ALL_LIVE)
+        lift_one(&mut b, &d, 0x1000, mode, FLAGS_ALL_LIVE)
     })).ok()?;
     if !handled { return None; }
     let xr = ts.xmm_reads();
@@ -162,6 +162,10 @@ fn main() {
     // uses emit_stub_xmm (v2, SLOT_OFF=226, movdqu load/store around slot),
     // sweeps xmm_reads through PRE_VALS_XMM. Off = phase-1 (v1 stub, GPR only).
     let phase2_xmm = args.iter().any(|a| a == "--xmm");
+    // --bits32: ① 32-bit-mode arm. Encodes/decodes/lifts at Bits32 (no REX,
+    // reg 0..8, opws {16,32}, byte-idx 4-7 = AH/CH/DH/BH). Stub for silicon
+    // execution needs a 64→32 mode-switch bracket = part (c), separate.
+    let mode = if args.iter().any(|a| a == "--bits32") { XMode::Bits32 } else { XMode::Bits64 };
 
     let mut n_defs_p1 = 0u32;
     let mut n_enc = 0u32;
@@ -182,7 +186,7 @@ fn main() {
     } else { None };
 
     for (i, sd) in SWEEP_DEFS.iter().enumerate() {
-        if let Some(r) = phase1_skip(sd) { *skip_by.entry(r).or_default() += 1; continue; }
+        if let Some(r) = phase1_skip(sd, mode) { *skip_by.entry(r).or_default() += 1; continue; }
         if let Some(r) = mnem_exec_skip(sd.mnem) { *skip_by.entry(r).or_default() += 1; continue; }
         // Def has ANY xmm-class operand? (read OR write side). Own #171:
         // the encoder change let XMM defs pass phase1_skip; without --xmm
@@ -200,14 +204,14 @@ fn main() {
         // For each ENCODING (reg-choice + opsize + imm), verify_rt-checked:
         if row_limit.map(|l| n_rows >= l).unwrap_or(false) { break; }
         let mut enc_i = 0u32;
-        let (ok, _fail) = enumerate_p1(sd, |c: &EncChoice, insn: &[u8]| {
+        let (ok, _fail) = enumerate_p1(sd, mode, |c: &EncChoice, insn: &[u8]| {
             n_enc += 1;
             enc_i += 1;
             if stride > 1 && (enc_i % stride) != 1 { return; }
             if row_limit.map(|l| n_rows >= l).unwrap_or(false) { return; }
             // Discover read-set for THIS specific encoding (reg-choice determines
             // which GPRs the insn reads — add r8,r9 reads {r8,r9}).
-            let Some((gpr_reads, flag_reads, xmm_reads, def_id)) = discover(insn, phase2_xmm) else {
+            let Some((gpr_reads, flag_reads, xmm_reads, def_id)) = discover(insn, phase2_xmm, mode) else {
                 *skip_by.entry("track-fail").or_default() += 1;
                 *tf_by.entry(sd.mnem).or_default() += 1;
                 if !tf_ex.contains_key(sd.mnem) { tf_ex.insert(sd.mnem, insn.to_vec()); }
@@ -265,7 +269,7 @@ fn main() {
                             pre.xmm[sweep_xr as usize] = bxv;
                         }
 
-                        let Some((post, _)) = interp_one(&pre, insn) else {
+                        let Some((post, _)) = interp_one(&pre, insn, mode) else {
                             *skip_by.entry("interp-panic").or_default() += 1; continue;
                         };
                         if post.gpr[4] != pre.gpr[4] {

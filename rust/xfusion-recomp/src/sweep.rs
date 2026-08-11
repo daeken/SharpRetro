@@ -19,6 +19,23 @@ use crate::decode::XMode;
 /// mode (their opcode range is repurposed as prefix bytes). The decoder's
 /// scan_prefixes consumes them before dispatch → correct decode-fail.
 /// Not encoder bugs — mode-invalid rows. Skip in the 64-bit sweep.
+/// Defs invalid in Bits32 (long-mode-only). Populated from objdump-i386
+/// cross-check (round-trip = self-oracle only — our decoder doesn't
+/// mode-gate 0x63, so encode MOVSXD → 63 C1 → decode(Bits32) → MOVSXD passes
+/// round-trip; objdump -m i386 says ARPL). ‡ DECODER-TIER gap: the .isa has
+/// no `only64` encoding-flag; 40+r INC/DEC work by accident (prefix scanner
+/// eats 0x40-0x4F as REX in Bits64 before dispatch). Proper fix = add an
+/// only64 flag + gate in both disasm-gens; for the sweep, skip here.
+pub fn bits32_invalid(d: &SwDef) -> bool {
+    // From objdump -m i386 cross-check (bits32_encode_spot_objdump test):
+    match d.mnem {
+        // 0x63 = ARPL in Bits32 (16-bit-era priv insn). Alky is 64-bit only
+        // → the decoder gap doesn't affect the consumer; ‡ filed regardless.
+        "MOVSXD" => true,
+        _ => false,
+    }
+}
+
 pub fn long_mode_invalid(d: &SwDef) -> bool {
     // 40+r INC / 48+r DEC = the REX prefix range.
     if d.map == 0 && d.plus_r && (d.opcode == 0x40 || d.opcode == 0x48) { return true; }
@@ -31,22 +48,33 @@ pub fn long_mode_invalid(d: &SwDef) -> bool {
 
 /// One point in the sweep space: a specific encoding with all fields chosen.
 /// The encoder produces bytes from this; the caller iterates the choice space.
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug)]
 pub struct EncChoice {
+    pub mode: XMode,    // Bits64 (default) | Bits32 (① 32-bit sweep arm)
     pub op_w: u8,       // effective operand width for V/Z-coded operands: 16|32|64
-    pub reg: u8,        // ModRM.reg field value (0..15, if any Greg/Vxmm operand)
-    pub rm: u8,         // ModRM.rm field value  (0..15, if any Erm/Wxmm operand; reg-form)
-    pub zopc: u8,       // +r opcode-embedded reg (0..15, if plus_r)
+    pub reg: u8,        // ModRM.reg field value (0..15 in Bits64, 0..8 in Bits32)
+    pub rm: u8,         // ModRM.rm field value  (same range)
+    pub zopc: u8,       // +r opcode-embedded reg (same range)
     pub imm: u64,       // immediate value (if any Imm operand)
     // phase-2: mem-form choices (base/idx/scale/disp), phase-3: xmm-idx separate
+}
+impl Default for EncChoice {
+    fn default() -> Self {
+        Self { mode: XMode::Bits64, op_w: 32, reg: 0, rm: 0, zopc: 0, imm: 0 }
+    }
 }
 
 /// What phase-1 will and won't encode. A def is phase-1-eligible if ALL its
 /// operands are in the phase-1 class-set AND it's legacy (vex==0). Returns
 /// the reason for skipping (for the census).
-pub fn phase1_skip(d: &SwDef) -> Option<&'static str> {
+pub fn phase1_skip(d: &SwDef, mode: XMode) -> Option<&'static str> {
     if d.vex != 0 { return Some("vex/evex"); }
-    if long_mode_invalid(d) { return Some("64bit-invalid"); }
+    // 40+r/48+r INC/DEC etc: invalid in Bits64 (REX range), VALID in Bits32.
+    if mode == XMode::Bits64 && long_mode_invalid(d) { return Some("64bit-invalid"); }
+    // Bits32-invalid rows (MOVSXD, SYSCALL, CDQE/CQO, SWAPGS, …): let the
+    // round-trip CENSUS name them first (day-1 method) rather than composing
+    // the list from memory. bits32_invalid() below grows from census output.
+    if mode == XMode::Bits32 && bits32_invalid(d) { return Some("32bit-invalid"); }
     for o in d.ops {
         match o.cls {
             SwCls::Erm | SwCls::Greg | SwCls::Zopc | SwCls::FixR | SwCls::FixI
@@ -155,7 +183,7 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
     let byte_op_at_hi4 = |o: &SwOp, idx: u8| {
         matches!(o.w, SwW::B) && (4..8).contains(&idx)
     };
-    let need_rex40 = d.ops.iter().any(|o| match o.cls {
+    let need_rex40 = c.mode == XMode::Bits64 && d.ops.iter().any(|o| match o.cls {
         SwCls::Greg => byte_op_at_hi4(o, c.reg),
         SwCls::Erm  => byte_op_at_hi4(o, c.rm),
         SwCls::Zopc => byte_op_at_hi4(o, c.zopc),
@@ -163,7 +191,14 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
         _ => false,
     });
     let rex_bits = ((rex_w as u8)<<3) | ((rex_r as u8)<<2) | (rex_b as u8);
-    if rex_bits != 0 || need_rex40 {
+    // REX is Bits64-ONLY (0x40-0x4F = INC/DEC in Bits32). Enumerate caps reg/
+    // rm/zopc to 0..8 and op_w to {16,32} in Bits32 → rex_bits SHOULD be 0;
+    // this assert catches an enumerator that leaks a 64-bit choice into a
+    // 32-bit encode. In Bits32, byte-reg idx 4-7 = AH/CH/DH/BH (no SPL/BPL/
+    // SIL/DIL exist without REX) → need_rex40 doesn't apply.
+    if c.mode != XMode::Bits64 {
+        debug_assert_eq!(rex_bits, 0, "REX bits set in {:?}: {c:?}", c.mode);
+    } else if rex_bits != 0 || need_rex40 {
         b.push(0x40 | rex_bits);
     }
 
@@ -208,7 +243,7 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
 /// synthesized encoding must survive the XED-verified decoder.
 pub fn verify_rt(d: &SwDef, c: &EncChoice) -> Result<Vec<u8>, String> {
     let bytes = encode(d, c);
-    match decode_insn(&bytes, XMode::Bits64) {
+    match decode_insn(&bytes, c.mode) {
         None => Err(format!("decode-fail: {} bytes {:02X?} choice {c:?}",
                             d.mnem, bytes)),
         Some(di) if di.len as usize != bytes.len() =>
@@ -264,8 +299,8 @@ pub fn verify_rt(d: &SwDef, c: &EncChoice) -> Result<Vec<u8>, String> {
 /// 1<<(w-1) (min-negative), and 1<<k for k in a sparse set}. sign_ext operands
 /// get the imm's own width's boundaries (the value that lands in the reg is
 /// the sign-extended result — that's what the pre-state grid then exercises).
-pub fn enumerate_p1<F: FnMut(&EncChoice, &[u8])>(d: &SwDef, f: F) -> (u32, u32) {
-    enumerate_p1_debug(d, f, |_| {})
+pub fn enumerate_p1<F: FnMut(&EncChoice, &[u8])>(d: &SwDef, mode: XMode, f: F) -> (u32, u32) {
+    enumerate_p1_debug(d, mode, f, |_| {})
 }
 
 /// Known encoding aliases: choice-points where the encoding is VALID but
@@ -281,7 +316,7 @@ fn is_known_alias(d: &SwDef, c: &EncChoice) -> bool {
 
 /// Same as enumerate_p1 but calls on_fail(err) for each verify_rt failure.
 pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
-    d: &SwDef, mut f: F, mut on_fail: E) -> (u32, u32)
+    d: &SwDef, mode: XMode, mut f: F, mut on_fail: E) -> (u32, u32)
 {
     let has_greg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Greg));
     let has_vreg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Vxmm));
@@ -289,17 +324,29 @@ pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
     let has_wrm  = d.ops.iter().any(|o| matches!(o.cls, SwCls::Wxmm | SwCls::Uxmm));
     let has_zopc = d.plus_r || d.ops.iter().any(|o| matches!(o.cls, SwCls::Zopc));
     let imm_op   = d.ops.iter().find(|o| matches!(o.cls, SwCls::Imm));
+    let is64 = mode == XMode::Bits64;
 
-    // op_w dimension: V/Z ⇒ {16,32,64}; Y ⇒ {32,64} (66 ignored, REX.W only);
-    // d64 ⇒ {64}; XMM-only or fixed-width ⇒ single point.
+    // op_w dimension. Bits64: V/Z⇒{16,32,64}, Y⇒{32,64}, d64⇒{64}.
+    // Bits32: no REX.W → V/Z⇒{16,32}, Y⇒{32}; d64 ("default-64 in long mode")
+    // has no effect in Bits32 — those rows fall back to v_width ⇒ {16,32}.
     let has_y = d.ops.iter().any(|o| matches!(o.w, SwW::Y));
-    let opws: &[u8] = if d.d64 { &[64] }
-                      else if has_v_operand(d) { &[16, 32, 64] }
-                      else if has_y { &[32, 64] }
-                      else { &[32] };
-    let regs: Vec<u8> = if has_greg || has_vreg { (0..16).collect() } else { vec![0] };
-    let rms:  Vec<u8> = if has_erm || has_wrm  { (0..16).collect() } else { vec![0] };
-    let zops: Vec<u8> = if has_zopc { (0..16).collect() } else { vec![0] };
+    let opws: &[u8] = if is64 {
+        if d.d64 { &[64] }
+        else if has_v_operand(d) { &[16, 32, 64] }
+        else if has_y { &[32, 64] }
+        else { &[32] }
+    } else {
+        // Bits32 (Bits16 = phase-4, not yet)
+        if has_v_operand(d) || d.d64 { &[16, 32] }
+        else { &[32] }  // Y and fixed-width both → 32
+    };
+    // reg/rm/zopc range: Bits64 → 0..16 (REX.R/B extends); Bits32 → 0..8 (no
+    // REX; xmm8-15 also unreachable). Byte-reg idx 4-7 in Bits32 = AH/CH/DH/BH
+    // (bind_modrm_reg keys high8 on d.p.rex≠0 — rex=0 in Bits32 → high8 ✓).
+    let hi: u8 = if is64 { 16 } else { 8 };
+    let regs: Vec<u8> = if has_greg || has_vreg { (0..hi).collect() } else { vec![0] };
+    let rms:  Vec<u8> = if has_erm || has_wrm  { (0..hi).collect() } else { vec![0] };
+    let zops: Vec<u8> = if has_zopc { (0..hi).collect() } else { vec![0] };
     let (mut n_ok, mut n_fail) = (0u32, 0u32);
     for &op_w in opws {
         // Imm boundary set PER ENCODED WIDTH (varies with op_w for V/Z-code).
@@ -325,7 +372,7 @@ pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
             for &rm in &rms {
                 for &zopc in &zops {
                     for &imm in &imms {
-                        let c = EncChoice { op_w, reg, rm, zopc, imm };
+                        let c = EncChoice { mode, op_w, reg, rm, zopc, imm };
                         if is_known_alias(d, &c) { continue; }
                         match verify_rt(d, &c) {
                             Ok(bytes) => { n_ok += 1; f(&c, &bytes); }
@@ -381,7 +428,7 @@ mod tests {
         let mut skip: BTreeMap<&str, u32> = BTreeMap::new();
         let mut n_p1 = 0;
         for d in SWEEP_DEFS {
-            match phase1_skip(d) { None => n_p1 += 1, Some(r) => *skip.entry(r).or_default() += 1 }
+            match phase1_skip(d, XMode::Bits64) { None => n_p1 += 1, Some(r) => *skip.entry(r).or_default() += 1 }
         }
         println!("  phase-1 eligible: {n_p1} / {} defs", SWEEP_DEFS.len());
         for (r, n) in &skip { println!("    skip {r}: {n}"); }
@@ -406,7 +453,7 @@ mod tests {
             let d = SWEEP_DEFS.iter().find(|d|
                 d.mnem == mnem && d.mprefix == mp && d.opcode == op && d.map == 1
             ).unwrap_or_else(|| panic!("no SwDef for {mnem}"));
-            let c = EncChoice { op_w: 32, reg, rm, zopc: 0, imm: 0 };
+            let c = EncChoice { op_w: 32, reg, rm, ..Default::default() };
             let bytes = encode(d, &c);
             eprintln!("  {} reg={} rm={} → {:02X?}", mnem, reg, rm, &bytes);
             all.extend_from_slice(&bytes);
@@ -431,32 +478,89 @@ mod tests {
 
     #[test]
     fn round_trip_all_p1() {
+        round_trip_at_mode(XMode::Bits64, true);
+    }
+
+    #[test]
+    fn round_trip_all_bits32() {
+        // ① 32-bit arm: gated (was census-only until bits32_invalid populated).
+        round_trip_at_mode(XMode::Bits32, true);
+    }
+
+    #[test]
+    fn bits32_encode_spot_objdump() {
+        // Independent-decoder verify for the Bits32 encoder (round-trip is
+        // self-oracle only — our decoder doesn't mode-gate 0x63 → MOVSXD
+        // "passes" round-trip in Bits32; objdump -m i386 says ARPL).
+        use std::process::Command;
+        // (mnem, opcode, map, op_w, reg, rm, zopc, want-objdump-mnem)
+        let cases: &[(&str, u8, u8, u8, u8, u8, u8, &str)] = &[
+            ("ADD",   0x01, 0, 32, 1, 2, 0, "add"),      // 01 CA add edx,ecx
+            ("ADD",   0x01, 0, 16, 1, 2, 0, "add"),      // 66 01 CA add dx,cx
+            ("INC",   0x40, 0, 32, 0, 0, 3, "inc"),      // 43 inc ebx (40+r zopc)
+            ("DEC",   0x48, 0, 16, 0, 0, 5, "dec"),      // 66 4D dec bp
+            ("MOV",   0x88, 0, 32, 4, 1, 0, "mov"),      // 88 E1 mov cl,ah (byte idx=4 no-REX = high8)
+            ("ADDPS", 0x58, 1, 32, 3, 6, 0, "addps"),    // 0F 58 DE (SSE works in 32-bit)
+            ("IMUL3", 0x69, 0, 32, 2, 5, 0, "imul"),     // 69 D5 .. imul edx,ebp,imm32
+        ];
+        let mut all = vec![];
+        let mut lens = vec![];
+        for &(mnem, op, map, op_w, reg, rm, zopc, _) in cases {
+            let d = SWEEP_DEFS.iter().find(|d|
+                d.mnem == mnem && d.opcode == op && d.map == map
+            ).unwrap_or_else(|| panic!("no SwDef for {mnem} m{map}/0x{op:02X}"));
+            let c = EncChoice { mode: XMode::Bits32, op_w, reg, rm, zopc, imm: 0x11 };
+            let bytes = encode(d, &c);
+            eprintln!("  {} op_w={} reg={} rm={} zopc={} → {:02X?}", mnem, op_w, reg, rm, zopc, &bytes);
+            lens.push(bytes.len());
+            all.extend_from_slice(&bytes);
+        }
+        std::fs::write("/tmp/sweep_b32_spot.bin", &all).unwrap();
+        let out = Command::new("objdump")
+            .args(["-D","-b","binary","-m","i386","-M","intel","/tmp/sweep_b32_spot.bin"])
+            .output().unwrap();
+        let dump = String::from_utf8_lossy(&out.stdout);
+        let insns: Vec<_> = dump.lines().filter(|l| l.contains(":\t")).collect();
+        eprintln!("  objdump -m i386 ({} insns):", insns.len());
+        for l in &insns { eprintln!("    {}", l.trim()); }
+        assert_eq!(insns.len(), cases.len(),
+                   "objdump insn count ≠ case count → misencoded (or objdump split one)");
+        for (i, &(mnem, .., want)) in cases.iter().enumerate() {
+            let l = insns[i];
+            assert!(l.contains(want), "{mnem}: objdump `{}` doesn't contain `{want}`", l.trim());
+        }
+    }
+
+    fn round_trip_at_mode(mode: XMode, gate: bool) {
         // The load-bearing test: every phase-1 def × every enumerated choice
         // must round-trip through decode_insn. n_fail should be ZERO.
         let mut total_ok = 0u32;
         let mut total_fail = 0u32;
+        let mut n_defs = 0u32;
         let mut fail_by = std::collections::BTreeMap::<String, u32>::new();
         let mut first_fails: Vec<String> = vec![];
         for d in SWEEP_DEFS {
-            if phase1_skip(d).is_some() { continue; }
+            if phase1_skip(d, mode).is_some() { continue; }
+            n_defs += 1;
             // Print the FIRST failure case per def (the §4 datum).
             let mut df = 0u32;
-            let (ok, fail) = enumerate_p1_debug(d, |_c, _b| {}, |e| {
-                if df == 0 && first_fails.len() < 30 {
+            let (ok, fail) = enumerate_p1_debug(d, mode, |_c, _b| {}, |e| {
+                if df == 0 && first_fails.len() < 40 {
                     first_fails.push(e.to_string());
                 }
                 df += 1;
             });
             total_ok += ok; total_fail += fail;
             if fail > 0 {
-                let key = format!("{} 0x{:02X}", d.mnem, d.opcode);
+                let key = format!("{} m{}/0x{:02X}", d.mnem, d.map, d.opcode);
                 *fail_by.entry(key).or_default() += fail;
             }
         }
         for e in &first_fails { println!("    fail-case: {e}"); }
-        println!("  round-trip: {total_ok} ok, {total_fail} FAIL");
-        for (m, n) in fail_by.iter().take(20) { println!("    {m}: {n} fail"); }
-        // The gate: every phase-1 encoding must round-trip clean.
-        assert_eq!(total_fail, 0, "phase-1 encoder round-trip must be clean");
+        println!("  round-trip [{mode:?}]: {n_defs} defs, {total_ok} ok, {total_fail} FAIL");
+        for (m, n) in &fail_by { println!("    {m}: {n} fail"); }
+        if gate {
+            assert_eq!(total_fail, 0, "phase-1 encoder round-trip must be clean");
+        }
     }
 }
