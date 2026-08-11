@@ -93,10 +93,43 @@ source), then a ~200L walker: linear-scan regalloc over the block, const-fold, d
 elim, redundant-load elim (two `reg_read(Gpr, rn)` with no intervening write → one load).
 Emits via the same `Emit` as tier-0. ≈2-5× tier-0's code quality, ~ms compile.
 
-### tier-2: LLVM
+### tier-2: region-SSA (settled shape — sera ·1401, 2026-08-11)
 
-Lower `IlBlock` → LLVM IR (via `inkwell`), let LLVM optimize + codegen. Slow (~10-100ms/block),
-best code. Only for genuinely hot blocks. Reference impl = the existing C# `LlvmJit/`.
+NOT LLVM-first. The IlRecorder stream is already SSA within a block (every op = a fresh
+val-id, no reassignment — SVN/DSE exploit exactly this). What tier-1 lacks: (a) cross-block
+value flow — every block boundary is a full state[]-materialize + reload; (b) a region
+bigger than one guest block. Tier-2 =
+
+1. **Region selection**: superblock/trace regions off the LINKER's own signal — exec-counts
+   per link-edge name the hot chains (the linking work made the region graph observable
+   for free). Follow the dominant successor(s); side-exits stay block-grain.
+2. **Region lift**: same IlRecorder over the whole region; block joins become explicit
+   (φ-or-predication decision at build time — traces need no φ if side-exits materialize).
+3. **Region passes**: GVN (subsumes SVN), cross-block DCE (the store-at-exit/reload-at-entry
+   pairs die — the single biggest remaining tax), flag-liveness at region grain (block-exit
+   conservatism vanishes inside the region; exit-peek only at region exits).
+4. One linear-scan over the region; same Emitter; side-exits = the existing link-thunks.
+
+Same IR, same Builder, same oracles: region-vs-interp state-diff at region boundaries; the
+tier-0/1 LOCKSTEP generalizes (run the region's constituent blocks under tier-1, diff at
+the region exit). Compile cost stays ~ms — which matters because CP2077 compiles ~100K+
+blocks at boot.
+
+### tier-3: LLVM (hotspot-proven regions only)
+
+Lower the REGION (not block) → LLVM IR via `inkwell` for the few regions exec-counts prove
+deserve real isel. Slow (~10-100ms); reference impl = C# `LlvmJit/`. Only after tier-2's
+region machinery exists — LLVM inherits regions for free.
+
+### Cross-run cache (item ④, design pending loader answer)
+
+Persist compiled blobs keyed by (guest-image content-hash, pc-range, compiler-version,
+env-knobs). Identity-map (mem_base=0) makes blocks nearly position-independent — the
+literal-routed link slots re-patch at load anyway (they're data), and state-ptr/spill-ptr
+arrive in registers. Open: image-hash at map time (asked fuchi — loader-side) vs
+(path, mtime, size). Invalidate story: SMC pages fall back to runtime invalidate as today;
+the persisted cache only serves never-invalidated ranges (conservative: any invalidate on
+a range poisons its cache entries for the run + on disk).
 
 ### Host-arch dimension
 
