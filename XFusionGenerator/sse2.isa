@@ -132,13 +132,27 @@
     (= dst (u64 src)))
 (encoding MOVD-XS (Ev Vdq) (opsize 0x0F 0x7E))
 
-; MOVQ xmm<->xmm/m64 (F3 0F 7E load, 66 0F D6 store)
+; MOVQ xmm<->xmm/m64 (F3 0F 7E load, 66 0F D6 store).
+; SDM: "when the destination operand is an XMM register ... the high quadword
+; is cleared to all 0s." dst=Vdq/Udq (width=128) so write_operand does a FULL
+; write of the zext'd 128-bit value (upper=0). Was Vq/Wq (width=64) — since
+; the scalar-preserve-upper fix, that would mask-INSERT low-64 → upper
+; PRESERVED, wrong for MOVQ. Silicon-sweep phase-2b: 84 diffs, all silicon
+; xmm.hi=0 vs interp xmm.hi=preserved — EXPOSED by the scalar-preserve fix
+; (before it, everything zeroed, so MOVQ was accidentally correct).
+; Src stays Wq (reads low-64 of xmm OR 64 bits from mem — both correct).
+; Store form: xmm-dst arm = Udq (mod=11, full-128 write); mem-dst arm = Mq
+; (mod≠11, 64-bit store). Disasm-gen mod-discriminates (MOVHLPS/MOVLPS @0F12
+; is the precedent).
 (instruction MOVQ-X (dst src) "movq $dst, $src"
     (= dst (zext (u64 src) 128)))
-(encoding MOVQ-X (Vq Wq) (rep 0x0F 0x7E))
+(encoding MOVQ-X (Vdq Wq) (rep 0x0F 0x7E))
 (instruction MOVQ-XS (dst src) "movq $dst, $src"
+    (= dst (zext (u64 src) 128)))
+(encoding MOVQ-XS (Udq Vq) (opsize 0x0F 0xD6))
+(instruction MOVQ-XM (dst src) "movq $dst, $src"
     (= dst (u64 src)))
-(encoding MOVQ-XS (Wq Vq) (opsize 0x0F 0xD6))
+(encoding MOVQ-XM (Mq Vq) (opsize 0x0F 0xD6))
 
 ; --- integer xmm: compare/extract ---
 ; PCMPEQ*/PCMPGT*: per-lane integer compare → all-1s/0 mask. cmpgt is SIGNED. vibin op=3/4.

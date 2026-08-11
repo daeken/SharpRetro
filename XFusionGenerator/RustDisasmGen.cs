@@ -96,6 +96,26 @@ public static class RustDisasmGen {
                 sb.AppendLine($"            if {cond} {{");
                 sb.AppendLine($"                {clear}");
                 var pdefs = pg.ToList();
+                // mod-field discrimination inside a mprefix-group: two defs, same
+                // prefix+opcode, one U*(reg-only mod=11) + one M*(mem-only mod≠11).
+                // First case: MOVQ-XS(Udq)/MOVQ-XM(Mq) at 66 0F D6 — the reg-form
+                // zeroes upper 64 (dst=Udq width=128), the mem-form stores 64 bits.
+                // Mirrors the byExt mod-split below (which only covers no-mprefix
+                // rows — 0F 12 movhlps/movlps).
+                if(pdefs.Count == 2 && pdefs.All(d => d.RegExtension < 0)) {
+                    var rF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+                    var mF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+                    if(rF != null && mF != null && rF != mF) {
+                        sb.AppendLine("                if i >= code.len() { return None; }");
+                        sb.AppendLine("                if (code[i] >> 6) == 3 {");
+                        EmitDefBody(sb, rF, "                    ");
+                        sb.AppendLine("                } else {");
+                        EmitDefBody(sb, mF, "                    ");
+                        sb.AppendLine("                }");
+                        sb.AppendLine("            }");
+                        continue;
+                    }
+                }
                 if(pdefs.Count > 1 || pdefs[0].RegExtension >= 0) {
                     sb.AppendLine("                if i >= code.len() { return None; }");
                     sb.AppendLine("                match (code[i] >> 3) & 7 {");
