@@ -41,10 +41,14 @@ public static class RustDisasmGen {
 
         // Same grouping as DisassemblerGenerator (kept in lockstep — the C# side is
         // XED-verified; this side must produce the SAME def_id for the same bytes).
-        var exact = defs.Where(d => !d.PlusR).Select(d => (d.Map, d.Opcode)).ToHashSet();
+        // A plus_r def's r=0 slot may collide with an exact def at the same opcode
+        // (only case: 0x90 NOP vs XCHG rAX,r0). PREVIOUSLY the exact-set filter dropped
+        // the plus_r row entirely there — wrong when REX.B is set: 41 90 = XCHG r8d,eax,
+        // NOT nop. Now: keep BOTH in the group; the byExt arm-emit below discriminates
+        // by p.rex_b() (rex_b → the plus_r def targeting r8+, else → the exact def).
+        // Found by the sweep's round-trip gate on its first fire.
         var dispatchRows = defs.SelectMany(d => d.PlusR
             ? Enumerable.Range(0, 8).Select(r => (Op: (byte)(d.Opcode + r), Def: d))
-                .Where(x => !exact.Contains((d.Map, x.Op)))
             : new[] { (Op: d.Opcode, Def: d) });
         var groups = dispatchRows.GroupBy(x => (x.Def.Map, x.Op))
             .OrderBy(g => g.Key.Map).ThenBy(g => g.Key.Op);
@@ -111,7 +115,23 @@ public static class RustDisasmGen {
             }
 
             var byExt = g.Select(x => x.Def)
-                .Where(d => d.MandatoryPrefix == null && d.Vex == VexMode.None).ToList();
+                .Where(d => d.MandatoryPrefix == null && d.Vex == VexMode.None)
+                .Distinct().ToList();
+
+            // (exact + plus_r) collision at this opcode: the plus_r def only reaches
+            // this slot's opcode via its r=0 encoding, and REX.B extends that to r8.
+            // Without REX.B the exact def wins (90=NOP); with REX.B it's the plus_r
+            // def targeting r8 (41 90 = XCHG r8d,eax). Only 0x90 in practice.
+            if(byExt.Count == 2 && byExt.Count(d => d.PlusR) == 1) {
+                var plusR = byExt.First(d => d.PlusR);
+                var exact = byExt.First(d => !d.PlusR);
+                sb.AppendLine("            if p.rex_b() {");
+                EmitDefBody(sb, plusR, "                ");
+                sb.AppendLine("            }");
+                EmitDefBody(sb, exact, "            ");
+                sb.AppendLine("        }");
+                continue;
+            }
             if(byExt.Count == 0) {
                 sb.AppendLine("            return None;");
                 sb.AppendLine("        }");

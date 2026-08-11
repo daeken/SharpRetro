@@ -29,6 +29,8 @@ public class Program : Core {
 			File.WriteAllText(Path.Combine(rustOut, "disassembler.rs"), RustDisasmGen.Generate(defs));
 			Console.WriteLine($"Wrote {Path.Combine(rustOut, "disassembler.rs")} ({RustDisasmGen.BodyOrder.Count} def-bodies)");
 			File.WriteAllText(Path.Combine(rustOut, "lift.rs"), RustLiftGen.Generate(templates, defs));
+			File.WriteAllText(Path.Combine(rustOut, "sweep_defs.rs"), SweepGen.Generate(defs));
+			Console.WriteLine($"Wrote sweep_defs.rs ({defs.Count} defs)");
 			Console.WriteLine($"Wrote {Path.Combine(rustOut, "lift.rs")}");
 			return;
 		}
