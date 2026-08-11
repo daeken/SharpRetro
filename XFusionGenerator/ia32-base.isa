@@ -87,18 +87,29 @@
 ; BSR = position of HIGHEST set bit = (opw-1) - clz(src).
 (instruction BSF (dst src)
     "bsf $dst, $src"
+    ; src=0: SDM says dst UNDEFINED; silicon = NO WRITE (Intel: full 64-bit
+    ; dst preserved, no 32-zext). RustLiftGen collapses single-`=`-body `if`
+    ; to ternary+unconditional-write (correct for CMOVcc, which DOES always
+    ; 32-zext per SDM). Wrapping in (block ...) defeats the collapse → the
+    ; general bd.cond form = truly conditional write. Silicon-sweep fire-1:
+    ; bsf eax,r14d w/ r14=0, rax=0x1122334455667788 → silicon rax UNCHANGED,
+    ; interp=0x55667788 (32-zext'd). hardware > SDM.
     (mlet (z (== src 0))
         (= ZF z)
-        (if (! z) (= dst (clz (rbit src))))))
+        (if (! z) (block (= dst (clz (rbit src)))))))
 (encoding BSF (Gv Ev) (0x0F 0xBC))
 
 ; TZCNT/LZCNT (BMI/LZCNT features, F3-prefixed BSF/BSR): DEFINED on src==0
 ; (returns opw). CF = (src==0), ZF = (result==0).
 (instruction TZCNT (dst src)
     "tzcnt $dst, $src"
-    (mlet (r (clz (rbit src)))
+    ; CF must read src BEFORE dst is written: when dst==src (tzcnt ax,ax),
+    ; `(== src 0)` after `(= dst r)` reads the RESULT → CF inverted (src=0→
+    ; result=width→CF=0; src=1→result=0→CF=1). Third .isa-tier bug (silicon-
+    ; sweep fire-1). mlet-capture the CF predicate before the dst-write.
+    (mlet (r (clz (rbit src)) cf (== src 0))
         (= dst r)
-        (= CF (== src 0))
+        (= CF cf)
         (= ZF (== r 0))))
 (encoding TZCNT (Gv Ev) (rep 0x0F 0xBC))
 
@@ -107,14 +118,16 @@
     (mlet (z (== src 0)
            w1 (- (bitwidth src) 1))
         (= ZF z)
-        (if (! z) (= dst (- w1 (clz src))))))
+        ; Same as BSF: block-wrap defeats ternary-collapse → no write on src=0.
+        (if (! z) (block (= dst (- w1 (clz src)))))))
 (encoding BSR (Gv Ev) (0x0F 0xBD))
 
 (instruction LZCNT (dst src)
     "lzcnt $dst, $src"
-    (mlet (r (clz src))
+    ; Same aliasing hazard as TZCNT (dst==src → CF reads result).
+    (mlet (r (clz src) cf (== src 0))
         (= dst r)
-        (= CF (== src 0))
+        (= CF cf)
         (= ZF (== r 0))))
 (encoding LZCNT (Gv Ev) (rep 0x0F 0xBD))
 
@@ -444,11 +457,18 @@
     "shl $lval, $count"
     (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) _lval lval tval (<< _lval c))
         (= lval tval)
+        ; SF/ZF re-read lval POST-write (write_operand truncates to op_w).
+        ; Second .isa-tier bug, EXPOSED by the shift-mask fix above: with the
+        ; correct 5-bit mask, count can be ≥width for 8/16-bit ops → tval
+        ; overflows type-width (interp shl deliberately doesn't mask, per the
+        ; FCMP-cast contract) → SF/ZF from pre-truncation bits. shl al,21 w/
+        ; al=1 → tval=0x200000, SF=(>>7)≠0=1, ZF=0; silicon: al=0 → SF=0, ZF=1.
+        ; SDM: 'SF, ZF, and PF flags are set according to the RESULT.'
         (if (!= c 0)
             (block
                 (= CF (& (>> _lval (- (bitwidth _lval) c)) 1))
-                (= SF (>> tval (- (bitwidth tval) 1)))
-                (= ZF (== tval 0))))))
+                (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
+                (= ZF (== lval 0))))))
 (encoding SHL (Eb Ib) (0xC0 /4))
 (encoding SHL (Ev Ib) (0xC1 /4))
 (encoding SHL (Eb 1)  (0xD0 /4))
@@ -463,8 +483,8 @@
         (if (!= c 0)
             (block
                 (= CF (& (>> _lval (- c 1)) 1))
-                (= SF (>> tval (- (bitwidth tval) 1)))
-                (= ZF (== tval 0))))))
+                (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
+                (= ZF (== lval 0))))))
 (encoding SHR (Eb Ib) (0xC0 /5))
 (encoding SHR (Ev Ib) (0xC1 /5))
 (encoding SHR (Eb 1)  (0xD0 /5))
@@ -479,8 +499,8 @@
         (if (!= c 0)
             (block
                 (= CF (& (>> _lval (- c 1)) 1))
-                (= SF (>> tval (- (bitwidth tval) 1)))
-                (= ZF (== tval 0))))))
+                (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
+                (= ZF (== lval 0))))))
 (encoding SAR (Eb Ib) (0xC0 /7))
 (encoding SAR (Ev Ib) (0xC1 /7))
 (encoding SAR (Eb 1)  (0xD0 /7))
