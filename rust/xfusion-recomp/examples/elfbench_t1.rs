@@ -72,7 +72,14 @@ fn compile_t1(pc: u64) -> CompiledBlock {
     }
     // Backward liveness (dead-flag-elim).
     let mut per = vec![0u32; insns.len()];
-    let mut live = FLAGS_ALL_LIVE;
+    // Exit-liveness: successor-peek (XF_EXITLIVE=0 → conservative ALL-LIVE).
+    // Sound per exit_live.rs's contract; state[eflags] stale where successors
+    // provably overwrite-before-read.
+    let mut live = if std::env::var("XF_EXITLIVE").map(|v| v != "0").unwrap_or(true) {
+        let (ld, lpc) = (&insns[insns.len()-1].0, insns[insns.len()-1].1);
+        unsafe { xfusion_recomp::exit_live::block_exit_liveness(
+            ld.def_id, ld.imm0, lpc + ld.len as u64, XMode::Bits64) }
+    } else { FLAGS_ALL_LIVE };
     for i in (0..insns.len()).rev() {
         let did = insns[i].0.def_id as usize;
         per[i] = live;
@@ -105,7 +112,14 @@ fn compile_t0(pc: u64) -> CompiledBlock {
         if br { break; }
     }
     let mut per = vec![0u32; insns.len()];
-    let mut live = FLAGS_ALL_LIVE;
+    // Exit-liveness: successor-peek (XF_EXITLIVE=0 → conservative ALL-LIVE).
+    // Sound per exit_live.rs's contract; state[eflags] stale where successors
+    // provably overwrite-before-read.
+    let mut live = if std::env::var("XF_EXITLIVE").map(|v| v != "0").unwrap_or(true) {
+        let (ld, lpc) = (&insns[insns.len()-1].0, insns[insns.len()-1].1);
+        unsafe { xfusion_recomp::exit_live::block_exit_liveness(
+            ld.def_id, ld.imm0, lpc + ld.len as u64, XMode::Bits64) }
+    } else { FLAGS_ALL_LIVE };
     for i in (0..insns.len()).rev() {
         let did = insns[i].0.def_id as usize;
         per[i] = live;

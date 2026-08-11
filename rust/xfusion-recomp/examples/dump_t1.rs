@@ -7,7 +7,12 @@ use sharpretro_jit::{Builder, IlType};
 fn main() {
     // Which block: sum10 loop (default) or LCG loop (from /tmp/elfbench_x64).
     let which = std::env::args().nth(1).unwrap_or("sum10".into());
-    let bytes: Vec<u8> = if which == "lcg" {
+    let bytes: Vec<u8> = if which == "bb" {
+        // branchbench hot block @0x2011ab: imul rdx,r8; add rdx,rsi;
+        // mov rax,rdx; test dl,1; jne -0x28  (5 insns, 2 flag-writers, Jcc)
+        vec![0x49,0x0F,0xAF,0xD0, 0x48,0x01,0xF2, 0x48,0x89,0xD0,
+             0xF6,0xC2,0x01, 0x75,0xD6]
+    } else if which == "lcg" {
         // Extract the LCG loop-body from elfbench_x64 (same as lcg_measure's extraction).
         let d = std::fs::read("/tmp/elfbench_x64").unwrap();
         let b = &d[0x230..0x230+170];
