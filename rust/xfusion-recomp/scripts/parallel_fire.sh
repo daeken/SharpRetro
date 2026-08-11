@@ -2,7 +2,7 @@
 # Parallel X64D corpus fire: split into N shards, run oracle_runner_v2 on each
 # concurrently, aggregate RESULT lines. Assumes split_x64d.py + runner on box.
 set -e
-CORPUS="$1"; N="${2:-16}"; RUNNER="${3:-/tmp/oracle_runner_v2}"
+CORPUS="$1"; N="${2:-16}"; RUNNER="${3:-/tmp/oracle_runner_v4}"
 BASE="${CORPUS%.x64d}"
 echo "[parallel-fire] $CORPUS → $N shards"
 python3 /tmp/split_x64d.py "$CORPUS" "$N" "${BASE}_shard" | head -3
