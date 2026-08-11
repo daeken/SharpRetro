@@ -16,7 +16,7 @@ use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice};
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::state::{X86State, TrackingState};
-use xfusion_recomp::x64_stub::{emit_stub, emit_stub_xmm};
+use xfusion_recomp::x64_stub::{emit_stub, emit_stub_xmm, emit_stub_32};
 use xfusion_recomp::lift::{lift_one, DEF_FLAGS_MASK, FLAGS_ALL_LIVE};
 use sharpretro_jit::interp::{InterpretingBuilder, FlatMem};
 
@@ -163,9 +163,13 @@ fn main() {
     // sweeps xmm_reads through PRE_VALS_XMM. Off = phase-1 (v1 stub, GPR only).
     let phase2_xmm = args.iter().any(|a| a == "--xmm");
     // --bits32: ① 32-bit-mode arm. Encodes/decodes/lifts at Bits32 (no REX,
-    // reg 0..8, opws {16,32}, byte-idx 4-7 = AH/CH/DH/BH). Stub for silicon
-    // execution needs a 64→32 mode-switch bracket = part (c), separate.
+    // reg 0..8, opws {16,32}, byte-idx 4-7 = AH/CH/DH/BH). Uses emit_stub_32
+    // (85B, edi=anchor); runner detects by stub_len<100 → run_child_32().
     let mode = if args.iter().any(|a| a == "--bits32") { XMode::Bits32 } else { XMode::Bits64 };
+    if mode == XMode::Bits32 && phase2_xmm {
+        eprintln!("--bits32 --xmm not yet supported (32-bit XMM stub = separate)");
+        std::process::exit(1);
+    }
 
     let mut n_defs_p1 = 0u32;
     let mut n_enc = 0u32;
@@ -252,6 +256,16 @@ fn main() {
                         // (low-16 already 0) → guard passed → silicon hung.
                         pre.gpr[4] = 0x8FED8;
                         pre.eflags = fs;
+                        // Bits32: mask pre-GPRs to u32 (r8-r15 don't exist →
+                        // zero). Both silicon (32-bit stores low-32 only,
+                        // high-32 stays = pre = 0) and interp (32-zext →
+                        // high=0) then produce identical u64 post-values.
+                        // Also: interp at Bits32 with a 16-bit dest mask-
+                        // inserts into a u64 whose high-32 = pre-high-32 = 0.
+                        if mode == XMode::Bits32 {
+                            for r in 0..8 { pre.gpr[r] &= 0xFFFF_FFFF; }
+                            for r in 8..16 { pre.gpr[r] = 0; }
+                        }
 
                     // XMM sweep dimension: for each xmm-read, sweep it through
                     // PRE_VALS_XMM with others=ANCHOR_XMM. If no xmm reads,
@@ -280,7 +294,9 @@ fn main() {
                         *per_def_rows.entry(sd.mnem).or_default() += 1;
 
                         if let Some(f) = &mut fw {
-                            let (stub, _slot) = if use_v2_stub {
+                            let (stub, _slot) = if mode == XMode::Bits32 {
+                                emit_stub_32(insn)
+                            } else if use_v2_stub {
                                 emit_stub_xmm(insn)
                             } else {
                                 emit_stub(insn)

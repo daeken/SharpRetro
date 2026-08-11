@@ -31,6 +31,66 @@ pub fn emit_stub(test_insn: &[u8]) -> (Vec<u8>, usize) {
 /// Emit the v2 stub: v1 + xmm0-15 load/store via movdqu around the slot.
 /// Larger stub (≈ SLOT_OFF+16 movdqu×2×16); a phase-2 XMM sweep uses this,
 /// with a distinct format tag so runners know which SLOT_OFF applies.
+/// ① 32-bit-mode stub (part c). PURE 32-bit code — the runner does the
+/// 64→32 mode-switch (ljmp far *[m16:32] to CS=0x23) then this executes;
+/// runner sets edi=state (a MAP_32BIT page → fits u32) + esp→[retf_eip:u32]
+/// [retf_cs:u32] (also MAP_32BIT). edi = anchor (mirrors 64-bit's r15).
+/// Loads eax-esi, pushes edi, loads guest-edi last; slot; pushes guest-edi,
+/// reloads state-ptr from [esp+4], stores eax-esi+eflags+edi, add esp,8, retf.
+/// esp NEVER loaded/stored (like rsp in 64-bit — anchor-preserving). r8-r15
+/// don't exist. State layout unchanged (u64 slots, 8-byte stride) — stub
+/// touches low-32 of each u64; corpus-gen masks pre.gpr[i]&=0xFFFF_FFFF and
+/// zeroes gpr[8..16] so both silicon (writes low-32, high stays 0 from pre)
+/// and interp (32-zext → high=0) produce identical u64s.
+///
+/// Every byte objdump-i386-verified before transcription (encode-then-
+/// decode-back discipline). SLOT_OFF=29, total 85B (69 + 16 slot).
+pub const STUB32_SLOT_OFF: usize = 29;
+
+pub fn emit_stub_32(test_insn: &[u8]) -> (Vec<u8>, usize) {
+    debug_assert!(test_insn.len() <= 15);
+    debug_assert_eq!(OFF_GPR, 0);
+    debug_assert_eq!(OFF_EFLAGS, 16);  // byte offset 128 = 0x80 (disp32)
+    let mut b: Vec<u8> = Vec::with_capacity(85);
+    // ── prologue (29B) ──
+    b.extend_from_slice(&[
+        0xFF,0xB7,0x80,0x00,0x00,0x00,   // push dword [edi+0x80]  (state[16]=eflags)
+        0x9D,                             // popfd
+        0x8B,0x47,0x00,                   // mov eax,[edi+0x00]
+        0x8B,0x4F,0x08,                   // mov ecx,[edi+0x08]
+        0x8B,0x57,0x10,                   // mov edx,[edi+0x10]
+        0x8B,0x5F,0x18,                   // mov ebx,[edi+0x18]
+        0x8B,0x6F,0x28,                   // mov ebp,[edi+0x28]
+        0x8B,0x77,0x30,                   // mov esi,[edi+0x30]
+        0x57,                             // push edi              (state-ptr → [sptr][retf...])
+        0x8B,0x7F,0x38,                   // mov edi,[edi+0x38]    (guest-edi LAST; anchor gone)
+    ]);
+    let slot = b.len();
+    debug_assert_eq!(slot, STUB32_SLOT_OFF);
+    // ── slot (16B, NOP-padded) ──
+    b.extend_from_slice(test_insn);
+    b.resize(slot + 16, 0x90);
+    // ── epilogue (40B) ──
+    b.extend_from_slice(&[
+        0x57,                             // push edi              (guest-edi → [gedi][sptr][retf...])
+        0x8B,0x7C,0x24,0x04,              // mov edi,[esp+4]       (reload state-ptr; SIB for esp)
+        0x89,0x47,0x00,                   // mov [edi+0x00],eax
+        0x89,0x4F,0x08,                   // mov [edi+0x08],ecx
+        0x89,0x57,0x10,                   // mov [edi+0x10],edx
+        0x89,0x5F,0x18,                   // mov [edi+0x18],ebx
+        0x89,0x6F,0x28,                   // mov [edi+0x28],ebp
+        0x89,0x77,0x30,                   // mov [edi+0x30],esi
+        0x9C,                             // pushfd
+        0x8F,0x87,0x80,0x00,0x00,0x00,   // pop dword [edi+0x80]  (eflags → state[16])
+        0x8B,0x04,0x24,                   // mov eax,[esp]         (= guest-edi; eax already saved)
+        0x89,0x47,0x38,                   // mov [edi+0x38],eax
+        0x83,0xC4,0x08,                   // add esp,8             (drop gedi+sptr → esp→retf-frame)
+        0xCB,                             // retf                  → back to 64-bit trampoline
+    ]);
+    debug_assert_eq!(b.len(), 85);
+    (b, slot)
+}
+
 pub fn emit_stub_xmm(test_insn: &[u8]) -> (Vec<u8>, usize) {
     emit_stub_impl(test_insn, true)
 }
@@ -173,5 +233,38 @@ mod tests {
         assert!(d.contains("[r15+0x1b0]"), "xmm15 at (OFF_XMM+30)*8=0x1B0");
         // v2 SLOT_OFF derived from emit, not composed. Print for phase-2 corpus format.
         assert_eq!(slot, 226, "v2 SLOT_OFF (if this fails, update phase-2 corpus reader)");
+    }
+}
+
+#[cfg(test)]
+mod stub32_tests {
+    use super::*;
+    #[test]
+    fn stub32_decode_back() {
+        // Encode-then-decode-back: every hardcoded byte-string objdump-verified.
+        // Emit with a 3-byte insn (add eax,ecx = 01 C8) → objdump the WHOLE
+        // stub at i386 → verify structure (line count, slot at offset 29,
+        // starts push/popfd, ends add-esp/retf, no misdecodes = no .byte).
+        let (stub, slot) = emit_stub_32(&[0x01, 0xC8]);
+        assert_eq!(stub.len(), 85);
+        assert_eq!(slot, 29);
+        std::fs::write("/tmp/stub32_test.bin", &stub).unwrap();
+        let out = std::process::Command::new("objdump")
+            .args(["-D","-b","binary","-m","i386","-M","intel","/tmp/stub32_test.bin"])
+            .output().unwrap();
+        let d = String::from_utf8_lossy(&out.stdout);
+        let insns: Vec<&str> = d.lines().filter(|l| l.contains(":\t")).collect();
+        eprintln!("  stub32 objdump ({} insns):", insns.len());
+        for l in &insns { eprintln!("    {}", l.trim()); }
+        // Structural checks. Line-count with a 2-byte test insn:
+        // 10 prologue + 1 test + 14 nop + 14 epilogue = 39.
+        assert_eq!(insns.len(), 39, "objdump line-count (misdecodes split lines)");
+        assert!(d.contains("push   DWORD PTR [edi+0x80]"), "prologue eflags load");
+        assert!(d.contains("popf"), "popfd");
+        assert!(d.contains("1d:\t01 c8"), "test insn at slot offset 0x1d=29");
+        assert!(d.contains("mov    edi,DWORD PTR [esp+0x4]"), "epilogue state-ptr reload");
+        assert!(d.contains("add    esp,0x8"), "epilogue stack adjust");
+        assert!(d.contains("retf"), "epilogue far-ret");
+        assert!(!d.contains(".byte"), "no undecoded bytes → no misencoding");
     }
 }
