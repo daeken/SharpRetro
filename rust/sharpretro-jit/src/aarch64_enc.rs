@@ -372,6 +372,7 @@ impl Aarch64Enc {
     pub fn fneg_d(&mut self, dd: u32, dn: u32)  { self.put(0x1E614000 | (dn<<5) | dd); }
     pub fn fabs_d(&mut self, dd: u32, dn: u32)  { self.put(0x1E60C000 | (dn<<5) | dd); }
     pub fn fsqrt_s(&mut self, sd: u32, sn: u32) { self.put(0x1E21C000 | (sn<<5) | sd); }
+    pub fn fabs_s(&mut self, sd: u32, sn: u32)  { self.put(0x1E20C000 | (sn<<5) | sd); }
     // FCMP Dn,Dm — sets NZCV. For UCOMISD → eflags mapping.
     pub fn fcmp_d(&mut self, dn: u32, dm: u32) { self.put(0x1E602000 | (dm<<16) | (dn<<5)); }
     pub fn fcmp_s(&mut self, sn: u32, sm: u32) { self.put(0x1E202000 | (sm<<16) | (sn<<5)); }

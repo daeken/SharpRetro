@@ -478,9 +478,26 @@ public class RustLiftGen {
             case "as-f64": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:64}})");
             case "as-f32": return Rt($"bd.bitcast({Expr(l[1])}, IlType::F{{width:32}})");
             case "int-of": {
-                // (int-of W v) — float→signed-int-of-W-bits (truncate). CVTTSD2SI etc.
-                var w = l[1] is PInt(var wv3) ? wv3.ToString() : OpW;
-                return Rt($"bd.cast({Expr(l[2])}, IlType::I{{signed:true, width:{w} as u8}})");
+                // (int-of W v) — x86 float→signed-int-of-W-bits w/ INDEFINITE-INTEGER
+                // semantics on NaN/inf/out-of-range (SDM: "the indefinite integer
+                // value 80000000H is returned"). Was bare bd.cast(F→I) — Rust `as`
+                // gives 0 for NaN + saturates; aarch64 fcvtzs saturates → 3-way
+                // divergence from silicon. Silicon-sweep p2-DENSE Ⓗ: cvttsd2si eax
+                // on f64 NaN → silicon 0x80000000, interp 0, tier-0 0. On +inf →
+                // silicon 0x80000000, interp 0xFFFFFFFF, tier-0 0x7FFFFFFF.
+                //
+                // iw: `(bitwidth <op>)` → ops[N].width() (a Rust-side u32 = the bound
+                // operand's actual width — for Gy dst this is y_width, NOT op_w which
+                // reads 66; also closes the Ⓓ-residual where the cast target used
+                // op_w=v_width). fw: peek the (as-fNN ...) wrapper on l[2].
+                var iw = l[1] is PList bw && bw.Count == 2 && bw[0] is PName("bitwidth")
+                             && bw[1] is PName(var opn) && Params.Contains(opn)
+                    ? $"ops[{Params.IndexOf(opn)}].width()"
+                    : (l[1] is PInt(var wv3) ? wv3.ToString() : OpW);
+                var fw = l[2] is PList af && af.Count == 2 && af[0] is PName(var afn)
+                             && (afn == "as-f32" || afn == "as-f64")
+                    ? afn.Substring(4) : "64";
+                return Rt($"f_to_si_x86(bd, {Expr(l[2])}, {iw}, {fw})");
             }
             case "signed": {
                 // (signed W v) — reinterpret v as signed int of W bits (no bit change,

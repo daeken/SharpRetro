@@ -48,6 +48,41 @@ pub enum Operand<V> {
 }
 
 impl<V> Operand<V> {
+}
+
+/// Ⓗ: x86 float→signed-int with indefinite-integer semantics. SDM Vol 2A
+/// (all CVT{,T}S{S,D}2SI + packed forms): "If a converted result cannot be
+/// represented in the destination format, ... the indefinite integer value
+/// (80000000H or 80000000_00000000H ...) is returned." Rust `as i32` gives
+/// 0 for NaN and saturates for ±inf; aarch64 fcvtzs saturates (0x7FFF... for
+/// +inf) — THREE-way divergence from silicon. Fix: check in-range first via
+/// `fabs(v) < 2^(iw−1)` (NaN → lt=false → indef; the boundary v=−2^(iw−1)
+/// "wrongly" fires but indefinite==INT_MIN==the correct value anyway). All
+/// backends inherit via Builder primitives.
+pub fn f_to_si_x86<B: Builder>(bd: &mut B, fv: B::Val, iw: u32, fw: u32) -> B::Val
+    where B::Val: Copy
+{
+    // 2^(iw−1) as f{fw} — bit-patterns objdump/python-verified (not composed):
+    //   2^31: f32=0x4F000000 f64=0x41E0000000000000
+    //   2^63: f32=0x5F000000 f64=0x43E0000000000000
+    let bound_bits: u128 = match (fw, iw) {
+        (32, 32) => 0x4F000000,           (32, 64) => 0x5F000000,
+        (64, 32) => 0x41E0000000000000,   (64, 64) => 0x43E0000000000000,
+        _ => panic!("f_to_si_x86 fw={fw} iw={iw}"),
+    };
+    let fty = IlType::F{width: fw as u8};
+    let ity = IlType::I{signed:true, width: iw as u8};
+    let bound = bd.literal(fty, bound_bits);
+    let av = bd.fabs(fv);
+    // lt on F: interp (x<y = false for NaN), tier-0 FCMP+cset MI (N=0 on
+    // unordered → false). Both give in_range=false for NaN/±inf. ✓
+    let in_range = bd.lt(av, bound);
+    let cvt = bd.cast(fv, ity);
+    let indef = bd.literal(ity, 1u128 << (iw - 1));
+    bd.ternary(in_range, cvt, indef)
+}
+
+impl<V> Operand<V> {
     pub fn width(&self) -> u32 {
         match self { Self::Reg{width,..} | Self::Mem{width,..}
                    | Self::Imm{width,..} | Self::Xmm{width,..} => *width }
