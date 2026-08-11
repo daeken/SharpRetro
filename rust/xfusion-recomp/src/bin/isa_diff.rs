@@ -4,7 +4,7 @@
 //! seeds a fresh interp from line N's state, executes ONE insn at N.pc,
 //! compares result to line N+1. First mismatch = the .isa bug.
 //!
-//! STATELESS (·1079): the interp never accumulates state across insns —
+//! STATELESS: the interp never accumulates state across insns —
 //! each check re-seeds from silicon. So shim-return-values, host-pointers,
 //! stack-base differences don't propagate; only the SEMANTICS of one insn
 //! are under test.
@@ -13,7 +13,7 @@
 //! touch memory (load/store operands, push/pop, call/ret) are MEM-SKIP —
 //! the interp can't know what silicon's memory held. Re-seed from N+1
 //! regardless, so skips don't accumulate error. Own #117 (cmp reg,reg; jle)
-//! is pure-GPR → caught by v1. v2 = fuchi adds `mem:{addr:val}` inline.
+//! is pure-GPR → caught by v1. v2 = trace adds `mem:{addr:val}` inline.
 //!
 //! usage: isa_diff <trace-file> [<pe-path>=/tmp/cp2077/Cyberpunk2077.exe]
 //!        [--image-base 0x140000000] [--max N]
@@ -44,7 +44,7 @@ struct TraceLine {
     pc_rva: u64,
     gpr: [u64; 16],
     eflags: u32,
-    bytes: Vec<u8>,   // raw insn bytes at pc (self-contained, per ·1080)
+    bytes: Vec<u8>,   // raw insn bytes at pc (self-contained; trace carries them)
 }
 
 fn parse_line(s: &str) -> Option<TraceLine> {
@@ -54,7 +54,7 @@ fn parse_line(s: &str) -> Option<TraceLine> {
     let pc_rva = u64::from_str_radix(parts.next()?.trim(), 16).ok()?;
     let gprs_s = parts.next()?;
     let eflags = u32::from_str_radix(parts.next()?.trim(), 16).ok()?;
-    // trace r-order: rax rbx rcx rdx rsi rdi rsp rbp r8..r15 (·1078).
+    // trace r-order: rax rbx rcx rdx rsi rdi rsp rbp r8..r15 (ptrace GETREGS order).
     // x64 encoding-order idx: rax=0 rcx=1 rdx=2 rbx=3 rsp=4 rbp=5 rsi=6 rdi=7 r8..=8..
     // gpr[enc_idx] = vals[trace_pos]:
     //   gpr[0]rax←vals[0]  gpr[1]rcx←vals[2]  gpr[2]rdx←vals[3]  gpr[3]rbx←vals[1]
@@ -135,7 +135,7 @@ fn main() {
         if n_checked >= max_n { break; }
         n_checked += 1;
         let pc_rva = prev.pc_rva;
-        // Prefer trace-supplied bytes (self-contained, ·1080); fall back to PE.
+        // Prefer trace-supplied bytes (self-contained); fall back to PE.
         let pe_bytes;
         let bytes: &[u8] = if !prev.bytes.is_empty() {
             &prev.bytes
