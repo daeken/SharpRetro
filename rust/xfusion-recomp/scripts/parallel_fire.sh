@@ -8,12 +8,25 @@ echo "[parallel-fire] $CORPUS → $N shards"
 python3 /tmp/split_x64d.py "$CORPUS" "$N" "${BASE}_shard" | head -3
 echo "[parallel-fire] launching $N runners..."
 T0=$(date +%s)
+declare -a PIDS
 for k in $(seq -f '%02g' 0 $((N-1))); do
   "$RUNNER" "${BASE}_shard.${k}" > "${BASE}_shard.${k}.log" 2>&1 &
+  PIDS[$k]=$!
 done
-wait
+# Own #182: `wait` alone discards per-child rc → a post-RESULT segfault (or
+# any nonzero exit that isn't the intended DIFF→rc=1) is invisible. Report
+# per-shard rc; treat rc>1 as CRASH (rc=1 = intentional "diffs found").
+CRASH=0
+for k in $(seq -f '%02g' 0 $((N-1))); do
+  wait ${PIDS[$k]}; rc=$?
+  if [ $rc -gt 1 ]; then
+    echo "[parallel-fire] ⚠ shard $k rc=$rc (>1 = crash/signal, NOT the diff-found rc=1)"
+    CRASH=1
+  fi
+done
 T1=$(date +%s)
 echo "[parallel-fire] all shards done in $((T1-T0))s"
+[ $CRASH -eq 1 ] && echo "[parallel-fire] ⚠ ONE OR MORE SHARDS CRASHED (rc>1) — results below may be partial"
 echo ""
 echo "[parallel-fire] AGGREGATE:"
 python3 - "$BASE" "$N" <<'PY'
