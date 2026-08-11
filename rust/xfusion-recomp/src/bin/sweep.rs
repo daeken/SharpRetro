@@ -16,7 +16,7 @@ use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice, phase3_skip, e
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::state::{X86State, TrackingState};
-use xfusion_recomp::x64_stub::{emit_stub, emit_stub_xmm, emit_stub_32};
+use xfusion_recomp::x64_stub::{emit_stub, emit_stub_xmm, emit_stub_32, emit_stub_32_xmm};
 use xfusion_recomp::sweep::MemChoice;
 use xfusion_recomp::lift::{lift_one, DEF_FLAGS_MASK, FLAGS_ALL_LIVE};
 use sharpretro_jit::interp::{InterpretingBuilder, FlatMem};
@@ -252,10 +252,8 @@ fn main() {
     // reg 0..8, opws {16,32}, byte-idx 4-7 = AH/CH/DH/BH). Uses emit_stub_32
     // (85B, edi=anchor); runner detects by stub_len<100 → run_child_32().
     let mode = if args.iter().any(|a| a == "--bits32") { XMode::Bits32 } else { XMode::Bits64 };
-    if mode == XMode::Bits32 && phase2_xmm {
-        eprintln!("--bits32 --xmm not yet supported (32-bit XMM stub = separate)");
-        std::process::exit(1);
-    }
+    // --bits32 --xmm: p2-32. emit_stub_32_xmm (213B, movdqu xmm0-7 around
+    // slot). xmm8-15 unreachable (no REX) — enumerate caps reg range at 8.
     // --mem: phase-3 mem-form. Walks enumerate_p3 (addressing-mode shapes)
     // instead of enumerate_p1; rows carry [pre_mem:64][post_mem:64] after the
     // state blocks (X64E magic so the runner knows). GPR-only v1 (no --xmm
@@ -449,7 +447,8 @@ fn main() {
 
                         if let Some(f) = &mut fw {
                             let (stub, _slot) = if mode == XMode::Bits32 {
-                                emit_stub_32(insn)
+                                if use_v2_stub { emit_stub_32_xmm(insn) }
+                                else { emit_stub_32(insn) }
                             } else if use_v2_stub {
                                 emit_stub_xmm(insn)
                             } else {

@@ -46,12 +46,23 @@ pub fn emit_stub(test_insn: &[u8]) -> (Vec<u8>, usize) {
 /// Every byte objdump-i386-verified before transcription (encode-then-
 /// decode-back discipline). SLOT_OFF=29, total 85B (69 + 16 slot).
 pub const STUB32_SLOT_OFF: usize = 29;
+/// XMM variant: 8 movdqu loads (8B each) before the guest-edi load → slot
+/// shifts +64. xmm0-7 only (no REX in 32-bit → xmm8-15 unreachable).
+pub const STUB32_XMM_SLOT_OFF: usize = 29 + 64;
 
 pub fn emit_stub_32(test_insn: &[u8]) -> (Vec<u8>, usize) {
+    emit_stub_32_impl(test_insn, false)
+}
+pub fn emit_stub_32_xmm(test_insn: &[u8]) -> (Vec<u8>, usize) {
+    emit_stub_32_impl(test_insn, true)
+}
+
+fn emit_stub_32_impl(test_insn: &[u8], xmm: bool) -> (Vec<u8>, usize) {
     debug_assert!(test_insn.len() <= 15);
     debug_assert_eq!(OFF_GPR, 0);
     debug_assert_eq!(OFF_EFLAGS, 16);  // byte offset 128 = 0x80 (disp32)
-    let mut b: Vec<u8> = Vec::with_capacity(85);
+    debug_assert_eq!(OFF_XMM, 24);     // byte offset 192 = 0xC0 (disp32)
+    let mut b: Vec<u8> = Vec::with_capacity(256);
     // ── prologue (29B) ──
     b.extend_from_slice(&[
         0xFF,0xB7,0x80,0x00,0x00,0x00,   // push dword [edi+0x80]  (state[16]=eflags)
@@ -62,11 +73,21 @@ pub fn emit_stub_32(test_insn: &[u8]) -> (Vec<u8>, usize) {
         0x8B,0x5F,0x18,                   // mov ebx,[edi+0x18]
         0x8B,0x6F,0x28,                   // mov ebp,[edi+0x28]
         0x8B,0x77,0x30,                   // mov esi,[edi+0x30]
+    ]);
+    if xmm {
+        // movdqu xmmN,[edi + 0xC0 + N*16]  (F3 0F 6F modrm disp32; objdump-
+        // verified). state[OFF_XMM + N*2] = byte 192 + N*16.
+        for x in 0..8u8 {
+            b.extend_from_slice(&[0xF3,0x0F,0x6F, 0x87 | (x<<3)]);
+            b.extend_from_slice(&((0xC0 + x as i32*16).to_le_bytes()));
+        }
+    }
+    b.extend_from_slice(&[
         0x57,                             // push edi              (state-ptr → [sptr][retf...])
         0x8B,0x7F,0x38,                   // mov edi,[edi+0x38]    (guest-edi LAST; anchor gone)
     ]);
     let slot = b.len();
-    debug_assert_eq!(slot, STUB32_SLOT_OFF);
+    debug_assert_eq!(slot, if xmm { STUB32_XMM_SLOT_OFF } else { STUB32_SLOT_OFF });
     // ── slot (16B, NOP-padded) ──
     b.extend_from_slice(test_insn);
     b.resize(slot + 16, 0x90);
@@ -80,6 +101,15 @@ pub fn emit_stub_32(test_insn: &[u8]) -> (Vec<u8>, usize) {
         0x89,0x5F,0x18,                   // mov [edi+0x18],ebx
         0x89,0x6F,0x28,                   // mov [edi+0x28],ebp
         0x89,0x77,0x30,                   // mov [edi+0x30],esi
+    ]);
+    if xmm {
+        // movdqu [edi + 0xC0 + N*16],xmmN  (F3 0F 7F modrm disp32)
+        for x in 0..8u8 {
+            b.extend_from_slice(&[0xF3,0x0F,0x7F, 0x87 | (x<<3)]);
+            b.extend_from_slice(&((0xC0 + x as i32*16).to_le_bytes()));
+        }
+    }
+    b.extend_from_slice(&[
         0x9C,                             // pushfd
         0x8F,0x87,0x80,0x00,0x00,0x00,   // pop dword [edi+0x80]  (eflags → state[16])
         0x8B,0x04,0x24,                   // mov eax,[esp]         (= guest-edi; eax already saved)
@@ -87,7 +117,7 @@ pub fn emit_stub_32(test_insn: &[u8]) -> (Vec<u8>, usize) {
         0x83,0xC4,0x08,                   // add esp,8             (drop gedi+sptr → esp→retf-frame)
         0xCB,                             // retf                  → back to 64-bit trampoline
     ]);
-    debug_assert_eq!(b.len(), 85);
+    debug_assert_eq!(b.len(), if xmm { 85 + 128 } else { 85 });
     (b, slot)
 }
 
@@ -266,5 +296,31 @@ mod stub32_tests {
         assert!(d.contains("add    esp,0x8"), "epilogue stack adjust");
         assert!(d.contains("retf"), "epilogue far-ret");
         assert!(!d.contains(".byte"), "no undecoded bytes → no misencoding");
+    }
+}
+
+#[cfg(test)]
+mod stub32_xmm_tests {
+    use super::*;
+    #[test]
+    fn stub32_xmm_decode_back() {
+        let (stub, slot) = emit_stub_32_xmm(&[0x0F, 0x58, 0xCA]);  // addps xmm1,xmm2
+        assert_eq!(stub.len(), 213);
+        assert_eq!(slot, STUB32_XMM_SLOT_OFF);
+        std::fs::write("/tmp/stub32x_test.bin", &stub).unwrap();
+        let out = std::process::Command::new("objdump")
+            .args(["-D","-b","binary","-m","i386","-M","intel","/tmp/stub32x_test.bin"])
+            .output().unwrap();
+        let d = String::from_utf8_lossy(&out.stdout);
+        let insns: Vec<&str> = d.lines().filter(|l| l.contains(":\t")).collect();
+        // 10 prologue-gpr + 8 movdqu-load + 2 (push edi, mov edi) + 1 test +
+        // 13 nop + 6 gpr-stores + 8 movdqu-store + 8 epilogue-tail = 56
+        eprintln!("  stub32-xmm objdump: {} insns", insns.len());
+        assert!(!d.contains(".byte"), "no undecoded bytes");
+        assert!(d.contains("movdqu xmm0,XMMWORD PTR [edi+0xc0]"), "xmm load arm");
+        assert!(d.contains("movdqu xmm7,XMMWORD PTR [edi+0x130]"), "xmm7 load");
+        assert!(d.contains("movdqu XMMWORD PTR [edi+0xc0],xmm0"), "xmm store arm");
+        assert!(d.contains("5d:\t0f 58 ca"), "test insn at slot 0x5d=93");
+        assert!(d.contains("retf"), "far-ret");
     }
 }
