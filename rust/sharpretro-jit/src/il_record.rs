@@ -172,13 +172,19 @@ impl Builder for IlRecorder {
         // Flag-file (per-bit reads) doesn't participate — the flag-RMW compaction
         //   is a separate v1.2; caching individual bits here would be correct but
         //   the RegWrite-flag-RMW is where the cost lives.
-        if self.svn && f.0 == 0 {   // GPR file only v1
+        // SVN files: GPR (0) + flag files (x64 EFLAGS=1 / aarch64 NZCV=2).
+        // Flags are per-bit (idx=bit#, ty=Bool) so the (f,idx) key works as-is;
+        // forwarding a flag read to its producing cset-val is exactly the
+        // cmp/jcc fusion the branchbench profile named (TEST's ZF: computed,
+        // RMW-stored to state[], then RELOADED 9 words later — SVN kills the
+        // reload; DSE below kills the dead store).
+        if self.svn && f.0 <= 2 {
             if let Some(&(cv, cty)) = self.reg_cache.get(&(f.0, idx)) {
                 if cty == ty { return cv; }
             }
         }
         let v = self.produce(IlOpKind::RegRead, ty, &[], ((f.0 as u128) << 32) | idx as u128);
-        if self.svn && f.0 == 0 { self.reg_cache.insert((f.0, idx), (v, ty)); }
+        if self.svn && f.0 <= 2 { self.reg_cache.insert((f.0, idx), (v, ty)); }
         v
     }
     fn reg_write(&mut self, f: RegFile, idx: u32, v: u32) {
@@ -190,7 +196,7 @@ impl Builder for IlRecorder {
         //   result here, so v is authoritative for the full reg. width=32 zeroes
         //   upper (also upstream). So caching (v, ty) is safe — but a subsequent
         //   read at DIFFERENT ty misses (v1 exact-match), which is correct-if-wasteful.
-        if self.svn && f.0 == 0 {
+        if self.svn && f.0 <= 2 {
             self.reg_cache.insert((f.0, idx), (v, ty));
             // Inside a cond: mark (f,idx) written so CondEnd drops it.
             if let Some((_, dirty)) = self.cond_snap.last_mut() { dirty.insert((f.0, idx)); }

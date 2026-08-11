@@ -68,7 +68,7 @@ impl Tier1 {
                     IlOpKind::CondEnd   => { cond_depth -= 1; last_write.clear(); }
                     IlOpKind::RegWrite if cond_depth == 0 => {
                         let f = (op.imm >> 32) as u8; let idx = op.imm as u32;
-                        if f == 0 {   // GPR only v1 (flag-RMW compaction is separate)
+                        if f <= 2 {   // GPR + flag files (EFLAGS=1/NZCV=2; per-bit idx keys)
                             if let Some(&prev) = last_write.get(&(f, idx)) {
                                 dead_ops.insert(prev);
                             }
