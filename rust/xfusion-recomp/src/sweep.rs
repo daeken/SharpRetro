@@ -56,11 +56,64 @@ pub struct EncChoice {
     pub rm: u8,         // ModRM.rm field value  (same range)
     pub zopc: u8,       // +r opcode-embedded reg (same range)
     pub imm: u64,       // immediate value (if any Imm operand)
-    // phase-2: mem-form choices (base/idx/scale/disp), phase-3: xmm-idx separate
+    pub mem: Option<MemChoice>,  // phase-3: mem-form addressing (None = reg-form mod=11)
 }
 impl Default for EncChoice {
     fn default() -> Self {
-        Self { mode: XMode::Bits64, op_w: 32, reg: 0, rm: 0, zopc: 0, imm: 0 }
+        Self { mode: XMode::Bits64, op_w: 32, reg: 0, rm: 0, zopc: 0, imm: 0,
+               mem: None }
+    }
+}
+
+/// Phase-3 mem-form: the addressing-mode choice. When `Some`, `encode()`
+/// emits ModRM at mod≠11 (+SIB+disp as needed) instead of the reg-form
+/// mod=11. `EncChoice.rm` is IGNORED in mem-form (rm is derived from the
+/// mem-shape: rm=4 when SIB, rm=5 when rip-rel/no-base, else base&7).
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct MemChoice {
+    pub base:  i8,      // GPR index 0..15, or -1 = no base
+    pub index: i8,      // GPR index 0..15, or -1 = no index (SIB idx=4)
+    pub scale: u8,      // 1|2|4|8 (only meaningful if index>=0)
+    pub disp:  i32,     // displacement (0 = try no-disp form)
+    pub rip_rel: bool,  // Bits64: mod=00 rm=5 [rip+disp32]. Bits32: [disp32] absolute.
+}
+impl MemChoice {
+    /// Choose the ModRM.mod field (0/1/2) + whether a SIB byte is needed.
+    /// The x86 special-index rules:
+    ///   • rm=4 (rsp/r12) ALWAYS needs SIB, at any mod≠11
+    ///   • mod=00 rm=5 = [rip+d32] (64) / [d32] (32), NOT [rbp]/[r13] →
+    ///     encoding [rbp]/[r13] with disp=0 requires mod=01 disp8=0
+    ///   • SIB base=5 mod=00 = no-base [d32 + idx*s]; encoding rbp/r13 as
+    ///     SIB base with disp=0 requires mod=01 disp8=0
+    ///   • SIB idx=4 = no-index. rsp-as-index UNENCODABLE (idx-field=100
+    ///     bare = none). r12-as-index IS encodable (REX.X=1 idx=100 = r12,
+    ///     objdump-verified: 42 01 0C 20 = add [rax+r12*1],ecx). SDM Table
+    ///     2-5 is explicit: REX.X extends SIB.index; only bare 100 is none.
+    fn plan(&self) -> (u8 /*mod*/, bool /*need_sib*/, u8 /*disp_bytes*/) {
+        if self.rip_rel {
+            // mod=00 rm=5, always disp32. No SIB.
+            return (0, false, 4);
+        }
+        // Need SIB if: index present, OR base is rsp/r12 (rm-field would be
+        // 4 which means "SIB follows"), OR base is absent (SIB base=5 mod=00).
+        let need_sib = self.index >= 0
+            || (self.base >= 0 && (self.base & 7) == 4)
+            || self.base < 0;
+        // The "base=5 problem": both direct-rm=5 and SIB-base=5 at mod=00
+        // mean something OTHER than [rbp]/[r13]. If base&7==5 and disp==0,
+        // must use mod=01 disp8=0. Also if base<0 (no-base), mod=00 SIB
+        // base=5 disp32.
+        let base5 = self.base >= 0 && (self.base & 7) == 5;
+        let (mod_, dbytes) = if self.base < 0 {
+            (0, 4)                                   // no-base → mod=00 disp32
+        } else if self.disp == 0 && !base5 {
+            (0, 0)                                   // [base] no disp
+        } else if self.disp as i8 as i32 == self.disp {
+            (1, 1)                                   // disp8
+        } else {
+            (2, 4)                                   // disp32
+        };
+        (mod_, need_sib, dbytes)
     }
 }
 
@@ -170,10 +223,19 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
     let has_y = d.ops.iter().any(|o| matches!(o.w, SwW::Y));
     let rex_w = c.op_w == 64 && !d.d64 && (has_v_operand(d) || has_y);
     let rex_r = uses_reg && (c.reg & 8) != 0;
-    let rex_b = if has_zopc { (c.zopc & 8) != 0 }
-                else if uses_rm { (c.rm & 8) != 0 }
-                else { false };
-    // REX.X unused in reg-form (no SIB).
+    // REX.B: extends rm in reg-form; extends BASE in mem-form (or zopc).
+    // REX.X: extends SIB.index (mem-form only).
+    let (rex_b, rex_x) = if has_zopc {
+        ((c.zopc & 8) != 0, false)
+    } else if let Some(m) = &c.mem {
+        // rip-rel: rm=5 no REX.B; base<0: SIB base=5 no REX.B either.
+        (m.base >= 0 && (m.base & 8) != 0,
+         m.index >= 0 && (m.index & 8) != 0)
+    } else if uses_rm {
+        ((c.rm & 8) != 0, false)
+    } else {
+        (false, false)
+    };
     // Byte-reg SPL/BPL/SIL/DIL selection: any b-width GPR operand at index 4-7
     // needs a bare REX (0x40) to select the low-byte view instead of AH/CH/DH/BH.
     // Applies to Greg-b, Erm-b (reg-form), Zopc-b, and FixR-b at those indices.
@@ -190,7 +252,8 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
         SwCls::FixR => o.fix_idx >= 4 && o.fix_idx < 8 && matches!(o.w, SwW::B),
         _ => false,
     });
-    let rex_bits = ((rex_w as u8)<<3) | ((rex_r as u8)<<2) | (rex_b as u8);
+    let rex_bits = ((rex_w as u8)<<3) | ((rex_r as u8)<<2)
+                 | ((rex_x as u8)<<1) | (rex_b as u8);
     // REX is Bits64-ONLY (0x40-0x4F = INC/DEC in Bits32). Enumerate caps reg/
     // rm/zopc to 0..8 and op_w to {16,32} in Bits32 → rex_bits SHOULD be 0;
     // this assert catches an enumerator that leaks a 64-bit choice into a
@@ -213,19 +276,37 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
     let opc = if has_zopc { d.opcode | (c.zopc & 7) } else { d.opcode };
     b.push(opc);
 
-    // ── ModRM (reg-form: mod=11) ──
+    // ── ModRM (+SIB+disp for mem-form) ──
     if has_modrm {
-        // uses_reg/uses_rm (not has_greg/has_erm) — Vxmm/Wxmm occupy the
-        // same ModRM.reg/.rm fields. First-cut left the old gates here
-        // → every XMM row encoded reg=0,rm=0 (ModRM=0xC0). REX bits were
-        // correct (uses_reg/uses_rm at :138), so 45 0F 58 C0 = addps
-        // xmm8,xmm8 not xmm9,xmm10. objdump-spot-test caught it; round-
-        // trip gate DIDN'T (checks len+mnem only — xmm0,xmm0 has both).
         let reg3 = if d.reg_ext >= 0 { d.reg_ext as u8 }
                    else if uses_reg { c.reg & 7 }
                    else { 0 };
-        let rm3 = if uses_rm { c.rm & 7 } else { 0 };
-        b.push(0xC0 | (reg3 << 3) | rm3);
+        if let Some(m) = &c.mem {
+            // Phase-3 mem-form. See MemChoice::plan() for the special-index
+            // rules (rm=4→SIB, rm=5@mod=00→rip/abs, base=5@mod=00→no-base).
+            let (mod_, need_sib, dbytes) = m.plan();
+            let rm3 = if m.rip_rel { 5 }
+                      else if need_sib { 4 }
+                      else { (m.base & 7) as u8 };
+            b.push((mod_ << 6) | (reg3 << 3) | rm3);
+            if need_sib {
+                let ss = match m.scale { 1=>0, 2=>1, 4=>2, 8=>3, _=>unreachable!() };
+                let idx3 = if m.index >= 0 { (m.index & 7) as u8 } else { 4 };
+                let base3 = if m.base >= 0 { (m.base & 7) as u8 } else { 5 };
+                b.push((ss << 6) | (idx3 << 3) | base3);
+            }
+            match dbytes {
+                0 => {}
+                1 => b.push(m.disp as i8 as u8),
+                4 => b.extend_from_slice(&(m.disp as i32).to_le_bytes()),
+                _ => unreachable!(),
+            }
+        } else {
+            // Reg-form: mod=11. uses_reg/uses_rm (not has_greg/has_erm) —
+            // Vxmm/Wxmm occupy the same ModRM.reg/.rm fields.
+            let rm3 = if uses_rm { c.rm & 7 } else { 0 };
+            b.push(0xC0 | (reg3 << 3) | rm3);
+        }
     }
 
     // ── immediate ──
@@ -270,7 +351,38 @@ pub fn verify_rt(d: &SwDef, c: &EncChoice) -> Result<Vec<u8>, String> {
                 return Err(format!("reg-mismatch: {} enc reg={} dec reg={} bytes {:02X?}",
                                    d.mnem, c.reg, di.m.reg, bytes));
             }
-            if uses_rm && di.m.rm != c.rm {
+            if let Some(mc) = &c.mem {
+                // Mem-form: verify the decoder recovered the SAME mem-shape.
+                // This catches encoder+decoder mem-form bugs the reg-form
+                // gate can't (own-#165 lesson: len+mnem alone is blind to
+                // ModRM misencoding).
+                if di.m.is_reg {
+                    return Err(format!("mem-mismatch: {} encoded mem-form, decoded is_reg=true bytes {:02X?} mc={mc:?}",
+                                       d.mnem, bytes));
+                }
+                if mc.rip_rel != di.m.rip_relative {
+                    return Err(format!("mem-mismatch: {} rip_rel enc={} dec={} bytes {:02X?}",
+                                       d.mnem, mc.rip_rel, di.m.rip_relative, bytes));
+                }
+                if !mc.rip_rel {
+                    if di.m.base_reg != mc.base {
+                        return Err(format!("mem-mismatch: {} base enc={} dec={} bytes {:02X?} mc={mc:?}",
+                                           d.mnem, mc.base, di.m.base_reg, bytes));
+                    }
+                    if di.m.index_reg != mc.index {
+                        return Err(format!("mem-mismatch: {} index enc={} dec={} bytes {:02X?} mc={mc:?}",
+                                           d.mnem, mc.index, di.m.index_reg, bytes));
+                    }
+                    if mc.index >= 0 && di.m.scale != mc.scale {
+                        return Err(format!("mem-mismatch: {} scale enc={} dec={} bytes {:02X?}",
+                                           d.mnem, mc.scale, di.m.scale, bytes));
+                    }
+                }
+                if di.m.disp != mc.disp as i64 {
+                    return Err(format!("mem-mismatch: {} disp enc={} dec={} bytes {:02X?} mc={mc:?}",
+                                       d.mnem, mc.disp, di.m.disp, bytes));
+                }
+            } else if uses_rm && di.m.rm != c.rm {
                 return Err(format!("rm-mismatch: {} enc rm={} dec rm={} bytes {:02X?}",
                                    d.mnem, c.rm, di.m.rm, bytes));
             }
@@ -301,6 +413,132 @@ pub fn verify_rt(d: &SwDef, c: &EncChoice) -> Result<Vec<u8>, String> {
 /// the sign-extended result — that's what the pre-state grid then exercises).
 pub fn enumerate_p1<F: FnMut(&EncChoice, &[u8])>(d: &SwDef, mode: XMode, f: F) -> (u32, u32) {
     enumerate_p1_debug(d, mode, f, |_| {})
+}
+
+/// Phase-3 mem-form addressing-mode SHAPES to enumerate. This is the
+/// x86 special-index case-table from PHASE3-MEMFORM.md — each row exercises
+/// a distinct encoding path (mod/rm/SIB rules), NOT the full base×idx×scale
+/// cartesian product. The corpus dimension expands base/idx values later;
+/// this is the encoder-correctness dimension.
+///
+/// idx=4(rsp) unencodable as index (bare 100=none). idx=12(r12) IS encodable
+/// (REX.X extends). base=4(rsp)/12(r12) forces SIB. base=5(rbp)/13(r13) at
+/// disp=0 needs mod=01 disp8=0.
+pub fn mem_shapes_p3(mode: XMode) -> Vec<MemChoice> {
+    let is64 = mode == XMode::Bits64;
+    let mut v = vec![
+        // ── plain [base], mod=00 rm≠4≠5 ──
+        MemChoice{base:0,  index:-1, scale:1, disp:0,      rip_rel:false},  // [rax]
+        MemChoice{base:3,  index:-1, scale:1, disp:0,      rip_rel:false},  // [rbx]
+        // ── [base+disp8], mod=01 ──
+        MemChoice{base:1,  index:-1, scale:1, disp:0x10,   rip_rel:false},  // [rcx+0x10]
+        MemChoice{base:2,  index:-1, scale:1, disp:-8,     rip_rel:false},  // [rdx-8]
+        // ── [base+disp32], mod=10 ──
+        MemChoice{base:0,  index:-1, scale:1, disp:0x1000, rip_rel:false},
+        // ── the base=5 problem: [rbp]/[r13] w/ disp=0 → mod=01 disp8=0 ──
+        MemChoice{base:5,  index:-1, scale:1, disp:0,      rip_rel:false},
+        // ── the rm=4 problem: [rsp]/[r12] → SIB idx=none base=4 ──
+        MemChoice{base:4,  index:-1, scale:1, disp:0,      rip_rel:false},  // [rsp]
+        MemChoice{base:4,  index:-1, scale:1, disp:0x20,   rip_rel:false},  // [rsp+0x20]
+        // ── SIB [base+idx*scale] ──
+        MemChoice{base:0,  index:1,  scale:1, disp:0,      rip_rel:false},  // [rax+rcx]
+        MemChoice{base:0,  index:2,  scale:4, disp:0,      rip_rel:false},  // [rax+rdx*4]
+        MemChoice{base:3,  index:6,  scale:8, disp:8,      rip_rel:false},  // [rbx+rsi*8+8]
+        // ── SIB base=5 (rbp) w/ disp=0 → mod=01 disp8=0 ──
+        MemChoice{base:5,  index:1,  scale:2, disp:0,      rip_rel:false},
+        // ── no-base [idx*s+disp32], mod=00 SIB base=5 ──
+        MemChoice{base:-1, index:2,  scale:2, disp:0x60000,rip_rel:false},
+        // ── no-base no-idx = pure [disp32] absolute (SIB idx=4 base=5) ──
+        MemChoice{base:-1, index:-1, scale:1, disp:0x60000,rip_rel:false},
+    ];
+    if is64 {
+        v.extend_from_slice(&[
+            // ── rip-relative (mod=00 rm=5, 64-bit only; 32-bit=[disp32]) ──
+            MemChoice{base:0,  index:-1, scale:1, disp:0x400, rip_rel:true},
+            // ── r8-r15 as base (REX.B) ──
+            MemChoice{base:8,  index:-1, scale:1, disp:0,      rip_rel:false},
+            MemChoice{base:15, index:-1, scale:1, disp:0x10,   rip_rel:false},
+            // ── r13 = base=5 problem w/ REX.B ──
+            MemChoice{base:13, index:-1, scale:1, disp:0,      rip_rel:false},
+            // ── r12 = rm=4 problem w/ REX.B (SIB required) ──
+            MemChoice{base:12, index:-1, scale:1, disp:0,      rip_rel:false},
+            // ── r8-r15 as index (REX.X) — incl r12 (encodable, verified) ──
+            MemChoice{base:0,  index:9,  scale:8, disp:8,      rip_rel:false},
+            MemChoice{base:0,  index:12, scale:1, disp:0,      rip_rel:false},  // r12-as-idx
+            // ── mixed REX.B+REX.X ──
+            MemChoice{base:10, index:11, scale:4, disp:-4,     rip_rel:false},
+        ]);
+    }
+    v
+}
+
+/// Phase-3 enumerate: for defs with an Erm/Wxmm operand (and mod11≠1 i.e.
+/// mem-form legal), walk mem_shapes_p3() × op_w × reg. rm/zopc fixed (mem-form
+/// uses c.mem, not c.rm). Round-trip via verify_rt (which now checks
+/// base/index/scale/disp/rip_rel against decoded ModRm).
+pub fn enumerate_p3_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
+    d: &SwDef, mode: XMode, mut f: F, mut on_fail: E) -> (u32, u32)
+{
+    // Only defs where Erm/Wxmm exists AND mem-form is legal (mod11 != 1).
+    let has_mem_op = d.ops.iter().any(|o|
+        matches!(o.cls, SwCls::Erm | SwCls::Wxmm) && !matches!(o.cls, SwCls::Uxmm));
+    if !has_mem_op || d.mod11 == 1 { return (0, 0); }
+    let has_greg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Greg));
+    let has_vreg = d.ops.iter().any(|o| matches!(o.cls, SwCls::Vxmm));
+    let uses_reg = has_greg || has_vreg;
+    let is64 = mode == XMode::Bits64;
+    let has_y = d.ops.iter().any(|o| matches!(o.w, SwW::Y));
+
+    // op_w: same rules as enumerate_p1
+    let opws: &[u8] = if is64 {
+        if d.d64 { &[64] }
+        else if has_v_operand(d) { &[16, 32, 64] }
+        else if has_y { &[32, 64] }
+        else { &[32] }
+    } else {
+        if has_v_operand(d) || d.d64 { &[16, 32] } else { &[32] }
+    };
+    // reg: if uses_reg, sweep a few (0,1,7 and in Bits64 also 8,15 for REX.R
+    // interaction w/ REX.B/X). Not the full 0..16 — the reg-form sweep already
+    // covers that; this dimension exists to catch REX.R+REX.B/X composition.
+    let regs: &[u8] = if uses_reg {
+        if is64 { &[0, 1, 7, 8, 15] } else { &[0, 1, 7] }
+    } else { &[0] };
+    let shapes = mem_shapes_p3(mode);
+    let imm_op = d.ops.iter().find(|o| matches!(o.cls, SwCls::Imm));
+    // imm: single value (imm-space already covered by phase-1)
+    let imm: u64 = if imm_op.is_some() { 0x11 } else { 0 };
+
+    let mut n_ok = 0u32; let mut n_fail = 0u32;
+    for &op_w in opws {
+        for &reg in regs {
+            for mc in &shapes {
+                let c = EncChoice { mode, op_w, reg, rm: 0, zopc: 0, imm, mem: Some(*mc) };
+                match verify_rt(d, &c) {
+                    Ok(bytes) => { n_ok += 1; f(&c, &bytes); }
+                    Err(e) => { n_fail += 1; on_fail(&e); }
+                }
+            }
+        }
+    }
+    (n_ok, n_fail)
+}
+
+pub fn enumerate_p3<F: FnMut(&EncChoice, &[u8])>(d: &SwDef, mode: XMode, f: F) -> (u32, u32) {
+    enumerate_p3_debug(d, mode, f, |_| {})
+}
+
+/// Phase-3 skip: defs with NO mem-form encoding path.
+pub fn phase3_skip(d: &SwDef, mode: XMode) -> Option<&'static str> {
+    if d.vex != 0 { return Some("vex/evex"); }
+    if mode == XMode::Bits64 && long_mode_invalid(d) { return Some("64bit-invalid"); }
+    if mode == XMode::Bits32 && bits32_invalid(d) { return Some("32bit-invalid"); }
+    // No Erm/Wxmm operand → no mem-form at all.
+    let has_mem_op = d.ops.iter().any(|o| matches!(o.cls, SwCls::Erm | SwCls::Wxmm));
+    if !has_mem_op { return Some("no-mem-op"); }
+    // mod11==1 = reg-form-only encoding row (e.g. some mprefix-mod-split rows).
+    if d.mod11 == 1 { return Some("reg-only-row"); }
+    None
 }
 
 /// Known encoding aliases: choice-points where the encoding is VALID but
@@ -372,7 +610,7 @@ pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
             for &rm in &rms {
                 for &zopc in &zops {
                     for &imm in &imms {
-                        let c = EncChoice { mode, op_w, reg, rm, zopc, imm };
+                        let c = EncChoice { mode, op_w, reg, rm, zopc, imm, mem: None };
                         if is_known_alias(d, &c) { continue; }
                         match verify_rt(d, &c) {
                             Ok(bytes) => { n_ok += 1; f(&c, &bytes); }
@@ -488,6 +726,75 @@ mod tests {
     }
 
     #[test]
+    fn round_trip_p3_mem() {
+        // Phase-3 mem-form: every mem-eligible def × mem-shape must round-
+        // trip through decode_insn (base/index/scale/disp/rip_rel checked).
+        for mode in [XMode::Bits64, XMode::Bits32] {
+            let mut n_defs = 0; let mut tot_ok = 0u32; let mut tot_fail = 0u32;
+            let mut first: Vec<String> = vec![];
+            for d in SWEEP_DEFS {
+                if phase3_skip(d, mode).is_some() { continue; }
+                n_defs += 1;
+                let (ok, fail) = enumerate_p3_debug(d, mode, |_,_|{}, |e| {
+                    if first.len() < 20 { first.push(e.to_string()); }
+                });
+                tot_ok += ok; tot_fail += fail;
+            }
+            for e in &first { println!("    fail: {e}"); }
+            println!("  round-trip-p3 [{mode:?}]: {n_defs} defs, {tot_ok} ok, {tot_fail} FAIL");
+            assert_eq!(tot_fail, 0, "phase-3 mem-form encoder round-trip must be clean");
+        }
+    }
+
+    #[test]
+    fn mem_encode_spot_objdump() {
+        // Independent-decoder verify for the mem-form encoder (round-trip is
+        // self-oracle only — the reg-form's ModRM=0xC0 bug + the Bits32 0x63
+        // gap both passed round-trip). All 14 special-index cases on ADD Ev,Gv.
+        use std::process::Command;
+        let d = SWEEP_DEFS.iter().find(|d| d.mnem=="ADD" && d.opcode==0x01 && d.map==0).unwrap();
+        let cases: &[(MemChoice, &str)] = &[
+            (MemChoice{base:0, index:-1, scale:1, disp:0,      rip_rel:false}, "[rax]"),
+            (MemChoice{base:3, index:-1, scale:1, disp:0x10,   rip_rel:false}, "[rbx+0x10]"),
+            (MemChoice{base:2, index:-1, scale:1, disp:0x1234, rip_rel:false}, "[rdx+0x1234]"),
+            (MemChoice{base:5, index:-1, scale:1, disp:0,      rip_rel:false}, "[rbp+0x0]"),
+            (MemChoice{base:13,index:-1, scale:1, disp:0,      rip_rel:false}, "[r13+0x0]"),
+            (MemChoice{base:4, index:-1, scale:1, disp:0,      rip_rel:false}, "[rsp]"),
+            (MemChoice{base:12,index:-1, scale:1, disp:0,      rip_rel:false}, "[r12]"),
+            (MemChoice{base:0, index:2,  scale:4, disp:0,      rip_rel:false}, "[rax+rdx*4]"),
+            (MemChoice{base:0, index:9,  scale:8, disp:8,      rip_rel:false}, "[rax+r9*8+0x8]"),
+            (MemChoice{base:-1,index:2,  scale:2, disp:0x60000,rip_rel:false}, "[rdx*2+0x60000]"),
+            (MemChoice{base:-1,index:-1, scale:1, disp:0x60000,rip_rel:false}, "ds:0x60000"),
+            (MemChoice{base:0, index:-1, scale:1, disp:0x333,  rip_rel:true},  "[rip+0x333]"),
+            (MemChoice{base:8, index:-1, scale:1, disp:0,      rip_rel:false}, "[r8]"),
+            (MemChoice{base:5, index:11, scale:1, disp:-8,     rip_rel:false}, "[rbp+r11*1-0x8]"),
+            (MemChoice{base:0, index:12, scale:1, disp:0,      rip_rel:false}, "[rax+r12*1]"),
+        ];
+        let mut all = vec![];
+        for (mc, want) in cases {
+            let c = EncChoice { op_w:32, reg:1, mem:Some(*mc), ..Default::default() };
+            let bytes = verify_rt(d, &c)
+                .unwrap_or_else(|e| panic!("verify_rt failed for {want}: {e}"));
+            eprintln!("  {:24} → {:02X?}", want, &bytes);
+            all.extend_from_slice(&bytes);
+        }
+        std::fs::write("/tmp/sweep_p3_spot.bin", &all).unwrap();
+        let out = Command::new("objdump")
+            .args(["-D","-b","binary","-m","i386:x86-64","-M","intel","/tmp/sweep_p3_spot.bin"])
+            .output().unwrap();
+        let d = String::from_utf8_lossy(&out.stdout);
+        let insns: Vec<&str> = d.lines().filter(|l| l.contains(":\t")).collect();
+        assert_eq!(insns.len(), cases.len(),
+                   "objdump insn-count ≠ case-count → misencoding");
+        for (i, (_, want)) in cases.iter().enumerate() {
+            let got = insns[i].splitn(3,'\t').last().unwrap().trim();
+            assert!(got.contains(want),
+                    "case {i} objdump `{got}` doesn't contain `{want}`");
+            eprintln!("  ✓ objdump: `{got}`");
+        }
+    }
+
+    #[test]
     fn bits32_encode_spot_objdump() {
         // Independent-decoder verify for the Bits32 encoder (round-trip is
         // self-oracle only — our decoder doesn't mode-gate 0x63 → MOVSXD
@@ -509,7 +816,7 @@ mod tests {
             let d = SWEEP_DEFS.iter().find(|d|
                 d.mnem == mnem && d.opcode == op && d.map == map
             ).unwrap_or_else(|| panic!("no SwDef for {mnem} m{map}/0x{op:02X}"));
-            let c = EncChoice { mode: XMode::Bits32, op_w, reg, rm, zopc, imm: 0x11 };
+            let c = EncChoice { mode: XMode::Bits32, op_w, reg, rm, zopc, imm: 0x11, mem: None };
             let bytes = encode(d, &c);
             eprintln!("  {} op_w={} reg={} rm={} zopc={} → {:02X?}", mnem, op_w, reg, rm, zopc, &bytes);
             lens.push(bytes.len());
