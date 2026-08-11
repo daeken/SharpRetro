@@ -102,6 +102,7 @@ impl Tier1 {
 
 impl Builder for Tier1 {
     type Val = u32;
+    fn branched(&self) -> bool { self.rec.branched() }
     fn ty_of(&self, v: u32) -> IlType { self.rec.ty_of(v) }
     fn literal(&mut self, ty: IlType, bits: u128) -> u32 { self.rec.literal(ty, bits) }
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 { self.rec.reg_read(f, idx, ty) }
@@ -248,6 +249,7 @@ impl<'a> Emitter<'a> {
             blk.link_sites.push((slot_w * 4, guest_tgt));
         }
         blk.body_off = BODY_OFF;
+        blk.epilogue_addr = base + (epi_word as u64) * 4;
         blk
     }
 

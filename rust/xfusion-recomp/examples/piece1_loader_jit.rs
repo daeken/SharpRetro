@@ -135,14 +135,14 @@ fn main() {
             unsafe { ((self.host_base + pc) as *const u32).read_unaligned() }
         }
         fn is_stop(&self, first_word: u32) -> bool { (first_word & 0xFF) == 0xCC }
-        fn compile_block(&self, t0: &mut Tier0, pc: u64, _mode: u32) -> (usize, StopReason) {
+        fn compile_block<BB: sharpretro_jit::Builder<Val = u32>>(&self, t0: &mut BB, pc: u64, _mode: u32) -> (u64, StopReason) {
             let mut cur = pc;
             for n in 0..self.max_block {
                 let bytes = unsafe { std::slice::from_raw_parts((self.host_base + cur) as *const u8, 15) };
                 if bytes[0] == 0xCC {
                     let t = t0.literal(IlType::U64, cur as u128);
                     t0.branch(t, false);
-                    return (n, StopReason::StopInsn);
+                    return (cur, StopReason::StopInsn);
                 }
                 let d = decode_insn(bytes, XMode::Bits64)
                     .unwrap_or_else(|| panic!("undecoded @0x{cur:x}: {:02X?}", &bytes[..4]));
@@ -150,11 +150,11 @@ fn main() {
                     panic!("no lift @0x{cur:x}: {} def_id={}", DEF_MNEMONICS[d.def_id as usize], d.def_id);
                 }
                 cur += d.len as u64;
-                if t0.branched() { return (n + 1, StopReason::Branched); }
+                if t0.branched() { return (cur, StopReason::Branched); }
             }
             let t = t0.literal(IlType::U64, cur as u128);
             t0.branch(t, false);
-            (self.max_block, StopReason::MaxInsns)
+            (cur, StopReason::MaxInsns)
         }
     }
 

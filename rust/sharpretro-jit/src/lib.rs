@@ -261,6 +261,10 @@ pub trait Builder {
     // ── control flow ────────────────────────────────────────────────────────
     /// Ends the current block. `link` = record return-address (BL/CALL).
     fn branch(&mut self, target: Self::Val, link: bool);
+    /// Has a branch been emitted? (Block compilers use this to decide whether
+    /// to append a fallthrough-branch.) Backends that don't track it return
+    /// false (callers then always append — harmless duplicate exit).
+    fn branched(&self) -> bool { false }
     /// If/else — both arms emitted. `then`/`else_` receive the same builder.
     /// Bounded-count loop: execute `body` `n` times. tier-0 emits an in-block
     /// loop (mov ctr,n; head: cbz ctr,exit; body; sub ctr,#1; b head; exit:).

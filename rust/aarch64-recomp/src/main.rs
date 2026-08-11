@@ -159,7 +159,7 @@ fn main() {
             fn is_stop(&self, insn: u32) -> bool {
                 (insn & 0xFFE00000) == 0xD4200000  // BRK
             }
-            fn compile_block(&self, t0: &mut Tier0, pc: u64, _mode: u32) -> (usize, StopReason) {
+            fn compile_block<BB: sharpretro_jit::Builder<Val = u32>>(&self, t0: &mut BB, pc: u64, _mode: u32) -> (u64, StopReason) {
                 let mut cur = pc;
                 for n in 0..self.max_block {
                     let insn = self.fetch(cur);
@@ -167,15 +167,15 @@ fn main() {
                         // Emit branch-to-cur so pc=cur; driver's next-iter stop-check catches it.
                         let t = t0.literal(IlType::U64, cur as u128);
                         t0.branch(t, false);
-                        return (n, StopReason::StopInsn);
+                        return (cur, StopReason::StopInsn);
                     }
                     if !recompile_one(t0, insn, cur) {
                         panic!("block@0x{pc:X}+{n}: insn 0x{insn:08X} not decoded");
                     }
-                    if t0.branched() { return (n + 1, StopReason::Branched); }
+                    if t0.branched() { return (cur + 4, StopReason::Branched); }
                     cur += 4;
                 }
-                (self.max_block, StopReason::MaxInsns)
+                (cur, StopReason::MaxInsns)
             }
         }
 

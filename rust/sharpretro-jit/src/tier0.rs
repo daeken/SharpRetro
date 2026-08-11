@@ -228,6 +228,7 @@ impl Tier0 {
 
 impl Builder for Tier0 {
     type Val = u32;
+    fn branched(&self) -> bool { self.branched }
 
     fn ty_of(&self, v: u32) -> IlType { self.tys[v as usize] }
 
@@ -1375,7 +1376,7 @@ pub fn compile_from_enc(enc: Aarch64Enc, n_slots: u32) -> CompiledBlock {
             page: page as *mut u8, page_len, code_len: len,
             entry: std::mem::transmute(page),
             n_slots,
-            link_sites: vec![], body_off: 0,
+            link_sites: vec![], body_off: 0, epilogue_addr: 0,
         }
     }
 }
@@ -1395,6 +1396,9 @@ pub struct CompiledBlock {
     /// entries jump here, reusing the predecessor block's frame). 0 = tier-0
     /// (not chainable).
     pub body_off: usize,
+    /// Absolute address of this block's epilogue (the unlink target: resetting
+    /// a link-slot here restores exit-to-driver). 0 = tier-0 (no link sites).
+    pub epilogue_addr: u64,
 }
 
 impl CompiledBlock {

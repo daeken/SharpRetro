@@ -132,7 +132,7 @@ fn main() {
                 fn is_stop(&self, first_word: u32) -> bool {
                     (first_word & 0xFF) == 0xCC  // INT3
                 }
-                fn compile_block(&self, t0: &mut Tier0, pc: u64, _mode: u32) -> (usize, StopReason) {
+                fn compile_block<BB: sharpretro_jit::Builder<Val = u32>>(&self, t0: &mut BB, pc: u64, _mode: u32) -> (u64, StopReason) {
                     use xfusion_recomp::lift::{DEF_FLAGS_MASK, DEF_FLAGS_READ};
                     // Pass 1: decode the block, collect (DecodedInsn, pc) until stop/branch.
                     // (Branch detection: any def whose template calls bd.branch — for x64
@@ -183,7 +183,7 @@ fn main() {
                         let t = t0.literal(IlType::U64, cur as u128);
                         t0.branch(t, false);
                     }
-                    (insns.len(), stop_reason)
+                    (cur, stop_reason)
                 }
             }
 

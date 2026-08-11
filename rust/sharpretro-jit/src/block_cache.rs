@@ -19,9 +19,19 @@ use std::collections::HashMap;
 pub trait BlockCompiler {
     /// Read one insn word at `pc` from guest memory (for the driver's stop-check).
     fn fetch(&self, pc: u64) -> u32;
-    /// Compile insns starting at `pc` into `t0` until a block-ending condition
-    /// (branch emitted / stop-insn / max-cap). Return (n_insns, why_stopped).
-    fn compile_block(&self, t0: &mut Tier0, pc: u64, mode: u32) -> (usize, StopReason);
+    /// Compile insns starting at `pc` into `b` until a block-ending condition
+    /// (branch emitted / stop-insn / max-cap). Return (end_pc, why_stopped) —
+    /// end_pc = first byte AFTER the block (guest_range for invalidate; was
+    /// n_insns ×4 which mis-sized every x64 block's range — variable-length).
+    /// Generic over Builder (Val=u32) so the SAME impl serves tier-0 and
+    /// tier-1 (lift_one loops are Builder-generic already). Not object-safe;
+    /// nothing uses dyn BlockCompiler (checked).
+    fn compile_block<B: Builder<Val = u32>>(&self, b: &mut B, pc: u64, mode: u32) -> (u64, StopReason);
+    /// Guest byte-range READ BEYOND the block by the most recent compile_block
+    /// (exit-liveness successor-peek). (0,0) = none. invalidate() drops blocks
+    /// whose peek-window intersects — their stripped flag-computation depended
+    /// on those bytes.
+    fn last_peek_range(&self) -> (u64, u64) { (0, 0) }
     /// Is this insn a driver-level stop? (BRK/HLT/etc — the "return to host" signal.)
     fn is_stop(&self, insn: u32) -> bool;
     /// Called at each driver-loop iteration BEFORE is_stop / compile-or-lookup.
@@ -49,8 +59,17 @@ pub enum StopReason {
 struct Entry {
     block: CompiledBlock,
     guest_range: (u64, u64),  // [start, end) in guest bytes — for invalidate() intersection
+    /// Peek-window: guest range read by exit-liveness successor-peek at
+    /// compile time (empty if none). invalidate() must ALSO drop blocks whose
+    /// peek-window intersects the invalidated range — the stripped flag-
+    /// computation depended on those bytes.
+    peek_range: (u64, u64),
+    /// Predecessor link-slots pointing INTO this block: (pred_key, slot_off,
+    /// pred_epilogue_addr). invalidate() resets each to the pred's epilogue
+    /// (else: use-after-munmap through a stale chain).
+    linked_from: Vec<((u64, u32), usize, u64)>,
     exec_count: u32,          // hotspot promotion counter (v2)
-    tier: u8,                 // 0 for now
+    tier: u8,                 // 0 = tier-0; 1 = tier-1
 }
 
 pub struct BlockCache {
@@ -65,13 +84,66 @@ pub struct BlockCache {
     /// (5M heap allocs). The spill area doesn't need zeroing (each block's
     /// prologue writes before reading — SSA def-before-use guarantees it).
     spill: Vec<u64>,
+    /// Block-linking on? (XF_LINK=0 disables; also disables tier-1 emit-side
+    /// thunks via the same env in tier1.rs — one switch.)
+    link: bool,
+    /// Compile tier-1 with tier-0 fallback? (XF_T1=0 → tier-0 only.)
+    use_t1: bool,
+    /// pcs awaited by already-compiled predecessors: target_key →
+    /// [(pred_key, slot_off, pred_epilogue)].
+    pending_links: std::collections::HashMap<(u64, u32), Vec<((u64, u32), usize, u64)>>,
 }
 
 impl BlockCache {
     pub fn new() -> Self { Self::with_layout(&AARCH64_LAYOUT) }
     pub fn with_layout(layout: &'static StateLayout) -> Self {
         Self { map: HashMap::new(), max_block_insns: 32, n_compiles: 0, n_execs: 0, layout,
-               spill: vec![0u64; 64] }
+               spill: vec![0u64; 64],
+               link: std::env::var("XF_LINK").map(|v| v != "0").unwrap_or(true),
+               use_t1: std::env::var("XF_T1").map(|v| v != "0").unwrap_or(true),
+               pending_links: Default::default() }
+    }
+
+    /// Compile one block: tier-1 first (catch_unwind — wide-ty/loop_n/
+    /// intrinsic blocks panic at RECORD or EMIT time, compile-time only),
+    /// tier-0 on fallback. Returns (block, end_pc, tier).
+    fn compile_one<C: BlockCompiler>(&self, compiler: &C, pc: u64, mode: u32)
+        -> (CompiledBlock, u64, u8)
+    {
+        if self.use_t1 {
+            let layout = self.layout;
+            // Suppress the default panic-print for this EXPECTED bail class
+            // (wide-ty/loop_n/intrinsic blocks panic → tier-0 serves them; a
+            // 100K-block boot with ~1K bails must not spam stderr). The hook
+            // is process-global: swap, run, restore. Drivers are single-
+            // threaded today (cp2077 worker threads each own a BlockCache but
+            // compile rarely; a race here just mis-suppresses one message).
+            let prev_hook = std::panic::take_hook();
+            std::panic::set_hook(Box::new(|_| {}));
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let mut t1 = crate::tier1::Tier1::with_layout(layout);
+                let (end_pc, _stop) = compiler.compile_block(&mut t1, pc, mode);
+                if !t1.rec.branched() {
+                    debug_assert_eq!(layout.flag_file, 2,
+                        "non-aarch64 BlockCompiler must emit branch (variable-length)");
+                    let t = <crate::tier1::Tier1 as Builder>::literal(&mut t1, IlType::U64, end_pc as u128);
+                    <crate::tier1::Tier1 as Builder>::branch(&mut t1, t, false);
+                }
+                (t1.compile(), end_pc)
+            }));
+            std::panic::set_hook(prev_hook);
+            if let Ok((block, end_pc)) = r { return (block, end_pc, 1); }
+            // fall through to tier-0 (bail-class: wide/intrinsic/loop_n).
+        }
+        let mut t0 = Tier0::with_layout(self.layout);
+        let (end_pc, _stop) = compiler.compile_block(&mut t0, pc, mode);
+        if !t0.branched() {
+            debug_assert_eq!(self.layout.flag_file, 2,
+                "non-aarch64 BlockCompiler must emit branch (variable-length)");
+            let t = t0.literal(IlType::U64, end_pc as u128);
+            t0.branch(t, false);
+        }
+        (t0.finalize(), end_pc, 0)
     }
 
     /// Run guest code from `state[OFF_PC]` until a stop-insn or `max_execs` blocks.
@@ -95,39 +167,77 @@ impl BlockCache {
             if compiler.is_stop(compiler.fetch(pc)) {
                 return RunResult::Stop { pc };
             }
-            let entry = match self.map.get(&(pc, mode)) {
-                Some(_) => self.map.get_mut(&(pc, mode)).unwrap(),
-                None => {
-                    let mut t0 = Tier0::with_layout(self.layout);
-                    let (n, _stop) = compiler.compile_block(&mut t0, pc, mode);
-                    // Ensure the block terminates: if compile_block didn't emit a branch
-                    // (e.g. hit max-cap on a non-branch), append a fallthrough-branch.
-                    // ‡ x64: `n * 4` is aarch64-specific (fixed 4-byte insns). For x64 the
-                    //   BlockCompiler must ALWAYS emit a branch (compile_block returns the
-                    //   fallthrough-pc via a branch it emits itself), so this arm is aarch64-only.
-                    //   Assert instead of miscomputing.
-                    if !t0.branched() {
-                        debug_assert_eq!(self.layout.flag_file, 2,
-                            "non-aarch64 BlockCompiler must emit branch (variable-length)");
-                        let next = pc + (n as u64 * 4);
-                        let t = t0.literal(IlType::U64, next as u128);
-                        t0.branch(t, false);
-                    }
-                    let block = t0.finalize();
-                    // Grow the shared spill area if this block needs more.
-                    if block.n_slots as usize + 1 > self.spill.len() {
-                        self.spill.resize(block.n_slots as usize + 1, 0);
-                    }
-                    self.n_compiles += 1;
-                    self.map.insert((pc, mode), Entry {
-                        block,
-                        guest_range: (pc, pc + n as u64 * 4),
-                        exec_count: 0,
-                        tier: 0,
-                    });
-                    self.map.get_mut(&(pc, mode)).unwrap()
+            if !self.map.contains_key(&(pc, mode)) {
+                let (block, end_pc, tier) = self.compile_one(compiler, pc, mode);
+                let peek = compiler.last_peek_range();
+                // Grow the shared spill area if this block needs more.
+                if block.n_slots as usize + 1 > self.spill.len() {
+                    self.spill.resize(block.n_slots as usize + 1, 0);
                 }
-            };
+                self.n_compiles += 1;
+                if std::env::var("XF_DBG").is_ok() { eprintln!("[cache] compile pc={:#x} tier={} sites={:?}", pc, tier, block.link_sites); }
+                // ── BLOCK-LINKING cross-patch ─────────────────────────────
+                // (a) NEW block's link-sites aimed at already-compiled pcs
+                //     (incl. itself) → patch to their bodies now.
+                // (b) Register the rest in pending_links so future compiles
+                //     patch them lazily.
+                // (c) Serve pending_links aimed at THIS pc: patch each
+                //     registered predecessor slot to our body.
+                // Reverse-index (linked_from) records every live edge for
+                // invalidate()'s unlink pass.
+                if self.link {
+                    let new_key = (pc, mode);
+                    let mut fwd: Vec<((u64, u32), usize, u64)> = vec![];   // edges FROM new
+                    // (link_sites only exist on tier-1 blocks; body_off!=0 for them.)
+                    for &(off, tgt) in &block.link_sites {
+                        if tgt == pc {
+                            block.patch_link(off, block.body_addr());
+                            fwd.push((new_key, off, block.epilogue_addr));
+                        } else if let Some(e) = self.map.get(&(tgt, mode)) {
+                            // CHAINABILITY GUARD: only tier-1 blocks (body_off
+                            // != 0) can be chain TARGETS — a tier-0 block has
+                            // no uniform frame; jumping into it with a tier-1
+                            // frame live corrupts the stack (found the hard
+                            // way: branchbench's imul block bailed to tier-0,
+                            // got linked into, core-dumped @garbage pc).
+                            if e.block.body_off != 0 {
+                                block.patch_link(off, e.block.body_addr());
+                                self.map.get_mut(&(tgt, mode)).unwrap().linked_from
+                                    .push((new_key, off, block.epilogue_addr));
+                            }
+                        } else {
+                            self.pending_links.entry((tgt, mode)).or_default()
+                                .push((new_key, off, block.epilogue_addr));
+                        }
+                    }
+                    let mut entry = Entry {
+                        block, guest_range: (pc, end_pc), peek_range: peek,
+                        linked_from: fwd, exec_count: 0, tier,
+                    };
+                    // (c) predecessors waiting on this pc.
+                    if entry.block.body_off != 0 {
+                        if let Some(waiters) = self.pending_links.remove(&new_key) {
+                            for (pred_key, off, pred_epi) in waiters {
+                                if let Some(pe) = self.map.get(&pred_key) {
+                                    pe.block.patch_link(off, entry.block.body_addr());
+                                    entry.linked_from.push((pred_key, off, pred_epi));
+                                }
+                            }
+                        }
+                    }
+                    // (tier-0 new block: waiters stay pending forever — their
+                    // slots still point at their own epilogues = correct
+                    // unlinked behavior; a future invalidate+recompile at this
+                    // pc may serve them as tier-1.)
+                    self.map.insert(new_key, entry);
+                } else {
+                    self.map.insert((pc, mode), Entry {
+                        block, guest_range: (pc, end_pc), peek_range: peek,
+                        linked_from: vec![], exec_count: 0, tier,
+                    });
+                }
+            }
+            let entry = self.map.get_mut(&(pc, mode)).unwrap();
             // Direct entry-call with the shared spill area (was exec_slice →
             // vec![0u64; n_slots+1] per call = 40% of wall on tight-loop bench).
             let ef = entry.block.entry_fn();
@@ -160,7 +270,35 @@ impl BlockCache {
     /// the contract lands here so the loader integration has the seam to build against.
     pub fn invalidate(&mut self, start: u64, end: u64) -> usize {
         let before = self.map.len();
-        self.map.retain(|_, e| !(e.guest_range.0 < end && start < e.guest_range.1));
+        // Drop blocks whose CODE range or exit-liveness PEEK-window intersects
+        // (peek: the stripped flag computation depended on successor bytes —
+        // if those changed, the strip may now be unsound → recompile).
+        let doomed: Vec<(u64, u32)> = self.map.iter()
+            .filter(|(_, e)| (e.guest_range.0 < end && start < e.guest_range.1)
+                          || (e.peek_range.0 < end && start < e.peek_range.1))
+            .map(|(k, _)| *k).collect();
+        for k in &doomed {
+            let e = self.map.remove(k).unwrap();
+            // UNLINK: every predecessor slot pointing into this block's page
+            // gets reset to that predecessor's OWN epilogue (else the chain
+            // jumps into a munmap'd page). Predecessor may itself be doomed —
+            // then it's already/soon removed and its slots die with it.
+            for (pred_key, slot_off, pred_epi) in e.linked_from {
+                if let Some(pe) = self.map.get(&pred_key) {
+                    pe.block.patch_link(slot_off, pred_epi);
+                }
+            }
+            // Drop any pending-link registrations FROM this block (its slots
+            // are about to be freed; a later compile must not patch them).
+            for v in self.pending_links.values_mut() {
+                v.retain(|(pk, _, _)| *pk != *k);
+            }
+            // And forget waiters ON this pc? No — waiters are OTHER blocks'
+            // slots aimed at this guest pc; they stay pending and re-serve
+            // when the pc recompiles. (Their slots still point at their own
+            // epilogues if never patched, or... if they WERE patched to us,
+            // they're in linked_from and were just reset above.)
+        }
         before - self.map.len()
     }
 

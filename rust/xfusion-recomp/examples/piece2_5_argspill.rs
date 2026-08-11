@@ -104,17 +104,17 @@ fn main() {
             println!("  [dispatch_native] 7-arg call: regs[1,2,3,4] + spill[5,6,7] → native_sum7 = {} → rax", ret);
             true
         }
-        fn compile_block(&self, t0: &mut Tier0, pc: u64, _m: u32) -> (usize, StopReason) {
+        fn compile_block<BB: sharpretro_jit::Builder<Val = u32>>(&self, t0: &mut BB, pc: u64, _m: u32) -> (u64, StopReason) {
             let mut cur = pc;
             for n in 0..self.max_block {
                 let b = unsafe { std::slice::from_raw_parts(cur as *const u8, 15) };
-                if b[0]==0xCC { let t=t0.literal(IlType::U64,cur as u128); t0.branch(t,false); return (n,StopReason::StopInsn); }
+                if b[0]==0xCC { let t=t0.literal(IlType::U64,cur as u128); t0.branch(t,false); return (cur,StopReason::StopInsn); }
                 let d = decode_insn(b, XMode::Bits64).unwrap_or_else(|| panic!("undecoded @0x{cur:x}: {:02X?}",&b[..4]));
                 if !lift_one(t0,&d,cur,XMode::Bits64,FLAGS_ALL_LIVE) { panic!("no lift @0x{cur:x}: {}",DEF_MNEMONICS[d.def_id as usize]); }
                 cur += d.len as u64;
-                if t0.branched() { return (n+1,StopReason::Branched); }
+                if t0.branched() { return (cur,StopReason::Branched); }
             }
-            let t=t0.literal(IlType::U64,cur as u128); t0.branch(t,false); (self.max_block,StopReason::MaxInsns)
+            let t=t0.literal(IlType::U64,cur as u128); t0.branch(t,false); (cur,StopReason::MaxInsns)
         }
     }
 

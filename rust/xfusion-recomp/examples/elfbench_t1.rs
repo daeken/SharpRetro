@@ -218,6 +218,76 @@ fn main() {
     // linear-probed Vec<(pc, fn)>. 3 blocks → linear-scan is ~free. Isolates
     // HashMap-lookup cost from the residual (which is then prologue/epilogue +
     // the block-body itself = the block-linking floor).
+    // CACHE=1: run through the CRATE driver (BlockCache::run — tier-1 w/
+    // tier-0 fallback + linking + fast-loop, exactly what cp2077_boot gets).
+    if std::env::var("CACHE").is_ok() {
+        use sharpretro_jit::block_cache::{BlockCache, BlockCompiler, StopReason};
+        struct C;
+        impl BlockCompiler for C {
+            fn fetch(&self, pc: u64) -> u32 {
+                u32::from_le_bytes(unsafe { *(pc as *const [u8; 4]) })
+            }
+            fn is_stop(&self, insn: u32) -> bool { insn as u8 == 0xCC }
+            fn compile_block<BB: sharpretro_jit::Builder<Val = u32>>(
+                &self, b: &mut BB, pc: u64, _mode: u32) -> (u64, StopReason)
+            {
+                // Decode-collect FIRST (block-grain), so backward flag-
+                // liveness + exit-peek run before any lift. Without this,
+                // per-insn ALL_LIVE forces imul-of's wide path → tier-1
+                // bails the hot block to tier-0 → unchainable → the whole
+                // loop pays driver dispatch (measured: 6.07s vs 0.56s).
+                let mut insns = vec![]; let mut cur = pc; let mut stop = StopReason::MaxInsns;
+                for _ in 0..64 {
+                    let bytes = unsafe { std::slice::from_raw_parts(cur as *const u8, 15) };
+                    if bytes[0] == 0xCC { stop = StopReason::StopInsn; break; }
+                    let d = decode_insn(bytes, XMode::Bits64).unwrap();
+                    let m = DEF_MNEMONICS[d.def_id as usize];
+                    cur += d.len as u64;
+                    let br = is_branch(m);
+                    insns.push((d, cur));   // (insn, its next_pc)
+                    if br { stop = StopReason::Branched; break; }
+                }
+                if insns.is_empty() {
+                    let t = b.literal(IlType::U64, cur as u128);
+                    b.branch(t, false);
+                    return (cur, stop);
+                }
+                let mut per = vec![0u32; insns.len()];
+                let mut live = if matches!(stop, StopReason::Branched)
+                    && std::env::var("XF_EXITLIVE").map(|v| v != "0").unwrap_or(true) {
+                    let (ld, lnext) = (&insns[insns.len()-1].0, insns[insns.len()-1].1);
+                    unsafe { xfusion_recomp::exit_live::block_exit_liveness(
+                        ld.def_id, ld.imm0, lnext, XMode::Bits64) }
+                } else { FLAGS_ALL_LIVE };
+                for i in (0..insns.len()).rev() {
+                    let did = insns[i].0.def_id as usize;
+                    per[i] = live;
+                    live = (live & !DEF_FLAGS_MASK.get(did).copied().unwrap_or(0))
+                         | DEF_FLAGS_READ.get(did).copied().unwrap_or(0);
+                }
+                for (i, (d, next)) in insns.iter().enumerate() {
+                    lift_one(b, d, next - d.len as u64, XMode::Bits64, per[i]);
+                }
+                if !b.branched() {
+                    let t = b.literal(IlType::U64, cur as u128);
+                    b.branch(t, false);
+                }
+                (cur, stop)
+            }
+            fn last_peek_range(&self) -> (u64, u64) { (0, 0) }  // ‡ peek-range
+            // reporting not wired (needs interior mutability or API change);
+            // SMC near a peeked successor won't invalidate the peeker. The
+            // bench has no SMC; cp2077_boot wiring should pass it properly.
+        }
+        let mut cache = BlockCache::with_layout(&X64_LAYOUT);
+        cache.max_block_insns = 64;
+        let t0c = Instant::now();
+        let r = cache.run(&C, &mut flat[..], 0, u64::MAX as usize);
+        let wall = t0c.elapsed().as_secs_f64();
+        println!("[elfbench_t1] CACHE wall = {:.4}s  ({} driver-execs, {} compiles, {:?})  rax=0x{:x}",
+            wall, cache.n_execs, cache.n_compiles, r, flat[0]);
+        return;
+    }
     let nohash = std::env::var("NOHASH").is_ok();
     // LINKED=1: block-linking. After each compile, cross-patch link-slots:
     // new block's sites → existing blocks' bodies; existing blocks' sites

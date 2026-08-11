@@ -32,7 +32,7 @@ fn main() {
         let d = decode_insn(&bytes[cur..], XMode::Bits64).unwrap();
         cur += d.len as usize; insns.push(d);
     }
-    let mut per = vec![0u32; insns.len()]; let mut live = FLAGS_ALL_LIVE;
+    let mut per = vec![0u32; insns.len()]; let mut live = std::env::var("SEED").ok().and_then(|v| u32::from_str_radix(&v,16).ok()).unwrap_or(FLAGS_ALL_LIVE);
     for i in (0..insns.len()).rev() {
         let did = insns[i].def_id as usize;
         per[i] = live;
