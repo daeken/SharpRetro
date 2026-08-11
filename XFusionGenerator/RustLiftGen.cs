@@ -338,8 +338,21 @@ public class RustLiftGen {
                 Emit($"    let ph = bd.shr(_p, sh);");
                 Emit($"    let h = bd.cast(ph, {wu}); (l, h)");
                 Emit($"}};");
-                Emit("bd.reg_write(GPR, 0, _lo);");
-                Emit("bd.reg_write(GPR, 2, _hi);");
+                // ⑫ 5th .isa-tier (RustLiftGen head, both interp+C# derive from it):
+                // direct bd.reg_write bypasses write_operand's partial-write contract
+                // (8/16-bit = mask-insert; 32-bit = zext). imul r15w w/ rax=0x1122..7788:
+                // silicon rax=0x1122..ef10 (upper-48 preserved), interp rax=0xef10.
+                // Fire-7 dense ×395 (templates 243/244/250/251 = MUL/IMUL Eb/Ev).
+                // + op_w=8 SPECIAL (SDM): AL×src → AX (result in AX, rdx UNTOUCHED).
+                Emit($"if op_w == 8 {{");
+                Emit($"    let _sh = bd.literal({w2}, 8u128);");
+                Emit($"    let _hs = bd.shl(_hi, _sh);");
+                Emit($"    let _ax = bd.or(_hs, _lo);");
+                Emit($"    write_operand(bd, &Operand::Reg{{idx:0, width:16, high8:false}}, _ax);");
+                Emit($"}} else {{");
+                Emit($"    write_operand(bd, &Operand::Reg{{idx:0, width:op_w, high8:false}}, _lo);");
+                Emit($"    write_operand(bd, &Operand::Reg{{idx:2, width:op_w, high8:false}}, _hi);");
+                Emit($"}}");
                 // CF=OF: unsigned = hi≠0. Signed = hi ≠ asr(lo, op_w−1) — i.e. the
                 // full product doesn't fit in op_w signed (hi should be sign-fill of
                 // lo). Silicon sweep fire-1: imul r14d w/ eax=2 r14d=0x55667788 →
