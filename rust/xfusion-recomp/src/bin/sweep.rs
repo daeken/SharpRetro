@@ -98,6 +98,57 @@ fn gen_fault_rows(out_path: &str, mode: XMode) -> std::io::Result<()> {
     w.write_all(&0u32.to_le_bytes())?;           // count patched at end
     let mut n_rows = 0u32;
 
+    // ── #PF rows: mem access to GUARD_VA (0x70000 — a page the runner's
+    // child never maps; DATA_PAGE's neighbor +0x10000 so a data-page mapping
+    // can't accidentally cover it). Expected: SIGSEGV w/ si_addr == the
+    // exact ea. Three access kinds: load (MOV r,[m]), store (MOV [m],r),
+    // rmw (ADD [m],r). slot89 = si_addr ABSOLUTE for SEGV/BUS (vs rip-offset
+    // for FPE/ILL) — the runner's handler keys on the signal class.
+    const GUARD_VA: u64 = 0x70000;
+    let pf_defs: &[(&str, u8)] = &[("MOV", 0x8B), ("MOV", 0x89), ("ADD", 0x01), ("ADD", 0x03)];
+    for &(mn, opc) in pf_defs {
+        let sd = SWEEP_DEFS.iter()
+            .find(|d| d.mnem == mn && d.opcode == opc && d.map == 0).unwrap();
+        let opws: &[u8] = if is64 { &[16, 32, 64] } else { &[16, 32] };
+        for &op_w in opws {
+            // Two shapes: [base] and [base+idx*4+disp8] (SIB path faults too).
+            let shapes = [
+                MemChoice{base:1, index:-1, scale:1, disp:0, rip_rel:false},
+                MemChoice{base:1, index:3,  scale:4, disp:8, rip_rel:false},
+            ];
+            for mc in &shapes {
+                let c = EncChoice { mode, op_w, reg: 0, rm: 0, zopc: 0, imm: 0, mem: Some(*mc) };
+                let insn = match verify_rt(sd, &c) { Ok(b) => b, Err(_) => continue };
+                // Solve base/idx so ea = GUARD_VA exactly.
+                let (bv, iv): (u64, u64) = if mc.index >= 0 {
+                    let iv = 2u64;
+                    (GUARD_VA - iv*(mc.scale as u64) - mc.disp as u64, iv)
+                } else {
+                    (GUARD_VA - mc.disp as u64, 0)
+                };
+                let mut pre = X86State::default();
+                pre.gpr[4] = 0x8FED8;
+                pre.eflags = 0x202;
+                pre.gpr[0] = 0x1122_3344_5566_7788;   // src for stores/rmw
+                pre.gpr[1] = bv;
+                if mc.index >= 0 { pre.gpr[3] = iv; }
+                if !is64 { for r in 0..8 { pre.gpr[r] &= 0xFFFF_FFFF; } }
+                let mut post_flat = pre.to_flat();
+                post_flat[SLOT_SIGNO] = 11;          // SIGSEGV
+                post_flat[SLOT_FAULT_OFF] = GUARD_VA; // si_addr, absolute
+                let (stub, _slot) = if is64 { emit_stub(&insn) } else { emit_stub_32(&insn) };
+                let def_id = decode_insn(&insn, mode).map(|d| d.def_id).unwrap_or(0);
+                w.write_all(&def_id.to_le_bytes())?;
+                w.write_all(&FMASK_FAULT_ROW.to_le_bytes())?;
+                w.write_all(&(stub.len() as u32).to_le_bytes())?;
+                w.write_all(&stub)?;
+                for v in &pre.to_flat() { w.write_all(&v.to_le_bytes())?; }
+                for v in &post_flat { w.write_all(&v.to_le_bytes())?; }
+                n_rows += 1;
+            }
+        }
+    }
+
     for sd in SWEEP_DEFS {
         if !(sd.mnem == "DIV" || sd.mnem == "IDIV") { continue; }
         let signed = sd.mnem == "IDIV";
