@@ -307,6 +307,35 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         }
         IVal { ty: IlType::U64, bits: c as u128 }
     }
+    fn vdpp(&mut self, a: IVal, b: IVal, imm: u32, ew: u32) -> IVal {
+        let nlanes = if ew == 64 { 2 } else { 4 };
+        let sum = if ew == 64 {
+            let mut s = 0.0f64;
+            for i in 0..nlanes {
+                if imm & (1<<(4+i)) != 0 {
+                    let ai = f64::from_bits(((a.bits >> (i*64)) & u64::MAX as u128) as u64);
+                    let bi = f64::from_bits(((b.bits >> (i*64)) & u64::MAX as u128) as u64);
+                    s += ai * bi;
+                }
+            }
+            s.to_bits() as u128
+        } else {
+            let mut s = 0.0f32;
+            for i in 0..nlanes {
+                if imm & (1<<(4+i)) != 0 {
+                    let ai = f32::from_bits(((a.bits >> (i*32)) & 0xFFFFFFFF) as u32);
+                    let bi = f32::from_bits(((b.bits >> (i*32)) & 0xFFFFFFFF) as u32);
+                    s += ai * bi;
+                }
+            }
+            s.to_bits() as u128
+        };
+        let mut out: u128 = 0;
+        for i in 0..nlanes {
+            if imm & (1<<i) != 0 { out |= sum << (i * ew as usize); }
+        }
+        IVal { ty: IlType::V128, bits: out }
+    }
     fn bswap(&mut self, a: IVal) -> IVal {
         let w = match a.ty { IlType::I{width,..} => width, _ => panic!("bswap non-int") };
         let r = match w { 64 => (a.bits as u64).swap_bytes() as u128,

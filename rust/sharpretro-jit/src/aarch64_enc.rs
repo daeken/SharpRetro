@@ -272,6 +272,17 @@ impl Aarch64Enc {
         debug_assert!(size < 3, "MUL vector has no .2D form");
         self.put(0x4E209C00 | (size<<22) | (vm<<16) | (vn<<5) | vd);
     }
+    // INS Vd.S[i], Wn (general, 32-bit lane). imm5 for .S = index<<3 | 0b100 (size-marker
+    // at bit-2, index at bits [4:3] — SAME pattern as ins_vd_x's .D: index<<4|0b1000).
+    // First cut had (lane<<2)|4 = index colliding with the size bit → i=1→s[0], i=3→s[1].
+    // The encode-then-decode-back check caught it (objdump showed s[0]×2,s[1]×2 instead of
+    // s[0..3]); the DPPS 0x7F interp-vs-tier0 diff then confirmed at values (tier-0 gave
+    // 9806.0 = zeroed lane-1 not lane-3 → 1+0+4+9801, vs interp's correct 9.0). Wn=31→wzr.
+    pub fn ins_vs_w(&mut self, vd: u32, lane: u32, wn: u32) {
+        debug_assert!(lane < 4);
+        self.put(0x4E001C00 | (((lane<<3)|4)<<16) | (wn<<5) | vd);
+    }
+    // INS Vd.D[i], Xn already exists as ins_vd_x. For DPPD lane-zero: ins_vd_x(vd, i, 31=xzr).
     // REV Xd,Xn (reverse bytes in 64-bit) = 0xDAC00C00; REV Wd,Wn (32-bit) = 0x5AC00800.
     pub fn rev_x(&mut self, rd: u32, rn: u32) { self.put(0xDAC00C00 | (rn<<5) | rd); }
     pub fn rev_w(&mut self, rd: u32, rn: u32) { self.put(0x5AC00800 | (rn<<5) | rd); }

@@ -531,6 +531,14 @@ public class RustLiftGen {
                 var a = Expr(l[1]);
                 return Rt($"bd.bswap({a})");
             }
+            case "vdpp": {
+                // (vdpp a b imm-op elw) — DPPS/DPPD. imm is Ib (compile-time-per-decode).
+                var a = Expr(l[1]); var b = Expr(l[2]);
+                var immOp = ParamOp(((PName)l[3]).Name);
+                var ew = ((PInt)l[4]).Value;
+                var immv = Rt($"if let Operand::Imm{{value,..}} = {immOp} {{ *value as u32 }} else {{ unreachable!() }}");
+                return Rt($"bd.vdpp({a}, {b}, {immv}, {ew})");
+            }
             case "vhadd": {
                 var a = Expr(l[1]); var b = Expr(l[2]); var ew = ((PInt)l[3]).Value;
                 return Rt($"bd.vhadd({a}, {b}, {ew})");

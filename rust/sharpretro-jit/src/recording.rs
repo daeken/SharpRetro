@@ -88,6 +88,7 @@ impl Builder for RecordingBuilder {
     }
     fn vhadd(&mut self, a: u32, b: u32, ew: u32) -> u32 { self.v(format!("vhadd v{a} v{b} @{ew}b")) }
     fn bswap(&mut self, a: u32) -> u32 { self.v(format!("bswap v{a}")) }
+    fn vdpp(&mut self, a: u32, b: u32, imm: u32, ew: u32) -> u32 { self.v(format!("vdpp v{a} v{b} imm={imm:#x} @{ew}b")) }
     fn loop_while(&mut self, n: u32, exit_on: bool, body: &mut dyn FnMut(&mut Self) -> u32) -> u32 {
         self.stmt(format!("loop_while v{n} exit_on={exit_on} {{"));
         let f = body(self);

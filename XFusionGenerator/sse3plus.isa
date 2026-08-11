@@ -50,7 +50,18 @@
     (instruction PINSRB (dst src sel) "pinsrb $dst, $src, $sel" (intrinsic pinsrb dst src sel))
     (encoding PINSRB (Vdq Ed Ib) (opsize 0x0F 0x3A 0x20))
     (instruction MOVNTDQA (dst src) "movntdqa $dst, $src" (intrinsic movntdqa dst src))
-    (encoding MOVNTDQA (Vdq Mdq) (opsize 0x0F 0x38 0x2A)))
+    (encoding MOVNTDQA (Vdq Mdq) (opsize 0x0F 0x38 0x2A))
+    ; DPPS/DPPD: masked dot-product. imm[7:4]=src-lane-mask (which multiply),
+    ; imm[3:0]=dst-lane-mask (where the sum lands; else 0). CP2077 wall #29
+    ; @0x1401177bc: dpps xmm0,xmm4,0x7F = the vec3-normalize idiom (xyz·xyz →
+    ; all 4 lanes → sqrtss = |v|). aarch64: fmul + INS-wzr per unmasked +
+    ; faddp×2 → sum broadcast + INS-wzr per unmasked-out.
+    (instruction DPPS (dst src imm) "dpps $dst, $src, $imm"
+        (= dst (vdpp dst src imm 32)))
+    (encoding DPPS (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x40))
+    (instruction DPPD (dst src imm) "dppd $dst, $src, $imm"
+        (= dst (vdpp dst src imm 64)))
+    (encoding DPPD (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x41)))
 
 (featuring sse4.2
     (instruction PCMPISTRI (a b pred) "pcmpistri $a, $b, $pred" (intrinsic pcmpistri a b pred))

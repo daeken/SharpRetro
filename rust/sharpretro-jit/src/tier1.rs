@@ -141,6 +141,7 @@ impl Builder for Tier1 {
     fn vfcmpp(&mut self, a: u32, b: u32, ew: u32, p: u32) -> u32 { self.rec.vfcmpp(a, b, ew, p) }
     fn vhadd(&mut self, a: u32, b: u32, ew: u32) -> u32 { self.rec.vhadd(a, b, ew) }
     fn bswap(&mut self, a: u32) -> u32 { self.rec.bswap(a) }
+    fn vdpp(&mut self, a: u32, b: u32, imm: u32, ew: u32) -> u32 { self.rec.vdpp(a, b, imm, ew) }
     fn loop_while(&mut self, _: u32, _: bool, _: &mut dyn FnMut(&mut Self) -> u32) -> u32 { panic!("tier-1 v1: loop_while") }
     fn vshuf(&mut self, a: u32, b: u32, ew: u32, sel: u32) -> u32 { self.rec.vshuf(a, b, ew, sel) }
     fn vshufw(&mut self, a: u32, sel: u32, hi: bool) -> u32 { self.rec.vshufw(a, sel, hi) }

@@ -410,6 +410,39 @@ impl Builder for Tier0 {
         self.store(X_C, s);
         s
     }
+    fn vdpp(&mut self, a: u32, b: u32, imm: u32, ew: u32) -> u32 {
+        // fmul q2 = a*b; zero src-unmasked lanes (INS from wzr); faddp×N → sum broadcast
+        // to all lanes; zero dst-unmasked lanes. imm is compile-time-per-decode (Ib), so
+        // the INS-zero emissions are conditional at codegen-time = optimal per call-site.
+        let s = self.slot(IlType::V128);
+        self.load2(X_A, X_C, a);
+        self.enc.ins_vd_x(0, 0, X_A); self.enc.ins_vd_x(0, 1, X_C);
+        self.load2(X_B, X_D, b);
+        self.enc.ins_vd_x(1, 0, X_B); self.enc.ins_vd_x(1, 1, X_D);
+        let (sz, nlanes) = if ew == 64 { (1u32, 2) } else { (0, 4) };
+        self.enc.fmul_v(2, 0, 1, sz);
+        // src-mask: zero lanes where imm[4+i]==0
+        for i in 0..nlanes {
+            if imm & (1 << (4+i)) == 0 {
+                if ew == 64 { self.enc.ins_vd_x(2, i, 31); }  // xzr → .D[i]
+                else { self.enc.ins_vs_w(2, i, 31); }         // wzr → .S[i]
+            }
+        }
+        // horizontal sum → broadcast: faddp v2,v2,v2 twice for .4S (once for .2D).
+        // .4S: [a,b,c,d]→[a+b,c+d,a+b,c+d]→[(a+b)+(c+d)]×4. .2D: [a,b]→[a+b,a+b].
+        self.enc.faddp_v(2, 2, 2, sz);
+        if ew != 64 { self.enc.faddp_v(2, 2, 2, sz); }
+        // dst-mask: zero output lanes where imm[i]==0
+        for i in 0..nlanes {
+            if imm & (1 << i) == 0 {
+                if ew == 64 { self.enc.ins_vd_x(2, i, 31); }
+                else { self.enc.ins_vs_w(2, i, 31); }
+            }
+        }
+        self.enc.umov_x_vd(X_A, 2, 0); self.enc.umov_x_vd(X_C, 2, 1);
+        self.store2(X_A, X_C, s);
+        s
+    }
     fn bswap(&mut self, a: u32) -> u32 {
         let ty = self.tys[a as usize];
         let w = match ty { IlType::I{width,..} => width, _ => panic!("bswap non-int") };
@@ -1030,21 +1063,18 @@ impl Builder for Tier0 {
 
     fn cast(&mut self, a: u32, to: IlType) -> u32 {
         let from = self.tys[a as usize];
-        // Own #135: cast(V128,V128) fell through to the 1-word int arm → hi-word
-        // LOST. My write_operand Mem-arm cast (@f16570f) made EVERY V128 mem-store
-        // go through cast → MOVDQA-to-mem wrote only lo-64 → memory corruption at
-        // ~234 shims → once-guard read garbage → contended-spin → PAUSE. Caught by
-        // MOVDQA-round-trip test + JIT regression 15.9M→234.
+        // Wide-identity fast-path: cast(V128,V128) previously fell through to the 1-word
+        // int arm → hi-word LOST. The write_operand Mem-arm cast made every V128 mem-store
+        // go through cast → MOVDQA-to-mem wrote only lo-64 → memory corruption. Caught by
+        // MOVDQA-round-trip test + a full-app regression.
         //
-        // Own #136: my first fix was full identity (from==to → return a). That
-        // regressed tier0-fuzz 3446→3435/11 on aarch64: the fall-through I→I arm
-        // MASKS to width<64, and some producers leave dirty bits above their
-        // declared width — cast(I32,I32) was cleaning them. Full-identity is
-        // semantically-correct but exposed the dirty producers (‡ they're the
-        // real bugs; a slot's bits should match its type — but that's a whole
-        // audit, not tonight). NARROW the fast-path to what #135 actually needs:
-        // wide→wide identity (V128/I128/U128 = 2-slot values the 1-word fall-
-        // through can't handle). Narrow same-type still masks (belt+braces).
+        // NOT full identity: the fall-through I→I arm MASKS to width<64, and some aarch64
+        // producers leave dirty bits above their declared width — cast(I32,I32) was
+        // cleaning them. Full-identity is semantically-correct but exposes the dirty
+        // producers (‡ they're the real bugs; a slot's bits should match its type — but
+        // that's a whole audit). NARROW the fast-path to wide→wide only (V128/I128/U128 =
+        // 2-slot values the 1-word fall-through can't handle). Narrow same-type still
+        // masks (belt+braces).
         if from == to && Self::is_wide(to) { return a; }
         let s = self.slot(to);
         if Self::is_wide(to) && !Self::is_wide(from) {

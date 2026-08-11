@@ -845,9 +845,9 @@
 ; PAUSE = F3 90 — a distinct instruction (spin-wait hint), not rep+nop.
 ; PAUSE (F3 90): spin-wait hint to the CPU. Architectural no-op; the hint
 ; matters for HT-yield/power on real silicon, not for correctness. Was always
-; intrinsic (die-loud) — surfaced only when own #135's V128-mem corruption
-; sent early boot into a contended once-spin @0x14025fa49 that clean runs
-; never reach. tier-0 could emit aarch64 YIELD (0xD503203F) but no-op is fine.
+; intrinsic (die-loud) — surfaced only when a V128-mem-store regression sent
+; early boot into a contended once-spin that clean runs never reach. tier-0
+; could emit aarch64 YIELD (0xD503203F) but no-op is fine.
 (instruction PAUSE ()
     "pause"
     (block))

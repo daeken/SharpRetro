@@ -139,6 +139,11 @@ pub trait Builder {
     /// ‡ x86 BSWAP with 16-bit operand-size = SDM-undefined (real hw typically
     /// zeroes); .isa's Zv can encode it via 66-prefix but no game emits it.
     fn bswap(&mut self, a: Self::Val) -> Self::Val;
+    /// DPPS/DPPD: masked dot-product. imm[7:4] (or [5:4] for ew=64) selects which
+    /// lanes participate in the multiply (unmasked → treat as 0); the sum of those
+    /// products is broadcast to lanes selected by imm[3:0] (or [1:0]); unselected
+    /// output lanes = 0. The vec3-normalize idiom: dpps x,x,0x7F = |xyz|² in all lanes.
+    fn vdpp(&mut self, a: Self::Val, b: Self::Val, imm: u32, ew: u32) -> Self::Val;
 
     // ── compares (LT/LTE/EQ/NE/GTE/GT — signedness from operand IlType) → Bool ──
     fn eq(&mut self, a: Self::Val, b: Self::Val) -> Self::Val;
