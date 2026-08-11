@@ -414,10 +414,16 @@
 ; found 103× CF divergences at the CRT security-cookie ROR (0x1929da1).
 (instruction ROR (lval count)
     "ror $lval, $count"
+    ; CF = MSB of result (= bit-0 rotated in). (bitwidth tval) where tval is
+    ; an mlet-bound value emits op_w (=32 prefix-less) not the value's type
+    ; width → shr(0x80,31)=0 instead of shr(0x80,7)=1 for ror al,1. Silicon
+    ; sweep fire-1 caught it. (bitwidth lval) → ops[0].width() = correct.
+    ; ‡ RustLiftGen bug: (bitwidth <mlet-var>) can't infer type-width, falls
+    ;   back to op_w. Workaround here; the emit-tier fix is separate.
     (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) tval (rotr lval c))
         (= lval tval)
         (if (!= c 0)
-            (= CF (>> tval (- (bitwidth tval) 1))))))
+            (= CF (& (>> tval (- (bitwidth lval) 1)) 1)))))
 (encoding ROR (Eb Ib) (0xC0 /1))
 (encoding ROR (Ev Ib) (0xC1 /1))
 (encoding ROR (Eb 1)  (0xD0 /1))

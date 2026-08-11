@@ -340,10 +340,24 @@ public class RustLiftGen {
                 Emit($"}};");
                 Emit("bd.reg_write(GPR, 0, _lo);");
                 Emit("bd.reg_write(GPR, 2, _hi);");
-                // CF=OF = hi≠0 (unsigned) or hi≠sext(lo>>op_w-1, op_w) (signed — meaning the
-                // full product doesn't fit in op_w). ‡ v1: unsigned form only; IMUL-1arg later.
-                Emit($"let _z = bd.literal({wu}, 0);");
-                Emit($"let _hnz = bd.ne(_hi, _z);");
+                // CF=OF: unsigned = hi≠0. Signed = hi ≠ asr(lo, op_w−1) — i.e. the
+                // full product doesn't fit in op_w signed (hi should be sign-fill of
+                // lo). Silicon sweep fire-1: imul r14d w/ eax=2 r14d=0x55667788 →
+                // product=0xAACCEF10 = negative in i32, hi=0 ≠ asr(lo,31)=−1 → OF=1.
+                // Was: unsigned check for both → IMUL1 OF=0 when silicon says 1.
+                if (signed) {
+                    // No bd.sar — bd.shr on a signed-typed value does arithmetic
+                    // shift (interp's shr matches on I{signed:true} → sext+>>).
+                    var ws = $"IlType::I{{signed:true, width:op_w as u8}}";
+                    Emit($"let _los = bd.cast(_lo, {ws});");
+                    Emit($"let _s1 = bd.literal({ws}, (op_w - 1) as u128);");
+                    Emit($"let _sf = bd.shr(_los, _s1);");
+                    Emit($"let _sfu = bd.cast(_sf, {wu});");
+                    Emit($"let _hnz = bd.ne(_hi, _sfu);");
+                } else {
+                    Emit($"let _z = bd.literal({wu}, 0);");
+                    Emit($"let _hnz = bd.ne(_hi, _z);");
+                }
                 Emit($"if live_flags & 0x1 != 0 {{ bd.reg_write(EFLAGS, 0, _hnz); }}");
                 Emit($"if live_flags & 0x800 != 0 {{ bd.reg_write(EFLAGS, 11, _hnz); }}");
                 FlagsWritten |= 0x801;
