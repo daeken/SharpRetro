@@ -189,6 +189,11 @@ fn mnem_exec_skip(mnem: &str) -> Option<&'static str> {
         // div/idiv: divisor=0 or INT_MIN/-1 → #DE. ‡ phase-2 fault-record
         // will let these through with a signal-catch; v1 skips.
         "DIV" | "IDIV" => Some("div-fault-v1"),
+        // MXCSR not modeled (STMXCSR stores constant 0x1F80; LDMXCSR from a
+        // pattern-page #GPs on silicon — reserved bits set). MXCSR isn't in
+        // the compared state, so the row proves nothing. Was the p3-full
+        // 525-reject residue (mem-form LDMXCSR of 0xCCCCCCCC).
+        "LDMXCSR" | "STMXCSR" => Some("mxcsr-unmodeled"),
         // deliberate fault / trap
         "INT" | "INT3" | "INTO" | "UD0" | "UD1" | "UD2" | "ICEBP" => Some("trap"),
         // privileged / host-query / model-specific
