@@ -72,6 +72,31 @@ fn main() {
             0x90,                   // nop
             0xC3,                   // ret
         ];
+        // guardloop: the TIER-2 discriminator — a hot loop whose body crosses
+        // 2 rare-taken guard-exits (Jcc → error stubs) + a rel-JMP hop. Block-
+        // grain: 4 blocks chained per iteration (each guard ends a block).
+        // Trace-grain: ONE region (guards = side-exit conds, JMP followed) →
+        // the tier-1 passes see the whole loop body = cross-block SVN/DSE.
+        // eax = accumulator, ecx = counter, edx = guard operand (never 0x7777).
+        let guardloop: &[u8] = &[
+            0xB8, 0,0,0,0,             // @0  mov eax, 0
+            0xB9, 0x40,0x42,0x0F,0,    // @5  mov ecx, 1_000_000
+            0xBA, 0x11,0x11,0x22,0,    // @10 mov edx, 0x00221111 (> 1M: guard-2 never fires)
+            // loop @15:
+            0x01, 0xD0,                // @15 add eax, edx
+            0x81, 0xFA, 0x77,0x77,0,0, // @17 cmp edx, 0x7777
+            0x74, 0x12,                // @23 je err1 (@43)   — never taken
+            0x05, 0x03,0,0,0,          // @25 add eax, 3
+            0x39, 0xCA,                // @30 cmp edx, ecx
+            0x74, 0x0A,                // @32 je err2 (@44)   — never taken
+            0xEB, 0x02,                // @34 jmp cont (@38)  — followed edge
+            0xCC, 0xCC,                // @36 (unreached pad)
+            0xFF, 0xC9,                // @38 cont: dec ecx
+            0x75, 0xE5,                // @40 jnz loop (@15)  — back-edge
+            0xCC,                      // @42 int3 (loop done)
+            0xCC,                      // @43 err1: int3
+            0xCC,                      // @44 err2: int3
+        ];
         // fib(N) with call/ret — exercises push/pop/call/ret stack-mem.
         let fib: &[u8] = &[
             // main: mov edi, 12; call fib; int3
@@ -94,6 +119,7 @@ fn main() {
             Some("sum10") | None => sum10,
             Some("fib") => fib,
             Some("icloop") => icloop,
+            Some("guardloop") => guardloop,
             Some(hex) => Box::leak(hex.split(',')
                 .map(|s| u8::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap())
                 .collect::<Vec<_>>().into_boxed_slice()),
@@ -204,6 +230,29 @@ fn main() {
                         t0.branch(t, false);
                     }
                     (cur, stop_reason)
+                }
+                // TIER-2 REGION (the BlockCache promotion hook): trace-compile.
+                // Follows rel-JMPs + Jcc fallthroughs (taken arms = side-exit
+                // conds), stops at back-edges/CALL/RET/indirect. The tier-1
+                // passes then see the whole region = cross-block SVN/DSE/sink.
+                fn compile_trace<BB: sharpretro_jit::Builder<Val = u32>>(&self, b: &mut BB, pc: u64, _mode: u32)
+                    -> Option<(u64, u64)>
+                {
+                    use xfusion_recomp::trace::{collect_trace_at, trace_liveness_at, lift_trace};
+                    let hb = self.host_base;
+                    let (tinsns, tend, _tbr) = unsafe {
+                        collect_trace_at(hb, pc, XMode::Bits64, 256, &|_| true) };
+                    // A trace that followed no edges = just a block — decline,
+                    // block-grain is equivalent and cheaper to maintain.
+                    if !tinsns.iter().any(|t| t.followed.is_some()) { return None; }
+                    let per = unsafe { trace_liveness_at(hb, &tinsns, XMode::Bits64, true) };
+                    if !lift_trace(b, &tinsns, &per, XMode::Bits64) {
+                        // elide-miss (non-tracing builder) — decline; the
+                        // promotion path treats None as "don't retry".
+                        return None;
+                    }
+                    let hull_hi = tinsns.iter().map(|t| t.next_pc).max().unwrap_or(tend);
+                    Some((tend, hull_hi))
                 }
             }
 

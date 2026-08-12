@@ -16,6 +16,10 @@ use std::collections::HashMap;
 /// the given `Tier0`. Returns (n_insns_compiled, block_end_pc). The generated
 /// `recompiler.rs` supplies this via `recompile_one` in a loop; this trait keeps
 /// BlockCache arch-neutral.
+/// Tier-2 promotion threshold: a DISPATCHED block whose exec_count crosses
+/// this gets recompiled as a trace region via compile_trace.
+const T2_THRESHOLD: u32 = 50;
+
 pub trait BlockCompiler {
     /// Read one insn word at `pc` from guest memory (for the driver's stop-check).
     fn fetch(&self, pc: u64) -> u32;
@@ -34,6 +38,15 @@ pub trait BlockCompiler {
     fn last_peek_range(&self) -> (u64, u64) { (0, 0) }
     /// Is this insn a driver-level stop? (BRK/HLT/etc — the "return to host" signal.)
     fn is_stop(&self, insn: u32) -> bool;
+    /// TIER-2 REGION hook: compile a TRACE region starting at `pc` into `b`
+    /// (follow rel-JMPs + Jcc-fallthroughs; side-exits as cond{branch}; stop
+    /// at back-edges/CALL/RET/indirect). Return None (default) = no trace
+    /// support / trace not profitable at this pc → caller uses compile_block.
+    /// Some((end_pc, guest_hi)) = region compiled; guest_hi = highest guest
+    /// byte the region covers (its insns span [pc, guest_hi) — NOT contiguous
+    /// necessarily, but invalidate uses the hull, conservative).
+    fn compile_trace<B: Builder<Val = u32>>(&self, _b: &mut B, _pc: u64, _mode: u32)
+        -> Option<(u64, u64)> { None }
     /// Called at each driver-loop iteration BEFORE is_stop / compile-or-lookup.
     /// If `pc` is a native-call target (in the enumerated `native_call_targets` set
     /// under shared-mode / mem_base=0), the impl: calls the native fn (win64→AAPCS
@@ -89,6 +102,8 @@ pub struct BlockCache {
     link: bool,
     /// Compile tier-1 with tier-0 fallback? (XF_T1=0 → tier-0 only.)
     use_t1: bool,
+    /// TIER-2 eager trace-regions (XF_T2=1; default off pending game-scale A/B).
+    t2: bool,
     /// pcs awaited by already-compiled predecessors: target_key →
     /// [(pred_key, slot_off, pred_epilogue)].
     pending_links: std::collections::HashMap<(u64, u32), Vec<((u64, u32), usize, u64)>>,
@@ -119,6 +134,7 @@ impl BlockCache {
                use_t1: std::env::var("XF_T1").map(|v| v != "0").unwrap_or(true)
                        && !std::env::var("XF_WATCH").is_ok()
                        && !std::env::var("XF_RR").is_ok(),
+               t2: std::env::var("XF_T2").map(|v| v == "1").unwrap_or(false),
                pending_links: Default::default(), ic_from: Default::default(),
                last_exiter: Box::new(0) }
     }
@@ -173,6 +189,85 @@ impl BlockCache {
         (t0.finalize(), end_pc, 0)
     }
 
+    /// Insert a compiled block into the map with full link bookkeeping —
+    /// (a) patch the new block's link-sites at already-compiled targets,
+    /// (b) register the rest as pending, (c) serve predecessors waiting on
+    /// this pc. Shared by the compile-miss path and tier-2 promotion.
+    fn insert_linked(&mut self, pc: u64, mode: u32, block: CompiledBlock,
+                     guest_range: (u64, u64), peek: (u64, u64), tier: u8)
+    {
+        if self.link {
+            let new_key = (pc, mode);
+            let mut fwd: Vec<((u64, u32), usize, u64)> = vec![];   // edges FROM new
+            // (link_sites only exist on tier-1 blocks; body_off!=0 for them.)
+            for &(off, tgt) in &block.link_sites {
+                if tgt == pc {
+                    block.patch_link(off, block.body_addr());
+                    fwd.push((new_key, off, block.epilogue_addr));
+                } else if let Some(e) = self.map.get(&(tgt, mode)) {
+                    // CHAINABILITY GUARD: only tier-1 blocks (body_off != 0)
+                    // can be chain TARGETS — a tier-0 block has no uniform
+                    // frame; jumping into it with a tier-1 frame live corrupts
+                    // the stack (found the hard way: branchbench's imul block
+                    // bailed to tier-0, got linked into, core-dumped).
+                    if e.block.body_off != 0 {
+                        block.patch_link(off, e.block.body_addr());
+                        self.map.get_mut(&(tgt, mode)).unwrap().linked_from
+                            .push((new_key, off, block.epilogue_addr));
+                    }
+                } else {
+                    self.pending_links.entry((tgt, mode)).or_default()
+                        .push((new_key, off, block.epilogue_addr));
+                }
+            }
+            let mut entry = Entry {
+                block, guest_range, peek_range: peek,
+                linked_from: fwd, exec_count: 0, tier,
+            };
+            // (c) predecessors waiting on this pc.
+            if entry.block.body_off != 0 {
+                if let Some(waiters) = self.pending_links.remove(&new_key) {
+                    for (pred_key, off, pred_epi) in waiters {
+                        if let Some(pe) = self.map.get(&pred_key) {
+                            pe.block.patch_link(off, entry.block.body_addr());
+                            entry.linked_from.push((pred_key, off, pred_epi));
+                        }
+                    }
+                }
+            }
+            // (tier-0 new block: waiters stay pending forever — their slots
+            // still point at their own epilogues = correct unlinked behavior;
+            // a future invalidate+recompile at this pc may serve them.)
+            self.map.insert(new_key, entry);
+        } else {
+            self.map.insert((pc, mode), Entry {
+                block, guest_range, peek_range: peek,
+                linked_from: vec![], exec_count: 0, tier,
+            });
+        }
+    }
+
+    /// TIER-2 promotion: try compiling a TRACE region at `pc` via the
+    /// compiler's compile_trace hook (tier-1 pipeline, region-sized input).
+    /// None = hook declined (no trace support / unprofitable / t1 bail).
+    fn compile_trace_one<C: BlockCompiler>(&self, compiler: &C, pc: u64, mode: u32)
+        -> Option<(CompiledBlock, u64, u64)>
+    {
+        if !self.use_t1 { return None; }
+        let layout = self.layout;
+        let cell_addr = &*self.last_exiter as *const u64 as u64;
+        let prev_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(|_| {}));
+        let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let mut t1 = crate::tier1::Tier1::with_layout(layout);
+            t1.exit_ident = Some((cell_addr, pc));
+            compiler.compile_trace(&mut t1, pc, mode)
+                .map(|(end_pc, hull_hi)| (t1.compile(), end_pc, hull_hi))
+        }));
+        std::panic::set_hook(prev_hook);
+        r.ok().flatten()
+    }
+
     /// Run guest code from `state[OFF_PC]` until a stop-insn or `max_execs` blocks.
     /// Returns the reason.
     pub fn run<C: BlockCompiler>(&mut self, compiler: &C, state: &mut [u64],
@@ -195,6 +290,31 @@ impl BlockCache {
                 return RunResult::Stop { pc };
             }
             if !self.map.contains_key(&(pc, mode)) {
+                // TIER-2 EAGER (XF_T2=1): try a trace REGION first — the hook
+                // declines (None) when the trace followed no edges (single
+                // block = block-grain equivalent) or tier-1 bails inside it.
+                // Eager-not-promoted because under block-linking hot blocks
+                // stop DISPATCHING (the loop lives in the chain) — exec_count
+                // freezes at ~2, so a dispatch-count trigger can't see the
+                // hottest code (the IC chain-tail lesson, hotness edition).
+                // The dispatch-count promotion below still serves IC-miss-
+                // heavy blocks (polymorphic indirect targets keep returning
+                // to the driver).
+                if self.t2 {
+                    if let Some((block, end_pc, hull_hi)) = self.compile_trace_one(compiler, pc, mode) {
+                        let peek = compiler.last_peek_range();
+                        if block.n_slots as usize + 1 > self.spill.len() {
+                            self.spill.resize(block.n_slots as usize + 1, 0);
+                        }
+                        self.n_compiles += 1;
+                        if std::env::var("XF_DBG").is_ok() {
+                            eprintln!("[cache] T2-EAGER pc={pc:#x} region=[{pc:#x},{hull_hi:#x}) end={end_pc:#x}");
+                        }
+                        self.insert_linked(pc, mode, block, (pc, hull_hi.max(end_pc)), peek, 2);
+                    }
+                }
+            }
+            if !self.map.contains_key(&(pc, mode)) {
                 let (block, end_pc, tier) = self.compile_one(compiler, pc, mode);
                 let peek = compiler.last_peek_range();
                 // Grow the shared spill area if this block needs more.
@@ -203,65 +323,42 @@ impl BlockCache {
                 }
                 self.n_compiles += 1;
                 if std::env::var("XF_DBG").is_ok() { eprintln!("[cache] compile pc={:#x} tier={} sites={:?} ic={}", pc, tier, block.link_sites, block.ic_sites.len()); }
-                // ── BLOCK-LINKING cross-patch ─────────────────────────────
-                // (a) NEW block's link-sites aimed at already-compiled pcs
-                //     (incl. itself) → patch to their bodies now.
-                // (b) Register the rest in pending_links so future compiles
-                //     patch them lazily.
-                // (c) Serve pending_links aimed at THIS pc: patch each
-                //     registered predecessor slot to our body.
-                // Reverse-index (linked_from) records every live edge for
-                // invalidate()'s unlink pass.
-                if self.link {
-                    let new_key = (pc, mode);
-                    let mut fwd: Vec<((u64, u32), usize, u64)> = vec![];   // edges FROM new
-                    // (link_sites only exist on tier-1 blocks; body_off!=0 for them.)
-                    for &(off, tgt) in &block.link_sites {
-                        if tgt == pc {
-                            block.patch_link(off, block.body_addr());
-                            fwd.push((new_key, off, block.epilogue_addr));
-                        } else if let Some(e) = self.map.get(&(tgt, mode)) {
-                            // CHAINABILITY GUARD: only tier-1 blocks (body_off
-                            // != 0) can be chain TARGETS — a tier-0 block has
-                            // no uniform frame; jumping into it with a tier-1
-                            // frame live corrupts the stack (found the hard
-                            // way: branchbench's imul block bailed to tier-0,
-                            // got linked into, core-dumped @garbage pc).
-                            if e.block.body_off != 0 {
-                                block.patch_link(off, e.block.body_addr());
-                                self.map.get_mut(&(tgt, mode)).unwrap().linked_from
-                                    .push((new_key, off, block.epilogue_addr));
-                            }
-                        } else {
-                            self.pending_links.entry((tgt, mode)).or_default()
-                                .push((new_key, off, block.epilogue_addr));
-                        }
+                self.insert_linked(pc, mode, block, (pc, end_pc), peek, tier);
+            }
+            // ── TIER-2 PROMOTION ──────────────────────────────────────
+            // A dispatched block that stays hot (exec_count crossing the
+            // threshold) gets recompiled as a TRACE REGION via the compiler's
+            // compile_trace hook (rel-JMP/Jcc-fallthrough followed, side-
+            // exits as conds, back-edge stop → the tier-1 passes see the
+            // whole region = cross-block SVN/DSE/sink for free). Linked-into
+            // chain members never dispatch → never promote, but their chain
+            // HEAD does, and the trace from the head covers the path. tier=2
+            // marks promoted entries (no re-promotion; tier-3 = same hook,
+            // bigger budget + more passes, promoted from tier-2 the same way).
+            let t2_due = {
+                let e = &self.map[&(pc, mode)];
+                e.tier == 1 && e.exec_count >= T2_THRESHOLD
+            };
+            if t2_due {
+                if let Some((block, end_pc, hull_hi)) = self.compile_trace_one(compiler, pc, mode) {
+                    let peek = compiler.last_peek_range();
+                    // Drop the old entry through invalidate (unlinks preds →
+                    // their slots fall back to epilogues; scrubs ICs holding
+                    // the old body; removes the map row) then insert the
+                    // region through the normal linking path.
+                    self.invalidate(pc, pc + 1);
+                    if block.n_slots as usize + 1 > self.spill.len() {
+                        self.spill.resize(block.n_slots as usize + 1, 0);
                     }
-                    let mut entry = Entry {
-                        block, guest_range: (pc, end_pc), peek_range: peek,
-                        linked_from: fwd, exec_count: 0, tier,
-                    };
-                    // (c) predecessors waiting on this pc.
-                    if entry.block.body_off != 0 {
-                        if let Some(waiters) = self.pending_links.remove(&new_key) {
-                            for (pred_key, off, pred_epi) in waiters {
-                                if let Some(pe) = self.map.get(&pred_key) {
-                                    pe.block.patch_link(off, entry.block.body_addr());
-                                    entry.linked_from.push((pred_key, off, pred_epi));
-                                }
-                            }
-                        }
+                    self.n_compiles += 1;
+                    if std::env::var("XF_DBG").is_ok() {
+                        eprintln!("[cache] T2-PROMOTE pc={pc:#x} region=[{pc:#x},{hull_hi:#x}) end={end_pc:#x}");
                     }
-                    // (tier-0 new block: waiters stay pending forever — their
-                    // slots still point at their own epilogues = correct
-                    // unlinked behavior; a future invalidate+recompile at this
-                    // pc may serve them as tier-1.)
-                    self.map.insert(new_key, entry);
+                    self.insert_linked(pc, mode, block, (pc, hull_hi.max(end_pc)), peek, 2);
                 } else {
-                    self.map.insert((pc, mode), Entry {
-                        block, guest_range: (pc, end_pc), peek_range: peek,
-                        linked_from: vec![], exec_count: 0, tier,
-                    });
+                    // Hook declined (no trace support / t1-bail inside the
+                    // region). Mark so we don't re-try every dispatch.
+                    self.map.get_mut(&(pc, mode)).unwrap().exec_count = 0;
                 }
             }
             let entry = self.map.get_mut(&(pc, mode)).unwrap();

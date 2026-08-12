@@ -34,11 +34,17 @@ const PEEK_INSNS: usize = 12;
 /// `pc` must be readable guest memory (identity-mapped). Caller guarantees
 /// this the same way the block compiler does for its own decode.
 pub unsafe fn entry_liveness(pc: u64, mode: XMode) -> u32 {
+    entry_liveness_at(0, pc, mode)
+}
+
+/// entry_liveness with a host-base (guest bytes at `base + pc`; base=0 =
+/// identity-map, the bench form).
+pub unsafe fn entry_liveness_at(base: u64, pc: u64, mode: XMode) -> u32 {
     let mut resolved_dead = 0u32;   // bits proven overwritten-before-read
     let mut resolved_read = 0u32;   // bits proven read first
     let mut cur = pc;
     for _ in 0..PEEK_INSNS {
-        let bytes = std::slice::from_raw_parts(cur as *const u8, 15);
+        let bytes = std::slice::from_raw_parts((base + cur) as *const u8, 15);
         if bytes[0] == 0xCC { break; }  // stop-insn: nothing beyond reads flags
         let d = match decode_insn(bytes, mode) { Some(d) => d, None => return FLAGS_ALL_LIVE };
         let did = d.def_id as usize;
@@ -69,17 +75,22 @@ pub unsafe fn entry_liveness(pc: u64, mode: XMode) -> u32 {
 /// Successor pcs must be readable guest memory (identity-mapped), same
 /// contract as `entry_liveness`.
 pub unsafe fn block_exit_liveness(last_def_id: u32, imm0: i64, next_pc: u64, mode: XMode) -> u32 {
+    block_exit_liveness_at(0, last_def_id, imm0, next_pc, mode)
+}
+
+/// block_exit_liveness with a host-base (see entry_liveness_at).
+pub unsafe fn block_exit_liveness_at(base: u64, last_def_id: u32, imm0: i64, next_pc: u64, mode: XMode) -> u32 {
     const JMP_REL32: u32 = 236;
     const JMP_REL8: u32 = 237;
     if last_def_id == JMP_REL32 || last_def_id == JMP_REL8 {
-        return entry_liveness((next_pc as i64 + imm0) as u64, mode);
+        return entry_liveness_at(base, (next_pc as i64 + imm0) as u64, mode);
     }
     let m = DEF_MNEMONICS.get(last_def_id as usize).copied().unwrap_or("");
     // Jcc family: mnemonic starts with 'J' and it's not one of the JMP defs
     // (all Jcc are rel-only in x86 — no indirect Jcc exists, so this is safe).
     if m.starts_with('J') && !m.starts_with("JMP") {
-        let t = entry_liveness((next_pc as i64 + imm0) as u64, mode);
-        let f = entry_liveness(next_pc, mode);
+        let t = entry_liveness_at(base, (next_pc as i64 + imm0) as u64, mode);
+        let f = entry_liveness_at(base, next_pc, mode);
         return t | f;
     }
     FLAGS_ALL_LIVE

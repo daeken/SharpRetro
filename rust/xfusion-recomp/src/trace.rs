@@ -28,7 +28,7 @@
 use sharpretro_jit::{Builder, IlType};
 use crate::decode::{DecodedInsn, XMode};
 use crate::disassembler::{decode_insn, DEF_MNEMONICS};
-use crate::exit_live::{entry_liveness, block_exit_liveness};
+use crate::exit_live::{entry_liveness_at, block_exit_liveness_at};
 use crate::lift::{lift_one, FLAGS_ALL_LIVE, DEF_FLAGS_MASK, DEF_FLAGS_READ};
 
 const JMP_REL32: u32 = 236;
@@ -64,13 +64,23 @@ pub unsafe fn collect_trace(pc: u64, mode: XMode, max_insns: usize,
                             fetch_ok: &dyn Fn(u64) -> bool)
     -> (Vec<TraceInsn>, u64, bool)
 {
+    collect_trace_at(0, pc, mode, max_insns, fetch_ok)
+}
+
+/// collect_trace with a host-base: guest bytes live at `base + pc` (the
+/// --run-x64 driver maps the program at a nonzero host offset; the bench's
+/// identity-map passes base=0 via the wrapper above).
+pub unsafe fn collect_trace_at(base: u64, pc: u64, mode: XMode, max_insns: usize,
+                               fetch_ok: &dyn Fn(u64) -> bool)
+    -> (Vec<TraceInsn>, u64, bool)
+{
     let mut insns: Vec<TraceInsn> = vec![];
     let mut seen = std::collections::HashSet::new();
     let mut cur = pc;
     let mut branched = false;
     while insns.len() < max_insns {
         if !fetch_ok(cur) { break; }
-        let bytes = std::slice::from_raw_parts(cur as *const u8, 15);
+        let bytes = std::slice::from_raw_parts((base + cur) as *const u8, 15);
         if bytes[0] == 0xCC { break; }
         let Some(d) = decode_insn(bytes, mode) else { break };
         let next = cur + d.len as u64;
@@ -126,12 +136,17 @@ pub unsafe fn collect_trace(pc: u64, mode: XMode, max_insns: usize,
 /// path must materialize). Exit liveness at the trace end = the usual
 /// block_exit_liveness rules (or ALL-LIVE when disabled/no-branch).
 pub unsafe fn trace_liveness(insns: &[TraceInsn], mode: XMode, exitlive: bool) -> Vec<u32> {
+    trace_liveness_at(0, insns, mode, exitlive)
+}
+
+/// trace_liveness with a host-base (guest bytes at `base + pc`).
+pub unsafe fn trace_liveness_at(base: u64, insns: &[TraceInsn], mode: XMode, exitlive: bool) -> Vec<u32> {
     let n = insns.len();
     let mut per = vec![0u32; n];
     if n == 0 { return per; }
     let last = &insns[n - 1];
     let mut live = if exitlive {
-        block_exit_liveness(last.d.def_id, last.d.imm0, last.next_pc, mode)
+        block_exit_liveness_at(base, last.d.def_id, last.d.imm0, last.next_pc, mode)
     } else { FLAGS_ALL_LIVE };
     for i in (0..n).rev() {
         let t = &insns[i];
@@ -139,7 +154,7 @@ pub unsafe fn trace_liveness(insns: &[TraceInsn], mode: XMode, exitlive: bool) -
         if t.followed.is_some() && is_jcc(t.d.def_id) {
             // Side-exit: its target's entry liveness joins the flow.
             let tgt = (t.next_pc as i64 + t.d.imm0) as u64;
-            let exit_live = if exitlive { entry_liveness(tgt, mode) } else { FLAGS_ALL_LIVE };
+            let exit_live = if exitlive { entry_liveness_at(base, tgt, mode) } else { FLAGS_ALL_LIVE };
             live |= exit_live;
         }
         per[i] = live;
