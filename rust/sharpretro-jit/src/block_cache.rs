@@ -447,10 +447,10 @@ mod tests {
     impl BlockCompiler for StubCompiler {
         fn fetch(&self, pc: u64) -> u32 { if pc >= 0x1010 { 0xD4200000 } else { 0xD503201F } }
         fn is_stop(&self, insn: u32) -> bool { insn == 0xD4200000 }
-        fn compile_block(&self, t0: &mut Tier0, pc: u64, _: u32) -> (usize, StopReason) {
-            let t = t0.literal(IlType::U64, (pc + 4) as u128);
-            t0.branch(t, false);
-            (1, StopReason::Branched)
+        fn compile_block<B: Builder<Val = u32>>(&self, b: &mut B, pc: u64, _: u32) -> (u64, StopReason) {
+            let t = b.literal(IlType::U64, (pc + 4) as u128);
+            b.branch(t, false);
+            (pc + 4, StopReason::Branched)
         }
     }
     #[test]

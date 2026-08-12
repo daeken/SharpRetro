@@ -16,3 +16,4 @@ pub mod lift;
 pub mod sweep_defs;
 pub mod sweep;
 pub mod exit_live;
+pub mod trace;

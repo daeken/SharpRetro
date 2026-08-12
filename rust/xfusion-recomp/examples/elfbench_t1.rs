@@ -231,6 +231,32 @@ fn main() {
             fn compile_block<BB: sharpretro_jit::Builder<Val = u32>>(
                 &self, b: &mut BB, pc: u64, _mode: u32) -> (u64, StopReason)
             {
+                // TIER-2 TRACE arm (XF_TRACE=1): trace-compile — "a trace is
+                // just a bigger block". Follows rel-JMPs + Jcc fallthroughs
+                // (taken arms = side-exits), stops at back-edges/CALL/RET.
+                // Non-tracing builders (tier-0) return false from take_elided
+                // → lift_trace fails → block-grain fallback below.
+                if std::env::var("XF_TRACE").map(|v| v != "0").unwrap_or(false) {
+                    use xfusion_recomp::trace::{collect_trace, trace_liveness, lift_trace};
+                    let el = std::env::var("XF_EXITLIVE").map(|v| v != "0").unwrap_or(true);
+                    let (tinsns, tend, _tbr) = unsafe {
+                        collect_trace(pc, XMode::Bits64, 256, &|_| true) };
+                    if tinsns.iter().any(|t| t.followed.is_some()) {
+                        let per = unsafe { trace_liveness(&tinsns, XMode::Bits64, el) };
+                        if lift_trace(b, &tinsns, &per, XMode::Bits64) {
+                            return (tend, StopReason::Branched);
+                        }
+                        // elide-miss (non-tracing builder / lift-shape change):
+                        // fall through to block-grain. ‡ b now holds partial
+                        // ops — for tier-1 catch_unwind path that's a fresh
+                        // builder per attempt; for tier-0 the recorder ISN'T
+                        // fresh… compile_one gives each tier a FRESH builder,
+                        // so falling through here would double-lift. Panic
+                        // instead: compile_one catches → tier-0 block-grain.
+                        panic!("trace: elide-miss — block-grain fallback");
+                    }
+                    // no followed edges (single-block trace) → block-grain.
+                }
                 // Decode-collect FIRST (block-grain), so backward flag-
                 // liveness + exit-peek run before any lift. Without this,
                 // per-insn ALL_LIVE forces imul-of's wide path → tier-1

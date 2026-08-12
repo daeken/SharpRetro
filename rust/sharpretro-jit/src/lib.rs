@@ -265,6 +265,14 @@ pub trait Builder {
     /// to append a fallthrough-branch.) Backends that don't track it return
     /// false (callers then always append — harmless duplicate exit).
     fn branched(&self) -> bool { false }
+    /// TRACE MODE (tier-2): while set, `branch()` to a literal target equal to
+    /// this pc is ELIDED (fallthrough — the trace continues there). Builders
+    /// that don't support tracing ignore it (default no-op) and
+    /// `trace_take_elided` returns false → callers fall back to block-grain.
+    fn set_trace_next(&mut self, _pc: Option<u64>) {}
+    /// After lifting one insn under trace mode: true iff its fallthrough
+    /// branch was elided (side-effect: un-latches `branched`). Clears.
+    fn trace_take_elided(&mut self) -> bool { false }
     /// If/else — both arms emitted. `then`/`else_` receive the same builder.
     /// Bounded-count loop: execute `body` `n` times. tier-0 emits an in-block
     /// loop (mov ctr,n; head: cbz ctr,exit; body; sub ctr,#1; b head; exit:).

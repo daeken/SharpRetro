@@ -103,6 +103,8 @@ impl Tier1 {
 impl Builder for Tier1 {
     type Val = u32;
     fn branched(&self) -> bool { self.rec.branched() }
+    fn set_trace_next(&mut self, pc: Option<u64>) { self.rec.set_trace_next(pc); }
+    fn trace_take_elided(&mut self) -> bool { self.rec.trace_take_elided() }
     fn ty_of(&self, v: u32) -> IlType { self.rec.ty_of(v) }
     fn literal(&mut self, ty: IlType, bits: u128) -> u32 { self.rec.literal(ty, bits) }
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 { self.rec.reg_read(f, idx, ty) }

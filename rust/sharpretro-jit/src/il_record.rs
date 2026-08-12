@@ -59,6 +59,14 @@ pub struct IlRecorder {
     /// eliminated by write-forwarding alone; rdi/rax write-then-read chains also
     /// forward. env XF_SVN=0 disables (for A/B measurement).
     reg_cache: HashMap<(u8, u32), (u32, IlType)>,
+    /// TRACE MODE (tier-2): branches to this guest pc are ELIDED — the trace
+    /// continues there, so the jump is a fallthrough. A Jcc whose taken-arm
+    /// exits becomes a pure side-exit; lifting proceeds past it. Sound because
+    /// reg_write always emits the store op (SVN forwards READS only) — state[]
+    /// is fully materialized on every surviving branch path.
+    trace_next: Option<u64>,
+    /// Set when a branch was elided (the insn WAS a branch that fell through).
+    pub trace_elided: bool,
     /// Snapshot stack for cond: (cache-at-CondBegin, regs-written-during-this-cond).
     /// CondBegin: push (clone, ∅). reg_write inside: mark written. CondElse:
     /// restore cache to snapshot (else-arm sees pre-cond, not then's writes).
@@ -80,6 +88,20 @@ impl IlRecorder {
         self.tys.clear(); self.reg_cache.clear();
     }
     pub fn branched(&self) -> bool { self.branched }
+    /// Enter/leave trace mode: branches targeting `pc` are elided (see field doc).
+    pub fn set_trace_next(&mut self, pc: Option<u64>) {
+        self.trace_next = pc; self.trace_elided = false;
+    }
+    /// Trace driver: after lifting one insn, if its fallthrough was elided the
+    /// insn CONTINUES the trace — returns true and un-latches branched() (the
+    /// taken-arm's real branch inside the cond is a side-exit, not a block
+    /// end). Clears the elide flag for the next insn.
+    pub fn trace_take_elided(&mut self) -> bool {
+        let e = self.trace_elided;
+        self.trace_elided = false;
+        if e { self.branched = false; }
+        e
+    }
     pub fn n_vals(&self) -> u32 { self.next }
 
     fn produce(&mut self, kind: IlOpKind, ty: IlType, args: &[u32], imm: u128) -> u32 {
@@ -253,6 +275,25 @@ impl Builder for IlRecorder {
         self.produce(IlOpKind::Ternary, ty, &[c, a, b], 0)
     }
     fn branch(&mut self, target: u32, link: bool) {
+        // TRACE ELIDE: an unconditional non-link branch whose target is a
+        // LITERAL equal to the trace's continue-pc is a fallthrough — emit
+        // nothing, don't latch branched. (Indirect/computed targets and
+        // BranchLink never elide.)
+        if !link {
+            if let Some(tn) = self.trace_next {
+                // val-id ≠ ops index (stmt ops don't produce). Scan back for
+                // the producing op — branch targets are made a few ops before
+                // their branch, so this is O(1) in practice.
+                let is_lit = self.ops.iter().rev()
+                    .find(|op| op.out == Some(target))
+                    .map_or(false, |op| matches!(op.kind, IlOpKind::Literal)
+                                        && op.imm == tn as u128);
+                if is_lit {
+                    self.trace_elided = true;
+                    return;
+                }
+            }
+        }
         self.stmt(if link { IlOpKind::BranchLink } else { IlOpKind::Branch },
                   IlType::U64, &[target], 0);
         self.branched = true;
@@ -313,6 +354,46 @@ impl Builder for IlRecorder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn trace_elide_branch() {
+        use crate::Builder;
+        // Trace mode: branch-to-literal(trace_next) elides; other branches don't.
+        let mut r = IlRecorder::new();
+        r.set_trace_next(Some(0x2000));
+        let cont = r.literal(IlType::U64, 0x2000);
+        let taken = r.literal(IlType::U64, 0x3000);
+        r.branch(cont, false);                    // ELIDED
+        assert!(!r.branched());
+        assert!(r.trace_take_elided());
+        r.branch(taken, false);                   // real
+        assert!(r.branched());
+        assert!(!r.trace_take_elided(), "real branch is not an elide (and take clears branched — call order matters in driver)");
+        // ops: 2 literals + 1 Branch (the elided one emitted nothing)
+        assert_eq!(r.ops.iter().filter(|o| matches!(o.kind, IlOpKind::Branch)).count(), 1);
+        // Jcc-shape: cond(c, then{branch 0x3000}, else{branch 0x2000}) → else empty
+        let mut r2 = IlRecorder::new();
+        r2.set_trace_next(Some(0x2000));
+        let c = r2.literal(IlType::Bool, 1);
+        let t2 = r2.literal(IlType::U64, 0x3000);
+        let n2 = r2.literal(IlType::U64, 0x2000);
+        r2.cond(c,
+            &mut |b| { b.branch(t2, false); },
+            &mut |b| { b.branch(n2, false); });
+        // then-arm's REAL branch latches branched (normal-mode semantics kept);
+        // the trace driver detects the elided fallthrough and un-latches:
+        assert!(r2.branched());
+        assert!(r2.trace_take_elided());
+        assert!(!r2.branched(), "take_elided must un-latch");
+        assert!(!r2.trace_take_elided(), "flag clears after take");
+        // link-branch to trace_next must NOT elide (CALL fallthrough ≠ trace-continue)
+        let mut r3 = IlRecorder::new();
+        r3.set_trace_next(Some(0x2000));
+        let l3 = r3.literal(IlType::U64, 0x2000);
+        r3.branch(l3, true);
+        assert!(r3.branched());
+        assert!(!r3.trace_elided);
+    }
 
     #[test]
     fn record_add_shape() {
