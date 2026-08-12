@@ -277,7 +277,7 @@ impl BlockCache {
             entry.exec_count = entry.exec_count.saturating_add(hot as u32);
             self.n_execs += hot as usize;
             self.n_execs += 1;
-            // ── INLINE-CACHE PATCH (sera ·1421) ───────────────────────────
+            // ── INLINE-CACHE PATCH ────────────────────────────────────────
             // The block at `pc` exited toward state[pc_idx] through the
             // epilogue (indirect-miss or unlinked const). If it HAS IC sites
             // and the destination is a compiled CHAINABLE block, install
@@ -525,5 +525,67 @@ mod tests {
         let before = c.n_compiles;
         c.run(&StubCompiler, &mut st[..], 0, 100);
         assert_eq!(c.n_compiles - before, 2);
+    }
+
+    // ── INLINE-CACHE discriminator (the never-hits mystery's instrument) ──
+    // Two blocks in an INDIRECT loop: A @0x1000 reads state[40] (the "return
+    // address register") and branches to it INDIRECTLY (no Literal trace →
+    // const_tgt=None → IC arm emits when XF_IC=1). B @0x2000 decrements a
+    // counter state[41] and branches CONST back to 0x1000. state[40]=0x2000
+    // always — so A's indirect target is the SAME every iteration = the IC's
+    // designed case. With IC working: after B compiles, A's exit installs
+    // (0x2000, B.body) and every later A-exit br's straight to B's body —
+    // driver dispatches collapse to ~the compile handful. IC broken: every
+    // A→B transition round-trips the driver (n_execs ≈ 2×iterations).
+    struct IndirectLoop;
+    impl BlockCompiler for IndirectLoop {
+        fn fetch(&self, pc: u64) -> u32 { if pc == 0x3000 { 0xD4200000 } else { 0 } }
+        fn is_stop(&self, insn: u32) -> bool { insn == 0xD4200000 }
+        fn compile_block<B: Builder<Val = u32>>(&self, b: &mut B, pc: u64, _: u32) -> (u64, StopReason) {
+            if pc == 0x1000 {
+                // A: indirect branch to state[40] (idx 40, file 0 = X-regs in
+                // the aarch64 layout — any u64 slot works for the test).
+                let t = b.reg_read(crate::RegFile(0), 40, IlType::U64);
+                b.branch(t, false);
+            } else {
+                // B @0x2000: ctr -= 1; branch to (ctr==0 ? 0x3000 : 0x1000) —
+                // CONST-traced? No: ternary isn't Literal-traced, so this is
+                // ALSO indirect. Fine — the discriminator only needs A's.
+                let c = b.reg_read(crate::RegFile(0), 41, IlType::U64);
+                let one = b.literal(IlType::U64, 1);
+                let c2 = b.sub(c, one);
+                b.reg_write(crate::RegFile(0), 41, c2);
+                let done = b.literal(IlType::U64, 0x3000);
+                let more = b.literal(IlType::U64, 0x1000);
+                let t = b.ternary(c2, more, done);   // c2!=0 → loop
+                b.branch(t, false);
+            }
+            (pc + 4, StopReason::Branched)
+        }
+    }
+
+    #[test]
+    fn ic_collapses_indirect_dispatch() {
+        if !cfg!(target_arch = "aarch64") { return; }
+        unsafe { std::env::set_var("XF_IC", "1"); }
+        let mut c = BlockCache::new();
+        c.use_t1 = true;
+        let mut st = [0u64; crate::tier0::STATE_WORDS];
+        st[33] = 0x1000;        // pc
+        st[40] = 0x2000;        // A's indirect target — constant
+        st[41] = 1000;          // loop count
+        let r = c.run(&IndirectLoop, &mut st[..], 0, 5000);
+        assert!(matches!(r, RunResult::Stop { pc: 0x3000 }), "r={r:?} pc={:#x}", st[33]);
+        assert_eq!(st[41], 0);
+        eprintln!("[ic-test] n_execs={} n_compiles={}", c.n_execs, c.n_compiles);
+        // 1000 iterations × 2 blocks. Without IC every transition is a
+        // driver dispatch: n_execs ≈ 2000. With A's IC hitting (A→B goes
+        // br-direct) the A→B leg vanishes from the driver: n_execs ≈ 1000.
+        // (B→A stays driver-side: B's ternary target is also indirect and
+        // ALSO gets an IC — if both hit, execs collapse toward ~single-digit
+        // because the whole loop lives in JIT'd code.)
+        assert!(c.n_execs < 1500,
+            "IC never hit: n_execs={} (≈2/iter = every transition driver-dispatched)", c.n_execs);
+        unsafe { std::env::remove_var("XF_IC"); }
     }
 }

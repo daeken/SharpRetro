@@ -53,6 +53,25 @@ fn main() {
             0x7C, 0xF8,             // jl loop  (rel8 = -8)
             0xCC,                   // int3
         ];
+        // icloop: call/ret ×1M — the IC discriminator (RET's indirect branch
+        // to a CONSTANT return address = the inline-cache's designed case).
+        // ecx counts down from 1,000,000; each iter CALLs a leaf that RETs.
+        // IC working: the RET-block's exit installs (ret-addr → caller-body)
+        // once, then every later transition is br-direct = n_execs collapses
+        // to the compile handful. IC broken: n_execs ≈ 2M (every RET + every
+        // loop-branch round-trips the driver... loop-branch is rel8=const so
+        // links; the RET leg is the measured one → n_execs ≈ 1M+const).
+        let icloop: &[u8] = &[
+            0xB9, 0x40,0x42,0x0F,0, // mov ecx, 1_000_000
+            // loop @+5:
+            0xE8, 0x05,0,0,0,       // call +5 → leaf @+15
+            0xFF, 0xC9,             // dec ecx  @+10
+            0x75, 0xF7,             // jnz loop @+12 (rel8: 14-9 = +5 ✓)
+            0xCC,                   // int3 @+14
+            // leaf @+15:
+            0x90,                   // nop
+            0xC3,                   // ret
+        ];
         // fib(N) with call/ret — exercises push/pop/call/ret stack-mem.
         let fib: &[u8] = &[
             // main: mov edi, 12; call fib; int3
@@ -74,6 +93,7 @@ fn main() {
         let prog: &[u8] = match args.get(2).map(|s| s.as_str()) {
             Some("sum10") | None => sum10,
             Some("fib") => fib,
+            Some("icloop") => icloop,
             Some(hex) => Box::leak(hex.split(',')
                 .map(|s| u8::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap())
                 .collect::<Vec<_>>().into_boxed_slice()),
