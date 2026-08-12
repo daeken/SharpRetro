@@ -100,9 +100,21 @@ val-id, no reassignment — SVN/DSE exploit exactly this). What tier-1 lacks: (a
 value flow — every block boundary is a full state[]-materialize + reload; (b) a region
 bigger than one guest block. Tier-2 =
 
-1. **Region selection**: superblock/trace regions off the LINKER's own signal — exec-counts
-   per link-edge name the hot chains (the linking work made the region graph observable
-   for free). Follow the dominant successor(s); side-exits stay block-grain.
+1. **Region selection**: superblock/trace regions off the LINKER's own signal. ⚠ CAVEAT
+   (found post-④): exec_count is per-DRIVER-DISPATCH — linked chains bypass the driver, so
+   block exec-counts DIED as a hotspot signal the moment linking landed. v1 alternative:
+   STATIC region selection — the link graph itself (link_sites edges) names loops (back-edge
+   to a region head); a trace = greedy path-follow through the loop. No profiling needed;
+   the linker's chains ARE the traces. (Edge counters in the thunk = later, if static picks
+   badly.)
+2. **Trace form dodges φ**: follow ONE path; at each Jcc where the trace continues, emit
+   only the side-exit arm (cond(c, {state-writes + branch-out}, {})) and keep lifting the
+   next insn on the path — the IlRecorder handles this TODAY (a side-exit is a cond with a
+   Branch inside; the main path continues after CondEnd). Needs lift-level support: the
+   generated (branch-if) head must suppress its unconditional fallthrough-Branch when the
+   trace continues at next_pc — a Builder hook (`trace_continues_at(pc) -> bool`, default
+   false) + a RustLiftGen change at the branch-if/JMP heads. Loop-close = the trace's last
+   edge back to the head becomes a real backward `b` (region-internal, zero-cost hop).
 2. **Region lift**: same IlRecorder over the whole region; block joins become explicit
    (φ-or-predication decision at build time — traces need no φ if side-exits materialize).
 3. **Region passes**: GVN (subsumes SVN), cross-block DCE (the store-at-exit/reload-at-entry
