@@ -36,6 +36,12 @@ pub enum IlOpKind {
     CallIntrinsic,       // ‡ arity>3 not modeled yet — args[0..3] + intrinsic-id in imm
     // stmts (out = None)
     RegWrite, MemWrite, Branch, BranchLink,
+    /// C1 atomics: args=[addr, val]; imm = op (0=Add 1=Or 2=And 3=Xor 4=Swap).
+    /// Produces OLD. Full-fence semantics — treated as an ORDERING BARRIER by
+    /// SVN/DSE/sink (like a cond boundary: cache cleared, pending dropped).
+    MemRmwAtomic,
+    /// C1 CAS: args=[addr, expected, new]; produces OLD. Same barrier rules.
+    MemCasAtomic,
     // control (cond)
     CondBegin, CondElse, CondEnd,   // bd.cond(c, then, else) → CondBegin(c) .. CondElse .. CondEnd
     // markers
@@ -225,6 +231,17 @@ impl Builder for IlRecorder {
         }
     }
     fn mem_read(&mut self, a: u32, ty: IlType) -> u32 { self.produce(IlOpKind::MemRead, ty, &[a], 0) }
+    fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
+        // NB: SVN reg-cache survives — it caches REGISTER reads (thread-
+        // private); the lock-fence constrains MEMORY order, and ops emit in
+        // recorded order (no pass reorders across a MemRmwAtomic: DSE only
+        // touches RegWrite; sink treats only cond-regions). ‡ if a future
+        // pass reorders MemWrite/MemRead, it must treat these as barriers.
+        self.produce(IlOpKind::MemRmwAtomic, ty, &[a, val], op as u128)
+    }
+    fn mem_cas_atomic(&mut self, a: u32, expected: u32, new: u32, ty: IlType) -> u32 {
+        self.produce(IlOpKind::MemCasAtomic, ty, &[a, expected, new], 0)
+    }
     fn mem_write(&mut self, a: u32, v: u32) {
         let ty = self.tys[v as usize];
         self.stmt(IlOpKind::MemWrite, ty, &[a, v], 0)

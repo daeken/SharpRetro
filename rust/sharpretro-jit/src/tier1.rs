@@ -186,6 +186,12 @@ impl Builder for Tier1 {
     fn branched(&self) -> bool { self.rec.branched() }
     fn set_trace_next(&mut self, pc: Option<u64>) { self.rec.set_trace_next(pc); }
     fn trace_take_elided(&mut self) -> bool { self.rec.trace_take_elided() }
+    fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
+        self.rec.mem_rmw_atomic(op, a, val, ty)
+    }
+    fn mem_cas_atomic(&mut self, a: u32, e: u32, n: u32, ty: IlType) -> u32 {
+        self.rec.mem_cas_atomic(a, e, n, ty)
+    }
     fn ty_of(&self, v: u32) -> IlType { self.rec.ty_of(v) }
     fn literal(&mut self, ty: IlType, bits: u128) -> u32 { self.rec.literal(ty, bits) }
     fn reg_read(&mut self, f: RegFile, idx: u32, ty: IlType) -> u32 { self.rec.reg_read(f, idx, ty) }
@@ -539,6 +545,47 @@ impl<'a> Emitter<'a> {
                     64 => self.enc.str_x(v, X_S2, 0),
                     _ => panic!("tier-1 mem_write w={vw}"),
                 }
+            }
+            MemRmwAtomic => {
+                // args=[addr, val], imm=op. OLD → dest. Same host-addr calc
+                // as MemWrite; LSE AL-form (decode-back-verified encodings).
+                let out = op.out.unwrap();
+                let (xd, sp) = self.dest(out);
+                let addr = self.get(op.args[0], X_S0);
+                self.enc.ldr_x(X_S2, X_STATE, self.layout.off_membase);
+                self.enc.add_r(X_S2, X_S2, addr);
+                let v = self.get(op.args[1], X_S1);
+                let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3,
+                                       _ => panic!("t1 rmw w={w}") };
+                // v may be a direct-alloc reg — don't clobber it with mvn:
+                // copy to X_S1 first when needed.
+                match op.imm as u8 {
+                    0 => self.enc.ldaddal(sz, v, X_S2, xd),
+                    1 => self.enc.ldsetal(sz, v, X_S2, xd),
+                    2 => { self.enc.put_raw(0xAA20_03E0 | (v << 16) | X_S1); // mvn xS1, v
+                           self.enc.ldclral(sz, X_S1, X_S2, xd); }
+                    3 => self.enc.ldeoral(sz, v, X_S2, xd),
+                    4 => self.enc.swpal(sz, v, X_S2, xd),
+                    o => panic!("t1 rmw op {o}"),
+                }
+                self.put(out, xd, sp);
+            }
+            MemCasAtomic => {
+                // args=[addr, expected, new] → OLD. CASAL clobbers Xs with
+                // OLD — copy expected into X_S1 so the alloc's reg survives.
+                let out = op.out.unwrap();
+                let (xd, sp) = self.dest(out);
+                let addr = self.get(op.args[0], X_S0);
+                self.enc.ldr_x(X_S2, X_STATE, self.layout.off_membase);
+                self.enc.add_r(X_S2, X_S2, addr);
+                let exp = self.get(op.args[1], X_S1);
+                if exp != X_S1 { self.enc.mov_r(X_S1, exp); }
+                let newv = self.get(op.args[2], X_S0); // addr already consumed into X_S2
+                let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3,
+                                       _ => panic!("t1 cas w={w}") };
+                self.enc.casal(sz, X_S1, newv, X_S2);
+                self.enc.mov_r(xd, X_S1);   // OLD
+                self.put(out, xd, sp);
             }
             Add | Sub | Mul | Div | Rem | And | Or | Xor | Shl | Shr | Rotr => {
                 let out = op.out.unwrap();

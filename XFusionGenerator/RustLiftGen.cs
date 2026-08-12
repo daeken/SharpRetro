@@ -13,6 +13,20 @@ namespace XFusionGenerator;
 /// day-4-verified reference). SSA-linearize via RtSink (same discipline as the
 /// aarch64 backend's RustEmit): every bd.* → `let _tN = ...;` own-line, return `_tN`.
 public class RustLiftGen {
+    // C1 atomics: mnemonics that accept LOCK (SDM Vol 2 LOCK-prefix table),
+    // restricted to the single-width-RMW set we route through atomic_pre.
+    // XCHG-mem is implicitly locked. NOT here: CMPXCHG8B/16B (not in corpus),
+    // BTS/BTR/BTC mem-forms (bit-string ea adjust composes with atomic in
+    // atomic_pre via the same Val substitution — the BIT ops pass the
+    // ALREADY-ADJUSTED ea; ‡ v1 routes them too, op computed from mnemonic).
+    // v1 set = the CP2077 census (objdump lock-tally: xadd 17.5K, inc 16.9K,
+    // xchg-mem 7.9K, cmpxchg 5K, add 713, or 212, dec 82, and 17, xor ~0).
+    // ADC/SBB/NEG/NOT/BTS/BTR/BTC lock-forms: 0 in corpus — NOT intercepted
+    // (they stay non-atomic; atomic_pre is never reached for them).
+    static readonly HashSet<string> LockableMnemonics = new() {
+        "ADD","AND","OR","XOR","SUB","INC","DEC","XADD","XCHG","CMPXCHG",
+    };
+
     readonly StringBuilder Sb = new();
     readonly List<string> RtSink = new();
     int RtN;
@@ -291,6 +305,17 @@ public class RustLiftGen {
                 var wu = "ilty(op_w)";
                 var wi = "IlType::I{signed:true, width:op_w as u8}";
                 var a = Expr(l[2]); var b = Expr(l[3]);
+                // Dead-flag fast-path: low-op_w of the double-width product ==
+                // plain op_w×op_w mul, so when CF|OF are both DEAD the whole
+                // sext/wide-mul/hi-half apparatus is unnecessary — emit one
+                // mul + the dst write. This is ALSO what keeps tier-1 (no
+                // wide-ty support) able to compile IMUL-carrying hot loops:
+                // liveness says flags-dead in a loop body → no I128 ops emitted.
+                Emit($"if live_flags & 0x801 == 0 {{");
+                Emit($"    let _lo = bd.mul({a}, {b});");
+                var dstOpFast = ParamOp(((PName)l[1]).Name);
+                Emit($"    write_operand(bd, {dstOpFast}, _lo);");
+                Emit($"}} else {{");
                 Emit($"let _mA = bd.sext({a}, {w2});");
                 Emit($"let _mB = bd.sext({b}, {w2});");
                 Emit($"let _p = bd.mul(_mA, _mB);");
@@ -313,6 +338,7 @@ public class RustLiftGen {
                 Emit($"let _ov = bd.ne(_hi, _sf);");
                 Emit($"if live_flags & 0x1 != 0 {{ bd.reg_write(EFLAGS, 0, _ov); }}");
                 Emit($"if live_flags & 0x800 != 0 {{ bd.reg_write(EFLAGS, 11, _ov); }}");
+                Emit($"}}");  // close the dead-flag fast-path else-arm
                 FlagsWritten |= 0x801;
                 break;
             }
@@ -858,6 +884,22 @@ public class RustLiftGen {
                 sb.AppendLine($"                bd.loop_n(rcx, &mut |bd| {{ tmpl_{tt}(bd, ops, op_w, next_pc, live_flags); }});");
                 sb.AppendLine($"                let z = bd.literal(IlType::U64, 0);");
                 sb.AppendLine($"                bd.reg_write(GPR, 1, z);");
+                sb.AppendLine($"            }} else {{");
+                sb.AppendLine($"                tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
+                sb.AppendLine($"            }}");
+            } else if(LockableMnemonics.Contains(def.Mnemonic) &&
+                      def.Operands.Count > 0 &&
+                      def.Operands[0].Class is OpClass.ModRmRm) {
+                // C1 ATOMICS: lock-prefixed (or XCHG-mem, implicitly locked)
+                // RMW on a memory dst. atomic_pre does the memory side
+                // atomically (LSE/host-atomic via Builder) and returns
+                // ops-with-dst-replaced-by Operand::Val(OLD); the template
+                // then computes flags/reg effects over OLD exactly as
+                // written, its mem-write discarded (Val write = no-op).
+                var implicitLock = def.Mnemonic.StartsWith("XCHG") ? "true" : "d.p.lock";
+                sb.AppendLine($"            if ({implicitLock}) && matches!(ops[0], Operand::Mem{{..}}) {{");
+                sb.AppendLine($"                let ops2 = crate::atomic::atomic_pre(bd, \"{def.Mnemonic}\", ops, op_w);");
+                sb.AppendLine($"                tmpl_{tt}(bd, &ops2, op_w, next_pc, live_flags);");
                 sb.AppendLine($"            }} else {{");
                 sb.AppendLine($"                tmpl_{tt}(bd, ops, op_w, next_pc, live_flags);");
                 sb.AppendLine($"            }}");

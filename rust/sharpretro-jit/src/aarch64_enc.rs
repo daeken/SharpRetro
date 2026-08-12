@@ -452,6 +452,35 @@ impl Aarch64Enc {
     pub fn ret(&mut self) { self.put(0xD65F03C0); }
     pub fn nop(&mut self) { self.put(0xD503201F); }
 
+    // ── LSE atomics (C1: guest lock-prefixed RMW). All `AL` = acquire+
+    // release = x86 lock full-fence semantics. size: 0=B 1=H 2=W 3=X.
+    // LDADDAL/LDSETAL(or)/LDCLRAL(and-not!)/LDEORAL: Xs=operand, Xt=OLD out.
+    // base 0x38E0_0000 | size<<30 | Rs<<16 | opc<<12 | Rn<<5 | Rt
+    //   opc: 000=LDADD 001=LDCLR 010=LDEOR 011=LDSET
+    pub fn ldaddal(&mut self, sz: u8, xs: u32, xn: u32, xt: u32) {
+        self.put(0x38E0_0000 | ((sz as u32) << 30) | (xs << 16) | (0 << 12) | (xn << 5) | xt);
+    }
+    /// ⚠ LDCLR clears the bits SET in Xs (mem &= !Xs) — caller passes the
+    /// COMPLEMENT for x86 `and` semantics.
+    pub fn ldclral(&mut self, sz: u8, xs: u32, xn: u32, xt: u32) {
+        self.put(0x38E0_0000 | ((sz as u32) << 30) | (xs << 16) | (1 << 12) | (xn << 5) | xt);
+    }
+    pub fn ldeoral(&mut self, sz: u8, xs: u32, xn: u32, xt: u32) {
+        self.put(0x38E0_0000 | ((sz as u32) << 30) | (xs << 16) | (2 << 12) | (xn << 5) | xt);
+    }
+    pub fn ldsetal(&mut self, sz: u8, xs: u32, xn: u32, xt: u32) {
+        self.put(0x38E0_0000 | ((sz as u32) << 30) | (xs << 16) | (3 << 12) | (xn << 5) | xt);
+    }
+    /// SWPAL: mem swap, Xt=OLD. base 0x38E0_8000.
+    pub fn swpal(&mut self, sz: u8, xs: u32, xn: u32, xt: u32) {
+        self.put(0x38E0_8000 | ((sz as u32) << 30) | (xs << 16) | (xn << 5) | xt);
+    }
+    /// CASAL Xs(expected→old), Xt(new), [Xn]. 0x08E0_FC00 | size<<30.
+    /// NB Rs is BOTH input (expected) and output (old) — clobbered!
+    pub fn casal(&mut self, sz: u8, xs: u32, xt: u32, xn: u32) {
+        self.put(0x08E0_FC00 | ((sz as u32) << 30) | (xs << 16) | (xn << 5) | xt);
+    }
+
     // ── system ─────────────────────────────────────────────────────────────
     pub fn mrs_nzcv(&mut self, xt: u32) { self.put(0xD53B4200 | xt); }
     pub fn msr_nzcv(&mut self, xt: u32) { self.put(0xD51B4200 | xt); }

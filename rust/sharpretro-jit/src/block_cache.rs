@@ -136,6 +136,12 @@ impl BlockCache {
             }));
             std::panic::set_hook(prev_hook);
             if let Ok((block, end_pc)) = r { return (block, end_pc, 1); }
+            if std::env::var("XF_BAIL_LOG").is_ok() {
+                let msg = match &r { Err(e) => e.downcast_ref::<String>().cloned()
+                    .or_else(|| e.downcast_ref::<&str>().map(|s| s.to_string()))
+                    .unwrap_or_default(), _ => unreachable!() };
+                eprintln!("[t1-bail] pc={pc:#x}: {msg}");
+            }
             // fall through to tier-0 (bail-class: wide/intrinsic/loop_n).
         }
         let mut t0 = Tier0::with_layout(self.layout);

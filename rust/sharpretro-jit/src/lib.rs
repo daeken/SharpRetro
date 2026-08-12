@@ -273,6 +273,24 @@ pub trait Builder {
     /// After lifting one insn under trace mode: true iff its fallthrough
     /// branch was elided (side-effect: un-latches `branched`). Clears.
     fn trace_take_elided(&mut self) -> bool { false }
+
+    /// ── C1 ATOMICS (guest `lock`-prefixed RMW + XCHG-mem) ────────────────
+    /// Atomically `mem[addr] = mem[addr] <op> val` at `ty`'s width; returns
+    /// the OLD value. Op: 0=Add 1=Or 2=And 3=Xor 4=Swap(val replaces). Full
+    /// barrier semantics (x86 `lock` = full fence → LSE `AL`-suffixed forms /
+    /// SeqCst). Templates then run over the returned OLD via Operand::Val —
+    /// flags compute exactly as written, memory side already done atomically.
+    fn mem_rmw_atomic(&mut self, _op: u8, _addr: Self::Val, _val: Self::Val,
+                      _ty: IlType) -> Self::Val {
+        panic!("mem_rmw_atomic: not implemented by this Builder");
+    }
+    /// Atomic compare-and-swap: if mem[addr]==expected { mem[addr]=new };
+    /// returns the OLD value (caller derives success = old==expected). Full
+    /// barrier. LSE CASAL / SeqCst compare_exchange.
+    fn mem_cas_atomic(&mut self, _addr: Self::Val, _expected: Self::Val,
+                      _new: Self::Val, _ty: IlType) -> Self::Val {
+        panic!("mem_cas_atomic: not implemented by this Builder");
+    }
     /// If/else — both arms emitted. `then`/`else_` receive the same builder.
     /// Bounded-count loop: execute `body` `n` times. tier-0 emits an in-block
     /// loop (mov ctr,n; head: cbz ctr,exit; body; sub ctr,#1; b head; exit:).

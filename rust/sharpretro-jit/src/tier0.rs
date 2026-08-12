@@ -325,6 +325,42 @@ impl Builder for Tier0 {
         self.store(X_A, s);
         s
     }
+    fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
+        let w = match ty { IlType::I{width,..} => width, _ => panic!("t0 rmw ty {ty:?}") };
+        let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3, _ => panic!("t0 rmw w={w}") };
+        let s = self.slot(ty);
+        self.load(X_A, a);                                       // guest addr
+        self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
+        self.enc.add_r(X_A, X_B, X_A);                           // host addr
+        self.load(X_B, val);                                     // operand
+        match op {
+            0 => self.enc.ldaddal(sz, X_B, X_A, X_C),
+            1 => self.enc.ldsetal(sz, X_B, X_A, X_C),
+            2 => { // x86 AND: LDCLR clears SET bits → pass complement
+                self.enc.put_raw(0xAA20_03E0 | (X_B << 16) | X_B); // mvn xB, xB (ORN xd,xzr,xm)
+                self.enc.ldclral(sz, X_B, X_A, X_C);
+            }
+            3 => self.enc.ldeoral(sz, X_B, X_A, X_C),
+            4 => self.enc.swpal(sz, X_B, X_A, X_C),
+            _ => panic!("t0 rmw op {op}"),
+        }
+        // LSE result register holds OLD (zero-extended at sz width for W forms).
+        self.store(X_C, s);
+        s
+    }
+    fn mem_cas_atomic(&mut self, a: u32, expected: u32, new: u32, ty: IlType) -> u32 {
+        let w = match ty { IlType::I{width,..} => width, _ => panic!("t0 cas ty {ty:?}") };
+        let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3, _ => panic!("t0 cas w={w}") };
+        let s = self.slot(ty);
+        self.load(X_A, a);
+        self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
+        self.enc.add_r(X_A, X_B, X_A);
+        self.load(X_B, expected);      // Xs: expected in, OLD out (clobbered)
+        self.load(X_C, new);           // Xt: new
+        self.enc.casal(sz, X_B, X_C, X_A);
+        self.store(X_B, s);            // OLD
+        s
+    }
     fn mem_write(&mut self, a: u32, v: u32) {
         let ty = self.tys[v as usize];
         self.load(X_A, a);

@@ -51,6 +51,25 @@ fn sext(v: u128, w: u8) -> i128 {
 pub trait GuestMem {
     fn read(&self, addr: u64, w: u8) -> u128;
     fn write(&mut self, addr: u64, w: u8, bits: u128);
+    /// C1 atomics: RMW returning OLD. op: 0=Add 1=Or 2=And 3=Xor 4=Swap.
+    /// Default = non-atomic compose (fine for single-threaded FlatMem test
+    /// arenas); HostMem overrides with REAL host atomics (identity-mapped
+    /// guest memory shared with JIT'd worker threads).
+    fn rmw(&mut self, addr: u64, w: u8, op: u8, val: u128) -> u128 {
+        let old = self.read(addr, w);
+        let new = match op {
+            0 => old.wrapping_add(val), 1 => old | val, 2 => old & val,
+            3 => old ^ val, 4 => val, _ => panic!("rmw op {op}"),
+        };
+        self.write(addr, w, new);
+        old
+    }
+    /// C1 CAS returning OLD. Default non-atomic; HostMem overrides.
+    fn cas(&mut self, addr: u64, w: u8, expected: u128, new: u128) -> u128 {
+        let old = self.read(addr, w);
+        if old == expected { self.write(addr, w, new); }
+        old
+    }
 }
 
 /// Per-arch state layout. The generated recompiler.rs declares RegFile ids (GPR=0/VEC=1/…);
@@ -135,6 +154,14 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
     fn mem_read(&mut self, a: IVal, ty: IlType) -> IVal {
         let w = match ty { IlType::I{width,..} => width, IlType::F{width} => width, IlType::V128 => 128, _ => 64 };
         IVal { ty, bits: self.mem.read(a.as_u64(), w) }
+    }
+    fn mem_rmw_atomic(&mut self, op: u8, a: IVal, val: IVal, ty: IlType) -> IVal {
+        let w = match ty { IlType::I{width,..} => width as u8, _ => panic!("rmw ty {ty:?}") };
+        IVal { ty, bits: self.mem.rmw(a.as_u64(), w, op, val.bits) }
+    }
+    fn mem_cas_atomic(&mut self, a: IVal, expected: IVal, new: IVal, ty: IlType) -> IVal {
+        let w = match ty { IlType::I{width,..} => width as u8, _ => panic!("cas ty {ty:?}") };
+        IVal { ty, bits: self.mem.cas(a.as_u64(), w, expected.bits, new.bits) }
     }
     fn mem_write(&mut self, a: IVal, v: IVal) {
         let w = match v.ty { IlType::I{width,..} => width, IlType::F{width} => width, IlType::V128 => 128, _ => 64 };
@@ -659,6 +686,46 @@ impl GuestMem for HostMem {
                      ((addr+8) as *mut u64).write_unaligned((v>>64) as u64); }
             _ => panic!("HostMem write w={w}"),
         } }
+    }
+    fn rmw(&mut self, addr: u64, w: u8, op: u8, val: u128) -> u128 {
+        use std::sync::atomic::*;
+        // x86 `lock` requires natural alignment for guaranteed atomicity in
+        // practice (split-lock is a bus-lock legacy path; real code is
+        // aligned). Die loud on misaligned rather than silently tear.
+        assert_eq!(addr % (w as u64 / 8).max(1), 0, "atomic rmw misaligned @{addr:#x} w={w}");
+        macro_rules! go { ($At:ty, $t:ty) => {{
+            let a = unsafe { &*(addr as *const $At) };
+            let v = val as $t;
+            (match op {
+                0 => a.fetch_add(v, Ordering::SeqCst),
+                1 => a.fetch_or(v, Ordering::SeqCst),
+                2 => a.fetch_and(v, Ordering::SeqCst),
+                3 => a.fetch_xor(v, Ordering::SeqCst),
+                4 => a.swap(v, Ordering::SeqCst),
+                _ => panic!("rmw op {op}"),
+            }) as u128
+        }}}
+        match w {
+            8 => go!(AtomicU8, u8), 16 => go!(AtomicU16, u16),
+            32 => go!(AtomicU32, u32), 64 => go!(AtomicU64, u64),
+            _ => panic!("HostMem atomic rmw w={w}"),
+        }
+    }
+    fn cas(&mut self, addr: u64, w: u8, expected: u128, new: u128) -> u128 {
+        use std::sync::atomic::*;
+        assert_eq!(addr % (w as u64 / 8).max(1), 0, "atomic cas misaligned @{addr:#x} w={w}");
+        macro_rules! go { ($At:ty, $t:ty) => {{
+            let a = unsafe { &*(addr as *const $At) };
+            match a.compare_exchange(expected as $t, new as $t,
+                                     Ordering::SeqCst, Ordering::SeqCst) {
+                Ok(old) => old as u128, Err(old) => old as u128,
+            }
+        }}}
+        match w {
+            8 => go!(AtomicU8, u8), 16 => go!(AtomicU16, u16),
+            32 => go!(AtomicU32, u32), 64 => go!(AtomicU64, u64),
+            _ => panic!("HostMem atomic cas w={w}"),
+        }
     }
 }
 

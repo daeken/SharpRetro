@@ -45,6 +45,11 @@ pub enum Operand<V> {
     Imm { value: i64, width: u32 },
     /// XMM/YMM/ZMM at ModRM.reg or ModRM.rm.
     Xmm { idx: u8, width: u32 },
+    /// Pre-loaded VALUE (C1 atomics): read returns `v`, write is a NO-OP.
+    /// Used to re-run an unmodified template over the OLD value an atomic
+    /// RMW already returned — flags compute exactly as the template says,
+    /// zero transcription, while the memory side happened atomically.
+    Val { v: V, width: u32 },
 }
 
 impl<V> Operand<V> {
@@ -85,7 +90,8 @@ pub fn f_to_si_x86<B: Builder>(bd: &mut B, fv: B::Val, iw: u32, fw: u32) -> B::V
 impl<V> Operand<V> {
     pub fn width(&self) -> u32 {
         match self { Self::Reg{width,..} | Self::Mem{width,..}
-                   | Self::Imm{width,..} | Self::Xmm{width,..} => *width }
+                   | Self::Imm{width,..} | Self::Xmm{width,..}
+                   | Self::Val{width,..} => *width }
     }
 }
 
@@ -122,6 +128,7 @@ pub fn read_operand<B: Builder>(bd: &mut B, op: &Operand<B::Val>) -> B::Val
             bd.literal(ilty(width), value as u128),
         Operand::Xmm { idx, width } =>
             bd.reg_read(XMM, idx as u32, ilty(width)),
+        Operand::Val { v, .. } => v,
     }
 }
 
@@ -176,6 +183,8 @@ pub fn write_operand<B: Builder>(bd: &mut B, op: &Operand<B::Val>, v: B::Val)
             bd.mem_write(addr, vc);
         }
         Operand::Imm { .. } => panic!("write to Imm operand"),
+        Operand::Val { .. } => { /* C1 atomics: memory side already done
+            atomically by the RMW node; the template's write is discarded. */ }
         Operand::Xmm { idx, width: 128 } => {
             bd.reg_write(XMM, idx as u32, v);
         }
