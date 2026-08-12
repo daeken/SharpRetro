@@ -47,7 +47,7 @@ impl Tier1 {
 
     /// After the block's been emitted into `.rec` (via the Builder trait forward
     /// below), allocate + emit + finalize into a CompiledBlock.
-    pub fn compile(self) -> CompiledBlock {
+    pub fn compile(mut self) -> CompiledBlock {
         // Dead-RegWrite elimination (v1.2): for each GPR (f=0,idx), a RegWrite
         // followed by a LATER RegWrite(same) with no state-observing RegRead
         // and no cond-boundary between = the earlier one is dead. Post-SVN,
@@ -56,6 +56,87 @@ impl Tier1 {
         // v1-conservative: cond boundaries flush last_write (RegWrites inside
         // conds never dropped; a write BEFORE a cond isn't dropped either since
         // a post-cond read of a cond-dirtied reg hits state[]). XF_DSE=0 disables.
+        // ── CROSS-EXIT STORE SINKING (tier-2, XF_SINK=0 disables) ─────────
+        // A depth-0 RegWrite overwritten later at depth-0, crossing only
+        // side-exit conds that neither read nor write the reg, SINKS: a copy
+        // lands in each crossed exit arm (before its Branch), the original
+        // dies. Every path still performs identical state[] writes — the main
+        // path just stops materializing values only exits needed. This is
+        // what makes traces pay: DSE alone can't kill stores across conds.
+        // Sound because val-ids are position-independent (inserting cloned
+        // ops never breaks SSA refs) and regalloc runs after (ranges extend).
+        let sink_en = std::env::var("XF_SINK").map(|v| v != "0").unwrap_or(true);
+        if sink_en {
+            use std::collections::{HashMap, HashSet};
+            let ops = &self.rec.ops;
+            // pending: (f,idx) → (op_idx_of_store, branch-positions crossed)
+            let mut pending: HashMap<(u8, u32), (usize, Vec<usize>)> = HashMap::new();
+            let mut inserts: HashMap<usize, Vec<usize>> = HashMap::new(); // before-pos → src op idxs
+            let mut dead: HashSet<usize> = HashSet::new();
+            let mut i = 0usize;
+            while i < ops.len() {
+                match ops[i].kind {
+                    IlOpKind::CondBegin => {
+                        // Scan the whole top-level cond region as one unit.
+                        let is_loop = ops[i].imm == 4;
+                        let mut depth = 1i32; let mut j = i + 1;
+                        let mut touched: HashSet<(u8, u32)> = HashSet::new();
+                        let mut branches: Vec<usize> = vec![];
+                        while j < ops.len() && depth > 0 {
+                            match ops[j].kind {
+                                IlOpKind::CondBegin => depth += 1,
+                                IlOpKind::CondEnd => depth -= 1,
+                                IlOpKind::RegRead | IlOpKind::RegWrite => {
+                                    touched.insert(((ops[j].imm >> 32) as u8, ops[j].imm as u32));
+                                }
+                                IlOpKind::Branch | IlOpKind::BranchLink => branches.push(j),
+                                _ => {}
+                            }
+                            j += 1;
+                        }
+                        if is_loop {
+                            pending.clear();   // loop body may iterate 0..n times
+                        } else {
+                            pending.retain(|k, _| !touched.contains(k));
+                            if !branches.is_empty() {
+                                for p in pending.values_mut() { p.1.extend(&branches); }
+                            }
+                        }
+                        i = j; continue;
+                    }
+                    IlOpKind::RegWrite => {
+                        let f = (ops[i].imm >> 32) as u8; let idx = ops[i].imm as u32;
+                        if f <= 2 {
+                            if let Some((old_idx, crossed)) = pending.insert((f, idx), (i, vec![])) {
+                                if !crossed.is_empty() {
+                                    dead.insert(old_idx);
+                                    for bpos in crossed {
+                                        inserts.entry(bpos).or_default().push(old_idx);
+                                    }
+                                }
+                                // crossed-empty case: plain DSE (below) catches it.
+                            }
+                        }
+                    }
+                    IlOpKind::RegRead => {
+                        pending.remove(&((ops[i].imm >> 32) as u8, ops[i].imm as u32));
+                    }
+                    _ => {}
+                }
+                i += 1;
+            }
+            if !dead.is_empty() {
+                let src = std::mem::take(&mut self.rec.ops);
+                let mut out = Vec::with_capacity(src.len() + 8);
+                for (i, op) in src.iter().enumerate() {
+                    if let Some(idxs) = inserts.get(&i) {
+                        for &s in idxs { out.push(src[s].clone()); }
+                    }
+                    if !dead.contains(&i) { out.push(op.clone()); }
+                }
+                self.rec.ops = out;
+            }
+        }
         let dse = std::env::var("XF_DSE").map(|v| v != "0").unwrap_or(true);
         let mut dead_ops: std::collections::HashSet<usize> = std::collections::HashSet::new();
         if dse {
