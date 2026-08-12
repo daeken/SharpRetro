@@ -147,22 +147,40 @@
 ; the CMP-flags per rAX-dst compare (SF/CF/OF/AF/PF) — ‡ v1 sets ZF only
 ; (the flag every InterlockedCompareExchange caller reads); other flags
 ; are SDM-defined but rarely consumed.
+; CMPXCHG: compare accumulator with dst; flags = the comparison (accumulator
+; − dst), ALL SIX per SDM — CMP's block transcribed verbatim with
+; _lval=accumulator _rval=dst (was ZF-only; atomics-fleet flag-battery find).
 (instruction CMPXCHG (dst src)
     "cmpxchg $dst, $src"
-    (mlet (t dst
-           eq (== AX t))
-        (= ZF eq)
-        (if eq
+    (mlet (_lval AX _rval dst tval (- _lval _rval))
+        (= CF (< _lval _rval))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ _lval _rval) (^ _lval tval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))
+        (if (== tval 0)
             (= dst src)
-            (= AX t))))
+            (= AX _rval))))
 (encoding CMPXCHG (Eb Gb) (0x0F 0xB0))
 (encoding CMPXCHG (Ev Gv) (0x0F 0xB1))
 
+; XADD: exchange-and-add. Flags "according to the result of the addition"
+; (SDM Vol 2C) — the flag block is ADD's, transcribed verbatim (found by the
+; atomics fleet's flag-battery: all-zero flags after lock xadd; the gap was
+; invisible while nothing consumed XADD's flags + the sweep's per-def mask
+; skipped undeclared flags).
 (instruction XADD (dst src)
     "xadd $dst, $src"
-    (mlet (t (+ dst src))
-        (= src dst)
-        (= dst t)))
+    (mlet (_lval dst _rval src tval (+ _lval _rval))
+        (= src _lval)
+        (= dst tval)
+        (= CF (| (< tval _lval) (< tval _rval)))
+        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= OF (& (^ tval _lval) (^ tval _rval) (<< 1 (- (bitwidth tval) 1))))
+        (= AF (& (>> (^ _lval _rval tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+        (= ZF (== tval 0))))
 (encoding XADD (Eb Gb) (0x0F 0xC0))
 (encoding XADD (Ev Gv) (0x0F 0xC1))
 

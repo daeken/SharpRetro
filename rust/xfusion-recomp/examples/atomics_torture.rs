@@ -145,11 +145,82 @@ fn run_v2(entry: u64, n_threads: usize) {
     std::process::exit(if ok { 0 } else { 9 });
 }
 
+/// Generic fleet arm: presets, N threads of _start(shm, tid), read-back.
+/// --preset off:w:val (before run)  --read off:w (dump `FLEET <off> <hex>` after)
+fn run_fleet(entry: u64, n_threads: usize, args: &[String]) {
+    let shm = 0x600000u64;
+    let stk_base = 0x7f0000000000u64;
+    unsafe {
+        libc::mmap(shm as *mut _, 0x2000, libc::PROT_READ | libc::PROT_WRITE,
+            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS | libc::MAP_FIXED, -1, 0);
+        libc::mmap((stk_base - 0x100000 * n_threads as u64) as *mut _,
+            0x100000 * n_threads, libc::PROT_READ | libc::PROT_WRITE,
+            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS | libc::MAP_FIXED, -1, 0);
+    }
+    let parse3 = |s: &str| -> (u64, u32, u64) {
+        let p: Vec<&str> = s.split(':').collect();
+        let val = if p.len() > 2 {
+            let v = p[2];
+            if let Some(h) = v.strip_prefix("0x") { u64::from_str_radix(h, 16).unwrap() }
+            else { v.parse().unwrap() }
+        } else { 0 };
+        (p[0].parse().unwrap(), p[1].parse().unwrap(), val)
+    };
+    let mut i = 0;
+    let mut reads: Vec<(u64, u32)> = vec![];
+    while i < args.len() {
+        match args[i].as_str() {
+            "--preset" => {
+                let (off, w, val) = parse3(&args[i + 1]);
+                unsafe { match w {
+                    8 => *((shm + off) as *mut u8) = val as u8,
+                    16 => *((shm + off) as *mut u16) = val as u16,
+                    32 => *((shm + off) as *mut u32) = val as u32,
+                    _ => *((shm + off) as *mut u64) = val,
+                } }
+                i += 2;
+            }
+            "--read" => {
+                let (off, w, _) = parse3(&args[i + 1]);
+                reads.push((off, w));
+                i += 2;
+            }
+            _ => i += 1,
+        }
+    }
+    std::thread::scope(|sc| {
+        for t in 0..n_threads {
+            sc.spawn(move || {
+                let mut state = vec![0u64; STATE_WORDS_X64];
+                state[OFF_RIP] = entry;
+                state[OFF_MEMBASE] = 0;
+                state[7] = shm;
+                state[6] = t as u64;
+                state[4] = stk_base - 0x100000 * t as u64 - 0x4000;
+                let mut cache = BlockCache::with_layout(&X64_LAYOUT);
+                cache.max_block_insns = 64;
+                cache.run(&C, &mut state[..], 0, usize::MAX);
+            });
+        }
+    });
+    for (off, w) in reads {
+        let v = unsafe { match w {
+            8 => *((shm + off) as *const u8) as u64,
+            16 => *((shm + off) as *const u16) as u64,
+            32 => *((shm + off) as *const u32) as u64,
+            _ => *((shm + off) as *const u64),
+        } };
+        println!("FLEET {off} {v:#x}");
+    }
+    std::process::exit(0);
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let entry = load_elf(&args[1]);
     let n_threads: usize = args.get(2).map(|s| s.parse().unwrap()).unwrap_or(8);
     if args.iter().any(|a| a == "--v2") { run_v2(entry, n_threads); }
+    if args.iter().any(|a| a == "--fleet") { run_fleet(entry, n_threads, &args); }
     const ITERS: u64 = 200_000;
 
     // Shared guest struct + per-thread stacks.
