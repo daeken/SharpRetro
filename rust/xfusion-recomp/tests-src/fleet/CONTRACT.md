@@ -1,4 +1,4 @@
-# Atomics test-fleet contract (sera ·1438)
+# Atomics test-fleet contract
 
 Each test = ONE freestanding C file exercising ONE x64 atomic instruction /
 edge-class under multi-thread fire, runnable through the atomics_torture

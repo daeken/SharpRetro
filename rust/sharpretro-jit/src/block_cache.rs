@@ -95,6 +95,12 @@ pub struct BlockCache {
     /// IC reverse-index: target_key → blocks whose inline caches may hold the
     /// target's body address. invalidate(target) resets those caches.
     ic_from: std::collections::HashMap<(u64, u32), Vec<(u64, u32)>>,
+    /// IC exiter cell: under block-linking, the block whose INDIRECT exit
+    /// reached the driver is the chain TAIL, not the dispatched head — each
+    /// ic-carrying block's epilogue stores its own guest-pc here (address
+    /// baked at compile; Box = stable address). Driver seeds it with the
+    /// dispatched pc pre-call and installs into map[*cell] post-call.
+    last_exiter: Box<u64>,
 }
 
 impl BlockCache {
@@ -113,7 +119,8 @@ impl BlockCache {
                use_t1: std::env::var("XF_T1").map(|v| v != "0").unwrap_or(true)
                        && !std::env::var("XF_WATCH").is_ok()
                        && !std::env::var("XF_RR").is_ok(),
-               pending_links: Default::default(), ic_from: Default::default() }
+               pending_links: Default::default(), ic_from: Default::default(),
+               last_exiter: Box::new(0) }
     }
 
     /// Compile one block: tier-1 first (catch_unwind — wide-ty/loop_n/
@@ -124,6 +131,7 @@ impl BlockCache {
     {
         if self.use_t1 {
             let layout = self.layout;
+            let cell_addr = &*self.last_exiter as *const u64 as u64;
             // Suppress the default panic-print for this EXPECTED bail class
             // (wide-ty/loop_n/intrinsic blocks panic → tier-0 serves them; a
             // 100K-block boot with ~1K bails must not spam stderr). The hook
@@ -134,6 +142,7 @@ impl BlockCache {
             std::panic::set_hook(Box::new(|_| {}));
             let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut t1 = crate::tier1::Tier1::with_layout(layout);
+                t1.exit_ident = Some((cell_addr, pc));
                 let (end_pc, _stop) = compiler.compile_block(&mut t1, pc, mode);
                 if !t1.rec.branched() {
                     debug_assert_eq!(layout.flag_file, 2,
@@ -260,6 +269,7 @@ impl BlockCache {
             // vec![0u64; n_slots+1] per call = 40% of wall on tight-loop bench).
             let ef = entry.block.entry_fn();
             let sp = state.as_mut_ptr(); let spp = self.spill.as_mut_ptr();
+            *self.last_exiter = pc;   // seed: ic-less chains attribute to head
             ef(sp, spp);
             entry.exec_count = entry.exec_count.saturating_add(1);
             // SAME-PC FAST-LOOP: if the block back-branched to its own entry
@@ -290,17 +300,28 @@ impl BlockCache {
             // != 0) — same chainability rule as linking. The reverse-index
             // (ic_from) lets invalidate() scrub stale bodies.
             let next = unsafe { *sp.add(pc_idx) };
-            let has_ic = !entry.block.ic_sites.is_empty();
+            // CHAIN-TAIL ATTRIBUTION (the never-hits root): under block-
+            // linking the dispatched block br's through linked successors,
+            // so the block whose indirect exit reached the driver is the
+            // chain TAIL — installing into the dispatched head's ic-sites
+            // never arms the cache that missed. Each ic-carrying block's
+            // epilogue stores its own guest-pc into last_exiter (seeded
+            // with the dispatched pc pre-call, so ic-less exits attribute
+            // to the head as before — head-without-ic ⇒ no install, same
+            // net behavior, correct attribution when it matters).
+            let exiter = *self.last_exiter;
+            let has_ic = self.map.get(&(exiter, mode))
+                .map_or(false, |xe| !xe.block.ic_sites.is_empty());
             if has_ic && std::env::var("XF_DBG").is_ok() {
-                eprintln!("[ic] exit pc={pc:#x} → next={next:#x} (installing={})",
+                eprintln!("[ic] exiter={exiter:#x} (dispatched {pc:#x}) → next={next:#x} (installing={})",
                     self.map.get(&(next, mode)).map_or(false, |te| te.block.body_off != 0));
             }
             if has_ic {
                 if let Some(te) = self.map.get(&(next, mode)) {
                     if te.block.body_off != 0 {
                         let body = te.block.body_addr();
-                        self.map[&(pc, mode)].block.ic_install(next, body);
-                        self.ic_from.entry((next, mode)).or_default().push((pc, mode));
+                        self.map[&(exiter, mode)].block.ic_install(next, body);
+                        self.ic_from.entry((next, mode)).or_default().push((exiter, mode));
                     }
                 }
             }
@@ -337,7 +358,11 @@ impl BlockCache {
     pub fn save(&self) -> Vec<u8> {
         let mut out = Vec::with_capacity(1 << 20);
         out.extend_from_slice(b"XFC1");
-        let recs: Vec<_> = self.map.iter().filter(|(_, e)| e.tier == 1).collect();
+        // ic-carrying blocks bake THIS run's last_exiter cell address into
+        // their epilogue → not position-independent → excluded from persist
+        // (they recompile next run; ICs are hot-path caches, cheap to re-earn).
+        let recs: Vec<_> = self.map.iter()
+            .filter(|(_, e)| e.tier == 1 && e.block.ic_sites.is_empty()).collect();
         out.extend_from_slice(&(recs.len() as u32).to_le_bytes());
         for (&(pc, mode), e) in recs {
             let b = &e.block;

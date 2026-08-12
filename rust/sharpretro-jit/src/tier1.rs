@@ -34,6 +34,13 @@ const REG_BASE: u32 = 13;   // Loc::Reg(0) → x13, .. Reg(13) → x26.
 pub const N_ALLOC_REGS: usize = 14;   // x13..x26
 
 pub struct Tier1 {
+    /// IC exiter self-identification: (cell_addr, own_guest_pc). When set AND
+    /// the block has ic_sites, the epilogue stores own_pc into *cell before
+    /// frame-restore — so the driver learns WHICH block's indirect exit
+    /// actually returned (under block-linking the dispatched block br's
+    /// through linked successors; the exiting block is the chain TAIL, and
+    /// installing into the dispatched head's ic-sites is the never-hits bug).
+    pub exit_ident: Option<(u64, u64)>,
     /// The recorder — client emits into this via the Builder trait, THEN
     /// calls compile() which allocates + walks + finalizes.
     pub rec: IlRecorder,
@@ -42,7 +49,7 @@ pub struct Tier1 {
 
 impl Tier1 {
     pub fn with_layout(layout: &'static StateLayout) -> Self {
-        Self { rec: IlRecorder::new(), layout }
+        Self { rec: IlRecorder::new(), layout, exit_ident: None }
     }
 
     /// After the block's been emitted into `.rec` (via the Builder trait forward
@@ -169,6 +176,7 @@ impl Tier1 {
         }
         let alloc = linear_scan(&self.rec, N_ALLOC_REGS);
         let mut e = Emitter::new(self.layout, &self.rec, &alloc);
+        e.exit_ident = self.exit_ident;
         e.dead_ops = dead_ops;
         for (i, op) in self.rec.ops.iter().enumerate() {
             e.emit_op(i, op);
@@ -305,9 +313,11 @@ struct Emitter<'a> {
     /// against guest0/guest1 and br's the matching body; both-miss falls to
     /// the epilogue and the DRIVER patches (guest-pc→body is universal truth,
     /// so patching every site of the returning block is sound even without
-    /// knowing which site missed). sera's ·1421 ask.
+    /// knowing which site missed).
     ic_sites: Vec<usize>,
     ic_enabled: bool,
+    /// See Tier1::exit_ident. Emitted in the epilogue iff ic_sites non-empty.
+    exit_ident: Option<(u64, u64)>,
     /// XF_LINK=0 disables (measurement + fallback).
     link: bool,
 }
@@ -330,12 +340,12 @@ impl<'a> Emitter<'a> {
         enc.mov_r(X_SPILL, 1);
         let link = std::env::var("XF_LINK").map(|v| v != "0").unwrap_or(true);
         Self { enc, layout, rec, alloc, cond_stack: vec![], dead_ops: Default::default(),
-            ic_sites: vec![],
+            ic_sites: vec![], exit_ident: None,
             // ‡ default OFF: emit verified-shape but cache never HITS on the
             // icbench (1.9M installs, 0 hits — driver-exec count unchanged).
             // Root not yet found (suspects: install ordering vs page W^X
             // none—page is RWX; the eor/cbnz compare; the pair read layout).
-            // Fix before enabling; sera's ·1424 sync-audit preempted.
+            // Fix before enabling; the sync-audit preempted the root-hunt.
             ic_enabled: std::env::var("XF_IC").map(|v| v == "1").unwrap_or(false),
                lit_of: Default::default(), link_sites: vec![], link }
     }
@@ -343,6 +353,18 @@ impl<'a> Emitter<'a> {
     fn finalize(mut self, n_spill_slots: u32) -> CompiledBlock {
         // Epilogue: restore callee-saved + lr, ret.
         let epi_word = self.enc.here();
+        // IC exiter self-identification (see Tier1::exit_ident): before the
+        // frame-restore, store this block's guest-pc into the cache's
+        // last_exiter cell. Only blocks WITH ic-sites need it (the driver
+        // only consults the cell when installing). x16/x17 = scratch (the
+        // IC arms use them mid-body; dead at epilogue-entry).
+        if let Some((cell, own_pc)) = self.exit_ident {
+            if !self.ic_sites.is_empty() {
+                self.enc.mov_imm64(16, cell);
+                self.enc.mov_imm64(17, own_pc);
+                self.enc.str_x(17, 16, 0);
+            }
+        }
         for (i, r) in (19..=28).enumerate() { self.enc.ldr_x(r, 31, (i as u32) * 8); }
         self.enc.ldr_x(30, 31, 80);
         self.enc.add_i(31, 31, 96);
@@ -814,7 +836,7 @@ impl<'a> Emitter<'a> {
                     }
                 }
                 // INDIRECT target (RET / jmp-reg / call-reg): 2-entry INLINE
-                // CACHE (sera ·1421). Compare the live target against two
+                // CACHE. Compare the live target against two
                 // inline (guest,body) pairs; hit → br body (stays on-frame,
                 // same chain-soundness as linking); both-miss → fall through
                 // to the epilogue and the DRIVER patches the pairs. Data

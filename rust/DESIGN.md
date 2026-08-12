@@ -93,7 +93,7 @@ source), then a ~200L walker: linear-scan regalloc over the block, const-fold, d
 elim, redundant-load elim (two `reg_read(Gpr, rn)` with no intervening write → one load).
 Emits via the same `Emit` as tier-0. ≈2-5× tier-0's code quality, ~ms compile.
 
-### tier-2: region-SSA (settled shape — sera ·1401, 2026-08-11)
+### tier-2: region-SSA (settled shape, 2026-08-11)
 
 NOT LLVM-first. The IlRecorder stream is already SSA within a block (every op = a fresh
 val-id, no reassignment — SVN/DSE exploit exactly this). What tier-1 lacks: (a) cross-block
@@ -138,7 +138,7 @@ region machinery exists — LLVM inherits regions for free.
 Persist compiled blobs keyed by (guest-image content-hash, pc-range, compiler-version,
 env-knobs). Identity-map (mem_base=0) makes blocks nearly position-independent — the
 literal-routed link slots re-patch at load anyway (they're data), and state-ptr/spill-ptr
-arrive in registers. Open: image-hash at map time (asked fuchi — loader-side) vs
+arrive in registers. Open: image-hash at map time (loader-side) vs
 (path, mtime, size). Invalidate story: SMC pages fall back to runtime invalidate as today;
 the persisted cache only serves never-invalidated ranges (conservative: any invalidate on
 a range poisons its cache entries for the run + on disk).

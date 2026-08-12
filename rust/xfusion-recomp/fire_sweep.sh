@@ -2,7 +2,7 @@
 # fire_sweep.sh — the deterministic sweep fire-loop (corpus → box → split →
 # 16-way fire → aggregate). Replaces the manual sequence that cost 3 re-fires
 # tonight alone (splitter-args, dot-names, stale-parts) + the pgrep-self-match
-# class (own #159/#180/#181: this IS the scp-a-script-file form).
+# class (pgrep/pkill -f self-matching a heredoc cmdline: this IS the scp-a-script-file form).
 #
 # Usage: ./fire_sweep.sh <corpus.x64d> [runner=oracle_runner_v8]
 # Judgement (WHICH corpus, WHEN the box is free) = the caller's.
@@ -10,7 +10,7 @@
 set -e
 CORPUS="${1:?usage: fire_sweep.sh <corpus.x64d> [runner]}"
 RUNNER="${2:-oracle_runner_v8}"
-KEY=~/.ssh/x64-oracle-fuchi.pem
+KEY=~/.ssh/x64-oracle.pem
 BOX=ec2-user@ec2-3-230-167-219.compute-1.amazonaws.com
 B="$(basename "$CORPUS" .x64d)"
 
@@ -28,7 +28,7 @@ cat > /tmp/${B}_fire.sh <<EOF
 #!/bin/bash
 set -e
 cd /tmp
-echo "coram $B sweep \$(date -u +%H:%M:%S)" > /tmp/whofile
+echo "sweep-$USER $B \$(date -u +%H:%M:%S)" > /tmp/whofile
 gunzip -f $B.x64d.gz
 python3 split_x64d.py $B.x64d 16 ${B}part
 for k in \$(seq -w 0 15); do
