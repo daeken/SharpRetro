@@ -44,6 +44,11 @@ if [ -n "$HITS" ]; then
 fi
 
 echo "== 5/5 commit + push =="
+# Orchestrator env carries GIT_{AUTHOR,COMMITTER}_EMAIL=agent.<seat>@<op>.mantis.local
+# (operator-alias + orchestrator-name exposure on a PUBLIC repo — env BEATS
+# git-config, so unset here; the identity leak rode COMMITTER on 578 commits
+# before this line existed).
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
 git commit -m "$MSG" --author="coram <coram@daeken>"
 git push origin main
 echo "== SHIPPED =="
