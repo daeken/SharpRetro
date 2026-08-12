@@ -97,7 +97,33 @@ fn main() {
             0xCC,                      // @43 err1: int3
             0xCC,                      // @44 err2: int3
         ];
-        // fib(N) with call/ret — exercises push/pop/call/ret stack-mem.
+        // memloop: the TIER-3 discriminator — a hot loop with REDUNDANT memory
+        // traffic (the MSVC spill idiom): per iteration it stores eax to
+        // [rsp-8], reloads it twice, and loads a constant from [rsp-16] set
+        // up before the loop. T3's store-to-load forwarding + redundant-load
+        // elim should delete all three loads (the stored/loaded vals are in
+        // SSA already); block-grain/T2-without-T3 does 4 mem ops per iter.
+        // Also crosses a guard (Jcc never taken) + a JMP hop so the loop is a
+        // REGION (T2-shaped), not one block.
+        let memloop: &[u8] = &[
+            0xB8, 0,0,0,0,                   // @0  mov eax, 0
+            0xB9, 0x40,0x42,0x0F,0,          // @5  mov ecx, 1_000_000
+            0xC7,0x44,0x24,0xF0, 7,0,0,0,    // @10 mov dword [rsp-16], 7
+            // loop @18:
+            0x89,0x44,0x24,0xF8,             // @18 mov [rsp-8], eax
+            0x8B,0x54,0x24,0xF8,             // @22 mov edx, [rsp-8]     (fwd)
+            0x03,0x54,0x24,0xF8,             // @26 add edx, [rsp-8]     (fwd)
+            0x03,0x54,0x24,0xF0,             // @30 add edx, [rsp-16]    (fwd)
+            0x81,0xFA, 0,0,0,0x80,           // @34 cmp edx, 0x80000000
+            0x74, 0x0C,                      // @40 je err (@54) — never taken
+            0xEB, 0x02,                      // @42 jmp cont (@46)
+            0xCC, 0xCC,                      // @44 pad
+            0x89,0xD0,                       // @46 cont: mov eax, edx
+            0xFF,0xC9,                       // @48 dec ecx
+            0x75, 0xDE,                      // @50 jnz loop (@18: rel8 = 18-52 = -34)
+            0xCC,                            // @52 int3
+            0xCC, 0xCC,                      // @53 pad, @54 err: int3
+        ];
         let fib: &[u8] = &[
             // main: mov edi, 12; call fib; int3
             0xBF, 0x0C,0,0,0,       // mov edi, 12
@@ -120,6 +146,7 @@ fn main() {
             Some("fib") => fib,
             Some("icloop") => icloop,
             Some("guardloop") => guardloop,
+            Some("memloop") => memloop,
             Some(hex) => Box::leak(hex.split(',')
                 .map(|s| u8::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap())
                 .collect::<Vec<_>>().into_boxed_slice()),

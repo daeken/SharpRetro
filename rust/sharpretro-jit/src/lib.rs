@@ -30,7 +30,7 @@ pub mod block_cache;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// IL type lattice — mirrors ArchCompilerCore's `EType`. Every `Val` carries one.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IlType {
     /// Integer: signed?, width in bits (1..=128).
     I { signed: bool, width: u8 },

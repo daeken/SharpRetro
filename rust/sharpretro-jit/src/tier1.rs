@@ -174,6 +174,110 @@ impl Tier1 {
                 }
             }
         }
+        // ── TIER-3 REGION PASSES (XF_T3=1; off = tier-2 exactly) ──────────
+        // ① GVN: hash-cons PURE producers (same kind+ty+args+imm at the same
+        //   cond-depth-0 availability) → later duplicates rewrite to the
+        //   first. Unifies address computations so ② sees textual equality.
+        // ② Store-to-load forwarding + redundant-load elim: MemWrite(a,v)
+        //   makes a later MemRead(a) return v; MemRead(a) makes a LATER
+        //   MemRead(a) return the first's out. Conservative total-alias:
+        //   ANY intervening MemWrite/atomic/intrinsic/cond-boundary clobbers
+        //   the whole table (guest stores may alias anything; cond arms may
+        //   store). Runs to fixpoint with ① (one combined forward walk).
+        // LICM is DELIBERATELY absent: a trace region has no preheader to
+        // hoist into — that's the LLVM tier's job (real loop-form + its own
+        // LICM/GVN). Orphaned ops die at DCE-at-alloc (Loc::Dead → skipped).
+        fn val_ty(ops: &[IlOp], v: u32) -> Option<IlType> {
+            // producing op's ty (linear scan is fine: called only on forward
+            // hits, and regions are ≤~4K ops).
+            ops.iter().find(|o| o.out == Some(v)).map(|o| o.ty)
+        }
+        let t3 = std::env::var("XF_T3").map(|v| v == "1").unwrap_or(false);
+        if t3 {
+            use std::collections::HashMap;
+            let n_vals = self.rec.next_val();
+            let ops = &mut self.rec.ops;
+            let n = ops.len();
+            // replace[v] = the val to use instead of v (union-find-flat).
+            let mut replace: Vec<u32> = (0..n_vals).collect();
+            let res = |replace: &Vec<u32>, mut v: u32| -> u32 {
+                // paths are short (we flatten on write); loop for safety.
+                while replace[v as usize] != v { v = replace[v as usize]; }
+                v
+            };
+            // GVN table: (kind-disc, ty, args-resolved, imm) → out val.
+            let mut gvn: HashMap<(u8, IlType, [u32; 3], u128), u32> = HashMap::new();
+            // load table: addr-val (resolved) → known value val.
+            let mut loads: HashMap<u32, u32> = HashMap::new();
+            let mut depth = 0i32;
+            for i in 0..n {
+                // resolve args through the replace map FIRST (so GVN keys and
+                // load addrs see canonical vals).
+                let na = ops[i].n_args as usize;
+                for k in 0..na {
+                    let a = ops[i].args[k];
+                    if a != u32::MAX { ops[i].args[k] = res(&replace, a); }
+                }
+                match ops[i].kind {
+                    IlOpKind::CondBegin => { depth += 1; loads.clear(); gvn.clear(); }
+                    IlOpKind::CondElse  => { loads.clear(); gvn.clear(); }
+                    IlOpKind::CondEnd   => { depth -= 1; loads.clear(); gvn.clear(); }
+                    IlOpKind::MemWrite => {
+                        // Total-alias: clobber all known loads, then RECORD
+                        // this store (store-to-load forward: a read of the
+                        // same addr-val sees the stored val).
+                        loads.clear();
+                        loads.insert(ops[i].args[0], ops[i].args[1]);
+                    }
+                    IlOpKind::MemRmwAtomic | IlOpKind::MemCasAtomic
+                    | IlOpKind::Fence | IlOpKind::CallIntrinsic => {
+                        loads.clear(); gvn.clear();   // ordering barriers
+                    }
+                    IlOpKind::MemRead => {
+                        let addr = ops[i].args[0];
+                        let out = ops[i].out.unwrap();
+                        if let Some(&known) = loads.get(&addr) {
+                            // ‡ width: the table records the ADDR's last
+                            // store/load val — forwarding is only sound at
+                            // matching width. Types ride vals; compare via
+                            // the producing op's ty vs ours. Cheap check:
+                            // only forward when the tys match exactly.
+                            let src_ty = val_ty(ops, known);
+                            if src_ty == Some(ops[i].ty) {
+                                replace[out as usize] = known;
+                                continue;
+                            }
+                        }
+                        loads.insert(addr, out);
+                    }
+                    // PURE producers → GVN. (RegRead excluded: SVN already
+                    // caches it at record time; a RegRead's value depends on
+                    // preceding RegWrites which we don't key — unsound here.)
+                    IlOpKind::Literal | IlOpKind::Add | IlOpKind::Sub
+                    | IlOpKind::Mul | IlOpKind::Div | IlOpKind::Rem
+                    | IlOpKind::Neg | IlOpKind::And | IlOpKind::Or
+                    | IlOpKind::Xor | IlOpKind::Not | IlOpKind::Shl
+                    | IlOpKind::Shr | IlOpKind::Rotr | IlOpKind::Rbit
+                    | IlOpKind::Clz | IlOpKind::Eq | IlOpKind::Ne
+                    | IlOpKind::Lt | IlOpKind::Le | IlOpKind::Gt
+                    | IlOpKind::Ge | IlOpKind::Cast | IlOpKind::Sext
+                    | IlOpKind::Ternary => {
+                        if let Some(out) = ops[i].out {
+                            let key = (ops[i].kind as u8, ops[i].ty, ops[i].args, ops[i].imm);
+                            match gvn.get(&key) {
+                                Some(&first) => { replace[out as usize] = first; }
+                                None => { gvn.insert(key, out); }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            if std::env::var("XF_DBG").is_ok() {
+                let n_rep = replace.iter().enumerate().filter(|&(i, &v)| v != i as u32).count();
+                eprintln!("[t3] {} vals unified/forwarded of {}", n_rep, n_vals);
+            }
+        }
         let alloc = linear_scan(&self.rec, N_ALLOC_REGS);
         let mut e = Emitter::new(self.layout, &self.rec, &alloc);
         e.exit_ident = self.exit_ident;

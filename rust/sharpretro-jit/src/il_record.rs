@@ -86,6 +86,9 @@ pub struct IlRecorder {
 }
 
 impl IlRecorder {
+    /// Highest val-id + 1 (for pass-side tables sized by val count).
+    pub fn next_val(&self) -> u32 { self.next }
+
     pub fn new() -> Self {
         let mut r = Self::default();
         r.svn = std::env::var("XF_SVN").map(|v| v != "0").unwrap_or(true);
