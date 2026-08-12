@@ -244,6 +244,76 @@ impl ShimLog {
 /// changed a branch → a different atomic order). The emitted spin loops
 /// forever; the HOST watchdog (driver-side, checks cursor progress) aborts
 /// loud. This is the "divergence = detector" contract.
+/// Save shim-logs (per-thread) to a file. Format XFRS1: magic, n_threads,
+/// per thread {name_len, name_bytes (the SetThreadDescription name — the
+/// STABLEST cross-run thread key; empty = unnamed, falls back to the
+/// spawn-order composite), n_events, per event {fn_id, has_seq, seq, ret,
+/// n_out, per out {addr, len, bytes}}}, fnv1a trailer.
+pub fn save_shim_log(path: &str, threads: &[(String, ShimLog)]) -> std::io::Result<()> {
+    let mut out: Vec<u8> = Vec::new();
+    out.extend_from_slice(b"XFRS1\0\0\0");
+    out.extend_from_slice(&(threads.len() as u64).to_le_bytes());
+    for (name, log) in threads {
+        out.extend_from_slice(&(name.len() as u32).to_le_bytes());
+        out.extend_from_slice(name.as_bytes());
+        out.extend_from_slice(&(log.events.len() as u64).to_le_bytes());
+        for ev in &log.events {
+            out.extend_from_slice(&ev.fn_id.to_le_bytes());
+            out.push(ev.ordered_seq.is_some() as u8);
+            out.extend_from_slice(&ev.ordered_seq.unwrap_or(0).to_le_bytes());
+            out.extend_from_slice(&ev.ret.to_le_bytes());
+            out.extend_from_slice(&(ev.out.len() as u32).to_le_bytes());
+            for (addr, bytes) in &ev.out {
+                out.extend_from_slice(&addr.to_le_bytes());
+                out.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+                out.extend_from_slice(bytes);
+            }
+        }
+    }
+    let ck = fnv1a(&out);
+    out.extend_from_slice(&ck.to_le_bytes());
+    std::fs::write(path, out)
+}
+
+pub fn load_shim_log(path: &str) -> std::io::Result<Vec<(String, ShimLog)>> {
+    let raw = std::fs::read(path)?;
+    let bad = |m: &str| std::io::Error::new(std::io::ErrorKind::InvalidData, m.to_string());
+    if raw.len() < 24 || &raw[..8] != b"XFRS1\0\0\0" { return Err(bad("bad magic")); }
+    let body = &raw[..raw.len() - 8];
+    let ck = u64::from_le_bytes(raw[raw.len() - 8..].try_into().unwrap());
+    if fnv1a(body) != ck { return Err(bad("checksum mismatch")); }
+    let mut o = 8usize;
+    let rd_u32 = |raw: &[u8], o: &mut usize| -> u32 {
+        let v = u32::from_le_bytes(raw[*o..*o + 4].try_into().unwrap()); *o += 4; v };
+    let rd_u64 = |raw: &[u8], o: &mut usize| -> u64 {
+        let v = u64::from_le_bytes(raw[*o..*o + 8].try_into().unwrap()); *o += 8; v };
+    let n_threads = rd_u64(body, &mut o);
+    let mut threads = Vec::new();
+    for _ in 0..n_threads {
+        let nl = rd_u32(body, &mut o) as usize;
+        let name = String::from_utf8_lossy(&body[o..o + nl]).into_owned(); o += nl;
+        let n_ev = rd_u64(body, &mut o);
+        let mut log = ShimLog::default();
+        for _ in 0..n_ev {
+            let fn_id = rd_u32(body, &mut o);
+            let has_seq = body[o] != 0; o += 1;
+            let seq = rd_u64(body, &mut o);
+            let ret = rd_u64(body, &mut o);
+            let n_out = rd_u32(body, &mut o);
+            let mut outv = Vec::new();
+            for _ in 0..n_out {
+                let addr = rd_u64(body, &mut o);
+                let len = rd_u32(body, &mut o) as usize;
+                outv.push((addr, body[o..o + len].to_vec())); o += len;
+            }
+            log.events.push(ShimEvent {
+                fn_id, ordered_seq: has_seq.then_some(seq), ret, out: outv });
+        }
+        threads.push((name, log));
+    }
+    Ok(threads)
+}
+
 /// Host-side RR_LOCK acquire/release — the ordered-shim bracket (see the
 /// ORDERED-SHIM CONTRACT above). Same lock the emitted record brackets use,
 /// so shim effects and guest atomics serialize into ONE linearization.
@@ -308,5 +378,38 @@ mod tests {
         buf = [0; 8];
         log.replay(3);
         assert_eq!(&buf[..2], &[0xAA, 0xBB]);
+    }
+}
+
+#[cfg(test)]
+mod shim_log_tests {
+    use super::*;
+    #[test]
+    fn xfrs1_roundtrip_and_negative_controls() {
+        let mut l1 = ShimLog::default();
+        l1.events.push(ShimEvent { fn_id: 7, ordered_seq: None, ret: 42,
+            out: vec![(0x1000, vec![1, 2, 3])] });
+        l1.events.push(ShimEvent { fn_id: 9, ordered_seq: Some(5), ret: 0, out: vec![] });
+        let mut l2 = ShimLog::default();
+        l2.events.push(ShimEvent { fn_id: 1, ordered_seq: Some(6), ret: 1,
+            out: vec![(0x2000, vec![0xFF; 32]), (0x3000, vec![])] });
+        let threads = vec![("GameThread".to_string(), l1), ("redIOWorker0".to_string(), l2)];
+        let p = "/tmp/xfrs1_test.bin";
+        save_shim_log(p, &threads).unwrap();
+        let back = load_shim_log(p).unwrap();
+        assert_eq!(back.len(), 2);
+        assert_eq!(back[0].0, "GameThread");
+        assert_eq!(back[0].1.events, threads[0].1.events);
+        assert_eq!(back[1].1.events, threads[1].1.events);
+        // negative controls: bit-flip → checksum; truncation; bad magic.
+        let mut raw = std::fs::read(p).unwrap();
+        raw[20] ^= 1;
+        std::fs::write(p, &raw).unwrap();
+        assert!(load_shim_log(p).is_err(), "bit-flip must fail checksum");
+        std::fs::write(p, &raw[..raw.len() / 2]).unwrap();
+        assert!(load_shim_log(p).is_err(), "truncation must fail");
+        std::fs::write(p, b"NOTMAGIC________________").unwrap();
+        assert!(load_shim_log(p).is_err(), "bad magic must fail");
+        let _ = std::fs::remove_file(p);
     }
 }
