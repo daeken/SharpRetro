@@ -393,3 +393,69 @@ reverse-thunk-stack (@f93f196).
   `flat[OFF_MEMBASE]=0` → rax=55. Shared-mode empirically de-risked.
 - piece-2 (native crossing): `dispatch_native` hook landed (default-false, zero
   behavior change verified). Loader-side impl (enumerated-set + ABI-map + pop) next.
+
+## §record-replay — the rr-substitute
+
+**Why we can do this cheaply where rr is heroic**: the JIT owns every instruction and —
+post-C1 — every cross-thread ordering point routes through OUR Builder nodes
+(`mem_rmw_atomic` / `mem_cas_atomic` / `fence`). We don't infer nondeterminism sources;
+we EMIT all of them. rr needs a retired-branches PMU (absent on virtual EC2 — the wall
+that killed rr for the CP2077 hunt) because it must *count* its way to interrupt-delivery
+points in code it doesn't control. We have no interrupts and control all the code.
+
+**Division of labor**: native arm = the fast reference; **JIT arm = the debuggable
+substrate**. Walls get hunted on the JIT at boot-parity with reverse-navigation; the
+recorder never has to exist on the native arm.
+
+### Nondeterminism inventory (everything else is deterministic given these)
+
+1. **Cross-thread memory ordering** — ONLY at atomic ops (C1's guarantee). Plain-access
+   races exist (~78ppm measured reader-side reordering, litmus harness) but are real-x86
+   bugs in the guest anyway; replay is deterministic *up to* them, and a divergence at
+   replay = a plain-access race detector for free.
+2. **Shim results** — every call crossing to a shim/seam (time, file I/O, handles, rand).
+3. **Clock reads** — RDTSC/QueryPerformanceCounter/GetTickCount (already DET_CLOCK-able;
+   the recorder makes the det-clock *the* clock).
+4. Thread spawn/exit ordering — CreateThread events, recorded as shim results (2).
+
+### RECORD
+
+- **Per-thread append buffers**, lock-free, thread-local — the JIT'd thread streams
+  fixed-width events; no cross-thread contention on the record path.
+  - Atomic-op event: one global-seq LDADD (a single extra `ldaddal` on a process-wide
+    counter at each lock-RMW/CAS/fence — the linearization stamp) + `{seq, guest_pc}`
+    into the local buffer. ~2 insns hot-path.
+  - Shim event: `{fn_id, ret, out-param bytes}` written by the shim dispatcher (host
+    code — free).
+  - Clock event: folded into shim events (clock reads are already host callouts).
+- **Stop-the-world flush**: when any buffer hits high-water, rendezvous at the next
+  driver-loop boundary / atomic site (safepoints we already own — every thread passes
+  one in bounded time), flush all buffers to disk, reset, resume.
+- **Clock stays PAUSED during the stop** (guest time = our counter, so the flush window
+  simply doesn't advance it). The recorded run sees a gapless clock; watchdogs and
+  timeout paths (the 6s-window class) never observe the recorder. This is the piece rr
+  structurally cannot do — it owns the interleaving but not the clock.
+
+### REPLAY = enforce the recorded linearization
+
+- Each thread's JIT'd atomic ops **wait-for-turn**: before executing atomic event k of
+  thread T, spin/park until the global replay cursor reaches the recorded seq. The seq
+  log IS the schedule; threads stay genuinely parallel between ordering points.
+- Shim calls and clock reads feed from the log (no host syscalls at replay).
+- Compiles are free: the cross-run block cache means a replay is execute-only.
+- **Reverse-navigation**: `reverse-continue` ≈ re-run to seq N (replays are fast +
+  deterministic, so binary-search over seq is the time machine). `reverse-watch` =
+  XF_WATCH hit-ring + replay-to-hit-k. No checkpointing needed at v1; add periodic
+  state snapshots later if replay-from-zero gets slow.
+
+### Build order
+
+1. ✅ XF_WATCH watchpoints (@c7589b4) — the no-recording debug surface.
+2. Record: buffer plumbing + atomic-seq stamp + shim-dispatcher taps + flush/rendezvous.
+3. Replay: wait-for-turn at atomics + log-fed shims/clock.
+4. Reverse-nav UX (seq-addressed re-run; watch+replay composition).
+
+v1 explicitly does NOT record: signal delivery (we have none in-guest), async APCs
+(unimplemented), GPU/seam timing (the seam is a shim boundary = already a recorded
+result). Plain-access divergence at replay aborts loud with both states dumped — a
+detector, not a silent wrong.
