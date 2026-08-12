@@ -1,9 +1,11 @@
 # Wine-spec wave — consolidated verdict table (7 of 8 families landed)
 
 **The question this answers ("is every exposed API wine-identical or fail-loud?"):
-NO — the wave found ~163 divergence rows across the first 7 families, of which
-~37 are TRUST-CHAIN class (a consumer makes a trust/branch decision on the
-wrong answer — the version-info-root's class) and ~18 BLOCKER-class.**
+NO — the wave found ~213 divergence rows across all 8 families, of which
+~44 are TRUST-CHAIN class (a consumer makes a trust/branch decision on the
+wrong answer — the version-info-root's class) and ~19 BLOCKER-class. ~70 rows
+graded honest-PASS (correct constants / matching implementations), credit
+where due.**
 Marker-counts are upper bounds (some rows carry two labels); per-spec deduped
 counts live in each file's own summary line.
 
@@ -16,7 +18,7 @@ counts live in each file's own summary line.
 | 05 locale/text | 12 | 13 | 5 | 0 | GetLocaleInfoEx/LCMapString/GetStringType constant-0 (the census suspects, confirmed vs wine column); MB/WC flags+lengths ignored; EnumSystemLocales success-with-zero-callbacks |
 | 07 thread/proc | 15 | 12 | 2 | 1 | SuspendThread fake-success (census-confirmed); topology self-contradictory (1 core-record carrying 8 LPs — pool-sizing reads 1) |
 | 08 time/sysinfo | 16 | 14 | 5 | 1 | GetSystemTime FROZEN at 2025-01-01 while FILETIME APIs run real = two disagreeing nows; SystemTimeToFileTime ignores the date; VerifyVersionInfo + IsProcessorFeaturePresent constant-TRUE |
-| 09 misc/loader/COM | ~40 | (landing) | — | — | agent mid-write |
+| 09 misc/loader/COM | ~40 | 50 | 7 | 1 | GetLastError process-GLOBAL (cross-thread bleed); LoadLibrary fake-handles + GetModuleHandle always-exe = impossible-state pair; all KNOWNFOLDERIDs collapse to one dir; CloseHandle never validates; deterministic 'random' |
 
 ## The fix-queue, trust-chain-first (the ranked union)
 1. **Clock coherence (08 r1/r2/r3/r4)** — GetSystemTime frozen-2025 vs real-epoch
@@ -36,6 +38,14 @@ counts live in each file's own summary line.
 9. **VerifyVersionInfo/IsProcessorFeaturePresent real tables (08 r5/r6)**.
 10. Window-family QS_* + message-classification (01 — interacts with the
     CW_* behavior switches; fix alongside the window organ's next pass).
+11. **Per-thread GetLastError (09)** — currently a process-global Mutex:
+    cross-thread error bleed corrupts every call-then-check under threads.
+    One TEB field. Arguably belongs at #2 — it's every-API-wide.
+12. Module-registry coherence (09) — LoadLibrary fake-handles +
+    GetModuleHandle-always-exe contradict each other (impossible state on
+    real Windows); one registry makes both honest.
+13. Distinct KNOWNFOLDERID roots + CloseHandle validation + real entropy
+    (BCryptGenRandom rides splitmix-over-det-ticks — 3-line getrandom fix).
 
 Blocker-class-but-unreached rows (OVERLAPPED writes, WFMO abandonment, IOCP
 combined-form) = die-loud candidates per the all-stubs ruling rather than
