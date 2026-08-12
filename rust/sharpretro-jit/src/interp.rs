@@ -155,6 +155,7 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         let w = match ty { IlType::I{width,..} => width, IlType::F{width} => width, IlType::V128 => 128, _ => 64 };
         IVal { ty, bits: self.mem.read(a.as_u64(), w) }
     }
+    fn fence(&mut self) { std::sync::atomic::fence(std::sync::atomic::Ordering::SeqCst); }
     fn mem_rmw_atomic(&mut self, op: u8, a: IVal, val: IVal, ty: IlType) -> IVal {
         let w = match ty { IlType::I{width,..} => width as u8, _ => panic!("rmw ty {ty:?}") };
         IVal { ty, bits: self.mem.rmw(a.as_u64(), w, op, val.bits) }

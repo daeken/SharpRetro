@@ -88,10 +88,68 @@ fn load_elf(path: &str) -> u64 {
     e_entry
 }
 
+fn run_v2(entry: u64, n_threads: usize) {
+    const ITERS: u64 = 100_000;
+    let shm = 0x600000u64;
+    let stk_base = 0x7f0000000000u64;
+    unsafe {
+        libc::mmap(shm as *mut _, 0x1000, libc::PROT_READ | libc::PROT_WRITE,
+            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS | libc::MAP_FIXED, -1, 0);
+        // and_bits starts ALL-ONES (threads clear their bit)
+        *((shm + 24) as *mut u64) = u64::MAX;
+        libc::mmap((stk_base - 0x100000 * n_threads as u64) as *mut _,
+            0x100000 * n_threads, libc::PROT_READ | libc::PROT_WRITE,
+            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS | libc::MAP_FIXED, -1, 0);
+    }
+    let t0 = std::time::Instant::now();
+    std::thread::scope(|sc| {
+        for t in 0..n_threads {
+            sc.spawn(move || {
+                let mut state = vec![0u64; STATE_WORDS_X64];
+                state[OFF_RIP] = entry;
+                state[OFF_MEMBASE] = 0;
+                state[7] = shm;                                     // rdi
+                state[6] = t as u64;                                // rsi = tid
+                state[4] = stk_base - 0x100000 * t as u64 - 0x4000; // rsp
+                let mut cache = BlockCache::with_layout(&X64_LAYOUT);
+                cache.max_block_insns = 64;
+                cache.run(&C, &mut state[..], 0, usize::MAX);
+            });
+        }
+    });
+    let wall = t0.elapsed().as_secs_f64();
+    let rd64 = |o: u64| unsafe { *((shm + o) as *const u64) };
+    let rd32 = |o: u64| unsafe { *((shm + o) as *const u32) } as u64;
+    let rd16 = |o: u64| unsafe { *((shm + o) as *const u16) } as u64;
+    let rd8  = |o: u64| unsafe { *((shm + o) as *const u8) } as u64;
+    let n = n_threads as u64;
+    let mask = if n >= 64 { u64::MAX } else { (1u64 << n) - 1 };
+    let checks = [
+        ("add64", rd64(0),  (ITERS * n) & u64::MAX),
+        ("add32", rd32(8),  (ITERS * n) & 0xFFFF_FFFF),
+        ("add16", rd16(12), (ITERS * n) & 0xFFFF),
+        ("add8",  rd8(14),  (ITERS * n) & 0xFF),
+        ("or_bits (stamped)",  rd64(16), mask),
+        ("and_bits (stamped)", rd64(24), !mask),
+        ("xor_bits (odd-flips)", rd64(32), mask),
+        ("xadd_mix", rd64(40), ITERS * (n * (n + 1) / 2)),
+        ("protected@lock16", rd64(56), ITERS * n),
+    ];
+    let mut ok = true;
+    for (name, got, exp) in checks {
+        let m = if got == exp { "✓" } else { ok = false; "✗ LOST-UPDATES" };
+        println!("{m} {name}: got={got:#x} want={exp:#x}");
+    }
+    println!("[atomics_torture v2] {} threads × {} iters, {:.2}s — {}",
+        n_threads, ITERS, wall, if ok { "PASS" } else { "FAIL" });
+    std::process::exit(if ok { 0 } else { 9 });
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let entry = load_elf(&args[1]);
     let n_threads: usize = args.get(2).map(|s| s.parse().unwrap()).unwrap_or(8);
+    if args.iter().any(|a| a == "--v2") { run_v2(entry, n_threads); }
     const ITERS: u64 = 200_000;
 
     // Shared guest struct + per-thread stacks.

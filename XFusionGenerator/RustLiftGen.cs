@@ -88,6 +88,11 @@ public class RustLiftGen {
             case PName("block"):
                 foreach(var f in l.Skip(1)) Stmt(f);
                 break;
+            case PName("fence"):
+                // Memory-ordering barrier (MFENCE/SFENCE/LFENCE) — C2(b):
+                // dmb ish on JIT tiers, atomic::fence(SeqCst) in interp.
+                Emit("bd.fence();");
+                break;
             case PName("="): {
                 var target = ((PName) l[1]).Name;
                 if(Flags.TryGetValue(target, out var fbit)) {

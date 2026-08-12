@@ -284,6 +284,11 @@ pub trait Builder {
                       _ty: IlType) -> Self::Val {
         panic!("mem_rmw_atomic: not implemented by this Builder");
     }
+    /// Memory-ordering barrier (guest MFENCE/SFENCE/LFENCE — C2(b)). Full
+    /// barrier everywhere (dmb ish / SeqCst fence) — stronger than x86 needs
+    /// for S/LFENCE, always sound. Default no-op is WRONG for multi-thread
+    /// guests but preserved for non-memory builders (recording etc).
+    fn fence(&mut self) {}
     /// Atomic compare-and-swap: if mem[addr]==expected { mem[addr]=new };
     /// returns the OLD value (caller derives success = old==expected). Full
     /// barrier. LSE CASAL / SeqCst compare_exchange.

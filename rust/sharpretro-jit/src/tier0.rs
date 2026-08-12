@@ -325,6 +325,7 @@ impl Builder for Tier0 {
         self.store(X_A, s);
         s
     }
+    fn fence(&mut self) { self.enc.put_raw(0xD503_3BBF); } // dmb ish (decode-back ✓)
     fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
         let w = match ty { IlType::I{width,..} => width, _ => panic!("t0 rmw ty {ty:?}") };
         let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3, _ => panic!("t0 rmw w={w}") };

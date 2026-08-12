@@ -186,6 +186,7 @@ impl Builder for Tier1 {
     fn branched(&self) -> bool { self.rec.branched() }
     fn set_trace_next(&mut self, pc: Option<u64>) { self.rec.set_trace_next(pc); }
     fn trace_take_elided(&mut self) -> bool { self.rec.trace_take_elided() }
+    fn fence(&mut self) { self.rec.fence(); }
     fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
         self.rec.mem_rmw_atomic(op, a, val, ty)
     }
@@ -546,6 +547,7 @@ impl<'a> Emitter<'a> {
                     _ => panic!("tier-1 mem_write w={vw}"),
                 }
             }
+            Fence => { self.enc.put_raw(0xD503_3BBF); } // dmb ish
             MemRmwAtomic => {
                 // args=[addr, val], imm=op. OLD → dest. Same host-addr calc
                 // as MemWrite; LSE AL-form (decode-back-verified encodings).

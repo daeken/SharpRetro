@@ -42,6 +42,8 @@ pub enum IlOpKind {
     MemRmwAtomic,
     /// C1 CAS: args=[addr, expected, new]; produces OLD. Same barrier rules.
     MemCasAtomic,
+    /// Memory barrier (no args, no out) — ordering-only.
+    Fence,
     // control (cond)
     CondBegin, CondElse, CondEnd,   // bd.cond(c, then, else) → CondBegin(c) .. CondElse .. CondEnd
     // markers
@@ -231,6 +233,7 @@ impl Builder for IlRecorder {
         }
     }
     fn mem_read(&mut self, a: u32, ty: IlType) -> u32 { self.produce(IlOpKind::MemRead, ty, &[a], 0) }
+    fn fence(&mut self) { self.stmt(IlOpKind::Fence, IlType::Unit, &[], 0); }
     fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
         // NB: SVN reg-cache survives — it caches REGISTER reads (thread-
         // private); the lock-fence constrains MEMORY order, and ops emit in

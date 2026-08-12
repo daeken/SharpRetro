@@ -330,12 +330,14 @@
 ; rejects on the 66-prefixed rows the old Mv/Gv width-code emitted.
 (encoding MOVNTI (My Gy) (0x0F 0xC3))
 
-; Fences: memory-ordering barriers. Under mem_base=0 single-guest-thread,
-; there's no reordering to fence — semantically a NOP. When SMP-guest
-; arrives (multi-thread), these need real dmb sy/ld/st.
-(instruction MFENCE () "mfence" (block))
+; Fences: memory-ordering barriers. SMP-guest is REAL now (worker threads
+; share identity-mapped memory) — (fence) lowers to dmb ish on the JIT
+; tiers / atomic::fence(SeqCst) in the interp. C2 bucket-(b) of
+; SYNC-AUDIT-ATOMICS.md. (dmb ish for all three = stronger-than-x86-needs
+; for S/LFENCE, always sound.)
+(instruction MFENCE () "mfence" (fence))
 (encoding MFENCE () (0x0F 0xAE /6))
-(instruction LFENCE () "lfence" (block))
+(instruction LFENCE () "lfence" (fence))
 (encoding LFENCE () (0x0F 0xAE /5))
 
 ; Prefetch hints: pure cache-timing hints, ZERO architectural effect. NOPs.

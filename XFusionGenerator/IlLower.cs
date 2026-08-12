@@ -149,6 +149,13 @@ public class IlLower {
 				Stmts.Add(new IlIntrin(IlType.V0, name, args.ToArray()));
 				break;
 			}
+			case PName("fence"):
+				// Memory-ordering barrier (MFENCE/SFENCE/LFENCE). C#-side
+				// consumers are single-threaded (X86Machine oracle, isa_diff's
+				// C# arm) — a well-known intrinsic marker suffices; the Rust
+				// side (RustLiftGen) lowers to bd.fence() → dmb ish/SeqCst.
+				Stmts.Add(new IlIntrin(IlType.V0, "fence", Array.Empty<Il>()));
+				break;
 			default:
 				throw new NotSupportedException($"stmt head {l[0]}");
 		}
