@@ -57,11 +57,12 @@ pub struct EncChoice {
     pub zopc: u8,       // +r opcode-embedded reg (same range)
     pub imm: u64,       // immediate value (if any Imm operand)
     pub mem: Option<MemChoice>,  // phase-3: mem-form addressing (None = reg-form mod=11)
+    pub lock: bool,     // phase-4: F0 prefix (lockable mnemonics, mem-dst forms only)
 }
 impl Default for EncChoice {
     fn default() -> Self {
         Self { mode: XMode::Bits64, op_w: 32, reg: 0, rm: 0, zopc: 0, imm: 0,
-               mem: None }
+               mem: None, lock: false }
     }
 }
 
@@ -208,6 +209,8 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
     let has_modrm = uses_reg || uses_rm || d.reg_ext >= 0;
 
     // ── prefix bytes ──
+    // LOCK (F0, group 1) first — phase-4 atomic forms.
+    if c.lock { b.push(0xF0); }
     // Mandatory prefix (66/F2/F3) is a REAL prefix byte, before REX.
     if d.mprefix != 0 { b.push(d.mprefix); }
     // Operand-size 66 for op_w==16 on V-coded rows (unless mprefix already 66,
@@ -513,7 +516,7 @@ pub fn enumerate_p3_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
     for &op_w in opws {
         for &reg in regs {
             for mc in &shapes {
-                let c = EncChoice { mode, op_w, reg, rm: 0, zopc: 0, imm, mem: Some(*mc) };
+                let c = EncChoice { mode, op_w, reg, rm: 0, zopc: 0, imm, mem: Some(*mc), lock: false };
                 match verify_rt(d, &c) {
                     Ok(bytes) => { n_ok += 1; f(&c, &bytes); }
                     Err(e) => { n_fail += 1; on_fail(&e); }
@@ -526,6 +529,26 @@ pub fn enumerate_p3_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
 
 pub fn enumerate_p3<F: FnMut(&EncChoice, &[u8])>(d: &SwDef, mode: XMode, f: F) -> (u32, u32) {
     enumerate_p3_debug(d, mode, f, |_| {})
+}
+
+/// Phase-4: LOCK-prefix (F0) forms — the lockable set with a MEM dst, both
+/// modes. Same mem-shape × op_w × reg walk as phase-3, lock=true. Purpose:
+/// silicon-verifies the ATOMIC ROUTING's semantics (atomic_pre's
+/// Val-substitution + the XADD/CMPXCHG flag blocks) — single-threaded, a
+/// locked op's ARCHITECTURAL effect equals the unlocked one, so the same
+/// interp-derived expected-post applies; what the F0 rows add is (a) our
+/// decoder accepting every F0 encoding shape, (b) the lifted atomic path
+/// producing bare-silicon-exact results+flags.
+pub const LOCKABLE: &[&str] = &["ADD","AND","OR","XOR","SUB","INC","DEC","XADD","XCHG","CMPXCHG"];
+
+pub fn enumerate_p4<F: FnMut(&EncChoice, &[u8])>(d: &SwDef, mode: XMode, mut f: F) -> (u32, u32) {
+    if !LOCKABLE.contains(&d.mnem) { return (0, 0); }
+    // LOCK requires a mem destination: Erm operand + mem-form legal.
+    enumerate_p3(d, mode, |c, _| {
+        let mut c2 = *c;
+        c2.lock = true;
+        if let Ok(bytes) = verify_rt(d, &c2) { f(&c2, &bytes); }
+    })
 }
 
 /// Phase-3 skip: defs with NO mem-form encoding path.
@@ -610,7 +633,7 @@ pub fn enumerate_p1_debug<F: FnMut(&EncChoice, &[u8]), E: FnMut(&str)>(
             for &rm in &rms {
                 for &zopc in &zops {
                     for &imm in &imms {
-                        let c = EncChoice { mode, op_w, reg, rm, zopc, imm, mem: None };
+                        let c = EncChoice { mode, op_w, reg, rm, zopc, imm, mem: None, lock: false };
                         if is_known_alias(d, &c) { continue; }
                         match verify_rt(d, &c) {
                             Ok(bytes) => { n_ok += 1; f(&c, &bytes); }

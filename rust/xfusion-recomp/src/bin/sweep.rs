@@ -12,7 +12,7 @@ use std::io::Write;
 use std::collections::BTreeMap;
 
 use xfusion_recomp::sweep_defs::{SWEEP_DEFS, SwCls, SwW};
-use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice, phase3_skip, enumerate_p3, verify_rt};
+use xfusion_recomp::sweep::{phase1_skip, enumerate_p1, EncChoice, phase3_skip, enumerate_p3, enumerate_p4, verify_rt};
 use xfusion_recomp::disassembler::{decode_insn, DEF_MNEMONICS};
 use xfusion_recomp::decode::XMode;
 use xfusion_recomp::state::{X86State, TrackingState};
@@ -117,7 +117,7 @@ fn gen_fault_rows(out_path: &str, mode: XMode) -> std::io::Result<()> {
                 MemChoice{base:1, index:3,  scale:4, disp:8, rip_rel:false},
             ];
             for mc in &shapes {
-                let c = EncChoice { mode, op_w, reg: 0, rm: 0, zopc: 0, imm: 0, mem: Some(*mc) };
+                let c = EncChoice { mode, op_w, reg: 0, rm: 0, zopc: 0, imm: 0, mem: Some(*mc), lock: false };
                 let insn = match verify_rt(sd, &c) { Ok(b) => b, Err(_) => continue };
                 // Solve base/idx so ea = GUARD_VA exactly.
                 let (bv, iv): (u64, u64) = if mc.index >= 0 {
@@ -161,7 +161,7 @@ fn gen_fault_rows(out_path: &str, mode: XMode) -> std::io::Result<()> {
                 // fixed by the encoder's B-width path; pass 32 there).
                 let c = EncChoice {
                     mode, op_w: if op_w == 8 { 32 } else { op_w },
-                    reg: 0, rm, zopc: 0, imm: 0, mem: None,
+                    reg: 0, rm, zopc: 0, imm: 0, mem: None, lock: false,
                 };
                 let insn = match verify_rt(sd, &c) { Ok(b) => b, Err(_) => continue };
                 // Fault-classes: (divisor_val, rdx, rax) triples.
@@ -433,6 +433,12 @@ fn main() {
     // composition yet); Bits64 + Bits32 both work (32-bit stub loads the
     // solved base/idx values from state like any other GPR).
     let phase3_mem = args.iter().any(|a| a == "--mem");
+    // phase-4: F0-lock forms — the mem-form walk restricted to the lockable
+    // set, lock=true. Silicon-verifies the atomic routing's semantics (the
+    // atomic_pre Val-substitution + the XADD/CMPXCHG flag blocks) — single-
+    // threaded, a locked op's architectural effect equals the unlocked one,
+    // so the interp-derived expected-post applies unchanged.
+    let phase4_lock = args.iter().any(|a| a == "--lock");
     if phase3_mem && phase2_xmm {
         eprintln!("--mem --xmm not yet composed (xmm-mem rows = later)");
         std::process::exit(1);
@@ -450,7 +456,7 @@ fn main() {
         let f = std::fs::File::create(&out_path).expect("create corpus");
         let mut w = std::io::BufWriter::new(f);
         // 'X64D' = state-only rows; 'X64E' = rows carry [pre_mem][post_mem].
-        let magic: u32 = if phase3_mem { 0x45343658 } else { 0x44343658 };
+        let magic: u32 = if phase3_mem || phase4_lock { 0x45343658 } else { 0x44343658 };
         w.write_all(&magic.to_le_bytes()).unwrap();
         // Runner header = [u32 magic][u32 n]. We don't know n up-front (skip
         // predicates prune), so write a placeholder and seek-back to patch it.
@@ -459,7 +465,10 @@ fn main() {
     } else { None };
 
     for (i, sd) in SWEEP_DEFS.iter().enumerate() {
-        let pskip = if phase3_mem { phase3_skip(sd, mode) } else { phase1_skip(sd, mode) };
+        let pskip = if phase3_mem || phase4_lock { phase3_skip(sd, mode) } else { phase1_skip(sd, mode) };
+        if phase4_lock && !xfusion_recomp::sweep::LOCKABLE.contains(&sd.mnem) {
+            *skip_by.entry("not-lockable").or_default() += 1; continue;
+        }
         if let Some(r) = pskip { *skip_by.entry(r).or_default() += 1; continue; }
         if let Some(r) = mnem_exec_skip(sd.mnem) { *skip_by.entry(r).or_default() += 1; continue; }
         // Def has ANY xmm-class operand? (read OR write side). Own #171:
@@ -484,7 +493,9 @@ fn main() {
         let mut enc_i = 0u32;
         let enum_fn: fn(&xfusion_recomp::sweep_defs::SwDef, XMode,
                         &mut dyn FnMut(&EncChoice, &[u8])) -> (u32, u32) =
-            if phase3_mem {
+            if phase4_lock {
+                |d, m, f| enumerate_p4(d, m, f)
+            } else if phase3_mem {
                 |d, m, f| enumerate_p3(d, m, f)
             } else {
                 |d, m, f| enumerate_p1(d, m, f)
@@ -633,7 +644,7 @@ fn main() {
                             f.write_all(&stub).unwrap();
                             for w in &pre.to_flat()  { f.write_all(&w.to_le_bytes()).unwrap(); }
                             for w in &post.to_flat() { f.write_all(&w.to_le_bytes()).unwrap(); }
-                            if phase3_mem {
+                            if phase3_mem || phase4_lock {
                                 // X64E: [pre_mem:64][post_mem:64] after states.
                                 f.write_all(pre_mem_opt.map(|p| &p[..]).unwrap_or(&[0u8; MEM_LEN])).unwrap();
                                 f.write_all(&post_mem).unwrap();
