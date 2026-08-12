@@ -796,6 +796,7 @@ public class RustLiftGen {
         sb.AppendLine("    where B::Val: Copy");
         sb.AppendLine("{");
         sb.AppendLine("    let next_pc = pc.wrapping_add(d.len as u64);");
+        sb.AppendLine("    bd.set_insn_pc(pc);   // debug context (XF_WATCH hit records; no-op default)");
         sb.AppendLine("    match d.def_id {");
         foreach(var (def, defId) in RustDisasmGen.BodyOrder.Select((d, i) => (d, i + 1))) {
             static bool IsBtFamilyRegIdx(XFusionDef d) =>

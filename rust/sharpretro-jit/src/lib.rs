@@ -284,6 +284,10 @@ pub trait Builder {
                       _ty: IlType) -> Self::Val {
         panic!("mem_rmw_atomic: not implemented by this Builder");
     }
+    /// Debug context: the guest pc of the insn ABOUT to lift (drivers call
+    /// per-insn; default no-op). Consumed by XF_WATCH hit records and future
+    /// debug surfaces. NOT semantic — safe to ignore.
+    fn set_insn_pc(&mut self, _pc: u64) {}
     /// Memory-ordering barrier (guest MFENCE/SFENCE/LFENCE — C2(b)). Full
     /// barrier everywhere (dmb ish / SeqCst fence) — stronger than x86 needs
     /// for S/LFENCE, always sound. Default no-op is WRONG for multi-thread

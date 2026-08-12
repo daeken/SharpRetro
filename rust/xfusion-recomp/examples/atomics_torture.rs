@@ -270,6 +270,13 @@ fn main() {
     println!("(swap_last={:#x} — any thread's last i, unchecked)", rd(32));
     println!("lock word final = {} (want 0)", rd(40) as u32);
     if rd(40) as u32 != 0 { ok = false; }
+    let hits = sharpretro_jit::tier0::watch_hits();
+    if !hits.is_empty() {
+        println!("[watch] {} hits; first 5:", hits.len());
+        for h in hits.iter().take(5) {
+            println!("  pc={:#x} addr={:#x} old={:#x}", h.guest_pc, h.addr, h.old);
+        }
+    }
     println!("[atomics_torture] {} threads × {} iters, {:.2}s — {}",
         n_threads, ITERS, wall, if ok { "PASS" } else { "FAIL" });
     std::process::exit(if ok { 0 } else { 9 });

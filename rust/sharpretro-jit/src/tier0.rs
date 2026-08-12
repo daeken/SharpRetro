@@ -24,6 +24,55 @@ use crate::aarch64_enc::{Aarch64Enc, Cond};
 
 const X_STATE: u32 = 28;   // x28 = state-base
 const X_SPILL: u32 = 27;   // x27 = spill-base
+/// ── XF_WATCH software watchpoints (sera ·1445/·1460 — the rr-substitute's
+/// piece 1). Process-wide watched range + hit ring. The JIT emits a range-
+/// check before every guest store when XF_WATCH=<addr>,<len> is set at
+/// compile time (env read once, cached; ~8 insns per store — acceptable
+/// behind the gate; without the env the emit is untouched). Hits append
+/// {guest_pc, addr, old_value} to the ring (lock-free LDADD cursor, capacity
+/// 4096, overwrite-oldest). Drain via watch_hits().
+#[repr(C)]   // the EMITTED code addresses fields by offset: lo@0 hi@8
+             // cursor@16 ring@24 — repr(C) makes that a contract.
+pub struct WatchState {
+    pub lo: std::sync::atomic::AtomicU64,
+    pub hi: std::sync::atomic::AtomicU64,
+    pub cursor: std::sync::atomic::AtomicU64,
+    pub ring: [WatchHit; 4096],
+}
+#[derive(Clone, Copy, Default)]
+#[repr(C)]
+pub struct WatchHit { pub guest_pc: u64, pub addr: u64, pub old: u64 }
+pub static WATCH: WatchState = WatchState {
+    lo: std::sync::atomic::AtomicU64::new(u64::MAX),
+    hi: std::sync::atomic::AtomicU64::new(0),
+    cursor: std::sync::atomic::AtomicU64::new(0),
+    ring: [WatchHit { guest_pc: 0, addr: 0, old: 0 }; 4096],
+};
+/// Arm from XF_WATCH=<addr>,<len> (hex ok). Returns whether armed.
+pub fn watch_arm_from_env() -> bool {
+    if let Ok(v) = std::env::var("XF_WATCH") {
+        let parse = |s: &str| -> u64 {
+            let s = s.trim();
+            if let Some(h) = s.strip_prefix("0x") { u64::from_str_radix(h, 16).unwrap() }
+            else { s.parse().unwrap() }
+        };
+        if let Some((a, l)) = v.split_once(',') {
+            let (a, l) = (parse(a), parse(l));
+            WATCH.lo.store(a, std::sync::atomic::Ordering::SeqCst);
+            WATCH.hi.store(a + l, std::sync::atomic::Ordering::SeqCst);
+            return true;
+        }
+    }
+    false
+}
+/// Drain hits recorded so far (up to the cursor; ring may have wrapped).
+pub fn watch_hits() -> Vec<WatchHit> {
+    let n = WATCH.cursor.load(std::sync::atomic::Ordering::SeqCst) as usize;
+    let take = n.min(4096);
+    let start = if n > 4096 { n % 4096 } else { 0 };
+    (0..take).map(|i| WATCH.ring[(start + i) % 4096]).collect()
+}
+
 const X_A: u32 = 9;        // scratch A
 const X_B: u32 = 10;       // scratch B
 const X_C: u32 = 11;       // scratch C (for 3-arg ops / temp)
@@ -85,10 +134,51 @@ pub struct Tier0 {
     /// still emits them (harmless — after the ret) to keep the trait contract simple.
     branched: bool,
     layout: &'static StateLayout,
+    /// XF_WATCH: current insn's guest pc (set_insn_pc) + armed flag (env read
+    /// once at construction — compile-time gate; zero emit cost when off).
+    insn_pc: u64,
+    watch_on: bool,
 }
 
 impl Tier0 {
     pub fn new() -> Self { Self::with_layout(&AARCH64_LAYOUT) }
+
+    /// XF_WATCH: emit the range-check + hit-record sequence. X_A = HOST store
+    /// addr (must survive). Uses X_B/X_C + x12/x13 (free — tier-0's scratch
+    /// contract is x9-x11; x12+ untouched by codegen). ~14 insns when armed,
+    /// ZERO when not (compile-time gate).
+    fn emit_watch_check(&mut self, xaddr: u32) {
+        if !self.watch_on { return; }
+        let wp = &WATCH as *const WatchState as u64;
+        self.enc.mov_imm64(12, wp);                       // x12 = &WATCH
+        self.enc.ldr_x(13, 12, 0);                        // x13 = lo
+        self.enc.cmp_r(xaddr, 13);
+        let skip1 = self.enc.here(); self.enc.nop();      // b.lo → patch
+        self.enc.ldr_x(13, 12, 8);                        // x13 = hi
+        self.enc.cmp_r(xaddr, 13);
+        let skip2 = self.enc.here(); self.enc.nop();      // b.hs → patch
+        // hit: idx = LDADD(cursor,1); slot = &ring + (idx&4095)*24
+        self.enc.mov_imm64(13, 1);
+        self.enc.add_i(12, 12, 16);                       // x12 = &cursor
+        self.enc.ldaddal(3, 13, 12, 13);                  // x13 = old cursor
+        self.enc.mov_imm64(11, 4095);                     // X_C as mask (value load comes after)
+        self.enc.and_r(13, 13, 11);
+        self.enc.mov_imm64(11, 24);
+        self.enc.mul_r(13, 13, 11);
+        self.enc.mov_imm64(12, wp + 24);                  // &ring (cursor@16 pad@… ring@24)
+        self.enc.add_r(12, 12, 13);                       // x12 = &slot
+        self.enc.mov_imm64(13, self.insn_pc);
+        self.enc.str_x(13, 12, 0);                        // guest_pc
+        self.enc.str_x(xaddr, 12, 8);                     // addr
+        self.enc.ldr_x(13, xaddr, 0);                     // old value (pre-store)
+        self.enc.str_x(13, 12, 16);                       // old
+        // patch skips → here
+        let end = self.enc.here();
+        let off1 = (end - skip1) as u32;
+        let off2 = (end - skip2) as u32;
+        self.enc.patch(skip1, 0x54000003 | ((off1 & 0x7FFFF) << 5)); // b.lo (cc=0011=LO)
+        self.enc.patch(skip2, 0x54000002 | ((off2 & 0x7FFFF) << 5)); // b.hs (cs=0010=HS)
+    }
 
     pub fn with_layout(layout: &'static StateLayout) -> Self {
         let _ = layout;  // (prologue is layout-independent — x28=state, x27=spill)
@@ -100,7 +190,8 @@ impl Tier0 {
         enc.str_x(30, 31, 16);          // save lr (branch may clobber via bl later — ‡ v2)
         enc.mov_r(X_STATE, 0);          // x28 = state
         enc.mov_r(X_SPILL, 1);          // x27 = spill
-        Self { enc, next_slot: 0, tys: vec![], branched: false, layout }
+        Self { enc, next_slot: 0, tys: vec![], branched: false, layout,
+               insn_pc: 0, watch_on: watch_arm_from_env() }
     }
 
     /// Whether this block emitted a `branch` (= it terminates itself; the driver
@@ -333,6 +424,7 @@ impl Builder for Tier0 {
         self.load(X_A, a);                                       // guest addr
         self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
         self.enc.add_r(X_A, X_B, X_A);                           // host addr
+        self.emit_watch_check(X_A);
         self.load(X_B, val);                                     // operand
         match op {
             0 => self.enc.ldaddal(sz, X_B, X_A, X_C),
@@ -356,17 +448,20 @@ impl Builder for Tier0 {
         self.load(X_A, a);
         self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
         self.enc.add_r(X_A, X_B, X_A);
+        self.emit_watch_check(X_A);
         self.load(X_B, expected);      // Xs: expected in, OLD out (clobbered)
         self.load(X_C, new);           // Xt: new
         self.enc.casal(sz, X_B, X_C, X_A);
         self.store(X_B, s);            // OLD
         s
     }
+    fn set_insn_pc(&mut self, pc: u64) { self.insn_pc = pc; }
     fn mem_write(&mut self, a: u32, v: u32) {
         let ty = self.tys[v as usize];
         self.load(X_A, a);
         self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
         self.enc.add_r(X_A, X_B, X_A);
+        self.emit_watch_check(X_A);
         match ty {
             IlType::I{width: 8, ..}  => { self.load(X_B, v); self.enc.put_raw(0x38000000 | (X_A<<5) | X_B); }  // strb
             IlType::I{width: 16, ..} => { self.load(X_B, v); self.enc.put_raw(0x78000000 | (X_A<<5) | X_B); }  // strh
