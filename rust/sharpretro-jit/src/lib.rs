@@ -24,6 +24,8 @@ pub mod tier0;
 pub mod tier1;
 #[cfg(target_arch = "aarch64")]
 pub mod block_cache;
+#[cfg(feature = "llvm")]
+pub mod llvm_tier;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

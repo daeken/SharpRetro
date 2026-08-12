@@ -189,6 +189,11 @@ macro_rules! un { ($n:ident, $k:ident) => {
     }
 }; }
 
+impl IlRecorder {
+    /// Type of a val (pub inherent — llvm_tier reads it).
+    pub fn val_type(&self, v: u32) -> IlType { self.tys[v as usize] }
+}
+
 impl Builder for IlRecorder {
     type Val = u32;
 

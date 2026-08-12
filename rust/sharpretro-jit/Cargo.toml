@@ -7,4 +7,16 @@ edition = "2024"
 libc = "0.2"
 # dashmap = "6"       # BlockCache concurrent map — add when cache lands
 # smallvec = "1"      # SavedAlloc stack, inlined_slots
-# inkwell = { ... }   # tier-2 LLVM — add when tier-2 lands
+
+[features]
+# LLVM tier-TOP. Needs: system llvm22-devel + libxml2 dev-symlink + gcc-14
+# libstdc++ (build: PATH=/usr/lib64/llvm22/bin:$PATH LLVM_SYS_221_PREFIX=
+# /usr/lib64/llvm22 RUSTFLAGS="-L /usr/lib/gcc/aarch64-amazon-linux/14"
+# cargo build --features llvm). Feature-gated so the default build needs no
+# LLVM toolchain.
+llvm = ["dep:inkwell"]
+
+[dependencies.inkwell]
+git = "https://github.com/TheDan64/inkwell"
+features = ["llvm22-1"]
+optional = true
