@@ -103,15 +103,16 @@ impl BlockCache {
         // XF_WATCH v1 is TIER-0 ONLY (the recorder doesn't carry per-op guest
         // pc; wiring it = per-op debug-context in IlOp — v2). Force tier-0 +
         // warn so a watch is never silently blind through tier-1 blocks.
-        if std::env::var("XF_WATCH").is_ok()
+        if (std::env::var("XF_WATCH").is_ok() || std::env::var("XF_RR").is_ok())
             && std::env::var("XF_T1").map(|v| v != "0").unwrap_or(true) {
-            eprintln!("[cache] XF_WATCH armed → forcing tier-0 (watch is t0-only v1; set XF_T1=0 to silence)");
+            eprintln!("[cache] XF_WATCH/XF_RR armed → forcing tier-0 (t0-only v1; set XF_T1=0 to silence)");
         }
         Self { map: HashMap::new(), max_block_insns: 32, n_compiles: 0, n_execs: 0, layout,
                spill: vec![0u64; 64],
                link: std::env::var("XF_LINK").map(|v| v != "0").unwrap_or(true),
                use_t1: std::env::var("XF_T1").map(|v| v != "0").unwrap_or(true)
-                       && !std::env::var("XF_WATCH").is_ok(),
+                       && !std::env::var("XF_WATCH").is_ok()
+                       && !std::env::var("XF_RR").is_ok(),
                pending_links: Default::default(), ic_from: Default::default() }
     }
 

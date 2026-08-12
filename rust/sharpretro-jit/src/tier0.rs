@@ -24,8 +24,7 @@ use crate::aarch64_enc::{Aarch64Enc, Cond};
 
 const X_STATE: u32 = 28;   // x28 = state-base
 const X_SPILL: u32 = 27;   // x27 = spill-base
-/// ── XF_WATCH software watchpoints (sera ·1445/·1460 — the rr-substitute's
-/// piece 1). Process-wide watched range + hit ring. The JIT emits a range-
+/// ── XF_WATCH software watchpoints (the rr-substitute's piece 1). Process-wide watched range + hit ring. The JIT emits a range-
 /// check before every guest store when XF_WATCH=<addr>,<len> is set at
 /// compile time (env read once, cached; ~8 insns per store — acceptable
 /// behind the gate; without the env the emit is untouched). Hits append
@@ -100,6 +99,9 @@ pub struct StateLayout {
     /// Byte-offset of RegFile f at index idx, for NON-flag files. Panics on unknown file.
     /// (The flag file is handled via off_flags + flag_bit RMW, not here.)
     pub reg_off: fn(RegFile, u32) -> u32,
+    /// Byte-offset of the per-thread RrThread* word (record/replay handle);
+    /// 0 = feature-absent for this layout (rr emits nothing). See rr.rs.
+    pub off_rr: u32,
     /// aarch64 GPR W-writes zero-extend to 64 (Tier0 handles it here). x64 does
     /// partial-write semantics in operand.rs BEFORE calling reg_write (already
     /// zero-extended to u64), so tier-0's reg_write is a plain store. This flag
@@ -120,6 +122,7 @@ pub static AARCH64_LAYOUT: StateLayout = StateLayout {
         _ => panic!("aarch64 tier-0: file {} not wired", f.0),
     },
     gpr_w_zext: true,
+    off_rr: 0,
 };
 
 /// Legacy alias — aarch64 harness code uses this. Same as AARCH64_LAYOUT.state_words.
@@ -138,10 +141,100 @@ pub struct Tier0 {
     /// once at construction — compile-time gate; zero emit cost when off).
     insn_pc: u64,
     watch_on: bool,
+    rr: crate::rr::RrMode,
 }
 
 impl Tier0 {
     pub fn new() -> Self { Self::with_layout(&AARCH64_LAYOUT) }
+
+    /// XF_RR record: acquire the global atomic-section lock (spin CASAL 0→1).
+    /// The {seq-take, guest-op} pair must be atomic as a unit or the log is
+    /// not a linearization of the run (see rr.rs RR_LOCK).
+    fn emit_rr_pre(&mut self) {
+        match self.rr {
+            crate::rr::RrMode::Off => {}
+            crate::rr::RrMode::Record => {
+                let lp = &crate::rr::RR_LOCK as *const _ as u64;
+                self.enc.mov_imm64(12, lp);
+                let loop_top = self.enc.here();
+                self.enc.mov_imm64(13, 0);          // expected = 0
+                self.enc.mov_imm64(14, 1);          // new = 1
+                self.enc.casal(3, 13, 14, 12);      // x13 = old
+                // here() is a WORD index; cbnz wants BYTES (it /4s internally)
+                let off = ((loop_top as i64 - self.enc.here() as i64) * 4) as i32;
+                self.enc.cbnz(13, off);             // held → retry
+            }
+            crate::rr::RrMode::Replay => {
+                // my next event's seq ← [rrthread.cur]; spin until RR_CURSOR == seq
+                let cp = &crate::rr::RR_CURSOR as *const _ as u64;
+                self.enc.ldr_x(14, X_STATE, self.layout.off_rr); // x14 = RrThread*
+                self.enc.ldr_x(15, 14, 0);          // x15 = cur ptr
+                // log exhausted? cur >= end → BRK (ran past the recording)
+                self.enc.ldr_x(13, 14, 8);
+                self.enc.cmp_r(15, 13);
+                let skip = self.enc.here(); self.enc.nop(); // b.lo ok → patch
+                self.enc.put_raw(0xD4200000 | (0xD3u32 << 5)); // brk #0xD3: replay ran past the recording
+                let ok = self.enc.here();
+                let off1 = (ok - skip) as u32;
+                self.enc.patch(skip, 0x54000003 | ((off1 & 0x7FFFF) << 5)); // b.lo
+                self.enc.ldr_x(13, 15, 0);          // x13 = my seq
+                self.enc.mov_imm64(12, cp);
+                let spin = self.enc.here();
+                self.enc.ldar_x(14, 12);            // x14 = cursor (acquire)
+                self.enc.cmp_r(14, 13);
+                let hit = self.enc.here(); self.enc.nop(); // b.eq → patch
+                self.enc.yield_hint();
+                let back = ((spin as i64 - self.enc.here() as i64) * 4) as i32;
+                self.enc.b(back);
+                let after = self.enc.here();
+                let off2 = (after - hit) as u32;
+                self.enc.patch(hit, 0x54000000 | ((off2 & 0x7FFFF) << 5)); // b.eq
+            }
+        }
+    }
+
+    /// XF_RR post: record = {seq=LDADD(RR_SEQ), append (seq,pc), release lock};
+    /// replay = {advance buffer ptr, cursor = seq+1 (release)}.
+    fn emit_rr_post(&mut self) {
+        match self.rr {
+            crate::rr::RrMode::Off => {}
+            crate::rr::RrMode::Record => {
+                let sp = &crate::rr::RR_SEQ as *const _ as u64;
+                self.enc.mov_imm64(12, sp);
+                self.enc.mov_imm64(13, 1);
+                self.enc.ldaddal(3, 13, 12, 13);    // x13 = seq
+                self.enc.ldr_x(14, X_STATE, self.layout.off_rr); // RrThread*
+                self.enc.ldr_x(15, 14, 0);          // cur
+                // full? cur >= end → BRK #0xD2 loud (v1: no flush)
+                self.enc.ldr_x(12, 14, 8);
+                self.enc.cmp_r(15, 12);
+                let skip = self.enc.here(); self.enc.nop();
+                self.enc.put_raw(0xD4200000 | (0xD2u32 << 5)); // brk #0xD2: record buffer full (v1 no-flush)
+                let ok = self.enc.here();
+                let off1 = (ok - skip) as u32;
+                self.enc.patch(skip, 0x54000003 | ((off1 & 0x7FFFF) << 5)); // b.lo
+                self.enc.str_x(13, 15, 0);          // [cur] = seq
+                self.enc.mov_imm64(13, self.insn_pc);
+                self.enc.str_x(13, 15, 8);          // [cur+8] = guest pc
+                self.enc.add_i(15, 15, 16);
+                self.enc.str_x(15, 14, 0);          // cur += 16
+                let lp = &crate::rr::RR_LOCK as *const _ as u64;
+                self.enc.mov_imm64(12, lp);
+                self.enc.stlr_x(31, 12);            // release (xzr)
+            }
+            crate::rr::RrMode::Replay => {
+                self.enc.ldr_x(14, X_STATE, self.layout.off_rr);
+                self.enc.ldr_x(15, 14, 0);
+                self.enc.ldr_x(13, 15, 0);          // my seq (again)
+                self.enc.add_i(15, 15, 16);
+                self.enc.str_x(15, 14, 0);          // advance buffer
+                self.enc.add_i(13, 13, 1);
+                let cp = &crate::rr::RR_CURSOR as *const _ as u64;
+                self.enc.mov_imm64(12, cp);
+                self.enc.stlr_x(13, 12);            // cursor = seq+1 (release)
+            }
+        }
+    }
 
     /// XF_WATCH: emit the range-check + hit-record sequence. X_A = HOST store
     /// addr (must survive). Uses X_B/X_C + x12/x13 (free — tier-0's scratch
@@ -191,7 +284,8 @@ impl Tier0 {
         enc.mov_r(X_STATE, 0);          // x28 = state
         enc.mov_r(X_SPILL, 1);          // x27 = spill
         Self { enc, next_slot: 0, tys: vec![], branched: false, layout,
-               insn_pc: 0, watch_on: watch_arm_from_env() }
+               insn_pc: 0, watch_on: watch_arm_from_env(),
+               rr: if layout.off_rr != 0 { crate::rr::rr_mode() } else { crate::rr::RrMode::Off } }
     }
 
     /// Whether this block emitted a `branch` (= it terminates itself; the driver
@@ -416,11 +510,16 @@ impl Builder for Tier0 {
         self.store(X_A, s);
         s
     }
-    fn fence(&mut self) { self.enc.put_raw(0xD503_3BBF); } // dmb ish (decode-back ✓)
+    fn fence(&mut self) {
+        self.emit_rr_pre();
+        self.enc.put_raw(0xD503_3BBF);  // dmb ish (decode-back ✓)
+        self.emit_rr_post();
+    }
     fn mem_rmw_atomic(&mut self, op: u8, a: u32, val: u32, ty: IlType) -> u32 {
         let w = match ty { IlType::I{width,..} => width, _ => panic!("t0 rmw ty {ty:?}") };
         let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3, _ => panic!("t0 rmw w={w}") };
         let s = self.slot(ty);
+        self.emit_rr_pre();
         self.load(X_A, a);                                       // guest addr
         self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
         self.enc.add_r(X_A, X_B, X_A);                           // host addr
@@ -439,12 +538,14 @@ impl Builder for Tier0 {
         }
         // LSE result register holds OLD (zero-extended at sz width for W forms).
         self.store(X_C, s);
+        self.emit_rr_post();
         s
     }
     fn mem_cas_atomic(&mut self, a: u32, expected: u32, new: u32, ty: IlType) -> u32 {
         let w = match ty { IlType::I{width,..} => width, _ => panic!("t0 cas ty {ty:?}") };
         let sz: u8 = match w { 8 => 0, 16 => 1, 32 => 2, 64 => 3, _ => panic!("t0 cas w={w}") };
         let s = self.slot(ty);
+        self.emit_rr_pre();
         self.load(X_A, a);
         self.enc.ldr_x(X_B, X_STATE, self.layout.off_membase);
         self.enc.add_r(X_A, X_B, X_A);
@@ -453,6 +554,7 @@ impl Builder for Tier0 {
         self.load(X_C, new);           // Xt: new
         self.enc.casal(sz, X_B, X_C, X_A);
         self.store(X_B, s);            // OLD
+        self.emit_rr_post();
         s
     }
     fn set_insn_pc(&mut self, pc: u64) { self.insn_pc = pc; }

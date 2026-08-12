@@ -477,6 +477,12 @@ impl Aarch64Enc {
     }
     /// CASAL Xs(expected→old), Xt(new), [Xn]. 0x08E0_FC00 | size<<30.
     /// NB Rs is BOTH input (expected) and output (old) — clobbered!
+    /// LDAR Xt, [Xn] — load-acquire (64-bit).
+    pub fn ldar_x(&mut self, xt: u32, xn: u32) { self.put(0xC8DFFC00 | (xn<<5) | xt); }
+    /// STLR Xt, [Xn] — store-release (64-bit).
+    pub fn stlr_x(&mut self, xt: u32, xn: u32) { self.put(0xC89FFC00 | (xn<<5) | xt); }
+    /// YIELD hint (spin-loop politeness).
+    pub fn yield_hint(&mut self) { self.put(0xD503203F); }
     pub fn casal(&mut self, sz: u8, xs: u32, xt: u32, xn: u32) {
         self.put(0x08E0_FC00 | ((sz as u32) << 30) | (xs << 16) | (xn << 5) | xt);
     }

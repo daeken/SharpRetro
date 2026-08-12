@@ -12,6 +12,7 @@
 #![allow(dead_code)]
 
 pub mod recording;
+pub mod rr;
 pub mod il_record;
 pub mod regalloc;
 pub mod interp;

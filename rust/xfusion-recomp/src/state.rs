@@ -48,6 +48,8 @@ pub const OFF_RIP: usize = 17;
 pub const OFF_SEG: usize = 18;
 pub const OFF_XMM: usize = 24;
 pub const OFF_MEMBASE: usize = 88;
+/// Per-thread RrThread* (record/replay handle; rr.rs). 0 when rr off.
+pub const OFF_RR: usize = 89;
 
 /// Tier-0 StateLayout for x64-guest — flat[90] per the offsets above.
 /// RegFile mapping: 0=GPR, 1=EFLAGS(idx=bit#), 2=SEG, 3=XMM.
@@ -68,6 +70,7 @@ pub static X64_LAYOUT: sharpretro_jit::tier0::StateLayout = sharpretro_jit::tier
         _ => panic!("x64 tier-0: file {} not wired", f.0),
     },
     gpr_w_zext: false,
+    off_rr: (OFF_RR * 8) as u32,
 };
 
 impl X86State {
