@@ -92,6 +92,9 @@ pub struct BlockCache {
     /// pcs awaited by already-compiled predecessors: target_key →
     /// [(pred_key, slot_off, pred_epilogue)].
     pending_links: std::collections::HashMap<(u64, u32), Vec<((u64, u32), usize, u64)>>,
+    /// IC reverse-index: target_key → blocks whose inline caches may hold the
+    /// target's body address. invalidate(target) resets those caches.
+    ic_from: std::collections::HashMap<(u64, u32), Vec<(u64, u32)>>,
 }
 
 impl BlockCache {
@@ -101,7 +104,7 @@ impl BlockCache {
                spill: vec![0u64; 64],
                link: std::env::var("XF_LINK").map(|v| v != "0").unwrap_or(true),
                use_t1: std::env::var("XF_T1").map(|v| v != "0").unwrap_or(true),
-               pending_links: Default::default() }
+               pending_links: Default::default(), ic_from: Default::default() }
     }
 
     /// Compile one block: tier-1 first (catch_unwind — wide-ty/loop_n/
@@ -175,7 +178,7 @@ impl BlockCache {
                     self.spill.resize(block.n_slots as usize + 1, 0);
                 }
                 self.n_compiles += 1;
-                if std::env::var("XF_DBG").is_ok() { eprintln!("[cache] compile pc={:#x} tier={} sites={:?}", pc, tier, block.link_sites); }
+                if std::env::var("XF_DBG").is_ok() { eprintln!("[cache] compile pc={:#x} tier={} sites={:?} ic={}", pc, tier, block.link_sites, block.ic_sites.len()); }
                 // ── BLOCK-LINKING cross-patch ─────────────────────────────
                 // (a) NEW block's link-sites aimed at already-compiled pcs
                 //     (incl. itself) → patch to their bodies now.
@@ -259,6 +262,33 @@ impl BlockCache {
             entry.exec_count = entry.exec_count.saturating_add(hot as u32);
             self.n_execs += hot as usize;
             self.n_execs += 1;
+            // ── INLINE-CACHE PATCH (sera ·1421) ───────────────────────────
+            // The block at `pc` exited toward state[pc_idx] through the
+            // epilogue (indirect-miss or unlinked const). If it HAS IC sites
+            // and the destination is a compiled CHAINABLE block, install
+            // (guest→body) into its caches: next time that indirect exit
+            // resolves the same target, it br's straight to the body — no
+            // driver round-trip. guest→body is universal truth, so blindly
+            // patching every site of the exiting block is sound (we don't
+            // know which site missed; a site that never sees this target
+            // just keeps a never-matching pair). Only tier-1 dest (body_off
+            // != 0) — same chainability rule as linking. The reverse-index
+            // (ic_from) lets invalidate() scrub stale bodies.
+            let next = unsafe { *sp.add(pc_idx) };
+            let has_ic = !entry.block.ic_sites.is_empty();
+            if has_ic && std::env::var("XF_DBG").is_ok() {
+                eprintln!("[ic] exit pc={pc:#x} → next={next:#x} (installing={})",
+                    self.map.get(&(next, mode)).map_or(false, |te| te.block.body_off != 0));
+            }
+            if has_ic {
+                if let Some(te) = self.map.get(&(next, mode)) {
+                    if te.block.body_off != 0 {
+                        let body = te.block.body_addr();
+                        self.map[&(pc, mode)].block.ic_install(next, body);
+                        self.ic_from.entry((next, mode)).or_default().push((pc, mode));
+                    }
+                }
+            }
         }
         RunResult::MaxExecs
     }
@@ -419,6 +449,16 @@ impl BlockCache {
             // are about to be freed; a later compile must not patch them).
             for v in self.pending_links.values_mut() {
                 v.retain(|(pk, _, _)| *pk != *k);
+            }
+            // IC SCRUB: any surviving block whose inline caches may hold THIS
+            // block's body address gets its caches reset (else a stale IC
+            // hit br's into a munmap'd page). Coarse (resets all pairs of
+            // those blocks, not just the matching entry) — invalidate is
+            // rare; correctness over precision.
+            if let Some(holders) = self.ic_from.remove(k) {
+                for hk in holders {
+                    if let Some(he) = self.map.get(&hk) { he.block.ic_reset(); }
+                }
             }
             // And forget waiters ON this pc? No — waiters are OTHER blocks'
             // slots aimed at this guest pc; they stay pending and re-serve

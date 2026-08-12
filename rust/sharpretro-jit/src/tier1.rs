@@ -292,11 +292,26 @@ struct Emitter<'a> {
     /// br x17` + 8-byte inline slot the cache patches with the successor's body
     /// address once compiled. Until then finalize points it at the epilogue.
     link_sites: Vec<(usize, u64)>,
+    /// Inline-cache sites for INDIRECT exits (RET / jmp-reg / call-reg — the
+    /// exits linking can't serve): word-offset of a 4×u64 data area
+    /// {guest0, body0, guest1, body1}. Emitted code compares the live target
+    /// against guest0/guest1 and br's the matching body; both-miss falls to
+    /// the epilogue and the DRIVER patches (guest-pc→body is universal truth,
+    /// so patching every site of the returning block is sound even without
+    /// knowing which site missed). sera's ·1421 ask.
+    ic_sites: Vec<usize>,
+    ic_enabled: bool,
     /// XF_LINK=0 disables (measurement + fallback).
     link: bool,
 }
 
 impl<'a> Emitter<'a> {
+    /// LDR (literal) encoding — same form as Aarch64Enc::ldr_lit, needed as a
+    /// pure function for the placeholder-then-patch IC emission.
+    fn enc_ldr_lit(xt: u32, off_words: i32) -> u32 {
+        0x5800_0000 | (((off_words as u32) & 0x7FFFF) << 5) | xt
+    }
+
     fn new(layout: &'static StateLayout, rec: &'a IlRecorder, alloc: &'a AllocResult) -> Self {
         let mut enc = Aarch64Enc::new();
         // Prologue: save callee-saved x19-x28 + lr, install state/spill bases.
@@ -308,6 +323,13 @@ impl<'a> Emitter<'a> {
         enc.mov_r(X_SPILL, 1);
         let link = std::env::var("XF_LINK").map(|v| v != "0").unwrap_or(true);
         Self { enc, layout, rec, alloc, cond_stack: vec![], dead_ops: Default::default(),
+            ic_sites: vec![],
+            // ‡ default OFF: emit verified-shape but cache never HITS on the
+            // icbench (1.9M installs, 0 hits — driver-exec count unchanged).
+            // Root not yet found (suspects: install ordering vs page W^X
+            // none—page is RWX; the eor/cbnz compare; the pair read layout).
+            // Fix before enabling; sera's ·1424 sync-audit preempted.
+            ic_enabled: std::env::var("XF_IC").map(|v| v == "1").unwrap_or(false),
                lit_of: Default::default(), link_sites: vec![], link }
     }
 
@@ -333,6 +355,7 @@ impl<'a> Emitter<'a> {
         }
         blk.body_off = BODY_OFF;
         blk.epilogue_addr = base + (epi_word as u64) * 4;
+        blk.ic_sites = self.ic_sites.iter().map(|&w| w * 4).collect();
         blk
     }
 
@@ -725,8 +748,12 @@ impl<'a> Emitter<'a> {
                 // (ldr-literal reads data → no icache maintenance).
                 let target = self.get(op.args[0], X_S0);
                 self.enc.str_x(target, X_STATE, self.layout.off_pc);
-                if self.link && matches!(op.kind, IlOpKind::Branch) {
-                    if let Some(&t) = self.lit_of.get(&op.args[0]) {
+                let const_tgt = if matches!(op.kind, IlOpKind::Branch) {
+                    self.lit_of.get(&op.args[0]).copied()
+                } else { None };
+                if self.link && matches!(op.kind, IlOpKind::Branch) && const_tgt.is_some() {
+                    {
+                        let t = const_tgt.unwrap();
                         // Slot must be 8-aligned: it lands at (here+2) words;
                         // pad with a NOP if (here+2) is odd.
                         if (self.enc.here() + 2) % 2 != 0 { self.enc.nop(); }
@@ -737,7 +764,58 @@ impl<'a> Emitter<'a> {
                         self.link_sites.push((slot_w, t as u64));
                     }
                 }
-                // Non-const target (RET/indirect): falls through to the shared
+                // INDIRECT target (RET / jmp-reg / call-reg): 2-entry INLINE
+                // CACHE (sera ·1421). Compare the live target against two
+                // inline (guest,body) pairs; hit → br body (stays on-frame,
+                // same chain-soundness as linking); both-miss → fall through
+                // to the epilogue and the DRIVER patches the pairs. Data
+                // slots default to (u64::MAX, 0) = never-match (guest pcs
+                // can't be MAX). ic_word layout: [g0][b0][g1][b1].
+                else if self.ic_enabled && matches!(op.kind, IlOpKind::Branch)
+                    && const_tgt.is_none()
+                {
+                    // x16 = target copy (`target` may BE a spill-scratch; the
+                    // compares clobber nothing else — x16/x17 are scratch).
+                    self.enc.mov_r(16, target);
+                    // forward layout (words, from cmp0_ldr):
+                    //   0: ldr x17,→g0   1: eor x17,x17,x16   2: cbnz x17,+3
+                    //   3: ldr x17,→b0   4: br x17
+                    //   5: ldr x17,→g1   6: eor …             7: cbnz x17,+3
+                    //   8: ldr x17,→b1   9: br x17
+                    //  10: b epilogue-fallthrough (implicit: just fall through)
+                    //  [pad-to-8-align] data: g0 b0 g1 b1
+                    // ldr-literal offsets depend on alignment; compute after
+                    // laying out: emit with placeholder lit offsets, patch.
+                    let base_w = self.enc.here();
+                    // reserve 11 words (10 IC + 1 skip-over-data branch);
+                    // patch after data addr known. The both-miss path MUST
+                    // branch over the inline data (first fire fell into it —
+                    // executed u64::MAX as insns, core dump).
+                    for _ in 0..11 { self.enc.nop(); }
+                    if self.enc.here() % 2 != 0 { self.enc.nop(); }
+                    let data_w = self.enc.here();
+                    self.enc.put_u64(u64::MAX); self.enc.put_u64(0);   // g0, b0
+                    self.enc.put_u64(u64::MAX); self.enc.put_u64(0);   // g1, b1
+                    let after_w = self.enc.here();
+                    // now patch the reserved words with real encodings
+                    let lit = |from_w: usize, to_w: usize| ((to_w as i32 - from_w as i32)) as i32;
+                    let w = |i: usize| base_w + i;
+                    self.enc.patch(w(0), Self::enc_ldr_lit(17, lit(w(0), data_w)));
+                    self.enc.patch(w(1), 0xCA000000 | (16 << 16) | (17 << 5) | 17); // eor x17,x17,x16
+                    self.enc.patch(w(2), 0xB5000000 | ((3u32 & 0x7FFFF) << 5) | 17); // cbnz x17,+3
+                    self.enc.patch(w(3), Self::enc_ldr_lit(17, lit(w(3), data_w + 2)));
+                    self.enc.patch(w(4), 0xD61F_0000 | (17 << 5)); // br x17
+                    self.enc.patch(w(5), Self::enc_ldr_lit(17, lit(w(5), data_w + 4)));
+                    self.enc.patch(w(6), 0xCA000000 | (16 << 16) | (17 << 5) | 17);
+                    self.enc.patch(w(7), 0xB5000000 | ((3u32 & 0x7FFFF) << 5) | 17);
+                    self.enc.patch(w(8), Self::enc_ldr_lit(17, lit(w(8), data_w + 6)));
+                    self.enc.patch(w(9), 0xD61F_0000 | (17 << 5));
+                    // word 10: B <after-data> (unconditional, pc-rel imm26 words)
+                    let boff = (after_w as i32 - w(10) as i32) as u32 & 0x03FF_FFFF;
+                    self.enc.patch(w(10), 0x1400_0000 | boff);
+                    self.ic_sites.push(data_w);
+                }
+                // Unhandled indirect (IC off): falls through to the shared
                 // epilogue as before.
                 // ‡ BranchLink: link semantics done upstream (x86 CALL = push
                 //   next_pc as separate ops before this Branch).

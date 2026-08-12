@@ -1376,7 +1376,7 @@ pub fn compile_from_enc(enc: Aarch64Enc, n_slots: u32) -> CompiledBlock {
             page: page as *mut u8, page_len, code_len: len,
             entry: std::mem::transmute(page),
             n_slots,
-            link_sites: vec![], body_off: 0, epilogue_addr: 0,
+            link_sites: vec![], ic_sites: vec![], body_off: 0, epilogue_addr: 0,
         }
     }
 }
@@ -1392,6 +1392,10 @@ pub struct CompiledBlock {
     /// body_off) into A's slot — one aligned volatile u64 store (data, not
     /// insn stream → no icache maintenance).
     pub link_sites: Vec<(usize, u64)>,
+    /// Inline-cache data areas (tier-1 indirect exits): BYTE offset of a
+    /// 4×u64 {guest0, body0, guest1, body1} block. guest=u64::MAX = empty.
+    /// The DRIVER patches these on an IC miss (see BlockCache::run).
+    pub ic_sites: Vec<usize>,
     /// Byte offset of the post-prologue body (uniform frame contract: chained
     /// entries jump here, reusing the predecessor block's frame). 0 = tier-0
     /// (not chainable).
@@ -1431,7 +1435,9 @@ impl CompiledBlock {
                 page: page as *mut u8, page_len, code_len: code.len(),
                 entry: std::mem::transmute(page),
                 n_slots,
-                link_sites, body_off,
+                link_sites, ic_sites: vec![],   // ‡ IC sites not persisted
+                // v1 (they re-warm at runtime; empty pairs = all-miss = safe).
+                body_off,
                 epilogue_addr: page as u64 + epi_byte_off as u64,
             };
             for &(off, _) in &blk.link_sites {
@@ -1469,6 +1475,38 @@ impl CompiledBlock {
     pub fn exec(&self, flat: &mut [u64; STATE_WORDS]) {
         let mut spill = vec![0u64; self.n_slots.max(1) as usize];
         (self.entry)(flat.as_mut_ptr(), spill.as_mut_ptr());
+    }
+}
+
+impl CompiledBlock {
+    /// Install (guest→body) into this block's inline caches. Slot choice:
+    /// pair0 if empty, else pair1 if empty, else REPLACE pair1 (pair0 =
+    /// first-seen ≈ hottest stays; pair1 = churn slot — cheap LRU-ish).
+    /// Skips pairs already holding `guest`. Order: body BEFORE guest (a
+    /// racing reader sees either never-match or a complete pair; single-
+    /// threaded today, but the write order costs nothing).
+    pub fn ic_install(&self, guest: u64, body: u64) {
+        for &off in &self.ic_sites {
+            unsafe {
+                let p = self.page.add(off) as *mut u64;
+                let (g0, g1) = (p.read(), p.add(2).read());
+                if g0 == guest || g1 == guest { continue; }
+                let slot = if g0 == u64::MAX { p } else { p.add(2) };
+                std::ptr::write_volatile(slot.add(1), body);
+                std::ptr::write_volatile(slot, guest);
+            }
+        }
+    }
+    /// Reset all IC pairs to empty (invalidate of a TARGET block must scrub
+    /// every cache that could hold its body address).
+    pub fn ic_reset(&self) {
+        for &off in &self.ic_sites {
+            unsafe {
+                let p = self.page.add(off) as *mut u64;
+                std::ptr::write_volatile(p, u64::MAX);
+                std::ptr::write_volatile(p.add(2), u64::MAX);
+            }
+        }
     }
 }
 
