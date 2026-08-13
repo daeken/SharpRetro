@@ -459,3 +459,27 @@ v1 explicitly does NOT record: signal delivery (we have none in-guest), async AP
 (unimplemented), GPU/seam timing (the seam is a shim boundary = already a recorded
 result). Plain-access divergence at replay aborts loud with both states dumped — a
 detector, not a silent wrong.
+
+## Tier A/B at game scale (measured, day-49)
+
+Meter: wall-time to the EngineWatchdog marker on the deterministic
+(DET_CLOCK) CP2077 boot, interleaved runs. Results: BASE 22-24s; XF_T2
+neutral; XF_T2+XF_T3 +4-6s (a 20-25% REGRESSION) even after (a) the
+per-compile getenv fix, (b) the ≥48-op region gate on the T3 passes,
+(c) a cheap backward-branch prescan before the full trace-collect.
+
+The mechanism, honest: boot-shaped work = ~100K cold compile-once blocks +
+shim churn; region machinery amortizes into loop REVISITS that a cold boot
+mostly doesn't have, while every passing prescan (backward branches are
+common — memcpy/strlen inner loops) pays collect+liveness+bigger-tier-1.
+The microbench wins (guardloop 1.67×, memloop 12%, LLVM > T2+T3) are real
+but describe steady-state hot loops, not boot.
+
+Standing defaults: T2/T3/LLVM stay OFF for boot-scale runs; they're
+steady-state tiers. The promotion path that would serve a LONG session
+(hot loops re-promoted at runtime) needs a HEAT SIGNAL that survives
+block-linking — dispatch-count freezes on linked chains (the IC chain-tail
+lesson). v2 lever: count side-exit/IC-miss arrivals at the driver per
+chain-head and promote the REGION containing them; or sample pc via the
+same-pc fast-loop's hot counter. Until a long-session workload exists to
+measure, the ladder stays env-gated and honest.

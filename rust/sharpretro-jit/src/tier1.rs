@@ -192,7 +192,15 @@ impl Tier1 {
             // hits, and regions are ≤~4K ops).
             ops.iter().find(|o| o.out == Some(v)).map(|o| o.ty)
         }
-        let t3 = std::env::var("XF_T3").map(|v| v == "1").unwrap_or(false);
+        // env read ONCE (was per-compile = 100K+ getenv on a game boot — the
+        // A/B measured T2+T3 as a 25% boot REGRESSION; this + the small-block
+        // gate below are the fix). Pass gated to REGION-sized recordings:
+        // single-block records get full value from record-time SVN already;
+        // the GVN/forward walk on 100K cold boot blocks = pure pass-time with
+        // no loop to amortize into.
+        static T3: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        let t3 = *T3.get_or_init(|| std::env::var("XF_T3").map(|v| v == "1").unwrap_or(false))
+            && self.rec.ops.len() >= 48;
         if t3 {
             use std::collections::HashMap;
             let n_vals = self.rec.next_val();

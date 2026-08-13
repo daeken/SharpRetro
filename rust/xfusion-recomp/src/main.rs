@@ -267,6 +267,35 @@ fn main() {
                 {
                     use xfusion_recomp::trace::{collect_trace_at, trace_liveness_at, lift_trace};
                     let hb = self.host_base;
+                    // CHEAP PRE-SCAN before the full collect: a trace only pays
+                    // when the region loops (a BACKWARD branch within reach).
+                    // Boot-shaped code = ~all forward/indirect = decline here
+                    // for the cost of a linear decode instead of collect+
+                    // liveness (the game-scale A/B measured eager-T2's full
+                    // probe as ~+25% boot wall on 100K cold one-shot blocks).
+                    {
+                        let mut cur = pc;
+                        let mut looped = false;
+                        for _ in 0..64 {
+                            let bytes = unsafe {
+                                std::slice::from_raw_parts((hb + cur) as *const u8, 15) };
+                            if bytes[0] == 0xCC { break; }
+                            let Some(d) = xfusion_recomp::disassembler::decode_insn(bytes, XMode::Bits64) else { break };
+                            let next = cur + d.len as u64;
+                            let mn = xfusion_recomp::disassembler::DEF_MNEMONICS
+                                .get(d.def_id as usize).copied().unwrap_or("");
+                            if mn.starts_with('J') {
+                                let tgt = (next as i64 + d.imm0) as u64;
+                                if tgt <= cur && tgt >= pc.saturating_sub(0x400) { looped = true; break; }
+                                if !mn.starts_with("JMP") { cur = next; continue; }
+                                if tgt > cur { cur = tgt; continue; }   // forward JMP hop
+                                break;
+                            }
+                            if mn == "RET" || mn == "CALL" || mn.starts_with("INT") { break; }
+                            cur = next;
+                        }
+                        if !looped { return None; }
+                    }
                     let (tinsns, tend, _tbr) = unsafe {
                         collect_trace_at(hb, pc, XMode::Bits64, 256, &|_| true) };
                     // A trace that followed no edges = just a block — decline,
