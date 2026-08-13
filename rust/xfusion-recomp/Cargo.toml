@@ -6,3 +6,7 @@ edition = "2024"
 [dependencies]
 sharpretro-jit = { path = "../sharpretro-jit" }
 libc = "0.2"
+
+[features]
+# LLVM tier-TOP passthrough (see sharpretro-jit's Cargo.toml for toolchain).
+llvm = ["sharpretro-jit/llvm"]

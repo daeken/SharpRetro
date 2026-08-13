@@ -198,6 +198,12 @@ impl Builder for IlRecorder {
     type Val = u32;
 
     fn ty_of(&self, v: u32) -> IlType { self.tys[v as usize] }
+    // Trace hooks: forward to the inherent impls (without these the trait's
+    // no-op defaults win when a bare IlRecorder is used generically — a
+    // compile_trace into it would silently decline; the LLVM promotion path
+    // records through exactly that shape).
+    fn set_trace_next(&mut self, pc: Option<u64>) { IlRecorder::set_trace_next(self, pc); }
+    fn trace_take_elided(&mut self) -> bool { IlRecorder::trace_take_elided(self) }
 
     fn literal(&mut self, ty: IlType, bits: u128) -> u32 {
         self.produce(IlOpKind::Literal, ty, &[], bits)

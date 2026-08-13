@@ -116,6 +116,16 @@ pub struct BlockCache {
     /// baked at compile; Box = stable address). Driver seeds it with the
     /// dispatched pc pre-call and installs into map[*cell] post-call.
     last_exiter: Box<u64>,
+    /// TIER-TOP (LLVM) blocks: keyed like `map`, dispatched FIRST. The
+    /// LlvmBlock owns its ExecutionEngine (code lifetime); entry matches the
+    /// CompiledBlock ABI. LLVM entries don't participate in block-LINKING
+    /// (v1: regions are big; the driver dispatch amortizes) — so no Entry
+    /// bookkeeping, just the fn. invalidate() drops by the recorded range.
+    #[cfg(feature = "llvm")]
+    llvm_map: std::collections::HashMap<(u64, u32), (crate::llvm_tier::LlvmBlock, (u64, u64))>,
+    /// XF_LLVM=1: eager LLVM tier for trace-regions (the A/B knob).
+    #[cfg(feature = "llvm")]
+    use_llvm: bool,
 }
 
 impl BlockCache {
@@ -136,7 +146,11 @@ impl BlockCache {
                        && !std::env::var("XF_RR").is_ok(),
                t2: std::env::var("XF_T2").map(|v| v == "1").unwrap_or(false),
                pending_links: Default::default(), ic_from: Default::default(),
-               last_exiter: Box::new(0) }
+               last_exiter: Box::new(0),
+               #[cfg(feature = "llvm")]
+               llvm_map: Default::default(),
+               #[cfg(feature = "llvm")]
+               use_llvm: std::env::var("XF_LLVM").map(|v| v == "1").unwrap_or(false) }
     }
 
     /// Compile one block: tier-1 first (catch_unwind — wide-ty/loop_n/
@@ -290,6 +304,56 @@ impl BlockCache {
                 return RunResult::Stop { pc };
             }
             if !self.map.contains_key(&(pc, mode)) {
+                // TIER-TOP EAGER (XF_LLVM=1, --features llvm): try LLVM on the
+                // trace region FIRST. Records through a bare IlRecorder (the
+                // trace hooks forward via the Builder impl), lowers via
+                // llvm_tier::compile_llvm at -O2. Declines (None) exactly
+                // like t2 (single-block trace / unsupported op panic) →
+                // falls through to t2/tier-1. No linking v1: regions are
+                // big, dispatch amortizes.
+                #[cfg(feature = "llvm")]
+                if self.use_llvm && !self.llvm_map.contains_key(&(pc, mode)) {
+                    let prev_hook = std::panic::take_hook();
+                    if std::env::var("XF_LLVM_LOUD").is_err() {
+                        std::panic::set_hook(Box::new(|_| {}));
+                    }
+                    let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        let mut rec = crate::il_record::IlRecorder::new();
+                        compiler.compile_trace(&mut rec, pc, mode)
+                            .and_then(|(end_pc, hull_hi)| {
+                                crate::llvm_tier::compile_llvm(&rec, self.layout)
+                                    .map(|lb| (lb, end_pc, hull_hi))
+                            })
+                    }));
+                    std::panic::set_hook(prev_hook);
+                    if let Ok(Some((lb, end_pc, hull_hi))) = r {
+                        if std::env::var("XF_DBG").is_ok() {
+                            eprintln!("[cache] LLVM-EAGER pc={pc:#x} region=[{pc:#x},{hull_hi:#x})");
+                        }
+                        self.n_compiles += 1;
+                        self.llvm_map.insert((pc, mode), (lb, (pc, hull_hi.max(end_pc))));
+                    }
+                }
+                #[cfg(feature = "llvm")]
+                if self.llvm_map.contains_key(&(pc, mode)) {
+                    // dispatch the LLVM block directly; skip map-compile.
+                    let (lb, _) = &self.llvm_map[&(pc, mode)];
+                    let ef = lb.entry;
+                    let sp = state.as_mut_ptr(); let spp = self.spill.as_mut_ptr();
+                    ef(sp, spp);
+                    self.n_execs += 1;
+                    // SAME-PC FAST-LOOP (the tier-1 driver's form): a region
+                    // whose back-edge re-enters itself would otherwise pay a
+                    // full dispatch per iteration (LLVM blocks don't link —
+                    // first fire hit MaxExecs at 1 iter/dispatch on guardloop).
+                    let mut hot = 0u64;
+                    while unsafe { *sp.add(pc_idx) } == pc {
+                        ef(sp, spp);
+                        hot += 1;
+                    }
+                    self.n_execs += hot as usize;
+                    continue;
+                }
                 // TIER-2 EAGER (XF_T2=1): try a trace REGION first — the hook
                 // declines (None) when the trace followed no edges (single
                 // block = block-grain equivalent) or tier-1 bails inside it.
@@ -563,6 +627,10 @@ impl BlockCache {
     /// this explicitly; guest-SMC = write-protect+fault → this). No callers yet;
     /// the contract lands here so the loader integration has the seam to build against.
     pub fn invalidate(&mut self, start: u64, end: u64) -> usize {
+        // LLVM-tier entries drop by recorded region-range (they don't link,
+        // so no slot bookkeeping — the map removal is the whole invalidate).
+        #[cfg(feature = "llvm")]
+        self.llvm_map.retain(|_, (_, r)| !(r.0 < end && start < r.1));
         let before = self.map.len();
         // Drop blocks whose CODE range or exit-liveness PEEK-window intersects
         // (peek: the stripped flag computation depended on successor bytes —

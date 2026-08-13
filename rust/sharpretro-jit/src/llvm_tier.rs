@@ -117,7 +117,11 @@ impl<'ctx, 'a> Lower<'ctx, 'a> {
             RegRead => {
                 let f = (op.imm >> 32) as u8;
                 let idx = op.imm as u32;
-                let off = (self.layout.reg_off)(crate::RegFile(f), idx);
+                // flag-file regs live in the flags WORD (off_flags + flag_bit),
+                // never through reg_off (which panics on the flag file — the
+                // first llvm-arm fire found exactly that).
+                let off = if f == self.layout.flag_file { self.layout.off_flags }
+                          else { (self.layout.reg_off)(crate::RegFile(f), idx) };
                 let mut v = self.ld_state(off);
                 if f == self.layout.flag_file && !(self.layout.flag_file == 2 && idx == 0) {
                     let bit = (self.layout.flag_bit)(idx);
@@ -132,7 +136,8 @@ impl<'ctx, 'a> Lower<'ctx, 'a> {
             RegWrite => {
                 let f = (op.imm >> 32) as u8;
                 let idx = op.imm as u32;
-                let off = (self.layout.reg_off)(crate::RegFile(f), idx);
+                let off = if f == self.layout.flag_file { self.layout.off_flags }
+                          else { (self.layout.reg_off)(crate::RegFile(f), idx) };
                 let xs = self.get(op.args[0]);
                 if f == self.layout.flag_file && !(self.layout.flag_file == 2 && idx == 0) {
                     let bit = (self.layout.flag_bit)(idx);
@@ -667,6 +672,16 @@ mod tests {
             // guest store: mem[x5] = m (identity-ish: membase set in state)
             let addr = r.reg_read(RegFile(0), 5, t);
             r.mem_write(addr, m);
+            // FLAG write+read (file 2 = NZCV; per-bit idx) — the first llvm-arm
+            // fire panicked exactly here (reg_off called for the flag file);
+            // the oracle test hadn't covered flags = test-topology-excludes-
+            // the-failure-mode, again. Now it does.
+            r.reg_write(RegFile(2), 2, nz);         // Z-flag ← (m != 0)
+            let zback = r.reg_read(RegFile(2), 2, IlType::Bool);
+            let one7 = r.literal(t, 70);
+            let one9 = r.literal(t, 90);
+            let sel2 = r.ternary(zback, one7, one9);
+            r.reg_write(RegFile(0), 7, sel2);
             // 32-bit signed op coverage: x6 = (i32)x0 >> 3 (asr)
             let t32 = IlType::I { width: 32, signed: true };
             let a32 = r.reg_read(RegFile(0), 0, t32);
