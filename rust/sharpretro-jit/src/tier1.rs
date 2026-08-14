@@ -969,33 +969,41 @@ impl<'a> Emitter<'a> {
                     //  [pad-to-8-align] data: g0 b0 g1 b1
                     // ldr-literal offsets depend on alignment; compute after
                     // laying out: emit with placeholder lit offsets, patch.
+                    // N-WAY (day-51): the 2-way form THRASHED on real workloads —
+                    // measured at the OA/QVM hot site: SIX distinct targets cycling
+                    // through 2 slots = 553,669 driver round-trips (each install
+                    // evicting a pair about to be needed) = the IC's whole benefit
+                    // eaten by the eviction churn. Six targets is a bytecode
+                    // interpreter's dispatch fanout; 8 ways covers it with slack.
+                    // Per-way cost = 5 words code + 16 bytes data; 8 ways = 40 words
+                    // + 128B, paid once per indirect-branch SITE (not per exec).
+                    use crate::tier0::IC_WAYS;
                     let base_w = self.enc.here();
-                    // reserve 11 words (10 IC + 1 skip-over-data branch);
-                    // patch after data addr known. The both-miss path MUST
-                    // branch over the inline data (first fire fell into it —
-                    // executed u64::MAX as insns, core dump).
-                    for _ in 0..11 { self.enc.nop(); }
+                    // reserve 5×WAYS words + 1 skip-over-data branch. The all-miss
+                    // path MUST branch over the inline data (first fire fell into
+                    // it — executed u64::MAX as insns, core dump).
+                    let n_code = 5 * IC_WAYS + 1;
+                    for _ in 0..n_code { self.enc.nop(); }
                     if self.enc.here() % 2 != 0 { self.enc.nop(); }
                     let data_w = self.enc.here();
-                    self.enc.put_u64(u64::MAX); self.enc.put_u64(0);   // g0, b0
-                    self.enc.put_u64(u64::MAX); self.enc.put_u64(0);   // g1, b1
+                    for _ in 0..IC_WAYS { self.enc.put_u64(u64::MAX); self.enc.put_u64(0); }
                     let after_w = self.enc.here();
                     // now patch the reserved words with real encodings
                     let lit = |from_w: usize, to_w: usize| ((to_w as i32 - from_w as i32)) as i32;
                     let w = |i: usize| base_w + i;
-                    self.enc.patch(w(0), Self::enc_ldr_lit(17, lit(w(0), data_w)));
-                    self.enc.patch(w(1), 0xCA000000 | (16 << 16) | (17 << 5) | 17); // eor x17,x17,x16
-                    self.enc.patch(w(2), 0xB5000000 | ((3u32 & 0x7FFFF) << 5) | 17); // cbnz x17,+3
-                    self.enc.patch(w(3), Self::enc_ldr_lit(17, lit(w(3), data_w + 2)));
-                    self.enc.patch(w(4), 0xD61F_0000 | (17 << 5)); // br x17
-                    self.enc.patch(w(5), Self::enc_ldr_lit(17, lit(w(5), data_w + 4)));
-                    self.enc.patch(w(6), 0xCA000000 | (16 << 16) | (17 << 5) | 17);
-                    self.enc.patch(w(7), 0xB5000000 | ((3u32 & 0x7FFFF) << 5) | 17);
-                    self.enc.patch(w(8), Self::enc_ldr_lit(17, lit(w(8), data_w + 6)));
-                    self.enc.patch(w(9), 0xD61F_0000 | (17 << 5));
-                    // word 10: B <after-data> (unconditional, pc-rel imm26 words)
-                    let boff = (after_w as i32 - w(10) as i32) as u32 & 0x03FF_FFFF;
-                    self.enc.patch(w(10), 0x1400_0000 | boff);
+                    for k in 0..IC_WAYS {
+                        let c = 5 * k;                       // this way's first code word
+                        let d = data_w + 4 * k;              // this way's (guest, body) pair
+                        self.enc.patch(w(c),     Self::enc_ldr_lit(17, lit(w(c), d)));
+                        self.enc.patch(w(c + 1), 0xCA000000 | (16 << 16) | (17 << 5) | 17); // eor x17,x17,x16
+                        self.enc.patch(w(c + 2), 0xB5000000 | ((3u32 & 0x7FFFF) << 5) | 17); // cbnz x17,+3
+                        self.enc.patch(w(c + 3), Self::enc_ldr_lit(17, lit(w(c + 3), d + 2)));
+                        self.enc.patch(w(c + 4), 0xD61F_0000 | (17 << 5)); // br x17
+                    }
+                    // final word: B <after-data> (unconditional, pc-rel imm26 words)
+                    let last = w(5 * IC_WAYS);
+                    let boff = (after_w as i32 - last as i32) as u32 & 0x03FF_FFFF;
+                    self.enc.patch(last, 0x1400_0000 | boff);
                     self.ic_sites.push(data_w);
                 }
                 // Unhandled indirect (IC off): falls through to the shared

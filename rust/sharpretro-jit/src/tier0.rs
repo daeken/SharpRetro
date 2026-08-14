@@ -1615,6 +1615,9 @@ pub fn compile_from_enc(enc: Aarch64Enc, n_slots: u32) -> CompiledBlock {
     }
 }
 
+/// Inline-cache ways per indirect-branch site (day-51: 2 thrashed at 6 targets).
+pub const IC_WAYS: usize = 8;
+
 pub struct CompiledBlock {
     page: *mut u8,
     page_len: usize,
@@ -1723,9 +1726,22 @@ impl CompiledBlock {
         for &off in &self.ic_sites {
             unsafe {
                 let p = self.page.add(off) as *mut u64;
-                let (g0, g1) = (p.read(), p.add(2).read());
-                if g0 == guest || g1 == guest { continue; }
-                let slot = if g0 == u64::MAX { p } else { p.add(2) };
+                static TRACE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+                if *TRACE.get_or_init(|| std::env::var("XF_IC_TRACE").is_ok()) {
+                    let ways: Vec<String> = (0..IC_WAYS).map(|k| format!("{:#x}", p.add(4*k).read())).collect();
+                    eprintln!("[ic-inst] off={off:#x} ways=[{}] guest={guest:#x} body={body:#x}", ways.join(","));
+                }
+                // N-WAY: first free way wins; if all full, way-0 is the churn
+                // slot (keeps ways 1..N as the settled set — cheap LRU-ish).
+                let mut held = false;
+                let mut free_way: Option<usize> = None;
+                for k in 0..IC_WAYS {
+                    let g = p.add(4 * k).read();
+                    if g == guest { held = true; break; }
+                    if g == u64::MAX && free_way.is_none() { free_way = Some(k); }
+                }
+                if held { continue; }
+                let slot = p.add(4 * free_way.unwrap_or(0));
                 std::ptr::write_volatile(slot.add(1), body);
                 std::ptr::write_volatile(slot, guest);
             }
@@ -1737,8 +1753,7 @@ impl CompiledBlock {
         for &off in &self.ic_sites {
             unsafe {
                 let p = self.page.add(off) as *mut u64;
-                std::ptr::write_volatile(p, u64::MAX);
-                std::ptr::write_volatile(p.add(2), u64::MAX);
+                for k in 0..IC_WAYS { std::ptr::write_volatile(p.add(4 * k), u64::MAX); }
             }
         }
     }
