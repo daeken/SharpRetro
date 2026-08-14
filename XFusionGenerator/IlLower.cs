@@ -327,9 +327,9 @@ public class IlLower {
 		}
 	}
 
-	static bool IsFlag(string n) => n is "CF" or "PF" or "AF" or "ZF" or "SF" or "OF" or "DF";
+	static bool IsFlag(string n) => n is "CF" or "PF" or "AF" or "ZF" or "SF" or "OF" or "DF" or "IDF";
 	static int FlagBit(string n) => n switch {
-		"CF" => 0, "PF" => 2, "AF" => 4, "ZF" => 6, "SF" => 7, "DF" => 10, "OF" => 11, _ => -1
+		"CF" => 0, "PF" => 2, "AF" => 4, "ZF" => 6, "SF" => 7, "DF" => 10, "OF" => 11, "IDF" => 21, _ => -1
 	};
 
 	/// Implicit arch-reg names in eval bodies (LEAVE: (= SP BP)) → X86 file index.

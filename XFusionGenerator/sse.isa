@@ -19,7 +19,10 @@
 ; BUT with args SWAPPED: result = [src.hi, dst.hi], vzip(a,b,64,hi)=[a.hi,b.hi].
 (instruction MOVHLPS (dst src) "movhlps $dst, $src" (= dst (vzip src dst 64 #t)))
 (encoding MOVHLPS (Vps Ups) (0x0F 0x12))
-(instruction MOVLPS (dst src) "movlps $dst, $src" (intrinsic movlps dst src))
+; MOVLPS load (Vq Mq): dst.lo64 = [mem], upper preserved — the scalar-write form
+; (operand width 64 → lane-0 write w/ preserve-upper, the same contract as MOVSD-X).
+; store (Mq Vq): [mem] = src.lo64 (natural 64-bit truncate).
+(instruction MOVLPS (dst src) "movlps $dst, $src" (= dst src))
 (encoding MOVLPS (Vq Mq) (0x0F 0x12))
 (encoding MOVLPS (Mq Vq) (0x0F 0x13))
 
@@ -27,9 +30,14 @@
 ; (result lanes: [dst.lo, src.lo] = interleave-low of two 64-bit lanes).
 (instruction MOVLHPS (dst src) "movlhps $dst, $src" (= dst (vzip dst src 64 #f)))
 (encoding MOVLHPS (Vps Ups) (0x0F 0x16))
-(instruction MOVHPS (dst src) "movhps $dst, $src" (intrinsic movhps dst src))
+; MOVHPS load (Vq Mq): dst[127:64] = [mem]64, lo preserved — same vzip shape as MOVLHPS
+; (dst.hi = src.lo where src = the 64-bit mem read).
+(instruction MOVHPS (dst src) "movhps $dst, $src" (= dst (vzip dst src 64 #f)))
+; MOVHPS store (Mq Vq): [mem]64 = src[127:64] — vzip-hi(src,src) lane-0 = src.hi, and the
+; 64-bit dst operand takes lane-0 (natural truncate).
+(instruction MOVHPS-ST (dst src) "movhps $dst, $src" (= dst (vzip src src 64 #t)))
 (encoding MOVHPS (Vq Mq) (0x0F 0x16))
-(encoding MOVHPS (Mq Vq) (0x0F 0x17))
+(encoding MOVHPS-ST (Mq Vq) (0x0F 0x17))
 
 ; MOVMSKPS: dst = 4-bit mask, bit i = sign of src.f32[i]. Upper GPR bits zeroed.
 (instruction MOVMSKPS (dst src) "movmskps $dst, $src" (= dst (vmovmsk src 32)))

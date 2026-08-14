@@ -60,7 +60,7 @@ public class RustLiftGen {
     }
 
     static readonly Dictionary<string, int> Flags = new() {
-        {"CF",0},{"PF",2},{"AF",4},{"ZF",6},{"SF",7},{"DF",10},{"OF",11}
+        {"CF",0},{"PF",2},{"AF",4},{"ZF",6},{"SF",7},{"DF",10},{"OF",11},{"IDF",21}
     };
     static readonly Dictionary<string, int> ArchRegs = new() {
         {"AX",0},{"CX",1},{"DX",2},{"BX",3},{"SP",4},{"BP",5},{"SI",6},{"DI",7}

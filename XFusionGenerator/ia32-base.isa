@@ -52,6 +52,27 @@
 (encoding MOV (Ev Iz)  (0xC7 /0))
 
 ; --- PUSH/POP (r/m forms; the +r register forms need opcode-range encodings, XF-2) ---
+; PUSHF/POPF (9C/9D): materialize/scatter EFLAGS. Long mode: 8-byte push (d64).
+; Bits: CF|reserved-1|PF|AF|ZF|SF|IF(=1 ring-3 constant)|DF|OF|ID(bit21, pseudo-flag IDF —
+; round-trips through POPF so the CPUID-detect probe [pushf;xor ID;popf;pushf;cmp] sees a
+; toggleable bit = "CPUID supported", which we do support).
+(instruction PUSHF ()
+    "pushfq"
+    (push (| (u64 CF) 2 (<< (u64 PF) 2) (<< (u64 AF) 4) (<< (u64 ZF) 6) (<< (u64 SF) 7) 0x200 (<< (u64 DF) 10) (<< (u64 OF) 11) (<< (u64 IDF) 21))))
+(encoding PUSHF () (0x9C d64))
+(instruction POPF ()
+    "popfq"
+    (mlet (v (pop))
+        (= CF (& v 1))
+        (= PF (& (>> v 2) 1))
+        (= AF (& (>> v 4) 1))
+        (= ZF (& (>> v 6) 1))
+        (= SF (& (>> v 7) 1))
+        (= DF (& (>> v 10) 1))
+        (= OF (& (>> v 11) 1))
+        (= IDF (& (>> v 21) 1))))
+(encoding POPF () (0x9D d64))
+
 (instruction PUSH (src)
     "push $src"
     (push src))
