@@ -7,7 +7,9 @@
     (encoding MOVSLDUP (Vps Wps) (rep 0x0F 0x12))
     (instruction MOVSHDUP (dst src) "movshdup $dst, $src" (intrinsic movshdup dst src))
     (encoding MOVSHDUP (Vps Wps) (rep 0x0F 0x16))
-    (instruction MOVDDUP (dst src) "movddup $dst, $src" (intrinsic movddup dst src))
+    ; dst.lo = src.lo, dst.hi = src.lo — the vzip-64-lo shape with src as both halves
+    ; (wall #32, OA/SDL SSE3 path; same family as MOVLHPS/MOVHPS wall #30).
+    (instruction MOVDDUP (dst src) "movddup $dst, $src" (= dst (vzip src src 64 #f)))
     (encoding MOVDDUP (Vpd Wsd) (repnz 0x0F 0x12))
     (instruction LDDQU (dst src) "lddqu $dst, $src" (intrinsic lddqu dst src))
     (encoding LDDQU (Vdq Mdq) (repnz 0x0F 0xF0))

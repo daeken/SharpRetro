@@ -36,8 +36,8 @@
 ; MOVHPS store (Mq Vq): [mem]64 = src[127:64] — vzip-hi(src,src) lane-0 = src.hi, and the
 ; 64-bit dst operand takes lane-0 (natural truncate).
 (instruction MOVHPS-ST (dst src) "movhps $dst, $src" (= dst (vzip src src 64 #t)))
-(encoding MOVHPS (Vq Mq) (0x0F 0x16))
-(encoding MOVHPS-ST (Mq Vq) (0x0F 0x17))
+(encoding MOVHPS (Vps Mq) (0x0F 0x16))
+(encoding MOVHPS-ST (Mq Vps) (0x0F 0x17))
 
 ; MOVMSKPS: dst = 4-bit mask, bit i = sign of src.f32[i]. Upper GPR bits zeroed.
 (instruction MOVMSKPS (dst src) "movmskps $dst, $src" (= dst (vmovmsk src 32)))
