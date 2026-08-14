@@ -36,6 +36,7 @@ public class RustLiftGen {
     /// Emitted as DEF_FLAGS_MASK[def_id] — the per-triple diff-mask (only compare
     /// flags the insn DEFINES; SDM-undefined flags may differ interp vs silicon).
     uint FlagsWritten;
+    internal bool curTmplHasIntrinsic = false;
     /// Which eflags bits this template's eval body READS (via bare flag-name in Expr).
     /// Emitted as DEF_FLAGS_READ[def_id] — for block-local dead-flag liveness:
     /// backward-scan `live = (live & ~WRITTEN[i]) | READ[i]`; a flag-write whose bit
@@ -439,6 +440,7 @@ public class RustLiftGen {
                 // ‡ intrinsic-id assignment: hash the name for now (v2: a proper enum).
                 var id = Math.Abs(name.GetHashCode()) % 1000;
                 Emit($"bd.call_intrinsic(IntrinsicId({id} /*{name}*/), {argsRust});");
+                curTmplHasIntrinsic = true;
                 break;
             }
             default:
@@ -750,6 +752,7 @@ public class RustLiftGen {
         // mnemonic but different param-counts (rare) get separate bodies.
         var tmplId = new Dictionary<(string, int), int>();
         var tmplFlagsMask = new Dictionary<int, uint>();
+        var tmplIntrinsic = new Dictionary<int, bool>();
         var tmplFlagsRead = new Dictionary<int, uint>();
         var tid = 0;
         var nUnhandled = 0;
@@ -773,6 +776,7 @@ public class RustLiftGen {
                 g.RtSink.Clear();
                 g.Emit($"// UNHANDLED: {ex.Message.Replace('\n',' ').Replace('"',' ')}");
                 g.Emit($"bd.unimplemented(\"{t.Mnemonic}\");");
+                g.curTmplHasIntrinsic = true;
             }
             g.Flush();
             sb.Append(g.Sb);
@@ -780,6 +784,7 @@ public class RustLiftGen {
             sb.AppendLine();
             tmplFlagsMask[tid] = g.FlagsWritten;
             tmplFlagsRead[tid] = g.FlagsRead;
+            tmplIntrinsic[tid] = g.curTmplHasIntrinsic;
             tid++;
         }
 
@@ -939,6 +944,22 @@ public class RustLiftGen {
             sb.AppendLine("];");
         }
         EmitFlagsTable("DEF_FLAGS_MASK", tmplFlagsMask);
+        // Per-def_id: template bottoms out in call_intrinsic (or UNHANDLED) = NOT liftable.
+        // The compiler ends the block AT such an insn so dispatch_native's arms get a shot
+        // (the DECODE-STOP contract at def-grain; the x87-decode-shadowed-the-dispatch fix).
+        sb.AppendLine("pub const DEF_IS_INTRINSIC: &[bool] = &[");
+        sb.Append("    false,");
+        {
+            var col2 = 1;
+            foreach(var def in RustDisasmGen.BodyOrder) {
+                var key2 = (def.Mnemonic, def.Operands.Count);
+                var isIntr = tmplId.TryGetValue(key2, out var tt2) && tmplIntrinsic.TryGetValue(tt2, out var bb) && bb;
+                sb.Append($" {(isIntr ? "true" : "false")},");
+                if(++col2 % 16 == 0) { sb.AppendLine(); sb.Append("   "); }
+            }
+        }
+        sb.AppendLine();
+        sb.AppendLine("];");
         // Which eflags bits each def's template READS. For block-local backward liveness:
         //   live_out = ALL (conservative at block boundary);
         //   for i in (n-1)..=0: live_in[i] = (live_out & !MASK[i]) | READ[i]; live_out = live_in[i];

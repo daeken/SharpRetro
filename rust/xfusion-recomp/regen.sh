@@ -15,7 +15,7 @@ cd "$(dirname "$0")/../.."
 # NOT included: x87 (0 in CP2077 corpus, MSVC-x64 doesn't emit), avx/avx2/
 # avx512 (cpuid_table under-advertises; adding these would decode VEX/EVEX
 # forms but CP2077-with-SSE-baseline-cpuid never reaches them).
-FEATURES="ia32 x86-64 sse sse2 sse3 ssse3 sse4.1 sse4.2"
+FEATURES="ia32 x86-64 sse sse2 sse3 ssse3 sse4.1 sse4.2 x87"
 touch XFusionGenerator/Program.cs
 dotnet run --project XFusionGenerator -- $FEATURES --rust rust/xfusion-recomp/src
 echo "regen: $(grep -c '=> {' rust/xfusion-recomp/src/disassembler.rs) def-arms, $(grep -c '^fn tmpl_' rust/xfusion-recomp/src/lift.rs) templates"
