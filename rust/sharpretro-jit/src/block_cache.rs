@@ -210,6 +210,7 @@ impl BlockCache {
     fn insert_linked(&mut self, pc: u64, mode: u32, block: CompiledBlock,
                      guest_range: (u64, u64), peek: (u64, u64), tier: u8)
     {
+        perf_map_emit(block.page_addr(), block.code_len, pc, guest_range.1, tier);
         if self.link {
             let new_key = (pc, mode);
             let mut fwd: Vec<((u64, u32), usize, u64)> = vec![];   // edges FROM new
@@ -676,6 +677,30 @@ impl BlockCache {
 
     pub fn len(&self) -> usize { self.map.len() }
     pub fn clear(&mut self) { self.map.clear(); self.n_compiles = 0; self.n_execs = 0; }
+}
+
+/// perf-map emitter (XF_PERF_MAP=1): one row per compiled block to /tmp/perf-<pid>.map —
+/// the standard JIT-symbols form (perf/gdb backtraces name translated blocks by guest pc).
+/// Row: "<host-addr-hex> <size-hex> jit_t<tier>_0x<guest-pc>[+<guest-end>]".
+/// The fn-NAME enrichment (addr2line over the guest module's DWARF) is the reader's
+/// join — the guest pc is the key.
+pub fn perf_map_emit(host_addr: u64, size: usize, guest_pc: u64, guest_end: u64, tier: u8) {
+    use std::sync::OnceLock;
+    use std::io::Write;
+    static F: OnceLock<Option<std::sync::Mutex<std::fs::File>>> = OnceLock::new();
+    let f = F.get_or_init(|| {
+        if std::env::var("XF_PERF_MAP").is_ok() {
+            let path = format!("/tmp/perf-{}.map", std::process::id());
+            std::fs::OpenOptions::new().create(true).append(true).open(&path)
+                .ok().map(std::sync::Mutex::new)
+        } else { None }
+    });
+    if let Some(m) = f {
+        if let Ok(mut g) = m.lock() {
+            let _ = writeln!(g, "{:x} {:x} jit_t{}_0x{:x}_to_0x{:x}",
+                             host_addr, size, tier, guest_pc, guest_end);
+        }
+    }
 }
 
 #[derive(Debug)]
