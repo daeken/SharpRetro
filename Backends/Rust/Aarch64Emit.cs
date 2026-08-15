@@ -118,6 +118,17 @@ public static class Aarch64Emit {
     };
 
     static void EmitAssign(CodeBuilder c, PList list, bool rt) {
+        // CT-assignment to a bare name short-circuits BEFORE Lift — Lift() on a ct rhs
+        // emits a fake runtime literal into the sink as a side effect (`(= T "B")` minted
+        // `bd.literal(U32, 0 /* non-numeric */)`), and the value must stay compiletime.
+        if(list[1] is PName ctn && !list[2].Type.Runtime && !rt) {
+            // `as _`: the shadow-rebind re-TYPED each binding (u8 expr shadowing a u32
+            // let); a true assignment can't (E0308), so re-cast to the declared type via
+            // inference. Strings/bools assign bare (`as _` is numeric-only).
+            var cast = list[2].Type is EInt ? " as _" : "";
+            c += $"{SafeIdent(ctn.Name)} = ({Ge(list[2])}){cast};";
+            return;
+        }
         var rhs = Lift(list[2]);
         if(list[1] is PList sub && sub[0] is PName(var head)) {
             var idx = sub.Count > 1 ? $"({Ge(sub[1])}) as u32" : "0";
@@ -159,8 +170,13 @@ public static class Aarch64Emit {
                     return;
             }
         }
-        // bare-name lhs = a `let`-bound local being reassigned → local_write.
-        // ‡ rung-4a: emit as a bare Rust `let name = ...;` shadow-rebind for now.
-        c += $"let {SafeIdent(((PName) list[1]).Name)} = {rhs};";
+        // bare-name lhs = a `let`-bound local being REASSIGNED. The rung-4a shadow-rebind
+        // (`let name = ...`) was WRONG inside conditional arms: the shadow dies at the
+        // arm's brace, so the outer name kept its declaration value — DUP-element-scalar
+        // read size=0 through every branch (silicon-diff caught it; the fuzz's v3 arm).
+        // let/mlet now declare `let mut`, so this is a true assignment. For a CT rhs the
+        // Lift() at the top of this fn was already wrong (it minted a fake runtime
+        // literal for `(= T "B")`) — re-derive the ct expression instead.
+        c += $"{SafeIdent(((PName) list[1]).Name)} = {rhs};";
     }
 }

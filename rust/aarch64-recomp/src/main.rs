@@ -751,6 +751,14 @@ fn main() {
             // diff compares all 32 as u128 — so the SIMD LD/ST families are UN-excluded.
             // The F-prefix/vector-arith exclusions above remain pending an interp-semantics
             // census (two-step deliberately: this fire's diffs attribute to ONE family).
+            // BARE-BODY DEFS: decode-only stubs in the .isa — the def body carries the
+            // disasm string and NO exec semantics (generated arm is `return true` with
+            // no reg_write). The interp silently no-ops → every diff reads interp==pre.
+            // Excluded as UNWRITTEN (not bugs) so the diff column stays signal; writing
+            // the semantics un-excludes each (CNT/CMEQ-scalar are small; queued).
+            || matches!(n, "CMEQ-register-scalar"|"CMEQ-zero-scalar"|"CMGT-register-scalar"
+                |"CMGT-zero-scalar"|"CMHS-register-scalar"|"CNT"|"MUL-by-element"
+                |"SHRN[2]-bare-guard-unused"|"UADDLV"|"UMAXP-UMINP"|"ZIP")
             // BARE STORE-EXCLUSIVE: without a paired load-exclusive the status result is
             // architecturally UNPREDICTABLE (ARM ARM: software must not rely on it). The
             // interp models always-succeed (right for real paired code, the only shape the

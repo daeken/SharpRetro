@@ -27,13 +27,13 @@ public static class ControlFlowEmit {
         // Compiletime-name binding. In Rust, `let name = <expr>;` then continue.
         Statement("let", (c, list) => {
             var name = RustEmit.SafeIdent(((PName) list[1]).Name);
-            c += $"let {name} = {GenerateExpression(list[2])};";
+            c += $"let mut {name} = {GenerateExpression(list[2])};";
             foreach(var e in list.Skip(3))
                 if(e is PList pl) GenerateStatement(c, pl);
         });
         Expression("let", list => {
             var name = RustEmit.SafeIdent(((PName) list[1]).Name);
-            RtSink += $"let {name} = {GenerateExpression(list[2])};";
+            RtSink += $"let mut {name} = {GenerateExpression(list[2])};";
             var body = list.Skip(3).ToList();
             foreach(var e in body.Take(body.Count - 1))
                 if(e is PList pl) GenerateStatement(RtSink, pl);
@@ -45,14 +45,14 @@ public static class ControlFlowEmit {
         Statement("mlet", (c, list) => {
             var binds = (PList) list[1];
             for(var i = 0; i < binds.Count; i += 2)
-                c += $"let {RustEmit.SafeIdent(((PName) binds[i]).Name)} = {GenerateExpression(binds[i+1])};";
+                c += $"let mut {RustEmit.SafeIdent(((PName) binds[i]).Name)} = {GenerateExpression(binds[i+1])};";
             foreach(var e in list.Skip(2))
                 if(e is PList pl) GenerateStatement(c, pl);
         });
         Expression("mlet", list => {
             var binds = (PList) list[1];
             for(var i = 0; i < binds.Count; i += 2)
-                RtSink += $"let {RustEmit.SafeIdent(((PName) binds[i]).Name)} = {GenerateExpression(binds[i+1])};";
+                RtSink += $"let mut {RustEmit.SafeIdent(((PName) binds[i]).Name)} = {GenerateExpression(binds[i+1])};";
             var body = list.Skip(2).ToList();
             foreach(var e in body.Take(body.Count - 1))
                 if(e is PList pl) GenerateStatement(RtSink, pl);

@@ -2647,7 +2647,11 @@
                    "2D")))
     (let address (gpr-or-sp64 rn)
         (do-ld1 rt 0)
-        (do-ld1 rt (if Q 16 8))
+        ; rt2, NOT rt: this said `rt` — the second chunk overwrote the first register
+        ; and rt2 was never written. Silicon-diff tell: interp's v[rt] == silicon's
+        ; v[rt2] exactly (the mem+16 data landed one register early). The no-offset
+        ; sibling at the def above always had rt2 — postindex drifted alone.
+        (do-ld1 rt2 (if Q 16 8))
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def LD1-multi-no-offset-three-registers
@@ -4503,7 +4507,12 @@
 (defm shrn-sub (count wide thin)
     (if Q
         (block (mfor (i count) (shrn-elem (+ i count) i wide thin)))
-        (block (mfor (i count) (shrn-elem i i wide thin)))))
+        ; Q=0 (SHRN): the narrow result goes to the LOWER half and the upper 64 are
+        ; ZEROED (SDM) — only SHRN2 preserves. vector-insert RMWs rd, so the pre-state
+        ; survived in the top lanes; zero-top after the inserts clears exactly those.
+        ; Silicon-diff caught it: interp hi-64 == pre, native hi-64 == 0.
+        (block (mfor (i count) (shrn-elem i i wide thin))
+               (= (vec rd) (vector-zero-top (vec rd))))))
 
 (def SHRN[2]
     "0 Q 0 011110 hhhh bbb 1000 0 1 nnnnn ddddd"
