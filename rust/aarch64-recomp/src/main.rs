@@ -747,13 +747,10 @@ fn main() {
             // Rust's own locals — the NEXT def's `(0..0x1000).collect()` returned an EMPTY
             // Vec while a fresh `.count()` in the same panic message said 4096. That host-
             // safety hole is FIXED in the stub (native_oracle.rs, str_d/ldr_d prologue pair).
-            // These defs stay excluded for a narrower reason: the stub doesn't load/store
-            // V-REG VALUES from state[], so the oracle comparison for a V-reg-writing def
-            // compares garbage. Un-exclude when the stub marshals V0-V31 (v2).
-            || n.starts_with("LD1") || n.starts_with("LD2") || n.starts_with("LD3")
-            || n.starts_with("LD4") || n.starts_with("ST1") || n.starts_with("ST2")
-            || n.starts_with("ST3") || n.starts_with("ST4")
-            || n.contains("-simd")
+            // v3: the stub NOW marshals full V0-V31 (ldr_q/str_q, flat[32..96]) and the
+            // diff compares all 32 as u128 — so the SIMD LD/ST families are UN-excluded.
+            // The F-prefix/vector-arith exclusions above remain pending an interp-semantics
+            // census (two-step deliberately: this fire's diffs attribute to ONE family).
             // BARE STORE-EXCLUSIVE: without a paired load-exclusive the status result is
             // architecturally UNPREDICTABLE (ARM ARM: software must not rely on it). The
             // interp models always-succeed (right for real paired code, the only shape the
@@ -789,6 +786,11 @@ fn main() {
                 let mut pre = Aarch64State::default();
                 for r in 1..=28 { pre.x[r] = rand(); }
                 pre.nzcv = ((rand() as u32) & 0xF) << 28;
+                // V pre-state (v3): random full-128. Read-modify lanes (INS-element, the
+                // MLA/MLS families, narrowing-top forms writing the hi half) are invisible
+                // against a zero pre-state — the day-3 law: every operand class needs its
+                // own pre-state, or agreement is agreement-about-zero.
+                for r in 0..32 { pre.v[r] = (rand() as u128) | ((rand() as u128) << 64); }
                 // MEM ARM: for a load/store def, a RANDOM register is outside the 64KB arena
                 // 598-of-835 times — which is why 623 panics over 109 distinct ld/st defs read
                 // as a "harness limit" instead of as the coverage hole they are. So place EVERY
@@ -916,6 +918,9 @@ fn main() {
                 let mut d = false;
                 for r in 0..31 { if i_post.x[r] != n_post.x[r] { d = true; break; } }
                 if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) { d = true; }
+                // V-REG post-state (v3): without this an LD1/SIMD-op writing the wrong
+                // lanes passes — nothing downstream reads the V it wrote. Full u128.
+                if !d { for r in 0..32 { if i_post.v[r] != n_post.v[r] { d = true; break; } } }
                 // MEMORY post-state. A GPR-only compare passes a STORE that wrote the wrong
                 // bytes to the right address, or the right bytes to the wrong one — the exact
                 // class this tier exists to catch, and invisible for as long as ld/st was
@@ -939,6 +944,9 @@ fn main() {
                         if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) {
                             eprintln!("    nzcv: interp=0x{:08X} native=0x{:08X} (pre=0x{:08X})",
                                 i_post.nzcv, n_post.nzcv, pre.nzcv); }
+                        for r in 0..32 { if i_post.v[r] != n_post.v[r] {
+                            eprintln!("    v{r}: interp=0x{:032X} native=0x{:032X} (pre=0x{:032X})",
+                                i_post.v[r], n_post.v[r], pre.v[r]); } }
                         // MEMORY detail. Without this a store-diff prints NO field at all — the
                         // registers agree by construction for a store, so the dump was empty and
                         // "104 GPR-only diffs" was unreadable. Print the first disagreeing bytes

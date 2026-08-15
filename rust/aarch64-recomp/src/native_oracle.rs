@@ -93,7 +93,7 @@ const PAGE: usize = 4096;
 // objdump decode-back of the emitted bytes — the encode-then-decode-back discipline):
 //   sub_sp(1) + str_x0(1) + 12×str_callee(12) + ldr_nzcv(1) + msr(1) + 30×ldr_x1..30(30)
 //   + ldr_x0(1) = 47. The runtime assert_eq! double-checks.
-const SLOT_OFF: usize = 55;   // was 47; +8 for the d8-d15 saves (assert at emit re-verifies)
+const SLOT_OFF: usize = 87;   // 47 v1, +8 d8-d15 saves (v2), +32 ldr_q V-loads (v3); emit-assert re-verifies
 
 /// One RWX page holding the stub. Reused across calls (only the test-insn slot rewrites).
 pub struct NativeStub {
@@ -184,10 +184,15 @@ impl NativeStub {
             *self.page.add(SLOT_OFF) = insn;
             clear_cache(self.page.add(SLOT_OFF) as *const u8, 4);
             // Marshal Aarch64State → flat u64[64] the stub reads.
-            let mut flat = [0u64; 64];
+            let mut flat = [0u64; 96];
             for i in 0..31 { flat[i] = state.x[i]; }
             flat[31] = state.nzcv as u64;
-            for i in 0..32 { flat[32 + i] = state.v[i] as u64; }  // ‡ low-64 only
+            // V0-V31 FULL 128-bit: lo word at flat[32+2i], hi at flat[33+2i] (little-endian
+            // pair = exactly what `ldr q, [x0, #256+16i]` reads). v3 — retires the ‡ low-64.
+            for i in 0..32 {
+                flat[32 + 2*i] = state.v[i] as u64;
+                flat[33 + 2*i] = (state.v[i] >> 64) as u64;
+            }
             // sigsetjmp — if the insn traps, sig_handler siglongjmps here with the signal.
             let mut jb: SigJmpBuf = std::mem::zeroed();
             JMP.with(|j| j.set(&mut jb));
@@ -200,7 +205,9 @@ impl NativeStub {
             JMP.with(|j| j.set(std::ptr::null_mut()));
             for i in 0..31 { state.x[i] = flat[i]; }
             state.nzcv = flat[31] as u32;
-            for i in 0..32 { state.v[i] = flat[32 + i] as u128; }  // ‡ low-64
+            for i in 0..32 {
+                state.v[i] = (flat[32 + 2*i] as u128) | ((flat[33 + 2*i] as u128) << 64);
+            }
         }
         NativeResult::Ran
     }
@@ -234,6 +241,17 @@ impl StubWriter {
     fn ldr_d(&mut self, dt: u32, xn: u32, off: u32) {
         debug_assert_eq!(off % 8, 0);
         self.put(0xFD400000 | ((off / 8) << 10) | (xn << 5) | dt);
+    }
+    /// STR Qt, [Xn, #off] — 128-bit. objdump-verified: str_q(0,0,256) = 0x3D804000
+    /// `str q0, [x0, #256]`; str_q(31,0,752) = 0x3D80BC1F `str q31, [x0, #752]`.
+    fn str_q(&mut self, qt: u32, xn: u32, off: u32) {
+        debug_assert_eq!(off % 16, 0);
+        self.put(0x3D800000 | ((off / 16) << 10) | (xn << 5) | qt);
+    }
+    /// LDR Qt, [Xn, #off] — objdump-verified: ldr_q(0,0,256) = 0x3DC04000.
+    fn ldr_q(&mut self, qt: u32, xn: u32, off: u32) {
+        debug_assert_eq!(off % 16, 0);
+        self.put(0x3DC00000 | ((off / 16) << 10) | (xn << 5) | qt);
     }
     fn str_(&mut self, xt: u32, xn: u32, off: u32) {
         assert!(off % 8 == 0 && off < 32768);
@@ -273,6 +291,10 @@ impl StubWriter {
         // load nzcv (before clobbering x0)
         self.ldr(1, 0, 31*8);            // x1 = state[31] = nzcv
         self.msr_nzcv(1);
+        // load guest V0-V31 (FULL 128-bit) from flat[32..96] — v3: un-excludes the SIMD
+        // def families. Host d8-d15 were saved above, so clobbering all Q-regs is safe.
+        // Encodings decode-back-verified: ldr_q(0,0,256)=0x3DC04000 `ldr q0,[x0,#256]`.
+        for v in 0u32..=31 { self.ldr_q(v, 0, 256 + v*16); }
         // load x1-x30 from state (x0 = base)
         for r in 1..=30 { self.ldr(r, 0, r*8); }
         // load x0 LAST (loses base ptr; it's on stack)
@@ -294,6 +316,9 @@ impl StubWriter {
         // store nzcv
         self.mrs_nzcv(1);
         self.str_(1, 0, 31*8);
+        // store guest V0-V31 (full 128-bit) to flat[32..96] — BEFORE the host d8-d15
+        // restore below overwrites the guest's low-64 in those eight.
+        for v in 0u32..=31 { self.str_q(v, 0, 256 + v*16); }
         // restore callee-saved x19-x30
         for (i, r) in (19..=30).enumerate() { self.ldr(r, 31, 16 + (i as u32)*8); }
         // restore callee-saved d8-d15

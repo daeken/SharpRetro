@@ -56,8 +56,15 @@ public static class Aarch64Emit {
         Expression("float-to-fixed-point", list =>
             $"bd.call_intrinsic(IntrinsicId(5/*ftfp*/), &[{string.Join(", ", list.Skip(1).Select(Lift))}]).unwrap()");
         Expression("vector-insert", list => {
-            var v = Rt($"bd.reg_read(VEC, ({Ge(list[1])}) as u32, IlType::V128)");
-            return $"bd.velement_write({v}, {Lift(list[2])}, {Lift(list[3])})";
+            // READ-MODIFY-WRITE: velement_write RETURNS the modified V128 — it does not
+            // store. The v1 emit dropped the result (`let _ = …`), making every
+            // lane-insert (LD1-single, INS-class) a silent no-op in the interp; the v3
+            // silicon fuzz caught it as interp==pre one byte off. The C# backend's form
+            // is an assignment (state.V[rt] = …Element(…)); this mirrors it.
+            var rt = Rt($"({Ge(list[1])}) as u32");
+            var v = Rt($"bd.reg_read(VEC, {rt}, IlType::V128)");
+            var nv = Rt($"bd.velement_write({v}, {Lift(list[2])}, {Lift(list[3])})");
+            return $"bd.reg_write(VEC, {rt}, {nv})";
         });
 
         // ── compiletime-only (fold-out — but not folded yet in this pipeline; see ‡ below) ──
