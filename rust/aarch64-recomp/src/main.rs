@@ -9,7 +9,7 @@
 
 use aarch64_recomp::recompile_one;
 use sharpretro_jit::recording::RecordingBuilder;
-use sharpretro_jit::interp::{InterpretingBuilder, FlatMem, GuestMem};
+use sharpretro_jit::interp::{InterpretingBuilder, FlatMem, GuestMem, IVal};
 
 mod state;
 use state::Aarch64State;
@@ -24,9 +24,54 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
     let branched;
     {
         let mut b = InterpretingBuilder::new(&mut s, mem, pc);
-        // Vector intrinsics (id≥100) → panic-stub for now (‡ rung-4b: implement or route
-        // via call_intrinsic hook). SR/svc/breakpoint (id<10) → panic named.
-        b.intrinsic = |_s, _m, id, _a| panic!("intrinsic id={id} not wired");
+        // Intrinsic policy for the EXEC-TRUTH ORACLE. Three classes, and the split is
+        // about what a single-threaded fuzz harness can honestly model:
+        //
+        //   WIRED — semantics fully determined without an OS or a second thread:
+        //     id=3 load_excl  (LDXR/LDXRB/LDXRH/LDAXR…) — with no contention an exclusive
+        //       load IS a plain load; the monitor's only observable effect is on a later
+        //       store-exclusive, which we also model. The intrinsic gets NO width arg (the
+        //       generator drops the .isa's `u8`/`u32`/… token), so read the widest the def
+        //       can want and let the generated downstream `cast` narrow — which is exactly
+        //       what the emitted code already does (`cast(_t1, U32)` after the call).
+        //     id=4 store_excl (STXR/STXRB/…) — with no contention it always SUCCEEDS, so:
+        //       store, return 0. Width IS available here and IS load-bearing: the value arg
+        //       is pre-cast by the generator (`cast(_t1, U8)` before the call), so
+        //       args[1].ty carries it. Writing 8 bytes for a byte-store would corrupt the
+        //       neighbours and the diff would surface as a mystery in an unrelated def.
+        //
+        //   UNWIRED, DELIBERATELY — the insn's meaning LEAVES the instruction:
+        //     id=0 sr_read (system registers: no MSR/MRS state model in the fuzz state),
+        //     id=1 svc (a syscall — the effect is the OS's), id=2 breakpoint (a trap).
+        //     Panicking is the honest answer: a fabricated value would be diffed against
+        //     silicon that actually has the register/handler, and the diff would be OURS.
+        //
+        //   UNWIRED, NOT YET — id≥100, the vector intrinsics. Named per-id in the panic so
+        //     the tally says which, rather than "some intrinsic".
+        b.intrinsic = |_s, m, id, a| match id {
+            3 => {
+                if std::env::var("XF_EXCL_DBG").is_ok() {
+                    eprintln!("  [excl] load_excl addr={:#x}", a[0].bits);
+                }
+                let addr = a[0].bits as u64;
+                // 64 = BITS. GuestMem::read/write take a BIT width (interp.rs:738, n=(w+7)/8);
+                // passing 8 reads ONE BYTE. That produced x2=0xef on a 64-bit LDXR and looked
+                // exactly like an unwired intrinsic — predicted before the fire, confirmed by it.
+                Some(IVal::u(64, m.read(addr, 64)))
+            }
+            4 => {
+                if std::env::var("XF_EXCL_DBG").is_ok() {
+                    eprintln!("  [excl] store_excl addr={:#x} val={:#x} ty={:?}", a[0].bits, a[1].bits, a[1].ty);
+                }
+                let addr = a[0].bits as u64;
+                // width via the same match-idiom interp.rs:155 uses — IlType has no
+                // width() accessor and inventing one would be a second API to keep in sync.
+                let w = match a[1].ty { sharpretro_jit::IlType::I{width,..} => width, _ => 64 };
+                m.write(addr, w, a[1].bits);
+                Some(IVal::u(32, 0))     // 0 = store-exclusive SUCCEEDED
+            }
+            _ => panic!("intrinsic id={id} not wired"),
+        };
         let ok = recompile_one(&mut b, insn, pc);
         assert!(ok, "insn 0x{insn:08X} not decoded");
         branched = b.branched;
@@ -42,6 +87,68 @@ fn main() {
     // run via interp AND tier-0-block-cache, diff final state. THE step-④ oracle.
     // <program> = a name ("sum10") or a comma-sep hex-insn list.
     #[cfg(target_arch = "aarch64")]
+    // --excl-test — direct proof that the load/store-exclusive intrinsics EXECUTE, rather
+    // than inferring it from a fuzz tally. The tally can't show it: def-names are recorded
+    // only on diff/reject, so a working def is indistinguishable from one that was never
+    // selected. Addresses are CHOSEN (inside the arena) because the fuzz's random regs put
+    // them outside it 598-of-835 times, which is an arena limit rather than a semantics gap.
+    if args.get(1).map(|s| s.as_str()) == Some("--excl-test") {
+        // FlatMem::new(BASE, size) — base=0x10000, so valid guest addrs are 0x10000..0x20000.
+        // My first pass chose 0x1000/0x2000 (below base): `addr - self.base` underflows to
+        // ~2^64 and indexes out of bounds. The panic read as "intrinsic not wired" because
+        // that's what the test's own message said — the arm was fine, my ADDRESSES were.
+        let mut mem = FlatMem::new(0x10000, 0x10000);
+        let mut fail = 0usize;
+        // STXR w0, [x1] then LDXR w2, [x1]: store 0xDEADBEEF, read it back.
+        // Encodings hand-built and decode-back-verified below against DEF_MNEMONICS.
+        for (name, insn, pre_x, want) in [
+            // STXR Ws, Wt, [Xn]: sf=0 -> 32-bit. 88 1F 7C 20 = stxr w31?,... build explicitly:
+            ("STXR-32", 0x8802_7C20u32, [0x11000u64, 0xDEAD_BEEFu64], 0xDEAD_BEEFu64),
+        ] {
+            let mut st = Aarch64State::default();
+            // objdump: `stxr w2, w0, [x1]` — Ws=w2 (STATUS out), Wt=w0 (VALUE in), Xn=x1 (ADDR).
+            // Setting x2 as the value would store 0 from w0 and read as a working store of the
+            // wrong number: decode-back gave the encoding, and the OPERAND ORDER still had to
+            // be read off it rather than assumed from the mnemonic's argument order.
+            st.x[1] = pre_x[0]; st.x[0] = pre_x[1];
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                interp_one(&st, &mut mem, insn, 0x1000)
+            }));
+            match r {
+                Ok(_) => {
+                    // NB: GuestMem::read/write take w in BITS, not bytes (interp.rs:738, n=(w+7)/8).
+                    // My first version passed 4 and read ONE byte — the 0xef that made a
+                    // correctly-wired intrinsic look broken.
+                    let got = mem.read(0x11000, 32);
+                    let ok = got == want as u128;
+                    println!("  {name}: mem[0x11000]={got:#x} want={want:#x} {}", if ok {"OK"} else {"FAIL"});
+                    if !ok { fail += 1; }
+                }
+                Err(_) => { println!("  {name}: PANICKED (intrinsic not wired?)"); fail += 1; }
+            }
+        }
+        // LDXR must read back what a plain store put there.
+        mem.write(0x12000, 64, 0x0123_4567_89AB_CDEF);   // 64 = BITS
+        // §4: read it back through the SAME api before trusting the store — a wrong-unit or
+        // wrong-base write is what made the STXR arm read 0xef.
+        let sanity = mem.read(0x12000, 64);
+        println!("  [sanity] mem[0x12000]={sanity:#x} (want 0x123456789abcdef)");
+        let mut st = Aarch64State::default();
+        st.x[3] = 0x12000;
+        let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            interp_one(&st, &mut mem, 0xC85F_7C62u32, 0x1000)   // LDXR x2, [x3]
+        }));
+        match r {
+            Ok((post, _)) => {
+                let ok = post.x[2] == 0x0123_4567_89AB_CDEF;
+                println!("  LDXR-64: x2={:#x} {}", post.x[2], if ok {"OK"} else {"FAIL"});
+                if !ok { fail += 1; }
+            }
+            Err(_) => { println!("  LDXR-64: PANICKED (intrinsic not wired?)"); fail += 1; }
+        }
+        println!("{}", if fail == 0 { "excl-test: PASS" } else { "excl-test: FAIL" });
+        std::process::exit(if fail == 0 { 0 } else { 1 });
+    }
     if args.get(1).map(|s| s.as_str()) == Some("--run") {
         // ── the test program(s) ────────────────────────────────────────────
         // sum10: x0 = Σ 1..10 = 55. Exercises MOVZ, ADD-reg, ADD-imm, SUBS(CMP),
