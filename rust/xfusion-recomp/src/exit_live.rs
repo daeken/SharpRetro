@@ -19,6 +19,28 @@
 //! Depth: peek up to PEEK_INSNS insns per target, following NO edges (a
 //! conditional successor's own branch ends the walk with the residual live
 //! mask folded in as-if-read — i.e. whatever we haven't resolved stays live).
+//!
+//! ── WHY THIS PASS DOESN'T DISTINGUISH "PROVED DEAD" FROM "STOPPED LOOKING",
+//!    AND WHEN IT WOULD HAVE TO ─────────────────────────────────────────────
+//! Every failure to resolve a successor here collapses into one answer: seed
+//! ALL-LIVE. So `dead` means *proved-overwritten-before-read within the peek
+//! horizon* and every other outcome — undecoded insn, indirect target, past
+//! the horizon, a def outside the mask tables — is indistinguishable from
+//! "live". That conflation is SAFE HERE and only here, because this pass only
+//! ever WIDENS the live set: an unresolved edge costs us a flag computation we
+//! didn't need, never a flag we did.
+//!
+//! The moment that stops holding is if a verdict from this pass ever LICENSES
+//! INACTION — i.e. narrowing becomes the optimisation ("drop this flag
+//! computation because nothing downstream reads it"). Then "nothing reads it"
+//! is a claim that has to separate *I proved it* from *I stopped looking*, and
+//! a PEEK_INSNS-bounded window that treats an indirect target as all-live
+//! would be proving the wrong thing quietly: it would be asserting a negative
+//! it never established. If that day comes, the fix is to return the reason
+//! alongside the mask (resolved-and-overwritten / horizon / undecoded /
+//! indirect) and refuse to narrow on anything but the first — the same split
+//! a reachability analysis needs between "unreachable" and "not-followed".
+//! Recorded here so the next reader doesn't have to re-derive the condition.
 
 use crate::decode::XMode;
 use crate::disassembler::decode_insn;

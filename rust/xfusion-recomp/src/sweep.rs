@@ -307,7 +307,18 @@ pub fn encode(d: &SwDef, c: &EncChoice) -> Vec<u8> {
         } else {
             // Reg-form: mod=11. uses_reg/uses_rm (not has_greg/has_erm) —
             // Vxmm/Wxmm occupy the same ModRM.reg/.rm fields.
-            let rm3 = if uses_rm { c.rm & 7 } else { 0 };
+            //
+            // rm_exact pins ModRM.rm for the x87 ESCAPE SINGLES, where the
+            // second byte is a fixed opcode-extension rather than an operand
+            // encoding: D9 /4 rm=0 is FCHS and rm=1 is FABS, so a def with no
+            // operands still needs its rm. Without this, `uses_rm` is false for
+            // every one (no operands to use it), rm3 collapses to 0, and each
+            // escape group encodes as its FIRST member — FABS→FCHS, all seven
+            // of D9 E8..EE→FLD1, and DA E9/DB E2/DE D9 fail to decode at all.
+            // Silent, and only visible as a round-trip mnemonic mismatch: the
+            // bytes are always a VALID instruction, just the wrong one.
+            let rm3 = if d.rm_exact >= 0 { d.rm_exact as u8 & 7 }
+                      else if uses_rm { c.rm & 7 } else { 0 };
             b.push(0xC0 | (reg3 << 3) | rm3);
         }
     }
@@ -839,7 +850,7 @@ mod tests {
             let d = SWEEP_DEFS.iter().find(|d|
                 d.mnem == mnem && d.opcode == op && d.map == map
             ).unwrap_or_else(|| panic!("no SwDef for {mnem} m{map}/0x{op:02X}"));
-            let c = EncChoice { mode: XMode::Bits32, op_w, reg, rm, zopc, imm: 0x11, mem: None };
+            let c = EncChoice { mode: XMode::Bits32, op_w, reg, rm, zopc, imm: 0x11, mem: None, lock: false };
             let bytes = encode(d, &c);
             eprintln!("  {} op_w={} reg={} rm={} zopc={} → {:02X?}", mnem, op_w, reg, rm, zopc, &bytes);
             lens.push(bytes.len());

@@ -76,6 +76,7 @@ public static class SweepGen {
 		sb.AppendLine("    pub map: u8,          // 0=1B, 1=0F, 2=0F38, 3=0F3A");
 		sb.AppendLine("    pub opcode: u8,");
 		sb.AppendLine("    pub reg_ext: i8,      // /0../7 or -1");
+		sb.AppendLine("    pub rm_exact: i8,     // exact ModRM.rm constraint (x87 escape singles: D9 /4 rm=1 = FABS), or -1");
 		sb.AppendLine("    pub mprefix: u8,      // 0 | 0x66 | 0xF2 | 0xF3");
 		sb.AppendLine("    pub plus_r: bool,");
 		sb.AppendLine("    pub d64: bool,");
@@ -107,7 +108,7 @@ public static class SweepGen {
 		foreach(var d in defs) {
 			var mod11 = d.Mod11 switch { true => 1, false => 0, null => -1 };
 			sb.Append($"    SwDef {{ mnem: \"{d.Mnemonic}\", map: {MapByte(d.Map)}, opcode: 0x{d.Opcode:X2}, ");
-			sb.Append($"reg_ext: {d.RegExtension}, mprefix: 0x{MPrefix(d.MandatoryPrefix):X2}, ");
+			sb.Append($"reg_ext: {d.RegExtension}, rm_exact: {d.RmExact}, mprefix: 0x{MPrefix(d.MandatoryPrefix):X2}, ");
 			sb.Append($"plus_r: {(d.PlusR ? "true" : "false")}, d64: {(d.D64 ? "true" : "false")}, ");
 			sb.Append($"mod11: {mod11}, vex: {VexByte(d)}, ops: &[");
 			foreach(var o in d.Operands) {
