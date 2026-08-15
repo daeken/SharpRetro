@@ -83,6 +83,9 @@ pub struct IlRecorder {
     /// valid). SHR-with-dead-flags: empty body → written=∅ → cache preserved.
     cond_snap: Vec<(HashMap<(u8,u32),(u32,IlType)>, HashSet<(u8,u32)>)>,
     svn: bool,
+    /// Monotonic LocalId allocator (used only by the unimplemented local_new
+    /// placeholder today; a real tier-1 local impl replaces this).
+    n_locals: u32,
 }
 
 impl IlRecorder {
@@ -115,6 +118,34 @@ impl IlRecorder {
     }
     pub fn n_vals(&self) -> u32 { self.next }
 
+    /// Record a not-modelled Builder op HONESTLY: emit an `Unimplemented`
+    /// statement (so `complete()` goes false and every consumer degrades
+    /// rather than losing the trace) and return a well-formed placeholder
+    /// val of the requested type.
+    ///
+    /// WHY this replaced 31 `panic!("tier-1 v1: …")` arms (2026-08-15, from an IL-read consumer's report):
+    /// the panics were never the JIT's safety mechanism — `BlockCache::
+    /// compile_one` already wraps tier-1 in `catch_unwind` with a suppressed
+    /// hook and falls back to tier-0, so an unliftable arm was ALREADY a
+    /// caught-and-swallowed control-flow signal. That shape cannot tell
+    /// "tier-1 declined" from "tier-1 has a bug" (both arrive as a silent
+    /// caught panic), and it takes the whole trace out — so a read-tool
+    /// asking "does this block touch field +0x18" got nothing for any block
+    /// containing one FP insn, instead of a partial answer marked partial.
+    /// `Unimplemented` is CHECKABLE rather than fatal: Tier1::compile refuses
+    /// the block, which is stricter, and the recorded trace stays readable.
+    fn unimpl_val(&mut self, what: &'static str, ty: IlType) -> u32 {
+        let _ = what;
+        self.stmt(IlOpKind::Unimplemented, IlType::Unit, &[], 0);
+        self.produce(IlOpKind::Unimplemented, ty, &[], 0)
+    }
+
+    /// True when no `Unimplemented` op was recorded — i.e. every Builder op in
+    /// this trace was modelled. `Tier1::compile` gates on this; read-tools use
+    /// it to mark a partial lift instead of silently under-reporting.
+    pub fn complete(&self) -> bool {
+        !self.ops.iter().any(|o| o.kind == IlOpKind::Unimplemented)
+    }
     fn produce(&mut self, kind: IlOpKind, ty: IlType, args: &[u32], imm: u128) -> u32 {
         let out = self.next; self.next += 1;
         self.tys.push(ty);
@@ -269,22 +300,22 @@ impl Builder for IlRecorder {
         self.produce(IlOpKind::Cast, IlType::I{signed:false,width:128}, &[hi, lo], 2 /*pair marker*/)
     }
     fn hi64(&mut self, a: u32) -> u32 { self.produce(IlOpKind::Cast, IlType::U64, &[a], 3 /*hi64 marker*/) }
-    fn vfbin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfbin (V128)") }
-    fn vibin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vibin (V128)") }
-    fn vishi(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vishi (V128)") }
-    fn vmovmsk(&mut self, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vmovmsk (V128)") }
-    fn vfun(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfun (V128)") }
-    fn vfminmax(&mut self, _: u32, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vfminmax (V128)") }
-    fn vfcmpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vfcmpp (V128)") }
-    fn vhadd(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vhadd (V128)") }
-    fn bswap(&mut self, _: u32) -> u32 { panic!("tier-1 v1: bswap") }
-    fn vdpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vdpp (V128)") }
-    fn loop_while(&mut self, _: u32, _: bool, _: &mut dyn FnMut(&mut Self) -> u32) -> u32 { panic!("tier-1 v1: loop_while") }
-    fn vshuf(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vshuf (V128)") }
-    fn vshufw(&mut self, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: vshufw (V128)") }
-    fn vcvt(&mut self, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vcvt (V128)") }
-    fn fcmpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: fcmpp (float)") }
-    fn fminmax(&mut self, _: u32, _: u32, _: bool) -> u32 { panic!("tier-1 v1: fminmax (float)") }
+    fn vfbin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vfbin", IlType::V128) }
+    fn vibin(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vibin", IlType::V128) }
+    fn vishi(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vishi", IlType::V128) }
+    fn vmovmsk(&mut self, _: u32, _: u32) -> u32 { self.unimpl_val("vmovmsk", IlType::U64) }
+    fn vfun(&mut self, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vfun", IlType::V128) }
+    fn vfminmax(&mut self, _: u32, _: u32, _: u32, _: bool) -> u32 { self.unimpl_val("vfminmax", IlType::V128) }
+    fn vfcmpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vfcmpp", IlType::V128) }
+    fn vhadd(&mut self, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vhadd", IlType::V128) }
+    fn bswap(&mut self, _: u32) -> u32 { self.unimpl_val("bswap", IlType::U64) }
+    fn vdpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vdpp", IlType::V128) }
+    fn loop_while(&mut self, _: u32, _: bool, _: &mut dyn FnMut(&mut Self) -> u32) -> u32 { self.unimpl_val("loop_while", IlType::U64) }
+    fn vshuf(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("vshuf", IlType::V128) }
+    fn vshufw(&mut self, _: u32, _: u32, _: bool) -> u32 { self.unimpl_val("vshufw", IlType::V128) }
+    fn vcvt(&mut self, _: u32, _: u32) -> u32 { self.unimpl_val("vcvt", IlType::V128) }
+    fn fcmpp(&mut self, _: u32, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("fcmpp", IlType::U64) }
+    fn fminmax(&mut self, _: u32, _: u32, _: bool) -> u32 { self.unimpl_val("fminmax", IlType::U64) }
     fn vzip(&mut self, a: u32, b: u32, ew: u32, hi: bool) -> u32 {
         self.produce(IlOpKind::Ternary, IlType::V128, &[a, b],
             (ew as u128) | if hi { 1<<8 } else { 0 } | 5<<16 /*vzip marker*/)
@@ -301,7 +332,7 @@ impl Builder for IlRecorder {
     bin!(and, And); bin!(or, Or); bin!(xor, Xor);
     bin!(shl, Shl); bin!(shr, Shr); bin!(rotr, Rotr);
     un!(neg, Neg); un!(not, Not); un!(rbit, Rbit); un!(clz, Clz);
-    fn popcnt(&mut self, _: u32) -> u32 { panic!("tier-1 v1: popcnt (needs V-reg)") }
+    fn popcnt(&mut self, _: u32) -> u32 { self.unimpl_val("popcnt", IlType::U64) }
     cmp!(eq, Eq); cmp!(ne, Ne); cmp!(lt, Lt); cmp!(le, Le); cmp!(gt, Gt); cmp!(ge, Ge);
 
     fn ternary(&mut self, c: u32, a: u32, b: u32) -> u32 {
@@ -370,19 +401,25 @@ impl Builder for IlRecorder {
 
     // ── float/vec/local/native — panic for now (tier-1 v1 = scalar-int only,
     //    matching tier-0's coverage; the fuzz gate covers exactly this set) ──
-    fn fabs(&mut self, _: u32) -> u32 { panic!("tier-1 v1: float") }
-    fn fsqrt(&mut self, _: u32) -> u32 { panic!("tier-1 v1: float") }
-    fn fround(&mut self, _: u32, _: RoundMode) -> u32 { panic!("tier-1 v1: float") }
-    fn fceil(&mut self, _: u32) -> u32 { panic!("tier-1 v1: float") }
-    fn ffloor(&mut self, _: u32) -> u32 { panic!("tier-1 v1: float") }
-    fn fisnan(&mut self, _: u32) -> u32 { panic!("tier-1 v1: float") }
-    fn velement_read(&mut self, _: u32, _: u32, _: IlType) -> u32 { panic!("tier-1 v1: vec") }
-    fn velement_write(&mut self, _: u32, _: u32, _: u32) -> u32 { panic!("tier-1 v1: vec") }
-    fn vzero_top(&mut self, _: u32) -> u32 { panic!("tier-1 v1: vec") }
-    fn local_new(&mut self, _: IlType) -> LocalId { panic!("tier-1 v1: local") }
-    fn local_read(&mut self, _: LocalId) -> u32 { panic!("tier-1 v1: local") }
-    fn local_write(&mut self, _: LocalId, _: u32) { panic!("tier-1 v1: local") }
-    fn call_native(&mut self, _: NativeSlot, _: &[u32]) -> Option<u32> { panic!("tier-1 v1: call_native") }
+    fn fabs(&mut self, _: u32) -> u32 { self.unimpl_val("fabs", IlType::U64) }
+    fn fsqrt(&mut self, _: u32) -> u32 { self.unimpl_val("fsqrt", IlType::U64) }
+    fn fround(&mut self, _: u32, _: RoundMode) -> u32 { self.unimpl_val("fround", IlType::U64) }
+    fn fceil(&mut self, _: u32) -> u32 { self.unimpl_val("fceil", IlType::U64) }
+    fn ffloor(&mut self, _: u32) -> u32 { self.unimpl_val("ffloor", IlType::U64) }
+    fn fisnan(&mut self, _: u32) -> u32 { self.unimpl_val("fisnan", IlType::Bool) }
+    fn velement_read(&mut self, _: u32, _: u32, ty: IlType) -> u32 { self.unimpl_val("velement_read", ty) }
+    fn velement_write(&mut self, _: u32, _: u32, _: u32) -> u32 { self.unimpl_val("velement_write", IlType::V128) }
+    fn vzero_top(&mut self, _: u32) -> u32 { self.unimpl_val("vzero_top", IlType::V128) }
+    fn local_new(&mut self, ty: IlType) -> LocalId {
+        // a REAL id: a subsequent local_write must not index nothing.
+        let id = self.n_locals; self.n_locals += 1;
+        let _ = self.unimpl_val("local_new", ty); LocalId(id)
+    }
+    fn local_read(&mut self, _: LocalId) -> u32 { self.unimpl_val("local_read", IlType::U64) }
+    fn local_write(&mut self, _: LocalId, _: u32) { self.stmt(IlOpKind::Unimplemented, IlType::Unit, &[], 0); }
+    fn call_native(&mut self, _: NativeSlot, _: &[u32]) -> Option<u32> {
+        Some(self.unimpl_val("call_native", IlType::U64))
+    }
 }
 
 #[cfg(test)]
@@ -442,5 +479,48 @@ mod tests {
         let (def_at, last_use) = r.live_ranges();
         assert_eq!(def_at, vec![0, 1, 2]);
         assert_eq!(last_use, vec![2, 2, 3]);   // v0,v1 last-used at op[2](add); v2 at op[3](write)
+    }
+}
+
+#[cfg(test)]
+mod unimpl_gate_tests {
+    use super::*;
+    use crate::{Builder, IlType};
+
+    /// PLANTED-FAILURE CONTROL for the `complete()` gate (the rule being:
+    /// a check that cannot fail is decoration). Three readings, and the middle
+    /// MUST differ — a gate that returned false always, or true always, fails here.
+    #[test]
+    fn complete_gate_discriminates() {
+        // arm 1: a scalar-int-only trace — every op modelled.
+        let mut r = IlRecorder::new();
+        let a = r.literal(IlType::U64, 7);
+        let b = r.literal(IlType::U64, 35);
+        let _ = r.add(a, b);
+        assert!(r.complete(), "a fully-modelled trace must be complete");
+
+        // arm 2 (the PLANT): record one not-modelled op into the SAME trace.
+        let _v = r.fabs(a);                       // an arm that now emits Unimplemented
+        assert!(!r.complete(), "an Unimplemented op must make complete() false");
+        assert!(r.ops.iter().any(|o| o.kind == IlOpKind::Unimplemented),
+                "the Unimplemented op must be RECORDED, not swallowed");
+
+        // arm 3: a fresh trace reverts to complete — proves arm 2 moved the cell
+        // rather than the cell being stuck.
+        let mut r2 = IlRecorder::new();
+        let c = r2.literal(IlType::U64, 1);
+        let _ = r2.add(c, c);
+        assert!(r2.complete(), "before == reverted != planted");
+    }
+
+    /// The placeholder must be WELL-FORMED, not a hole: a later local_write
+    /// against an unimplemented local_new must not index nothing.
+    #[test]
+    fn unimpl_placeholder_is_usable() {
+        let mut r = IlRecorder::new();
+        let id = r.local_new(IlType::U64);
+        let v = r.literal(IlType::U64, 42);
+        r.local_write(id, v);                     // must not panic
+        assert!(!r.complete());
     }
 }

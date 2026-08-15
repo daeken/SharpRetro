@@ -349,25 +349,46 @@ mod tests {
 
     #[test]
     fn ordered_shims_replay_in_recorded_order() {
-        // record: two "threads" (simulated serially) take ordered seqs A then B
-        RR_SEQ.store(100, Ordering::SeqCst);
+        // RR_SEQ/RR_CURSOR are PROCESS-GLOBAL and `tier0.rs` takes their addresses
+        // for the XF_RR emit path, so this test's coupling to them is a real design
+        // fact rather than a test artifact. It is therefore written RELATIVE (base
+        // captured at entry, deltas asserted) instead of absolute: an absolute
+        // `== 102` can't survive a concurrent neighbour, and a serial-guard would
+        // make the test pass while leaving the sharing itself untested.
+        let seq_base = RR_SEQ.load(Ordering::SeqCst);
         let mut t0 = ShimLog::default();
         let mut t1 = ShimLog::default();
-        t0.record(1, 10, vec![], true);   // seq 100
-        t1.record(2, 20, vec![], true);   // seq 101
-        // replay: t1 must WAIT until cursor passes 100 even if it arrives first.
-        RR_CURSOR.store(100, Ordering::SeqCst);
+        t0.record(1, 10, vec![], true);   // takes seq_base
+        t1.record(2, 20, vec![], true);   // takes seq_base+1
+        // replay: t1 must WAIT until the cursor reaches ITS seq, even arriving first.
+        RR_CURSOR.store(seq_base, Ordering::SeqCst);
+
+        // The ordering property under test is that t1 BLOCKS. Timing it against a
+        // post-hoc instant on the main thread was racy and flaked (~1-in-3): t1
+        // unblocks *inside* t0.replay, so t1's completion-instant and the main
+        // thread's next instant have no guaranteed order. The sound form times t1
+        // against a `t_pre` captured BEFORE the blocking window — if t1 were not
+        // blocked it would finish immediately, i.e. well under the sleep.
+        let t_pre = std::time::Instant::now();
         let t1h = std::thread::spawn(move || {
-            let ret = t1.replay(2).ret;   // blocks until cursor==101
+            let ret = t1.replay(2).ret;   // blocks until cursor == its seq
             (ret, std::time::Instant::now())
         });
-        std::thread::sleep(std::time::Duration::from_millis(50));
-        let ret0 = t0.replay(1).ret;      // seq 100 → advances cursor to 101
-        let at0 = std::time::Instant::now();
+        const BLOCK_MS: u64 = 50;
+        std::thread::sleep(std::time::Duration::from_millis(BLOCK_MS));
+        let ret0 = t0.replay(1).ret;      // advances the cursor past t0's seq
         let (ret1, at1) = t1h.join().unwrap();
+
         assert_eq!((ret0, ret1), (10, 20));
-        assert!(at1 >= at0, "t1's ordered replay must complete after t0's");
-        assert_eq!(RR_CURSOR.load(Ordering::SeqCst), 102);
+        assert!(
+            at1.duration_since(t_pre) >= std::time::Duration::from_millis(BLOCK_MS),
+            "t1's ordered replay must have BLOCKED through the window (waited {:?}, expected >= {}ms)",
+            at1.duration_since(t_pre), BLOCK_MS
+        );
+        assert_eq!(
+            RR_CURSOR.load(Ordering::SeqCst), seq_base + 2,
+            "the cursor must advance exactly 2 from the base this test captured"
+        );
     }
 
     #[test]

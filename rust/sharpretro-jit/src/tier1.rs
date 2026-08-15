@@ -54,7 +54,22 @@ impl Tier1 {
 
     /// After the block's been emitted into `.rec` (via the Builder trait forward
     /// below), allocate + emit + finalize into a CompiledBlock.
+    ///
+    /// REFUSES (panics, caught by `BlockCache::compile_one` → tier-0 fallback) if
+    /// the recorded trace carries any `Unimplemented` op. That check REPLACED 31
+    /// `panic!("tier-1 v1: …")` arms in `IlRecorder` (2026-08-15): the
+    /// panics were never the safety mechanism — compile_one already caught and
+    /// suppressed them — and they took the whole trace out, so a read-tool got
+    /// NOTHING for any block containing one FP insn rather than a partial answer
+    /// marked partial. Gating on `complete()` here is STRICTER (it's checkable
+    /// before emit rather than fatal mid-record) and leaves the trace readable.
     pub fn compile(mut self) -> CompiledBlock {
+        if !self.rec.complete() {
+            // The recorder modelled the trace honestly and something in it isn't
+            // liftable at tier-1 v1 (vec/float/local/native). Not an error: the
+            // caller's fallback serves the block at tier-0.
+            panic!("tier-1: trace carries Unimplemented op(s) — use tier-0");
+        }
         // Dead-RegWrite elimination (v1.2): for each GPR (f=0,idx), a RegWrite
         // followed by a LATER RegWrite(same) with no state-observing RegRead
         // and no cond-boundary between = the earlier one is dead. Post-SVN,
