@@ -616,8 +616,9 @@ public partial class Disassembler {
 			var size = (insn >> 22) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", _ => throw new NotImplementedException() });
-			return (string) ("cnt V" + (rd).ToString() + "." + t + ", V" + (rn).ToString() + "." + t);
+			if(!((bool) (((byte) (size)) == ((byte) 0x0))))
+				goto insn_54;
+			return (string) ("cnt V" + (rd).ToString() + "." + (t).ToString() + ", V" + (rn).ToString() + "." + (t).ToString());
 		}
 		insn_54:
 		/* CSEL */
@@ -2572,9 +2573,9 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var simm = (long) (Math.SignExt<long>(imm, 9));
-			var r = (string) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x2) => "H", (byte) ((byte) 0x4) => "S", (byte) ((byte) 0x6) => "D", (byte) ((byte) 0x1) => "Q", _ => throw new NotImplementedException() });
-			return (string) ("ldr " + r + (rt).ToString() + ", [X" + (rn).ToString() + "], #" + (simm).ToString());
+			if(!((bool) ((((bool) ((((bool) ((((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1)))))))
+				goto insn_178;
+			return (string) ("ldr " + (r).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + "], #" + (simm).ToString());
 		}
 		insn_178:
 		/* LDR-simd-immediate-preindex */
@@ -2942,9 +2943,9 @@ public partial class Disassembler {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x2) => "H", (byte) ((byte) 0x4) => "S", (byte) ((byte) 0x6) => "D", (byte) ((byte) 0x1) => "Q", _ => throw new NotImplementedException() });
-			var imm = (long) (Math.SignExt<long>(rawimm, 9));
-			return (string) ("ldur " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
+			if(!((bool) ((((bool) ((((bool) ((((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1)))))))
+				goto insn_211;
+			return (string) ("ldur " + (r).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
 		}
 		insn_211:
 		/* LDXR */
@@ -3187,11 +3188,9 @@ public partial class Disassembler {
 			var H = (insn >> 11) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var rm = (byte) (((bool) (((byte) (size)) == ((byte) 0x2))) ? (byte) ((byte) ((byte) (((byte) (((byte) (rv)) << 0)) | ((byte) (((byte) (M)) << 4))))) : (byte) (rv));
-			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", _ => throw new NotImplementedException() });
-			var ts = (string) (size switch { (byte) ((byte) 0x1) => "H", (byte) ((byte) 0x2) => "S", _ => throw new NotImplementedException() });
-			var index = (byte) (size switch { (byte) ((byte) 0x1) => (byte) ((byte) (((byte) (byte) (((byte) (((byte) (M)) << 0)) | ((byte) (((byte) (L)) << 1)))) | ((byte) (((byte) (H)) << 2)))), (byte) ((byte) 0x2) => (byte) ((byte) ((byte) (((byte) (((byte) (L)) << 0)) | ((byte) (((byte) (H)) << 1))))), _ => throw new NotImplementedException() });
-			return (string) ("mul V" + (rd).ToString() + "." + t + ", V" + (rn).ToString() + "." + t + ", V" + (rm).ToString() + "." + ts + "[" + (index).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) | ((bool) (((byte) (size)) == ((byte) 0x2)))))))
+				goto insn_230;
+			return (string) ("mul V" + (rd).ToString() + "." + (t).ToString() + ", V" + (rn).ToString() + "." + (t).ToString() + ", V" + (rm).ToString() + "." + (ts).ToString() + "[" + (index).ToString() + "]");
 		}
 		insn_230:
 		/* MUL-vector */
@@ -4055,9 +4054,9 @@ public partial class Disassembler {
 			var rt2 = (insn >> 10) & 0x1FU;
 			var rd = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
-			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
-			return (string) ("stp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
+			if(!((bool) ((((bool) ((((bool) (((byte) (opc)) == ((byte) 0x0))) | ((bool) (((byte) (opc)) == ((byte) 0x1)))))) | ((bool) (((byte) (opc)) == ((byte) 0x2)))))))
+				goto insn_293;
+			return (string) ("stp " + (r).ToString() + (rt1).ToString() + ", " + (r).ToString() + (rt2).ToString() + ", [X" + (rd).ToString() + "], #" + (simm).ToString());
 		}
 		insn_293:
 		/* STP-simd-preindex */
@@ -4137,10 +4136,9 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var simm = (long) (Math.SignExt<long>(imm, 9));
-			return (string) ("str " + r + (rt).ToString() + ", [X" + (rn).ToString() + "], #" + (simm).ToString());
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_300;
+			return (string) ("str " + (r).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + "], #" + (simm).ToString());
 		}
 		insn_300:
 		/* STR-simd-preindex */
@@ -4150,11 +4148,9 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var scale = (byte) ((byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (opc)) << 2))));
-			var simm = (long) (Math.SignExt<long>(imm, 9));
-			return (string) ("str " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]!");
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_301;
+			return (string) ("str " + (r).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]!");
 		}
 		insn_301:
 		/* STR-simd-unsigned-offset */
@@ -4164,10 +4160,9 @@ public partial class Disassembler {
 			var imm = (insn >> 10) & 0xFFFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var scale = (byte) ((byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (opc)) << 2))));
-			return (string) ("str " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_302;
+			return (string) ("str " + (r).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (imm).ToString() + "]");
 		}
 		insn_302:
 		/* STR-simd-register */
@@ -4179,7 +4174,7 @@ public partial class Disassembler {
 			var scale = (insn >> 12) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			if(!((bool) (((byte) (((option) & ((byte) ((byte) ((byte) 0x2)))))) != ((byte) 0x0))))
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
 				goto insn_303;
 			return (string) ("str " + (r1).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + ", " + (r2).ToString() + (rm).ToString() + ", " + (extend).ToString() + " " + (amount).ToString() + "]");
 		}
@@ -4279,10 +4274,9 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var simm = (long) (Math.SignExt<long>(imm, 9));
-			return (string) ("stur " + r + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_313;
+			return (string) ("stur " + (r).ToString() + (rt).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]");
 		}
 		insn_313:
 		/* STURB */
@@ -5333,7 +5327,8 @@ public partial class Disassembler {
 			var size = (insn >> 22) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", _ => throw new NotImplementedException() });
+			if(!((bool) (((byte) (size)) == ((byte) 0x0))))
+				goto insn_54;
 			return "CNT";
 		}
 		insn_54:
@@ -7165,8 +7160,8 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var simm = (long) (Math.SignExt<long>(imm, 9));
-			var r = (string) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x2) => "H", (byte) ((byte) 0x4) => "S", (byte) ((byte) 0x6) => "D", (byte) ((byte) 0x1) => "Q", _ => throw new NotImplementedException() });
+			if(!((bool) ((((bool) ((((bool) ((((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1)))))))
+				goto insn_178;
 			return "LDR-simd-immediate-postindex";
 		}
 		insn_178:
@@ -7502,8 +7497,8 @@ public partial class Disassembler {
 			var rawimm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x2) => "H", (byte) ((byte) 0x4) => "S", (byte) ((byte) 0x6) => "D", (byte) ((byte) 0x1) => "Q", _ => throw new NotImplementedException() });
-			var imm = (long) (Math.SignExt<long>(rawimm, 9));
+			if(!((bool) ((((bool) ((((bool) ((((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6)))))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1)))))))
+				goto insn_211;
 			return "LDUR-simd";
 		}
 		insn_211:
@@ -7728,10 +7723,8 @@ public partial class Disassembler {
 			var H = (insn >> 11) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var rm = (byte) (((bool) (((byte) (size)) == ((byte) 0x2))) ? (byte) ((byte) ((byte) (((byte) (((byte) (rv)) << 0)) | ((byte) (((byte) (M)) << 4))))) : (byte) (rv));
-			var t = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", _ => throw new NotImplementedException() });
-			var ts = (string) (size switch { (byte) ((byte) 0x1) => "H", (byte) ((byte) 0x2) => "S", _ => throw new NotImplementedException() });
-			var index = (byte) (size switch { (byte) ((byte) 0x1) => (byte) ((byte) (((byte) (byte) (((byte) (((byte) (M)) << 0)) | ((byte) (((byte) (L)) << 1)))) | ((byte) (((byte) (H)) << 2)))), (byte) ((byte) 0x2) => (byte) ((byte) ((byte) (((byte) (((byte) (L)) << 0)) | ((byte) (((byte) (H)) << 1))))), _ => throw new NotImplementedException() });
+			if(!((bool) ((((bool) (((byte) (size)) == ((byte) 0x1))) | ((bool) (((byte) (size)) == ((byte) 0x2)))))))
+				goto insn_230;
 			return "MUL-by-element";
 		}
 		insn_230:
@@ -8533,8 +8526,8 @@ public partial class Disassembler {
 			var rt2 = (insn >> 10) & 0x1FU;
 			var rd = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
-			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), (byte) ((byte) 0x2) => (byte) ((byte) 0x4), _ => throw new NotImplementedException() })));
+			if(!((bool) ((((bool) ((((bool) (((byte) (opc)) == ((byte) 0x0))) | ((bool) (((byte) (opc)) == ((byte) 0x1)))))) | ((bool) (((byte) (opc)) == ((byte) 0x2)))))))
+				goto insn_293;
 			return "STP-simd-postindex";
 		}
 		insn_293:
@@ -8608,9 +8601,8 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var simm = (long) (Math.SignExt<long>(imm, 9));
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_300;
 			return "STR-simd-postindex";
 		}
 		insn_300:
@@ -8620,10 +8612,8 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var scale = (byte) ((byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (opc)) << 2))));
-			var simm = (long) (Math.SignExt<long>(imm, 9));
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_301;
 			return "STR-simd-preindex";
 		}
 		insn_301:
@@ -8633,9 +8623,8 @@ public partial class Disassembler {
 			var imm = (insn >> 10) & 0xFFFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var scale = (byte) ((byte) (((byte) (((byte) (size)) << 0)) | ((byte) (((byte) (opc)) << 2))));
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_302;
 			return "STR-simd-unsigned-offset";
 		}
 		insn_302:
@@ -8647,7 +8636,7 @@ public partial class Disassembler {
 			var scale = (insn >> 12) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			if(!((bool) (((byte) (((option) & ((byte) ((byte) ((byte) 0x2)))))) != ((byte) 0x0))))
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
 				goto insn_303;
 			return "STR-simd-register";
 		}
@@ -8737,9 +8726,8 @@ public partial class Disassembler {
 			var imm = (insn >> 12) & 0x1FFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var rop = (byte) ((byte) (((byte) (byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x0)))) << 0)) | ((byte) (((byte) (opc)) << 1)))) | ((byte) (((byte) (size)) << 2))));
-			var r = (string) (rop switch { (byte) ((byte) 0x0) => "B", (byte) ((byte) 0x4) => "H", (byte) ((byte) 0x8) => "S", (byte) ((byte) 0xC) => "D", (byte) ((byte) 0x2) => "Q", _ => throw new NotImplementedException() });
-			var simm = (long) (Math.SignExt<long>(imm, 9));
+			if(!((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x0))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x2))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x4))) | ((bool) ((((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x6))) | ((bool) (((byte) ((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1)))))) == ((byte) 0x1))))))))))))))))
+				goto insn_313;
 			return "STUR-simd";
 		}
 		insn_313:
@@ -9613,10 +9601,6 @@ public partial class Disassembler {
 		else if((insn & 0xBF000000) == 0x18000000) {
 			yield return (false, false, true, 0);
 		}
-		/* LDR-simd-immediate-postindex */
-		else if((insn & 0x3F600C00) == 0x3C400400) {
-			yield return (true, true, true, 5);
-		}
 		/* LDR-simd-immediate-preindex */
 		else if((insn & 0x3F600C00) == 0x3C400C00) {
 			yield return (true, true, true, 5);
@@ -9732,10 +9716,6 @@ public partial class Disassembler {
 		/* LDURSW */
 		else if((insn & 0xFFE00C00) == 0xB8800000) {
 			yield return (false, false, true, 0);
-			yield return (true, true, false, 5);
-		}
-		/* LDUR-simd */
-		else if((insn & 0x3F600C00) == 0x3C400000) {
 			yield return (true, true, false, 5);
 		}
 		/* LDXR */
@@ -10021,10 +10001,6 @@ public partial class Disassembler {
 			yield return (false, true, false, 0);
 			yield return (false, true, false, 10);
 		}
-		/* STP-simd-postindex */
-		else if((insn & 0x3FC00000) == 0x2C800000) {
-			yield return (true, true, true, 5);
-		}
 		/* STP-simd-preindex */
 		else if((insn & 0x3FC00000) == 0x2D800000) {
 			yield return (true, true, true, 5);
@@ -10047,18 +10023,6 @@ public partial class Disassembler {
 		else if((insn & 0xBFC00000) == 0xB9000000) {
 			yield return (true, true, false, 5);
 			yield return (false, true, false, 0);
-		}
-		/* STR-simd-postindex */
-		else if((insn & 0x3F600C00) == 0x3C000400) {
-			yield return (true, true, true, 5);
-		}
-		/* STR-simd-preindex */
-		else if((insn & 0x3F600C00) == 0x3C000C00) {
-			yield return (true, true, true, 5);
-		}
-		/* STR-simd-unsigned-offset */
-		else if((insn & 0x3F400000) == 0x3D000000) {
-			yield return (true, true, false, 5);
 		}
 		/* STRB-immediate-postindex */
 		else if((insn & 0xFFE00C00) == 0x38000400) {
@@ -10094,10 +10058,6 @@ public partial class Disassembler {
 		else if((insn & 0xBFE00C00) == 0xB8000000) {
 			yield return (true, true, false, 5);
 			yield return (false, true, false, 0);
-		}
-		/* STUR-simd */
-		else if((insn & 0x3F600C00) == 0x3C000000) {
-			yield return (true, true, false, 5);
 		}
 		/* STURB */
 		else if((insn & 0xFFE00C00) == 0x38000000) {

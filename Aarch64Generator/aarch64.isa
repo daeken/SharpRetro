@@ -965,6 +965,12 @@
     "0 q 0 01110 ss 10000 00101 10 nnnnn ddddd"
     "cnt V$rd.$t, V$rn.$t"
     (names (Q q) (size s) (rn n) (rd d))
+    ; CNT's only two cases are 0b00_0 (8B) and 0b00_1 (16B) -- i.e. size==00 with either Q.
+    ; size in {01,10,11} is UNDEFINED for CNT. Read off this def's OWN case-list below.
+    ; (An earlier form of this guard tested a single bit of the size:Q concat and admitted
+    ;  size=0b10, because I derived the bit-invariant at the wrong field width -- the concat
+    ;  is 3 bits, not 2. The fuzz census caught it; the guard's presence in codegen did not.)
+    (requires (== size 0b00))
     (let t (match (: size Q)
         0b00_0 "8B"
         0b00_1 "16B"
@@ -3300,6 +3306,11 @@
     "ss 111 1 00 o1 0 iiiiiiiii 01 nnnnn ttttt"
     "ldr $r$rt, [X$rn], #$simm"
     (names (size s) (opc o) (imm i) (rn n) (rt t))
+    ; ARM: size:opc in {000 B, 010 H, 100 S, 110 D, 001 Q}; 011/101/111 are UNDEFINED.
+    ; Derived from this def's OWN match case-list below, not composed from the manual.
+    ; Without the guard the match default hits unimplemented!() MID-EXECUTION
+    ; instead of failing to decode.
+    (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
     (block
         (let simm (signext imm i64))
         (let r (match (: size opc)
@@ -3820,6 +3831,11 @@
     "ss 111 1 00 x1 0 iiiiiiiii 00 nnnnn ttttt"
     "ldur $r$rt, [X$rn, #$imm]"
     (names (size s) (opc x) (rawimm i) (rn n) (rt t))
+    ; ARM: size:opc in {000 B, 010 H, 100 S, 110 D, 001 Q}; 011/101/111 are UNDEFINED.
+    ; Derived from this def's OWN match case-list below, not composed from the manual.
+    ; Without the guard the match default hits unimplemented!() MID-EXECUTION
+    ; instead of failing to decode.
+    (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
     (block
         (let r (match (: size opc)
             0b00_0 "B"
@@ -4023,6 +4039,11 @@
     "0 Q 0 01111 ss L M vvvv 1000 H 0 nnnnn ddddd"
     "mul V$rd.$t, V$rn.$t, V$rm.$ts[$index]"
     (names (Q Q) (size s) (L L) (M M) (rv v) (H H) (rn n) (rd d))
+    ; ARM: size in {01 H, 10 S}; 00 and 11 are UNDEFINED for the by-element form.
+    ; Derived from this def's OWN match case-list below, not composed from the manual.
+    ; Without the guard the match default hits unimplemented!() MID-EXECUTION
+    ; instead of failing to decode.
+    (requires (| (== size 0b01) (== size 0b10)))
     (block
         (let rm (if (== size 0b10) (: M rv) rv))
         (let t (match (: size Q)
@@ -5274,6 +5295,11 @@
     "oo 101 1 001 0 iiiiiii ppppp nnnnn ttttt"
     "stp $r$rt1, $r$rt2, [X$rd], #$simm"
     (names (opc o) (imm i) (rd n) (rt1 t) (rt2 p))
+    ; ARM: opc in {00 S, 01 D, 10 Q}; 11 is UNDEFINED.
+    ; Derived from this def's OWN match case-list below, not composed from the manual.
+    ; Without the guard the match default hits unimplemented!() MID-EXECUTION
+    ; instead of failing to decode.
+    (requires (| (| (== opc 0b00) (== opc 0b01)) (== opc 0b10)))
     (block
         (let r (match opc 0b00 "S" 0b01 "D" 0b10 "Q" (unimplemented)))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 0b10 4 (unimplemented)))))
@@ -5403,6 +5429,11 @@
     "ss 111 1 00 o0 0 iiiiiiiii 01 nnnnn ttttt"
     "str $r$rt, [X$rn], #$simm"
     (names (size s) (opc o) (imm i) (rn n) (rt t))
+    ; rop = size:opc:0 -- its low bit is a literal 0, so the valid rop set
+    ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
+    ; Derived from this def's OWN case-list below, not composed from the manual.
+    ; Without it the match default hits unimplemented!() MID-EXECUTION.
+    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
     (block
         (let rop (: size opc (u1 0)))
         (let r (match rop
@@ -5427,6 +5458,11 @@
     "ss 111 1 00 o0 0 iiiiiiiii 11 nnnnn ttttt"
     "str $r$rt, [X$rn, #$simm]!"
     (names (size s) (opc o) (imm i) (rn n) (rt t))
+    ; rop = size:opc:0 -- its low bit is a literal 0, so the valid rop set
+    ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
+    ; Derived from this def's OWN case-list below, not composed from the manual.
+    ; Without it the match default hits unimplemented!() MID-EXECUTION.
+    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
     (block
         (let rop (: size opc (u1 0)))
         (let r (match rop
@@ -5452,6 +5488,11 @@
     "ss 111 1 01 o0 iiiiiiiiiiii nnnnn ttttt"
     "str $r$rt, [X$rn, #$imm]"
     (names (size s) (opc o) (imm i) (rn n) (rt t))
+    ; rop = size:opc:0 -- its low bit is a literal 0, so the valid rop set
+    ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
+    ; Derived from this def's OWN case-list below, not composed from the manual.
+    ; Without it the match default hits unimplemented!() MID-EXECUTION.
+    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
     (block
         (let rop (: size opc (u1 0)))
         (let r (match rop
@@ -5475,6 +5516,11 @@
     "ff 111 1 00 x0 1 mmmmm ooo s 10 nnnnn ttttt"
     "str $r1$rt, [X$rn, $r2$rm, $extend $amount]"
     (names (size f) (opc x) (rm m) (option o) (scale s) (rn n) (rt t))
+    ; rop = size:opc:0 -- its low bit is a literal 0, so the valid rop set
+    ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
+    ; Derived from this def's OWN case-list below, not composed from the manual.
+    ; Without it the match default hits unimplemented!() MID-EXECUTION.
+    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
     ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
     ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
     ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
@@ -5633,6 +5679,11 @@
     "ss 111 1 00 o0 0 iiiiiiiii 00 nnnnn ttttt"
     "stur $r$rt, [X$rn, #$simm]"
     (names (size s) (opc o) (imm i) (rn n) (rt t))
+    ; rop = size:opc:0 -- its low bit is a literal 0, so the valid rop set
+    ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
+    ; Derived from this def's OWN case-list below, not composed from the manual.
+    ; Without it the match default hits unimplemented!() MID-EXECUTION.
+    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
     (block
         (let rop (: size opc (u1 0)))
         (let r (match rop
