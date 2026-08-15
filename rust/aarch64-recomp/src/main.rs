@@ -488,6 +488,7 @@ fn main() {
         let mut rng = seed;
         let mut rand = || { rng ^= rng<<13; rng ^= rng>>7; rng ^= rng<<17; rng };
         let (mut n_ok, mut n_diff, mut n_skip, mut n_ipanic, mut n_reject) = (0usize, 0usize, 0usize, 0usize, 0usize);
+        let mut ipanic_by: std::collections::BTreeMap<String, usize> = Default::default();
         let mut diff_by_def: std::collections::BTreeMap<String, usize> = Default::default();
         let mut reject_by_def: std::collections::BTreeMap<String, usize> = Default::default();
         // v1 def-level exclusions (oracle-limitations, not semantics bugs):
@@ -516,7 +517,27 @@ fn main() {
                 let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                     interp_one(&pre, &mut mem, insn, 0x1000).0
                 }));
-                let i_post = match ir { Ok(s) => s, Err(_) => { n_ipanic += 1; continue; } };
+                let i_post = match ir {
+                    Ok(s) => s,
+                    Err(e) => {
+                        // Tally the panic's CLASS per def. A bare count can't distinguish
+                        // "1 def x130" from "130 defs x1", and the classes have different
+                        // owners: arena-oob = the 64KB fuzz arena (a HARNESS limit),
+                        // unreachable = a generated match with no arm for a field value
+                        // (an .isa coverage question), intrinsic-unwired = deliberate policy,
+                        // not-decoded = a decode gap. Payloads are &str OR String; check both.
+                        let msg = e.downcast_ref::<&str>().map(|s| s.to_string())
+                            .or_else(|| e.downcast_ref::<String>().cloned())
+                            .unwrap_or_default();
+                        let class = if msg.contains("index out of bounds") { "arena-oob" }
+                            else if msg.contains("unreachable") { "unreachable" }
+                            else if msg.contains("not wired") { "intrinsic-unwired" }
+                            else if msg.contains("not decoded") { "not-decoded" }
+                            else { "other" };
+                        *ipanic_by.entry(format!("{class}\t{name}")).or_insert(0usize) += 1;
+                        n_ipanic += 1; continue;
+                    }
+                };
                 let mut n_post = pre.clone();
                 // Name the insn BEFORE feeding it to silicon — if the stub segfaults,
                 // the last stderr line names the killer (v1 debug; v2 = signal handler).
@@ -556,6 +577,16 @@ fn main() {
         }
         println!("[fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
         println!("  ok={n_ok}  diff={n_diff}  silicon-rejects={n_reject}  skip(v1-excl)={n_skip}  interp-panic={n_ipanic}");
+        if std::env::var("XF_PANIC_BY").is_ok() {
+            let mut by_class: std::collections::BTreeMap<&str, usize> = Default::default();
+            for (k, v) in &ipanic_by { *by_class.entry(k.split('\t').next().unwrap()).or_insert(0) += v; }
+            println!("  interp-panic by CLASS:");
+            for (c, n) in &by_class { println!("    {n:5}  {c}"); }
+            println!("  unreachable, by def (the .isa coverage question):");
+            let mut v: Vec<_> = ipanic_by.iter().filter(|(k,_)| k.starts_with("unreachable")).collect();
+            v.sort_by_key(|(_, n)| std::cmp::Reverse(**n));
+            for (k, n) in v.iter().take(20) { println!("    {n:5}  {}", k.split('\t').nth(1).unwrap()); }
+        }
         if n_reject > 0 {
             println!("  ── silicon-rejects (.isa over-permissive) ──");
             for (name, c) in &reject_by_def { println!("    {c:4}× {name}"); }

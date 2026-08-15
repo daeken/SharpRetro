@@ -82,16 +82,51 @@ fi
 
 echo ""
 echo "=== pre-push: house-vocab check (public repo — no seat-names/channel-cites/kt-refs) ==="
-if grep -rn 'barrow\|fuchi\|coram\|kt\[\|own #\|·[0-9]\|#alky\|corpse' \
+# The pattern list is itself the thing being searched for, so it CANNOT live in this file —
+# a gate whose patterns sit in its own source self-matches and reports a hit on itself
+# forever (which is exactly what happened: this block flagged three lines of this block).
+# Patterns live in .vocab-patterns.txt, which is gitignored and never ships.
+if [ ! -f oracle-baseline/.vocab-patterns.txt ]; then
+  echo "  ✗ .vocab-patterns.txt missing — the gate has no subject, treat as FAIL not as clean"
+  FAIL=1
+elif grep -rn -f oracle-baseline/.vocab-patterns.txt \
      ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ rust/ oracle-baseline/README.md 2>/dev/null \
-   | grep -v '/obj/\|/bin/Debug\|/bin/Release\|/target/\|.vocab-gate.txt\|coram <coram@daeken>'; then
+   | grep -v '/obj/\|/bin/Debug\|/bin/Release\|/target/\|vocab-patterns.txt\|vocab-gate.txt\|<coram@daeken>'; then
   echo "  ✗ house-vocab present in tracked source — scrub before push"
   FAIL=1
 else
   echo "  ✓ clean"
 fi
-if git log origin/main..HEAD --format='%s%n%b' 2>/dev/null | grep -E '·[0-9]+|barrow|fuchi|kt\[|own #|#alky|corpse'; then
+if git log origin/main..HEAD --format='%s%n%b' 2>/dev/null | grep -f oracle-baseline/.vocab-patterns.txt; then
   echo "  ✗ house-vocab in unpushed commit messages — reword before push"
+  FAIL=1
+fi
+
+echo ""
+echo "=== gate-(idem): the generator is byte-identical on a second run ==="
+# WHY this is a separate gate from the freeze-law diffs above: those compare
+# generated-vs-ORACLE, so they catch a CHANGE in output and structurally cannot catch
+# NON-DETERMINISM in the tool. Two runs both differing from the oracle IDENTICALLY read
+# as "the .isa changed"; two runs differing from EACH OTHER never get compared at all.
+# Product-to-oracle vs product-to-product are different assertions.
+# The two runs MUST write to different dirs, or run-2 reads run-1's output.
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --arch aarch64-rust --out /tmp/idem-1 2>/dev/null >/dev/null
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --arch aarch64-rust --out /tmp/idem-2 2>/dev/null >/dev/null
+IDEM_N=0
+for f in /tmp/idem-1/*; do
+  [ -f "$f" ] || continue
+  IDEM_N=$((IDEM_N+1))
+  b="/tmp/idem-2/$(basename "$f")"
+  if cmp -s "$f" "$b"; then
+    echo "  ✓ $(basename "$f") byte-identical on re-run ($(wc -c <"$f") B)"
+  else
+    echo "  ✗ $(basename "$f") DIFFERS between two runs of the SAME input — the generator is not deterministic"
+    FAIL=1
+  fi
+done
+# The gate must have a subject: 0 files compared is a PASS-shaped nothing.
+if [ "$IDEM_N" -eq 0 ]; then
+  echo "  ✗ idem gate compared 0 files — the generator produced no output (read this as a failure, not a no-op)"
   FAIL=1
 fi
 

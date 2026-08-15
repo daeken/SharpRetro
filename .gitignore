@@ -11,3 +11,5 @@ obj/
 *.log
 *.partial
 node_modules/
+
+oracle-baseline/.vocab-patterns.txt

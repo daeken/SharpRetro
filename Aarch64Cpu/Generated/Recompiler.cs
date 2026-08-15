@@ -345,6 +345,8 @@ public partial class Recompiler {
 			var imms = (insn >> 10) & 0x3FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) ((((bool) (((byte) (size)) != ((byte) 0x0))) | ((bool) (((byte) (up)) == ((byte) 0x0)))))))
+				goto insn_12;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var imm = (ulong) (MakeWMask(up, imms, immr, (byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x40)), (byte) 0x1));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -431,6 +433,8 @@ public partial class Recompiler {
 			var imms = (insn >> 10) & 0x3FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) ((((bool) (((byte) (size)) != ((byte) 0x0))) | ((bool) (((byte) (up)) == ((byte) 0x0)))))))
+				goto insn_16;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var imm = (ulong) (MakeWMask(up, imms, immr, (byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x40)), (byte) 0x1));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -1582,6 +1586,8 @@ public partial class Recompiler {
 			var imms = (insn >> 10) & 0x3FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) ((((bool) (((byte) (size)) != ((byte) 0x0))) | ((bool) (((byte) (up)) == ((byte) 0x0)))))))
+				goto insn_65;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var imm = (ulong) (MakeWMask(up, imms, immr, (byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x40)), (byte) 0x1));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {
@@ -6044,6 +6050,8 @@ public partial class Recompiler {
 			var imms = (insn >> 10) & 0x3FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) ((((bool) (((byte) (size)) != ((byte) 0x0))) | ((bool) (((byte) (up)) == ((byte) 0x0)))))))
+				goto insn_238;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var imm = (ulong) (MakeWMask(up, imms, immr, (byte) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x40)), (byte) 0x1));
 			if((bool) (((byte) (size)) == ((byte) 0x0))) {

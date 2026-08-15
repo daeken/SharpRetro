@@ -340,6 +340,11 @@
     "and $r$rd, $r$rn, #$imm"
     (names (size f) (up u) (immr i) (imms s) (rn n) (rd d))
     (block
+        ; ARM DecodeBitMasks: for the 32-bit form (sf==0) the N bit is UNALLOCATED when set.
+        ; Without this, make-wmask returns None for those encodings and the generated caller
+        ; hits unreachable!() mid-execution instead of failing to decode. BFM guards the same
+        ; field at its own size==0 branch; this is the shared-block form of the identical rule.
+        (requires (| (!= size 0) (== up 0)))
         (let r (if (== size 0) "W" "X"))
         (let imm (make-wmask up imms immr 1 (if (== size 0) 32 64))))
     (if (== size 0)
@@ -393,6 +398,11 @@
     "ands $r$rd, $r$rn, #$imm"
     (names (size f) (up u) (immr r) (imms s) (rn n) (rd d))
     (block
+        ; ARM DecodeBitMasks: for the 32-bit form (sf==0) the N bit is UNALLOCATED when set.
+        ; Without this, make-wmask returns None for those encodings and the generated caller
+        ; hits unreachable!() mid-execution instead of failing to decode. BFM guards the same
+        ; field at its own size==0 branch; this is the shared-block form of the identical rule.
+        (requires (| (!= size 0) (== up 0)))
         (let r (if (== size 0) "W" "X"))
         (let imm (make-wmask up imms immr 1 (if (== size 0) 32 64))))
     (if (== size 0)
@@ -1202,6 +1212,11 @@
     "and $r$rd, $r$rn, #$imm"
     (names (size f) (up u) (immr i) (imms s) (rn n) (rd d))
     (block
+        ; ARM DecodeBitMasks: for the 32-bit form (sf==0) the N bit is UNALLOCATED when set.
+        ; Without this, make-wmask returns None for those encodings and the generated caller
+        ; hits unreachable!() mid-execution instead of failing to decode. BFM guards the same
+        ; field at its own size==0 branch; this is the shared-block form of the identical rule.
+        (requires (| (!= size 0) (== up 0)))
         (let r (if (== size 0) "W" "X"))
         (let imm (make-wmask up imms immr 1 (if (== size 0) 32 64))))
     (if (== size 0)
@@ -4090,6 +4105,11 @@
     "orr $r$rd, $r$rn, #$imm"
     (names (size f) (up u) (immr i) (imms s) (rn n) (rd d))
     (block
+        ; ARM DecodeBitMasks: for the 32-bit form (sf==0) the N bit is UNALLOCATED when set.
+        ; Without this, make-wmask returns None for those encodings and the generated caller
+        ; hits unreachable!() mid-execution instead of failing to decode. BFM guards the same
+        ; field at its own size==0 branch; this is the shared-block form of the identical rule.
+        (requires (| (!= size 0) (== up 0)))
         (let r (if (== size 0) "W" "X"))
         (let imm (make-wmask up imms immr 1 (if (== size 0) 32 64))))
     (if (== size 0)
