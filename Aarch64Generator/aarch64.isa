@@ -830,6 +830,9 @@
     "01 1 11110 ss 1 mmmmm 10001 1 nnnnn ddddd"
     "cmeq $V$rd, $V$rn, $V$rm"
     (names (size s) (rm m) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; match size has ONE arm: 0b11 (D). All other sizes UNDEFINED.
+    (requires (== size 0b11))
     (let V (match size
         0b11 "D"
         (unimplemented)))
@@ -857,6 +860,9 @@
     "01 0 11110 ss 10000 0100 1 10 nnnnn ddddd"
     "cmeq $V$rd, $V$rn, #0"
     (names (size s) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; match size has ONE arm: 0b11 (D). All other sizes UNDEFINED.
+    (requires (== size 0b11))
     (let V (match size
         0b11 "D"
         (unimplemented)))
@@ -884,6 +890,9 @@
     "01 0 11110 ss 1 mmmmm 0011 0 1 nnnnn ddddd"
     "cmgt $V$rd, $V$rn, $V$rm"
     (names (size s) (rm m) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; match size has ONE arm: 0b11 (D). All other sizes UNDEFINED.
+    (requires (== size 0b11))
     (let V (match size
         0b11 "D"
         (unimplemented)))
@@ -911,6 +920,9 @@
     "01 0 11110 ss 10000 0100 0 10 nnnnn ddddd"
     "cmgt $V$rd, $V$rn, #0"
     (names (size s) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; match size has ONE arm: 0b11 (D). All other sizes UNDEFINED.
+    (requires (== size 0b11))
     (let V (match size
         0b11 "D"
         (unimplemented)))
@@ -938,6 +950,9 @@
     "01 1 11110 ss 1 mmmmm 0011 1 1 nnnnn ddddd"
     "cmhs $V$rd, $V$rn, $V$rm"
     (names (size s) (rm m) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; match size has ONE arm: 0b11 (D). All other sizes UNDEFINED.
+    (requires (== size 0b11))
     (let V (match size
         0b11 "D"
         (unimplemented)))
@@ -2842,6 +2857,9 @@
     "0 Q 0011000 1 000000 1000 ss nnnnn ttttt"
     "ld2 { V$rt.$T, V$rt2.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; size:Q arms cover all but 0b11_0.
+    (requires (!= (: size Q) 0b110))
     (let rt2 (% (+ rt 1) 32)
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -2994,6 +3012,9 @@
     "0 Q 0011000 1 000000 0000 ss nnnnn ttttt"
     "ld4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; size:Q arms cover all but 0b11_0.
+    (requires (!= (: size Q) 0b110))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -3334,6 +3355,10 @@
     "ss 111 1 00 o1 0 iiiiiiiii 11 nnnnn ttttt"
     "ldr $r$rt, [X$rn, #$simm]!"
     (names (size s) (opc o) (imm i) (rn n) (rt t))
+    ; Derived from this def's OWN match case-list below, not composed from the manual.
+    ; Without the guard the match default hits unimplemented!() MID-EXECUTION rather than
+    ; rejecting at decode. Sibling of LDR-simd-immediate-postindex, same valid set.
+    (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
     (block
         (let simm (signext imm i64))
         (let r (match (: size opc)
@@ -4558,6 +4583,9 @@
     "0 Q 0011000 0 000000 0111 ss nnnnn ttttt"
     "st1 { V$rt.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; size:Q arms cover all but 0b11_0; the inner (match size) is reached only for those.
+    (requires (!= (: size Q) 0b110))
     (let T (match (: size Q)
         0b00_0 "8B"
         0b00_1 "16B"
@@ -5133,6 +5161,9 @@
     "0 Q 0011000 0 000000 0000 ss nnnnn ttttt"
     "st4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; size:Q arms cover all but 0b11_0; ditto the inner (match size).
+    (requires (!= (: size Q) 0b110))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -5342,6 +5373,9 @@
     "oo 101 1 010 0 iiiiiii ppppp nnnnn ttttt"
     "stp $r$rt1, $r$rt2, [X$rd, #$simm]"
     (names (opc o) (imm i) (rd n) (rt1 t) (rt2 p))
+    ; Derived from this def's OWN match case-list below (opc in {00,01,10} -> S/D/Q),
+    ; not composed from the manual. Sibling of STP-simd-postindex, same valid set.
+    (requires (| (| (== opc 0b00) (== opc 0b01)) (== opc 0b10)))
     (block
         (let r (match opc 0b00 "S" 0b01 "D" 0b10 "Q" (unimplemented)))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 0b10 4 (unimplemented)))))
@@ -5938,6 +5972,9 @@
     "0 q 1 01110 ss 11000 00011 10 nnnnn ddddd"
     "uaddlv $r$rd, V$rn.$t"
     (names (Q q) (size s) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; TWO matches on DIFFERENT fields: (match size) admits 00/01/10, and (match (: size Q)) has no 0b10_0 arm. A guard from either alone is insufficient -- this is the intersection.
+    (requires (& (!= size 0b11) (!= (: size Q) 0b100)))
     (block
         (let r (match size
             0b00 "H"
@@ -6094,6 +6131,9 @@
     "0 Q 1 01110 ss 1 mmmmm 1010 o 1 nnnnn ddddd"
     "$mnem V$rd.$T, V$rn.$T, V$rm.$T"
     (names (Q Q) (size s) (rm m) (min o) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; size:Q arms are exactly size in {00,01,10} x either Q.
+    (requires (!= size 0b11))
     (let mnem (if min "uminp" "umaxp")
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -6281,6 +6321,9 @@
     "0 Q 001110 ss 0 mmmmm 0 o 11 10 nnnnn ddddd"
     "zip$i V$rd.$T, V$rn.$T, V$rm.$T"
     (names (Q Q) (size s) (rm m) (op o) (rn n) (rd d))
+    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
+    ; size:Q arms cover all but 0b11_0.
+    (requires (!= (: size Q) 0b110))
     (let i (u8 (+ op 1))
         (let T (match (: size Q)
             0b00_0 "8B"
