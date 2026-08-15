@@ -90,7 +90,8 @@ if [ ! -f oracle-baseline/.vocab-patterns.txt ]; then
   echo "  ✗ .vocab-patterns.txt missing — the gate has no subject, treat as FAIL not as clean"
   FAIL=1
 elif grep -rn -f oracle-baseline/.vocab-patterns.txt \
-     ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ rust/ oracle-baseline/README.md 2>/dev/null \
+     ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ rust/ oracle-baseline/README.md \
+     Aarch64Generator/ SharpStationGenerator/ DamageGenerator/ 2>/dev/null \
    | grep -v '/obj/\|/bin/Debug\|/bin/Release\|/target/\|vocab-patterns.txt\|vocab-gate.txt\|<coram@daeken>'; then
   echo "  ✗ house-vocab present in tracked source — scrub before push"
   FAIL=1

@@ -93,7 +93,7 @@ const PAGE: usize = 4096;
 // objdump decode-back of the emitted bytes — the encode-then-decode-back discipline):
 //   sub_sp(1) + str_x0(1) + 12×str_callee(12) + ldr_nzcv(1) + msr(1) + 30×ldr_x1..30(30)
 //   + ldr_x0(1) = 47. The runtime assert_eq! double-checks.
-const SLOT_OFF: usize = 47;
+const SLOT_OFF: usize = 55;   // was 47; +8 for the d8-d15 saves (assert at emit re-verifies)
 
 /// One RWX page holding the stub. Reused across calls (only the test-insn slot rewrites).
 pub struct NativeStub {
@@ -224,6 +224,17 @@ impl StubWriter {
         self.put(0xF9400000 | ((off/8) << 10) | (xn << 5) | xt);
     }
     // STR Xt, [Xn, #imm]
+    /// STR Dt, [Xn, #off] — off is a byte offset, must be 8-aligned. objdump-verified:
+    /// str_d(8,31,112) = 0xFD003BE8 = `str d8, [sp, #112]`.
+    fn str_d(&mut self, dt: u32, xn: u32, off: u32) {
+        debug_assert_eq!(off % 8, 0);
+        self.put(0xFD000000 | ((off / 8) << 10) | (xn << 5) | dt);
+    }
+    /// LDR Dt, [Xn, #off] — objdump-verified: ldr_d(8,31,112) = 0xFD403BE8.
+    fn ldr_d(&mut self, dt: u32, xn: u32, off: u32) {
+        debug_assert_eq!(off % 8, 0);
+        self.put(0xFD400000 | ((off / 8) << 10) | (xn << 5) | dt);
+    }
     fn str_(&mut self, xt: u32, xn: u32, off: u32) {
         assert!(off % 8 == 0 && off < 32768);
         self.put(0xF9000000 | ((off/8) << 10) | (xn << 5) | xt);
@@ -249,10 +260,16 @@ impl StubWriter {
         // v1: save x19-x30 on stack in prologue, restore in epilogue.
 
         // ── prologue ──
-        self.sub_sp(16 + 12*8);          // 16 for state-ptr+scratch, 96 for x19-x30
+        self.sub_sp(16 + 12*8 + 8*8);    // 16 state-ptr+scratch, 96 x19-x30, 64 d8-d15
         self.str_(0, 31, 0);             // [sp+0] = state-ptr (x0)
         // save callee-saved x19-x30 at [sp+16..]
         for (i, r) in (19..=30).enumerate() { self.str_(r, 31, 16 + (i as u32)*8); }
+        // save callee-saved d8-d15 (low 64 bits — the AAPCS64-preserved part) at [sp+112..].
+        // Guest SIMD ops (LD1, CMEQ-scalar, CNT, ...) clobber host V-regs; release-mode Rust
+        // keeps live locals in d8-d15 across calls, and the corruption surfaced as the NEXT
+        // def's Vec::collect returning EMPTY (contradicting a fresh .count() in the same
+        // panic message). Decode-back-verified: str d8,[sp,#112] = 0xFD003BE8 etc.
+        for (i, r) in (8u32..=15).enumerate() { self.str_d(r, 31, 112 + (i as u32)*8); }
         // load nzcv (before clobbering x0)
         self.ldr(1, 0, 31*8);            // x1 = state[31] = nzcv
         self.msr_nzcv(1);
@@ -279,7 +296,9 @@ impl StubWriter {
         self.str_(1, 0, 31*8);
         // restore callee-saved x19-x30
         for (i, r) in (19..=30).enumerate() { self.ldr(r, 31, 16 + (i as u32)*8); }
-        self.add_sp(16 + 12*8);
+        // restore callee-saved d8-d15
+        for (i, r) in (8u32..=15).enumerate() { self.ldr_d(r, 31, 112 + (i as u32)*8); }
+        self.add_sp(16 + 12*8 + 8*8);
         self.ret();
 
         // Flush the whole stub once (I-cache coherency for freshly-written code).

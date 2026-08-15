@@ -167,7 +167,17 @@ public static class RustEmit {
         var cast = child.Type is EBool ? $"({expr}) as u32 as u128"
                  : child.Type is EFloat ? $"({expr}).to_bits() as u128"
                  : $"({expr}) as u128";
-        return Rt($"bd.literal({TypeShort(child.Type)}, {cast})");
+        // Literal width: round a non-machine width UP to the machine width the generated
+        // Rust actually computed the value at. InferType gives `(<< rawimm 1)` the FIELD's
+        // width (12), but the emitted `((rawimm as u16) << 1)` holds all 13 bits — declaring
+        // the literal at width 12 makes width-honoring backends (interp masks to declared
+        // width) truncate 0x12EC→0x2EC. Silicon-diff caught it on STRH (store landed at
+        // EA-0x1000). Same class as the x64 PF-truncate (RustLiftGen.cs:457); the C# backend
+        // dodges it by machine-rounding types ((ushort) = 16 bits) — correct by accident.
+        var ty = child.Type is EInt(var s, var w) && w is not (1 or 8 or 16 or 32 or 64 or 128)
+            ? $"IlType::I {{ signed: {(s ? "true" : "false")}, width: {(w < 8 ? 8 : w < 16 ? 16 : w < 32 ? 32 : w < 64 ? 64 : 128)} }}"
+            : TypeShort(child.Type);
+        return Rt($"bd.literal({ty}, {cast})");
     }
 
     public static string TempName() => Temp.Name();

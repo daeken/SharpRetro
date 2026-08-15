@@ -741,8 +741,40 @@ fn main() {
         //     Coarse filter: exclude any triple where ANY 5-bit field == 31.
         let vec_def = |n: &str| n.starts_with('F') || n.contains("vector") || n.contains("VEC")
             || n.contains("SIMD") || matches!(n, "DUP-general"|"UMOV"|"INS-general"|"INS-element"
-                |"MOVI"|"MVNI"|"SCVTF-scalar-integer"|"UCVTF-scalar-integer");
+                |"MOVI"|"MVNI"|"SCVTF-scalar-integer"|"UCVTF-scalar-integer")
+            // SIMD LOADS/STORES: Rt is a V-register. HISTORY: before the stub saved d8-d15
+            // (AAPCS64 callee-saved low-64), executing LD1 on silicon clobbered release-mode
+            // Rust's own locals — the NEXT def's `(0..0x1000).collect()` returned an EMPTY
+            // Vec while a fresh `.count()` in the same panic message said 4096. That host-
+            // safety hole is FIXED in the stub (native_oracle.rs, str_d/ldr_d prologue pair).
+            // These defs stay excluded for a narrower reason: the stub doesn't load/store
+            // V-REG VALUES from state[], so the oracle comparison for a V-reg-writing def
+            // compares garbage. Un-exclude when the stub marshals V0-V31 (v2).
+            || n.starts_with("LD1") || n.starts_with("LD2") || n.starts_with("LD3")
+            || n.starts_with("LD4") || n.starts_with("ST1") || n.starts_with("ST2")
+            || n.starts_with("ST3") || n.starts_with("ST4")
+            || n.contains("-simd")
+            // BARE STORE-EXCLUSIVE: without a paired load-exclusive the status result is
+            // architecturally UNPREDICTABLE (ARM ARM: software must not rely on it). The
+            // interp models always-succeed (right for real paired code, the only shape the
+            // JIT emits); this silicon fires them bare. Measured on this core: STLXR/STLXRB
+            // fail ~21/24 bare while STXR/STXRB happen to succeed — micro-arch luck, not
+            // contract, so ALL four are excluded rather than keeping the two lucky ones.
+            || matches!(n, "STLXR"|"STLXRB"|"STXR"|"STXRB");
+        // XF_ONLY=<def-name>: run a single def in isolation. Bisect lever for state carried
+        // across defs (longjmp residue, V-reg clobber, allocator damage): if a def fails in
+        // the full run and passes alone, the killer is upstream, not the def.
+        let only = std::env::var("XF_ONLY").ok();
+        // XF_SKIP_TO=<def>: skip everything alphabetically before <def>. With XF_ONLY's
+        // isolation result (LD1-alone = clean) this pair binary-searches the poisoning def.
+        let skip_to = std::env::var("XF_SKIP_TO").ok();
+        let mut skipping = skip_to.is_some();
         for (name, mask, mat) in &defs {
+            if skipping {
+                if Some(name.as_str()) == skip_to.as_deref() { skipping = false; }
+                else { continue; }
+            }
+            if let Some(o) = &only { if name != o { continue; } }
             if vec_def(name) { n_skip += n; continue; }  // ‡ v2: enable when stub loads V-regs
             for _ in 0..n {
                 let mut fields = (rand() as u32) & !mask;
@@ -806,9 +838,24 @@ fn main() {
                     // diff stays reproducible from the seed.
                     let pat: Vec<u8> = (0..0x1000u32).map(|i| (i.wrapping_mul(31) ^ insn) as u8).collect();
                     stub.reset_arena(&pat);
-                    for (i, b) in pat.iter().enumerate() {
+                    // TILE THE INTERP SIDE THE SAME WAY reset_arena TILES THE SILICON SIDE.
+                    // This loop used to write only `pat.len()` (0x1000) bytes while reset_arena
+                    // tiles all of ARENA_SIZE (0x10000) — so every byte above 0x1000 held pattern
+                    // on silicon and ZERO in the interp. Bases sit at +0x2000 and above, so the
+                    // whole diff-window was in the asymmetric region: 104 GPR-only "diffs" on
+                    // STUR/STLR/STP/STRB where the dump showed hundreds of bytes differing for a
+                    // 4-byte store, none of them at the store's own address. Same defect as the
+                    // reset_arena seed-window, on the other side of the pair.
+                    // GUARD with a record: this once returned EMPTY in release builds only —
+                    // guest SIMD ops (LD1/CMEQ-scalar/CNT) clobbered host d8-d15 (AAPCS64
+                    // callee-saved), where LLVM kept the collect's live state. Fixed in the
+                    // stub (save/restore d8-d15, native_oracle.rs). If this ever fires again,
+                    // suspect a NEW class of host-state the stub doesn't preserve (FPCR? SVE?).
+                    assert!(!pat.is_empty(),
+                        "pat EMPTY after {name} 0x{insn:08X}: host V-reg/FP state clobbered?");
+                    for i in 0..native_oracle::ARENA_SIZE {
                         // w=8 is EIGHT BITS = one byte (interp.rs:744-746, n=(w+7)/8); v is u128.
-                        mem.write(native_oracle::ARENA_BASE + i as u64, 8, *b as u128);
+                        mem.write(native_oracle::ARENA_BASE + i as u64, 8, pat[i % pat.len()] as u128);
                     }
                 }
                 // Interp side (may panic on unwired intrinsic / unreachable-match / todo-wmask).
@@ -892,6 +939,28 @@ fn main() {
                         if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) {
                             eprintln!("    nzcv: interp=0x{:08X} native=0x{:08X} (pre=0x{:08X})",
                                 i_post.nzcv, n_post.nzcv, pre.nzcv); }
+                        // MEMORY detail. Without this a store-diff prints NO field at all — the
+                        // registers agree by construction for a store, so the dump was empty and
+                        // "104 GPR-only diffs" was unreadable. Print the first disagreeing bytes
+                        // with their address, and say how many differ in total: one byte at one
+                        // address is a value bug, a run of them is a width or endianness bug, and
+                        // two addresses far apart is the wrong-address class.
+                        if mem_arm {
+                            let n_arena = stub.arena_snapshot();
+                            let mut shown = 0; let mut total = 0;
+                            for i in 0..n_arena.len() {
+                                let ib = mem.read(native_oracle::ARENA_BASE + i as u64, 8) as u8;
+                                if ib != n_arena[i] {
+                                    total += 1;
+                                    if shown < 8 {
+                                        eprintln!("    mem[0x{:X}]: interp=0x{:02X} native=0x{:02X}",
+                                            native_oracle::ARENA_BASE + i as u64, ib, n_arena[i]);
+                                        shown += 1;
+                                    }
+                                }
+                            }
+                            if total > shown { eprintln!("    … {} bytes differ in total", total); }
+                        }
                         // dump pre-state args for repro
                         let regs: Vec<_> = (1..=28).map(|r| format!("x{r}=0x{:X}", pre.x[r])).collect();
                         eprintln!("    repro: --native-diff {} nzcv=0x{:X} 0x{insn:08X}",
@@ -901,6 +970,11 @@ fn main() {
                 else { n_ok += 1; }
             }
         }
+        // BUILD-STAMP: a runtime string, not a comment. Comments never reach a release binary, so
+        // `strings <bin> | grep <comment>` returns 0 for a FRESH build too — it cannot answer "is
+        // this binary my source?". This line can: bump it with any behavioural change and a stale
+        // binary is visible in its own first line of output.
+        println!("[fuzz build: memarm-v3-tiled-interp-seed]");
         println!("[fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
         println!("  ok={n_ok}  diff={n_diff}  silicon-rejects={n_reject}  skip(v1-excl)={n_skip}  interp-panic={n_ipanic}");
         if std::env::var("XF_PANIC_BY").is_ok() {

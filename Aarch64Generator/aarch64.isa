@@ -289,7 +289,11 @@
                     0b010 (& m 0xFFFFFFFF)
                     0b100 (u64 (signext (u8 m) i64))
                     0b101 (u64 (signext (u16 m) i64))
-                    0b110 (u64 (signext m i64))
+                    ; SXTW: re-narrow to u32 BEFORE signext — `m` is (u64 (gpr32 rm)), already
+                    ; 64-bit-typed, so (signext m i64) was a 64→64 NO-OP and negative w-values
+                    ; added zero-extended. Silicon-diff caught it (insn 0xAB2EC20F: interp
+                    ; +0x100000000 vs native). The u8/u16 arms were right by their re-narrow.
+                    0b110 (u64 (signext (u32 m) i64))
                     m)) imm) 0))))))
 
 (def ADDS-immediate
