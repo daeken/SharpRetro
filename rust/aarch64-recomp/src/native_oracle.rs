@@ -49,8 +49,20 @@ extern "C" fn sig_handler(sig: libc::c_int, _info: *mut libc::siginfo_t, _ctx: *
             unsafe { siglongjmp(p, sig) };
         }
     });
-    // Not inside a guarded exec_one → re-raise default (shouldn't happen in practice).
+    // Not inside a guarded exec_one → NAME THE FAULT, then re-raise. Without this the process
+    // dies with no output at all (buffered stdout is lost), so "which access faulted where"
+    // costs a hypothesis per guess. write() directly: async-signal-safe, unbuffered.
     unsafe {
+        let addr = if _info.is_null() { 0u64 } else { (*_info).si_addr() as u64 };
+        let inside = addr >= ARENA_BASE && addr < ARENA_BASE + ARENA_SIZE as u64;
+        let mut buf = [0u8; 128];
+        let msg = format!(
+            "\nUNGUARDED FAULT sig={sig} addr=0x{addr:x} in_arena={inside} \
+             (arena 0x{:x}..0x{:x})\n",
+            ARENA_BASE, ARENA_BASE + ARENA_SIZE as u64);
+        let n = msg.len().min(buf.len());
+        buf[..n].copy_from_slice(&msg.as_bytes()[..n]);
+        libc::write(2, buf.as_ptr() as *const libc::c_void, n);
         libc::signal(sig, libc::SIG_DFL);
         libc::raise(sig);
     }
@@ -87,9 +99,24 @@ const SLOT_OFF: usize = 47;
 pub struct NativeStub {
     page: *mut u32,
     entry: extern "C" fn(*mut u64),
+    /// Did the shared guest arena actually land at ARENA_BASE? Never assumed — a mem-form diff
+    /// against an unmapped arena would be a fact about the mapping, not about the .isa.
+    arena_ok: bool,
 }
 
 unsafe impl Send for NativeStub {}
+
+/// The GUEST ARENA, mapped at the same base the interp's `FlatMem` uses, so a guest address
+/// means the same thing on both sides of the diff and a load/store can be exec-compared at all.
+///
+/// Why this exists: `excluded()` used to drop EVERY load/store because guest addrs were
+/// unmapped in-process — stated there as a v1 limitation. The cost was invisible until the
+/// fuzz's arena-oob class got decomposed per-def: 623 panics across 109 DISTINCT defs, almost
+/// all of them ld/st (LDP-simd, the LD1-multi family, LDAR/LDAX acquire forms, CASPAL). So the
+/// tier whose whole reason for existing is catching value-level bugs had never executed a
+/// memory instruction, on either side.
+pub const ARENA_BASE: u64 = 0x10000;
+pub const ARENA_SIZE: usize = 0x10000;
 
 impl NativeStub {
     pub fn new() -> Self {
@@ -98,11 +125,55 @@ impl NativeStub {
                 libc::PROT_READ | libc::PROT_WRITE | libc::PROT_EXEC,
                 libc::MAP_PRIVATE | libc::MAP_ANONYMOUS, -1, 0) as *mut u32;
             assert!(!page.is_null() && page as isize != -1, "mmap RWX failed");
+            // MAP_FIXED_NOREPLACE: fail loudly rather than silently relocating, because a
+            // relocated arena would make every guest address mean two different things and the
+            // diffs would be MINE. If the range is taken, the fuzz's mem arm must stay off.
+            let arena = libc::mmap(ARENA_BASE as *mut libc::c_void, ARENA_SIZE,
+                libc::PROT_READ | libc::PROT_WRITE,
+                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS | libc::MAP_FIXED_NOREPLACE, -1, 0);
+            let arena_ok = arena as isize != -1 && arena as u64 == ARENA_BASE;
             let mut w = StubWriter { page, i: 0 };
             w.emit_stub();
             install_handlers();
-            Self { page, entry: std::mem::transmute(page) }
+            Self { page, entry: std::mem::transmute(page), arena_ok }
         }
+    }
+
+    /// Is the shared guest arena live at ARENA_BASE? Callers gate their mem-form arm on this
+    /// rather than assuming — a zero here means "not mapped", never "no bugs".
+    pub fn arena_ok(&self) -> bool { self.arena_ok }
+
+    /// Zero the arena, then write `pattern` bytes over the low 4KB. Both sides must start from
+    /// byte-identical memory or a load-diff is about the arena's history, not the semantics.
+    pub fn reset_arena(&self, pattern: &[u8]) {
+        if !self.arena_ok { return; }
+        unsafe {
+            // ZERO the whole arena, THEN tile `pattern` over all of it.
+            //
+            // Two defects lived here, both found by the control below rather than by reading:
+            //  (1) the v1 form wrote `pattern` over only the first 0x1000 bytes. The fuzz places
+            //      base registers at ARENA_BASE+0x2000..SIZE-0x2000, so every load read the
+            //      UNSEEDED region: silicon saw zeros (wiped per case) while the interp's
+            //      FlatMem — built once outside the loop — still held prior cases' stores. That
+            //      was 51 GPR-only "diffs" on plain LDR/LDP/LDAR, all harness, no .isa.
+            //  (2) fixing (1) dropped the zeroing entirely, and `(&[]).as_ptr()` is 0x1 on this
+            //      target (not null), so an empty pattern faulted at addr=0x1 OUTSIDE any
+            //      sigsetjmp guard — a bare SIGSEGV with no output, which cost three wrong
+            //      hypotheses before the handler was made to name the address.
+            std::ptr::write_bytes(ARENA_BASE as *mut u8, 0, ARENA_SIZE);
+            if pattern.is_empty() { return; }   // zeroed above; never deref an empty slice
+            let n = pattern.len();
+            for off in (0..ARENA_SIZE).step_by(n) {
+                let take = n.min(ARENA_SIZE - off);
+                std::ptr::copy_nonoverlapping(pattern.as_ptr(), (ARENA_BASE as *mut u8).add(off), take);
+            }
+        }
+    }
+
+    /// Read the arena back for post-state comparison against the interp's `FlatMem`.
+    pub fn arena_snapshot(&self) -> Vec<u8> {
+        if !self.arena_ok { return Vec::new(); }
+        unsafe { std::slice::from_raw_parts(ARENA_BASE as *const u8, ARENA_SIZE).to_vec() }
     }
 
     /// Execute `insn` against `state` on real silicon. Mutates `state` in place.
@@ -227,6 +298,21 @@ unsafe fn clear_cache(start: *const u8, len: usize) {
 /// v1 exclusion set: insns that would break the in-process stub (branch out / touch SP /
 /// system insns / loads-stores to unmapped guest addrs). These get their own harness
 /// (ptrace child, or a mapped-mem sandbox) at v2.
+thread_local! {
+    /// Set by the caller for the duration of a case in which EVERY plausible base register has
+    /// been placed inside the arena. Default FALSE, so the ld/st exclusion stands unless a
+    /// caller explicitly takes on the contract — the failure mode of a default-true flag here is
+    /// a wild store on real silicon, and the safe default costs only coverage I can measure.
+    static MEM_OK: std::cell::Cell<bool> = std::cell::Cell::new(false);
+}
+
+/// Does the caller assert the current case's addressing lands in the mapped arena?
+pub fn mem_addressable() -> bool { MEM_OK.with(|c| c.get()) }
+
+/// Scope-guard: assert arena-addressability for one case, then restore. Returns the prior value
+/// so nesting can't silently leak the assertion into an unrelated case.
+pub fn set_mem_addressable(v: bool) -> bool { MEM_OK.with(|c| c.replace(v)) }
+
 fn excluded(insn: u32) -> bool {
     // Branches (B/BL/BR/BLR/RET/CBZ/CBNZ/TBZ/TBNZ/B.cond) — top bits per the aarch64
     // encoding classes. Coarse mask; refine as the fuzz corpus needs.
@@ -237,12 +323,19 @@ fn excluded(insn: u32) -> bool {
         0x34..=0x37 | 0xB4..=0xB7 |          // CBZ/CBNZ/TBZ/TBNZ
         0xD6                                 // BR/BLR/RET (0xD61F../0xD63F../0xD65F..)
     )
-    // Loads/stores: v1 excludes ALL (guest addrs unmapped in-process). Coarse: any insn
-    // in the load/store major class (bits [27:25] == 0b100 for LDR/STR imm/reg forms is
-    // too coarse — also catches ADD-imm). Instead: bits [27] == 1 && bits [25] == 0 for
-    // load/store class per ARM ARM Table C4-1. ‡ Refine with the .isa's own def-name
-    // classification (any def whose eval contains `load`/`store` head).
-    || ((insn >> 25) & 0b101) == 0b100
+    // Loads/stores: EXCLUDED ONLY WHEN THE CALLER HASN'T POINTED THE ADDRESSING AT THE ARENA.
+    //
+    // v1 dropped the whole class ("guest addrs unmapped in-process") and the cost stayed
+    // invisible for a segment: decomposing the fuzz's arena-oob class per-def gave 623 panics
+    // over 109 DISTINCT defs, nearly all ld/st. So the values tier — the one that catches
+    // exactly the bugs text- and shape-diffs can't — had never run a memory instruction.
+    //
+    // The gate is `mem_addressable()`: the caller asserts it has put every plausible base
+    // register inside [ARENA_BASE, ARENA_BASE+ARENA_SIZE). Random registers do NOT satisfy it
+    // (they land outside 598-of-835 times), and a fault there is caught by the sigsetjmp path
+    // as SiliconRejects — safe, but a skip rather than a comparison, which is the whole reason
+    // the coverage hole was silent.
+    || (((insn >> 25) & 0b101) == 0b100 && !mem_addressable())
     // System insns (MSR/MRS/SVC/HVC/BRK/HLT etc — bits [28:25]=1101, op0)
     || (insn & 0xFFC00000) == 0xD5000000
     || (insn & 0xFFE00000) == 0xD4000000  // exception-gen (SVC/BRK/…)
@@ -250,4 +343,48 @@ fn excluded(insn: u32) -> bool {
     // Not a semantics bug — an oracle limitation. v2: normalize (subtract stub-va from
     // native result); v1: exclude. Bits [28:24]=10000 for ADR, [31]=op selects ADRP.
     || (insn & 0x1F000000) == 0x10000000
+}
+
+#[cfg(test)]
+mod arena_tests {
+    use super::*;
+
+    /// The arena must be PROVEN mapped, with a positive control, before any mem-form diff is
+    /// trusted. A write-then-read that returns the written byte is the [pos]; the [neg] is that
+    /// an address OUTSIDE the arena must still fault (else the map is wider than declared and a
+    /// wild address would silently succeed on one side of the diff).
+    #[test]
+    fn arena_maps_and_is_bounded() {
+        let s = NativeStub::new();
+        assert!(s.arena_ok(), "arena did not map at ARENA_BASE — mem arm must stay OFF");
+
+        // [pos] the arena is writable and reads back what we wrote.
+        s.reset_arena(&[0xAB; 64]);
+        let snap = s.arena_snapshot();
+        assert_eq!(snap.len(), ARENA_SIZE, "snapshot size");
+        assert_eq!(snap[0], 0xAB, "[pos] arena readback");
+        assert_eq!(snap[63], 0xAB, "[pos] arena readback (tail of pattern)");
+        // The pattern TILES the whole arena. This is the load-bearing property: the fuzz places
+        // base registers at ARENA_BASE+0x1000 and above, so a pattern covering only the first
+        // 0x1000 bytes leaves every actually-loaded address unseeded — silicon zeroed, interp
+        // holding prior cases' stores. Assert at the FAR END, where the loads really happen.
+        assert_eq!(snap[64], 0xAB, "[pos] pattern tiles past its own length");
+        assert_eq!(snap[0x1000], 0xAB, "[pos] tiles across the base-placement floor");
+        assert_eq!(snap[ARENA_SIZE - 1], 0xAB, "[pos] tiles to the last byte");
+
+        // [neg] a DIFFERENT pattern must produce different bytes — else `reset_arena` could be
+        // ignoring its argument entirely and every assertion above would still pass.
+        s.reset_arena(&[0x5C; 8]);
+        let snap2 = s.arena_snapshot();
+        assert_eq!(snap2[0], 0x5C, "[neg] a second pattern actually lands");
+        assert_eq!(snap2[ARENA_SIZE - 1], 0x5C, "[neg] and tiles to the end");
+
+        // [MUST-NOT-CRASH] the empty pattern. `(&[]).as_ptr()` == 0x1 here, so the pre-fix form
+        // faulted at addr=0x1 OUTSIDE any sigsetjmp guard = a bare SIGSEGV with no output. If
+        // this line ever segfaults again, that regression is back. It must zero, not crash.
+        s.reset_arena(&[]);
+        assert_eq!(s.arena_snapshot()[0], 0x00, "[pos] empty pattern zeroes rather than faulting");
+        assert_eq!(s.arena_snapshot()[ARENA_SIZE - 1], 0x00, "[pos] and zeroes to the end");
+        assert_ne!(snap2[0], snap[0], "[neg] the two patterns differ");
+    }
 }

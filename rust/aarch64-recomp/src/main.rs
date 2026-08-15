@@ -80,6 +80,250 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
     (s, branched)
 }
 
+/// Defs whose GENERATED body contains a memory op — derived from `lib.rs` itself rather than
+/// from def-NAMES, because a name-guess is a claim about the .isa and the emitted code is the
+/// artifact. Re-derive with:
+///
+///   python3 -c "import re;s=open('src/lib.rs').read();
+///     m=[(x.start(),x.group(1)) for x in re.finditer(r'/\\* ([A-Za-z0-9_.-]+) \\*/',s)];
+///     print([n for i,(p,n) in enumerate(m) if 'mem_read' in s[p:(m[i+1][0] if i+1<len(m) else len(s))]
+///            or 'mem_write' in s[p:(m[i+1][0] if i+1<len(m) else len(s))]])"
+///
+/// ‡ Name-based guessing would have been wrong in BOTH directions: STP-simd-signed-offset reads
+/// FALSE here and is correct — its body decodes and `return true`s with no semantics (one of the
+/// 8 known bare-body defs), so it touches no memory to diff.
+const LDST_DEFS: &[&str] = &[
+    "CASPAL",
+    "LD1-multi-no-offset-four-registers",
+    "LD1-multi-no-offset-four-registers-postindex-immediate",
+    "LD1-multi-no-offset-one-register",
+    "LD1-multi-no-offset-one-register-postindex-immediate",
+    "LD1-multi-no-offset-three-registers",
+    "LD1-multi-no-offset-three-registers-postindex-immediate",
+    "LD1-multi-no-offset-two-registers",
+    "LD1-multi-no-offset-two-registers-postindex-immediate",
+    "LD1-single-no-offset",
+    "LD1R-single-no-offset",
+    "LD1R-single-postindex-immediate",
+    "LD1R-single-postindex-register",
+    "LD2-multi-postindex-immediate",
+    "LD2-multi-postindex-register",
+    "LD3-multi-no-offset",
+    "LD3-multi-postindex-immediate",
+    "LD3-multi-postindex-register",
+    "LD4-multi-postindex-immediate",
+    "LD4-multi-postindex-register",
+    "LDAR",
+    "LDARB",
+    "LDARH",
+    "LDP-immediate-postindex",
+    "LDP-immediate-preindex",
+    "LDP-immediate-signed-offset",
+    "LDP-simd-postindex",
+    "LDP-simd-preindex",
+    "LDP-simd-signed-offset",
+    "LDPSW-immediate-signed-offset",
+    "LDR-immediate-postindex",
+    "LDR-immediate-preindex",
+    "LDR-immediate-unsigned-offset",
+    "LDR-literal",
+    "LDR-simd-immediate-unsigned-offset",
+    "LDR-simd-literal",
+    "LDRB-immediate-postindex",
+    "LDRB-immediate-preindex",
+    "LDRB-immediate-unsigned-offset",
+    "LDRH-immediate-postindex",
+    "LDRH-immediate-preindex",
+    "LDRH-immediate-unsigned-offset",
+    "LDRSB-immediate-postindex",
+    "LDRSB-immediate-preindex",
+    "LDRSB-immediate-unsigned-offset",
+    "LDRSH-immediate-postindex",
+    "LDRSH-immediate-preindex",
+    "LDRSH-immediate-unsigned-offset",
+    "LDRSW-immediate-postindex",
+    "LDRSW-immediate-preindex",
+    "LDRSW-immediate-unsigned-offset",
+    "LDRSW-literal",
+    "LDUR",
+    "LDURB",
+    "LDURH",
+    "LDURSB",
+    "LDURSH",
+    "LDURSW",
+    "ST1-multi-no-offset-four-registers",
+    "ST1-multi-no-offset-three-registers",
+    "ST1-multi-no-offset-two-registers",
+    "ST1-multi-postindex-immediate-four-registers",
+    "ST1-multi-postindex-immediate-one-register",
+    "ST1-multi-postindex-immediate-three-registers",
+    "ST1-multi-postindex-immediate-two-registers",
+    "ST1-multi-postindex-register-four-registers",
+    "ST1-multi-postindex-register-one-register",
+    "ST1-multi-postindex-register-three-registers",
+    "ST1-multi-postindex-register-two-registers",
+    "ST1-single-no-offset",
+    "ST2-multi-no-offset",
+    "ST2-multi-postindex-immediate",
+    "ST2-multi-postindex-register",
+    "ST3-multi-no-offset",
+    "ST3-multi-postindex-immediate",
+    "ST3-multi-postindex-register",
+    "ST4-multi-postindex-immediate",
+    "ST4-multi-postindex-register",
+    "STLR",
+    "STLRB",
+    "STLRH",
+    "STLXR",
+    "STLXRB",
+    "STP-postindex",
+    "STP-preindex",
+    "STP-signed-offset",
+    "STP-simd-preindex",
+    "STR-immediate-postindex",
+    "STR-immediate-preindex",
+    "STR-immediate-unsigned-offset",
+    "STRB-immediate-postindex",
+    "STRB-immediate-preindex",
+    "STRB-immediate-unsigned-offset",
+    "STRH-immediate-postindex",
+    "STRH-immediate-preindex",
+    "STRH-immediate-unsigned-offset",
+    "STUR",
+    "STURB",
+    "STURH",
+];
+
+/// Every def whose generated body is LD/ST-SHAPED — direct `mem_read`/`mem_write` (99) PLUS the
+/// forms whose memory access is intrinsic-lowered (LDXR/LDAXB/LDXP — exclusives become
+/// `intrinsic(...)`, never `mem_read`) and the PC-relative `*-literal` pool loads. 110 total.
+///
+/// This is the BASE-PLACEMENT set, not the diff set: a def in here gets its base registers
+/// pointed into the arena so the interp doesn't index FlatMem with a random u64 and panic
+/// `arena-oob`. Whether SILICON also runs is `is_ldst() && arena_ok()` — narrower on purpose.
+///
+/// Re-derive (never hand-edit — the generated body is the authority):
+///   python3 - <<'PY'  (see LDST_DEFS above; add `intrinsic(` w/ an LD|ST|CAS|SWP name, and
+///                      names ending `-literal`)
+static LDST_SHAPED: &[&str] = &[
+    "CASPAL",
+    "LD1-multi-no-offset-four-registers",
+    "LD1-multi-no-offset-four-registers-postindex-immediate",
+    "LD1-multi-no-offset-one-register",
+    "LD1-multi-no-offset-one-register-postindex-immediate",
+    "LD1-multi-no-offset-three-registers",
+    "LD1-multi-no-offset-three-registers-postindex-immediate",
+    "LD1-multi-no-offset-two-registers",
+    "LD1-multi-no-offset-two-registers-postindex-immediate",
+    "LD1-single-no-offset",
+    "LD1R-single-no-offset",
+    "LD1R-single-postindex-immediate",
+    "LD1R-single-postindex-register",
+    "LD2-multi-postindex-immediate",
+    "LD2-multi-postindex-register",
+    "LD3-multi-no-offset",
+    "LD3-multi-postindex-immediate",
+    "LD3-multi-postindex-register",
+    "LD4-multi-postindex-immediate",
+    "LD4-multi-postindex-register",
+    "LDAR",
+    "LDARB",
+    "LDARH",
+    "LDAXB",
+    "LDAXRB",
+    "LDAXRH",
+    "LDP-immediate-postindex",
+    "LDP-immediate-preindex",
+    "LDP-immediate-signed-offset",
+    "LDP-simd-postindex",
+    "LDP-simd-preindex",
+    "LDP-simd-signed-offset",
+    "LDPSW-immediate-signed-offset",
+    "LDR-immediate-postindex",
+    "LDR-immediate-preindex",
+    "LDR-immediate-unsigned-offset",
+    "LDR-literal",
+    "LDR-simd-immediate-unsigned-offset",
+    "LDR-simd-literal",
+    "LDRB-immediate-postindex",
+    "LDRB-immediate-preindex",
+    "LDRB-immediate-unsigned-offset",
+    "LDRH-immediate-postindex",
+    "LDRH-immediate-preindex",
+    "LDRH-immediate-unsigned-offset",
+    "LDRSB-immediate-postindex",
+    "LDRSB-immediate-preindex",
+    "LDRSB-immediate-unsigned-offset",
+    "LDRSH-immediate-postindex",
+    "LDRSH-immediate-preindex",
+    "LDRSH-immediate-unsigned-offset",
+    "LDRSW-immediate-postindex",
+    "LDRSW-immediate-preindex",
+    "LDRSW-immediate-unsigned-offset",
+    "LDRSW-literal",
+    "LDUR",
+    "LDURB",
+    "LDURH",
+    "LDURSB",
+    "LDURSH",
+    "LDURSW",
+    "LDXP",
+    "LDXR",
+    "LDXRB",
+    "LDXRH",
+    "PRFM-literal",
+    "ST1-multi-no-offset-four-registers",
+    "ST1-multi-no-offset-three-registers",
+    "ST1-multi-no-offset-two-registers",
+    "ST1-multi-postindex-immediate-four-registers",
+    "ST1-multi-postindex-immediate-one-register",
+    "ST1-multi-postindex-immediate-three-registers",
+    "ST1-multi-postindex-immediate-two-registers",
+    "ST1-multi-postindex-register-four-registers",
+    "ST1-multi-postindex-register-one-register",
+    "ST1-multi-postindex-register-three-registers",
+    "ST1-multi-postindex-register-two-registers",
+    "ST1-single-no-offset",
+    "ST2-multi-no-offset",
+    "ST2-multi-postindex-immediate",
+    "ST2-multi-postindex-register",
+    "ST3-multi-no-offset",
+    "ST3-multi-postindex-immediate",
+    "ST3-multi-postindex-register",
+    "ST4-multi-postindex-immediate",
+    "ST4-multi-postindex-register",
+    "STLR",
+    "STLRB",
+    "STLRH",
+    "STLXR",
+    "STLXRB",
+    "STP-postindex",
+    "STP-preindex",
+    "STP-signed-offset",
+    "STP-simd-preindex",
+    "STR-immediate-postindex",
+    "STR-immediate-preindex",
+    "STR-immediate-unsigned-offset",
+    "STRB-immediate-postindex",
+    "STRB-immediate-preindex",
+    "STRB-immediate-unsigned-offset",
+    "STRH-immediate-postindex",
+    "STRH-immediate-preindex",
+    "STRH-immediate-unsigned-offset",
+    "STUR",
+    "STURB",
+    "STURH",
+    "STXP",
+    "STXR",
+    "STXRB",
+];
+
+/// Is this def LD/ST-shaped (incl. intrinsic-lowered exclusives and literal-pool loads)?
+fn ldst_shaped(name: &str) -> bool { LDST_SHAPED.binary_search(&name).is_ok() }
+
+/// Does this def's generated body touch guest memory?
+fn is_ldst(name: &str) -> bool { LDST_DEFS.binary_search(&name).is_ok() }
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -513,6 +757,60 @@ fn main() {
                 let mut pre = Aarch64State::default();
                 for r in 1..=28 { pre.x[r] = rand(); }
                 pre.nzcv = ((rand() as u32) & 0xF) << 28;
+                // MEM ARM: for a load/store def, a RANDOM register is outside the 64KB arena
+                // 598-of-835 times — which is why 623 panics over 109 distinct ld/st defs read
+                // as a "harness limit" instead of as the coverage hole they are. So place EVERY
+                // register at an arena-interior, 16-byte-aligned address: any of them can be the
+                // base (the .isa's rn field varies per def) and pre/post-indexed forms write the
+                // base back, so the arithmetic must stay in range afterwards too. Values still
+                // vary — the low bits are random — so this constrains ADDRESSES, not DATA.
+                // XF_NOMEM=1 disables the mem arm entirely = pre-change behaviour (ld/st stay
+                // excluded). The bisect lever: a crash that survives XF_NOMEM is not mine.
+                // The CASP family (CASP/CASPA/CASPL/CASPAL) is BARE-BODY: the .isa declares the
+                // encoding and writes no semantics, so the interp panics while silicon happily
+                // executes a real 16-byte pair-CAS against the arena. Running the mem arm on a
+                // def whose interp side cannot participate buys no diff and costs a crash.
+                // XF_CASP=1 re-includes them (for when the semantics land).
+                // TWO SEPARATE DECISIONS, conflated in v1 and that conflation left 148 arena-oob:
+                //  place_in_arena — should this case's BASE REGISTERS point into the arena?
+                //  mem_arm        — should the SILICON side execute and be diffed?
+                // A def whose interp side can't participate (bare-body CASP*, intrinsic-lowered
+                // LDXR/LDAXB, PC-relative *-literal) still needs in-arena bases, or the interp
+                // indexes FlatMem with a random u64 and panics `arena-oob` — which reads as a
+                // coverage gap when it is only an unplaced base.
+                let casp = name.starts_with("CASP");
+                let place_in_arena = ldst_shaped(name) && std::env::var("XF_NOMEM").is_err();
+                let mem_arm = place_in_arena && is_ldst(name) && stub.arena_ok()
+                    && !(casp && std::env::var("XF_CASP").is_err());
+                // MEASURED (--fuzz 6, ×2): gating this on `place_in_arena` instead of `mem_arm`
+                // recovers 53 arena-oob and costs +276 diff / -292 ok. The extra 11 defs are not
+                // the cost — pointing a base into the arena changes what SILICON does for the 99
+                // ALREADY-WORKING defs as well, because a base that used to be random (and got
+                // rejected) now resolves. So the residual 148 arena-oob is HONEST: those defs'
+                // interp side cannot participate (bare-body CASP*, intrinsic-lowered exclusives,
+                // PC-relative literals), and forcing them into the arena buys diffs, not coverage.
+                if mem_arm {
+                    // Keep well inside on BOTH ends. The headroom must cover the WIDEST access
+                    // any ld/st def makes from a base, not just an imm9: LD4-multi touches 64
+                    // bytes, LDP-simd a 16-byte pair at base+imm7*16 (±1008), and postindex forms
+                    // WRITE THE BASE BACK, so the next access can start further along. An 0x1000
+                    // reservation at the top let an interp read hit index==len exactly (a panic
+                    // at interp.rs:746, my own harness rather than the .isa). 0x2000 both ends.
+                    const LO: u64 = native_oracle::ARENA_BASE + 0x2000;
+                    const HI: u64 = native_oracle::ARENA_BASE + native_oracle::ARENA_SIZE as u64 - 0x2000;
+                    for r in 1..=28 { pre.x[r] = LO + ((rand() % ((HI - LO) / 16)) * 16); }
+                    // SEED BOTH SIDES **BEFORE** EITHER RUNS. This was below the interp call for
+                    // one fire and produced 51 GPR-only "diffs" (plain LDR/LDP/LDAR): the interp
+                    // loaded a zeroed FlatMem while silicon loaded the pattern, so the diff was
+                    // about seed-ORDER, not semantics. `pat` is derived from the insn, so a real
+                    // diff stays reproducible from the seed.
+                    let pat: Vec<u8> = (0..0x1000u32).map(|i| (i.wrapping_mul(31) ^ insn) as u8).collect();
+                    stub.reset_arena(&pat);
+                    for (i, b) in pat.iter().enumerate() {
+                        // w=8 is EIGHT BITS = one byte (interp.rs:744-746, n=(w+7)/8); v is u128.
+                        mem.write(native_oracle::ARENA_BASE + i as u64, 8, *b as u128);
+                    }
+                }
                 // Interp side (may panic on unwired intrinsic / unreachable-match / todo-wmask).
                 let ir = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                     interp_one(&pre, &mut mem, insn, 0x1000).0
@@ -539,9 +837,25 @@ fn main() {
                     }
                 };
                 let mut n_post = pre.clone();
+                // Silicon's arena must start byte-identical to the interp's, or a load-diff is
+                // about the arena's history instead of the semantics. `pat` is deterministic
+                // per-case (derived from the insn) so a diff is reproducible from the seed.
+                // (arena seeded above, BEFORE interp_one — see the ordering note there)
+                // XF_TRACE=1 names the def on STDERR before the silicon call. A segfault discards
+                // buffered STDOUT, so the per-def tally cannot report which case killed the run —
+                // the last stderr line can. (Two wrong guesses at this crash before I did this.)
+                if std::env::var("XF_TRACE").is_ok() {
+                    eprintln!("TRACE {name} insn=0x{insn:08X} mem_arm={mem_arm}");
+                }
+                // Assert the addressability contract for exactly this case, then restore — a
+                // leaked assertion would let a RANDOM-register case through excluded()'s ld/st
+                // gate and store to a wild address on real silicon.
+                let prev_mem_ok = native_oracle::set_mem_addressable(mem_arm);
                 // Name the insn BEFORE feeding it to silicon — if the stub segfaults,
                 // the last stderr line names the killer (v1 debug; v2 = signal handler).
-                match stub.exec_one(&mut n_post, insn) {
+                let nr = stub.exec_one(&mut n_post, insn);
+                native_oracle::set_mem_addressable(prev_mem_ok);
+                match nr {
                     native_oracle::NativeResult::Excluded => { n_skip += 1; continue; }
                     native_oracle::NativeResult::SiliconRejects(sig) => {
                         // .isa accepted (interp didn't panic) but silicon trapped = a
@@ -555,6 +869,18 @@ fn main() {
                 let mut d = false;
                 for r in 0..31 { if i_post.x[r] != n_post.x[r] { d = true; break; } }
                 if (i_post.nzcv & 0xF0000000) != (n_post.nzcv & 0xF0000000) { d = true; }
+                // MEMORY post-state. A GPR-only compare passes a STORE that wrote the wrong
+                // bytes to the right address, or the right bytes to the wrong one — the exact
+                // class this tier exists to catch, and invisible for as long as ld/st was
+                // excluded wholesale. Compare the whole arena: a narrow window lets a stale
+                // byte outside it masquerade as agreement (the sweep's own harness-lesson).
+                if mem_arm && !d {
+                    let n_arena = stub.arena_snapshot();
+                    for i in 0..n_arena.len() {
+                        let ib = mem.read(native_oracle::ARENA_BASE + i as u64, 8) as u8;
+                        if ib != n_arena[i] { d = true; break; }
+                    }
+                }
                 if d {
                     n_diff += 1; *diff_by_def.entry(name.clone()).or_default() += 1;
                     // First diff for this def → dump the reproducer.
@@ -582,10 +908,20 @@ fn main() {
             for (k, v) in &ipanic_by { *by_class.entry(k.split('\t').next().unwrap()).or_insert(0) += v; }
             println!("  interp-panic by CLASS:");
             for (c, n) in &by_class { println!("    {n:5}  {c}"); }
-            println!("  unreachable, by def (the .isa coverage question):");
-            let mut v: Vec<_> = ipanic_by.iter().filter(|(k,_)| k.starts_with("unreachable")).collect();
-            v.sort_by_key(|(_, n)| std::cmp::Reverse(**n));
-            for (k, n) in v.iter().take(20) { println!("    {n:5}  {}", k.split('\t').nth(1).unwrap()); }
+            // Per-def breakdown for EVERY class, not just `unreachable`. The v1 form hardcoded
+            // that one filter, so any claim about another class (e.g. "the 330 arena-oob are the
+            // mem defs, a harness limit") had no per-def evidence available and could not be
+            // checked at all — a tally whose decomposition the printer refuses to emit is a
+            // number, not a finding. XF_PANIC_CLASS=<substr> narrows; default prints all.
+            let want = std::env::var("XF_PANIC_CLASS").unwrap_or_default();
+            for (cls, _) in &by_class {
+                if !want.is_empty() && !cls.contains(&want) { continue; }
+                let mut v: Vec<_> = ipanic_by.iter()
+                    .filter(|(k, _)| k.split('\t').next().unwrap() == *cls).collect();
+                v.sort_by_key(|(_, n)| std::cmp::Reverse(**n));
+                println!("  {} — {} distinct defs (top 20):", cls, v.len());
+                for (k, n) in v.iter().take(20) { println!("    {n:5}  {}", k.split('\t').nth(1).unwrap()); }
+            }
         }
         if n_reject > 0 {
             println!("  ── silicon-rejects (.isa over-permissive) ──");
