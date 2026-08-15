@@ -3389,6 +3389,13 @@
     "ff 111 1 00 x1 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldr $r1$rt, [X$rn, $r2$rm, $extend $amount]"
     (names (size f) (opc x) (rm m) (option o) (scale s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (block
         (let r1 (if (& (== size 0) (== opc 1)) "Q" (match size
             0b00 "B"
@@ -3428,6 +3435,13 @@
     "1f 111 0 00 01 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldr $r1$rt, [X$rn, $r2$rm, $extend $amount]"
     (names (size f) (rm m) (option o) (scale s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (block
         (let r1 (if (== size 0) "W" "X"))
         (let r2 (if (& option 1) "X" "W"))
@@ -3480,6 +3494,13 @@
     "00 111 0 00 01 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldrb W$rt, [X$rn, $r$rm, $str $amount]"
     (names (rm m) (option o) (amount s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (let r (if (& option 1) "X" "W")
         (let str (match option
             0b010 "UXTW"
@@ -3527,6 +3548,13 @@
     "01 111 0 00 01 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldrh W$rt, [X$rn, $r$rm, $str $amount]"
     (names (rm m) (option o) (amount s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (let r (if (& option 1) "X" "W")
         (let str (match option
             0b010 "UXTW"
@@ -3582,6 +3610,13 @@
     "00 111 0 00 1x 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldrsb $r$rt, [X$rn, $r$rm, $str $amount]"
     (names (rm m) (opc x) (option o) (amount s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (let r (if (== opc 0) "X" "W")
         (let str (match option
             0b010 "UXTW"
@@ -3641,6 +3676,13 @@
     "01 111 0 00 1x 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldrsh $r$rt, [X$rn, $r$rm, $str $amount]"
     (names (rm m) (opc x) (option o) (amount s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (let r (if (== opc 0) "X" "W")
         (let str (match option
             0b010 "UXTW"
@@ -3697,6 +3739,13 @@
     "10 111 0 00 10 1 mmmmm ooo s 10 nnnnn ttttt"
     "ldrsw X$rt, [X$rn, $r$rm, $extend $amount]"
     (names (rm m) (option o) (scale s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (block
         (let r (if (& option 1) "X" "W"))
         (let amount (if (== scale 0) 0 2))
@@ -5324,6 +5373,13 @@
     "1f 111 0 00 00 1 mmmmm ooo s 10 nnnnn ttttt"
     "str $r1$rt, [X$rn, $r2$rm, $extend $amount]"
     (names (size f) (rm m) (option o) (scale s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (block
         (let r1 (if (== size 0) "W" "X"))
         (let r2 (if (& option 1) "X" "W"))
@@ -5419,6 +5475,13 @@
     "ff 111 1 00 x0 1 mmmmm ooo s 10 nnnnn ttttt"
     "str $r1$rt, [X$rn, $r2$rm, $extend $amount]"
     (names (size f) (opc x) (rm m) (option o) (scale s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (block
         (let rop (: size opc (u1 0)))
         (let r1 (match rop
@@ -5484,6 +5547,13 @@
     "00 111 0 00 00 1 mmmmm ooo s 10 nnnnn ttttt"
     "strb W$rt, [X$rn, $r$rm, $str $amount]"
     (names (rm m) (option o) (amount s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (let r (if (& option 1) "X" "W")
         (let str (match option
             0b010 "UXTW"
@@ -5527,6 +5597,13 @@
     "01 111 0 00 00 1 mmmmm ooo s 10 nnnnn ttttt"
     "strh W$rt, [X$rn, $r$rm, $str $amount]"
     (names (rm m) (option o) (amount s) (rn n) (rt t))
+    ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
+    ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
+    ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
+    ; def's OWN match case-list, not composed from the manual. Without the guard the
+    ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
+    ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (requires (& option 0b010))
     (let r (if (& option 1) "X" "W")
         (let str (match option
             0b010 "UXTW"
