@@ -70,10 +70,16 @@ fn make_masks(n: u32, imms: u32, immr: u32, m: u32, immediate: bool) -> Option<(
     Some((wmask, tmask))
 }
 fn aarch64_wmask(n: u32, imms: u32, immr: u32, immediate: u32, m: u32) -> u64 {
-    make_masks(n, imms, immr, m, immediate != 0).map(|(w,_)| w).unwrap_or_else(|| unreachable!())
+    // None = an UNALLOCATED bitmask-immediate encoding (no valid len for imms) --
+    // architecturally a decode-reject, but wmask is an EVAL-time helper with no path
+    // back to 'decode. Named panic so the fuzz census reads the class honestly
+    // (was anonymous unreachable!() -- indistinguishable from a match-default bug).
+    make_masks(n, imms, immr, m, immediate != 0).map(|(w,_)| w)
+        .unwrap_or_else(|| panic!("UNALLOCATED bitmask-immediate (n={n} imms={imms} immr={immr})"))
 }
 fn aarch64_tmask(n: u32, imms: u32, immr: u32, immediate: u32, m: u32) -> u64 {
-    make_masks(n, imms, immr, m, immediate != 0).map(|(_,t)| t).unwrap_or_else(|| unreachable!())
+    make_masks(n, imms, immr, m, immediate != 0).map(|(_,t)| t)
+        .unwrap_or_else(|| panic!("UNALLOCATED bitmask-immediate (n={n} imms={imms} immr={immr})"))
 }
 fn aarch64_replicate(bits: u64, w: u32, c: u32) -> u64 { replicate_(bits, w, w * c) }
 ";

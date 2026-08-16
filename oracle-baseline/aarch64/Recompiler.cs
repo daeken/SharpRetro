@@ -1463,6 +1463,8 @@ public partial class Recompiler {
 			var imm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) (((byte) ((byte) (((imm) & ((byte) ((byte) ((byte) 0xF))))))) != ((byte) 0x0))))
+				goto insn_61;
 			var T = "";
 			var index = (byte) 0x0;
 			var size = (byte) 0x0;
@@ -4215,6 +4217,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_152;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
@@ -4257,6 +4261,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_153;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
 				goto insn_153;
@@ -4297,6 +4303,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_154;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
@@ -4337,6 +4345,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_155;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
@@ -4384,6 +4394,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_156;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
@@ -4476,6 +4488,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_158;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
@@ -4528,6 +4542,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_159;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
@@ -5635,6 +5651,10 @@ public partial class Recompiler {
 			switch((byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 1))))) {
 				case (byte) ((byte) 0x0): {
 					state.VB[(int) rt] = (IRuntimeValue<byte>) builder.EnsureRuntime((IRuntimeValue<byte>) (builder.Pointer<byte>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value));
+					break;
+				}
+				case (byte) ((byte) 0x2): {
+					state.VH[(int) rt] = (IRuntimeValue<ushort>) builder.EnsureRuntime((IRuntimeValue<ushort>) (builder.Pointer<ushort>((IRuntimeValue<ulong>) builder.EnsureRuntime(address)).Value));
 					break;
 				}
 				case (byte) ((byte) 0x4): {
@@ -9316,6 +9336,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_276;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
 			var address = ((IRuntimeValue<ulong>) ((rn) == 31 ? state.SP : state.X[(int) rn])).Store();
@@ -9442,6 +9464,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_277;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x20) : (byte) ((byte) 0x10)));
 			if(!((bool) (((byte) (rm)) == ((byte) 0x1F))))
@@ -9575,6 +9599,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_278;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
 				goto insn_278;
@@ -9706,6 +9732,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_279;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var T = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x2) => "4H", (byte) ((byte) 0x3) => "8H", (byte) ((byte) 0x4) => "2S", (byte) ((byte) 0x5) => "4S", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
@@ -9878,6 +9906,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_280;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var imm = (byte) ((byte) (((bool) ((Q) != ((byte) 0x0))) ? (byte) ((byte) 0x30) : (byte) ((byte) 0x18)));
@@ -10057,6 +10087,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_281;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			if(!((bool) (((byte) (rm)) != ((byte) 0x1F))))
@@ -10454,6 +10486,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_283;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));
@@ -10679,6 +10713,8 @@ public partial class Recompiler {
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
+			if(!((bool) (!((bool) ((((bool) (((byte) (size)) == ((byte) 0x3))) & ((bool) (!((bool) ((Q) != ((byte) 0x0)))))))))))
+				goto insn_284;
 			var rt2 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt3 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x2))))) % ((byte) (byte) ((byte) 0x20)));
 			var rt4 = (byte) (((byte) (byte) ((byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x3))))) % ((byte) (byte) ((byte) 0x20)));

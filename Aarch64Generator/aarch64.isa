@@ -1167,6 +1167,9 @@
     "01 0 11110000 iiiii 0 0000 1 nnnnn ddddd"
     "dup $T$rd, V$rn.$T[$index]"
     (names (imm i) (rn n) (rd d))
+    ; imm5 low-4-bits=0 (i.e. xxxx0000 w/ bit0-3 clear) = UNALLOCATED -- was an
+    ; (unimplemented) MID-EXEC in the mlet chain; reject at decode instead.
+    (requires (!= (& imm 0b01111) 0))
     (mlet (T "" index 0 size 0)
         (if (== (& imm 0b01111) 0) (unimplemented)
         (if (== (& imm 0b00001) 0b00001) (block (= T "B") (= index (>> imm 1)) (= size 1))
@@ -2903,6 +2906,8 @@
     "0 Q 0011001 1 0 mmmmm 1000 ss nnnnn ttttt"
     "ld2 { V$rt.$T, V$rt2.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) imm (u8 (if Q 32 16)))
         (requires (== rm 0b11111))
         (let T (match (: size Q)
@@ -2922,6 +2927,8 @@
     "0 Q 0011001 1 0 mmmmm 1000 ss nnnnn ttttt"
     "ld2 { V$rt.$T, V$rt2.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (let rt2 (% (+ rt 1) 32)
         (requires (!= rm 0b11111))
         (let T (match (: size Q)
@@ -2960,6 +2967,8 @@
     "0 Q 0011000 1 000000 0100 ss nnnnn ttttt"
     "ld3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -2977,6 +2986,8 @@
     "0 Q 0011001 1 0 mmmmm 0100 ss nnnnn ttttt"
     "ld3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) imm (u8 (if Q 48 24)))
         (requires (== rm 0b11111))
         (let T (match (: size Q)
@@ -2996,6 +3007,8 @@
     "0 Q 0011001 1 0 mmmmm 0100 ss nnnnn ttttt"
     "ld3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
         (requires (!= rm 0b11111))
         (let T (match (: size Q)
@@ -3058,6 +3071,8 @@
     "0 Q 0011001 1 0 mmmmm 0000 ss nnnnn ttttt"
     "ld4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32) imm (u8 (if Q 64 32)))
         (requires (== rm 0b11111))
         (let T (match (: size Q)
@@ -3077,6 +3092,8 @@
     "0 Q 0011001 1 0 mmmmm 0000 ss nnnnn ttttt"
     "ld4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
         (requires (!= rm 0b11111))
         (let T (match (: size Q)
@@ -3915,6 +3932,10 @@
     (let address (+ (gpr-or-sp64 rn) imm)
         (match (: size opc)
             0b00_0 (= (vec-b rt) (load address u8))
+            ; H was guard-ADMITTED but eval-absent since birth -- ldur h0 decoded then
+            ; died at the match's implicit default. A 16-bit load is a pure move (no
+            ; F16 arithmetic): vec-h carries it.
+            0b01_0 (= (vec-h rt) (load address u16))
             0b10_0 (= (vec-s rt) (load address f32))
             0b11_0 (= (vec-d rt) (load address f64))
             0b00_1 (= (vec   rt) (load address vec)))))
@@ -5091,6 +5112,8 @@
     "0 Q 0011000 0 000000 1000 ss nnnnn ttttt"
     "st2 { V$rt.$T, V$rt2.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (let rt2 (% (+ rt 1) 32)
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -5112,6 +5135,8 @@
     "0 Q 0011001 0 0 mmmmm 1000 ss nnnnn ttttt"
     "st2 { V$rt.$T, V$rt2.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) imm (u8 (if Q 32 16)))
         (requires (== rm 0b11111))
         (let T (match (: size Q)
@@ -5135,6 +5160,8 @@
     "0 Q 0011001 0 0 mmmmm 1000 ss nnnnn ttttt"
     "st2 { V$rt.$T, V$rt2.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (let rt2 (% (+ rt 1) 32)
         (requires (!= rm 0b11111))
         (let T (match (: size Q)
@@ -5163,6 +5190,8 @@
     "0 Q 0011000 0 000000 0100 ss nnnnn ttttt"
     "st3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
         (let T (match (: size Q)
             0b00_0 "8B"
@@ -5184,6 +5213,8 @@
     "0 Q 0011001 0 0 mmmmm 0100 ss nnnnn ttttt"
     "st3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) imm (u8 (if Q 48 24)))
         (requires (== rm 0b11111))
         (let T (match (: size Q)
@@ -5207,6 +5238,8 @@
     "0 Q 0011001 0 0 mmmmm 0100 ss nnnnn ttttt"
     "st3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
         (requires (!= rm 0b11111))
         (let T (match (: size Q)
@@ -5260,6 +5293,8 @@
     "0 Q 0011001 0 0 mmmmm 0000 ss nnnnn ttttt"
     "st4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32) imm (u8 (if Q 64 43)))
         (requires (== rm 0b11111))
         (let T (match (: size Q)
@@ -5283,6 +5318,8 @@
     "0 Q 0011001 0 0 mmmmm 0000 ss nnnnn ttttt"
     "st4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
+    ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (requires (! (& (== size 0b11) (! Q))))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
         (requires (!= rm 0b11111))
         (let T (match (: size Q)
