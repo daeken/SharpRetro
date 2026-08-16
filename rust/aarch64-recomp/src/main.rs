@@ -859,7 +859,13 @@ fn main() {
                 // coverage gap when it is only an unplaced base.
                 let casp = name.starts_with("CASP");
                 let place_in_arena = ldst_shaped(name) && std::env::var("XF_NOMEM").is_err();
-                let mem_arm = place_in_arena && is_ldst(name) && stub.arena_ok()
+                // PC-RELATIVE LITERALS never silicon-exec: EA = stub-pc + imm19, unmapped
+                // no matter where the arena sits (the sig=11 "rejects" were this — a
+                // harness limit mislabeled as .isa over-permissiveness). They still get
+                // arena bases (the interp side needs them); the third population the
+                // TWO-DECISIONS comment names, now encoded.
+                let literal = name.ends_with("-literal");
+                let mem_arm = place_in_arena && is_ldst(name) && stub.arena_ok() && !literal
                     && !(casp && std::env::var("XF_CASP").is_err());
                 // MEASURED (--fuzz 6, ×2): gating this on `place_in_arena` instead of `mem_arm`
                 // recovers 53 arena-oob and costs +276 diff / -292 ok. The extra 11 defs are not
@@ -968,6 +974,9 @@ fn main() {
                         // missing `requires` in the .isa. Tally by def.
                         n_reject += 1;
                         *reject_by_def.entry(format!("{name} (sig={sig})")).or_default() += 1;
+                        if std::env::var("XF_REJECTS").is_ok() {
+                            eprintln!("REJECT {name} insn=0x{insn:08X} sig={sig}");
+                        }
                         continue;
                     }
                     native_oracle::NativeResult::Ran => {}

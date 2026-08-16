@@ -53,6 +53,8 @@ public partial class Disassembler {
 			var imm = (insn >> 10) & 0x3FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
+				goto insn_4;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
 				goto insn_4;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
@@ -2162,7 +2164,7 @@ public partial class Disassembler {
 		}
 		insn_145:
 		/* LD1-multi-no-offset-four-registers-postindex-immediate */
-		if((insn & 0xBFFFF000) == 0x0C5F2000) {
+		if((insn & 0xBFFFF000) == 0x0CDF2000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
@@ -2458,6 +2460,8 @@ public partial class Disassembler {
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
 				goto insn_169;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
+				goto insn_169;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			return (string) ("ldp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]!");
@@ -2471,6 +2475,8 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
+				goto insn_170;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
 				goto insn_170;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
@@ -2486,6 +2492,8 @@ public partial class Disassembler {
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
 				goto insn_171;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
+				goto insn_171;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			return (string) ("ldp " + r + (rt1).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + ", #" + (simm).ToString() + "]!");
@@ -2499,6 +2507,8 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
+				goto insn_172;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
 				goto insn_172;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
@@ -2601,6 +2611,8 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			var opc = (byte) ((byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x1)))) << 0)) | ((byte) (((byte) (ropc)) << 1))));
+			if(!((bool) ((((bool) (((byte) (ropc)) == ((byte) 0x0))) | ((bool) (((byte) (size)) == ((byte) 0x0)))))))
+				goto insn_180;
 			var m = (byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 2))));
 			var r = (string) (m switch { (byte) ((byte) 0x1) => "B", (byte) ((byte) 0x5) => "H", (byte) ((byte) 0x9) => "S", (byte) ((byte) 0xD) => "D", _ => "Q" });
 			var imm = (uint) (((uint) ((uint) (rawimm))) << (int) ((byte) (m switch { (byte) ((byte) 0x1) => (byte) 0x0, (byte) ((byte) 0x5) => (byte) ((byte) 0x1), (byte) ((byte) 0x9) => (byte) ((byte) 0x2), (byte) ((byte) 0xD) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
@@ -3143,6 +3155,10 @@ public partial class Disassembler {
 			var hw = (insn >> 21) & 0x3U;
 			var imm = (insn >> 5) & 0xFFFFU;
 			var rd = (insn >> 0) & 0x1FU;
+			if((bool) (((byte) (size)) == ((byte) 0x0))) {
+				if(!((bool) (((byte) (hw)) < ((byte) 0x2))))
+					goto insn_226;
+			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shift = (uint) (((uint) ((uint) (hw))) << (int) ((byte) 0x4));
 			return (string) ("movz " + r + (rd).ToString() + ", #" + (imm).ToString() + ", LSL #" + (shift).ToString());
@@ -4814,6 +4830,8 @@ public partial class Disassembler {
 			var imm = (insn >> 10) & 0x3FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) (((byte) (shift)) != ((byte) 0x3))))
+				goto insn_4;
 			if(!((bool) (((byte) (imm)) <= ((byte) (((bool) ((size) != ((byte) 0x0))) ? (byte) ((byte) 0x3F) : (byte) ((byte) 0x1F))))))
 				goto insn_4;
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
@@ -6781,7 +6799,7 @@ public partial class Disassembler {
 			return "LD1-multi-no-offset-four-registers";
 		}
 		insn_145:
-		if((insn & 0xBFFFF000) == 0x0C5F2000) {
+		if((insn & 0xBFFFF000) == 0x0CDF2000) {
 			var Q = (insn >> 30) & 0x1U;
 			var size = (insn >> 10) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
@@ -7054,6 +7072,8 @@ public partial class Disassembler {
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
 				goto insn_169;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
+				goto insn_169;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			return "LDP-simd-preindex";
@@ -7066,6 +7086,8 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
+				goto insn_170;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
 				goto insn_170;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
@@ -7080,6 +7102,8 @@ public partial class Disassembler {
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
 				goto insn_171;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
+				goto insn_171;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
 			return "LDP-simd-preindex";
@@ -7092,6 +7116,8 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt1 = (insn >> 0) & 0x1FU;
 			if(!((bool) ((rt1) != (rt2))))
+				goto insn_172;
+			if(!((bool) (((byte) (opc)) != ((byte) 0x3))))
 				goto insn_172;
 			var r = (string) (opc switch { (byte) ((byte) 0x0) => "S", (byte) ((byte) 0x1) => "D", _ => "Q" });
 			var simm = (long) (((long) (Math.SignExt<long>(imm, 7))) << (int) ((byte) (opc switch { (byte) ((byte) 0x0) => (byte) 0x2, (byte) ((byte) 0x1) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
@@ -7186,6 +7212,8 @@ public partial class Disassembler {
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
 			var opc = (byte) ((byte) (((byte) (((byte) ((byte) ((byte) ((byte) 0x1)))) << 0)) | ((byte) (((byte) (ropc)) << 1))));
+			if(!((bool) ((((bool) (((byte) (ropc)) == ((byte) 0x0))) | ((bool) (((byte) (size)) == ((byte) 0x0)))))))
+				goto insn_180;
 			var m = (byte) ((byte) (((byte) (((byte) (opc)) << 0)) | ((byte) (((byte) (size)) << 2))));
 			var r = (string) (m switch { (byte) ((byte) 0x1) => "B", (byte) ((byte) 0x5) => "H", (byte) ((byte) 0x9) => "S", (byte) ((byte) 0xD) => "D", _ => "Q" });
 			var imm = (uint) (((uint) ((uint) (rawimm))) << (int) ((byte) (m switch { (byte) ((byte) 0x1) => (byte) 0x0, (byte) ((byte) 0x5) => (byte) ((byte) 0x1), (byte) ((byte) 0x9) => (byte) ((byte) 0x2), (byte) ((byte) 0xD) => (byte) ((byte) 0x3), _ => (byte) ((byte) 0x4) })));
@@ -7682,6 +7710,10 @@ public partial class Disassembler {
 			var hw = (insn >> 21) & 0x3U;
 			var imm = (insn >> 5) & 0xFFFFU;
 			var rd = (insn >> 0) & 0x1FU;
+			if((bool) (((byte) (size)) == ((byte) 0x0))) {
+				if(!((bool) (((byte) (hw)) < ((byte) 0x2))))
+					goto insn_226;
+			}
 			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
 			var shift = (uint) (((uint) ((uint) (hw))) << (int) ((byte) 0x4));
 			return "MOVZ";
@@ -9453,7 +9485,7 @@ public partial class Disassembler {
 			yield return (true, true, false, 5);
 		}
 		/* LD1-multi-no-offset-four-registers-postindex-immediate */
-		else if((insn & 0xBFFFF000) == 0x0C5F2000) {
+		else if((insn & 0xBFFFF000) == 0x0CDF2000) {
 			yield return (true, true, true, 5);
 		}
 		/* LD1-single-no-offset */

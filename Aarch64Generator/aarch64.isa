@@ -145,6 +145,10 @@
     "add $r$rd, $r$rn, $r$rm, $shiftstr #$imm"
     (names (size f) (shift s) (imm i) (rd d) (rn n) (rm m))
     (block
+        ; shift=0b11 (ROR) is RESERVED for the arithmetic shifted-register family
+        ; (legal for the LOGICAL family -- AND/ORR/EOR keep all four). Silicon
+        ; SIGILLs it; the day-40 first-fuzz finding, finally closed at the .isa.
+        (requires (!= shift 0b11))
         (requires (<= imm (if size 63 31)))
         (let r (if (== size 0) "W" "X"))
         (let shiftstr (shift-string shift)))
@@ -2714,7 +2718,12 @@
         (do-ld1 rt4 (if Q 48 24))))
 
 (def LD1-multi-no-offset-four-registers-postindex-immediate
-    "0 Q 0011000 1 0 11111 0010 ss nnnnn ttttt"
+    ; bit23=1 (post-index space) -- this said 0011000, the lone drift in the family
+    ; (1/2/3-reg postindex all say 0011001). The chimera decoded UNDEFINED encodings
+    ; (no-offset space + Rm=11111) that silicon SIGILLs; real LD1x4-postindex words
+    ; (0x4CDF..) were NOT decoded at all. objdump cross-check: 0x4C5F2386=undefined,
+    ; 0x4CDF2000=ld1 {v0.16b-v3.16b},[x0],#64.
+    "0 Q 0011001 1 0 11111 0010 ss nnnnn ttttt"
     "ld1 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], #$imm"
     (names (Q Q) (size s) (rn n) (rt t))
     (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32) imm (if Q 64 32))
@@ -3190,6 +3199,7 @@
     (names (opc o) (imm i) (rt2 p) (rn n) (rt1 t))
     (block
         (requires (!= rt1 rt2))
+        (requires (!= opc 0b11)) ; opc=11 UNALLOCATED (00=S 01=D 10=Q; the match default swallowed 11 as Q -- silicon SIGILLs it)
         (let r (match opc 0b00 "S" 0b01 "D" "Q"))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 4))))
     (let address (+ (gpr-or-sp64 rn) simm)
@@ -3211,6 +3221,7 @@
     (names (opc o) (imm i) (rt2 p) (rn n) (rt1 t))
     (block
         (requires (!= rt1 rt2))
+        (requires (!= opc 0b11)) ; opc=11 UNALLOCATED (00=S 01=D 10=Q; the match default swallowed 11 as Q -- silicon SIGILLs it)
         (let r (match opc 0b00 "S" 0b01 "D" "Q"))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 4))))
     (let address (gpr-or-sp64 rn)
@@ -3232,6 +3243,7 @@
     (names (opc o) (imm i) (rt2 p) (rn n) (rt1 t))
     (block
         (requires (!= rt1 rt2))
+        (requires (!= opc 0b11)) ; opc=11 UNALLOCATED (00=S 01=D 10=Q; the match default swallowed 11 as Q -- silicon SIGILLs it)
         (let r (match opc 0b00 "S" 0b01 "D" "Q"))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 4))))
     (let address (+ (gpr-or-sp64 rn) simm)
@@ -3253,6 +3265,7 @@
     (names (opc o) (imm i) (rt2 p) (rn n) (rt1 t))
     (block
         (requires (!= rt1 rt2))
+        (requires (!= opc 0b11)) ; opc=11 UNALLOCATED (00=S 01=D 10=Q; the match default swallowed 11 as Q -- silicon SIGILLs it)
         (let r (match opc 0b00 "S" 0b01 "D" "Q"))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 4))))
     (let address (+ (gpr-or-sp64 rn) simm)
@@ -3392,6 +3405,9 @@
     (names (size s) (ropc o) (rawimm i) (rn n) (rt t))
     (block
         (let opc (: ropc (u1 1)))
+        ; opc=11 is Q ONLY at size=00; sizes {01,10,11} w/ opc=11 are UNALLOCATED --
+        ; the match default swallowed them as "Q" and silicon SIGILL'd (2 fuzz rejects).
+        (requires (| (== ropc 0) (== size 0b00)))
         (let m (: size opc))
         (let r (match m
             0b0001 "B"
@@ -4048,6 +4064,10 @@
     "movz $r$rd, #$imm, LSL #$shift"
     (names (size s) (imm i) (rd d) (hw h))
     (block
+        ; 32-bit form: hw in {0,1} only (hw>=2 UNALLOCATED). MOVK/MOVN carried this
+        ; guard already -- MOVZ was the drifted sibling; silicon SIGILL'd hw={2,3}.
+        (when (== size 0)
+            (requires (< hw 2)))
         (let r (if (== size 0) "W" "X"))
         (let shift (<< (u32 hw) 4)))
     (if (== size 0)
