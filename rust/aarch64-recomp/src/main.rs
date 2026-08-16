@@ -70,6 +70,25 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
                 m.write(addr, w, a[1].bits);
                 Some(IVal::u(32, 0))     // 0 = store-exclusive SUCCEEDED
             }
+            100 => {
+                // vec_broadcast (the .isa's `vector-all`): replicate the scalar arg
+                // across V128, lane width = the arg's OWN IlType width (the C# twin is
+                // typed CreateVector). 51 call-sites — the whole MOVI family + every
+                // `one/zero`-mlet compare macro that broadcasts.
+                let w = match a[0].ty {
+                    sharpretro_jit::IlType::I{width,..} => width,
+                    sharpretro_jit::IlType::F{width} => width,   // LD1R.4S loads F32 —
+                    // the bare I-match sent floats to the 64 fallback (fuzz caught it
+                    // in the same fire that unblocked the family: 4S replicated at
+                    // 64-bit stride). Bool/V128/Unit keep the 64 fallback.
+                    _ => 64,
+                } as u32;
+                let lane = a[0].bits & (if w >= 128 { u128::MAX } else { (1u128 << w) - 1 });
+                let mut v: u128 = 0;
+                let mut off = 0;
+                while off + w <= 128 { v |= lane << off; off += w; }
+                Some(IVal { ty: sharpretro_jit::IlType::V128, bits: v })
+            }
             _ => panic!("intrinsic id={id} not wired"),
         };
         let ok = recompile_one(&mut b, insn, pc);

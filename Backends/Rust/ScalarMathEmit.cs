@@ -93,10 +93,19 @@ public static class ScalarMathEmit {
         // compiletime-eval leg firing pre-emit — deferred to rung-4b's fold-pass.
         Expression("literal", list => GenerateExpression(list[1]));
 
-        Expression("replicate", list =>
-            $"aarch64_replicate(({GenerateExpression(list[1])}) as u64, "
-            + $"({GenerateExpression(list[2])}) as u32, "
-            + $"({(list.Count > 3 ? GenerateExpression(list[3]) : "1")}) as u32)");
+        Expression("replicate", list => {
+            // (replicate x N) = x, of its OWN type-width, repeated N times (result =
+            // width*N bits) — ArchCompilerCore ScalarMath.cs:95's signature + the C#
+            // emit's `x << (i*width)` loop. The v1 arm passed the COUNT as the WIDTH:
+            // aarch64_replicate(a, 8, 1) = replicate_(a, esize=8, m=8) = times-1 =
+            // the bare value back. MOVI-2D's bit→byte expansion gave 0x01-bytes where
+            // silicon gives 0xFF — caught the same fire vec_broadcast unblocked it.
+            if(list[1].Type is not EInt(_, var elemWidth)) throw new NotSupportedException("replicate: non-int operand");
+            var count = list[2] is PInt(var c) ? (int) c
+                : throw new NotSupportedException("replicate: non-const count");
+            return $"aarch64_replicate(({GenerateExpression(list[1])}) as u64, "
+                + $"({elemWidth}) as u32, ({count}) as u32)";
+        });
     }
 
     // ct-emit: anchor operands to the RESULT type (list.Type) via `as`. VARIADIC: the .isa's
