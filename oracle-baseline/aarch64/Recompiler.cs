@@ -1657,6 +1657,8 @@ public partial class Recompiler {
 			var index = (insn >> 11) & 0xFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
+			if(!((bool) (((byte) (((Q) | ((byte) ((byte) (((bool) (((byte) (index)) < ((byte) 0x8))) ? 1U : 0U)))))) != ((byte) 0x0))))
+				goto insn_68;
 			var ts = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
 			state.V[(int) (rd)] = (IRuntimeValue<Vector128<float>>) (((IRuntimeValue<Vector128<float>>) (state.V[(int) (rn)])).VectorExtract((IRuntimeValue<Vector128<float>>) (state.V[(int) (rm)]), (uint) Q, (uint) index));
 			return true;

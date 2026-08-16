@@ -70,6 +70,48 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
                 m.write(addr, w, a[1].bits);
                 Some(IVal::u(32, 0))     // 0 = store-exclusive SUCCEEDED
             }
+            101 => {
+                // vec_extract (EXT): result = concat(b:a) >> (index*8), i.e. lanes
+                // a[index..count] then b[0..index]. Q selects 8/16-byte width; the
+                // 8-byte form's top half zeroes. SDM semantics — NOT transcribed from
+                // C#'s Math.VectorExtract, whose second loop reads `a` where EXT wants
+                // `b` (silicon arbitrates; if the fuzz diffs, re-read HERE first).
+                let (av, bv, q, idx) = (a[0].bits, a[1].bits, a[2].bits as u32, a[3].bits as usize);
+                let count = if q == 0 { 8usize } else { 16 };
+                let byte = |v: u128, i: usize| -> u128 { (v >> (8*i)) & 0xFF };
+                let mut r: u128 = 0;
+                for out in 0..count {
+                    let src = idx + out;
+                    let b8 = if src < count { byte(av, src) } else { byte(bv, src - count) };
+                    r |= b8 << (8*out);
+                }
+                Some(IVal { ty: sharpretro_jit::IlType::V128, bits: r })
+            }
+            102 => {
+                // vec_popcnt (CNT): per-BYTE popcount over the FIRST `count` bytes
+                // (arg-2 = the .isa's lane-COUNT: 8 for the 8B form, 16 for 16B; the
+                // v1 read it as width and counted all 16 — CNT.8B must zero-top,
+                // fuzz caught it first fire).
+                let v = a[0].bits;
+                let count = if a.len() > 1 { (a[1].bits as usize).min(16) } else { 16 };
+                let mut r: u128 = 0;
+                for i in 0..count {
+                    r |= (((v >> (8*i)) & 0xFF).count_ones() as u128) << (8*i);
+                }
+                Some(IVal { ty: sharpretro_jit::IlType::V128, bits: r })
+            }
+            103 => {
+                // vec_sum_u (UADDLV): unsigned sum of `count` lanes of `esize` bits.
+                // args = [vec, esize]; count isn't passed on all sites — derive from
+                // the .isa's own contract when present (3rd arg), else 128/esize.
+                let v = a[0].bits;
+                let esize = a[1].bits as u32;
+                let count = if a.len() > 2 { a[2].bits as u32 } else { 128 / esize };
+                let mask = (1u128 << esize) - 1;
+                let mut sum: u128 = 0;
+                for i in 0..count { sum += (v >> (esize*i)) & mask; }
+                Some(IVal::u(64, sum))
+            }
             100 => {
                 // vec_broadcast (the .isa's `vector-all`): replicate the scalar arg
                 // across V128, lane width = the arg's OWN IlType width (the C# twin is

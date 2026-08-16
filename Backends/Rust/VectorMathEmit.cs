@@ -33,13 +33,19 @@ public static class VectorMathEmit {
         Expression("vector-element", list =>
             $"bd.velement_read({Lift(list[1])}, {Lift(list[2])}, {TypeShort(list.Type)})");
         Expression("vector-zero-top", list => $"bd.vzero_top({Lift(list[1])})");
+        // ALL operands, generically — the v1 hand-listed arms dropped vector-extract's
+        // 4th arg (the INDEX) and vector-sum-unsigned's 3rd (the COUNT): a call-site
+        // arity silently truncated at the emitter (the CALLDROP class). Join over
+        // list.Skip(1) can't drift when the .isa's contract grows.
         Expression("vector-extract", list =>
             $"bd.call_intrinsic(IntrinsicId(101/*vec_extract*/), "
-            + $"&[{Lift(list[1])}, {Lift(list[2])}, {Lift(list[3])}]).unwrap()");
+            + $"&[{string.Join(", ", list.Skip(1).Select(Lift))}]).unwrap()");
         Expression("vector-count-bits", list =>
-            $"bd.call_intrinsic(IntrinsicId(102/*vec_popcnt*/), &[{Lift(list[1])}]).unwrap()");
+            $"bd.call_intrinsic(IntrinsicId(102/*vec_popcnt*/), "
+            + $"&[{string.Join(", ", list.Skip(1).Select(Lift))}]).unwrap()");
         Expression("vector-sum-unsigned", list =>
-            $"bd.call_intrinsic(IntrinsicId(103/*vec_sum_u*/), &[{Lift(list[1])}, {Lift(list[2])}]).unwrap()");
+            $"bd.call_intrinsic(IntrinsicId(103/*vec_sum_u*/), "
+            + $"&[{string.Join(", ", list.Skip(1).Select(Lift))}]).unwrap()");
 
         // Lane-wise arith/logic — the vec+/vec-/vec&/etc family. All → call_intrinsic
         // for rung-4a (the trait gains proper vector-op methods once the census settles).

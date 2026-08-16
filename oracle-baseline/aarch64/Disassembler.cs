@@ -842,8 +842,9 @@ public partial class Disassembler {
 			var index = (insn >> 11) & 0xFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var ts = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
-			return (string) ("ext V" + (rd).ToString() + "." + ts + ", V" + (rn).ToString() + "." + ts + ", V" + (rm).ToString() + "." + ts + ", #" + (index).ToString());
+			if(!((bool) (((byte) (((Q) | ((byte) ((byte) (((bool) (((byte) (index)) < ((byte) 0x8))) ? 1U : 0U)))))) != ((byte) 0x0))))
+				goto insn_68;
+			return (string) ("ext V" + (rd).ToString() + "." + (ts).ToString() + ", V" + (rn).ToString() + "." + (ts).ToString() + ", V" + (rm).ToString() + "." + (ts).ToString() + ", #" + (index).ToString());
 		}
 		insn_68:
 		/* EXTR */
@@ -5555,7 +5556,8 @@ public partial class Disassembler {
 			var index = (insn >> 11) & 0xFU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var ts = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
+			if(!((bool) (((byte) (((Q) | ((byte) ((byte) (((bool) (((byte) (index)) < ((byte) 0x8))) ? 1U : 0U)))))) != ((byte) 0x0))))
+				goto insn_68;
 			return "EXT";
 		}
 		insn_68:

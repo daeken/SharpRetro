@@ -1276,6 +1276,9 @@
     "0 Q 101110 00 0 mmmmm 0 iiii 0 nnnnn ddddd"
     "ext V$rd.$ts, V$rn.$ts, V$rm.$ts, #$index"
     (names (Q Q) (rm m) (index i) (rn n) (rd d))
+    ; Q=0 admits index 0-7 only (imm4 bit3 UNALLOCATED at 64-bit form -- silicon
+    ; SIGILLs; 6 fuzz rejects).
+    (requires (| Q (< index 8)))
     (let ts (if Q "16B" "8B"))
     (= (vec rd) (vector-extract (vec rn) (vec rm) Q index)))
 
