@@ -24,7 +24,15 @@ public class Aarch64Def : Def {
 		if(def[3] is not PTree disasm) throw new();
 		if(def[4] is not PList names) throw new();
 		if(def[5] is not PList decode) throw new();
-		if(def[6] is not PList eval) throw new();
+		if(def[6] is not PList) throw new();
+		// Fold def[6..] into ONE eval. The old `def[6]` take silently DROPPED trailing
+		// elements: adding a top-level (requires ...) guard shifted a def's real eval to
+		// position 7, and 30 defs' execution semantics vanished from every backend that
+		// derives from this parse (both C# and Rust — shared-ancestor co-blindness; the
+		// fuzz masked it because a dropped-eval def verifies ZERO triples, and zero
+		// comparisons produce zero diffs). A 7-element def is unchanged: block-of-one.
+		var eval = def.Count == 7 ? (PList) def[6]
+		    : new PList(new PTree[] { new PName("block") }.Concat(def.Skip(6)).ToList());
 
 		var name = _name switch {
 			PName(var x) => x, 

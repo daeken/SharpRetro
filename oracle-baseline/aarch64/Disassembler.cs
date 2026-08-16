@@ -9473,6 +9473,10 @@ public partial class Disassembler {
 			yield return (true, true, true, 5);
 			yield return (false, true, false, 16);
 		}
+		/* LD2-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C408000) {
+			yield return (true, true, false, 5);
+		}
 		/* LD2-multi-postindex-immediate */
 		else if((insn & 0xBFE0F000) == 0x0CC08000) {
 			yield return (true, true, true, 5);
@@ -9494,6 +9498,10 @@ public partial class Disassembler {
 		else if((insn & 0xBFE0F000) == 0x0CC04000) {
 			yield return (true, true, true, 5);
 			yield return (false, true, false, 16);
+		}
+		/* LD4-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C400000) {
+			yield return (true, true, false, 5);
 		}
 		/* LD4-multi-postindex-immediate */
 		else if((insn & 0xBFE0F000) == 0x0CC00000) {
@@ -9593,8 +9601,27 @@ public partial class Disassembler {
 		else if((insn & 0xBF000000) == 0x18000000) {
 			yield return (false, false, true, 0);
 		}
+		/* LDR-simd-immediate-postindex */
+		else if((insn & 0x3F600C00) == 0x3C400400) {
+			yield return (true, true, true, 5);
+		}
+		/* LDR-simd-immediate-preindex */
+		else if((insn & 0x3F600C00) == 0x3C400C00) {
+			yield return (true, true, true, 5);
+		}
 		/* LDR-simd-immediate-unsigned-offset */
 		else if((insn & 0x3F400000) == 0x3D400000) {
+			yield return (true, true, false, 5);
+		}
+		/* LDR-simd-register */
+		else if((insn & 0x3F600C00) == 0x3C600800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+		}
+		/* LDR-register */
+		else if((insn & 0xBFE00C00) == 0xB8600800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
 			yield return (true, true, false, 5);
 		}
 		/* LDRB-immediate-postindex */
@@ -9609,6 +9636,12 @@ public partial class Disassembler {
 		}
 		/* LDRB-immediate-unsigned-offset */
 		else if((insn & 0xFFC00000) == 0x39400000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRB-register */
+		else if((insn & 0xFFE00C00) == 0x38600800) {
+			yield return (false, true, false, 16);
 			yield return (false, false, true, 0);
 			yield return (true, true, false, 5);
 		}
@@ -9627,6 +9660,12 @@ public partial class Disassembler {
 			yield return (false, false, true, 0);
 			yield return (true, true, false, 5);
 		}
+		/* LDRH-register */
+		else if((insn & 0xFFE00C00) == 0x78600800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
 		/* LDRSB-immediate-postindex */
 		else if((insn & 0xFFA00C00) == 0x38800400) {
 			yield return (true, true, true, 5);
@@ -9642,6 +9681,12 @@ public partial class Disassembler {
 			yield return (false, false, true, 0);
 			yield return (true, true, false, 5);
 		}
+		/* LDRSB-register */
+		else if((insn & 0xFFA00C00) == 0x38A00800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
 		/* LDRSH-immediate-postindex */
 		else if((insn & 0xFFA00C00) == 0x78800400) {
 			yield return (true, true, true, 5);
@@ -9654,6 +9699,12 @@ public partial class Disassembler {
 		}
 		/* LDRSH-immediate-unsigned-offset */
 		else if((insn & 0xFF800000) == 0x79800000) {
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDRSH-register */
+		else if((insn & 0xFFA00C00) == 0x78A00800) {
+			yield return (false, true, false, 16);
 			yield return (false, false, true, 0);
 			yield return (true, true, false, 5);
 		}
@@ -9675,6 +9726,12 @@ public partial class Disassembler {
 		/* LDRSW-literal */
 		else if((insn & 0xFF000000) == 0x98000000) {
 			yield return (false, false, true, 0);
+		}
+		/* LDRSW-register */
+		else if((insn & 0xFFE00C00) == 0xB8A00800) {
+			yield return (false, true, false, 16);
+			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
 		}
 		/* LDUR */
 		else if((insn & 0xBFE00C00) == 0xB8400000) {
@@ -9704,6 +9761,10 @@ public partial class Disassembler {
 		/* LDURSW */
 		else if((insn & 0xFFE00C00) == 0xB8800000) {
 			yield return (false, false, true, 0);
+			yield return (true, true, false, 5);
+		}
+		/* LDUR-simd */
+		else if((insn & 0x3F600C00) == 0x3C400000) {
 			yield return (true, true, false, 5);
 		}
 		/* LDXR */
@@ -9849,6 +9910,10 @@ public partial class Disassembler {
 			yield return (false, true, false, 5);
 			yield return (false, true, false, 16);
 		}
+		/* ST1-multi-no-offset-one-register */
+		else if((insn & 0xBFFFF000) == 0x0C007000) {
+			yield return (true, true, false, 5);
+		}
 		/* ST1-multi-postindex-immediate-one-register */
 		else if((insn & 0xBFE0F000) == 0x0C807000) {
 			yield return (true, true, true, 5);
@@ -9927,6 +9992,10 @@ public partial class Disassembler {
 			yield return (true, true, true, 5);
 			yield return (false, true, false, 16);
 		}
+		/* ST4-multi-no-offset */
+		else if((insn & 0xBFFFF000) == 0x0C000000) {
+			yield return (true, true, false, 5);
+		}
 		/* ST4-multi-postindex-immediate */
 		else if((insn & 0xBFE0F000) == 0x0C800000) {
 			yield return (true, true, true, 5);
@@ -9981,9 +10050,17 @@ public partial class Disassembler {
 			yield return (false, true, false, 0);
 			yield return (false, true, false, 10);
 		}
+		/* STP-simd-postindex */
+		else if((insn & 0x3FC00000) == 0x2C800000) {
+			yield return (true, true, true, 5);
+		}
 		/* STP-simd-preindex */
 		else if((insn & 0x3FC00000) == 0x2D800000) {
 			yield return (true, true, true, 5);
+		}
+		/* STP-simd-signed-offset */
+		else if((insn & 0x3FC00000) == 0x2D000000) {
+			yield return (true, true, false, 5);
 		}
 		/* STR-immediate-postindex */
 		else if((insn & 0xBFE00C00) == 0xB8000400) {
@@ -10000,6 +10077,29 @@ public partial class Disassembler {
 			yield return (true, true, false, 5);
 			yield return (false, true, false, 0);
 		}
+		/* STR-register */
+		else if((insn & 0xBFE00C00) == 0xB8200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STR-simd-postindex */
+		else if((insn & 0x3F600C00) == 0x3C000400) {
+			yield return (true, true, true, 5);
+		}
+		/* STR-simd-preindex */
+		else if((insn & 0x3F600C00) == 0x3C000C00) {
+			yield return (true, true, true, 5);
+		}
+		/* STR-simd-unsigned-offset */
+		else if((insn & 0x3F400000) == 0x3D000000) {
+			yield return (true, true, false, 5);
+		}
+		/* STR-simd-register */
+		else if((insn & 0x3F600C00) == 0x3C200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+		}
 		/* STRB-immediate-postindex */
 		else if((insn & 0xFFE00C00) == 0x38000400) {
 			yield return (true, true, true, 5);
@@ -10012,6 +10112,12 @@ public partial class Disassembler {
 		}
 		/* STRB-immediate-unsigned-offset */
 		else if((insn & 0xFFC00000) == 0x39000000) {
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
+		/* STRB-register */
+		else if((insn & 0xFFE00C00) == 0x38200800) {
+			yield return (false, true, false, 16);
 			yield return (true, true, false, 5);
 			yield return (false, true, false, 0);
 		}
@@ -10030,10 +10136,20 @@ public partial class Disassembler {
 			yield return (true, true, false, 5);
 			yield return (false, true, false, 0);
 		}
+		/* STRH-register */
+		else if((insn & 0xFFE00C00) == 0x78200800) {
+			yield return (false, true, false, 16);
+			yield return (true, true, false, 5);
+			yield return (false, true, false, 0);
+		}
 		/* STUR */
 		else if((insn & 0xBFE00C00) == 0xB8000000) {
 			yield return (true, true, false, 5);
 			yield return (false, true, false, 0);
+		}
+		/* STUR-simd */
+		else if((insn & 0x3F600C00) == 0x3C000000) {
+			yield return (true, true, false, 5);
 		}
 		/* STURB */
 		else if((insn & 0xFFE00C00) == 0x38000000) {

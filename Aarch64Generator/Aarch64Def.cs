@@ -24,7 +24,14 @@ public class Aarch64Def : Def {
 		if(def[3] is not PTree disasm) throw new();
 		if(def[4] is not PList names) throw new();
 		if(def[5] is not PList decode) throw new();
-		if(def[6] is not PList eval) throw new();
+		if(def[6] is not PList) throw new();
+		// Trailing-element fold, IDENTICAL to ArchCompilerCore's Aarch64Def.Parse fix:
+		// def[6..] becomes one (block …) eval. Without it a top-level (requires) guard
+		// silently DROPPED the def's real eval (30 defs lost their semantics; the fuzz
+		// masked it because a dropped-eval def verifies zero triples). Both parsers get
+		// the same fix so the frozen-oracle byte-compare stays the faithful-port gate.
+		var eval = def.Count == 7 ? (PList) def[6]
+		    : new PList(new PTree[] { new PName("block") }.Concat(def.Skip(6)).ToList());
 
 		var name = _name switch {
 			PName(var x) => x, 
