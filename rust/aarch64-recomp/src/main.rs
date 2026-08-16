@@ -939,6 +939,9 @@ fn main() {
                         let msg = e.downcast_ref::<&str>().map(|s| s.to_string())
                             .or_else(|| e.downcast_ref::<String>().cloned())
                             .unwrap_or_default();
+                        if std::env::var("XF_PANICS").is_ok() {
+                            eprintln!("PANIC {name} insn=0x{insn:08X} :: {}", msg.lines().next().unwrap_or(""));
+                        }
                         let class = if msg.contains("index out of bounds") { "arena-oob" }
                             else if msg.contains("unreachable") { "unreachable" }
                             else if msg.contains("not wired") { "intrinsic-unwired" }
