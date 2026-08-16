@@ -18,6 +18,15 @@ use state::Aarch64State;
 mod native_oracle;
 
 /// Execute one insn via InterpretingBuilder → return post-state.
+
+/// Env-var gate: SET and not "0"/"" = ON. The bare is_ok() idiom reads "0" as ON
+/// (the 0-is-truthy class: a sibling project wrote GBs of logs under GATE=0 for
+/// exactly this). Population-changing gates (XF_NOMEM, XF_CASP) MUST use this;
+/// debug prints too, for one idiom not two.
+fn env_on(name: &str) -> bool {
+    match std::env::var(name) { Ok(v) => !v.is_empty() && v != "0", Err(_) => false }
+}
+
 fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) -> (Aarch64State, bool) {
     let mut s = pre.clone();
     s.pc = pc;
@@ -50,7 +59,7 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
         //     the tally says which, rather than "some intrinsic".
         b.intrinsic = |_s, m, id, a| match id {
             3 => {
-                if std::env::var("XF_EXCL_DBG").is_ok() {
+                if env_on("XF_EXCL_DBG") {
                     eprintln!("  [excl] load_excl addr={:#x}", a[0].bits);
                 }
                 let addr = a[0].bits as u64;
@@ -60,7 +69,7 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
                 Some(IVal::u(64, m.read(addr, 64)))
             }
             4 => {
-                if std::env::var("XF_EXCL_DBG").is_ok() {
+                if env_on("XF_EXCL_DBG") {
                     eprintln!("  [excl] store_excl addr={:#x} val={:#x} ty={:?}", a[0].bits, a[1].bits, a[1].ty);
                 }
                 let addr = a[0].bits as u64;
@@ -919,7 +928,7 @@ fn main() {
                 // indexes FlatMem with a random u64 and panics `arena-oob` — which reads as a
                 // coverage gap when it is only an unplaced base.
                 let casp = name.starts_with("CASP");
-                let place_in_arena = ldst_shaped(name) && std::env::var("XF_NOMEM").is_err();
+                let place_in_arena = ldst_shaped(name) && !env_on("XF_NOMEM");
                 // PC-RELATIVE LITERALS never silicon-exec: EA = stub-pc + imm19, unmapped
                 // no matter where the arena sits (the sig=11 "rejects" were this — a
                 // harness limit mislabeled as .isa over-permissiveness). They still get
@@ -927,7 +936,7 @@ fn main() {
                 // TWO-DECISIONS comment names, now encoded.
                 let literal = name.ends_with("-literal");
                 let mem_arm = place_in_arena && is_ldst(name) && stub.arena_ok() && !literal
-                    && !(casp && std::env::var("XF_CASP").is_err());
+                    && !(casp && !env_on("XF_CASP"));
                 // MEASURED (--fuzz 6, ×2): gating this on `place_in_arena` instead of `mem_arm`
                 // recovers 53 arena-oob and costs +276 diff / -292 ok. The extra 11 defs are not
                 // the cost — pointing a base into the arena changes what SILICON does for the 99
@@ -1000,7 +1009,7 @@ fn main() {
                         let msg = e.downcast_ref::<&str>().map(|s| s.to_string())
                             .or_else(|| e.downcast_ref::<String>().cloned())
                             .unwrap_or_default();
-                        if std::env::var("XF_PANICS").is_ok() {
+                        if env_on("XF_PANICS") {
                             eprintln!("PANIC {name} insn=0x{insn:08X} :: {}", msg.lines().next().unwrap_or(""));
                         }
                         let class = if msg.contains("index out of bounds") { "arena-oob" }
@@ -1020,7 +1029,7 @@ fn main() {
                 // XF_TRACE=1 names the def on STDERR before the silicon call. A segfault discards
                 // buffered STDOUT, so the per-def tally cannot report which case killed the run —
                 // the last stderr line can. (Two wrong guesses at this crash before I did this.)
-                if std::env::var("XF_TRACE").is_ok() {
+                if env_on("XF_TRACE") {
                     eprintln!("TRACE {name} insn=0x{insn:08X} mem_arm={mem_arm}");
                 }
                 // Assert the addressability contract for exactly this case, then restore — a
@@ -1038,7 +1047,7 @@ fn main() {
                         // missing `requires` in the .isa. Tally by def.
                         n_reject += 1;
                         *reject_by_def.entry(format!("{name} (sig={sig})")).or_default() += 1;
-                        if std::env::var("XF_REJECTS").is_ok() {
+                        if env_on("XF_REJECTS") {
                             eprintln!("REJECT {name} insn=0x{insn:08X} sig={sig}");
                         }
                         continue;
@@ -1115,7 +1124,7 @@ fn main() {
         println!("[fuzz build: memarm-v3-tiled-interp-seed]");
         println!("[fuzz: {} defs × {} = {} triples]", defs.len(), n, defs.len()*n);
         println!("  ok={n_ok}  diff={n_diff}  silicon-rejects={n_reject}  skip(v1-excl)={n_skip}  interp-panic={n_ipanic}");
-        if std::env::var("XF_PANIC_BY").is_ok() {
+        if env_on("XF_PANIC_BY") {
             let mut by_class: std::collections::BTreeMap<&str, usize> = Default::default();
             for (k, v) in &ipanic_by { *by_class.entry(k.split('\t').next().unwrap()).or_insert(0) += v; }
             println!("  interp-panic by CLASS:");

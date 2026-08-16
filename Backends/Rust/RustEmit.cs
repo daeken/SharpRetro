@@ -146,6 +146,13 @@ public static class RustEmit {
             if(Statements.TryGetValue(name, out var s)) {
                 (Context == ContextTypes.Recompiler && list.Type.Runtime ? s.RunTime : s.CompileTime)(c, list);
             } else {
+                // Expression-as-statement fallback. NOTE: a v1 die-loud here for
+                // "pure expression discarded" (the vector-insert-orphan class) BLOCKED
+                // 8 real defs -- statement-position isn't discard-position: FCVTN2's
+                // vector-insert lands here while its result feeds a surrounding match
+                // EXPRESSION the local grain can't see. The orphan class's honest
+                // instrument is the exec-oracle (caught the real one in one fire);
+                // an emit-time guard needs consumer-visibility this walker lacks.
                 c += $"let _ = {GenerateExpression(list)};";
             }
         } finally { RtSink = saved; }
