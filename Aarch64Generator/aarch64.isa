@@ -2751,7 +2751,13 @@
     "ld1 { V$rt.$t }[$index], [X$rn]"
     (names (Q Q) (opc x) (S S) (size z) (rn n) (rt t))
     (block
-        (requires (!= opc 0b11))
+        ; Full validity from this def's OWN case-list: B(opc=00 any) | H(opc=01,
+        ; size bit0=0) | S(opc=10,size=00) | D(opc=10,size=01,S=0). Everything else
+        ; UNDEFINED -- the bare opc!=11 guard let finer reserved combos reach the
+        ; inner (unimplemented) MID-EXEC. (LD1+ST1-single share this block verbatim.)
+        (requires (| (== opc 0b00)
+                  (| (& (== opc 0b01) (== (& size 1) 0))
+                  (& (== opc 0b10) (| (== size 0b00) (& (== size 0b01) (== S 0)))))))
         (let t (if (== opc 0b00)
             "B"
             (if (& (== opc 0b01) (== (& size 1) 0))
@@ -5043,7 +5049,13 @@
     "st1 { V$rt.$t }[$index], [X$rn]"
     (names (Q Q) (opc x) (S S) (size z) (rn n) (rt t))
     (block
-        (requires (!= opc 0b11))
+        ; Full validity from this def's OWN case-list: B(opc=00 any) | H(opc=01,
+        ; size bit0=0) | S(opc=10,size=00) | D(opc=10,size=01,S=0). Everything else
+        ; UNDEFINED -- the bare opc!=11 guard let finer reserved combos reach the
+        ; inner (unimplemented) MID-EXEC. (LD1+ST1-single share this block verbatim.)
+        (requires (| (== opc 0b00)
+                  (| (& (== opc 0b01) (== (& size 1) 0))
+                  (& (== opc 0b10) (| (== size 0b00) (& (== size 0b01) (== S 0)))))))
         (let t (if (== opc 0b00)
             "B"
             (if (& (== opc 0b01) (== (& size 1) 0))
