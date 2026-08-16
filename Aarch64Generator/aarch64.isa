@@ -3454,8 +3454,11 @@
             0b110 "SXTW"
             0b111 "SXTX"
             (unimplemented)))
+        ; scale ladder: B=0, H=1, S=2, D=3, Q=4 (shift = S * log2(size-bytes); a byte's
+        ; is ZERO). The B row said 1 -- silicon-diff caught interp EA = base+idx*2 vs
+        ; native base+idx on `ldr b2, [x24, x5, sxtx]` (same class as the GPR byte-forms).
         (let amount (* scale (if (& (== size 0) (== opc 1)) 4 (match size
-            0b00 1
+            0b00 0
             0b01 1
             0b10 2
             0b11 3
@@ -3556,7 +3559,10 @@
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
                 (gpr64 rm)
-                (u64 (gpr32 rm)))) amount)
+                (u64 (gpr32 rm)))) 0) ; BYTE form: S=1 is a legal encoding but the shift is ALWAYS 0 (scale=0).
+        ; Shifting by the raw S field doubled the index when S=1 - silicon-diff
+        ; caught it (interp EA = base+idx*2 vs native base+idx, decomposed at-bytes).
+        ; The H forms correctly shift by S (scale=1); LDR/STR compute amount from scale.
         (= (gpr32 rt) (load (+ (gpr-or-sp64 rn) offset) u8))))
 
 (def LDRH-immediate-postindex
@@ -3672,7 +3678,10 @@
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
                 (gpr64 rm)
-                (u64 (gpr32 rm)))) amount)
+                (u64 (gpr32 rm)))) 0) ; BYTE form: S=1 is a legal encoding but the shift is ALWAYS 0 (scale=0).
+        ; Shifting by the raw S field doubled the index when S=1 - silicon-diff
+        ; caught it (interp EA = base+idx*2 vs native base+idx, decomposed at-bytes).
+        ; The H forms correctly shift by S (scale=1); LDR/STR compute amount from scale.
         (if (== opc 1)
             (= (gpr32 rt) (u32 (signext (load (+ (gpr-or-sp64 rn) offset) u8) i32)))
             (= (gpr64 rt) (u64 (signext (load (+ (gpr-or-sp64 rn) offset) u8) i64))))))
@@ -5658,7 +5667,10 @@
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
                 (gpr64 rm)
-                (u64 (gpr32 rm)))) amount)
+                (u64 (gpr32 rm)))) 0) ; BYTE form: S=1 is a legal encoding but the shift is ALWAYS 0 (scale=0).
+        ; Shifting by the raw S field doubled the index when S=1 - silicon-diff
+        ; caught it (interp EA = base+idx*2 vs native base+idx, decomposed at-bytes).
+        ; The H forms correctly shift by S (scale=1); LDR/STR compute amount from scale.
         (store (+ (gpr-or-sp64 rn) offset) (u8 (gpr32 rt)))))
 
 (def STRH-immediate-postindex
