@@ -3419,8 +3419,9 @@ public partial class Disassembler {
 			var opc = (insn >> 10) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			return (string) ("rev " + r + (rd).ToString() + ", " + r + (rn).ToString());
+			if(!((bool) (((byte) (((size) | ((byte) ((byte) (((bool) (!((bool) ((opc) != ((byte) 0x0))))) ? 1U : 0U)))))) != ((byte) 0x0))))
+				goto insn_248;
+			return (string) ("rev " + (r).ToString() + (rd).ToString() + ", " + (r).ToString() + (rn).ToString());
 		}
 		insn_248:
 		/* REV16 */
@@ -3604,30 +3605,9 @@ public partial class Disassembler {
 			var immb = (insn >> 16) & 0x7U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var ta = "";
-			var tb = "";
-			var shift = (ulong) ((ulong) ((byte) 0x0));
-			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
-				ta = "8H";
-				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
-				shift = (byte) (((byte) (byte) ((byte) 0x10)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
-			} else {
-				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
-					ta = "4S";
-					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
-					shift = (byte) (((byte) (byte) ((byte) 0x20)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
-				} else {
-					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
-						ta = "2D";
-						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
-						shift = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
-					} else {
-						throw new NotImplementedException();
-					}
-				}
-			}
-			return (string) ("shrn" + variant + " V" + (rd).ToString() + "." + tb + ", V" + (rn).ToString() + "." + ta + ", #" + (shift).ToString());
+			if(!((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0x8))))))) == ((byte) 0x0))))
+				goto insn_259;
+			return (string) ("shrn" + (variant).ToString() + " V" + (rd).ToString() + "." + (tb).ToString() + ", V" + (rn).ToString() + "." + (ta).ToString() + ", #" + (shift).ToString());
 		}
 		insn_259:
 		/* SMADDL */
@@ -3654,30 +3634,9 @@ public partial class Disassembler {
 			var immb = (insn >> 16) & 0x7U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var ta = "";
-			var tb = "";
-			var shift = (ulong) ((ulong) ((byte) 0x0));
-			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
-				ta = "8H";
-				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
-				shift = (byte) (((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))) - ((byte) (byte) ((byte) 0x8)));
-			} else {
-				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
-					ta = "4S";
-					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
-					shift = (byte) (((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))) - ((byte) (byte) ((byte) 0x10)));
-				} else {
-					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
-						ta = "2D";
-						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
-						shift = (byte) (((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))) - ((byte) (byte) ((byte) 0x20)));
-					} else {
-						throw new NotImplementedException();
-					}
-				}
-			}
-			return (string) ("sshll" + variant + " V" + (rd).ToString() + "." + ta + ", V" + (rn).ToString() + "." + tb + ", #" + (shift).ToString());
+			if(!((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0x8))))))) == ((byte) 0x0))))
+				goto insn_262;
+			return (string) ("sshll" + (variant).ToString() + " V" + (rd).ToString() + "." + (ta).ToString() + ", V" + (rn).ToString() + "." + (tb).ToString() + ", #" + (shift).ToString());
 		}
 		insn_262:
 		/* ST1-multi-no-offset-one-register */
@@ -4494,46 +4453,9 @@ public partial class Disassembler {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var o2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var Ta = "";
-			var Tb = "";
-			switch((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1))))) {
-				case (byte) ((byte) 0x0): {
-					Ta = "8H";
-					Tb = "8B";
-					break;
-				}
-				case (byte) ((byte) 0x1): {
-					Ta = "8H";
-					Tb = "16B";
-					break;
-				}
-				case (byte) ((byte) 0x2): {
-					Ta = "4S";
-					Tb = "4H";
-					break;
-				}
-				case (byte) ((byte) 0x3): {
-					Ta = "4S";
-					Tb = "8H";
-					break;
-				}
-				case (byte) ((byte) 0x4): {
-					Ta = "2D";
-					Tb = "2S";
-					break;
-				}
-				case (byte) ((byte) 0x5): {
-					Ta = "2D";
-					Tb = "4S";
-					break;
-				}
-				default: {
-					throw new NotImplementedException();
-					break;
-				}
-			}
-			return (string) ("uaddw" + o2 + " V" + (rd).ToString() + "." + Ta + ", V" + (rn).ToString() + "." + Ta + ", V" + (rm).ToString() + "." + Tb);
+			if(!((bool) (((byte) (size)) != ((byte) 0x3))))
+				goto insn_330;
+			return (string) ("uaddw" + (o2).ToString() + " V" + (rd).ToString() + "." + (Ta).ToString() + ", V" + (rn).ToString() + "." + (Ta).ToString() + ", V" + (rm).ToString() + "." + (Tb).ToString());
 		}
 		insn_330:
 		/* UBFM */
@@ -4565,46 +4487,9 @@ public partial class Disassembler {
 			var type = (insn >> 22) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var st = (byte) ((byte) (((byte) (((byte) (type)) << 0)) | ((byte) (((byte) (size)) << 2))));
-			var r1 = "";
-			var r2 = "";
-			switch(st) {
-				case (byte) ((byte) 0x3): {
-					r1 = "H";
-					r2 = "W";
-					break;
-				}
-				case (byte) ((byte) 0x0): {
-					r1 = "S";
-					r2 = "W";
-					break;
-				}
-				case (byte) ((byte) 0x1): {
-					r1 = "D";
-					r2 = "W";
-					break;
-				}
-				case (byte) ((byte) 0x7): {
-					r1 = "H";
-					r2 = "X";
-					break;
-				}
-				case (byte) ((byte) 0x4): {
-					r1 = "S";
-					r2 = "X";
-					break;
-				}
-				case (byte) ((byte) 0x5): {
-					r1 = "D";
-					r2 = "X";
-					break;
-				}
-				default: {
-					throw new NotImplementedException();
-					break;
-				}
-			}
-			return (string) ("ucvtf " + r1 + (rd).ToString() + ", " + r2 + (rn).ToString());
+			if(!((bool) (((byte) (type)) != ((byte) 0x2))))
+				goto insn_332;
+			return (string) ("ucvtf " + (r1).ToString() + (rd).ToString() + ", " + (r2).ToString() + (rn).ToString());
 		}
 		insn_332:
 		/* UCVTF-scalar-integer */
@@ -7953,7 +7838,8 @@ public partial class Disassembler {
 			var opc = (insn >> 10) & 0x1U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
+			if(!((bool) (((byte) (((size) | ((byte) ((byte) (((bool) (!((bool) ((opc) != ((byte) 0x0))))) ? 1U : 0U)))))) != ((byte) 0x0))))
+				goto insn_248;
 			return "REV";
 		}
 		insn_248:
@@ -8127,29 +8013,8 @@ public partial class Disassembler {
 			var immb = (insn >> 16) & 0x7U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var ta = "";
-			var tb = "";
-			var shift = (ulong) ((ulong) ((byte) 0x0));
-			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
-				ta = "8H";
-				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
-				shift = (byte) (((byte) (byte) ((byte) 0x10)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
-			} else {
-				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
-					ta = "4S";
-					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
-					shift = (byte) (((byte) (byte) ((byte) 0x20)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
-				} else {
-					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
-						ta = "2D";
-						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
-						shift = (byte) (((byte) (byte) ((byte) 0x40)) - ((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))));
-					} else {
-						throw new NotImplementedException();
-					}
-				}
-			}
+			if(!((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0x8))))))) == ((byte) 0x0))))
+				goto insn_259;
 			return "SHRN[2]";
 		}
 		insn_259:
@@ -8174,29 +8039,8 @@ public partial class Disassembler {
 			var immb = (insn >> 16) & 0x7U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var variant = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var ta = "";
-			var tb = "";
-			var shift = (ulong) ((ulong) ((byte) 0x0));
-			if((bool) (((byte) (immh)) == ((byte) 0x1))) {
-				ta = "8H";
-				tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("16B") : (string) ("8B"));
-				shift = (byte) (((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))) - ((byte) (byte) ((byte) 0x8)));
-			} else {
-				if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xE))))))) == ((byte) 0x2))) {
-					ta = "4S";
-					tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("8H") : (string) ("4H"));
-					shift = (byte) (((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))) - ((byte) (byte) ((byte) 0x10)));
-				} else {
-					if((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0xC))))))) == ((byte) 0x4))) {
-						ta = "2D";
-						tb = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("4S") : (string) ("2S"));
-						shift = (byte) (((byte) (byte) ((byte) ((byte) (((byte) (((byte) (immb)) << 0)) | ((byte) (((byte) (immh)) << 3)))))) - ((byte) (byte) ((byte) 0x20)));
-					} else {
-						throw new NotImplementedException();
-					}
-				}
-			}
+			if(!((bool) (((byte) ((byte) (((immh) & ((byte) ((byte) ((byte) 0x8))))))) == ((byte) 0x0))))
+				goto insn_262;
 			return "SSHLL";
 		}
 		insn_262:
@@ -8946,45 +8790,8 @@ public partial class Disassembler {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var o2 = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var Ta = "";
-			var Tb = "";
-			switch((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1))))) {
-				case (byte) ((byte) 0x0): {
-					Ta = "8H";
-					Tb = "8B";
-					break;
-				}
-				case (byte) ((byte) 0x1): {
-					Ta = "8H";
-					Tb = "16B";
-					break;
-				}
-				case (byte) ((byte) 0x2): {
-					Ta = "4S";
-					Tb = "4H";
-					break;
-				}
-				case (byte) ((byte) 0x3): {
-					Ta = "4S";
-					Tb = "8H";
-					break;
-				}
-				case (byte) ((byte) 0x4): {
-					Ta = "2D";
-					Tb = "2S";
-					break;
-				}
-				case (byte) ((byte) 0x5): {
-					Ta = "2D";
-					Tb = "4S";
-					break;
-				}
-				default: {
-					throw new NotImplementedException();
-					break;
-				}
-			}
+			if(!((bool) (((byte) (size)) != ((byte) 0x3))))
+				goto insn_330;
 			return "UADDW[2]";
 		}
 		insn_330:
@@ -9015,45 +8822,8 @@ public partial class Disassembler {
 			var type = (insn >> 22) & 0x3U;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var st = (byte) ((byte) (((byte) (((byte) (type)) << 0)) | ((byte) (((byte) (size)) << 2))));
-			var r1 = "";
-			var r2 = "";
-			switch(st) {
-				case (byte) ((byte) 0x3): {
-					r1 = "H";
-					r2 = "W";
-					break;
-				}
-				case (byte) ((byte) 0x0): {
-					r1 = "S";
-					r2 = "W";
-					break;
-				}
-				case (byte) ((byte) 0x1): {
-					r1 = "D";
-					r2 = "W";
-					break;
-				}
-				case (byte) ((byte) 0x7): {
-					r1 = "H";
-					r2 = "X";
-					break;
-				}
-				case (byte) ((byte) 0x4): {
-					r1 = "S";
-					r2 = "X";
-					break;
-				}
-				case (byte) ((byte) 0x5): {
-					r1 = "D";
-					r2 = "X";
-					break;
-				}
-				default: {
-					throw new NotImplementedException();
-					break;
-				}
-			}
+			if(!((bool) (((byte) (type)) != ((byte) 0x2))))
+				goto insn_332;
 			return "UCVTF-scalar-gpr-integer";
 		}
 		insn_332:

@@ -4341,6 +4341,8 @@
     "s 1 0 11010110 00000 0000 1o nnnnn ddddd"
     "rev $r$rd, $r$rn"
     (names (size s) (opc o) (rn n) (rd d))
+    ; sf=0 + o=1 (32-bit REV64) is UNDEFINED (objdump: .inst undefined).
+    (requires (| size (! opc)))
     (let r (if (== size 0) "W" "X"))
     (match (: size opc)
         0b00 (let x (gpr32 rn) (= (gpr32 rd) (|
@@ -4357,6 +4359,17 @@
             (<< (& (>> x 40)  0xFF) 16)
             (<< (& (>> x 48)  0xFF) 8)
                 (& (>> x 56)  0xFF))))
+        ; size:o = 10 -> REV32 Xd,Xn (byte-reverse each 32-bit half independently) --
+        ; was an unreachable-panic on a REAL instruction (objdump: rev32 x20,x1).
+        0b10 (let x (gpr64 rn) (= (gpr64 rd) (|
+            (<< (& x          0xFF) 24)
+            (<< (& (>> x 8)   0xFF) 16)
+            (<< (& (>> x 16)  0xFF) 8)
+                (& (>> x 24)  0xFF)
+            (<< (& (>> x 32)  0xFF) 56)
+            (<< (& (>> x 40)  0xFF) 48)
+            (<< (& (>> x 48)  0xFF) 40)
+            (<< (& (>> x 56)  0xFF) 32))))
         (unimplemented)))
 
 (def REV16
@@ -4550,6 +4563,9 @@
     "0 Q 0 011110 hhhh bbb 1000 0 1 nnnnn ddddd"
     "shrn$variant V$rd.$tb, V$rn.$ta, #$shift"
     (names (Q Q) (immh h) (immb b) (rn n) (rd d))
+    ; immh=1xxx UNALLOCATED for SHRN (objdump: .inst undefined; 14 fuzz panics).
+    ; immh=0000 is the MOVI space (a different def wins first-match).
+    (requires (== (& immh 0b1000) 0))
     (mlet (variant (if Q "2" "") ta "" tb "" shift (u64 0))
         (if (== immh 0b0001) (block
             (= ta "8H") (= tb (if Q "16B" "8B"))
@@ -4590,6 +4606,8 @@
     "0 Q 0 011110 hhhh bbb 10100 1 nnnnn ddddd"
     "sshll$variant V$rd.$ta, V$rn.$tb, #$shift"
     (names (Q Q) (immh h) (immb b) (rn n) (rd d))
+    ; immh=1xxx UNALLOCATED for SSHLL (objdump-confirmed; 8 fuzz panics).
+    (requires (== (& immh 0b1000) 0))
     (mlet (variant (if Q "2" "") ta "" tb "" shift (u64 0))
         (if (== immh 0b0001) (block
             (= ta "8H") (= tb (if Q "16B" "8B"))
@@ -6051,6 +6069,8 @@
     "0 Q 1 01110 ss 1 mmmmm 00 0 1 00 nnnnn ddddd"
     "uaddw$o2 V$rd.$Ta, V$rn.$Ta, V$rm.$Tb"
     (names (Q Q) (size s) (rm m) (rn n) (rd d))
+    ; size=11 UNALLOCATED for the widening adds (objdump-confirmed; 8 fuzz panics).
+    (requires (!= size 0b11))
     (mlet (o2 (if Q "2" "") Ta "" Tb "")
         (match (: size Q)
             0b00_0 (block (= Ta "8H") (= Tb "8B"))
@@ -6096,6 +6116,10 @@
     "s 0 0 11110 tt 1 00 011 000000 nnnnn ddddd"
     "ucvtf $r1$rd, $r2$rn"
     (names (size s) (type t) (rn n) (rd d))
+    ; type=10 UNALLOCATED (objdump: .inst undefined). type=11 = FP16 (REAL --
+    ; ucvtf h28,w17 decodes on FEAT_FP16 silicon) but the IL has no F16 type yet:
+    ; semantics stay unimplemented-loud; the fuzz names it in the panic column.
+    (requires (!= type 0b10))
     (block
         (let st (: size type))
         (let r1 "") (let r2 "")
