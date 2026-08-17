@@ -4673,9 +4673,10 @@
     "0 Q 0011000 0 000000 0111 ss nnnnn ttttt"
     "st1 { V$rt.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
-    ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
-    ; size:Q arms cover all but 0b11_0; the inner (match size) is reached only for those.
-    (requires (!= (: size Q) 0b110))
+    ; NOTE a prior guard here rejected size:Q=0b110 -- derived from this def's own
+    ; case-list, which was itself INCOMPLETE: ST1-multi 1D is REAL (LD1-multi has
+    ; the arm; objdump decodes st1 {v.1d}). The guard-from-own-case-list method is
+    ; sound only when the case-list is.
     (let T (match (: size Q)
         0b00_0 "8B"
         0b00_1 "16B"
@@ -4683,14 +4684,14 @@
         0b01_1 "8H"
         0b10_0 "2S"
         0b10_1 "4S"
-        0b11_1 "2D"
-        (unimplemented)))
+        0b11_0 "1D"
+               "2D"))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))))
+                 (qfor i 1 2 (st1-sub 8 f64)))))
 
 (def ST1-multi-postindex-immediate-one-register
     "0 Q 0011001 0 0 mmmmm 0111 ss nnnnn ttttt"
@@ -4705,14 +4706,14 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ address imm))))
 
 (def ST1-multi-postindex-register-one-register
@@ -4728,14 +4729,14 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ address (gpr64 rm)))))
 
 (def ST1-multi-no-offset-two-registers
@@ -4750,21 +4751,21 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))))
+                 (qfor i 1 2 (st1-sub 8 f64)))))
 
 (def ST1-multi-postindex-immediate-two-registers
     "0 Q 0011001 0 0 mmmmm 1010 ss nnnnn ttttt"
@@ -4779,21 +4780,21 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ address (if Q 16 8)))))
 
 (def ST1-multi-postindex-register-two-registers
@@ -4809,21 +4810,21 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) oaddress address v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ oaddress (gpr64 rm)))))
 
 (def ST1-multi-no-offset-three-registers
@@ -4838,28 +4839,28 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))))
+                 (qfor i 1 2 (st1-sub 8 f64)))))
 
 (def ST1-multi-postindex-immediate-three-registers
     "0 Q 0011001 0 0 mmmmm 0110 ss nnnnn ttttt"
@@ -4874,28 +4875,28 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ address (if Q 16 8)))))
 
 (def ST1-multi-postindex-register-three-registers
@@ -4911,28 +4912,28 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) oaddress address v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ oaddress (gpr64 rm)))))
 
 (def ST1-multi-no-offset-four-registers
@@ -4947,35 +4948,35 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt4))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))))
+                 (qfor i 1 2 (st1-sub 8 f64)))))
 
 (def ST1-multi-postindex-immediate-four-registers
     "0 Q 0011001 0 0 mmmmm 0010 ss nnnnn ttttt"
@@ -4990,35 +4991,35 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt4))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ address (if Q 16 8)))))
 
 (def ST1-multi-postindex-register-four-registers
@@ -5034,35 +5035,35 @@
             0b01_1 "8H"
             0b10_0 "2S"
             0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+            0b11_0 "1D"
+                   "2D")))
     (mlet (address (gpr-or-sp64 rn) oaddress address v (vec rt))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= address (+ address (if Q 16 8)))
         (= v (vec rt4))
         (match size
             0b00 (qfor i 8 16 (st1-sub 1 u8))
             0b01 (qfor i 4  8 (st1-sub 2 u16))
             0b10 (qfor i 2  4 (st1-sub 4 f32))
-                 (for (i 2)   (st1-sub 8 f64)))
+                 (qfor i 1 2 (st1-sub 8 f64)))
         (= (gpr-or-sp64 rn) (+ oaddress (gpr64 rm)))))
 
 (def ST1-single-no-offset
