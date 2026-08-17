@@ -163,7 +163,10 @@ fn interp_one<M: GuestMem>(pre: &Aarch64State, mem: &mut M, insn: u32, pc: u64) 
 /// FALSE here and is correct — its body decodes and `return true`s with no semantics (one of the
 /// 8 known bare-body defs), so it touches no memory to diff.
 const LDST_DEFS: &[&str] = &[
+    "CASP",
+    "CASPA",
     "CASPAL",
+    "CASPL",
     "LD1-multi-no-offset-four-registers",
     "LD1-multi-no-offset-four-registers-postindex-immediate",
     "LD1-multi-no-offset-one-register",
@@ -296,7 +299,10 @@ const LDST_DEFS: &[&str] = &[
 ///   python3 - <<'PY'  (see LDST_DEFS above; add `intrinsic(` w/ an LD|ST|CAS|SWP name, and
 ///                      names ending `-literal`)
 static LDST_SHAPED: &[&str] = &[
+    "CASP",
+    "CASPA",
     "CASPAL",
+    "CASPL",
     "LD1-multi-no-offset-four-registers",
     "LD1-multi-no-offset-four-registers-postindex-immediate",
     "LD1-multi-no-offset-one-register",
@@ -935,8 +941,10 @@ fn main() {
                 // arena bases (the interp side needs them); the third population the
                 // TWO-DECISIONS comment names, now encoded.
                 let literal = name.ends_with("-literal");
+                // CASP* re-included by default (2026-08-17): all four siblings carry
+                // the CASPAL-transcribed body now; XF_CASP=0 excludes if ever needed.
                 let mem_arm = place_in_arena && is_ldst(name) && stub.arena_ok() && !literal
-                    && !(casp && !env_on("XF_CASP"));
+                    && !(casp && std::env::var("XF_CASP").map(|v| v=="0").unwrap_or(false));
                 // MEASURED (--fuzz 6, ×2): gating this on `place_in_arena` instead of `mem_arm`
                 // recovers 53 arena-oob and costs +276 diff / -292 ok. The extra 11 defs are not
                 // the cost — pointing a base into the arena changes what SILICON does for the 99

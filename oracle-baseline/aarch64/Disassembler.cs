@@ -398,10 +398,9 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
-			return (string) ("casp " + r + (rs).ToString() + ", " + r + (rs2).ToString() + ", " + r + (rt).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_33;
+			return (string) ("casp " + (r).ToString() + (rs).ToString() + ", " + (r).ToString() + (rs2).ToString() + ", " + (r).ToString() + (rt).ToString() + ", " + (r).ToString() + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
 		}
 		insn_33:
 		/* CASPA */
@@ -410,10 +409,9 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
-			return (string) ("caspa " + r + (rs).ToString() + ", " + r + (rs2).ToString() + ", " + r + (rt).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_34;
+			return (string) ("caspa " + (r).ToString() + (rs).ToString() + ", " + (r).ToString() + (rs2).ToString() + ", " + (r).ToString() + (rt).ToString() + ", " + (r).ToString() + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
 		}
 		insn_34:
 		/* CASPAL */
@@ -422,10 +420,9 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
-			return (string) ("caspal " + r + (rs).ToString() + ", " + r + (rs2).ToString() + ", " + r + (rt).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_35;
+			return (string) ("caspal " + (r).ToString() + (rs).ToString() + ", " + (r).ToString() + (rs2).ToString() + ", " + (r).ToString() + (rt).ToString() + ", " + (r).ToString() + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
 		}
 		insn_35:
 		/* CASPL */
@@ -434,10 +431,9 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
-			return (string) ("caspl " + r + (rs).ToString() + ", " + r + (rs2).ToString() + ", " + r + (rt).ToString() + ", " + r + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_36;
+			return (string) ("caspl " + (r).ToString() + (rs).ToString() + ", " + (r).ToString() + (rs2).ToString() + ", " + (r).ToString() + (rt).ToString() + ", " + (r).ToString() + (rt2).ToString() + ", [X" + (rn).ToString() + "]");
 		}
 		insn_36:
 		/* CBNZ */
@@ -4960,9 +4956,8 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_33;
 			return "CASP";
 		}
 		insn_33:
@@ -4971,9 +4966,8 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_34;
 			return "CASPA";
 		}
 		insn_34:
@@ -4982,9 +4976,8 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_35;
 			return "CASPAL";
 		}
 		insn_35:
@@ -4993,9 +4986,8 @@ public partial class Disassembler {
 			var rs = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rt = (insn >> 0) & 0x1FU;
-			var r = (string) (((bool) (((byte) (size)) == ((byte) 0x0))) ? (string) ("W") : (string) ("X"));
-			var rs2 = (byte) (((byte) (byte) (rs)) + ((byte) (byte) ((byte) 0x1)));
-			var rt2 = (byte) (((byte) (byte) (rt)) + ((byte) (byte) ((byte) 0x1)));
+			if(!((bool) ((((bool) (((byte) ((byte) (((rs) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0))) & ((bool) (((byte) ((byte) (((rt) & ((byte) ((byte) ((byte) 0x1))))))) == ((byte) 0x0)))))))
+				goto insn_36;
 			return "CASPL";
 		}
 		insn_36:
@@ -8952,8 +8944,26 @@ public partial class Disassembler {
 		else if((insn & 0xFFFFFC1F) == 0xD61F0000) {
 			yield return (false, true, false, 5);
 		}
+		/* CASP */
+		else if((insn & 0xBFE0FC00) == 0x08207C00) {
+			yield return (false, true, true, 16);
+			yield return (false, true, false, 0);
+			yield return (true, true, false, 5);
+		}
+		/* CASPA */
+		else if((insn & 0xBFE0FC00) == 0x08607C00) {
+			yield return (false, true, true, 16);
+			yield return (false, true, false, 0);
+			yield return (true, true, false, 5);
+		}
 		/* CASPAL */
 		else if((insn & 0xBFE0FC00) == 0x0860FC00) {
+			yield return (false, true, true, 16);
+			yield return (false, true, false, 0);
+			yield return (true, true, false, 5);
+		}
+		/* CASPL */
+		else if((insn & 0xBFE0FC00) == 0x0820FC00) {
 			yield return (false, true, true, 16);
 			yield return (false, true, false, 0);
 			yield return (true, true, false, 5);

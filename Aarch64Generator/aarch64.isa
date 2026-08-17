@@ -623,26 +623,92 @@
     "0 f 001000 0 0 1 sssss 0 11111 nnnnn ttttt"
     "casp $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
+    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
-    (unimplemented))
+    ; Body TRANSCRIBED from CASPAL (the one implemented sibling; identical
+    ; single-threaded -- acquire/release has no observable effect without a
+    ; second thread, the fuzz oracle's standing policy).
+    (if (== size 0)
+        (block
+            (let cl (gpr32 rs))
+            (let ch (gpr32 (+ rs 1)))
+            (let nl (gpr32 rt))
+            (let nh (gpr32 (+ rt 1)))
+            (let address (gpr-or-sp64 rn))
+            (let data (load address u64))
+            (if (== data (| (<< (u64 ch) 32) (u64 cl)))
+                (store address (| (<< (u64 nh) 32) (u64 nl)))
+                (block))
+            (= (gpr32 rs) (u32 data))
+            (= (gpr32 (+ rs 1)) (u32 (>> data 32))))
+        (block
+            (let cl (gpr64 rs))
+            (let ch (gpr64 (+ rs 1)))
+            (let nl (gpr64 rt))
+            (let nh (gpr64 (+ rt 1)))
+            (let address (gpr-or-sp64 rn))
+            (let dl (load address u64))
+            (let dh (load (+ address 8) u64))
+            (if (& (== dl cl) (== dh ch))
+                (block
+                    (store address nl)
+                    (store (+ address 8) nh))
+                (block))
+            (= (gpr64 rs) dl)
+            (= (gpr64 (+ rs 1)) dh))))
 
 (def CASPA
     "0 f 001000 0 1 1 sssss 0 11111 nnnnn ttttt"
     "caspa $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
+    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
-    (unimplemented))
+    ; Body TRANSCRIBED from CASPAL (the one implemented sibling; identical
+    ; single-threaded -- acquire/release has no observable effect without a
+    ; second thread, the fuzz oracle's standing policy).
+    (if (== size 0)
+        (block
+            (let cl (gpr32 rs))
+            (let ch (gpr32 (+ rs 1)))
+            (let nl (gpr32 rt))
+            (let nh (gpr32 (+ rt 1)))
+            (let address (gpr-or-sp64 rn))
+            (let data (load address u64))
+            (if (== data (| (<< (u64 ch) 32) (u64 cl)))
+                (store address (| (<< (u64 nh) 32) (u64 nl)))
+                (block))
+            (= (gpr32 rs) (u32 data))
+            (= (gpr32 (+ rs 1)) (u32 (>> data 32))))
+        (block
+            (let cl (gpr64 rs))
+            (let ch (gpr64 (+ rs 1)))
+            (let nl (gpr64 rt))
+            (let nh (gpr64 (+ rt 1)))
+            (let address (gpr-or-sp64 rn))
+            (let dl (load address u64))
+            (let dh (load (+ address 8) u64))
+            (if (& (== dl cl) (== dh ch))
+                (block
+                    (store address nl)
+                    (store (+ address 8) nh))
+                (block))
+            (= (gpr64 rs) dl)
+            (= (gpr64 (+ rs 1)) dh))))
 
 (def CASPAL
     "0 f 001000 0 1 1 sssss 1 11111 nnnnn ttttt"
     "caspal $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
+    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
@@ -680,11 +746,43 @@
     "0 f 001000 0 0 1 sssss 1 11111 nnnnn ttttt"
     "caspl $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
+    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
-    (unimplemented))
+    ; Body TRANSCRIBED from CASPAL (the one implemented sibling; identical
+    ; single-threaded -- acquire/release has no observable effect without a
+    ; second thread, the fuzz oracle's standing policy).
+    (if (== size 0)
+        (block
+            (let cl (gpr32 rs))
+            (let ch (gpr32 (+ rs 1)))
+            (let nl (gpr32 rt))
+            (let nh (gpr32 (+ rt 1)))
+            (let address (gpr-or-sp64 rn))
+            (let data (load address u64))
+            (if (== data (| (<< (u64 ch) 32) (u64 cl)))
+                (store address (| (<< (u64 nh) 32) (u64 nl)))
+                (block))
+            (= (gpr32 rs) (u32 data))
+            (= (gpr32 (+ rs 1)) (u32 (>> data 32))))
+        (block
+            (let cl (gpr64 rs))
+            (let ch (gpr64 (+ rs 1)))
+            (let nl (gpr64 rt))
+            (let nh (gpr64 (+ rt 1)))
+            (let address (gpr-or-sp64 rn))
+            (let dl (load address u64))
+            (let dh (load (+ address 8) u64))
+            (if (& (== dl cl) (== dh ch))
+                (block
+                    (store address nl)
+                    (store (+ address 8) nh))
+                (block))
+            (= (gpr64 rs) dl)
+            (= (gpr64 (+ rs 1)) dh))))
 
 (def CBNZ
     "s 011010 1 iiiiiiiiiiiiiiiiiii ttttt"
@@ -4593,8 +4691,13 @@
                 (unimplemented))))))
 
 (defm shrn-elem (di si wide thin)
-    (vector-insert rd di (thin (>> (vector-element (vec rn) si wide) shift))))
+    ; reads the SNAPSHOT (shrnsrc), not (vec rn): with rn==rd the insert-loop's
+    ; later reads saw earlier WRITES (read-after-write corruption -- silicon-diff
+    ; caught it on shrn2 v5,v5: one result byte was a narrow of its own output).
+    ; ARM semantics: all element reads precede any write.
+    (vector-insert rd di (thin (>> (vector-element shrnsrc si wide) shift))))
 (defm shrn-sub (count wide thin)
+    (let shrnsrc (vec rn)
     (if Q
         (block (mfor (i count) (shrn-elem (+ i count) i wide thin)))
         ; Q=0 (SHRN): the narrow result goes to the LOWER half and the upper 64 are
@@ -4602,7 +4705,7 @@
         ; survived in the top lanes; zero-top after the inserts clears exactly those.
         ; Silicon-diff caught it: interp hi-64 == pre, native hi-64 == 0.
         (block (mfor (i count) (shrn-elem i i wide thin))
-               (= (vec rd) (vector-zero-top (vec rd))))))
+               (= (vec rd) (vector-zero-top (vec rd)))))))
 
 (def SHRN[2]
     "0 Q 0 011110 hhhh bbb 1000 0 1 nnnnn ddddd"
