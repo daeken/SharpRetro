@@ -3310,10 +3310,9 @@ public partial class Disassembler {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var h = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var Ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x3) => "1Q", _ => throw new NotImplementedException() });
-			var Tb = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x6) => "1D", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
-			return (string) ("pmull" + h + " V" + (rd).ToString() + "." + Ta + ", V" + (rn).ToString() + "." + Tb + ", V" + (rm).ToString() + "." + Tb);
+			if(!((bool) ((((bool) (((byte) (size)) == ((byte) 0x0))) | ((bool) (((byte) (size)) == ((byte) 0x3)))))))
+				goto insn_241;
+			return (string) ("pmull" + (h).ToString() + " V" + (rd).ToString() + "." + (Ta).ToString() + ", V" + (rn).ToString() + "." + (Tb).ToString() + ", V" + (rm).ToString() + "." + (Tb).ToString());
 		}
 		insn_241:
 		/* PRFM-immediate */
@@ -7665,9 +7664,8 @@ public partial class Disassembler {
 			var rm = (insn >> 16) & 0x1FU;
 			var rn = (insn >> 5) & 0x1FU;
 			var rd = (insn >> 0) & 0x1FU;
-			var h = (string) (((bool) ((Q) != ((byte) 0x0))) ? (string) ("2") : (string) (""));
-			var Ta = (string) (size switch { (byte) ((byte) 0x0) => "8H", (byte) ((byte) 0x3) => "1Q", _ => throw new NotImplementedException() });
-			var Tb = (string) ((byte) ((byte) (((byte) (((byte) (Q)) << 0)) | ((byte) (((byte) (size)) << 1)))) switch { (byte) ((byte) 0x0) => "8B", (byte) ((byte) 0x1) => "16B", (byte) ((byte) 0x6) => "1D", (byte) ((byte) 0x7) => "2D", _ => throw new NotImplementedException() });
+			if(!((bool) ((((bool) (((byte) (size)) == ((byte) 0x0))) | ((bool) (((byte) (size)) == ((byte) 0x3)))))))
+				goto insn_241;
 			return "PMULL[2]";
 		}
 		insn_241:

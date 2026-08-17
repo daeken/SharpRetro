@@ -50,6 +50,17 @@
         (= (nzcv v) (& (== (>> $operand1 bits1) (>> $operand2 bits1)) (!= (>> usum bits1) (>> $operand1 bits1))))
         usum))
 
+(defm poly8* (a b)
+    (^ (^ (^ (^ (^ (^ (^
+        (if (& (>> a 0) 1) (<< (u16 b) 0) (u16 0))
+        (if (& (>> a 1) 1) (<< (u16 b) 1) (u16 0)))
+        (if (& (>> a 2) 1) (<< (u16 b) 2) (u16 0)))
+        (if (& (>> a 3) 1) (<< (u16 b) 3) (u16 0)))
+        (if (& (>> a 4) 1) (<< (u16 b) 4) (u16 0)))
+        (if (& (>> a 5) 1) (<< (u16 b) 5) (u16 0)))
+        (if (& (>> a 6) 1) (<< (u16 b) 6) (u16 0)))
+        (if (& (>> a 7) 1) (<< (u16 b) 7) (u16 0))))
+
 (defm polynomial* (op1 op2 iwidth otype)
     (let result (otype (^ op1 op1))
         (for (i iwidth)
@@ -4303,6 +4314,9 @@
     "0 Q 0 01110 ss 1 mmmmm 1110 00 nnnnn ddddd"
     "pmull$h V$rd.$Ta, V$rn.$Tb, V$rm.$Tb"
     (names (Q Q) (size s) (rm m) (rn n) (rd d))
+    ; size: 00=8x(8b->16b), 11=1x(64b->128b GHASH); 01/10 RESERVED. The guard must
+    ; precede the lets -- Ta's match hits its default on reserved sizes otherwise.
+    (requires (| (== size 0b00) (== size 0b11)))
     (let h (if Q "2" "")
         (let Ta (match size
             0b00 "8H"
@@ -4318,7 +4332,11 @@
         (block
             (polynomial* (vector-element (vec rn) Q u64) (vector-element (vec rm) Q u64) 64 u128)
             (= (vec rd) (bitcast result vec)))
-        (unimplemented)))
+        ; size=00: 8 independent 8-bit carry-less multiplies -> 16-bit lanes.
+        ; Lane i of the SOURCE half selected by Q (pmull=low 8 bytes, pmull2=high).
+        (= (vec rd) (vector (mfor (j 8)
+            (poly8* (vector-element (vec rn) (if Q (+ j 8) j) u8)
+                    (vector-element (vec rm) (if Q (+ j 8) j) u8)))))))
 
 (def PRFM-immediate
     "11 111 0 01 10 iiiiiiiiiiii nnnnn ttttt"
