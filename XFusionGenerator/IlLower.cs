@@ -155,7 +155,30 @@ public class IlLower {
 				if(IsFlag(target)) { Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit(target), CanonFlag(e))); break; }
 				if(Binds.TryGetValue(target, out var b)) { WriteOperand(target, b, e); break; }
 				if(ArchReg(target) is { } ar) {
-					Stmts.Add(new IlWriteReg(RegKind.X86, ar, W(e) == 64 ? e : new IlCast(IlType.U64, CastKind.Zext, e)));
+					// x86 PARTIAL-WRITE: a write narrower than 64 does NOT zero the rest of
+					// the register unless it is exactly 32 wide (32-bit ops zero-extend;
+					// 8/16-bit ops insert and leave the upper bits alone). Zext-ing an
+					// 8-bit value to 64 here wiped the upper 56 bits.
+					// Found by XFReader at p1 row 201,044: CMPXCHG's mismatch arm is
+					// `(= AX _rval)` where _rval is the 8-bit destination byte, and silicon
+					// gave RAX=0x11223344556677ff where C# gave 0xff.
+					// The insert form is transcribed from WriteOperand's own GPR case
+					// (:385-395), which has had it right all along -- this path is the one
+					// that takes IMPLICIT arch-reg names from an eval body (LEAVE's
+					// `(= SP BP)`, CMPXCHG's `(= AX ...)`) and it never got the rule.
+					var ew = W(e);
+					Il val;
+					if(ew >= 64) val = e;
+					else if(ew == 32) val = new IlCast(IlType.U64, CastKind.Zext, e);   // 32-bit ops zero-extend
+					else {
+						// insert low `ew` bits, preserve the rest
+						var keep = ~((1UL << ew) - 1);
+						val = new IlBin(IlType.U64, BinOp.Or,
+							new IlBin(IlType.U64, BinOp.And,
+								new IlReadReg(IlType.U64, RegKind.X86, ar), new IlConst(IlType.U64, keep)),
+							new IlCast(IlType.U64, CastKind.Zext, e));
+					}
+					Stmts.Add(new IlWriteReg(RegKind.X86, ar, val));
 					break;
 				}
 				throw new NotSupportedException($"write target {target}");
@@ -176,9 +199,41 @@ public class IlLower {
 				var inner = new IlLower(OpWidth) { Binds = Binds, TmpN = TmpN };
 				foreach(var (k, v) in Env) inner.Env[k] = v;
 				foreach(var (k, v) in MemAddr) inner.MemAddr[k] = v;
-				foreach(var f in l.Skip(2)) inner.Stmt(f);
+				// (if cond then...) has a variadic THEN; (if cond then else) is the
+				// THREE-arg form and the .isa uses it -- CMPXCHG's
+				//     (if (== tval 0x0) (= dst src) (= AX _rval))
+				// is match-then-store / mismatch-then-load-AL. Taking Skip(2) as one
+				// variadic then-list put BOTH arms in THEN and passed [] for ELSE, so the
+				// mismatch arm ran on the match path and AL was never updated on a
+				// mismatch. Found by XFReader at p1 row 201,044: silicon updates AL to the
+				// destination byte, C# left RAX at its pre-value, and the dumped IL showed
+				// both writes inside one block.
+				//
+				// Exactly the defect the Rust arm had (RustLiftGen's if/else arm put
+				// both stmts in then, so CMPXCHG's NEQ arm was silently a no-op). Second
+				// arm, same rule, same misreading -- and a variadic-then form is
+				// indistinguishable from a then/else form without knowing the arity the
+				// .isa means, which is why the wrong reading survived on both.
+				//
+				// ‡ Disambiguation: 3 args where the LAST is a statement = then/else. The
+				// .isa has no 3-arg variadic-then site (verified: the only 3-arg `if`s in
+				// LiftTables are CMPXCHG's and its siblings, all then/else). A future
+				// variadic 3-arg then would need an explicit (block ...) wrapper, which is
+				// what the .isa already writes when it means a multi-stmt arm.
+				var isThenElse = l.Count == 4;
+				var thenArgs = isThenElse ? l.Skip(2).Take(1) : l.Skip(2);
+				foreach(var f in thenArgs) inner.Stmt(f);
 				TmpN = inner.TmpN;
-				Stmts.Add(new IlIf(cond, inner.Stmts, []));
+				var elseStmts = new List<Il>();
+				if(isThenElse) {
+					var eInner = new IlLower(OpWidth) { Binds = Binds, TmpN = TmpN };
+					foreach(var (k, v) in Env) eInner.Env[k] = v;
+					foreach(var (k, v) in MemAddr) eInner.MemAddr[k] = v;
+					eInner.Stmt(l[3]);
+					TmpN = eInner.TmpN;
+					elseStmts = eInner.Stmts;
+				}
+				Stmts.Add(new IlIf(cond, inner.Stmts, elseStmts));
 				break;
 			}
 			case PName("push"): {
@@ -397,7 +452,20 @@ public class IlLower {
 				if(Env.TryGetValue(n, out var bound) && bound != null) return bound;
 				if(Binds != null && Binds.TryGetValue(n, out var b)) return ReadOperand(n, b);
 				if(IsFlag(n)) return new IlReadReg(IlType.U1, RegKind.Eflags, FlagBit(n));
-				if(ArchReg(n) is { } ar) return new IlReadReg(IlType.U64, RegKind.X86, ar);
+				// An implicit arch-reg name in an eval body means the register AT THE
+				// OPERATION'S WIDTH, not always 64. CMPXCHG-Eb's `(- AX _rval)` compares
+				// AL against a byte; reading RAX whole made the compare 64-bit, so ZF was
+				// wrong whenever the upper bytes were nonzero.
+				// Found by XFReader at p1 row 201,053: silicon ZF=1 (AL == the byte), C#
+				// ZF=0 (RAX 0x11223344556677xx != the byte), and the dumped IL read
+				// `(let %0 = (u64 RAX))` in a byte-width template.
+				// Mirrors ReadOperand's own GPR case (:466-470), which truncates to the
+				// bind width -- same rule, and this implicit path never got it. Widths
+				// above 64 are not a GPR thing; 64 needs no truncate.
+				if(ArchReg(n) is { } ar) {
+					var full = new IlReadReg(IlType.U64, RegKind.X86, ar);
+					return ctxW is >= 64 or <= 0 ? full : new IlCast(U(ctxW), CastKind.Trunc, full);
+				}
 				throw new NotSupportedException($"name {n}");
 			}
 			case PList l when l.Count >= 1: return ListExpr(l, ctxW);
