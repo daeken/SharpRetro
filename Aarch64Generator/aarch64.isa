@@ -3063,18 +3063,19 @@
     "ld2 { V$rt.$T, V$rt2.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (let rt2 (% (+ rt 1) 32)
-        (requires (!= rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (let rt2 (% (+ rt 1) 32)
+            (requires (!= rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (let address (gpr-or-sp64 rn)
         (do-ld2)
         (= (gpr-or-sp64 rn) (+ address (gpr64 rm)))))
@@ -5306,18 +5307,19 @@
     "st2 { V$rt.$T, V$rt2.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (mlet (rt2 (% (+ rt 1) 32) imm (u8 (if Q 32 16)))
-        (requires (== rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) imm (u8 (if Q 32 16)))
+            (requires (== rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st2-sub 1 u8))
@@ -5331,18 +5333,19 @@
     "st2 { V$rt.$T, V$rt2.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (let rt2 (% (+ rt 1) 32)
-        (requires (!= rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (let rt2 (% (+ rt 1) 32)
+            (requires (!= rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st2-sub 1 u8))
@@ -5385,18 +5388,19 @@
     "st3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) imm (u8 (if Q 48 24)))
-        (requires (== rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) imm (u8 (if Q 48 24)))
+            (requires (== rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2) c (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st3-sub 1 u8))
@@ -5410,18 +5414,19 @@
     "st3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
-        (requires (!= rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
+            (requires (!= rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2) c (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st3-sub 1 u8))
@@ -5466,18 +5471,19 @@
     "st4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], #$imm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32) imm (u8 (if Q 64 43)))
-        (requires (== rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32) imm (u8 (if Q 64 43)))
+            (requires (== rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2) c (vec rt3) d (vec rt4))
         (match size
             0b00 (qfor i 8 16 (st4-sub 1 u8))
@@ -5491,18 +5497,19 @@
     "st4 { V$rt.$T, V$rt2.$T, V$rt3.$T, V$rt4.$T }, [X$rn], X$rm"
     (names (Q Q) (rm m) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
-        (requires (!= rm 0b11111))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
+            (requires (!= rm 0b11111))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2) c (vec rt3) d (vec rt4))
         (match size
             0b00 (qfor i 8 16 (st4-sub 1 u8))
@@ -6303,16 +6310,17 @@
     "uaddw$o2 V$rd.$Ta, V$rn.$Ta, V$rm.$Tb"
     (names (Q Q) (size s) (rm m) (rn n) (rd d))
     ; size=11 UNALLOCATED for the widening adds (objdump-confirmed; 8 fuzz panics).
+    (block
     (requires (!= size 0b11))
-    (mlet (o2 (if Q "2" "") Ta "" Tb "")
-        (match (: size Q)
-            0b00_0 (block (= Ta "8H") (= Tb "8B"))
-            0b00_1 (block (= Ta "8H") (= Tb "16B"))
-            0b01_0 (block (= Ta "4S") (= Tb "4H"))
-            0b01_1 (block (= Ta "4S") (= Tb "8H"))
-            0b10_0 (block (= Ta "2D") (= Tb "2S"))
-            0b10_1 (block (= Ta "2D") (= Tb "4S"))
-            (unimplemented)))
+        (mlet (o2 (if Q "2" "") Ta "" Tb "")
+            (match (: size Q)
+                0b00_0 (block (= Ta "8H") (= Tb "8B"))
+                0b00_1 (block (= Ta "8H") (= Tb "16B"))
+                0b01_0 (block (= Ta "4S") (= Tb "4H"))
+                0b01_1 (block (= Ta "4S") (= Tb "8H"))
+                0b10_0 (block (= Ta "2D") (= Tb "2S"))
+                0b10_1 (block (= Ta "2D") (= Tb "4S"))
+                (unimplemented))))
     (mlet (a (vec rn) b (vec rm))
         (= (vec rd) (match size
             0b00 (uaddw-sub 8 u16 u8)

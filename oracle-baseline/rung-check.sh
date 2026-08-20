@@ -141,7 +141,12 @@ fi
 # Positive proof of one property read as proof of a wider one — so this arm asks
 # the other question directly.
 echo "== compile: Aarch64Cpu (generated C# must BUILD, not just match) =="
-CERR=$(timeout 300 dotnet build Aarch64Cpu/Aarch64Cpu.csproj -v q --nologo 2>&1 | grep -cE ' error ')
+# NB: `grep -c` EXITS 1 WHEN THE COUNT IS ZERO, so under `set -e` a bare
+# CERR=$(… | grep -c …) kills the script exactly when the build SUCCEEDS — this arm
+# could only ever pass while the defect it measures still existed (found the turn the
+# count first reached 0: eleven arms green, rc=1, no ✗ printed anywhere). `|| true`
+# keeps the count and lets zero be a real answer.
+CERR=$(timeout 300 dotnet build Aarch64Cpu/Aarch64Cpu.csproj -v q --nologo 2>&1 | grep -cE ' error ' || true)
 if [ "$CERR" = "0" ]; then
   echo "  ✓ Aarch64Cpu builds (0 errors)"
 else
