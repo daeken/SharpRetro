@@ -85,6 +85,23 @@ So the acceptance set is **four** defs, not six. That is still enough (a reader 
 known-good post-state, and four is a cross-check), but the claim as published was wrong
 in the direction that made the next step look easier than it is.
 
+## Where the reader goes (searched, 2026-08-20)
+
+No C#-side X64D reader exists — `grep -rl 'X64D|stub_len|pre\[90\]' --include=*.cs` hits
+only `XFusionGenerator/SweepGen.cs`, which WRITES the def facts rather than reading rows.
+
+It belongs beside `oracle-baseline/instruments/XFCorpus/` (28 lines), which is the closest
+sibling: a linear-sweep decode-boundary dumper whose output diffs against the Rust
+decoder's on the same bytes — i.e. the phase-1-full gate. Same shape (a C# instrument
+that consumes a binary and cross-checks the Rust arm), different subject (boundaries vs
+state).
+
+‡ A near-miss worth the line: `ls -d XF*` from the repo root shows five projects and NOT
+XFCorpus, because it lives two levels down. I was one command from "correcting" a true
+claim about it into a false one. The reference set derived from the artifact — every
+`.csproj` naming `XFusionCpu` — is XFusionCensus / XFusionJit / XFusionTests /
+oracle-baseline(XFCorpus), plus barrow's `Pagentry.Lifter` outside this tree.
+
 ## Sequencing
 
 ```
