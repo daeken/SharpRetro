@@ -131,28 +131,36 @@ if [ "$IDEM_N" -eq 0 ]; then
   FAIL=1
 fi
 
-# ── COMPILE gate (the arm that was missing) ─────────────────────────────
+# ── COMPILE MATRIX (the arm that was missing) ──────────────────────────
 # The rungs above byte-compare generator OUTPUT against the frozen oracle. That
 # proves EQUIVALENCE and says nothing about COMPILABILITY: a generated file can be
-# sha256-identical to the reference and still not build. It was — Aarch64Cpu's
-# committed Generated/Disassembler.cs has not compiled since at least fcfd76c
-# (33 CS0103 at HEAD; regen widens it to 456, all let/mlet-bound disassembly names
-# referenced outside their binding scope). Every rung ran green over it for days.
-# Positive proof of one property read as proof of a wider one — so this arm asks
-# the other question directly.
-echo "== compile: Aarch64Cpu (generated C# must BUILD, not just match) =="
-# NB: `grep -c` EXITS 1 WHEN THE COUNT IS ZERO, so under `set -e` a bare
-# CERR=$(… | grep -c …) kills the script exactly when the build SUCCEEDS — this arm
-# could only ever pass while the defect it measures still existed (found the turn the
-# count first reached 0: eleven arms green, rc=1, no ✗ printed anywhere). `|| true`
-# keeps the count and lets zero be a real answer.
-CERR=$(timeout 300 dotnet build Aarch64Cpu/Aarch64Cpu.csproj -v q --nologo 2>&1 | grep -cE ' error ' || true)
-if [ "$CERR" = "0" ]; then
-  echo "  ✓ Aarch64Cpu builds (0 errors)"
-else
-  echo "  ✗ Aarch64Cpu: $CERR compile errors in generated C# — byte-match does not imply compilability"
-  FAIL=1
-fi
+# sha256-identical to the reference and still not build. Aarch64Cpu's committed
+# Generated/Disassembler.cs did not compile for five days (456 errors from a clean
+# regen) while every rung ran green over it -- positive proof of one property read
+# as proof of a wider one.
+#
+# It is a MATRIX rather than one arm because the .isa emits into four consumers and
+# only one of them was ever compiled here. When aarch64 was broken, the other three
+# built clean -- so the defect was one-backend, but the BLINDNESS was fleet-wide,
+# and a disagreement between backends on the same .isa is itself the finding.
+#
+# NB: `grep -c` EXITS 1 WHEN THE COUNT IS ZERO, so a bare CERR=$(... | grep -c ...)
+# under `set -e` kills the script exactly when the build SUCCEEDS -- this arm could
+# only ever pass while the defect it measures still existed (found the turn the count
+# first reached 0: eleven arms green, rc=1, no failure printed anywhere). `|| true`
+# lets zero be a real answer. A gate needs BOTH sides seen: a verified must-fail
+# control and a verified pass.
+echo "== compile matrix: every generated backend must BUILD, not just match =="
+for proj in Aarch64Cpu SharpStationCore DamageCore XFusionCpu; do
+  [ -f "$proj/$proj.csproj" ] || { echo "  ~ $proj absent (skipped)"; continue; }
+  n=$(timeout 300 dotnet build "$proj/$proj.csproj" -v q --nologo 2>&1 | grep -cE ' error ' || true)
+  if [ "$n" = "0" ]; then
+    echo "  ✓ $proj builds (0 errors)"
+  else
+    echo "  ✗ $proj: $n compile errors in generated C# — byte-match does not imply compilability"
+    FAIL=1
+  fi
+done
 
 # The gate must actually GATE. A hit above sets FAIL=1; callers do:
 #   bash oracle-baseline/rung-check.sh && git push
