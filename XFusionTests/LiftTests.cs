@@ -463,8 +463,24 @@ public class LiftTests {
 		// (vcvt: IlCast has no element-width field, so a lane-count-CHANGING convert
 		// genuinely cannot be expressed) and once inward (these three). The name is not
 		// the classifier; the ctor is.
+		// Then the COMPARE family (fcmpp/vfcmpp) closed too, 19 -> 15 templates and
+		// 6 -> 4 heads -- and it closed for the SAME reason vibin's mask ops did: the
+		// convention was already DECLARED (sse.isa:135, "per-lane all-1s/0 mask. Same
+		// table as CMPSS", with the predicate list at :140), the predicate operand is
+		// compile-time, and every one of the 8 predicates composes from BinOps that
+		// exist -- including preds 4-6 as Not(0-2), which is the SDM's actual semantics
+		// on NaN rather than a shortcut.
+		//
+		// So THREE separate clusters read as "needs a new node kind in the shared
+		// LiftIl" from the head name and none of them did. What actually decides it is
+		// whether the receiving CONSTRUCTOR can carry the operation's information:
+		//   IlVecBin/IlVecUn      -> arithmetic, min/max, shifts, masks: fine
+		//   IlVecBuild+IlVecElem  -> any COMPILE-TIME lane permutation: fine
+		//   IlCast                -> has no element-width field, so a lane-count-
+		//                            CHANGING convert genuinely cannot be expressed
+		// The remaining four are the ones where that answer is actually no.
 		var known = new[] {
-			"fcmpp", "vcvt", "vdpp", "vfcmpp", "vhadd", "vmovmsk",
+			"vcvt", "vdpp", "vhadd", "vmovmsk",
 		};
 		Assert.That(heads, Is.EquivalentTo(known),
 			$"the unlowered-head set MOVED. now ({heads.Count}): {string.Join(" ", heads)}\n"

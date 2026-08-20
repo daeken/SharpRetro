@@ -66,6 +66,55 @@ public class IlLower {
 	};
 	static int W(Il e) => e.Ty is IlType.I(_, var b) ? b : 64;
 
+	// Resolve an 8-predicate compare's `pred` operand to its compile-time value. Like
+	// vshuf's selector this is an Ib imm bind, so it is known here and the compare
+	// lowers to a fixed shape rather than a runtime dispatch. imm8[2:0] per sse.isa:140.
+	int PredOf(string name) {
+		if(!Binds.TryGetValue(name, out var b) || b is not OperandBind.Imm i)
+			throw new NotSupportedException($"cmp pred {name} not an imm bind");
+		return (int) ((ulong) i.Value & 7);
+	}
+
+	// The 8-predicate float compare table, shared by the scalar (fcmpp) and packed
+	// (vfcmpp) forms because the declaration says they ARE the same table
+	// (sse.isa:135 "Same table as CMPSS"). Returns a U1 when packed==false, or a
+	// per-lane all-1s/0 V128 mask when packed==true.
+	//
+	// Preds 4-6 are Not(0-2) rather than their own comparisons, and that is the
+	// SEMANTICS not a shortcut: an ordered compare against a NaN operand is false, so
+	// its negation is true, which is what NEQ/NLT/NLE mean on x86 (interp.rs:594-596
+	// spells this out, and the SDM defines them that way). Composing them as
+	// Not(ordered) is therefore exact; writing Ne/Sge/Sgt instead would be WRONG on
+	// NaN, because those would need to be unordered-true and a bare Sge isn't.
+	Il FloatPred(Il a, Il b, int pred, bool packed, int ew) {
+		var vt = new IlType.F(ew);
+		Il Cmp(BinOp op) => packed
+			? new IlVecBin(128, vt, op, a, b)
+			: new IlBin(IlType.U1, op, a, b);
+		// isnan(x) = Ne(x, x) -- the identity the "fisnan" arm uses, for the same
+		// reason: NaN != NaN IS the definition, so no UnOp is needed and none exists.
+		Il IsNan(Il x) => packed
+			? new IlVecBin(128, vt, BinOp.Ne, x, x)
+			: new IlBin(IlType.U1, BinOp.Ne, x, x);
+		Il Invert(Il m) => packed
+			? new IlVecUn(128, vt, UnOp.Not, m)
+			: new IlUn(IlType.U1, UnOp.Not, m);
+		Il Unord() => packed
+			? new IlVecBin(128, vt, BinOp.Or, IsNan(a), IsNan(b))
+			: new IlBin(IlType.U1, BinOp.Or, IsNan(a), IsNan(b));
+		return pred switch {
+			0 => Cmp(BinOp.Eq),            // EQ    (ordered)
+			1 => Cmp(BinOp.Slt),           // LT    (ordered; float operands => ordered-lt,
+			2 => Cmp(BinOp.Sle),           // LE     per the "flt" arm's own convention)
+			3 => Unord(),                  // UNORD
+			4 => Invert(Cmp(BinOp.Eq)),    // NEQ   = !EQ  => true on NaN
+			5 => Invert(Cmp(BinOp.Slt)),   // NLT   = !LT  => true on NaN
+			6 => Invert(Cmp(BinOp.Sle)),   // NLE   = !LE  => true on NaN
+			7 => Invert(Unord()),          // ORD
+			_ => throw new NotSupportedException($"cmp pred {pred}")
+		};
+	}
+
 	// Extract lane `idx` of `v` at element type `et`, for the permutation family. The
 	// index is always a COMPILE-TIME constant here (vzip's hi is a literal, vshuf/vshufw's
 	// selector is an Imm bind), so this is an IlVecElem over an IlConst rather than
@@ -563,6 +612,54 @@ public class IlLower {
 					_ => throw new NotSupportedException($"op vishi-dir-{dir}")
 				};
 				return new IlVecBin(128, et, sop, a, new IlConst(new IlType.I(false, 32), (UInt128) cnt));
+			}
+			// ---- 8-PREDICATE COMPARE cluster: no new node kinds either ----
+			// Third head-family I had filed as "needs a shared-IL addition", and the
+			// declaration settles it the same way vibin's did -- sse.isa:135, on the
+			// instruction:
+			//     "; CMPPS: per-lane 8-predicate compare -> per-lane all-1s/0 mask.
+			//        Same table as CMPSS."
+			//     "; pred = imm8[2:0] (0=EQ 1=LT 2=LE 3=UNORD 4=NEQ 5=NLT 6=NLE 7=ORD)."
+			// and interp.rs (fn fcmpp :580, fn vfcmpp :391) implements exactly that,
+			// including the reason preds 4-6 are NOT of 0-2 rather than their own
+			// comparisons: on a NaN operand the ordered forms are false, so their
+			// negations are TRUE, which is what the SDM specifies. Transcribed, not
+			// composed -- the comment at :581 spells the NaN reasoning out.
+			//
+			// So each predicate is a composition of things that already exist:
+			//   0 EQ    -> Eq            4 NEQ  -> Not(Eq)
+			//   1 LT    -> Slt           5 NLT  -> Not(Slt)
+			//   2 LE    -> Sle           6 NLE  -> Not(Sle)
+			//   3 UNORD -> isnan(a) | isnan(b)     7 ORD -> Not(UNORD)
+			// with isnan(x) = Ne(x, x), which is the identity the "fisnan" arm below
+			// already uses ("NaN != NaN is the definition, so the IL already expresses
+			// it") -- and Slt/Sle on FLOAT operands is ordered-compare, which the "flt"
+			// arm below establishes.
+			//
+			// The MASK is where this could have gone wrong, and it's the vibin question
+			// again: an IlVecBin(Eq) is ambiguous between per-lane 1 and per-lane all-1s,
+			// and the declaration says all-1s at the element width. For the SCALAR form
+			// the mask is (1<<w)-1, which is a 1-bit sext -- the standard all-1s idiom
+			// (sign-extending a 1-bit value: bit 0 IS the sign bit, so 1 -> all-ones).
+			// Noting that explicitly because nothing else in this file sexts from width
+			// 1; the other Sext sites (:219, :384) are 8/16/32-bit.
+			case "fcmpp": {
+				// (fcmpp a b pred w) -- CMPSS/CMPSD. Scalar: dst[w-1:0] = mask, upper
+				// preserved by write_operand's scalar rule. Operands arrive already
+				// float-cast at the call site ((as-f32 dst) etc, sse.isa:141).
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var w = (int) ((PInt) l[4]).Value;
+				var cmp = FloatPred(a, b, PredOf(((PName) l[3]).Name), false, 0);
+				return new IlCast(U(w), CastKind.Sext, cmp);   // U1 -> all-1s at w
+			}
+			case "vfcmpp": {
+				// (vfcmpp a b pred ew) -- CMPPS/CMPPD, the same table per lane. The
+				// per-lane all-1s convention is the DECLARED one (sse.isa:135), so the
+				// compare BinOps are unambiguous here for the same reason they are in
+				// vibin's mask ops.
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[4]).Value;
+				return FloatPred(a, b, PredOf(((PName) l[3]).Name), true, ew);
 			}
 			// ---- LANE-PERMUTATION cluster: also NO new node kinds ----
 			// I had these in the "needs a new node kind" half, from the head names. Wrong,
