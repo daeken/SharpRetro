@@ -13,6 +13,50 @@ public class LiftTests {
 	}
 
 	[Test]
+	public void VexPackedFloatDecodesBothLengths() {
+		// objdump -M intel, ALL verified BEFORE the .isa edit:
+		//   C5 F0 59 C1 = vmulps xmm0,xmm1,xmm1    C5 F4 59 C1 = vmulps ymm0,ymm1,ymm1
+		//   C5 F1 59 C1 = vmulpd xmm...            C5 F0 C6 C1 00 = vshufps xmm...,0x0
+		// VEX2 byte-2 = R<<7 | (~vvvv&0xF)<<3 | L<<2 | pp; vvvv=xmm1 -> 0xE; pp 0=none 1=66.
+		// DECODE-ONLY, and unlike the scalar rows there are TWO independent reasons:
+		//   (a) VEX zeroes DEST[MAXVL-1:128] where legacy SSE preserves it -- our
+		//       write_operand has one rule per WIDTH, not one per encoding-family.
+		//   (b) VEX.L picks 128 or 256 at decode time, and there is no 256-bit VALUE
+		//       in either evaluator (X86Machine.Xmm[] is u128, Eval's carrier is ulong).
+		// So an L=1 form has no representable result at all. Intrinsic-bodied.
+		foreach(var (hex, mnem, reg) in new[] {
+			("c5f058c1","vaddps","xmm"), ("c5f059c1","vmulps","xmm"),
+			("c5f05cc1","vsubps","xmm"), ("c5f05ec1","vdivps","xmm"),
+			("c5f458c1","vaddps","ymm"), ("c5f459c1","vmulps","ymm"),
+			("c5f45cc1","vsubps","ymm"), ("c5f45ec1","vdivps","ymm"),
+			("c5f158c1","vaddpd","xmm"), ("c5f159c1","vmulpd","xmm"),
+			("c5f15cc1","vsubpd","xmm"), ("c5f15ec1","vdivpd","xmm"),
+			("c5f558c1","vaddpd","ymm"), ("c5f559c1","vmulpd","ymm"),
+			("c5f55cc1","vsubpd","ymm"), ("c5f55ec1","vdivpd","ymm"),
+		}) {
+			var b = Convert.FromHexString(hex);
+			Assert.That(Disassembler.DecodeInsn(b, XMode.Bits64, out var d), Is.True, $"decode {hex}");
+			Assert.That(d.Len, Is.EqualTo(4), $"len {hex}");
+			var txt = Disassembler.Disassemble(b, 0, XMode.Bits64).Text;
+			Assert.That(txt, Does.StartWith(mnem), $"mnem {hex} -> {txt}");
+			// the L-bit must reach the RENDER: an L=1 form saying xmm is the bug this catches
+			Assert.That(txt, Does.Contain($"{reg}0, {reg}1, {reg}1"), $"L-width {hex} -> {txt}");
+		}
+		// the imm8 forms carry a 5th byte and a selector
+		foreach(var (hex, mnem, reg) in new[] {
+			("c5f0c6c100","vshufps","xmm"), ("c5f4c6c100","vshufps","ymm"),
+			("c5f1c6c100","vshufpd","xmm"),
+		}) {
+			var b = Convert.FromHexString(hex);
+			Assert.That(Disassembler.DecodeInsn(b, XMode.Bits64, out var d), Is.True, $"decode {hex}");
+			Assert.That(d.Len, Is.EqualTo(5), $"len {hex}");
+			var txt = Disassembler.Disassemble(b, 0, XMode.Bits64).Text;
+			Assert.That(txt, Does.StartWith(mnem), $"mnem {hex} -> {txt}");
+			Assert.That(txt, Does.Contain($"{reg}0, {reg}1, {reg}1"), $"L-width {hex} -> {txt}");
+		}
+	}
+
+	[Test]
 	public void VexScalarFloatDecodesAndDiesLoud() {
 		// Every expectation below was read off `objdump -M intel` BEFORE the .isa edit:
 		//   C5 F3 59 C1 = vmulsd xmm0,xmm1,xmm1   C5 F2 10 C1 = vmovss xmm0,xmm1,xmm1

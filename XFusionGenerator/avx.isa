@@ -146,3 +146,56 @@
 (encoding VSUBSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5C))
 (instruction VDIVSD (dst src1 src2) "vdivsd $dst, $src1, $src2" (intrinsic vdivsd dst src1 src2))
 (encoding VDIVSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5E))
+
+; --- VEX packed-float: DECODE ONLY, same lane reason plus a WIDTH one ---
+;
+; The packed half of the AVX census (vmulps 84, vaddps 73, vshufps 66, vsubps 43 =
+; 266 of the top-8's 472). Two reasons these can't carry semantics yet, and the
+; second one is the harder:
+;
+; (1) THE LANE PROBLEM, as for the scalar rows above: SDM says the unused upper
+;     lanes of a VEX 128-bit form are ZEROED (DEST[MAXVL-1:128] := 0), where the
+;     legacy SSE form leaves them untouched. That is a difference our
+;     write_operand cannot express -- it has one rule per width, not one per
+;     encoding-family.
+; (2) THE WIDTH PROBLEM, which is new here: VEX.L selects 128 or 256 bits at
+;     DECODE time, so `vmulps` is two different operations behind one def. The
+;     decoder already handles this (DecodedInsn.p.VexL, and v_width() returns
+;     256 when set), and the C# disassembler renders ymm correctly -- verified:
+;     C5 F1 EF C2 -> "vpxor xmm0, xmm1, xmm2" and C5 F5 EF C2 -> "vpxor ymm0,
+;     ymm1, ymm2". But there is no 256-bit VALUE in either evaluator. X86Machine's
+;     Xmm[] is u128 and Eval's carrier is ulong; a ymm operand has nowhere to live.
+;
+; So a body here would be wrong in two independent ways at once, and one of them
+; (L=1) has no representable result at all. Intrinsic-bodied: the corpus gets its
+; lengths, and the vector tier gets a clean slate when it lands.
+;
+; Every encoding objdump-verified BEFORE the edit, at BOTH lengths:
+;   C5 F0 59 C1 = vmulps xmm0,xmm1,xmm1      C5 F4 59 C1 = vmulps ymm0,ymm1,ymm1
+;   C5 F1 59 C1 = vmulpd xmm0,xmm1,xmm1      C5 F0 C6 C1 00 = vshufps xmm...,0x0
+; Note pp=0 (no mprefix token) is the ps form -- first use of a prefix-less VEX row
+; in this .isa; ParseOpcodes leaves mprefix null unless rep/repnz/opsize appears,
+; so it parses with no generator change (XFusionDef.cs:165).
+
+(instruction VADDPS (dst src1 src2) "vaddps $dst, $src1, $src2" (intrinsic vaddps dst src1 src2))
+(encoding VADDPS (Vps Hps Wps) (vex-3src 0x0F 0x58))
+(instruction VMULPS (dst src1 src2) "vmulps $dst, $src1, $src2" (intrinsic vmulps dst src1 src2))
+(encoding VMULPS (Vps Hps Wps) (vex-3src 0x0F 0x59))
+(instruction VSUBPS (dst src1 src2) "vsubps $dst, $src1, $src2" (intrinsic vsubps dst src1 src2))
+(encoding VSUBPS (Vps Hps Wps) (vex-3src 0x0F 0x5C))
+(instruction VDIVPS (dst src1 src2) "vdivps $dst, $src1, $src2" (intrinsic vdivps dst src1 src2))
+(encoding VDIVPS (Vps Hps Wps) (vex-3src 0x0F 0x5E))
+
+(instruction VADDPD (dst src1 src2) "vaddpd $dst, $src1, $src2" (intrinsic vaddpd dst src1 src2))
+(encoding VADDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x58))
+(instruction VMULPD (dst src1 src2) "vmulpd $dst, $src1, $src2" (intrinsic vmulpd dst src1 src2))
+(encoding VMULPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x59))
+(instruction VSUBPD (dst src1 src2) "vsubpd $dst, $src1, $src2" (intrinsic vsubpd dst src1 src2))
+(encoding VSUBPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5C))
+(instruction VDIVPD (dst src1 src2) "vdivpd $dst, $src1, $src2" (intrinsic vdivpd dst src1 src2))
+(encoding VDIVPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5E))
+
+(instruction VSHUFPS (dst src1 src2 sel) "vshufps $dst, $src1, $src2, $sel" (intrinsic vshufps dst src1 src2 sel))
+(encoding VSHUFPS (Vps Hps Wps Ib) (vex-3src 0x0F 0xC6))
+(instruction VSHUFPD (dst src1 src2 sel) "vshufpd $dst, $src1, $src2, $sel" (intrinsic vshufpd dst src1 src2 sel))
+(encoding VSHUFPD (Vpd Hpd Wpd Ib) (vex-3src opsize 0x0F 0xC6))
