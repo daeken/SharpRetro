@@ -70,6 +70,24 @@ The controls that made this findable rather than a guess:
 The `MOVSXD` row is what a reader should look for: a mnemonic that cannot appear in a
 phase-2 XMM corpus, appearing with rows. Under the corrected join it is 0.
 
+**And the corrected predicate was itself planted against, because re-firing a figure
+tests the CORPUS while only a plant tests the ARM.** The new join extracts
+`stub[SLOT_OFF:]` and stripped trailing `0x90` padding — so its candidate defect is an
+instruction whose own last byte is genuinely `0x90` (any `Vxmm,Wxmm,Imm` form with
+`imm8 == 0x90`), which would decode short and yield yet another *plausible* mnemonic.
+
+Firing the narrow version of that check returned 0, which is the flattering direction
+and not sufficient. So the arm was re-run with the strip **removed entirely** —
+`decode_insn` reads length from the front, so padding is harmless to it — and the two
+joins compared:
+
+```
+364 unstripped rows decoded  ·  diff against the stripped join  ⟹  IDENTICAL
+```
+
+The strip changed no decode. That is a result about the arm rather than about the
+corpus, and it is the check the first (wrong) figure never had.
+
 ## What this does not say
 
 The 40 are verified at **link-1 only** — `.isa` formula against silicon, through
