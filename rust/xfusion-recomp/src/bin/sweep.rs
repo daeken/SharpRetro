@@ -686,11 +686,14 @@ fn main() {
         // ABSENT rather than as unlisted -- and that inverts a coverage verdict instead
         // of merely under-reporting it (a family with 6,448 rows outside a top-15 looks
         // exactly like a family with 0). Printing `top N of M` costs one format string.
-        let tf_shown = 20usize.min(tf_by.len());
+        // XF_FULL_CENSUS=1 prints the WHOLE tally. Needed because the question a reader
+        // brings to this list is usually "is mnemonic X here?", and a top-N list answers
+        // that only for the N. Default output unchanged.
+        let tf_shown = if std::env::var("XF_FULL_CENSUS").is_ok() { tf_by.len() } else { 20usize.min(tf_by.len()) };
         println!("  track-fail by mnem (§4 attribution) -- top {tf_shown} of {} mnemonics, NOT a complete list:", tf_by.len());
         let mut v: Vec<_> = tf_by.iter().collect();
         v.sort_by(|a,b| b.1.cmp(a.1));
-        for (m, n) in v.iter().take(20) {
+        for (m, n) in v.iter().take(tf_shown) {
             let ex = tf_ex.get(**m).map(|b| format!("{b:02X?}")).unwrap_or_default();
             println!("    {m}: {n}  first-fail={ex}");
         }
