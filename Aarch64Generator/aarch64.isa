@@ -623,9 +623,13 @@
     "0 f 001000 0 0 1 sssss 0 11111 nnnnn ttttt"
     "casp $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
-    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
-    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
+        ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+        ; The guard lives INSIDE the block: a bare top-level (requires) occupies def[5]
+        ; = the DECODE slot, which shifts the real (block (let ...)) into def[6+] = eval.
+        ; The disassembler emits decode only, so every let-bound disassembly name goes
+        ; unbound (CS0103). Same shape as the ArchCompilerCore parse-drop, one slot over.
+        (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
@@ -665,9 +669,13 @@
     "0 f 001000 0 1 1 sssss 0 11111 nnnnn ttttt"
     "caspa $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
-    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
-    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
+        ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+        ; The guard lives INSIDE the block: a bare top-level (requires) occupies def[5]
+        ; = the DECODE slot, which shifts the real (block (let ...)) into def[6+] = eval.
+        ; The disassembler emits decode only, so every let-bound disassembly name goes
+        ; unbound (CS0103). Same shape as the ArchCompilerCore parse-drop, one slot over.
+        (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
@@ -707,9 +715,13 @@
     "0 f 001000 0 1 1 sssss 1 11111 nnnnn ttttt"
     "caspal $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
-    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
-    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
+        ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+        ; The guard lives INSIDE the block: a bare top-level (requires) occupies def[5]
+        ; = the DECODE slot, which shifts the real (block (let ...)) into def[6+] = eval.
+        ; The disassembler emits decode only, so every let-bound disassembly name goes
+        ; unbound (CS0103). Same shape as the ArchCompilerCore parse-drop, one slot over.
+        (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
@@ -746,9 +758,13 @@
     "0 f 001000 0 0 1 sssss 1 11111 nnnnn ttttt"
     "caspl $r$rs, $r$rs2, $r$rt, $r$rt2, [X$rn]"
     (names (size f) (rs s) (rn n) (rt t))
-    ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
-    (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
     (block
+        ; Rs and Rt must be EVEN (odd = UNALLOCATED; silicon SIGILLs -- 16 fuzz rejects).
+        ; The guard lives INSIDE the block: a bare top-level (requires) occupies def[5]
+        ; = the DECODE slot, which shifts the real (block (let ...)) into def[6+] = eval.
+        ; The disassembler emits decode only, so every let-bound disassembly name goes
+        ; unbound (CS0103). Same shape as the ArchCompilerCore parse-drop, one slot over.
+        (requires (& (== (& rs 1) 0) (== (& rt 1) 0)))
         (let r (if (== size 0) "W" "X"))
         (let rs2 (+ rs 1))
         (let rt2 (+ rt 1)))
@@ -3487,8 +3503,9 @@
     ; Derived from this def's OWN match case-list below, not composed from the manual.
     ; Without the guard the match default hits unimplemented!() MID-EXECUTION
     ; instead of failing to decode.
-    (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
+
     (block
+        (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
         (let simm (signext imm i64))
         (let r (match (: size opc)
             0b00_0 "B"
@@ -3514,8 +3531,9 @@
     ; Derived from this def's OWN match case-list below, not composed from the manual.
     ; Without the guard the match default hits unimplemented!() MID-EXECUTION rather than
     ; rejecting at decode. Sibling of LDR-simd-immediate-postindex, same valid set.
-    (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
+
     (block
+        (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
         (let simm (signext imm i64))
         (let r (match (: size opc)
             0b00_0 "B"
@@ -3590,8 +3608,9 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
-    (requires (& option 0b010))
+
     (block
+        (requires (& option 0b010))
         (let r1 (if (& (== size 0) (== opc 1)) "Q" (match size
             0b00 "B"
             0b01 "H"
@@ -3639,8 +3658,9 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
-    (requires (& option 0b010))
+
     (block
+        (requires (& option 0b010))
         (let r1 (if (== size 0) "W" "X"))
         (let r2 (if (& option 1) "X" "W"))
         (let amount (if (== scale 0) 0 (if (== size 0) 2 3)))
@@ -3949,8 +3969,9 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
-    (requires (& option 0b010))
+
     (block
+        (requires (& option 0b010))
         (let r (if (& option 1) "X" "W"))
         (let amount (if (== scale 0) 0 2))
         (let extend (match option
@@ -4028,8 +4049,9 @@
     ; Derived from this def's OWN match case-list below, not composed from the manual.
     ; Without the guard the match default hits unimplemented!() MID-EXECUTION
     ; instead of failing to decode.
-    (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
+
     (block
+        (requires (| (| (| (| (== (: size opc) 0b000) (== (: size opc) 0b010)) (== (: size opc) 0b100)) (== (: size opc) 0b110)) (== (: size opc) 0b001)))
         (let r (match (: size opc)
             0b00_0 "B"
             0b01_0 "H"
@@ -4244,8 +4266,9 @@
     ; Derived from this def's OWN match case-list below, not composed from the manual.
     ; Without the guard the match default hits unimplemented!() MID-EXECUTION
     ; instead of failing to decode.
-    (requires (| (== size 0b01) (== size 0b10)))
+
     (block
+        (requires (| (== size 0b01) (== size 0b10)))
         (let rm (if (== size 0b10) (: M rv) rv))
         (let t (match (: size Q)
             0b01_0 "4H"
@@ -5564,8 +5587,9 @@
     ; Derived from this def's OWN match case-list below, not composed from the manual.
     ; Without the guard the match default hits unimplemented!() MID-EXECUTION
     ; instead of failing to decode.
-    (requires (| (| (== opc 0b00) (== opc 0b01)) (== opc 0b10)))
+
     (block
+        (requires (| (| (== opc 0b00) (== opc 0b01)) (== opc 0b10)))
         (let r (match opc 0b00 "S" 0b01 "D" 0b10 "Q" (unimplemented)))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 0b10 4 (unimplemented)))))
     (let address (gpr-or-sp64 rd)
@@ -5609,8 +5633,9 @@
     (names (opc o) (imm i) (rd n) (rt1 t) (rt2 p))
     ; Derived from this def's OWN match case-list below (opc in {00,01,10} -> S/D/Q),
     ; not composed from the manual. Sibling of STP-simd-postindex, same valid set.
-    (requires (| (| (== opc 0b00) (== opc 0b01)) (== opc 0b10)))
+
     (block
+        (requires (| (| (== opc 0b00) (== opc 0b01)) (== opc 0b10)))
         (let r (match opc 0b00 "S" 0b01 "D" 0b10 "Q" (unimplemented)))
         (let simm (<< (signext imm i64) (match opc 0b00 2 0b01 3 0b10 4 (unimplemented)))))
     (let address (+ (gpr-or-sp64 rd) simm)
@@ -5673,8 +5698,9 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
-    (requires (& option 0b010))
+
     (block
+        (requires (& option 0b010))
         (let r1 (if (== size 0) "W" "X"))
         (let r2 (if (& option 1) "X" "W"))
         (let amount (if (== scale 0) 0 (if (== size 0) 2 3)))
@@ -5701,8 +5727,9 @@
     ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
     ; Derived from this def's OWN case-list below, not composed from the manual.
     ; Without it the match default hits unimplemented!() MID-EXECUTION.
-    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
+
     (block
+        (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
         (let rop (: size opc (u1 0)))
         (let r (match rop
             0b0000 "B"
@@ -5730,8 +5757,9 @@
     ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
     ; Derived from this def's OWN case-list below, not composed from the manual.
     ; Without it the match default hits unimplemented!() MID-EXECUTION.
-    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
+
     (block
+        (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
         (let rop (: size opc (u1 0)))
         (let r (match rop
             0b0000 "B"
@@ -5760,8 +5788,9 @@
     ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
     ; Derived from this def's OWN case-list below, not composed from the manual.
     ; Without it the match default hits unimplemented!() MID-EXECUTION.
-    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
+
     (block
+        (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
         (let rop (: size opc (u1 0)))
         (let r (match rop
             0b0000 "B"
@@ -5788,15 +5817,17 @@
     ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
     ; Derived from this def's OWN case-list below, not composed from the manual.
     ; Without it the match default hits unimplemented!() MID-EXECUTION.
-    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
+
     ; ARM: option in {010 UXTW, 011 LSL, 110 SXTW, 111 SXTX}; the other four are
     ; UNDEFINED for the register-offset load/store forms. Every valid value has bit 1
     ; set (2,3,6,7) and every reserved one clears it (0,1,4,5) -- derived from this
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
-    (requires (& option 0b010))
+
     (block
+        (requires (& option 0b010))
+        (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
         (let rop (: size opc (u1 0)))
         (let r1 (match rop
             0b0000 "B"
@@ -5954,8 +5985,9 @@
     ; {0000,0100,1000,1100,0010} is exactly size:opc in {000,010,100,110,001}.
     ; Derived from this def's OWN case-list below, not composed from the manual.
     ; Without it the match default hits unimplemented!() MID-EXECUTION.
-    (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
+
     (block
+        (requires (| (== (: size opc) 0b000) (| (== (: size opc) 0b010) (| (== (: size opc) 0b100) (| (== (: size opc) 0b110) (== (: size opc) 0b001))))))
         (let rop (: size opc (u1 0)))
         (let r (match rop
             0b0000 "B"
@@ -6211,8 +6243,9 @@
     (names (Q q) (size s) (rn n) (rd d))
     ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
     ; TWO matches on DIFFERENT fields: (match size) admits 00/01/10, and (match (: size Q)) has no 0b10_0 arm. A guard from either alone is insufficient -- this is the intersection.
-    (requires (& (!= size 0b11) (!= (: size Q) 0b100)))
+
     (block
+        (requires (& (!= size 0b11) (!= (: size Q) 0b100)))
         (let r (match size
             0b00 "H"
             0b01 "S"
@@ -6290,8 +6323,9 @@
     ; type=10 UNALLOCATED (objdump: .inst undefined). type=11 = FP16 (REAL --
     ; ucvtf h28,w17 decodes on FEAT_FP16 silicon) but the IL has no F16 type yet:
     ; semantics stay unimplemented-loud; the fuzz names it in the panic column.
-    (requires (!= type 0b10))
+
     (block
+        (requires (!= type 0b10))
         (let st (: size type))
         (let r1 "") (let r2 "")
         (match st
