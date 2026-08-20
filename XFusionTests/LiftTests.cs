@@ -13,6 +13,41 @@ public class LiftTests {
 	}
 
 	[Test]
+	public void NewDecodeGapsDecodeAndDieLoud() {
+		// The full-scope M0 gate (11,320,255 lengths vs capstone) named the
+		// undecodables. A missing ENCODING desynchronises a linear sweep for the
+		// rest of the walk -- a corpus-wide cost. A missing SEMANTICS is one
+		// instruction that dies loud. So these land intrinsic-bodied: decode is
+		// what the corpus needs, and the v128 carrier question stays where it is.
+		// Each expectation was read off objdump -M intel BEFORE the .isa edit.
+		foreach(var (hex, want) in new[] {
+			("660fd2c1", "psrld"), ("660ff2c1", "pslld"), ("660fe2c1", "psrad"),
+			("660fd3c1", "psrlq"), ("660ff3c1", "psllq"), ("660fd1c1", "psrlw"),
+			("660ff1c1", "psllw"), ("660fe1c1", "psraw"),
+			("660f3840c1", "pmulld"), ("660f383dc1", "pmaxsd"), ("660f383cc1", "pmaxsb"),
+			("660f3839c1", "pminsd"), ("660f3838c1", "pminsb"), ("660f383fc1", "pmaxud"),
+			("660f383ec1", "pmaxuw"),
+		}) {
+			var b = Convert.FromHexString(hex);
+			Assert.That(Disassembler.DecodeInsn(b, XMode.Bits64, out var d), Is.True,
+				$"{want} ({hex}) must DECODE -- an undecodable byte desyncs the sweep");
+			Assert.That(Disassembler.Disassemble(b, 0, XMode.Bits64).Text, Does.Contain(want),
+				$"{hex} must disassemble as {want}");
+			// The SEMANTICS must die loud. Lift SUCCEEDS -- it builds
+			// (void intrin.<name> ...) -- so the die-loud property lives at EXEC, in
+			// RunIntrinsic (X86Machine.cs:167-171: StringOp, then the OnIntrin host
+			// shim, then throw). Observed before asserting: lifting psrld yields
+			// `(void intrin.psrld (u128 XMM0) (u128 XMM1))`, which is why the assert
+			// is on Step() and not on Lift().
+			var m = new X86Machine { Mode = XMode.Bits64, Mem = new byte[0x2000], Ip = 0x100 };
+			b.CopyTo(m.Mem, 0x100);
+			Assert.That(() => m.Step(), Throws.TypeOf<NotSupportedException>()
+				.With.Message.Contains(want),
+				$"{want} is intrinsic-bodied: EXEC must throw naming it, not compute a lie");
+		}
+	}
+
+	[Test]
 	public void ByteShiftImmThroughDecode() {  // 66 0F 73 DB 01 = psrldq xmm3, 1
 		// The lowering census reports `vshift-bytes count not an imm bind` as a
 		// blocker for PSRLDQ-I/PSLLDQ-I -- but the census binds every parameter as

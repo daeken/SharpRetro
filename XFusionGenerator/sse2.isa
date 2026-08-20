@@ -205,6 +205,32 @@
 (instruction PXOR (dst src) "pxor $dst, $src" (= dst (^ dst src)))
 (encoding PXOR (Vdq Wdq) (opsize 0x0F 0xEF))
 
+; VARIABLE-COUNT packed shifts (count in an xmm reg / memory, not an imm8).
+; The imm8 forms above use (vishi ...), which resolves the count AT LOWER TIME --
+; a compile-time constant by construction. These take a RUNTIME count, so they
+; are intrinsic-bodied until the IL has a variable-count vector shift.
+; Verified absent at bytes before adding: objdump -M intel on 66 0F F2 C1 says
+; `pslld xmm0,xmm1` and the .isa had zero encodings for 0F {D1,D2,D3,E1,E2,F1,F2,F3}.
+; Decode-only is the point: a missing ENCODING desynchronises a linear sweep for
+; the rest of the walk, which is a corpus-wide cost; a missing SEMANTICS is one
+; instruction that dies loud.
+(instruction PSRLW (dst count) "psrlw $dst, $count" (intrinsic psrlw dst count))
+(encoding PSRLW (Vdq Wdq) (opsize 0x0F 0xD1))
+(instruction PSRLD (dst count) "psrld $dst, $count" (intrinsic psrld dst count))
+(encoding PSRLD (Vdq Wdq) (opsize 0x0F 0xD2))
+(instruction PSRLQ (dst count) "psrlq $dst, $count" (intrinsic psrlq dst count))
+(encoding PSRLQ (Vdq Wdq) (opsize 0x0F 0xD3))
+(instruction PSRAW (dst count) "psraw $dst, $count" (intrinsic psraw dst count))
+(encoding PSRAW (Vdq Wdq) (opsize 0x0F 0xE1))
+(instruction PSRAD (dst count) "psrad $dst, $count" (intrinsic psrad dst count))
+(encoding PSRAD (Vdq Wdq) (opsize 0x0F 0xE2))
+(instruction PSLLW (dst count) "psllw $dst, $count" (intrinsic psllw dst count))
+(encoding PSLLW (Vdq Wdq) (opsize 0x0F 0xF1))
+(instruction PSLLD (dst count) "pslld $dst, $count" (intrinsic pslld dst count))
+(encoding PSLLD (Vdq Wdq) (opsize 0x0F 0xF2))
+(instruction PSLLQ (dst count) "psllq $dst, $count" (intrinsic psllq dst count))
+(encoding PSLLQ (Vdq Wdq) (opsize 0x0F 0xF3))
+
 (instruction PMINUB (dst src) "pminub $dst, $src" (intrinsic pminub dst src))
 (encoding PMINUB (Vdq Wdq) (opsize 0x0F 0xDA))
 (instruction PMAXUB (dst src) "pmaxub $dst, $src" (intrinsic pmaxub dst src))
