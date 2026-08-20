@@ -107,18 +107,24 @@ public static class Math {
 		var r = new Vector128<byte>();
 		var count = Q == 0 ? 8 : 16;
 
+		// EXT semantics: result = (concat(b:a) >> index*8)[0..count) — low part from a[index..],
+		// HIGH part from b[0..index). The second loop read `a` since birth; the Rust interp
+		// (written from the SDM independently, not transcribed from this) + a bare-silicon
+		// 24-seed fuzz both sided against it (2026-08-16, @2aa0080). index=0 is where the
+		// buggy and correct forms AGREE, which is why it survived: any fuzz seed landing
+		// on index=0 passes either way.
 		if(count == 8) {
 			for(var i = index; i < 8; ++i)
 				r = r.WithElement(i - index, a.GetElement(i));
 			var offset = 8 - index;
 			for(var i = offset; i < 8; ++i)
-				r = r.WithElement(i, a.GetElement(i - offset));
+				r = r.WithElement(i, b.GetElement(i - offset));
 		} else {
 			for(var i = index; i < 16; ++i)
 				r = r.WithElement(i - index, a.GetElement(i));
 			var offset = 16 - index;
 			for(var i = offset; i < 16; ++i)
-				r = r.WithElement(i, a.GetElement(i - offset));
+				r = r.WithElement(i, b.GetElement(i - offset));
 		}
 			
 		return r.As<byte, float>();
