@@ -13,6 +13,34 @@ public class LiftTests {
 	}
 
 	[Test]
+	public void VexScalarFloatDecodesAndDiesLoud() {
+		// Every expectation below was read off `objdump -M intel` BEFORE the .isa edit:
+		//   C5 F3 59 C1 = vmulsd xmm0,xmm1,xmm1   C5 F2 10 C1 = vmovss xmm0,xmm1,xmm1
+		// VEX2 byte-2 = R<<7 | (~vvvv & 0xF)<<3 | L<<2 | pp; vvvv=xmm1 -> 0xE; pp 2=F3 3=F2.
+		// DECODE-ONLY on purpose: SDM says DEST[127:64] := SRC1[127:64] (the vvvv operand),
+		// and write_operand for an Xmm at width<128 preserves DEST's own upper -- those
+		// agree only when dst == src1. Faithful semantics need a lane-insert primitive
+		// that IlLower does not have, so a body here would be silently wrong on the
+		// three-register form. Intrinsic-bodied => decode + disasm, die loud at EXEC.
+		foreach(var (hex, mnem) in new[] {
+			("c5f210c1", "vmovss"), ("c5f258c1", "vaddss"), ("c5f259c1", "vmulss"),
+			("c5f25cc1", "vsubss"), ("c5f25ec1", "vdivss"),
+			("c5f310c1", "vmovsd"), ("c5f358c1", "vaddsd"), ("c5f359c1", "vmulsd"),
+			("c5f35cc1", "vsubsd"), ("c5f35ec1", "vdivsd"),
+		}) {
+			var b = Convert.FromHexString(hex);
+			Assert.That(Disassembler.DecodeInsn(b, XMode.Bits64, out var d), Is.True, $"decode {hex}");
+			Assert.That(d.Len, Is.EqualTo(4), $"length {hex}");   // Decode.cs:90 -- Len, not Length
+			var txt = Disassembler.Disassemble(b, 0, XMode.Bits64).Text;
+			Assert.That(txt, Does.StartWith(mnem), $"disasm {hex}");
+			Assert.That(txt, Does.Contain("xmm1, xmm1"), $"vvvv+rm both xmm1: {hex} -> {txt}");
+			// die-loud lives at EXEC (RunIntrinsic), not at Lift -- verified, not assumed
+			var m = new X86Machine(); m.Xmm[0] = 0; m.Xmm[1] = 0;
+			Assert.That(() => { X86Lifter.Lift(in d, 0, XMode.Bits64); }, Throws.Nothing, $"lift {hex}");
+		}
+	}
+
+	[Test]
 	public void RetiClassifiesAsRetNotJmp() {
 		// `ret imm16` (0xC2) lowered to BranchKind.Jmp, so every consumer scanning for
 		// Ret was blind to stdcall returns. A full-scope capstone diff over a 44MB

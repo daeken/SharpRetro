@@ -92,3 +92,57 @@
 (encoding SHRX (Gv Ev Hv) (vex-3src repnz 0x0F 0x38 0xF7))
 (instruction BZHI (dst src count) "bzhi $dst, $src, $count" (intrinsic bzhi dst src count))
 (encoding BZHI (Gv Ev Hv) (vex-3src 0x0F 0x38 0xF5))
+
+; --- VEX scalar-float: DECODE ONLY, and the reason is a real IL gap ---
+;
+; A full-scope capstone census over a 44MB shipped x86-64 binary names AVX as the
+; decoder's largest remaining gap (1,114 on-stream instructions vs 16 off-stream =
+; 70:1, so these are real code and not linear-sweep debris inside desync windows).
+; The scalar third of that population -- vmulsd 62, vmovsd 55, vsubsd 42 -- is
+; reachable through the same u64 carrier the SSE scalar cluster already uses, so it
+; looked like the cheap half. It isn't, and the reason is worth writing down.
+;
+; SDM Vol 2A on VADDSD: DEST[63:0] := SRC1[63:0] + SRC2[63:0]
+;                       DEST[127:64] := SRC1[127:64]
+;                       DEST[MAXVL-1:128] := 0
+; The upper lane comes from SRC1 -- the vvvv operand -- NOT from DEST. Our
+; write_operand for an Xmm at width<128 preserves DEST's own upper (day-47 Ⓐ,
+; silicon-verified against bare Intel: 1,350 of 1,600 diffs were this one fix).
+; Those agree ONLY when dst == src1, which is the common two-operand-looking case
+; and NOT the general one. So a `(= dst (+ (as-f64 src1) (as-f64 src2)))` body
+; would be silently wrong whenever a compiler emits the three-register form -- the
+; exact class the exec tier exists to catch, shipped as a body that type-checks.
+;
+; Expressing it faithfully needs a lane-insert primitive (write lane 0 of a v128
+; while taking lane 1 from a third operand). IlLower has no vector node at all
+; today: 7 IlVec* kinds exist in the shared IL, 0 are emitted, 0 evaluated.
+; So these land `(intrinsic ...)` -- decode is what the corpus needs (a missing
+; ENCODING desynchronises a linear sweep for the rest of the walk; a missing
+; SEMANTICS is one instruction that dies loud at RunIntrinsic).
+;
+; Every encoding below was verified against `objdump -M intel` BEFORE it was
+; written, not composed: C5 F3 59 C1 is `vmulsd xmm0,xmm1,xmm1`, C5 F2 10 C1 is
+; `vmovss xmm0,xmm1,xmm1`. Hsd/Hss parse with no generator change -- OperandSpec
+; maps 'H' with any non-"v" width to OpClass.XmmVvvv (:159).
+
+(instruction VMOVSS (dst src1 src2) "vmovss $dst, $src1, $src2" (intrinsic vmovss dst src1 src2))
+(encoding VMOVSS (Vss Hss Wss) (vex-3src rep 0x0F 0x10))
+(instruction VADDSS (dst src1 src2) "vaddss $dst, $src1, $src2" (intrinsic vaddss dst src1 src2))
+(encoding VADDSS (Vss Hss Wss) (vex-3src rep 0x0F 0x58))
+(instruction VMULSS (dst src1 src2) "vmulss $dst, $src1, $src2" (intrinsic vmulss dst src1 src2))
+(encoding VMULSS (Vss Hss Wss) (vex-3src rep 0x0F 0x59))
+(instruction VSUBSS (dst src1 src2) "vsubss $dst, $src1, $src2" (intrinsic vsubss dst src1 src2))
+(encoding VSUBSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5C))
+(instruction VDIVSS (dst src1 src2) "vdivss $dst, $src1, $src2" (intrinsic vdivss dst src1 src2))
+(encoding VDIVSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5E))
+
+(instruction VMOVSD (dst src1 src2) "vmovsd $dst, $src1, $src2" (intrinsic vmovsd dst src1 src2))
+(encoding VMOVSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x10))
+(instruction VADDSD (dst src1 src2) "vaddsd $dst, $src1, $src2" (intrinsic vaddsd dst src1 src2))
+(encoding VADDSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x58))
+(instruction VMULSD (dst src1 src2) "vmulsd $dst, $src1, $src2" (intrinsic vmulsd dst src1 src2))
+(encoding VMULSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x59))
+(instruction VSUBSD (dst src1 src2) "vsubsd $dst, $src1, $src2" (intrinsic vsubsd dst src1 src2))
+(encoding VSUBSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5C))
+(instruction VDIVSD (dst src1 src2) "vdivsd $dst, $src1, $src2" (intrinsic vdivsd dst src1 src2))
+(encoding VDIVSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5E))
