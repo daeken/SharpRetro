@@ -123,9 +123,30 @@ value on lanes 2-3. So arms-before-carrier is the one ordering worse than doing 
 widening as a cost to minimize. The reader is testable first and against a population
 that already exists, which puts a self-checked comparand in front of the risky change.)
 
+## The reader needs no fresh sweep (read the stub, not the def_id)
+
+An X64D row is `{def_id:u32, flags_mask:u32, stub_len:u32, stub[stub_len],
+pre[STATE_WORDS_X64], post[...]}` (`src/bin/sweep.rs:641-646`), and **the stub carries
+the instruction bytes at a known offset** — SLOT_OFF, derived from stub_len (82 for the
+64-bit v1 stub, 29 for 32-bit, 226 for the XMM v2 stub; `sweep.rs:95`, `:421`).
+
+So a reader takes the insn from the stub and **never reads `def_id`**. That matters
+because the corpus is frozen against a 2026-08-11 def table: a def_id lookup against
+today's names mislabels ~74% of rows, and every mislabel is a plausible mnemonic (see
+SWEEP-VECTOR-COVERAGE.md). Reading the bytes sidesteps the whole class, and it means the
+frozen 4,088,162-row corpus is usable AS-IS — a fresh sweep is not a prerequisite for
+step 1.
+
 ## What this still won't verify
 
-The 23 mnemonics with no corpus rows. `phase1_skip` admits all ten vector families
-with zero skips, yet those 23 appear in neither the emitted tally, the track-fail list,
-nor `DEF_IS_INTRINSIC` — a third gate excludes them and it is unnamed. Until it is,
-*eligible* is not *covered*.
+Link-2. The corpus grades `interp.rs` against silicon; the C# `IlLower` lowerings are a
+hand transcription verified by nothing. That is what the reader is for, and it is the
+whole point of the sequence above.
+
+(An earlier draft of this section claimed 23 mnemonics had no corpus rows and inferred an
+unnamed "third gate" excluding them. There is no third gate: the figure came from a
+def_id join against a drifted table, plus a `take(20)` truncation in the census output I
+was reading. Measured by decoding each row's own bytes: **40 of 40** vector mnemonics
+have silicon rows. An inferred mechanism explaining a wrong figure reads as rigor and is
+the flattering direction twice over — recorded here because the correction landed in the
+sibling file first and this one stayed stale for an hour.)
