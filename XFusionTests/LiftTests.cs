@@ -512,7 +512,7 @@ public class LiftTests {
 		//                            CHANGING convert genuinely cannot be expressed
 		// The remaining four are the ones where that answer is actually no.
 		var known = new[] {
-			"vcvt", "vdpp", "vhadd",
+			"vcvt",
 		};
 		Assert.That(heads, Is.EquivalentTo(known),
 			$"the unlowered-head set MOVED. now ({heads.Count}): {string.Join(" ", heads)}\n"

@@ -500,13 +500,24 @@ public class IlLower {
 				return new IlBin(a.Ty, h == "fmax" ? BinOp.FMax : BinOp.FMin, a, b);
 			}
 			// ---- PACKED (V128) CLUSTER, the half that needs NO new node kinds ----
-			// 36 of the 552 templates reach only these heads. The other 41 want lane
-			// PERMUTATION (vzip/vshuf/vshufw), a lane-signbit GATHER (vmovmsk), a
-			// CROSS-lane add (vhadd), predicate MASKS (fcmpp/vfcmpp), a dot-product
-			// (vdpp) or a lane-count-CHANGING convert (vcvt) -- none of which any
-			// existing IlVec*/IlCast node expresses, so they'd need additions to the
-			// SHARED LiftIl (which Pagentry.Lifter references) and are deliberately
-			// not here. The two populations are disjoint: 0 templates use both.
+			// This comment said SEVEN heads "need additions to the shared LiftIl":
+			// vzip/vshuf/vshufw, vmovmsk, vhadd, fcmpp/vfcmpp, vdpp, vcvt. SIX of them
+			// are lowered in this file now, and every one needed NOTHING new. The
+			// classification was wrong six times by one organ: I asked whether ONE node
+			// could express the operation instead of whether the node SET could, which
+			// means I was classifying by the HEAD'S NAME rather than by the constructor
+			// that would receive it. "cross-lane add" and "dot-product" sound exotic;
+			// both are IlVecElem extracts + scalar IlBin + one IlVecBuild.
+			//
+			// vcvt is the ONE that genuinely can't: IlCast(Ty, Kind, X) has no
+			// element-width field, so CVTDQ2PS (4xi32->4xf32) and CVTPD2PS (2xf64->
+			// 4xf32, lane-count CHANGING) are indistinguishable in it. That is a real
+			// shared-LiftIl question and stays with the consumer side.
+			//
+			// The rule this cost six instances to state: CLASSIFY BY THE RECEIVING
+			// CONSTRUCTOR, NEVER BY THE HEAD'S NAME. What decides local-vs-shared is
+			// whether the ctor can carry the operation's information -- not whether the
+			// operation sounds like it wants a node of its own.
 			//
 			// The float-vs-int discriminator is the TYPE, not the op -- exactly as the
 			// scalar side already does it: DIVSS lowers as (/ (as-f32 dst) (as-f32 src))
@@ -708,6 +719,67 @@ public class IlLower {
 				var a = Expr(l[1]); var b = Expr(l[2]);
 				var ew = (int) ((PInt) l[4]).Value;
 				return FloatPred(a, b, PredOf(((PName) l[3]).Name), true, ew);
+			}
+			case "vhadd": {
+				// (vhadd a b ew) -- HADDPS/HADDPD: PAIRWISE add within each source, a's
+				// pairs filling the low half of the result and b's the high half.
+				//   n = 128/ew;  for i in 0..n/2:
+				//     r[i]       = a[2i] + a[2i+1]
+				//     r[n/2 + i] = b[2i] + b[2i+1]
+				// TRANSCRIBED from interp.rs:374 (fn vhadd), which spells ew=32 out as
+				// four explicit pairs -- p(l(a,0)+l(a,1),0) | p(l(a,2)+l(a,3),1) |
+				// p(l(b,0)+l(b,1),2) | p(l(b,2)+l(b,3),3) -- and ew=64 as two. The loop
+				// above is that, generalized; I checked it reproduces both spellings
+				// lane-for-lane rather than trusting the generalization.
+				//
+				// Lanes are FLOAT here (the interpreter uses f32/f64 from_bits and a
+				// float add), so ElemTy is IlType.F(ew) and the adds are IlBin over
+				// F(ew) -- the same float-by-TYPE discriminator vfbin uses above.
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				if(ew != 32 && ew != 64) throw new NotSupportedException($"op vhadd-ew-{ew}");
+				var ft = new IlType.F(ew);
+				var n = 128 / ew;
+				var el = new List<Il>();
+				for(var i = 0; i < n / 2; i++)
+					el.Add(new IlBin(ft, BinOp.Add, Lane(a, ft, 2 * i), Lane(a, ft, 2 * i + 1)));
+				for(var i = 0; i < n / 2; i++)
+					el.Add(new IlBin(ft, BinOp.Add, Lane(b, ft, 2 * i), Lane(b, ft, 2 * i + 1)));
+				return new IlVecBuild(128, ft, el);
+			}
+			case "vdpp": {
+				// (vdpp a b imm ew) -- DPPS/DPPD dot-product. imm's HIGH nibble selects
+				// which lanes multiply into the sum; the LOW nibble selects which output
+				// lanes receive it, the rest zero:
+				//   sum = 0.0;  for i in 0..n: if imm & (1<<(4+i)): sum += a[i]*b[i]
+				//   for i in 0..n: r[i] = (imm & (1<<i)) ? sum : 0.0
+				// TRANSCRIBED from interp.rs:338 (fn vdpp).
+				//
+				// The accumulator STARTS at a float zero and each product is Added to
+				// it -- not folded pairwise, and not seeded with the first product. That
+				// is what the interpreter does and it is observable: 0.0 + (-0.0) is
+				// +0.0, so seeding with the first term would differ on a negative-zero
+				// product. Faithfulness here is the difference between two shapes a
+				// byte-diff against the Rust arm would flag.
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[4]).Value;
+				if(ew != 32 && ew != 64) throw new NotSupportedException($"op vdpp-ew-{ew}");
+				var immName = ((PName) l[3]).Name;
+				if(!Binds.TryGetValue(immName, out var db) || db is not OperandBind.Imm di)
+					throw new NotSupportedException($"vdpp imm {immName} not an imm bind");
+				var imm = (uint) ((ulong) di.Value & 0xFF);
+				var ft = new IlType.F(ew);
+				var n = 128 / ew;
+				var zero = new IlConst(ft, (UInt128) 0);     // +0.0 at either width
+				Il sum = zero;
+				for(var i = 0; i < n; i++)
+					if((imm & (1u << (4 + i))) != 0)
+						sum = new IlBin(ft, BinOp.Add, sum,
+							new IlBin(ft, BinOp.Mul, Lane(a, ft, i), Lane(b, ft, i)));
+				var el = new List<Il>();
+				for(var i = 0; i < n; i++)
+					el.Add((imm & (1u << i)) != 0 ? sum : zero);
+				return new IlVecBuild(128, ft, el);
 			}
 			// ---- LANE-PERMUTATION cluster: also NO new node kinds ----
 			// I had these in the "needs a new node kind" half, from the head names. Wrong,
