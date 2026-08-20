@@ -24,6 +24,17 @@ cd "$(dirname "$0")/../.."
 # NOT included: avx/avx2/avx512 (cpuid_table under-advertises; adding these
 # would decode VEX/EVEX forms but a guest held to an SSE-baseline cpuid never
 # reaches them). Same caveat applies — that's a claim about our cpuid_table.
+#
+# ⚠ AND IT GOVERNS THE SWEEP TOO, which the caveat above does not say: this run
+# also writes src/sweep_defs.rs (the per-def encoding facts the silicon sweep
+# enumerates from). So FEATURES bounds what the SWEEP can reach, not only what the
+# decoder accepts — a reader who wants an AVX *sweep* changes it here, and the
+# avx-exclusion reasoning above is about DECODE + cpuid advertisement, which is a
+# different question from whether the sweep should enumerate those encodings.
+#
+# The file is gitignored and carries no provenance stamp, so a table generated with
+# a different FEATURES is byte-indistinguishable from this one in any test output.
+# This script IS the record of the invocation; that is why it's tracked.
 FEATURES="ia32 x86-64 sse sse2 sse3 ssse3 sse4.1 sse4.2 x87"
 touch XFusionGenerator/Program.cs
 dotnet run --project XFusionGenerator -- $FEATURES --rust rust/xfusion-recomp/src
