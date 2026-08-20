@@ -92,13 +92,26 @@ echo "=== rung-4 gate-(x86): the x86 lift+exec arm ==="
 #
 # rc read DIRECT (not through a pipe: `dotnet test | grep` gives grep's status,
 # and this gate's own history has that bug in it — n>=12 for the family here).
-# The count is compared against a stated FLOOR rather than 0, because the 3
-# remaining failure is the SSE vector row (vmovmsk/vibin/vshuf/f32) that needs lane
-# semantics the C# IL has never had. A floor makes a REGRESSION loud while an
-# honest known-gap stays quiet — and the floor is asserted in BOTH directions:
-# fewer failures than the floor is ALSO reported, because that means the floor is
-# stale and this comment is lying to the next reader.
-X86_FAIL_FLOOR=1
+# The count is compared against a stated FLOOR rather than 0, and the floor is
+# asserted in BOTH directions: fewer failures than the floor is ALSO reported,
+# because that means the floor is stale and this comment is lying to the next
+# reader.
+#
+# HISTORY, kept because the both-directions assert is what earned it: the floor
+# was 1 for the SSE vector row (vmovmsk/vibin/vshuf/f32), described here as
+# needing "lane semantics the C# IL has never had". That was WRONG on the
+# expressiveness question and the floor caught its own staleness the moment the
+# row closed -- 0 failed against a floor of 1, reported as ✗ FLOOR IS STALE.
+# The vector heads did not need a new node kind; IlVecBuild+IlVecElem (Il.cs
+# 143/145) were in the shared IL, documented and unused, and every lane selector
+# in the family is compile-time. So the row closed by DECOMPOSITION into nodes
+# that already existed.
+#
+# ⚠ AND THE READ THAT MATTERS BEFORE LOWERING A FLOOR: "0 failed" is also what a
+# test that stopped RUNNING looks like. Verified it is 232 PASSED / 0 failed and
+# not 0-of-0 before touching this -- a floor lowered on an absent subject is a
+# gate that can no longer fail. Same shape as the arm-count check above.
+X86_FAIL_FLOOR=0
 dotnet test XFusionTests -v q --nologo > /tmp/x86t.log 2>&1 || true   # set -e: rc=1 is EXPECTED at the floor
 xrc=$?
 xfail=$(grep -oE 'Failed:[[:space:]]+[0-9]+' /tmp/x86t.log | grep -oE '[0-9]+' | head -1)
@@ -134,7 +147,7 @@ if [ ! -f oracle-baseline/.vocab-patterns.txt ]; then
 elif grep -rn -f oracle-baseline/.vocab-patterns.txt \
      ArchCompilerCore/ ArchCompiler/ Frontends/ Backends/ rust/ oracle-baseline/README.md \
      Aarch64Generator/ SharpStationGenerator/ DamageGenerator/ 2>/dev/null \
-   | grep -v '/obj/\|/bin/Debug\|/bin/Release\|/target/\|vocab-patterns.txt\|vocab-gate.txt\|<coram@daeken>'; then
+   | grep -v '/obj/\|/bin/Debug\|/bin/Release\|/target/\|vocab-patterns.txt\|vocab-gate.txt\|@daeken>'; then
   echo "  ✗ house-vocab present in tracked source — scrub before push"
   FAIL=1
 else

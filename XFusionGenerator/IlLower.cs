@@ -532,6 +532,54 @@ public class IlLower {
 				};
 				return new IlVecBin(128, new IlType.F(ew), bop, a, b);
 			}
+			case "vmovmsk": {
+				// (vmovmsk a ew) -- gather each lane's SIGN BIT into a scalar integer.
+				// MOVMSKPS ew=32 (sse.isa:43) · MOVMSKPD ew=64 (sse2.isa:24) ·
+				// PMOVMSKB ew=8 (sse2.isa:176). Result is a SCALAR, not a vector.
+				//
+				// I had this in the "needs a new shared-LiftIl node kind" set and that
+				// was WRONG, for the third time by the same organ: I asked whether ONE
+				// node could express the operation instead of whether the node SET
+				// could. The consumer side read interp.rs:451 and pointed out the
+				// decomposition; the ctor is what settles it, as it did for the
+				// permutation cluster:
+				//   IlVecElem(IlType Ty, Il Vec, Il Idx)   -- Il.cs:145, PER-LANE type
+				// so each lane is an ordinary scalar once extracted, and everything
+				// after that is scalar arithmetic that already lowers.
+				//
+				// The .isa's own body is the transcription source (interp.rs:451):
+				//   for i in 0..n { r |= ((a.bits >> (i*ew + (ew-1))) & 1) << i; }
+				// i.e. per lane: take the top bit, place it at bit i, OR them together.
+				// Two ways to spell "the top bit": Shr by (ew-1) then And 1, or the
+				// signed-Slt-against-zero form. The FIRST is what the interpreter does,
+				// so it is what this emits -- composing the second would be a
+				// different-but-equivalent shape that a byte-diff against the Rust
+				// arm would flag -- the compose-from-memory class this bench keeps
+				// paying for.
+				//
+				// Widths: the lane is extracted at its own width (ew), shifted within
+				// that width, then WIDENED to 32 before placement -- because n can be
+				// 16 (PMOVMSKB) and bit 15 does not exist in a u8 lane. The result type
+				// is U32 to match interp.rs:451's `IlType::I{signed:false, width:32}`.
+				var mv = Expr(l[1]);
+				var mew = (int) ((PInt) l[2]).Value;
+				var nl = 128 / mew;
+				var lt = new IlType.I(false, mew);
+				Il acc2 = null;
+				for(var i = 0; i < nl; i++) {
+					// (lane >> (ew-1)) & 1, at the lane's own width
+					var bit = new IlBin(lt, BinOp.And,
+						new IlBin(lt, BinOp.Shr, Lane(mv, lt, i), C(mew, mew - 1)),
+						C(mew, 1));
+					// widen to 32 (Zext is a no-op when mew==32; kept uniform so the
+					// shift below is always in a width that can hold bit index nl-1)
+					Il w32 = mew == 32 ? bit : new IlCast(U(32), CastKind.Zext, bit);
+					var placed = i == 0 ? w32
+						: new IlBin(U(32), BinOp.Shl, w32, C(32, i));
+					acc2 = acc2 == null ? placed : new IlBin(U(32), BinOp.Or, acc2, placed);
+				}
+				return acc2;
+			}
 			case "vibin": {
 				// (vibin a b ew op) -- packed-int per-lane wrapping arith on V128.
 				// ew in {8,16,32,64}; op in {0=add,1=sub,2=mul,3=cmpeq,4=cmpgt}
