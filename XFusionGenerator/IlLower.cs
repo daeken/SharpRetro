@@ -440,6 +440,107 @@ public class IlLower {
 				var b = Expr(l[2], W(a));
 				return new IlBin(a.Ty, h == "fmax" ? BinOp.FMax : BinOp.FMin, a, b);
 			}
+			// ---- PACKED (V128) CLUSTER, the half that needs NO new node kinds ----
+			// 36 of the 552 templates reach only these heads. The other 41 want lane
+			// PERMUTATION (vzip/vshuf/vshufw), a lane-signbit GATHER (vmovmsk), a
+			// CROSS-lane add (vhadd), predicate MASKS (fcmpp/vfcmpp), a dot-product
+			// (vdpp) or a lane-count-CHANGING convert (vcvt) -- none of which any
+			// existing IlVec*/IlCast node expresses, so they'd need additions to the
+			// SHARED LiftIl (which Pagentry.Lifter references) and are deliberately
+			// not here. The two populations are disjoint: 0 templates use both.
+			//
+			// The float-vs-int discriminator is the TYPE, not the op -- exactly as the
+			// scalar side already does it: DIVSS lowers as (/ (as-f32 dst) (as-f32 src))
+			// -> BinOp.UDiv with an IlType.F operand (sse.isa:76, and the "/" arm at
+			// :532), and MaxwellLift:276 does new IlBin(F32, BinOp.Add, ...). So a
+			// packed float op is IlVecBin with ElemTy = IlType.F(ew) and the same
+			// arithmetic BinOp as the integer form.
+			//
+			// Op codes are TRANSCRIBED from the Builder trait's own doc-comments
+			// (sharpretro-jit/src/lib.rs) rather than composed -- that file is the
+			// authority the Rust backend's arms read, and composing an op table from
+			// memory is the exact class the freeze-oracle exists to catch.
+			case "vfbin": {
+				// (vfbin a b ew op) -- packed-float per-lane arith on V128 -> V128.
+				// ew in {32,64}; op in {0=add,1=sub,2=mul,3=div}. RustLiftGen:665-672,
+				// Builder::vfbin. div is BinOp.UDiv-with-a-float-type per DIVSS above.
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				var op = (int) ((PInt) l[4]).Value;
+				var bop = op switch {
+					0 => BinOp.Add, 1 => BinOp.Sub, 2 => BinOp.Mul, 3 => BinOp.UDiv,
+					_ => throw new NotSupportedException($"vfbin op {op}")
+				};
+				return new IlVecBin(128, new IlType.F(ew), bop, a, b);
+			}
+			case "vibin": {
+				// (vibin a b ew op) -- packed-int per-lane wrapping arith on V128.
+				// ew in {8,16,32,64}; op in {0=add,1=sub,2=mul,3=cmpeq,4=cmpgt}
+				// (Builder::vibin). ops 3/4 produce an all-1s/all-0 per-lane MASK, and
+				// BinOp.Eq/Sgt carry no mask-vs-boolean convention on a vector -- an
+				// IlVecBin(Eq) is ambiguous between per-lane 1 and per-lane all-1s.
+				// That convention is a shared-IL decision, so those DIE LOUD rather
+				// than lower to a plausible wrong shape.
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				var op = (int) ((PInt) l[4]).Value;
+				var bop = op switch {
+					0 => BinOp.Add, 1 => BinOp.Sub, 2 => BinOp.Mul,
+					_ => throw new NotSupportedException(
+						$"op vibin-mask-{op}")   // 3=cmpeq 4=cmpgt: mask convention undecided
+				};
+				return new IlVecBin(128, new IlType.I(true, ew), bop, a, b);
+			}
+			case "vfmax":
+			case "vfmin": {
+				// (vfmax|vfmin a b ew) -- packed MAXPS/MINPS/MAXPD/MINPD. x86-EXACT
+				// semantics, NOT ARM's FMAX: on NaN or +-0 x86 returns the SECOND
+				// source. BinOp.FMin/FMax already carry that (the scalar arm at :433
+				// relies on the same thing, and Builder::vfminmax lowers via FCMGT+BIT
+				// for exactly this reason).
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				return new IlVecBin(128, new IlType.F(ew),
+					h == "vfmax" ? BinOp.FMax : BinOp.FMin, a, b);
+			}
+			case "vfun": {
+				// (vfun a ew op) -- packed-float unary. op in {0=sqrt} today
+				// (Builder::vfun reserves 1/2 for fabs/fneg). SQRTPS/SQRTPD.
+				var a = Expr(l[1]);
+				var ew = (int) ((PInt) l[2]).Value;
+				var op = (int) ((PInt) l[3]).Value;
+				var uop = op switch {
+					0 => UnOp.Sqrt,
+					_ => throw new NotSupportedException($"op vfun-{op}")
+				};
+				return new IlVecUn(128, new IlType.F(ew), uop, a);
+			}
+			case "vishi": {
+				// (vishi dst count-op ew dir) -- packed shift by a COMPILE-TIME imm.
+				// dir in {0=shl,1=lshr,2=ashr}; count is an Imm bind, resolved here
+				// exactly as vshift-bytes does at :253-258 (and as RustLiftGen:651-658
+				// resolves it at emit-time rather than as a runtime ternary).
+				// x86: count >= ew gives 0 for shl/lshr and all-sign for ashr, and
+				// all-sign IS ashr by ew-1 -- so the clamp is the semantics, not a
+				// shortcut (Builder::vishi documents the same rule).
+				var a = Expr(l[1]);
+				var cntName = ((PName) l[2]).Name;
+				var ew = (int) ((PInt) l[3]).Value;
+				var dir = (int) ((PInt) l[4]).Value;
+				if(!Binds.TryGetValue(cntName, out var vb) || vb is not OperandBind.Imm vi)
+					throw new NotSupportedException($"vishi count {cntName} not an imm bind");
+				var cnt = (int) ((ulong) vi.Value & 0xFF);
+				var et = new IlType.I(dir == 2, ew);
+				if(cnt >= ew) {
+					if(dir != 2) return new IlConst(new IlType.Vec(128), 0);
+					cnt = ew - 1;   // ashr: saturating to all-sign
+				}
+				var sop = dir switch {
+					0 => BinOp.Shl, 1 => BinOp.Shr, 2 => BinOp.Sar,
+					_ => throw new NotSupportedException($"op vishi-dir-{dir}")
+				};
+				return new IlVecBin(128, et, sop, a, new IlConst(new IlType.I(false, 32), (UInt128) cnt));
+			}
 			case "flt": {
 				var a = Expr(l[1]); var b = Expr(l[2], W(a));
 				return new IlBin(IlType.U1, BinOp.Slt, a, b);   // float ordered-lt

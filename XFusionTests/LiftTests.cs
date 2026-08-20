@@ -433,9 +433,21 @@ public class LiftTests {
 		// The set form has no slack: a new head fails BY NAME, and a head that gains
 		// an IlLower case also fails -- which is correct, because the vector tier
 		// landing should update this list deliberately rather than silently.
+		// 2026-08-20: the PACKED cluster landed (IlLower's vfbin/vibin/vfmax/vfmin/
+		// vfun/vishi arms), so this list SHRANK deliberately -- 15 heads -> 11, and
+		// 77 templates -> 47. The gate failed BY NAME on the change, which is what the
+		// set form is for.
+		//
+		// vibin-mask-3 / vibin-mask-4 are SYNTHETIC names, not .isa heads: vibin ops
+		// 0/1/2 (add/sub/mul) lower, and ops 3/4 (cmpeq/cmpgt, i.e. PCMPEQ*/PCMPGT*,
+		// 6 templates) throw with an op-tagged message because an IlVecBin(Eq) carries
+		// no per-lane mask-vs-boolean convention -- all-1s or 1 is a SHARED-IL decision.
+		// Naming them separately is the honest form: reporting a bare "vibin" would
+		// claim the whole head is unhandled, which is false for 8 of its 14 templates.
 		var known = new[] {
-			"fcmpp", "vcvt", "vdpp", "vfbin", "vfcmpp", "vfmax", "vfmin", "vfun",
-			"vhadd", "vibin", "vishi", "vmovmsk", "vshuf", "vshufw", "vzip",
+			"fcmpp", "vcvt", "vdpp", "vfcmpp", "vhadd",
+			"vibin-mask-3", "vibin-mask-4",
+			"vmovmsk", "vshuf", "vshufw", "vzip",
 		};
 		Assert.That(heads, Is.EquivalentTo(known),
 			$"the unlowered-head set MOVED. now ({heads.Count}): {string.Join(" ", heads)}\n"
