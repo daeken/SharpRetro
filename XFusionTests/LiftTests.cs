@@ -13,6 +13,26 @@ public class LiftTests {
 	}
 
 	[Test]
+	public void ByteShiftImmThroughDecode() {  // 66 0F 73 DB 01 = psrldq xmm3, 1
+		// The lowering census reports `vshift-bytes count not an imm bind` as a
+		// blocker for PSRLDQ-I/PSLLDQ-I -- but the census binds every parameter as
+		// a synthetic Reg, and the .isa's encoding is (Udq Ib), so the REAL decode
+		// path binds count as an Imm. Those are different populations and only this
+		// one is the shipping path. The head resolves the count at LOWER time
+		// (compile-time-imm, matching RustLiftGen's emit-time resolution) so the
+		// output must carry no runtime shift-by-variable.
+		var il = LiftText("660f73db01");
+		Assert.That(il, Is.Not.Null, "psrldq did not lift at all");
+		Assert.That(il, Does.Not.Contain("op vshift-bytes"), "count bound as non-imm");
+		// count=1 => a real 8-bit shift, so the constant must appear, not be folded away
+		Assert.That(il, Does.Contain("shr"), "right-shift form expected for /3");
+		// and the sibling direction (/7 = pslldq) must lower too
+		var il2 = LiftText("660f73fa0f");   // pslldq xmm2, 15
+		Assert.That(il2, Is.Not.Null, "pslldq did not lift");
+		Assert.That(il2, Does.Contain("shl"), "left-shift form expected for /7");
+	}
+
+	[Test]
 	public void AddRegRegThroughDecode() {  // 01 D8 = add eax, ebx — golden row 1 via decode
 		var il = LiftText("01d8");
 		// same shapes as the golden (RAX=reg0 bound from ModRM.rm, RBX=reg3 from reg)

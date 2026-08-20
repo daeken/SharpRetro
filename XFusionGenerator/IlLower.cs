@@ -380,6 +380,85 @@ public class IlLower {
 				var a = Expr(l[1], ctxW);
 				return new IlUn(a.Ty, UnOp.Popcnt, a);
 			}
+			// ---- FLOAT-CONVERSION CLUSTER ----
+			// A corpus census over 11.3M decoded insns of real .text put these at
+			// ~127K of the 167,924 remaining op-level throws (~76%): as-f32 96,477 ·
+			// f32 3,285 · as-f64 3,087 · int-of 2,825 · fmax 2,284 · fmin 2,066 ·
+			// f64 738 · '/' 3,779. All SCALAR — no lane semantics — so they
+			// transcribe from RustLiftGen's own arms the way the stmt heads did.
+			// NB these throw from a DIFFERENT switch than the stmt heads (:421's
+			// `op {h}` vs :159's `stmt head {l[0]}`), which is why a census keyed on
+			// `case PName(...)` was structurally blind to them.
+			case "f32":
+			case "f64": {
+				// CONVERT (not reinterpret): int→float or float→float. RustLiftGen:491-492.
+				var a = Expr(l[1]);
+				var w = h == "f32" ? 32 : 64;
+				return new IlCast(new IlType.F(w), CastKind.SToF, a);
+			}
+			case "as-f32":
+			case "as-f64": {
+				// REINTERPRET the bits as float — no conversion. Used to read Wsd/Wss
+				// operands (xmm-lane bits) as float before fcvtzs/fcvt.
+				// RustLiftGen:511-512 (bd.bitcast, deliberately NOT bd.cast).
+				var a = Expr(l[1]);
+				var w = h == "as-f32" ? 32 : 64;
+				return new IlCast(new IlType.F(w), CastKind.Bitcast, a);
+			}
+			case "signed": {
+				// (signed W v) — reinterpret as signed int of W bits, no bit change.
+				// Used before div/rem for IDIV and before f64 for CVTSI2SD.
+				// RustLiftGen:535-540.
+				var w = l[1] is PInt(var sw) ? (int) sw : OpWidth;
+				return new IlCast(new IlType.I(true, w), CastKind.Bitcast, Expr(l[2]));
+			}
+			case "fmax":
+			case "fmin": {
+				// x86-EXACT min/max, which is NOT ARM's FMAX/FMIN: on NaN or ±0 x86
+				// returns the SECOND source, where ARM propagates the NaN. BinOp.FMin/
+				// FMax carry the x86 semantics (the Rust side lowers via FCMP+FCSEL for
+				// the same reason). RustLiftGen:507-508.
+				var a = Expr(l[1]);
+				var b = Expr(l[2], W(a));
+				return new IlBin(a.Ty, h == "fmax" ? BinOp.FMax : BinOp.FMin, a, b);
+			}
+			case "flt": {
+				var a = Expr(l[1]); var b = Expr(l[2], W(a));
+				return new IlBin(IlType.U1, BinOp.Slt, a, b);   // float ordered-lt
+			}
+			case "feq": {
+				var a = Expr(l[1]); var b = Expr(l[2], W(a));
+				return new IlBin(IlType.U1, BinOp.Eq, a, b);
+			}
+			case "fsqrt": {
+				var a = Expr(l[1], ctxW);
+				return new IlUn(a.Ty, UnOp.Sqrt, a);
+			}
+			case "int-of": {
+				// (int-of W v) — x86 float→signed-int with INDEFINITE-INTEGER semantics
+				// on NaN/inf/out-of-range: the SDM says 80000000H is returned, and the
+				// silicon sweep's p2-DENSE Ⓗ measured a THREE-WAY divergence when this
+				// was a bare F→I cast (cvttsd2si on f64 NaN: silicon 0x80000000, interp
+				// 0, tier-0 0; on +inf: silicon 0x80000000, interp 0xFFFFFFFF, tier-0
+				// 0x7FFFFFFF saturating). So the guard is the semantics, not a nicety.
+				// Transcribed from RustLiftGen:513-534's f_to_si_x86 shape:
+				//   in_range = |fv| < 2^(iw-1)  →  ternary(in_range, cast, 1<<(iw-1))
+				// NaN makes the lt FALSE, so NaN falls to the indefinite value for free.
+				var fv = Expr(l[2]);
+				var iw = l[1] is PList bw && bw.Count == 2 && bw[0] is PName("bitwidth")
+					? W(Expr(bw[1]))
+					: (l[1] is PInt(var iwv) ? (int) iwv : OpWidth);
+				var fw = W(fv) is var fwv && fwv is 32 or 64 ? fwv : 64;
+				var fty = new IlType.F(fw);
+				// 2^(iw-1) as a float constant of the source width
+				var limit = new IlCast(fty, CastKind.SToF,
+					new IlConst(IlType.U64, (UInt128) 1 << (iw - 1)));
+				var mag = new IlUn(fty, UnOp.Abs, fv);
+				var inRange = new IlBin(IlType.U1, BinOp.Slt, mag, limit);
+				var conv = new IlCast(new IlType.I(true, iw), CastKind.FToSI, fv);
+				var indef = new IlConst(new IlType.I(true, iw), (UInt128) 1 << (iw - 1));
+				return new IlIfV(new IlType.I(true, iw), inRange, conv, indef);
+			}
 			case "bswap": {
 				// (bswap x) — byte-reverse at op-width. No UnOp.Bswap exists, so
 				// this composes from the primitives the IL DOES have, exactly as a
@@ -414,6 +493,10 @@ public class IlLower {
 		}
 		var op2 = h switch {
 			"+" => BinOp.Add, "-" => BinOp.Sub, "*" => BinOp.Mul,
+			// / and % were absent: the corpus census put "/" at 3,779 insns. Unsigned
+			// forms; IDIV wraps its operands in (signed W ...) first, which retypes
+			// them and makes BinOp.UDiv the signed op via the operand type.
+			"/" => BinOp.UDiv, "%" => BinOp.URem,
 			"&" => BinOp.And, "|" => BinOp.Or, "^" => BinOp.Xor,
 			">>" => BinOp.Shr, "<<" => BinOp.Shl, ">>a" => BinOp.Sar, "rotr" => BinOp.Ror,
 			"!" => BinOp.Eq,  // (! x) → (== x 0)
