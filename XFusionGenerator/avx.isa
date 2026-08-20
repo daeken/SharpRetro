@@ -164,7 +164,17 @@
 ;     256 when set), and the C# disassembler renders ymm correctly -- verified:
 ;     C5 F1 EF C2 -> "vpxor xmm0, xmm1, xmm2" and C5 F5 EF C2 -> "vpxor ymm0,
 ;     ymm1, ymm2". But there is no 256-bit VALUE in either evaluator. X86Machine's
-;     Xmm[] is u128 and Eval's carrier is ulong; a ymm operand has nowhere to live.
+;     Xmm[] is ulong[32] -- SIXTY-FOUR bits per slot, not 128. X86Machine.cs:25-28
+;     says so in its own comment: "NOT the full 128 bits: Eval's carrier is ulong,
+;     so anything wider dies loud at the Eval default." The Rust interpreter is
+;     [u128; 32] (state.rs:12) and flattens each slot to TWO u64 words (state.rs:84).
+;     So the two evaluators do not even agree at 128, let alone 256: a ymm operand
+;     has nowhere to live in either, and a packed 128-bit value has nowhere to live
+;     in the C# one.
+;       (An earlier revision of this comment said the C# side was u128. Wrong, and
+;        the correction makes the case for decode-only STRONGER, not weaker. The
+;        right value was in the file the comment cites, in that file's own comment,
+;        two lines above the array declaration.)
 ;
 ; So a body here would be wrong in two independent ways at once, and one of them
 ; (L=1) has no representable result at all. Intrinsic-bodied: the corpus gets its
