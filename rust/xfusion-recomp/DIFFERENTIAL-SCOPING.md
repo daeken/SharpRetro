@@ -59,11 +59,31 @@ have both a C# test case and corpus rows, so the reader can be verified against 
 post-state the C# side already computes correctly:
 
 ```
-ADDSS   77,376 rows   ·  1 C# test
-MULSS   77,376        ·  1
-DIVSS    3,328        ·  1
-COMISS     510        ·  1
+mnem      corpus rows   C# ExecTests cases
+ADDSS           6,448   1
+MULSS           6,448   1
+SUBSS           6,448   1
+COMISS          6,448   1
+DIVSS           6,448   *** 0 ***
+UCOMISS         6,448   *** 0 ***
 ```
+
+**⚠ CORRECTED 2026-08-20 (@cfe05bc's sibling).** An earlier version of this table said
+`ADDSS 77,376 · MULSS 77,376 · DIVSS 3,328 · COMISS 510`, each with 1 C# test. Both
+columns were wrong:
+
+- The ROW counts were joined through `def_id` against today's `DEF_MNEMONICS`, and the
+  corpus is frozen against an earlier def table — see SWEEP-VECTOR-COVERAGE.md. The
+  numbers above are decoded from each row's own bytes. All six sit at 6,448, which is
+  itself the tell I should have noticed: four *different* figures for four defs of the
+  same encoding shape was implausible.
+- DIVSS and UCOMISS have **zero** C# test cases. I asserted 1 each from the family
+  rather than counting, so two of the six could not have served as an acceptance
+  population at all.
+
+So the acceptance set is **four** defs, not six. That is still enough (a reader needs one
+known-good post-state, and four is a cross-check), but the claim as published was wrong
+in the direction that made the next step look easier than it is.
 
 ## Sequencing
 
