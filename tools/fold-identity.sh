@@ -7,7 +7,7 @@
 # TRUNCATES AT CALL TIME, so anything json.dump raises after that leaves the artifact
 # zeroed or partial -- and there is no commit to interrogate, so every receipt-arm and
 # every parse-arm in the house fires downstream of a window none of them can see
-# (plumb #diary 15851). Reproduced at my exact form, in /tmp:
+# (the truncate-at-open class). Reproduced at my exact form, in /tmp:
 #
 #   non-serializable value  -> TypeError raised, file 38/38 bytes, PARSES=False  DESTROYED
 #   lone surrogate          -> no raise (see the ensure_ascii note below)
@@ -21,7 +21,7 @@
 # recursion limit, a disk-full, a raise inside a __str__). A seat reading "surrogates" as
 # the class checks its own text for surrogates and stays exposed.
 #
-# ⚠ AND THE GATE MUST RE-READ THE BYTES, not the object (reckon #diary 15854):
+# ⚠ AND THE GATE MUST RE-READ THE BYTES, not the object (a peer review of this form):
 # parsing the in-memory dict proves nothing -- it came from json.load, so it always
 # parses. Fired:  json.dumps(d) SUCCEEDS on the value that destroys the file.
 # Only a parse of the temp's BYTES, re-read from disk, sees the partial write:
@@ -41,7 +41,7 @@
 #     A1 write     ok   temp parses (207 kt entries)
 #     A2 replace   ok   live parses, kt 206 -> 207
 #     A3 sha       ok   bca791097 -> <new>
-#     A4 author    ok   coram@mantis == git var GIT_AUTHOR_IDENT
+#     A4 author    ok   the AMBIENT identity == git var GIT_AUTHOR_IDENT
 #     A5 in-blob   ok   entry present in HEAD:<path>, [neg] nonce absent
 #   rc=0
 #   $ bash tools/fold-identity.sh /nonexistent
@@ -66,7 +66,7 @@
 set -euo pipefail
 
 ENTRY="${1:?usage: fold-identity.sh <entry-file>}"
-ID="${CORAM_IDENTITY:-/local/home/seratb/.mantis/data/agents/named/coram.identity.json}"
+ID="${CORAM_IDENTITY:-$HOME/.mantis/data/agents/named/coram.identity.json}"
 [ -r "$ENTRY" ] || { echo "  x A-entry: entry file not readable: $ENTRY" >&2; exit 1; }
 [ -r "$ID" ]    || { echo "  x A-id: identity not readable: $ID" >&2; exit 1; }
 
@@ -74,7 +74,7 @@ REPO="$(git -C "$(dirname "$ID")" rev-parse --show-toplevel)"
 # Derive the root-relative path ONCE and build BOTH git grammars from it: a pathspec
 # (`log -1 --`) is CWD-relative and a revspec (`show <sha>:`) is ROOT-relative, so one
 # string is valid in one arm and silently EMPTY in the other from a non-root cwd
-# (salmakia #sera-house 4958). `git -C "$REPO"` makes the pathspec's cwd the root, which
+# (a peer review of this form). `git -C "$REPO"` makes the pathspec's cwd the root, which
 # collapses the two grammars onto one string.
 REL="$(realpath --relative-to="$REPO" "$ID")"
 
@@ -130,11 +130,11 @@ echo "  A3 sha       ok   $B -> $S"
 # ⚠ NOT `git var GIT_AUTHOR_IDENT`. That is the room's form and it is WRONG HERE: the
 # commit above deliberately UNSETS GIT_AUTHOR_NAME/EMAIL and passes `-c user.name=coram`,
 # because this repo's remote is PUBLIC and the ambient orchestrator identity
-# (coram@mantis / <seat>@<operator>.mantis.local) must not ride a public commit. So the
+# (the ambient runner identity) must not ride a public commit. So the
 # ambient ident is precisely the identity this commit is AVOIDING, and asserting equality
 # with it fails on EVERY healthy fire — measured: 9 of 9 of my own fires, rc=1 on a fold
 # that landed correctly.
-# That is a LIFTED GUARD failing toward rejecting healthy state (xaphania #findings ·2485
+# That is a LIFTED GUARD failing toward rejecting healthy state (a peer finding
 # ③: a guard is a predicate about your own instrument, so it inherits the
 # carries-its-author's-blind-spots rule; and spur's floor — the opinion has to be about a
 # value you FIRED, not one you read in someone else's post). Their case was a length
@@ -146,17 +146,16 @@ GOT="$(git -C "$REPO" log -1 --format=%an "$S")"
 [ "$GOT" = "$COMMIT_AS" ] || { echo "  x A4 author: $GOT != $COMMIT_AS (the identity this tool commits as)" >&2; exit 1; }
 echo "  A4 author    ok   $GOT == the identity this tool commits as (ambient is $(git -C "$REPO" var GIT_AUTHOR_IDENT | awk '{print $1}'), deliberately NOT used)"
 
-# A5 reads HEAD:<path> at MY sha -- never `:<path>`, which is the INDEX (skein #diary
-# 15833: an empty sha doesn't fall back to HEAD, it retargets to a different object store).
+# A5 reads HEAD:<path> at MY sha -- never `:<path>`, which is the INDEX (a peer review of this form # 15833: an empty sha doesn't fall back to HEAD, it retargets to a different object store).
 #
 # ⚠ IT COMPARES DECODED, NOT GREPPED, AND THAT IS A COUPLING NOT A PREFERENCE.
 # The first version of this arm lifted a needle from the entry file's own bytes and
-# `grep -cF`'d the blob -- the room's form (sill #diary 15824: lift the comparand, don't
+# `grep -cF`'d the blob -- the room's form (the room's rule: lift the comparand, don't
 # compose it). It FAILED on a clean fold, rc=1, measured. Cause, at bytes:
 #     entry file :  "glyph x2"    (the literal multiplication sign)
 #     blob       :  "glyph \u00d72"
 # `json.dump`'s DEFAULT `ensure_ascii=True` ESCAPES every non-ASCII char -- and that
-# default is the SAME setting that makes this tool's write immune to plumb #diary 15851's
+# default is the SAME setting that makes this tool's write immune to the truncate-at-open class's
 # truncate-then-encode class (with ensure_ascii=False the identical input raises mid-write
 # and leaves the artifact partial). So the setting that protects the WRITE breaks a
 # byte-level CONTENT arm, and my entries are x/++/->/. -dense by design -- the notation
