@@ -23,14 +23,14 @@ public class X86Machine {
 
 	public byte[] Mem;
 	/// Instruction-fetch hook — DISTINCT from LoadHook so a host can
-	/// exec-filter (barrow's X86Env step-1.5(c) ‡: LoadHook serves both
+	/// exec-filter (the X86Env consumer's step-1.5(c) ‡: LoadHook serves both
 	/// fetch and data, so his Segment.Exec check can't discriminate).
 	/// Fill up to 15 bytes at addr; return false if addr isn't executable
 	/// (Step() returns false = clean [not-exec] fault). Null → Step falls
 	/// through to Mem[]/Load() (current behavior — behaviorally transparent).
 	public delegate bool FetchDelegate(ulong addr, Span<byte> into);
 	public FetchDelegate FetchHook;
-	/// Overlay-miss fallback: barrow's X86Env sets this to read Image bytes
+	/// Overlay-miss fallback: the X86Env consumer sets this to read Image bytes
 	/// underneath a write-overlay when Mem is null / addr out-of-range.
 	/// Called by Load() when Mem doesn't cover; return the value at addr.
 	public Func<ulong, int, ulong> LoadHook;
@@ -362,6 +362,19 @@ public class X86Machine {
 					UnOp.Neg => 0 - a,
 					UnOp.Not => ~a,
 					UnOp.Popcnt => (ulong) System.Numerics.BitOperations.PopCount(MaskW(a, WOf(x))),
+					// BSF/BSR/LZCNT/TZCNT lower to clz / clz(rbit(x)) — the .isa says so
+					// in its own comment ("BSF = position of LOWEST set bit =
+					// clz(rbit(src)); aarch64 has no ctz"). The lowerer emits IlUn and
+					// this evaluator only knew Popcnt, so those four were unexecutable.
+					// Width-relative by necessity: LeadingZeroCount is defined on 64-bit,
+					// so a w-bit clz is the 64-bit count minus the (64-w) padding zeros.
+					UnOp.Clz => (ulong) (System.Numerics.BitOperations.LeadingZeroCount(MaskW(a, WOf(x)))
+						- (64 - WOf(x))),
+					// ReverseBits already exists in LibSharpRetro.CpuHelpers.Math (:127/:134)
+					// — reversing at 64 then shifting down is the w-bit reversal, matching
+					// the Rust interp's `bits.reverse_bits() >> (128 - w)` form exactly.
+					UnOp.Rbit => LibSharpRetro.CpuHelpers.Math.ReverseBits(MaskW(a, WOf(x)))
+						>> (64 - WOf(x)),
 					_ => throw new NotSupportedException($"unop {op}")
 				};
 				return MaskW(v, w);

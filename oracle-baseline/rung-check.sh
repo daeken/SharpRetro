@@ -81,6 +81,48 @@ else
 fi
 
 echo ""
+echo "=== rung-4 gate-(x86): the x86 lift+exec arm ==="
+# WHY THIS ARM EXISTS, and it's a defect in this gate rather than in the code it
+# gates: before 2026-08-20 this file had 25 aarch64 references and ONE x86 one, so
+# XFusionTests could go red and stay red without any gate noticing. It did — 21
+# failures rode for a month (IlLower had no case for 10 heads the .isa carried and
+# the Rust arm lowered; X86Machine/X86Recompiler call Lift with no try/catch, so
+# they were live throws through the C# exec-oracle and the JIT). An arm that
+# cannot reach the region under test contributes a green that reads as coverage.
+#
+# rc read DIRECT (not through a pipe: `dotnet test | grep` gives grep's status,
+# and this gate's own history has that bug in it — n>=12 for the family here).
+# The count is compared against a stated FLOOR rather than 0, because the 3
+# remaining failure is the SSE vector row (vmovmsk/vibin/vshuf/f32) that needs lane
+# semantics the C# IL has never had. A floor makes a REGRESSION loud while an
+# honest known-gap stays quiet — and the floor is asserted in BOTH directions:
+# fewer failures than the floor is ALSO reported, because that means the floor is
+# stale and this comment is lying to the next reader.
+X86_FAIL_FLOOR=1
+dotnet test XFusionTests -v q --nologo > /tmp/x86t.log 2>&1 || true   # set -e: rc=1 is EXPECTED at the floor
+xrc=$?
+xfail=$(grep -oE 'Failed:[[:space:]]+[0-9]+' /tmp/x86t.log | grep -oE '[0-9]+' | head -1)
+xpass=$(grep -oE 'Passed:[[:space:]]+[0-9]+' /tmp/x86t.log | grep -oE '[0-9]+' | head -1)
+if [ -z "$xfail" ]; then
+  # No summary line at all = the suite did not RUN (a build break, a missing
+  # project). That is not a pass; a gate with no subject is a PASS-shaped nothing.
+  echo "  ✗ XFusionTests produced no result summary (suite did not run — rc=$xrc)"
+  grep -E ' error |error CS' /tmp/x86t.log | head -5
+  FAIL=1
+elif [ "$xfail" -gt "$X86_FAIL_FLOOR" ]; then
+  echo "  ✗ XFusionTests REGRESSED: $xfail failed (floor $X86_FAIL_FLOOR), $xpass passed"
+  grep -oE 'op [a-z0-9]+|stmt head [a-z-]+' /tmp/x86t.log | sort | uniq -c | sort -rn | head -8
+  FAIL=1
+elif [ "$xfail" -lt "$X86_FAIL_FLOOR" ]; then
+  echo "  ✗ FLOOR IS STALE: only $xfail failed (floor says $X86_FAIL_FLOOR), $xpass passed."
+  echo "    This is good news and still a failure: lower X86_FAIL_FLOOR to $xfail and"
+  echo "    update the comment above, or the next real regression hides under the slack."
+  FAIL=1
+else
+  echo "  ✓ XFusionTests at floor: $xfail failed / $xpass passed (the 1 = the SSE vector row)"
+fi
+
+echo ""
 echo "=== pre-push: house-vocab check (public repo — no seat-names/channel-cites/kt-refs) ==="
 # The pattern list is itself the thing being searched for, so it CANNOT live in this file —
 # a gate whose patterns sit in its own source self-matches and reports a hit on itself

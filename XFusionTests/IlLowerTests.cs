@@ -181,13 +181,22 @@ public class IlLowerTests {
 	}
 
 	[Test]
-	public void IntrinsicPassthrough() {  // ·62: IlIntrin(V0, name, positional args)
-		var (ps, eval) = Load("BSF");
+	public void IntrinsicPassthrough() {  // IlIntrin(V0, name, positional args)
+		// RETARGETED 2026-08-20 from BSF to CMPSV. BSF stopped being intrinsic-bodied
+		// on 2026-08-09 (0327ba6): its .isa body is now `(clz (rbit src))` with a
+		// silicon-verified note in the .isa itself (src=0 → NO WRITE, "hardware >
+		// SDM"). This test asserted `intrin.bsf` from 2026-07-09, so it had been
+		// asserting the pre-rewrite shape for a month — a stale test, not a bug, and
+		// it was red either way (op clz threw until IlLower learned the head).
+		// CMPSV is still `(intrinsic cmps (bitwidth src) src dst)`, so the test's
+		// PURPOSE (a marker with positional dataflow args) keeps a live subject
+		// rather than being weakened to match the code.
+		var (ps, eval) = Load("CMPSV");
 		var il = Render(IlLower.Lower(ps, eval, new Dictionary<string, OperandBind> {
-			["dst"] = new OperandBind.Reg(0, 32),
-			["src"] = new OperandBind.Reg(3, 32),
+			["src"] = new OperandBind.Reg(0, 32),
+			["dst"] = new OperandBind.Reg(3, 32),
 		}, 32));
-		Assert.That(il, Does.Contain("(void intrin.bsf"));
+		Assert.That(il, Does.Contain("(void intrin.cmps"));
 		Assert.That(il, Does.Contain("(u32 trunc (u64 RAX))"));  // operands ride as dataflow args
 	}
 

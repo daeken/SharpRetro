@@ -65,9 +65,17 @@ public class LiftTests {
 	}
 
 	[Test]
-	public void IntrinsicThroughDecode() {  // F3 48 0F BC C1 = tzcnt rax, rcx
-		var il = LiftText("f3480fbcc1");
-		Assert.That(il, Does.Contain("(void intrin.tzcnt (u64 RAX) (u64 RCX))"));
+	public void IntrinsicThroughDecode() {  // A7 = cmpsd (dword string-compare)
+		// RETARGETED 2026-08-20 from `f3480fbcc1` (tzcnt rax,rcx). TZCNT stopped
+		// being intrinsic-bodied on 2026-08-09 (0327ba6) — its .isa body is now
+		// `(mlet (r (clz (rbit src)) cf (== src 0)) ...)`, with the mlet-capture
+		// there because CF must read src BEFORE dst is written (the third .isa-tier
+		// bug the silicon sweep found). This assert had been checking the
+		// pre-rewrite shape for a month. CMPSV is still `(intrinsic cmps ...)`, so
+		// the test keeps its purpose — an intrinsic marker surviving a real decode —
+		// against a subject that still exists.
+		var il = LiftText("a7");
+		Assert.That(il, Does.Contain("(void intrin.cmps"));
 	}
 
 	[Test]
@@ -76,7 +84,7 @@ public class LiftTests {
 		Assert.That(il, Does.Contain("if (u1 EFLAGS.C)"));
 	}
 
-	// --- 16-bit mode (sera ·76: "could we run DOS?") — XED -16 verified ---
+	// --- 16-bit mode ("could we run DOS?") — XED -16 verified ---
 	[TestCase("b409", "mov ah, 0x9")]              // DOS print-string setup
 	[TestCase("cd21", "int 0x21")]                 // THE DOS syscall
 	[TestCase("55", "push bp")]
@@ -105,7 +113,7 @@ public class LiftTests {
 		// byte-file terms — pinned below in Dos16AhWrite.
 	}
 
-	// --- the IL branch contract (barrow step-2a ·NOTES 689c): arch-neutral
+	// --- the IL branch contract (consumer step-2a NOTES 689c): arch-neutral
 	// scanners read IlBranch(Kind, ABSOLUTE-target[, Cond]) — same as aarch64 BL ---
 	[Test]
 	public void CallEmitsCallKindAbsoluteTarget() {  // E8 FB 05 00 00 @ pc=0x1000, len 5 → target 0x1600
