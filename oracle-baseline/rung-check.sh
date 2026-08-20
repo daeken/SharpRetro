@@ -162,6 +162,23 @@ for proj in Aarch64Cpu SharpStationCore DamageCore XFusionCpu; do
   fi
 done
 
+# ── COVERAGE PARITY (the matrix's semantic sibling) ────────────────────
+# The matrix asks "does each backend BUILD". This asks the adjacent question the
+# matrix displaces: "do they cover the SAME defs, and does either STUB one the other
+# implements?" A one-sided stub passes byte-equivalence AND compilability -- it is
+# only caught by an execution oracle, and only on the arm that has one (the Rust
+# fuzz). Zero divergence today; the arm exists so a future .isa change can't
+# reintroduce it quietly. BOTH SIDES SEEN: pass = 344/344 both, no one-sided stubs;
+# plant a todo!() on a def C# implements -> fails NAMING the def, rc=1.
+echo "== coverage parity: both backends cover the same defs, neither stubs one-sided =="
+rm -rf /tmp/cp-rust && mkdir -p /tmp/cp-rust
+$RUN ArchCompiler -- Aarch64Generator/aarch64.isa --stage emit --arch aarch64-rust --out /tmp/cp-rust 2>/dev/null >/dev/null
+if python3 oracle-baseline/coverage-parity.py Aarch64Generator/aarch64.isa      Aarch64Cpu/Generated/Recompiler.cs /tmp/cp-rust/recompiler.rs; then
+  :
+else
+  FAIL=1
+fi
+
 # The gate must actually GATE. A hit above sets FAIL=1; callers do:
 #   bash oracle-baseline/rung-check.sh && git push
 # so a non-zero exit blocks the push structurally. (A prior version printed the hit,
