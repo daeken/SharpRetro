@@ -100,7 +100,7 @@ state).
 XFCorpus, because it lives two levels down. I was one command from "correcting" a true
 claim about it into a false one. The reference set derived from the artifact — every
 `.csproj` naming `XFusionCpu` — is XFusionCensus / XFusionJit / XFusionTests /
-oracle-baseline(XFCorpus), plus barrow's `Pagentry.Lifter` outside this tree.
+oracle-baseline(XFCorpus), plus the `Pagentry.Lifter` consumer outside this tree.
 
 ## Sequencing
 
