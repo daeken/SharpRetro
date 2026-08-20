@@ -720,6 +720,82 @@ public class IlLower {
 				var ew = (int) ((PInt) l[4]).Value;
 				return FloatPred(a, b, PredOf(((PName) l[3]).Name), true, ew);
 			}
+			case "vcvt": {
+				// (vcvt a kind) -- the packed CVT family. TRANSCRIBED from interp.rs:291.
+				//
+				// I deferred this THREE TIMES on "IlCast(Ty, Kind, X) has no
+				// element-width field, so CVTDQ2PS (4xi32->4xf32) and CVTPS2PD
+				// (2xf64->4xf32, lane-count CHANGING) are indistinguishable in it."
+				// That is true of a VECTOR cast and the deferral presumed one. Per-lane
+				// the cast is SCALAR: IlCast(F(64), FExt, <an F(32) lane>) carries the
+				// widths in its own type and its operand's, and the lane-count change
+				// is HOW MANY EXTRACTS THERE ARE -- a property of the IlVecBuild, not a
+				// field on the cast. Same organ as the other six: I asked whether ONE
+				// node expressed it instead of whether the node SET did.
+				//
+				// kind, from the interpreter's own match:
+				//   0 4xi32->4xf32   1 4xf32->4xi32 trunc   2 2xf32->2xf64
+				//   3 2xf64->2xf32   4 2xi32->2xf64         5 2xf64->2xi32 trunc
+				//   6 2xf64->2xi32 round-ties-even          7 4xf32->4xi32 round
+				// The i32->float directions are SIGNED (`lane as i32 as f32`), so SToF.
+				// The float->int directions carry x86 INDEFINITE-INTEGER semantics, so
+				// each lane reuses the (int-of) shape built at the scalar site below --
+				// the sweep's p2-DENSE measured a THREE-WAY divergence when that was a
+				// bare F->I cast, so it is the semantics rather than a nicety.
+				var a = Expr(l[1]);
+				var kind = (int) ((PInt) l[2]).Value;
+				// (srcW, dstW, n, toFloat, round) per kind -- read off the interpreter,
+				// not derived: kinds 6 and 7 ROUND ties-even (MXCSR default), 1 and 5
+				// TRUNCATE, and that difference is the whole distinction between
+				// CVTPS2DQ and CVTTPS2DQ.
+				var (sw, dw, n, toF, rnd) = kind switch {
+					0 => (32, 32, 4, true,  false),
+					1 => (32, 32, 4, false, false),
+					2 => (32, 64, 2, true,  false),
+					3 => (64, 32, 2, true,  false),
+					4 => (32, 64, 2, true,  false),
+					5 => (64, 32, 2, false, false),
+					6 => (64, 32, 2, false, true),
+					7 => (32, 32, 4, false, true),
+					_ => throw new NotSupportedException($"op vcvt-kind-{kind}")
+				};
+				// The SOURCE lane type: kinds 0 and 4 read INTEGER lanes, everything
+				// else reads float lanes. Getting this wrong would silently reinterpret
+				// bits -- which is exactly the class the exec-oracle caught at (int-of).
+				var srcTy = (kind == 0 || kind == 4)
+					? (IlType) new IlType.I(true, sw)
+					: new IlType.F(sw);
+				var dstTy = toF ? (IlType) new IlType.F(dw) : new IlType.I(true, dw);
+				var el = new List<Il>();
+				for(var i = 0; i < n; i++) {
+					var lane = Lane(a, srcTy, i);
+					Il conv;
+					if(toF)
+						// int->float is SToF; float->float is FExt (widen) or FTrunc.
+						conv = (kind == 0 || kind == 4)
+							? new IlCast(dstTy, CastKind.SToF, lane)
+							: new IlCast(dstTy, dw > sw ? CastKind.FExt : CastKind.FTrunc, lane);
+					else {
+						// float->int, x86-indefinite. `rnd` applies UnOp.Round FIRST
+						// (ties-even, which is what Round means here and what MXCSR's
+						// default RC selects); the trunc kinds let FToSI truncate.
+						var fv = rnd ? new IlUn(srcTy, UnOp.Round, lane) : lane;
+						var fty = new IlType.F(sw);
+						var limit = new IlCast(fty, CastKind.SToF,
+							new IlConst(IlType.U64, (UInt128) 1 << (dw - 1)));
+						var mag = new IlUn(fty, UnOp.Abs, fv);
+						var inRange = new IlBin(IlType.U1, BinOp.Slt, mag, limit);
+						var ok = new IlCast(dstTy, CastKind.FToSI, fv);
+						var indef = new IlConst(dstTy, (UInt128) 1 << (dw - 1));
+						conv = new IlIfV(dstTy, inRange, ok, indef);
+					}
+					el.Add(conv);
+				}
+				// The result's OWN lane count is el.Count and its lane type is dstTy --
+				// so a 2xf64 result (128 bits, 2 lanes) and a 4xf32 one (128 bits, 4
+				// lanes) are different IlVecBuilds rather than one ambiguous cast.
+				return new IlVecBuild(128, dstTy, el);
+			}
 			case "vhadd": {
 				// (vhadd a b ew) -- HADDPS/HADDPD: PAIRWISE add within each source, a's
 				// pairs filling the low half of the result and b's the high half.

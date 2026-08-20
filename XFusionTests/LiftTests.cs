@@ -325,9 +325,14 @@ public class LiftTests {
 	/// corpus arm (that one tests the decoder->binder->lifter CHAIN on real bytes);
 	/// this one answers the question the corpus arm's comment was making.
 	///
-	/// Measured at authoring, and the ratchet is deliberate: the count is asserted
-	/// rather than the set being required empty, because four heads genuinely cannot
-	/// be expressed by the shared LiftIl's current node set (see `known` below).
+	/// Measured at authoring. The `known` set is now EMPTY -- and the sentence that
+	/// stood here for four commits said "four heads genuinely cannot be expressed by
+	/// the shared LiftIl's current node set", which was wrong about all four. Each
+	/// was reached by asking whether ONE node expressed the operation instead of
+	/// whether the node SET did: vmovmsk/vhadd/vdpp decompose to IlVecElem + scalar
+	/// IlBin + IlVecBuild, and vcvt's "IlCast has no element-width field" objection
+	/// only bites a VECTOR cast -- per-lane the cast is scalar, and the lane-count
+	/// change is how many extracts there are. Four deferrals, one organ.
 	/// A NEW unlowered head must fail here rather than wait for someone to write a
 	/// hex row for it -- which is the hole this arm exists to close.
 	///
@@ -511,9 +516,13 @@ public class LiftTests {
 		//   IlCast                -> has no element-width field, so a lane-count-
 		//                            CHANGING convert genuinely cannot be expressed
 		// The remaining four are the ones where that answer is actually no.
-		var known = new[] {
-			"vcvt",
-		};
+		// EMPTY, as of the vcvt lowering. Every head the .isa emits now has an
+		// IlLower case. Keep the exact-set form rather than relaxing to
+		// Is.Empty: a NEW head still has to fail here by NAME, and the
+		// empty-set compare also fails the BLIND case (an arm that examined
+		// nothing produces an empty set too, and `Is.Empty` would pass it --
+		// verified by planting a zero loop bound, which this form catches).
+		var known = new string[] { };
 		Assert.That(heads, Is.EquivalentTo(known),
 			$"the unlowered-head set MOVED. now ({heads.Count}): {string.Join(" ", heads)}\n"
 			+ $"expected ({known.Length}): {string.Join(" ", known)}\n"
