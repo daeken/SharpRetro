@@ -73,7 +73,7 @@ public static class X86Lifter {
 		// Found by XFReader: `add rax, 0xaaaaaaaa` (48 05 aa aa aa aa) gave
 		// 0x00000000aaaaaaaa where silicon recorded 0xffffffffaaaaaaaa, and the lowered IL
 		// read `(let %1 = (u32 #aaaaaaaa))` — bound at 32.
-		// Same defect as own #115 on the Rust arm (RustLiftGen.cs:858 passes op_w, not the
+		// Same defect the Rust arm had 8 days ago (RustLiftGen.cs:858 passes op_w, not the
 		// encoded width). Two arms, one rule, and the C# half kept the encoded width.
 		_ when spec.SignExtended || spec.Width == WCode.z => vw,
 		WCode.b => 8,
