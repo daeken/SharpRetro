@@ -58,6 +58,23 @@ public static class DisassemblerGenerator {
 			? Enumerable.Range(0, 8).Select(r => (Op: (byte) (d.Opcode + r), Def: d))
 				.Where(x => !exact.Contains((d.Map, x.Op)))
 			: [(Op: d.Opcode, Def: d)]);
+		// NOTE the .Where(!exact.Contains) above: a plus_r row whose r=0 slot collides with
+		// an exact def was DROPPED ENTIRELY, so 0x90 emitted only NOP and `66 41 90`
+		// (XCHG ax,r8w -- REX.B extends the plus_r register to r8) decoded as NOP and
+		// lifted to zero statements while the hardware exchanged the registers. Found by
+		// XFReader at p1 row 399,689: the def_id said NOP and the post-state said
+		// otherwise, so the VALUE pattern named it (gpr0's low 16 arriving in gpr8) and the
+		// mnemonic could not.
+		//
+		// The Rust arm already had this (RustDisasmGen:44-49, caught by the sweep's own
+		// round-trip gate on its first fire); this side kept the shadowing rule. Two
+		// generators that must emit the same def_id for the same bytes -- which is the
+		// invariant the drift broke.
+		var shadowed = defs.Where(d => d.PlusR).SelectMany(d => Enumerable.Range(0, 8)
+				.Select(r => (Map: d.Map, Op: (byte) (d.Opcode + r), Def: d))
+				.Where(x => exact.Contains((x.Map, x.Op))))
+			.ToList();
+		dispatchRows = dispatchRows.Concat(shadowed.Select(x => (x.Op, x.Def)));
 		var groups = dispatchRows.GroupBy(x => (x.Def.Map, x.Op)).OrderBy(g => g.Key.Map).ThenBy(g => g.Key.Op);
 		sb.AppendLine("\t\tswitch(map, op) {");
 		foreach(var g in groups) {
@@ -152,6 +169,18 @@ public static class DisassemblerGenerator {
 				if(!claimed.Contains("repnz")) rejects.Add("p.RepNz");
 				if(rejects.Count > 0)
 					sb.AppendLine($"\t\t\t\tif({string.Join(" || ", rejects)}) return false;");
+			}
+			// (exact + plus_r) collision, un-shadowed above. A plus_r def reaches this slot
+			// only via its r=0 encoding; REX.B extends that register to r8, so without
+			// REX.B the exact def wins (90 = NOP) and with it the plus_r def does
+			// (41 90 = XCHG r8d,eax). Only 0x90 in practice.
+			if(byExt.Count == 2 && byExt.Count(d => d.PlusR) == 1) {
+				sb.AppendLine("\t\t\t\tif(p.RexB) {");
+				EmitDefBody(sb, byExt.First(d => d.PlusR), "\t\t\t\t\t");
+				sb.AppendLine("\t\t\t\t}");
+				EmitDefBody(sb, byExt.First(d => !d.PlusR), "\t\t\t\t");
+				sb.AppendLine("\t\t\t}");
+				continue;
 			}
 			// mod-field discrimination (0F 12: movhlps mod==11 / movlps mem): a RegOnly
 			// (U*-operand) def and a MemOnly def can share (map, opcode) without /N.

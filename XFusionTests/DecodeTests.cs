@@ -181,8 +181,19 @@ public class DecodeTests {
 	[TestCase("f3a4", "rep movsb byte ptr [rdi], byte ptr [rsi]")]  // rep renders on string ops
 	[TestCase("f348ab", "rep stosq qword ptr [rdi]")] // wname suffix by REX.W
 	[TestCase("f3a5", "rep movsd dword ptr [rdi], dword ptr [rsi]")]
-	[TestCase("91", "xchg ecx, eax")]                 // 90+r shadowed at 90 by NOP
-	[TestCase("90", "nop")]
+	[TestCase("91", "xchg ecx, eax")]
+	// The 0x90 (exact + plus_r) COLLISION, two-sided. XCHG is 90+r, so its r=0 slot is
+	// the same opcode as NOP -- and the generator's `exact` filter used to drop that row
+	// outright, which the comment here previously called "shadowed at 90 by NOP" as
+	// though it were correct. It isn't: REX.B extends the plus_r register to r8, so
+	// 41 90 and 66 41 90 are real exchanges the decoder was rendering as NOP and lifting
+	// to ZERO statements. XFReader caught it at p1 row 399,689 -- gpr0's low 16 arriving
+	// in gpr8 while our def said NOP. Both rows are needed: the REX.B ones must decode as
+	// XCHG and the bare one must STAY NOP, because a fix that just un-shadowed the plus_r
+	// row would break `90`.
+	[TestCase("90", "nop")]                           // no REX.B -> the exact def wins
+	[TestCase("4190", "xchg r8d, eax")]               // REX.B   -> the plus_r def, r8
+	[TestCase("664190", "xchg r8w, ax")]              // + 66    -> 16-bit form
 	[TestCase("0f0b", "ud2")]
 	[TestCase("c9", "leave")]
 	public void Wave3(string hex, string expected) => Row(hex, XMode.Bits64, expected);

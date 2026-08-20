@@ -699,6 +699,7 @@ public static class LiftTables {
 		(3, "Sw Ew", false),
 		(7, "Ev", true),
 		(113, "", false),
+		(111, "Zv rAX", false),
 		(112, "", false),
 		(111, "Zv rAX", false),
 		(111, "Zv rAX", false),
