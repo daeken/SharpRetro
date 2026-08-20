@@ -971,11 +971,26 @@
 
 (encoding RET () (0xC3 d64))
 
+; RETI is a RET, not a jump. `(branch t)` lowered to BranchKind.Jmp, so anything
+; distinguishing a RETURN from a TAIL-CALL saw a jump where the bytes say `ret`.
+; A full-scope capstone diff over a 44MB binary found 5,923 misclassified this way.
+; EXECUTION was always right (both pop-and-jump); CLASSIFICATION wasn't.
+;
+; The downstream cost is NOT function-head loss: an indexer minting heads after a
+; return also mints them after an indirect jump, and RETI's target is `(pop)` =
+; non-const, so it took that arm and the heads were minted anyway (measured 0.0%
+; missing on that corpus). The consequence is for consumers that need the
+; DISTINCTION -- an unwinder, a calling-convention analysis, a CFG that treats a
+; return as a function boundary rather than an edge. Fixed because `ret imm16` IS
+; a return and the IL should say so, not because an index needed it.
+; The swap is safe: `ret` and `branch` take the same operand shape (IlLower.cs:134
+; and :142 both do Expr(l[1], 64)), and the stack adjustment is an INDEPENDENT stmt
+; that precedes it -- so nothing is lost by changing the node kind.
 (instruction RETI (imm)
     "ret $imm"
     (mlet (t (pop))
         (= SP (+ SP imm))
-        (branch t)))
+        (ret t)))
 
 (encoding RETI (Iw) (0xC2 d64))
 

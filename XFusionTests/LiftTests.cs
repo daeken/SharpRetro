@@ -13,6 +13,27 @@ public class LiftTests {
 	}
 
 	[Test]
+	public void RetiClassifiesAsRetNotJmp() {
+		// `ret imm16` (0xC2) lowered to BranchKind.Jmp, so every consumer scanning for
+		// Ret was blind to stdcall returns. A full-scope capstone diff over a 44MB
+		// binary found 5,923 misclassified and ~2,000 function heads never minted
+		// downstream, because a `ret imm16` ends a function invisibly.
+		// EXECUTION was always right; CLASSIFICATION wasn't.
+		foreach(var (hex, want, kind) in new[] {
+			("c20800", "ret",  BranchKind.Ret),   // ret 8    -- the fix
+			("c3",     "ret",  BranchKind.Ret),   // ret      -- must not regress
+			("e900000000", "jmp", BranchKind.Jmp),// jmp rel32 -- must stay Jmp
+			("e800000000", "call", BranchKind.Call),
+		}) {
+			var b = Convert.FromHexString(hex);
+			Assert.That(Disassembler.DecodeInsn(b, XMode.Bits64, out var d), Is.True, hex);
+			var blk = X86Lifter.Lift(in d, 0, XMode.Bits64);
+			var br = blk.Body.OfType<IlBranch>().Single();   // IlBlock(IReadOnlyList<Il> Body) @LiftIl/Il.cs:155
+			Assert.That(br.Kind, Is.EqualTo(kind), $"{want} ({hex}) branch-kind");
+		}
+	}
+
+	[Test]
 	public void NewDecodeGapsDecodeAndDieLoud() {
 		// The full-scope M0 gate (11,320,255 lengths vs capstone) named the
 		// undecodables. A missing ENCODING desynchronises a linear sweep for the
