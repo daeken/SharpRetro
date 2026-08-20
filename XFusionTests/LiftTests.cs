@@ -1,5 +1,10 @@
 using XFusionCpu;
 using LiftIl;
+// IlLower + OperandBind live in XFusionGenerator but are COMPILED INTO XFusionCpu
+// (XFusionCpu.csproj:17 links them as Lift/IlLower.cs), so the test project reaches
+// them without referencing the generator. PList/ListParser are CoreArchCompiler's.
+using XFusionGenerator;
+using CoreArchCompiler;
 
 namespace XFusionTests;
 
@@ -306,5 +311,117 @@ public class LiftTests {
 			}
 		}
 		Assert.That(failures, Is.Empty, string.Join("\n", failures.Take(12)));
+	}
+
+	/// EveryDecodableTestRowLifts' comment claims "the lift arm must never be narrower
+	/// than the decoder" -- a TOTAL-FUNCTION claim over the def set. It iterates
+	/// DecodeTests.AllRows(), which is 108 HAND-WRITTEN hex rows. So the claim was
+	/// gated by a sample of whatever those rows happen to decode to, and it surfaced 3
+	/// unlowered heads (vmovmsk/vibin/vshuf) while 83 of 518 defs use one.
+	///
+	/// This walks the DEF SET instead, via the generated table every backend reads,
+	/// with SYNTHETIC binds -- so a template's lowerability is tested independently of
+	/// whether anyone wrote a hex row that reaches it. Not a replacement for the
+	/// corpus arm (that one tests the decoder->binder->lifter CHAIN on real bytes);
+	/// this one answers the question the corpus arm's comment was making.
+	///
+	/// Measured at authoring, and the ratchet is deliberate: the count is asserted
+	/// rather than the set being required empty, because the vector tier is a real
+	/// unbuilt thing (IlLower has no vector head; MaxwellShader's forked IL does, at
+	/// MaxwellEval.Expr with an `object` carrier where X86Machine.Eval's is `ulong`).
+	/// A NEW unlowered head must fail here rather than wait for someone to write a
+	/// hex row for it -- which is the hole this arm exists to close.
+	[Test]
+	public void EveryTemplateLowersOrIsAKnownVectorGap() {
+		var vectorGap = new List<string>();
+		var other = new List<string>();
+
+		for(var tid = 0; tid < LiftTables.Templates.Length; tid++) {
+			var (mnem, paramsText, evalText) = LiftTables.Templates[tid];
+			var ps = paramsText.Length == 0
+				? new List<string>()
+				: paramsText.Split(' ').ToList();
+
+			// Synthetic binds, tried in THREE SHAPES. The first cut used uniform
+			// 64-bit GPRs and 3 templates failed on the bind SHAPE rather than on a
+			// head: LEA's `addr-of` needs a Mem bind ("addr-of non-mem operand") and
+			// PSRLDQ-I/PSLLDQ-I's `vshift-bytes` needs an Imm ("count not an imm
+			// bind"). Both throws were CORRECT -- IlLower has cases for those heads
+			// and my operands were wrong. So the arm asks "does SOME valid bind
+			// shape lower this template", which is the question that isolates head
+			// coverage from bind-shape guessing. A template failing under all three
+			// still lands in `other` and is visible.
+			//   (Found by the arm's own must-fail branch on its first fire. The
+			//    uniform version would have shipped as 3 permanent known-failures
+			//    attributed to the vector gap -- which is the sample-gated hiding
+			//    this arm exists to stop, one layer in.)
+			// The 4th shape is MIXED and it exists because the uniform ones can't
+			// express the commonest x86 form: PSRLDQ-I/PSLLDQ-I WRITE their first
+			// operand and read the last as a count, so all-Reg throws "count not an
+			// imm bind" and all-Imm throws "write to Imm". Neither throw is a head
+			// gap; both are my operands. Found by the arm's must-fail branch on
+			// consecutive fires -- the all-Imm shape fixed LEA and exposed this.
+			var shapes = new Func<int, OperandBind>[] {
+				k => new OperandBind.Reg(k % 16, 64),
+				k => new OperandBind.Mem(new IlConst(IlType.U64, 0x2000), 64),
+				k => new OperandBind.Imm(1, 8),
+				k => k == ps.Count - 1 && ps.Count > 1
+					? new OperandBind.Imm(1, 8)
+					: new OperandBind.Reg(k % 16, 64),
+			};
+
+			string headGap = null, lastOther = null;
+			var lowered = false;
+			foreach(var shape in shapes) {
+				var binds = new Dictionary<string, OperandBind>();
+				for(var k = 0; k < ps.Count; k++) binds[ps[k]] = shape(k);
+				binds["%nextpc"] = new OperandBind.Imm(0x1000, 64);
+				try {
+					var forms = ((PList) ListParser.Parse(evalText)[0]).Skip(1).ToList();
+					if(IlLower.Lower(ps, forms, binds, 64) != null) { lowered = true; break; }
+					lastOther = "null";
+				} catch(NotSupportedException e) when(e.Message.StartsWith("op ")) {
+					// "op <head>" is IlLower.cs:537's own default-arm text -- the
+					// exact signal this arm is for. A missing head is bind-shape
+					// INDEPENDENT, so record it and stop: no other shape will help.
+					headGap = e.Message[3..];
+					break;
+				} catch(Exception e) {
+					lastOther = $"{e.GetType().Name}: {e.Message}";
+				}
+			}
+
+			if(headGap != null) vectorGap.Add(headGap);
+			else if(!lowered) other.Add($"{tid} {mnem} -> {lastOther} (all 3 bind shapes)");
+		}
+
+		// The non-head failures are the ones with no known cause. Report them first
+		// and in full: a count would hide which template, and this arm's whole point
+		// is that a sample-gated claim hides members.
+		Assert.That(other, Is.Empty,
+			$"templates failing for a reason OTHER than a missing IlLower head "
+			+ $"({other.Count}):\n{string.Join("\n", other.Take(12))}");
+
+		var heads = vectorGap.Distinct().OrderBy(h => h).ToList();
+
+		// The EXPECTED SET, not a count, and derived from THIS ARM rather than from
+		// a sibling instrument. The first version asserted `Count <= 21` -- 21 came
+		// from a python census of the .isa text, while the arm itself observes 16
+		// (some heads only appear in templates where another head throws first). A
+		// planted `zzsynthhead` then took the count to 16 and PASSED, because the
+		// 5-slot gap between the two instruments was slack a new head could hide in.
+		//   A CEILING FROM A DIFFERENT INSTRUMENT THAN THE ASSERT IS NOT A GATE.
+		// The set form has no slack: a new head fails BY NAME, and a head that gains
+		// an IlLower case also fails -- which is correct, because the vector tier
+		// landing should update this list deliberately rather than silently.
+		var known = new[] {
+			"fcmpp", "vcvt", "vdpp", "vfbin", "vfcmpp", "vfmax", "vfmin", "vfun",
+			"vhadd", "vibin", "vishi", "vmovmsk", "vshuf", "vshufw", "vzip",
+		};
+		Assert.That(heads, Is.EquivalentTo(known),
+			$"the unlowered-head set MOVED. now ({heads.Count}): {string.Join(" ", heads)}\n"
+			+ $"expected ({known.Length}): {string.Join(" ", known)}\n"
+			+ "an ADDED head = a template whose semantics no C# backend can evaluate; "
+			+ "a REMOVED head = the vector tier gained a case, so update this list.");
 	}
 }
