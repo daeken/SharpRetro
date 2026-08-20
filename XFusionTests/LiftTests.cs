@@ -438,15 +438,20 @@ public class LiftTests {
 		// 77 templates -> 47. The gate failed BY NAME on the change, which is what the
 		// set form is for.
 		//
-		// vibin-mask-3 / vibin-mask-4 are SYNTHETIC names, not .isa heads: vibin ops
-		// 0/1/2 (add/sub/mul) lower, and ops 3/4 (cmpeq/cmpgt, i.e. PCMPEQ*/PCMPGT*,
-		// 6 templates) throw with an op-tagged message because an IlVecBin(Eq) carries
-		// no per-lane mask-vs-boolean convention -- all-1s or 1 is a SHARED-IL decision.
-		// Naming them separately is the honest form: reporting a bare "vibin" would
-		// claim the whole head is unhandled, which is false for 8 of its 14 templates.
+		// Then vibin's MASK ops (3/4 = PCMPEQ*/PCMPGT*) closed too, 47 -> 41 templates
+		// and 11 -> 9 heads. I had left them throwing on the belief that the per-lane
+		// mask convention (all-1s vs a boolean 1) was an undecided SHARED-IL question.
+		// It isn't -- it's declared at source: sse2.isa:158 states it as a semantic
+		// comment on the instruction ("per-lane integer compare -> all-1s/0 mask. cmpgt
+		// is SIGNED.") and interp.rs:484 implements exactly that. So the decision
+		// predates both consumers, and picking a boolean here would have put IlVecBin(Eq)
+		// in disagreement with the interpreter that already executes those templates.
+		// The lesson: before deferring a question as "a convention nobody has set", grep
+		// for the declaration -- a semantic comment ON the instruction is where this DSL
+		// records exactly that, and I had read the templates without reading the section
+		// header three lines above them.
 		var known = new[] {
 			"fcmpp", "vcvt", "vdpp", "vfcmpp", "vhadd",
-			"vibin-mask-3", "vibin-mask-4",
 			"vmovmsk", "vshuf", "vshufw", "vzip",
 		};
 		Assert.That(heads, Is.EquivalentTo(known),

@@ -484,10 +484,23 @@ public class IlLower {
 				var a = Expr(l[1]); var b = Expr(l[2]);
 				var ew = (int) ((PInt) l[3]).Value;
 				var op = (int) ((PInt) l[4]).Value;
+				// ops 3/4 are the MASK forms (PCMPEQ*/PCMPGT*), and the per-lane result
+				// convention is NOT a choice left to a backend -- it is DECLARED on the
+				// instruction and implemented to match:
+				//   sse2.isa:158  "; PCMPEQ*/PCMPGT*: per-lane integer compare -> all-1s/0
+				//                  mask. cmpgt is SIGNED. vibin op=3/4."
+				//   interp.rs:484  let m = if ew == 128 { u128::MAX } else { (1u128<<ew)-1 };
+				//                  3 => if la == lb { m } else { 0 },
+				//                  4 => sign-extend both to i128, then m
+				// So a lane is ALL-1s at the element width, not 1 -- which is what
+				// PAND-after-PCMPEQ depends on, and picking a boolean 1 here would put
+				// this in disagreement with the interpreter that already executes it.
+				// cmpgt is SIGNED (BinOp.Sgt); the ElemTy is signed for both, since
+				// PCMPEQ's equality is width-exact either way.
 				var bop = op switch {
 					0 => BinOp.Add, 1 => BinOp.Sub, 2 => BinOp.Mul,
-					_ => throw new NotSupportedException(
-						$"op vibin-mask-{op}")   // 3=cmpeq 4=cmpgt: mask convention undecided
+					3 => BinOp.Eq, 4 => BinOp.Sgt,
+					_ => throw new NotSupportedException($"op vibin-{op}")
 				};
 				return new IlVecBin(128, new IlType.I(true, ew), bop, a, b);
 			}
