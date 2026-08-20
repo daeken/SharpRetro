@@ -62,7 +62,20 @@ public static class X86Lifter {
 	static int WidthOf(OperandSpec spec, in DecodedInsn d, XMode mode, int vw) => spec.Width switch {
 		// sign-extended imms: the decoder already extended + masked Imm to the
 		// v-sized destination — bind at dest width so template arith is width-clean.
-		_ when spec.SignExtended => vw,
+		// The `|| WCode.z` half is NOT redundant, and omitting it was the bug: the
+		// DISASSEMBLER generator decides sign-extension with
+		//     var sx = spec.SignExtended || spec.Width == WCode.z;   (DisassemblerGenerator.cs:425)
+		// so a plain `Iz` (no -sx suffix, spec.SignExtended==false) IS extended at decode
+		// — `Decode.ReadImm(..., p.ZWidth(mode), true)` then masked to VWidth. Binding it
+		// at ZWidth afterwards truncates the extension straight back off.
+		// Only divergent under REX.W (vw=64, ZWidth=32); in Bits32 and in Bits64 without
+		// REX.W both are 32, which is why 59,925 rows passed before one didn't.
+		// Found by XFReader: `add rax, 0xaaaaaaaa` (48 05 aa aa aa aa) gave
+		// 0x00000000aaaaaaaa where silicon recorded 0xffffffffaaaaaaaa, and the lowered IL
+		// read `(let %1 = (u32 #aaaaaaaa))` — bound at 32.
+		// Same defect as own #115 on the Rust arm (RustLiftGen.cs:858 passes op_w, not the
+		// encoded width). Two arms, one rule, and the C# half kept the encoded width.
+		_ when spec.SignExtended || spec.Width == WCode.z => vw,
 		WCode.b => 8,
 		WCode.w => 16,
 		WCode.v => vw,
