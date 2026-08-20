@@ -22,6 +22,12 @@ public class X86Machine {
 	public readonly ushort[] SegSel = new ushort[6];
 
 	public byte[] Mem;
+	/// XMM scalar-lane values, as bit patterns. 32 slots per RegKind.Xmm's documented
+	/// range. NOT the full 128 bits: Eval's carrier is ulong, so anything wider dies
+	/// loud at the Eval default rather than silently truncating.
+	public readonly ulong[] Xmm = new ulong[32];
+	/// x87 stack slots, same carrier caveat (f64 bit patterns, no 80-bit extended).
+	public readonly ulong[] St = new ulong[8];
 	/// Instruction-fetch hook — DISTINCT from LoadHook so a host can
 	/// exec-filter (the X86Env consumer's step-1.5(c) ‡: LoadHook serves both
 	/// fetch and data, so his Segment.Exec check can't discriminate).
@@ -108,6 +114,13 @@ public class X86Machine {
 				if(bit < 0) Flags = Eval(v) | 2;
 				else Flags = (Flags & ~(1UL << bit)) | ((Eval(v) & 1) << bit);
 				break;
+			// XMM/x87: REAL files. They used to alias RegKind.X86 via OperandBind.Reg's
+			// missing File field, so an xmm write clobbered a GPR. Scalar lanes only --
+			// Eval's carrier is ulong, so a v128 op still dies loud at the Eval default,
+			// which is the honest state: the IlVec* node kinds exist in the shared IL
+			// (Il.cs:143-151) and nothing emits or evaluates them yet.
+			case IlWriteReg(RegKind.Xmm, var i, var v): Xmm[i] = Eval(v); break;
+			case IlWriteReg(RegKind.St, var i, var v): St[i] = Eval(v); break;
 			case IlWriteReg(RegKind.X86Seg, var i, var v): {
 				var sel = (ushort) Eval(v);
 				SegSel[i] = sel;
@@ -324,6 +337,8 @@ public class X86Machine {
 			case IlReadReg(_, RegKind.X86, var i): return Gpr[i];
 			case IlReadReg(_, RegKind.Eflags, var bit):
 				return bit < 0 ? Flags : (Flags >> bit) & 1;
+			case IlReadReg(_, RegKind.Xmm, var i): return Xmm[i];
+			case IlReadReg(_, RegKind.St, var i): return St[i];
 			case IlReadReg(_, RegKind.X86Seg, var i): return SegBase[i];
 			case IlReadPc: return SegBase[1] + Ip;  // linear pc (RIP-rel math wants linear)
 			case IlTmp(_, var id): return _tmps[id];

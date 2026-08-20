@@ -100,7 +100,7 @@ public static class X86Lifter {
 			case OpClass.RelBranch: {
 				// resolve to ABSOLUTE at bind time (pc + len + rel, wrapped at mode IP
 				// width) — the IL contract carries absolutes (aarch64 BL shape); raw
-				// rels would couple every consumer to x86 encoding. barrow step-2a find.
+				// rels would couple every consumer to x86 encoding.
 				var rel = immSlot++ == 0 ? d.Imm0 : d.Imm1;
 				var abs = pc + (ulong) d.Len + (ulong) rel;
 				if(mode == XMode.Bits32) abs &= 0xFFFFFFFF;
@@ -119,32 +119,36 @@ public static class X86Lifter {
 			case OpClass.FixedReg:
 				return new OperandBind.Reg(spec.FixedRegIndex,
 					spec.FixedRegByte ? 8 : spec.FixedRegVSized ? vw : 16);
-			// xmm/mmx/mask/segment/x87/string operand binds land with the vector-IL
-			// design conversation — their templates are intrinsic-bodied, and IlLower
-			// reads intrinsic args through these binds as dataflow placeholders.
+			// These bind to their OWN register files. They used to bind to RegKind.X86
+			// (the bind vocabulary had one file), which was survivable only while every
+			// such template was intrinsic-bodied — the binds were dataflow placeholders
+			// that never reached a real IlWriteReg. Once a template lowered to real IL
+			// the alias became a silent GPR clobber: `movdqa xmm0, xmm1` wrote RAX.
 			case OpClass.XmmReg:
 			case OpClass.MmxReg:
-				return new OperandBind.Reg(d.M.Reg, w);
+				return new OperandBind.Reg(d.M.Reg, w, File: RegKind.Xmm);
 			case OpClass.XmmRm or OpClass.XmmRmReg or OpClass.MmxRm when d.M.IsReg:
-				return new OperandBind.Reg(d.M.Rm, w);
+				return new OperandBind.Reg(d.M.Rm, w, File: RegKind.Xmm);
 			case OpClass.XmmRm or OpClass.MmxRm:
 				return new OperandBind.Mem(AddrExpr(in d, mode), w);
-			case OpClass.XmmVvvv or OpClass.GprVvvv:
+			case OpClass.XmmVvvv:
+				return new OperandBind.Reg(d.P.VexVvvv, w, File: RegKind.Xmm);
+			case OpClass.GprVvvv:
 				return new OperandBind.Reg(d.P.VexVvvv, w);
 			case OpClass.MaskReg:
-				return new OperandBind.Reg(d.M.Reg, w);
+				return new OperandBind.Reg(d.M.Reg, w, File: RegKind.Sys);
 			case OpClass.MaskRm:
-				return new OperandBind.Reg(d.M.Rm, w);
+				return new OperandBind.Reg(d.M.Rm, w, File: RegKind.Sys);
 			case OpClass.FpuTop:
-				return new OperandBind.Reg(0, w);
+				return new OperandBind.Reg(0, w, File: RegKind.St);
 			case OpClass.FpuSti:
-				return new OperandBind.Reg(d.M.Rm & 7, w);
+				return new OperandBind.Reg(d.M.Rm & 7, w, File: RegKind.St);
 			case OpClass.StrSrc:
 				return new OperandBind.Mem(new IlReadReg(IlType.U64, RegKind.X86, 6), w);  // [rSI]
 			case OpClass.StrDst:
 				return new OperandBind.Mem(new IlReadReg(IlType.U64, RegKind.X86, 7), w);  // [rDI]
 			case OpClass.ModRmSeg:
-				return new OperandBind.Reg(d.M.Reg, w);
+				return new OperandBind.Reg(d.M.Reg, w, File: RegKind.X86Seg);
 			case OpClass.FarPtr:
 				return new OperandBind.Imm(immSlot++ == 0 ? d.Imm0 : d.Imm1, w);
 			default:

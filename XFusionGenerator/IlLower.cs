@@ -21,7 +21,16 @@ namespace XFusionGenerator;
 public abstract record OperandBind {
 	/// High8: legacy AH/CH/DH/BH (8-bit reg 4-7 without REX) = bits 8-15 of
 	/// GPR Idx (already remapped to 0-3 by the binder). The x86 wart, encoded once.
-	public sealed record Reg(int Idx, int Width, bool High8 = false) : OperandBind;   // RegKind.X86 index
+	/// File: WHICH register file Idx indexes. Defaulted to X86 because that was the
+	/// only file the bind vocabulary had, and the omission was a live bug: every
+	/// xmm/mmx/mask/x87 operand bound to RegKind.X86, so `movdqa xmm0, xmm1` wrote
+	/// RAX. Harmless while those templates were intrinsic-bodied (X86Lifter's own
+	/// comment called the binds "dataflow placeholders"); the moment a template
+	/// lowered to real IL the alias became a silent GPR clobber. Verified at
+	/// execution, not inferred: RAX=0xAAAA…, RCX=0xBBBB…, movdqa xmm0,xmm1 → RAX
+	/// became 0xBBBB….
+	public sealed record Reg(int Idx, int Width, bool High8 = false,
+		RegKind File = RegKind.X86) : OperandBind;
 	public sealed record Mem(Il AddrExpr, int Width) : OperandBind;
 	public sealed record Imm(long Value, int Width) : OperandBind;
 }
@@ -269,21 +278,27 @@ public class IlLower {
 
 	void WriteOperand(string name, OperandBind b, Il e) {
 		switch(b) {
-			case OperandBind.Reg(var reg, _, true):  // AH/CH/DH/BH: insert at bits 8-15
+			case OperandBind.Reg(var reg, _, true, _):  // AH/CH/DH/BH: insert at bits 8-15
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlBin(IlType.U64, BinOp.Or,
 					new IlBin(IlType.U64, BinOp.And,
 						new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, ~0xFF00L)),
 					new IlBin(IlType.U64, BinOp.Shl,
 						new IlCast(IlType.U64, CastKind.Zext, e), C(64, 8)))));
 				break;
-			case OperandBind.Reg(var reg, 64, _):
+			// NON-GPR files (Xmm/St/mask/seg): write the value WHOLE, no partial-write
+			// wart. x86's zext-32 / masked-insert rules are GPR semantics; an xmm lane
+			// write does not zero-extend into a GPR and must not touch one.
+			case OperandBind.Reg(var reg, _, _, var f) when f != RegKind.X86:
+				Stmts.Add(new IlWriteReg(f, reg, e));
+				break;
+			case OperandBind.Reg(var reg, 64, _, _):
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, e));
 				break;
-			case OperandBind.Reg(var reg, 32, _):
+			case OperandBind.Reg(var reg, 32, _, _):
 				// x86-64 rule: 32-bit write ZERO-EXTENDS to 64 (not insert)
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlCast(IlType.U64, CastKind.Zext, e)));
 				break;
-			case OperandBind.Reg(var reg, var w, _):  // 8/16 low: masked insert
+			case OperandBind.Reg(var reg, var w, _, _):  // 8/16 low: masked insert
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlBin(IlType.U64, BinOp.Or,
 					new IlBin(IlType.U64, BinOp.And,
 						new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, ~((1L << w) - 1))),
@@ -316,10 +331,13 @@ public class IlLower {
 	}
 
 	Il ReadOperand(string name, OperandBind b) => b switch {
-		OperandBind.Reg(var reg, _, true) => new IlCast(IlType.U8, CastKind.Trunc,
+		OperandBind.Reg(var reg, _, true, _) => new IlCast(IlType.U8, CastKind.Trunc,
 			new IlBin(IlType.U64, BinOp.Shr, new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, 8))),
-		OperandBind.Reg(var reg, 64, _) => new IlReadReg(IlType.U64, RegKind.X86, reg),
-		OperandBind.Reg(var reg, var w, _) => new IlCast(U(w), CastKind.Trunc, new IlReadReg(IlType.U64, RegKind.X86, reg)),
+		// non-GPR file: read whole, no truncate-to-GPR-width
+		OperandBind.Reg(var reg, var xw, _, var xf) when xf != RegKind.X86
+			=> new IlReadReg(U(xw), xf, reg),
+		OperandBind.Reg(var reg, 64, _, _) => new IlReadReg(IlType.U64, RegKind.X86, reg),
+		OperandBind.Reg(var reg, var w, _, _) => new IlCast(U(w), CastKind.Trunc, new IlReadReg(IlType.U64, RegKind.X86, reg)),
 		OperandBind.Mem(_, var w) => new IlLoad(U(w), MemAddr[name]),
 		OperandBind.Imm(var v, var w) => C(w, v),
 		_ => throw new NotSupportedException(b.ToString())
