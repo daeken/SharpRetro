@@ -3021,17 +3021,18 @@
     (names (Q Q) (size s) (rn n) (rt t))
     ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
     ; size:Q arms cover all but 0b11_0.
+    (block
     (requires (!= (: size Q) 0b110))
-    (let rt2 (% (+ rt 1) 32)
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (let rt2 (% (+ rt 1) 32)
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (let address (gpr-or-sp64 rn)
         (do-ld2)))
 
@@ -3733,14 +3734,15 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (block
     (requires (& option 0b010))
-    (let r (if (& option 1) "X" "W")
-        (let str (match option
-            0b010 "UXTW"
-            0b011 "LSL"
-            0b110 "SXTW"
-            0b111 "SXTX"
-            (unimplemented))))
+        (let r (if (& option 1) "X" "W")
+            (let str (match option
+                0b010 "UXTW"
+                0b011 "LSL"
+                0b110 "SXTW"
+                0b111 "SXTX"
+                (unimplemented)))))
     (let offset (<< (if (== option 0b110)
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
@@ -3790,14 +3792,15 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (block
     (requires (& option 0b010))
-    (let r (if (& option 1) "X" "W")
-        (let str (match option
-            0b010 "UXTW"
-            0b011 "LSL"
-            0b110 "SXTW"
-            0b111 "SXTX"
-            (unimplemented))))
+        (let r (if (& option 1) "X" "W")
+            (let str (match option
+                0b010 "UXTW"
+                0b011 "LSL"
+                0b110 "SXTW"
+                0b111 "SXTX"
+                (unimplemented)))))
     (let offset (<< (if (== option 0b110)
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
@@ -3852,14 +3855,15 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (block
     (requires (& option 0b010))
-    (let r (if (== opc 0) "X" "W")
-        (let str (match option
-            0b010 "UXTW"
-            0b011 "LSL"
-            0b110 "SXTW"
-            0b111 "SXTX"
-            (unimplemented))))
+        (let r (if (== opc 0) "X" "W")
+            (let str (match option
+                0b010 "UXTW"
+                0b011 "LSL"
+                0b110 "SXTW"
+                0b111 "SXTX"
+                (unimplemented)))))
     (let offset (<< (if (== option 0b110)
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
@@ -3921,14 +3925,15 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (block
     (requires (& option 0b010))
-    (let r (if (== opc 0) "X" "W")
-        (let str (match option
-            0b010 "UXTW"
-            0b011 "LSL"
-            0b110 "SXTW"
-            0b111 "SXTX"
-            (unimplemented))))
+        (let r (if (== opc 0) "X" "W")
+            (let str (match option
+                0b010 "UXTW"
+                0b011 "LSL"
+                0b110 "SXTW"
+                0b111 "SXTX"
+                (unimplemented)))))
     (let offset (<< (if (== option 0b110)
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
@@ -4452,18 +4457,19 @@
     (names (Q Q) (size s) (rm m) (rn n) (rd d))
     ; size: 00=8x(8b->16b), 11=1x(64b->128b GHASH); 01/10 RESERVED. The guard must
     ; precede the lets -- Ta's match hits its default on reserved sizes otherwise.
+    (block
     (requires (| (== size 0b00) (== size 0b11)))
-    (let h (if Q "2" "")
-        (let Ta (match size
-            0b00 "8H"
-            0b11 "1Q"
-            (unimplemented)))
-        (let Tb (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b11_0 "1D"
-            0b11_1 "2D"
-            (unimplemented))))
+        (let h (if Q "2" "")
+            (let Ta (match size
+                0b00 "8H"
+                0b11 "1Q"
+                (unimplemented)))
+            (let Tb (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b11_0 "1D"
+                0b11_1 "2D"
+                (unimplemented)))))
     (if (== size 0b11)
         (block
             (polynomial* (vector-element (vec rn) Q u64) (vector-element (vec rm) Q u64) 64 u128)
@@ -5276,17 +5282,18 @@
     "st2 { V$rt.$T, V$rt2.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (let rt2 (% (+ rt 1) 32)
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (let rt2 (% (+ rt 1) 32)
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2))
         (match size
             0b00 (qfor i 8 16 (st2-sub 1 u8))
@@ -5354,17 +5361,18 @@
     "st3 { V$rt.$T, V$rt2.$T, V$rt3.$T }, [X$rn]"
     (names (Q Q) (size s) (rn n) (rt t))
     ; size=11,Q=0 (1D) RESERVED for multi-structure forms (objdump-confirmed).
+    (block
     (requires (! (& (== size 0b11) (! Q))))
-    (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2) c (vec rt3))
         (match size
             0b00 (qfor i 8 16 (st3-sub 1 u8))
@@ -5434,17 +5442,18 @@
     (names (Q Q) (size s) (rn n) (rt t))
     ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
     ; size:Q arms cover all but 0b11_0; ditto the inner (match size).
+    (block
     (requires (!= (: size Q) 0b110))
-    (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (mlet (rt2 (% (+ rt 1) 32) rt3 (% (+ rt 2) 32) rt4 (% (+ rt 3) 32))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (address (gpr-or-sp64 rn) a (vec rt) b (vec rt2) c (vec rt3) d (vec rt4))
         (match size
             0b00 (qfor i 8 16 (st4-sub 1 u8))
@@ -5916,14 +5925,15 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (block
     (requires (& option 0b010))
-    (let r (if (& option 1) "X" "W")
-        (let str (match option
-            0b010 "UXTW"
-            0b011 "LSL"
-            0b110 "SXTW"
-            0b111 "SXTX"
-            (unimplemented))))
+        (let r (if (& option 1) "X" "W")
+            (let str (match option
+                0b010 "UXTW"
+                0b011 "LSL"
+                0b110 "SXTW"
+                0b111 "SXTX"
+                (unimplemented)))))
     (let offset (<< (if (== option 0b110)
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
@@ -5969,14 +5979,15 @@
     ; def's OWN match case-list, not composed from the manual. Without the guard the
     ; match default hits unimplemented!() MID-EXECUTION instead of failing to decode.
     ; (The extended-register arithmetic forms use all 8 values and need no guard.)
+    (block
     (requires (& option 0b010))
-    (let r (if (& option 1) "X" "W")
-        (let str (match option
-            0b010 "UXTW"
-            0b011 "LSL"
-            0b110 "SXTW"
-            0b111 "SXTX"
-            (unimplemented))))
+        (let r (if (& option 1) "X" "W")
+            (let str (match option
+                0b010 "UXTW"
+                0b011 "LSL"
+                0b110 "SXTW"
+                0b111 "SXTX"
+                (unimplemented)))))
     (let offset (<< (if (== option 0b110)
             (u64 (signext (gpr32 rm) i64))
             (if (& option 1)
@@ -6428,16 +6439,17 @@
     (names (Q Q) (size s) (rm m) (min o) (rn n) (rd d))
     ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
     ; size:Q arms are exactly size in {00,01,10} x either Q.
+    (block
     (requires (!= size 0b11))
-    (let mnem (if min "uminp" "umaxp")
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            (unimplemented))))
+        (let mnem (if min "uminp" "umaxp")
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                (unimplemented)))))
     ; SDM: Vd = [pairwise(Vn) | pairwise(Vm)] -- Vn's pairs fill the LOW half. The
     ; original listed m first: silicon-diff caught the halves exactly mirrored.
     (mlet (m (vec rm) n (vec rn))
@@ -6620,17 +6632,18 @@
     (names (Q Q) (size s) (rm m) (op o) (rn n) (rd d))
     ; Derived from this def's OWN match case-list(s) below, not composed from the manual.
     ; size:Q arms cover all but 0b11_0.
+    (block
     (requires (!= (: size Q) 0b110))
-    (let i (u8 (+ op 1))
-        (let T (match (: size Q)
-            0b00_0 "8B"
-            0b00_1 "16B"
-            0b01_0 "4H"
-            0b01_1 "8H"
-            0b10_0 "2S"
-            0b10_1 "4S"
-            0b11_1 "2D"
-            (unimplemented))))
+        (let i (u8 (+ op 1))
+            (let T (match (: size Q)
+                0b00_0 "8B"
+                0b00_1 "16B"
+                0b01_0 "4H"
+                0b01_1 "8H"
+                0b10_0 "2S"
+                0b10_1 "4S"
+                0b11_1 "2D"
+                (unimplemented)))))
     (mlet (av (vec rn) bv (vec rm))
         (let _base (* (u32 op) (/ (/ (if Q 128 64) (<< 8 size)) 2))
             (= (vec rd)
