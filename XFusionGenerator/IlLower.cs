@@ -156,6 +156,110 @@ public class IlLower {
 				// side (RustLiftGen) lowers to bd.fence() → dmb ish/SeqCst.
 				Stmts.Add(new IlIntrin(IlType.V0, "fence", Array.Empty<Il>()));
 				break;
+			// ---- the six heads below were NEVER handled by this lowerer (verified
+			// via `git log -S` over its whole history, 2026-08-20). The .isa
+			// carried them from 07-09/08-09; RustLiftGen lowered them 08-09/08-10;
+			// this arm never caught up, which is 21 red XFusionTests rather than a
+			// regression. THREE of them (mul/div-wide, str-op) are executed BY NAME
+			// in X86Machine — for those the correct lowering is the `fence` shape:
+			// emit the intrinsic marker with the args the machine already reads.
+			// The other three need real IL and are transcribed from RustLiftGen's
+			// own arms (NOT composed — a rewrite's composed-from-memory
+			// semantics is exactly what the freeze-oracle exists to catch).
+			case PName("mul-wide"):
+			case PName("div-wide"): {
+				// (mul-wide src #t|#f) / (div-wide src #t|#f) — F6/F7 /4-/7.
+				// X86Machine:169 dispatches on {mul,imul,div,idiv}-wide with
+				// args = [width, src] (its own comment at :166). #t = signed,
+				// which selects the imul-/idiv- name the machine expects.
+				var signed = l[2] is PName("#t");
+				var stem = ((PName) l[0]).Name;                       // mul-wide | div-wide
+				var nm = signed ? "i" + stem : stem;                  // imul-wide | idiv-wide
+				Stmts.Add(new IlIntrin(IlType.V0, nm, [C(64, OpWidth), Expr(l[1])]));
+				break;
+			}
+			case PName("str-op"): {
+				// (str-op movs|stos|lods|scas|cmps) — ONE iteration. X86Machine:275
+				// takes args[0] = width (".isa convention", its own comment) and
+				// X86Lifter:44-47 rewrites a bare marker to rep_/repe_/repne_ from
+				// the DecodedInsn prefix — which this lowerer cannot see (it gets
+				// only params/eval/binds/opWidth), so emitting the BARE name is
+				// both correct and the only reachable form. The rep-wrap is the
+				// lifter's job and was already written for a marker nobody emitted.
+				Stmts.Add(new IlIntrin(IlType.V0, ((PName) l[1]).Name, [C(64, OpWidth)]));
+				break;
+			}
+			case PName("cdq-cwde"): {
+				// (cdq-cwde 0) = CBW/CWDE/CDQE: RAX@op_w = sext(RAX@op_w/2).
+				// (cdq-cwde 1) = CWD/CDQ/CQO:  RDX@op_w = RAX >>arith (op_w-1).
+				// Transcribed from RustLiftGen:192-215.
+				var which = ((PInt) l[1]).Value;
+				if(which == 0) {
+					var half = OpWidth / 2;
+					var al = new IlReadReg(U(half), RegKind.X86, 0);
+					var sx = new IlCast(U(OpWidth), CastKind.Sext, al);
+					Stmts.Add(new IlWriteReg(RegKind.X86, 0,
+						OpWidth == 64 ? sx : new IlCast(IlType.U64, CastKind.Zext, sx)));
+				} else {
+					var ra = new IlReadReg(U(OpWidth), RegKind.X86, 0);
+					var sn = new IlCast(new IlType.I(true, OpWidth), CastKind.Bitcast, ra);
+					var fd = new IlBin(new IlType.I(true, OpWidth), BinOp.Sar, sn, C(OpWidth, OpWidth - 1));
+					var fu = new IlCast(U(OpWidth), CastKind.Bitcast, fd);
+					Stmts.Add(new IlWriteReg(RegKind.X86, 2,
+						OpWidth == 64 ? fu : new IlCast(IlType.U64, CastKind.Zext, fu)));
+				}
+				break;
+			}
+			case PName("imul-of"): {
+				// (imul-of dst a b) — 2/3-op IMUL. dst = trunc(a*b, op_w);
+				// CF=OF = signed overflow = hi_half != asr(lo_half, op_w-1).
+				// Transcribed from RustLiftGen:305-330 (the .isa-tier fix that
+				// silicon verified at 0 IMUL diffs on 200K).
+				var w2 = new IlType.I(true, OpWidth * 2);
+				var wi = new IlType.I(true, OpWidth);
+				var pa = new IlCast(w2, CastKind.Sext, Expr(l[2]));
+				var pb = new IlCast(w2, CastKind.Sext, Expr(l[3]));
+				var prod = Let(new IlBin(w2, BinOp.Mul, pa, pb));
+				var lo = Let(new IlCast(U(OpWidth), CastKind.Trunc, prod));
+				var hi = Let(new IlCast(U(OpWidth), CastKind.Trunc,
+					new IlBin(w2, BinOp.Shr, prod, C(OpWidth * 2, OpWidth))));
+				var loS = new IlCast(wi, CastKind.Bitcast, lo);
+				var fill = new IlCast(U(OpWidth), CastKind.Bitcast,
+					new IlBin(wi, BinOp.Sar, loS, C(OpWidth, OpWidth - 1)));
+				var ovf = Let(new IlBin(IlType.U1, BinOp.Ne, hi, fill));
+				var dst = ((PName) l[1]).Name;
+				if(Binds.TryGetValue(dst, out var db)) WriteOperand(dst, db, lo);
+				else if(ArchReg(dst) is { } dr)
+					Stmts.Add(new IlWriteReg(RegKind.X86, dr, new IlCast(IlType.U64, CastKind.Zext, lo)));
+				else throw new NotSupportedException($"imul-of dst {dst}");
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit("CF"), ovf));
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit("OF"), ovf));
+				break;
+			}
+			case PName("vshift-bytes"): {
+				// (vshift-bytes dst count l|r) — PSRLDQ/PSLLDQ whole-128 byte-shift
+				// by a COMPILE-TIME imm8; count>=16 → 0 per SDM. count is an Imm
+				// bind, so this resolves at lower-time exactly as RustLiftGen:171-190
+				// resolves it at emit-time (a Rust-side match, not a runtime ternary).
+				var tgt = ((PName) l[1]).Name;
+				var cntName = ((PName) l[2]).Name;
+				var right = ((PName) l[3]).Name == "r";
+				if(!Binds.TryGetValue(cntName, out var cb) || cb is not OperandBind.Imm ci)
+					throw new NotSupportedException($"vshift-bytes count {cntName} not an imm bind");
+				var cnt = (int) (ulong) ci.Value & 0xFF;
+				var v128 = new IlType.I(false, 128);
+				Il rv;
+				if(cnt >= 16) rv = new IlConst(new IlType.Vec(128), 0);
+				else if(cnt == 0) rv = Expr(l[1]);
+				else {
+					var vd = new IlCast(v128, CastKind.Bitcast, Expr(l[1]));
+					var sh = new IlBin(v128, right ? BinOp.Shr : BinOp.Shl, vd, new IlConst(IlType.U64, (UInt128) (cnt * 8)));
+					rv = new IlCast(new IlType.Vec(128), CastKind.Bitcast, sh);
+				}
+				if(Binds.TryGetValue(tgt, out var tb)) WriteOperand(tgt, tb, rv);
+				else throw new NotSupportedException($"vshift-bytes dst {tgt}");
+				break;
+			}
 			default:
 				throw new NotSupportedException($"stmt head {l[0]}");
 		}
@@ -259,6 +363,45 @@ public class IlLower {
 			case "~": {
 				var a = Expr(l[1], ctxW);
 				return new IlUn(a.Ty, UnOp.Not, a);
+			}
+			// UnOp already carries Clz/Rbit/Popcnt (LiftIl/Il.cs:42) — these three
+			// were unreachable only because no case dispatched to them. BSF/BSR/
+			// LZCNT/TZCNT/POPCNT are the consumers; RustLiftGen:489/etc lowers the
+			// same heads to bd.clz/bd.rbit/bd.popcnt.
+			case "clz": {
+				var a = Expr(l[1], ctxW);
+				return new IlUn(a.Ty, UnOp.Clz, a);
+			}
+			case "rbit": {
+				var a = Expr(l[1], ctxW);
+				return new IlUn(a.Ty, UnOp.Rbit, a);
+			}
+			case "popcnt": {
+				var a = Expr(l[1], ctxW);
+				return new IlUn(a.Ty, UnOp.Popcnt, a);
+			}
+			case "bswap": {
+				// (bswap x) — byte-reverse at op-width. No UnOp.Bswap exists, so
+				// this composes from the primitives the IL DOES have, exactly as a
+				// generic backend would: rbit reverses BITS, so bswap = rbit of
+				// each byte re-reversed. Cheaper and obviously-correct form: OR of
+				// per-byte shifts, which is what a C compiler emits for the 16-bit
+				// case and what LLVM pattern-matches back to a bswap.
+				var a = Expr(l[1], ctxW);
+				var w = W(a);
+				if(w % 8 != 0 || w < 16) throw new NotSupportedException($"bswap width {w}");
+				var ty = U(w);
+				Il bsAcc = null;
+				for(var i = 0; i < w / 8; i++) {
+					// byte i of the source lands at byte (nbytes-1-i) of the result
+					var srcSh = i * 8;
+					var dstSh = (w / 8 - 1 - i) * 8;
+					Il b = srcSh == 0 ? a : new IlBin(ty, BinOp.Shr, a, C(w, srcSh));
+					b = new IlBin(ty, BinOp.And, b, C(w, 0xFF));
+					if(dstSh != 0) b = new IlBin(ty, BinOp.Shl, b, C(w, dstSh));
+					bsAcc = bsAcc == null ? b : new IlBin(ty, BinOp.Or, bsAcc, b);
+				}
+				return bsAcc;
 			}
 		}
 		// comparisons → u1
