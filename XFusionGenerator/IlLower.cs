@@ -65,6 +65,16 @@ public class IlLower {
 		_ => new IlType.I(false, w)
 	};
 	static int W(Il e) => e.Ty is IlType.I(_, var b) ? b : 64;
+
+	// Extract lane `idx` of `v` at element type `et`, for the permutation family. The
+	// index is always a COMPILE-TIME constant here (vzip's hi is a literal, vshuf/vshufw's
+	// selector is an Imm bind), so this is an IlVecElem over an IlConst rather than
+	// anything needing runtime lane addressing -- which is why the permutation cluster
+	// needs no node kind that LiftIl doesn't already have. IlVecElem is Il.cs:145,
+	// documented there as "extract scalar lane"; MaxwellLift:1155 is the working exemplar
+	// (it passes a constant index the same way).
+	static Il Lane(Il v, IlType et, int idx) =>
+		new IlVecElem(et, v, new IlConst(new IlType.I(false, 32), (UInt128) idx));
 	static IlConst C(int w, long v) => new(U(w), (UInt128) (ulong) (v & MaskW(w)));
 	static long MaskW(int w) => w >= 64 ? -1L : (1L << w) - 1;
 
@@ -553,6 +563,98 @@ public class IlLower {
 					_ => throw new NotSupportedException($"op vishi-dir-{dir}")
 				};
 				return new IlVecBin(128, et, sop, a, new IlConst(new IlType.I(false, 32), (UInt128) cnt));
+			}
+			// ---- LANE-PERMUTATION cluster: also NO new node kinds ----
+			// I had these in the "needs a new node kind" half, from the head names. Wrong,
+			// and the ctor is what settles it (same correction as vcvt, opposite direction):
+			// IlVecBuild(Bits, ElemTy, Elems) and IlVecElem(Ty, Vec, Idx) BOTH already exist
+			// in the shared LiftIl -- Il.cs:143/145, documented right there as
+			// "IlVecBuild = (vector e0..eN); IlVecElem = extract scalar lane". And every
+			// selector in this family is COMPILE-TIME (vzip's hi is a #t/#f literal;
+			// vshuf/vshufw's sel is an Imm bind, resolved here exactly as vishi and
+			// vshift-bytes resolve theirs). So a permutation is n IlVecElem extracts at
+			// CONSTANT indices, collected by one IlVecBuild -- no runtime lane indexing,
+			// hence no node kind that doesn't exist.
+			//
+			// ElemTy is I(false, ew): a permutation is WIDTH-typed, not sign- or
+			// float-typed. SHUFPS moves 32-bit lanes and never inspects them, so calling
+			// them f32 would assert something the operation doesn't depend on. The
+			// declaration comment on IlVecBuild says ElemTy carries lane type "for ops
+			// where it isn't recoverable from children" -- for a pure bit-permutation the
+			// width is the whole of it.
+			//
+			// Semantics TRANSCRIBED from interp.rs (fn vzip :536, vshuf :523, vshufw :509),
+			// which is the Rust backend's authority, not composed from the mnemonics.
+			case "vzip": {
+				// (vzip a b ew hi) -- INTERLEAVE the low (or high) halves:
+				//   n = 128/ew; base = hi ? n/2 : 0
+				//   for k in 0..n/2:  r[2k] = a[base+k];  r[2k+1] = b[base+k]
+				// x86's PUNPCKL*/H* and UNPCKLPS/HPS. Note the .isa SWAPS args where the
+				// x86 form wants it (MOVHLPS is (vzip src dst 64 #t), sse.isa:20) -- so
+				// this arm takes l[1]/l[2] in order and the swap stays declarative.
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				var hi = l[4] is PName("#t");
+				var n = 128 / ew;
+				var et = new IlType.I(false, ew);
+				var bse = hi ? n / 2 : 0;
+				var el = new List<Il>();
+				for(var k = 0; k < n / 2; k++) {
+					el.Add(Lane(a, et, bse + k));
+					el.Add(Lane(b, et, bse + k));
+				}
+				return new IlVecBuild(128, et, el);
+			}
+			case "vshuf": {
+				// (vshuf a b sel ew) -- SHUFPS/SHUFPD/PSHUFD. Low half of the result is
+				// selected from a, high half from b (PSHUFD passes src for both, so it
+				// degenerates to a single-source shuffle -- sse2.isa:290):
+				//   bits_per = ew==32 ? 2 : 1;  for i in 0..n:
+				//     src = i < n/2 ? a : b;  j = (sel >> i*bits_per) & mask;  r[i] = src[j]
+				var a = Expr(l[1]); var b = Expr(l[2]);
+				var selName = ((PName) l[3]).Name;
+				var ew = (int) ((PInt) l[4]).Value;
+				if(!Binds.TryGetValue(selName, out var sb) || sb is not OperandBind.Imm si)
+					throw new NotSupportedException($"vshuf sel {selName} not an imm bind");
+				var sel = (uint) ((ulong) si.Value & 0xFF);
+				var bitsPer = ew switch {
+					32 => 2, 64 => 1,
+					_ => throw new NotSupportedException($"op vshuf-ew-{ew}")
+				};
+				var n = 128 / ew;
+				var et = new IlType.I(false, ew);
+				var smask = (1u << bitsPer) - 1;
+				var el = new List<Il>();
+				for(var i = 0; i < n; i++) {
+					var src = i < n / 2 ? a : b;
+					var j = (int) ((sel >> (i * bitsPer)) & smask);
+					el.Add(Lane(src, et, j));
+				}
+				return new IlVecBuild(128, et, el);
+			}
+			case "vshufw": {
+				// (vshufw src sel hi) -- PSHUFLW/PSHUFHW. Shuffles the FOUR words of one
+				// half by sel; the OTHER half is copied through unchanged. So all 8 lanes
+				// are named, 4 permuted and 4 identity:
+				//   base = hi ? 4 : 0;  for i in 0..4: r[base+i] = src[base + ((sel>>2i)&3)]
+				//   and r[other+i] = src[other+i]
+				var a = Expr(l[1]);
+				var selName = ((PName) l[2]).Name;
+				var hi = l[3] is PName("#t");
+				if(!Binds.TryGetValue(selName, out var wb) || wb is not OperandBind.Imm wi)
+					throw new NotSupportedException($"vshufw sel {selName} not an imm bind");
+				var sel = (uint) ((ulong) wi.Value & 0xFF);
+				var et = new IlType.I(false, 16);
+				var bse = hi ? 4 : 0;
+				var el = new List<Il>();
+				for(var i = 0; i < 8; i++) {
+					if(i >= bse && i < bse + 4) {
+						var j = (int) ((sel >> ((i - bse) * 2)) & 3);
+						el.Add(Lane(a, et, bse + j));
+					} else
+						el.Add(Lane(a, et, i));      // the untouched half, copied through
+				}
+				return new IlVecBuild(128, et, el);
 			}
 			case "flt": {
 				var a = Expr(l[1]); var b = Expr(l[2], W(a));

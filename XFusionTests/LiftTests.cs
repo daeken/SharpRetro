@@ -450,9 +450,21 @@ public class LiftTests {
 		// for the declaration -- a semantic comment ON the instruction is where this DSL
 		// records exactly that, and I had read the templates without reading the section
 		// header three lines above them.
+		// Then the LANE-PERMUTATION cluster closed too, 41 -> 19 templates and 9 -> 6
+		// heads. I had classified vzip/vshuf/vshufw as "needs a new node kind in the
+		// shared LiftIl" from the head NAMES -- and the ctors say otherwise:
+		// IlVecBuild(Bits, ElemTy, Elems) + IlVecElem(Ty, Vec, Idx) both already exist
+		// (Il.cs:143/145), and every selector in that family is COMPILE-TIME, so a
+		// permutation is n constant-index extracts collected by one build. No runtime
+		// lane addressing, hence no missing node kind.
+		//
+		// That is the SECOND time this session that reading a head's receiving
+		// CONSTRUCTOR moved it across the local-vs-shared boundary -- once outward
+		// (vcvt: IlCast has no element-width field, so a lane-count-CHANGING convert
+		// genuinely cannot be expressed) and once inward (these three). The name is not
+		// the classifier; the ctor is.
 		var known = new[] {
-			"fcmpp", "vcvt", "vdpp", "vfcmpp", "vhadd",
-			"vmovmsk", "vshuf", "vshufw", "vzip",
+			"fcmpp", "vcvt", "vdpp", "vfcmpp", "vhadd", "vmovmsk",
 		};
 		Assert.That(heads, Is.EquivalentTo(known),
 			$"the unlowered-head set MOVED. now ({heads.Count}): {string.Join(" ", heads)}\n"
