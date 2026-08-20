@@ -16,6 +16,111 @@ public class ExecTests {
 	const int CF = 0, PF = 2, AF = 4, ZF = 6, SF = 7, OF = 11;
 	static bool F(X86Machine m, int bit) => ((m.Flags >> bit) & 1) != 0;
 
+	// --- SSE scalar float: EXECUTION, not just lowering ---
+	// A corpus census over 11.3M insns of real .text put MULSS/ADDSS/SUBSS/COMISS at
+	// 93,637 insns = 56% of everything IlLower couldn't lower. Those now lift (the
+	// float-conversion cluster) — but lifting is not executing: this evaluator had
+	// ZERO F-aware sites and its Cast arm threw on SToF, so the cluster would have
+	// been lift-clean and exec-dead. These tests are the arm that separates those.
+	//
+	// The carrier convention is MaxwellEval's (Il.cs's shared IL, MaxwellEval:119):
+	// Eval returns ulong, so an F-typed value rides as its IEEE BIT PATTERN. Hence
+	// the expectations below are bit-exact rather than approximate.
+	static X86Machine MF(string hex, uint xa, uint xb) {
+		var m = M64(hex);
+		// operands ride in the GPR file at 32-bit: the .isa's Vss/Wss binds are
+		// Reg binds, so IlLower reads them via RegKind.X86 (see X86Lifter:125).
+		m.Gpr[0] = xa; m.Gpr[1] = xb;
+		return m;
+	}
+	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
+
+	[Test]
+	public void SseScalarFloatArithExecutes() {  // F3 0F 59 C1 = mulss xmm0, xmm1
+		var m = MF("f30f59c1", Fb(6.0f), Fb(7.0f));
+		Assert.That(m.Step(), Is.True, "mulss did not step");
+		Assert.That((uint) m.Gpr[0], Is.EqualTo(Fb(42.0f)), "6*7 bit-exact");
+
+		var a = MF("f30f58c1", Fb(1.5f), Fb(2.25f));   // addss
+		a.Step();
+		Assert.That((uint) a.Gpr[0], Is.EqualTo(Fb(3.75f)), "1.5+2.25");
+
+		var s = MF("f30f5cc1", Fb(10.0f), Fb(3.5f));   // subss
+		s.Step();
+		Assert.That((uint) s.Gpr[0], Is.EqualTo(Fb(6.5f)), "10-3.5");
+
+		var d = MF("f30f5ec1", Fb(9.0f), Fb(2.0f));    // divss
+		d.Step();
+		Assert.That((uint) d.Gpr[0], Is.EqualTo(Fb(4.5f)), "9/2");
+	}
+
+	[Test]
+	public void SseMinMaxUsesX86NaNRule() {  // F3 0F 5D C1 = minss / 5F = maxss
+		// x86 MIN/MAX return the SECOND source when either operand is NaN — NOT
+		// ARM's FMAX/FMIN (which propagate the NaN) and NOT MathF.Max (same). If
+		// the evaluator used MathF.Max this test fails, which is why it exists.
+		var nan = Fb(float.NaN);
+		var mx = MF("f30f5fc1", nan, Fb(3.0f));
+		mx.Step();
+		Assert.That((uint) mx.Gpr[0], Is.EqualTo(Fb(3.0f)), "maxss NaN,3 → 3 (2nd src)");
+
+		var mn = MF("f30f5dc1", nan, Fb(3.0f));
+		mn.Step();
+		Assert.That((uint) mn.Gpr[0], Is.EqualTo(Fb(3.0f)), "minss NaN,3 → 3 (2nd src)");
+
+		// and the ordinary ordering still works
+		var ok = MF("f30f5fc1", Fb(2.0f), Fb(5.0f));
+		ok.Step();
+		Assert.That((uint) ok.Gpr[0], Is.EqualTo(Fb(5.0f)), "maxss 2,5 → 5");
+	}
+
+	[Test]
+	public void ComissSetsUnorderedFlags() {  // 0F 2F C1 = comiss xmm0, xmm1
+		// The .isa body is the reason this is the interesting one: PF=unord,
+		// CF=(lt|unord), ZF=(eq|unord), and OF/SF/AF forced 0. A NaN operand must
+		// set all three of PF/CF/ZF — which only works if fisnan, flt and feq all
+		// evaluate on FLOAT operands.
+		var eq = MF("0f2fc1", Fb(1.0f), Fb(1.0f));
+		eq.Step();
+		Assert.That(F(eq, ZF), Is.True,  "equal → ZF");
+		Assert.That(F(eq, CF), Is.False, "equal → no CF");
+		Assert.That(F(eq, PF), Is.False, "ordered → no PF");
+
+		var lt = MF("0f2fc1", Fb(1.0f), Fb(2.0f));
+		lt.Step();
+		Assert.That(F(lt, CF), Is.True,  "less → CF");
+		Assert.That(F(lt, ZF), Is.False, "less → no ZF");
+
+		var un = MF("0f2fc1", Fb(float.NaN), Fb(1.0f));
+		un.Step();
+		Assert.That(F(un, PF), Is.True, "unordered → PF");
+		Assert.That(F(un, CF), Is.True, "unordered → CF");
+		Assert.That(F(un, ZF), Is.True, "unordered → ZF");
+		Assert.That(F(un, OF), Is.False, "OF forced 0");
+		Assert.That(F(un, SF), Is.False, "SF forced 0");
+	}
+
+	[Test]
+	public void CvtsiToFloatAndBackExecutes() {  // F3 48 0F 2A = cvtsi2ss xmm0, rcx
+		var c = M64("f3480f2ac1");
+		c.Gpr[1] = 84;
+		c.Step();
+		Assert.That((uint) c.Gpr[0], Is.EqualTo(Fb(84.0f)), "int 84 → 84.0f");
+
+		// and the x86 INDEFINITE-INTEGER guard on the way back: cvttss2si of NaN
+		// must give 0x80000000, not 0 and not a saturate. The silicon sweep measured
+		// a three-way divergence here when this was a bare F→I cast.
+		var t = M64("f30f2cc1");       // cvttss2si eax, xmm1
+		t.Gpr[1] = Fb(float.NaN);
+		t.Step();
+		Assert.That((uint) t.Gpr[0], Is.EqualTo(0x80000000u), "NaN → indefinite integer");
+
+		var v = M64("f30f2cc1");
+		v.Gpr[1] = Fb(-7.9f);
+		v.Step();
+		Assert.That((int) (uint) v.Gpr[0], Is.EqualTo(-7), "truncate toward zero");
+	}
+
 	[Test]
 	public void AddCarryAndOverflow() {  // add eax, ebx with 0xFFFFFFFF + 1 → CF=1 ZF=1 OF=0
 		var m = M64("01d8");
@@ -287,7 +392,7 @@ public class ExecTests {
 	}
 
 	[Test]
-	public void FetchHookExecFilter() {  // FetchHook distinct from LoadHook (barrow's step-1.5(c) ‡)
+	public void FetchHookExecFilter() {  // FetchHook distinct from LoadHook (‡)
 		byte[] code = [0x48, 0x8B, 0x03, 0xC3];  // mov rax,[rbx] ; ret
 		var m = new X86Machine {
 			Mode = XMode.Bits64, Ip = 0x1000,
@@ -308,7 +413,7 @@ public class ExecTests {
 	}
 
 	[Test]
-	public void MemHooksFallback() {  // no Mem[] — fetch + load + store all via hooks (barrow's X86Env pattern ·124)
+	public void MemHooksFallback() {  // no Mem[] — fetch + load + store all via hooks (the X86Env pattern)
 		var stores = new Dictionary<ulong, (ulong v, int w)>();
 		byte[] code = [0x48, 0x8B, 0x03, 0x50];  // mov rax,[rbx] ; push rax
 		int loadW = 0;

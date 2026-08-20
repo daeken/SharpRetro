@@ -330,6 +330,52 @@ public class X86Machine {
 			case IlBin(var ty, var op, var l, var r): {
 				var (a, b) = (Eval(l), Eval(r));
 				var w = (ty as IlType.I)?.Bits ?? 64;
+				// FLOAT ARMS. Dispatch on the OPERAND type, not the result type: a
+				// float compare has an integer (u1) result but float inputs, which
+				// is exactly the convention MaxwellEval:245-247 uses (BinOp.Slt =>
+				// fa < fb when the operands are F-typed). So `flt`/`feq` lowering to
+				// Slt/Eq is right by that contract rather than by coincidence.
+				if(l.Ty is IlType.F lf) {
+					if(lf.Bits == 32) {
+						var (fa, fb) = (BitConverter.UInt32BitsToSingle((uint) a),
+						                BitConverter.UInt32BitsToSingle((uint) b));
+						// x86 MIN/MAX return the SECOND source on NaN or when both are
+						// zero -- NOT ARM's FMAX/FMIN, which propagate the NaN. MathF.Max
+						// propagates NaN too, so it can't be used here; the silicon sweep
+						// verified this shape on the Rust side (bd.fminmax via FCMP+FCSEL).
+						return op switch {
+							BinOp.Add => BitConverter.SingleToUInt32Bits(fa + fb),
+							BinOp.Sub => BitConverter.SingleToUInt32Bits(fa - fb),
+							BinOp.Mul => BitConverter.SingleToUInt32Bits(fa * fb),
+							BinOp.UDiv or BinOp.SDiv => BitConverter.SingleToUInt32Bits(fa / fb),
+							BinOp.FMax => BitConverter.SingleToUInt32Bits(fa > fb ? fa : fb),
+							BinOp.FMin => BitConverter.SingleToUInt32Bits(fa < fb ? fa : fb),
+							BinOp.Eq => fa == fb ? 1UL : 0, BinOp.Ne => fa != fb ? 1UL : 0,
+							BinOp.Slt or BinOp.Ult => fa < fb ? 1UL : 0,
+							BinOp.Sle or BinOp.Ule => fa <= fb ? 1UL : 0,
+							BinOp.Sgt or BinOp.Ugt => fa > fb ? 1UL : 0,
+							BinOp.Sge or BinOp.Uge => fa >= fb ? 1UL : 0,
+							_ => throw new NotSupportedException($"f32 binop {op}")
+						};
+					} else {
+						var (fa, fb) = (BitConverter.UInt64BitsToDouble(a),
+						                BitConverter.UInt64BitsToDouble(b));
+						return op switch {
+							BinOp.Add => BitConverter.DoubleToUInt64Bits(fa + fb),
+							BinOp.Sub => BitConverter.DoubleToUInt64Bits(fa - fb),
+							BinOp.Mul => BitConverter.DoubleToUInt64Bits(fa * fb),
+							BinOp.UDiv or BinOp.SDiv => BitConverter.DoubleToUInt64Bits(fa / fb),
+							BinOp.FMax => BitConverter.DoubleToUInt64Bits(fa > fb ? fa : fb),
+							BinOp.FMin => BitConverter.DoubleToUInt64Bits(fa < fb ? fa : fb),
+							BinOp.Eq => fa == fb ? 1UL : 0, BinOp.Ne => fa != fb ? 1UL : 0,
+							BinOp.Slt or BinOp.Ult => fa < fb ? 1UL : 0,
+							BinOp.Sle or BinOp.Ule => fa <= fb ? 1UL : 0,
+							BinOp.Sgt or BinOp.Ugt => fa > fb ? 1UL : 0,
+							BinOp.Sge or BinOp.Uge => fa >= fb ? 1UL : 0,
+							_ => throw new NotSupportedException($"f64 binop {op}")
+						};
+					}
+				}
 				var v = op switch {
 					BinOp.Add => a + b, BinOp.Sub => a - b, BinOp.Mul => a * b,
 					BinOp.UDiv => b == 0 ? throw new DivideByZeroException() : a / b,
@@ -362,6 +408,13 @@ public class X86Machine {
 					UnOp.Neg => 0 - a,
 					UnOp.Not => ~a,
 					UnOp.Popcnt => (ulong) System.Numerics.BitOperations.PopCount(MaskW(a, WOf(x))),
+					// float unops -- carrier is the bit pattern (see the Cast arm's note)
+					UnOp.Abs when x.Ty is IlType.F fa2 => fa2.Bits == 32
+						? BitConverter.SingleToUInt32Bits(MathF.Abs(BitConverter.UInt32BitsToSingle((uint) a)))
+						: BitConverter.DoubleToUInt64Bits(Math.Abs(BitConverter.UInt64BitsToDouble(a))),
+					UnOp.Sqrt when x.Ty is IlType.F fs => fs.Bits == 32
+						? BitConverter.SingleToUInt32Bits(MathF.Sqrt(BitConverter.UInt32BitsToSingle((uint) a)))
+						: BitConverter.DoubleToUInt64Bits(Math.Sqrt(BitConverter.UInt64BitsToDouble(a))),
 					// BSF/BSR/LZCNT/TZCNT lower to clz / clz(rbit(x)) — the .isa says so
 					// in its own comment ("BSF = position of LOWEST set bit =
 					// clz(rbit(src)); aarch64 has no ctz"). The lowerer emits IlUn and
@@ -382,6 +435,44 @@ public class X86Machine {
 			case IlCast(var ty, var kind, var x): {
 				var a = Eval(x);
 				var w = (ty as IlType.I)?.Bits ?? 64;
+				// FLOAT CASTS. Eval's carrier is ulong, so an F-typed value rides as
+				// its IEEE BIT PATTERN — the same convention MaxwellEval uses
+				// (MaxwellEval.cs:119, UInt32BitsToSingle on an F-typed read). A
+				// Bitcast is therefore a no-op on the carrier, which is why the
+				// (as-f32)/(as-f64) heads need no arm here and only the CONVERTING
+				// kinds do.
+				if(ty is IlType.F ft) {
+					switch(kind) {
+						case CastKind.SToF:   // int -> float (CVTSI2SD/SS, and (f32 x))
+							return ft.Bits == 32
+								? BitConverter.SingleToUInt32Bits((float) (long) SignEx(a, WOf(x)))
+								: BitConverter.DoubleToUInt64Bits((double) (long) SignEx(a, WOf(x)));
+						case CastKind.UToF:
+							return ft.Bits == 32
+								? BitConverter.SingleToUInt32Bits((float) a)
+								: BitConverter.DoubleToUInt64Bits((double) a);
+						case CastKind.FTrunc:   // f64 -> f32 (CVTSD2SS)
+							return BitConverter.SingleToUInt32Bits(
+								(float) BitConverter.UInt64BitsToDouble(a));
+						case CastKind.FExt:     // f32 -> f64 (CVTSS2SD)
+							return BitConverter.DoubleToUInt64Bits(
+								(double) BitConverter.UInt32BitsToSingle((uint) a));
+						case CastKind.Bitcast:  // reinterpret: carrier unchanged
+							return ft.Bits == 32 ? a & 0xFFFFFFFF : a;
+					}
+				}
+				// float -> int. The .isa's (int-of) head wraps this in the
+				// x86 indefinite-integer guard, so this arm only sees in-range
+				// values; a bare FToSI on NaN would be the caller's bug, not ours.
+				if(kind is CastKind.FToSI or CastKind.FToI or CastKind.FToUI) {
+					// same trap as IlLower's: WOf() falls back to 64 on a non-I type,
+					// so the F width must be read off the F type.
+					var fw = x.Ty is IlType.F fx ? fx.Bits : WOf(x);
+					var d = fw == 32 ? BitConverter.UInt32BitsToSingle((uint) a)
+					                 : BitConverter.UInt64BitsToDouble(a);
+					return kind == CastKind.FToUI ? MaskW((ulong) d, w)
+					                              : MaskW((ulong) (long) d, w);
+				}
 				return kind switch {
 					CastKind.Zext or CastKind.Trunc or CastKind.Bitcast => MaskW(a, w),
 					CastKind.Sext => MaskW((ulong) SignEx(a, WOf(x)), w),

@@ -434,6 +434,15 @@ public class IlLower {
 				var a = Expr(l[1], ctxW);
 				return new IlUn(a.Ty, UnOp.Sqrt, a);
 			}
+			case "fisnan": {
+				// (fisnan x) — IEEE unordered test. No UnOp for it, and there must not
+				// be one: NaN != NaN is the definition, so the IL already expresses it
+				// with a float Ne against itself. RustLiftGen:497 has a bd.fisnan
+				// primitive because the JIT wants one instruction; the C# arm gets the
+				// identity instead of a new node kind.
+				var a = Expr(l[1], ctxW);
+				return new IlBin(IlType.U1, BinOp.Ne, a, a);
+			}
 			case "int-of": {
 				// (int-of W v) — x86 float→signed-int with INDEFINITE-INTEGER semantics
 				// on NaN/inf/out-of-range: the SDM says 80000000H is returned, and the
@@ -448,7 +457,13 @@ public class IlLower {
 				var iw = l[1] is PList bw && bw.Count == 2 && bw[0] is PName("bitwidth")
 					? W(Expr(bw[1]))
 					: (l[1] is PInt(var iwv) ? (int) iwv : OpWidth);
-				var fw = W(fv) is var fwv && fwv is 32 or 64 ? fwv : 64;
+				// ⚠ W() returns 64 for ANY non-I type (IlLower.cs:58), so W(fv) on an
+				// F-typed value silently reads 64 — which built an f64 limit and an
+				// f64 abs against an f32 operand. Found by the exec-oracle: NaN gave
+				// 0 instead of the indefinite integer, because the f32 NaN's bits
+				// reinterpreted as f64 are a small positive normal, so the in-range
+				// compare said TRUE. The width must come from the F type itself.
+				var fw = fv.Ty is IlType.F ff2 ? ff2.Bits : 64;
 				var fty = new IlType.F(fw);
 				// 2^(iw-1) as a float constant of the source width
 				var limit = new IlCast(fty, CastKind.SToF,
