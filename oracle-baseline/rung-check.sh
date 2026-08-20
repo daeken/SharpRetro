@@ -9,6 +9,13 @@ FAIL=0
 echo "=== build ==="
 dotnet build ArchCompiler/ArchCompiler.csproj -v q 2>&1 | tail -3
 dotnet build oracle-baseline/instruments/LegacyR1b/LegacyR1b.csproj -v q 2>&1 | tail -3
+# XFusionCensus too: the corpus arm below runs it with --no-build, and a project that
+# is NOT built here runs whatever binary was last left on disk. That bit during this
+# arm's own bring-up -- the first pass-path fire reported 6,179,112 decoded and 2
+# MOVMSKPS bind-fails, i.e. the pre-2cdbf5e code, while HEAD's fixed binary sat in
+# bin/Release and --no-build reached for Debug. A stale artifact and a fresh one are
+# byte-indistinguishable in the output; only the build line separates them.
+dotnet build XFusionCensus/XFusionCensus.csproj -v q 2>&1 | tail -3
 RUN="dotnet run --no-build --project"
 
 echo "=== rung-1a: parse+macro (aarch64/mips/dmg) ==="
@@ -134,6 +141,78 @@ elif [ "$xfail" -lt "$X86_FAIL_FLOOR" ]; then
 else
   echo "  ✓ XFusionTests at floor: $xfail failed / $xpass passed (the 1 = the SSE vector row)"
 fi
+
+echo ""
+echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .text) =="
+# WHY THIS ARM EXISTS AND WHY IT IS SEPARATE FROM THE DEF-SET GATE ABOVE: they
+# measure different populations and each is blind where the other sees.
+#
+#   the def-set gate (XFusionTests) walks LiftTables and asks "does every TEMPLATE
+#     reach an IlLower case" -- 552 templates, complete over the .isa, and it can
+#     see a head no corpus happens to contain. It caught vhadd and vdpp, which
+#     appear ZERO times in 25MB of real compiler output.
+#   this arm decodes a real binary and asks "does every INSN lift" -- 6.18M insns,
+#     complete over what a compiler actually emits, and it can see a WIDTH-rule or
+#     operand-binding bug the template-level walk never reaches (it caught three).
+#
+# A green here plus a green there is a real pair. Either alone is a floor.
+#
+# THE OPERAND IS IN /tmp, WHICH IS NOT DURABLE. So an absent corpus must be
+# SKIPPED AND SAID, never silently clean: this box's /tmp holds ~1,900 loose files
+# from a dozen seats and anything there can vanish between runs. A gate that
+# reports nothing when its subject is gone is a PASS-shaped nothing -- the same
+# defect the XFusionTests arm above has a guard for.
+CORPUS=${XF_CORPUS:-/tmp/echidna}
+CORPUS_FAIL_FLOOR=0        # fail-classes; asserted in BOTH directions like the arm above
+CORPUS_MIN_DECODED=6000000 # a floor on the SUBJECT: a corpus that silently shrank to a
+                           # stub would otherwise lift 100% of very little and read green
+if [ ! -f "$CORPUS" ]; then
+  echo "  ⊘ SKIPPED: no corpus at $CORPUS (set XF_CORPUS=<an x86-64 ELF>)."
+  echo "    Stated rather than passed -- this arm has no subject, which is not the"
+  echo "    same as a clean result. The def-set gate above still covers the .isa."
+else
+  $RUN XFusionCensus -- lift "$CORPUS" 64 > /tmp/xfcorpus.log 2>&1 || true
+  cdec=$(grep -oE 'decoded [0-9]+' /tmp/xfcorpus.log | grep -oE '[0-9]+' | head -1)
+  clif=$(grep -oE 'lifted [0-9]+' /tmp/xfcorpus.log | grep -oE '[0-9]+' | head -1)
+  ccls=$(grep -oE 'fail-classes [0-9]+' /tmp/xfcorpus.log | grep -oE '[0-9]+' | head -1)
+  if [ -z "$cdec" ] || [ -z "$ccls" ]; then
+    echo "  ✗ corpus lift produced no summary line (the run did not complete)"
+    tail -4 /tmp/xfcorpus.log
+    FAIL=1
+  elif [ "$cdec" -lt "$CORPUS_MIN_DECODED" ]; then
+    echo "  ✗ corpus SHRANK: decoded $cdec < floor $CORPUS_MIN_DECODED — wrong binary at"
+    echo "    $CORPUS, or the decoder regressed. A high lift-rate over a tiny subject"
+    echo "    is not evidence; check the operand before reading the rate."
+    FAIL=1
+  elif [ "$ccls" -gt "$CORPUS_FAIL_FLOOR" ]; then
+    echo "  ✗ corpus lift REGRESSED: $ccls fail-class(es), floor $CORPUS_FAIL_FLOOR"
+    echo "    ($clif of $cdec lifted)"
+    grep -E 'op [a-z0-9]+|e\.g\.' /tmp/xfcorpus.log | head -6
+    FAIL=1
+  elif [ "$ccls" -lt "$CORPUS_FAIL_FLOOR" ]; then
+    echo "  ✗ CORPUS FLOOR IS STALE: $ccls fail-classes, floor says $CORPUS_FAIL_FLOOR."
+    echo "    Good news and still a failure -- lower the floor or the next regression"
+    echo "    hides under the slack."
+    FAIL=1
+  elif [ "$clif" != "$cdec" ]; then
+    echo "  ✗ corpus lift: $clif lifted of $cdec decoded with 0 fail-classes — those"
+    echo "    cannot both be true; the census's own two numbers disagree."
+    FAIL=1
+  else
+    echo "  ✓ corpus lift: $clif / $cdec insns (100.00%), $ccls fail-classes"
+  fi
+fi
+# HISTORY, kept because it is what the floor is FOR: this arm was fired by hand for
+# four segments and lived in no script, so four consecutive 0-fail results preserved
+# nothing. It went 10,848 unlifted -> 0 over four commits (the packed-arith, mask,
+# lane-permute and 8-pred clusters, then vcvt), and the consumer's independent
+# census agreed at every rung. A hand-fired arm is a claim about a moment; only a
+# scripted one is a claim about HEAD.
+#
+# BOTH SIDES SEEN before this shipped: pass = the ✓ above at 6,180,350/6,180,350;
+# plant a `throw new NotSupportedException` on a live IlLower case -> ✗ REGRESSED
+# naming the op, rc=1; point XF_CORPUS at a 4KB file -> ✗ SHRANK; point it at a
+# nonexistent path -> ⊘ SKIPPED and rc unchanged.
 
 echo ""
 echo "=== pre-push: house-vocab check (public repo — no seat-names/channel-cites/kt-refs) ==="
