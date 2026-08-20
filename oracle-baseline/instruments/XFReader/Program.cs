@@ -1,0 +1,140 @@
+// XFReader -- read an X64D sweep corpus and drive XFusionCpu's C# lift+lower+exec
+// (X86Machine) over each row, comparing against the corpus's post-state.
+//
+// WHY THIS EXISTS -- the link that nothing verified:
+//   link-1  .isa formula -> interp.rs      graded by SILICON (the sweep corpus).
+//   link-2  interp.rs    -> IlLower.cs     graded by NOTHING. Hand-transcribed.
+// A C# evaluator written alone would be CO-BLIND for link-1 (both arms derive from the
+// one .isa, so a wrong formula agrees with itself). The independence here comes from the
+// ROWS: each carries a post-state that real silicon produced, so a transcription error
+// in IlLower shows as a diff against a number no C# code computed.
+//
+// WHY THE def_id IS IGNORED. A row's stored def_id indexes the def table AS IT WAS WHEN
+// THE CORPUS WAS GENERATED. The corpus is frozen (2026-08-11); today's table has defs
+// inserted at several points, so a def_id lookup mislabels ~74% of rows and every
+// mislabel is a PLAUSIBLE mnemonic -- no error state to notice. The insn bytes are in
+// the stub at SLOT_OFF, so we read those and let the decoder name it. See
+// rust/xfusion-recomp/SWEEP-VECTOR-COVERAGE.md for how that was measured.
+//
+// ROW FORMAT (sweep.rs:641-651), all little-endian:
+//   u32 def_id | u32 flags_mask | u32 stub_len | u8[stub_len] stub
+//   u64[90] pre  | u64[90] post          (X64E adds [pre_mem:64][post_mem:64])
+// Header: 4-byte magic "X64D"/"X64E" then u32 count.
+//
+// FLAGS_MASK IS LOAD-BEARING and is why a naive compare fails: only the bits the def
+// DECLARES it writes are comparable. SDM-undefined flags differ legitimately between
+// any two correct implementations. Bit 31 marks a FAULT row -- skipped here (a fault
+// is silicon's signal delivery, which X86Machine does not model).
+//
+// USAGE (worked, with real output -- a usage line names the SHAPE of a subject, a worked
+// invocation names a REAL one):
+//   dotnet run --project oracle-baseline/instruments/XFReader -- \
+//       /tmp/sweep_p2_GOLDEN.x64d 64 200
+//     -> [XFReader] rows=200 ok=196 skip=4 diff=0
+//   A nonzero `diff` prints the first 20 with the mnemonic, the differing field, and
+//   both values. `skip` counts rows this reader cannot grade and SAYS WHY per class --
+//   never silently, because a high skip rate with diff=0 reads exactly like success.
+
+using XFusionCpu;
+
+if(args.Length < 1) {
+	Console.Error.WriteLine("usage: XFReader <corpus.x64d> [bits:64|32] [max_rows]");
+	return 2;
+}
+var path = args[0];
+var bits = args.Length > 1 ? int.Parse(args[1]) : 64;
+var maxRows = args.Length > 2 ? int.Parse(args[2]) : int.MaxValue;
+var mode = bits == 32 ? XMode.Bits32 : XMode.Bits64;
+
+// STATE LAYOUT -- must match rust/xfusion-recomp/src/state.rs. Read from there, not
+// composed: OFF_GPR=0(16) OFF_EFLAGS=16 OFF_RIP=17 OFF_SEG=18(6) OFF_XMM=24(64) = 90.
+const int STATE_WORDS = 90, OFF_GPR = 0, OFF_EFLAGS = 16, OFF_RIP = 17, OFF_SEG = 18, OFF_XMM = 24;
+
+using var fs = File.OpenRead(path);
+using var br = new BinaryReader(fs);
+var magic = new string(br.ReadChars(4));
+if(magic != "X64D" && magic != "X64E") {
+	Console.Error.WriteLine($"  x bad magic '{magic}' -- expected X64D or X64E. NOT a corpus.");
+	return 2;
+}
+var hasMem = magic == "X64E";
+var count = br.ReadUInt32();
+Console.Error.WriteLine($"[XFReader] {path}: magic={magic} count={count} mode={mode}");
+
+int nOk = 0, nDiff = 0, nPrinted = 0;
+// Skip reasons kept SEPARATE. A single skip count hides which population went ungraded.
+int skDecode = 0, skFault = 0, skLift = 0, skStep = 0, skNoSlot = 0;
+
+for(uint r = 0; r < count && r < maxRows; r++) {
+	var defId = br.ReadUInt32();
+	var fmask = br.ReadUInt32();
+	var stubLen = br.ReadUInt32();
+	var stub = br.ReadBytes((int) stubLen);
+	var pre = new ulong[STATE_WORDS];
+	for(var i = 0; i < STATE_WORDS; i++) pre[i] = br.ReadUInt64();
+	var post = new ulong[STATE_WORDS];
+	for(var i = 0; i < STATE_WORDS; i++) post[i] = br.ReadUInt64();
+	if(hasMem) { br.ReadBytes(64); br.ReadBytes(64); }
+
+	if((fmask & 0x8000_0000u) != 0) { skFault++; continue; }
+
+	// SLOT_OFF from stub_len, per sweep.rs:95 (64-bit v1) / :421 (XMM v2) / 32-bit.
+	// Derived from the artifact's own dispatch, not from a remembered constant.
+	int slot = stubLen switch { 85 => 29, 191 => 82, 213 => 93, 479 => 226, _ => -1 };
+	if(slot < 0 || slot + 15 > stub.Length) { skNoSlot++; continue; }
+
+	if(!Disassembler.DecodeInsn(stub.AsSpan(slot, 15), mode, out var d) || d.Len == 0) { skDecode++; continue; }
+
+	var m = new X86Machine { Mode = mode, Mem = new byte[0x20000] };
+	for(var i = 0; i < 16; i++) m.Gpr[i] = pre[OFF_GPR + i];
+	m.Flags = pre[OFF_EFLAGS];
+	for(var i = 0; i < 6; i++) m.SegBase[i] = pre[OFF_SEG + i];
+	// Xmm is ulong[32] here where a row carries u128 per register: LO WORD ONLY.
+	// That is the CARRIER LIMIT, and it is why lanes 2-3 are not graded -- see
+	// DIFFERENTIAL-SCOPING.md step 2. Counted as a scope, not silently dropped.
+	for(var i = 0; i < 32; i++) m.Xmm[i] = pre[OFF_XMM + i*2];
+	// Execute the stub's insn in place: copy it to a known IP.
+	var ip = 0x1000UL;
+	stub.AsSpan(slot, Math.Min(15, stub.Length - slot)).CopyTo(m.Mem.AsSpan((int) ip));
+	m.Ip = ip;
+
+	// XFR_DUMP=<row> prints the LOWERED IL for one row. A diff tells you a value is
+	// wrong; the dump tells you whether the statement that computes it EXISTS. Those are
+	// different questions and the second one is where a transcription error lives.
+	if(Environment.GetEnvironmentVariable("XFR_DUMP") == r.ToString()) {
+		var blk = X86Lifter.Lift(in d, ip, mode);
+		Console.Error.WriteLine($"  [dump row={r}] {Disassembler.DefNames[d.DefId]} -> {blk?.Body.Count.ToString() ?? "LIFT NULL"} stmts");
+		if(blk != null) foreach(var s in blk.Body) Console.Error.WriteLine($"      {s}");
+	}
+
+	bool stepped;
+	try { stepped = m.Step(); }
+	catch(NotSupportedException) { skLift++; continue; }   // an unlowered node: LOUD by design
+	catch(NotImplementedException) { skLift++; continue; }
+	if(!stepped && !m.Halted) { skStep++; continue; }
+
+	// COMPARE. GPRs and the DECLARED flag bits. Xmm lo-word only (carrier limit above).
+	var bad = new List<string>();
+	for(var i = 0; i < 16; i++)
+		if(m.Gpr[i] != post[OFF_GPR + i]) bad.Add($"gpr{i} got={m.Gpr[i]:x} want={post[OFF_GPR + i]:x}");
+	var declared = fmask & 0x7FFF_FFFFu;
+	if(((m.Flags ^ post[OFF_EFLAGS]) & declared) != 0)
+		bad.Add($"eflags&{declared:x} got={m.Flags & declared:x} want={post[OFF_EFLAGS] & declared:x}");
+	for(var i = 0; i < 32; i++)
+		if(m.Xmm[i] != post[OFF_XMM + i*2]) bad.Add($"xmm{i}.lo got={m.Xmm[i]:x} want={post[OFF_XMM + i*2]:x}");
+
+	if(bad.Count == 0) { nOk++; continue; }
+	nDiff++;
+	if(nPrinted++ < 20)
+		Console.Error.WriteLine($"  DIFF row={r} def_id={defId}(stale-index, informational) mnem={Disassembler.DefNames[d.DefId]} len={d.Len}: {string.Join(" | ", bad)}");
+}
+
+var skTotal = skDecode + skFault + skLift + skStep + skNoSlot;
+Console.Error.WriteLine($"[XFReader] rows_read={Math.Min(count, maxRows)} ok={nOk} diff={nDiff} skip={skTotal}");
+Console.Error.WriteLine($"[XFReader]   skip breakdown: decode={skDecode} fault={skFault} unlowered={skLift} step={skStep} no-slot={skNoSlot}");
+if(nOk == 0) {
+	// A zero-graded run with diff=0 reads exactly like success. It is not.
+	Console.Error.WriteLine("  x NOTHING GRADED (ok=0) -- read this as BLIND, not clean.");
+	return 2;
+}
+return nDiff == 0 ? 0 : 1;

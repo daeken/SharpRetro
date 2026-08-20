@@ -458,8 +458,11 @@ public class RustLiftGen {
                 // on C#-style int-promotion (e.g. PF's `(>> 0x9669 idx)` — a 16-bit lookup
                 // table). Emitting 0x9669 at ilty(op_w=8) → literal(U8) truncates to 0x69
                 // → PF wrong on all byte-form insns. Caught by the Rosetta silicon-oracle
-                // (SUB cl,dl → PF=0 vs silicon PF=1); invisible to interp-vs-C# only if C#
-                // shares the truncation (it doesn't — IlLower uses IlInt at natural width).
+                  // NOT invisible to interp-vs-C#: C# SHARES this truncation
+                  // (IlLower's C() masks to the context width), so BOTH arms were wrong and
+                  // the co-blind pair agreed. Fixed C#-side 2026-08-20 after XFReader diffed
+                  // it against silicon. This comment asserted the sibling was unaffected,
+                  // which is why the fix did not propagate for 8 days.
                 // Fix: literals ≥256 → U32 (fits every .isa constant); <256 → ctxW (so
                 // small immediates still participate at operand-width for cmp/etc).
                 var lv = (long) v;

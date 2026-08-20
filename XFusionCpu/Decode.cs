@@ -83,7 +83,7 @@ public struct ModRm {
 
 /// Structured decode result — ONE decode, two consumers (disasm text render +
 /// lift operand-binding). DefId = the generated per-encoding-body ordinal
-/// (Disassembler.DefMnemonics[DefId] names it); Imm0/Imm1 = decoded immediate
+/// (Disassembler.DefNames[DefId] names it); Imm0/Imm1 = decoded immediate
 /// slots in operand order (two suffice: no defined form carries three).
 public struct DecodedInsn {
 	public int DefId;

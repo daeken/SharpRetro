@@ -376,7 +376,23 @@ public class IlLower {
 
 	Il Expr(PTree t, int ctxW) {
 		switch(t) {
-			case PInt(var v): return C(ctxW, v);
+			// A literal WIDER than the context truncates, and the .isa has constants that
+			// are wider than the op on purpose -- the PF parity table 0x9669 is looked up
+			// with a 4-bit index inside a BYTE-width ADD, so C(8, 0x9669) masked it to
+			// 0x69 and PF came out wrong on EVERY byte-form insn that uses the table.
+			// Found by XFReader: silicon says PF=1 for `add cl,al` @ al=0xff cl=0x88
+			// (res=0x87, idx=0xf, (0x9669>>15)&1 == 1) and the lowered IL read
+			// `(u8 shr (u8 #69) ...)` -- 0x9669 & 0xFF.
+			//
+			// Rule transcribed from RustLiftGen.cs:465-467, which fixed the same defect on
+			// the Rust arm on 2026-08-12: <256 stays at ctxW so small immediates still
+			// participate at operand width (cmp/test/etc), wider goes to a type that holds
+			// it. ‡ That site's comment asserted "invisible to interp-vs-C# only if C#
+			// shares the truncation (it doesn't -- IlLower uses IlInt at natural width)".
+			// It does share it; C() masks. So the sibling was never checked, and a comment
+			// claiming a sibling is unaffected is what kept this alive for 8 days.
+			case PInt(var v): return (ulong) v < 256 ? C(ctxW, v)
+				: (ulong) v <= uint.MaxValue ? C(32, v) : C(64, v);
 			case PName(var n): {
 				if(Env.TryGetValue(n, out var bound) && bound != null) return bound;
 				if(Binds != null && Binds.TryGetValue(n, out var b)) return ReadOperand(n, b);
