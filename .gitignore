@@ -12,4 +12,12 @@ obj/
 *.partial
 node_modules/
 
+# House-vocab pattern lists: the gate's own patterns ARE house-vocab by
+# construction, so a pattern file in a PUBLIC repo publishes the thing it
+# exists to keep out. Path-anchoring one of these is the bug -- a sibling
+# copy written by any script slips through. Match the NAME, anywhere.
+.vocab-patterns.txt
+.vocab-gate.txt
+*/.vocab-gate.txt
+**/.vocab-gate.txt
 oracle-baseline/.vocab-patterns.txt

@@ -1,6 +1,0 @@
-·[0-9]{2,}
-#alky-dev
-#pagentry
-#sera-house
-kt\[[0-9]+\]
-own #[0-9]+
