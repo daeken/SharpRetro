@@ -334,6 +334,10 @@ public class LiftTests {
 	[Test]
 	public void EveryTemplateLowersOrIsAKnownVectorGap() {
 		var vectorGap = new List<string>();
+		// Template-ids whose lowering hit a missing head. Collected HERE rather than
+		// re-derived, so the def-share below is a join on this same classification
+		// (the two-instrument gap that let a plant through the old ceiling).
+		var gapTemplates = new List<int>();
 		var other = new List<string>();
 
 		for(var tid = 0; tid < LiftTables.Templates.Length; tid++) {
@@ -391,7 +395,7 @@ public class LiftTests {
 				}
 			}
 
-			if(headGap != null) vectorGap.Add(headGap);
+			if(headGap != null) { vectorGap.Add(headGap); gapTemplates.Add(tid); }
 			else if(!lowered) other.Add($"{tid} {mnem} -> {lastOther} (all 3 bind shapes)");
 		}
 
@@ -401,6 +405,21 @@ public class LiftTests {
 		Assert.That(other, Is.Empty,
 			$"templates failing for a reason OTHER than a missing IlLower head "
 			+ $"({other.Count}):\n{string.Join("\n", other.Take(12))}");
+
+		// The DEF-SHARE, computed by THIS walk rather than by a separate census.
+		// I first quoted "83 of 518 defs" from a python parse of the .isa text --
+		// a different instrument than the one producing the head list, which is
+		// exactly the gap that let a planted head through the old count-ceiling.
+		// LiftTables.Defs maps DefId -> TemplateId ([0] unused), so the share is a
+		// join on the template-ids this same loop already classified.
+		var gapTids = new HashSet<int>(gapTemplates);
+		var affectedDefs = 0;
+		for(var d = 1; d < LiftTables.Defs.Length; d++)
+			if(gapTids.Contains(LiftTables.Defs[d].TemplateId)) affectedDefs++;
+		TestContext.Out.WriteLine(
+			$"def-set lift census: {LiftTables.Templates.Length} templates, "
+			+ $"{LiftTables.Defs.Length - 1} defs; {gapTids.Count} templates / "
+			+ $"{affectedDefs} defs reach a head IlLower lacks");
 
 		var heads = vectorGap.Distinct().OrderBy(h => h).ToList();
 
