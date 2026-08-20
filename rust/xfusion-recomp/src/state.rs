@@ -66,7 +66,15 @@ pub static X64_LAYOUT: sharpretro_jit::tier0::StateLayout = sharpretro_jit::tier
     reg_off: |f, idx| match f.0 {
         0 => (OFF_GPR as u32 + idx) * 8,       // GPR rax..r15
         2 => (OFF_SEG as u32 + idx) * 8,       // SEG es..gs
-        3 => (OFF_XMM as u32 + idx * 2) * 8,   // XMM (2-word; ‡ tier-0 stores lo-only for now)
+        // XMM: 2-word slot. ‡ THE LO-ONLY CAVEAT IS TIER-0's, NOT THE ROW FORMAT'S:
+        // *the tier-0 JIT* stores lo-only for now. `to_flat` (:84-85) writes BOTH words
+        // and X86State.xmm is [u128; 32], so a .x64d row carries full 128-bit xmm and a
+        // differential over the corpus CAN verify lanes 2-3. Read the wrong way this line
+        // says the comparand is half-blind, which would make a corpus-differential
+        // pointless -- so: reg_off has ZERO callers today (grep -rn reg_off src/ = its own
+        // definition), the caveat binds the tier-0 x64 path the moment that goes live, and
+        // it binds nothing that reads a row.
+        3 => (OFF_XMM as u32 + idx * 2) * 8,
         _ => panic!("x64 tier-0: file {} not wired", f.0),
     },
     gpr_w_zext: false,
