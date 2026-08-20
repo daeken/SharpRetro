@@ -345,6 +345,35 @@ public class X86Machine {
 			case IlBin(var ty, var op, var l, var r): {
 				var (a, b) = (Eval(l), Eval(r));
 				var w = (ty as IlType.I)?.Bits ?? 64;
+				// WIDTH > 64 DIES LOUD. Eval's carrier is ulong (see the note at the top of
+				// this file), so a wider op cannot be computed here -- and the previous form
+				// did not say so: `w` was used as a MASK WIDTH, so an i128 op computed at 64
+				// and truncated, silently.
+				//
+				// That is not academic. IMUL-Gv-Ev lowers to exactly this shape:
+				//     (let %0 = (i128 mul (i128 sext a) (i128 sext b)))
+				//     (let %2 = (u64 trunc (i128 shr (i128 %0) (u128 #40))))
+				//     CF = OF = (%2 != sar(lo, 63))
+				// With the product truncated to 64, the high half is always the same as the
+				// sign-extension of the low half, so CF=OF read ZERO for every operand pair
+				// -- including the ones where the multiply genuinely overflowed. XFReader
+				// caught it at p1 row 580,040 (39,315 rows of the golden corpus): silicon
+				// CF|OF = 1, ours = 0.
+				//
+				// The mul-wide arm at :226 has always had a real UInt128/Int128 path, which
+				// is why MUL/IMUL's rDX:rAX forms are correct -- so this is the one-operand
+				// GENERIC path, reached by the two-operand IMUL that keeps only the low half
+				// and reports overflow in the flags. Dying loud makes the reader report it
+				// as `unlowered` (a stated gap) instead of `ok` (a false green), which is the
+				// difference between a known hole and a wrong answer.
+				//
+				// ‡ The fix is a UInt128 carrier for Eval (DIFFERENTIAL-SCOPING step 2, the
+				// same widening the XMM lanes need); until then this is honest rather than
+				// correct, and the 39,315 rows are a NAMED gap.
+				if(w > 64) throw new NotSupportedException(
+					$"IlBin {op} at width {w}: Eval's carrier is ulong, so this would compute " +
+					$"at 64 and truncate. IMUL's CF=OF depends on the real high half -- see " +
+					$"the note here. Needs the UInt128 carrier widening.");
 				// FLOAT ARMS. Dispatch on the OPERAND type, not the result type: a
 				// float compare has an integer (u1) result but float inputs, which
 				// is exactly the convention MaxwellEval:245-247 uses (BinOp.Slt =>
