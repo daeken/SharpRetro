@@ -681,7 +681,13 @@ fn main() {
     println!("  corpus rows emitted: {n_rows}");
     for (r, n) in &skip_by { println!("    skip {r}: {n}"); }
     if !tf_by.is_empty() {
-        println!("  track-fail by mnem (§4 attribution):");
+        // The denominator rides the header. A top-N list whose N is invisible is
+        // indistinguishable from a complete one, so a mnemonic BELOW the cut reads as
+        // ABSENT rather than as unlisted -- and that inverts a coverage verdict instead
+        // of merely under-reporting it (a family with 6,448 rows outside a top-15 looks
+        // exactly like a family with 0). Printing `top N of M` costs one format string.
+        let tf_shown = 20usize.min(tf_by.len());
+        println!("  track-fail by mnem (§4 attribution) -- top {tf_shown} of {} mnemonics, NOT a complete list:", tf_by.len());
         let mut v: Vec<_> = tf_by.iter().collect();
         v.sort_by(|a,b| b.1.cmp(a.1));
         for (m, n) in v.iter().take(20) {
@@ -693,7 +699,14 @@ fn main() {
         let sz = std::fs::metadata(&out_path).map(|m| m.len()).unwrap_or(0);
         println!("  → {out_path} ({} bytes = {} MB)", sz, sz / (1<<20));
     }
-    println!("  top defs by row-count:");
+    // Same reason as the track-fail header above: this list is what a reader consults
+    // to ask "was mnemonic X swept?", and the honest answer to that question is a
+    // def_id tally over the emitted corpus, not a truncated report. See
+    // SWEEP-VECTOR-COVERAGE.md -- reading this list for absence gave the wrong answer
+    // for 15 of 38 mnemonics.
+    let rows_shown = 15usize.min(per_def_rows.len());
+    println!("  top defs by row-count -- top {rows_shown} of {} mnemonics with rows, NOT a complete list:", per_def_rows.len());
+    println!("    (for \"was X swept?\" tally def_id over the corpus file; a zero here may be truncation)");
     let mut v: Vec<_> = per_def_rows.iter().collect();
     v.sort_by(|a,b| b.1.cmp(a.1));
     for (m, n) in v.iter().take(15) { println!("    {m}: {n}"); }
