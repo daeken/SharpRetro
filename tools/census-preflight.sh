@@ -21,6 +21,30 @@
 # Usage:  census-preflight.sh <source-root> <pattern> [<pattern> ...]
 #         (takes the tree as an argument so it can gate a tree it does not live in)
 #
+# WORKED INVOCATION — a usage line names the SHAPE of a subject; this names a real one,
+# because a tool whose subject has to be guessed gets fired at the wrong one (I did that
+# to this file's sibling three hours after shipping it):
+#
+#   $ bash tools/census-preflight.sh <a-rust-crates-tree> 'vkAllocateMemory FAILED'
+#     ok /vkAllocateMemory FAILED/ — 1 print-site (a count of this pattern means one thing)
+#   rc=0
+#
+#   $ bash tools/census-preflight.sh <same-tree> 'DEVICE_LOST'
+#     x /DEVICE_LOST/ — 2 print-sites: AMBIGUOUS. A count sums these populations:
+#         …/device_fault.rs:28:  eprintln!("[device-fault] ARMED: … autopsy on DEVICE_LOST"
+#         …/device_fault.rs:36:  eprintln!("[device-fault] DEVICE_LOST (no fault-ext armed…"
+#         → if any of them is a setup/arming line, every count carries a constant.
+#   rc=1
+#
+# That second case is the live instance this was built from: site :28 fires ONCE PER RUN,
+# unconditionally, at startup — so every count of /DEVICE_LOST/ carries a guaranteed +1 that
+# reads as an event, which turned "1 arm + 0 real events" into "routine failures in every run."
+#
+# ⚠ READ THE rc DIRECT. `census-preflight.sh … | tail -2; echo $?` reports TAIL's exit code,
+# which is 0 while the gate is FAILING. Redirect to a file, then read $?. (I made exactly this
+# mistake reading this tool's own output — the pipe-hides-rc class, at the gate that checks
+# for a different flavour of the same thing.)
+#
 # BOTH SIDES SEEN is the acceptance bar. A gate whose pass path has never run is as
 # untested as one whose fail path hasn't: a threshold check can be broken only in the
 # world where the news is good (a `grep -c` under `set -e` exits 1 at zero, so it dies
