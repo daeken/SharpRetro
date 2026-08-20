@@ -326,11 +326,43 @@ public class LiftTests {
 	/// this one answers the question the corpus arm's comment was making.
 	///
 	/// Measured at authoring, and the ratchet is deliberate: the count is asserted
-	/// rather than the set being required empty, because the vector tier is a real
-	/// unbuilt thing (IlLower has no vector head; MaxwellShader's forked IL does, at
-	/// MaxwellEval.Expr with an `object` carrier where X86Machine.Eval's is `ulong`).
+	/// rather than the set being required empty, because four heads genuinely cannot
+	/// be expressed by the shared LiftIl's current node set (see `known` below).
 	/// A NEW unlowered head must fail here rather than wait for someone to write a
 	/// hex row for it -- which is the hole this arm exists to close.
+	///
+	/// ⚠ WHAT THIS ARM PROVES, AND THE TIER ITS NAME OVERSTATES. It proves a template
+	/// LOWERS -- that a head has an IlLower case which emits a tree. It does NOT prove
+	/// the case computes CORRECTLY, and the name "EveryTemplateLowers…" invites reading
+	/// it as more. Three separate reasons the stronger reading is unavailable today:
+	///   (a) there is no C# evaluator for the shared LiftIl at all. MaxwellShader has
+	///       one (MaxwellEval) but for its OWN forked IL in a different namespace --
+	///       MaxwellShader/Il.cs declares its own IlVecBuild(IlType, …) without the
+	///       Bits param LiftIl's has, so the two trees are not interchangeable.
+	///   (b) XFusionJit/X86Recompiler.cs -- the one thing that DOES execute a LiftIl
+	///       tree -- handles 16 node kinds and dies loud at :164 on anything else.
+	///       ZERO of them are IlVec*, so every vector template lowers and then refuses
+	///       to execute. That is the right failure (loud, not silent-wrong), and it
+	///       bounds what "lowered" buys.
+	///   (c) the exec gate that would catch a wrong-but-present case
+	///       (RecompileTests.FuzzInterpVsRecompile) runs a 28-entry hand-written
+	///       corpus that is scalar-integer only -- no vector instruction in it -- so
+	///       it structurally cannot see any of the vector work.
+	/// This is day-53's lesson at the arm rather than at a def: A GUARD PRESENT AND
+	/// WRONG IS INDISTINGUISHABLE FROM PRESENT AND RIGHT ON THE EMIT SIDE. The CNT
+	/// guard read correctly in the generated Rust and did not guard, and only a
+	/// behavioural gate found it. So the honest tier for the 62 templates landed
+	/// tonight is LIFT-COMPLETE + EXECUTION-UNVERIFIED.
+	///
+	/// Where the execution truth actually lives, so this isn't read as an open hole:
+	/// the Rust arm's silicon sweep (`cargo run -- --fuzz`, and the x64 corpus fired
+	/// against real hardware) is the exec oracle for these semantics, on a different
+	/// tree generated from the same .isa. The C# consumer that reads this lift
+	/// (Pagentry.Lifter) WALKS the tree for stat counters and an IlBranch scan and
+	/// never executes it -- Db.cs:414 IlStats + :418 the branch loop -- so for that
+	/// consumer lift-complete is the tier that matters. A future C# consumer that
+	/// EXECUTES vector semantics would need (a) or (b) closed first, and this comment
+	/// is where to start reading.
 	[Test]
 	public void EveryTemplateLowersOrIsAKnownVectorGap() {
 		var vectorGap = new List<string>();
