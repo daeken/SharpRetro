@@ -259,6 +259,12 @@ public static class RustDisasmGen {
             sb.AppendLine($"{ind}i += m_len;");
             if(def.Operands.Any(o => o.MemOnly))
                 sb.AppendLine($"{ind}if m.is_reg {{ return None; }}");
+            // The U-class inverse: mod!=11 is #UD (see DisassemblerGenerator's note).
+            // Landed at BOTH generators in one edit -- a gate on one arm only is a
+            // cross-backend divergence the byte-identity gate structurally cannot see,
+            // because each backend is diffed against its OWN frozen oracle.
+            if(def.Operands.Any(o => o.RegOnly))
+                sb.AppendLine($"{ind}if !m.is_reg {{ return None; }}");
             if(Lockable.Contains(def.Mnemonic) && def.Operands.Count > 0
                     && def.Operands[0].Class == OpClass.ModRmRm)
                 sb.AppendLine($"{ind}if p.lock && m.is_reg {{ return None; }}");

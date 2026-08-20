@@ -52,6 +52,13 @@ public class OperandSpec {
 	public OpClass Class;
 	public WCode Width;
 	public bool MemOnly;         // M* — mod==11 is invalid
+	// U* — mod!=11 is invalid (the SDM's U class is an xmm reg from ModRM.rm).
+	// MemOnly had a decode gate from the start; this inverse had only a COMMENT
+	// claiming one ("mod==11 enforced by MemOnly-inverse below"), and no such gate
+	// existed. Measured: `0f 50 01` (mod=00) decoded as MOVMSKPS where objdump says
+	// `movmskps eax,(bad)`. A misdecode, not an undecode -- the whole reason bare
+	// rows must REJECT the forms they don't implement.
+	public bool RegOnly;
 	public bool SignExtended;    // Ib-sx (0x83 family): imm8 sign-extended to v
 	public int FixedRegIndex;    // for FixedReg: GPR index (rAX=0, rCX=1, ...)
 	public bool FixedRegByte;    // AL/CL/DL/BL: byte view of the fixed reg
@@ -162,6 +169,7 @@ public class OperandSpec {
 			_ => throw new NotSupportedException($"operand class in {s}")
 		};
 		spec.MemOnly = cls == 'M';
+		spec.RegOnly = cls == 'U';
 		return spec;
 	}
 }

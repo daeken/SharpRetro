@@ -5439,6 +5439,7 @@ public static partial class Disassembler {
 					var m418Len = Decode.ReadModRm(code[i..], mode, in p, out var m418);
 					if(m418Len < 0) return false;
 					i += m418Len;
+					if(!m418.IsReg) return false;
 					d.DefId = 418;
 					d.Len = i;
 					d.Op = op;
@@ -5578,6 +5579,7 @@ public static partial class Disassembler {
 					var m428Len = Decode.ReadModRm(code[i..], mode, in p, out var m428);
 					if(m428Len < 0) return false;
 					i += m428Len;
+					if(!m428.IsReg) return false;
 					d.DefId = 428;
 					d.Len = i;
 					d.Op = op;
@@ -6210,6 +6212,7 @@ public static partial class Disassembler {
 					var m473Len = Decode.ReadModRm(code[i..], mode, in p, out var m473);
 					if(m473Len < 0) return false;
 					i += m473Len;
+					if(!m473.IsReg) return false;
 					d.DefId = 473;
 					d.Len = i;
 					d.Op = op;
@@ -6222,6 +6225,7 @@ public static partial class Disassembler {
 				var m474Len = Decode.ReadModRm(code[i..], mode, in p, out var m474);
 				if(m474Len < 0) return false;
 				i += m474Len;
+				if(!m474.IsReg) return false;
 				d.DefId = 474;
 				d.Len = i;
 				d.Op = op;
@@ -7510,6 +7514,7 @@ public static partial class Disassembler {
 							var m567Len = Decode.ReadModRm(code[i..], mode, in p, out var m567);
 							if(m567Len < 0) return false;
 							i += m567Len;
+							if(!m567.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 567;
@@ -7524,6 +7529,7 @@ public static partial class Disassembler {
 							var m568Len = Decode.ReadModRm(code[i..], mode, in p, out var m568);
 							if(m568Len < 0) return false;
 							i += m568Len;
+							if(!m568.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 568;
@@ -7538,6 +7544,7 @@ public static partial class Disassembler {
 							var m569Len = Decode.ReadModRm(code[i..], mode, in p, out var m569);
 							if(m569Len < 0) return false;
 							i += m569Len;
+							if(!m569.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 569;
@@ -7563,6 +7570,7 @@ public static partial class Disassembler {
 							var m570Len = Decode.ReadModRm(code[i..], mode, in p, out var m570);
 							if(m570Len < 0) return false;
 							i += m570Len;
+							if(!m570.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 570;
@@ -7577,6 +7585,7 @@ public static partial class Disassembler {
 							var m571Len = Decode.ReadModRm(code[i..], mode, in p, out var m571);
 							if(m571Len < 0) return false;
 							i += m571Len;
+							if(!m571.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 571;
@@ -7591,6 +7600,7 @@ public static partial class Disassembler {
 							var m572Len = Decode.ReadModRm(code[i..], mode, in p, out var m572);
 							if(m572Len < 0) return false;
 							i += m572Len;
+							if(!m572.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 572;
@@ -7616,6 +7626,7 @@ public static partial class Disassembler {
 							var m573Len = Decode.ReadModRm(code[i..], mode, in p, out var m573);
 							if(m573Len < 0) return false;
 							i += m573Len;
+							if(!m573.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 573;
@@ -7630,6 +7641,7 @@ public static partial class Disassembler {
 							var m574Len = Decode.ReadModRm(code[i..], mode, in p, out var m574);
 							if(m574Len < 0) return false;
 							i += m574Len;
+							if(!m574.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 574;
@@ -7644,6 +7656,7 @@ public static partial class Disassembler {
 							var m575Len = Decode.ReadModRm(code[i..], mode, in p, out var m575);
 							if(m575Len < 0) return false;
 							i += m575Len;
+							if(!m575.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 575;
@@ -7658,6 +7671,7 @@ public static partial class Disassembler {
 							var m576Len = Decode.ReadModRm(code[i..], mode, in p, out var m576);
 							if(m576Len < 0) return false;
 							i += m576Len;
+							if(!m576.IsReg) return false;
 							if(i + (8) / 8 > code.Length) return false;
 							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 							d.DefId = 576;
@@ -9286,6 +9300,7 @@ public static partial class Disassembler {
 						var m698Len = Decode.ReadModRm(code[i..], mode, in p, out var m698);
 						if(m698Len < 0) return false;
 						i += m698Len;
+						if(!m698.IsReg) return false;
 						d.DefId = 698;
 						d.Len = i;
 						d.Op = op;
@@ -9315,6 +9330,7 @@ public static partial class Disassembler {
 						var m700Len = Decode.ReadModRm(code[i..], mode, in p, out var m700);
 						if(m700Len < 0) return false;
 						i += m700Len;
+						if(!m700.IsReg) return false;
 						d.DefId = 700;
 						d.Len = i;
 						d.Op = op;
@@ -9331,6 +9347,7 @@ public static partial class Disassembler {
 					var m701Len = Decode.ReadModRm(code[i..], mode, in p, out var m701);
 					if(m701Len < 0) return false;
 					i += m701Len;
+					if(!m701.IsReg) return false;
 					d.DefId = 701;
 					d.Len = i;
 					d.Op = op;

@@ -249,6 +249,11 @@ public static class DisassemblerGenerator {
 			sb.AppendLine($"{ind}i += {m}Len;");
 			var memOnly = def.Operands.Any(o => o.MemOnly);
 			if(memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return false;");
+			// And the inverse. U* is an xmm reg FROM ModRM.rm, so mod!=11 is #UD --
+			// the XmmRmReg operand site used to carry a comment saying this was
+			// "enforced by MemOnly-inverse below" and no such gate was ever emitted.
+			// `0f 50 01` decoded as MOVMSKPS; objdump says `movmskps eax,(bad)`.
+			if(def.Operands.Any(o => o.RegOnly)) sb.AppendLine($"{ind}if(!{m}.IsReg) return false;");
 			// LOCK's other half: legal mnemonic but register destination — still #UD.
 			if(Lockable.Contains(def.Mnemonic) && def.Operands.Count > 0 && def.Operands[0].Class == OpClass.ModRmRm)
 				sb.AppendLine($"{ind}if(p.Lock && {m}.IsReg) return false;");
