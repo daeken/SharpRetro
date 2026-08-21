@@ -159,6 +159,12 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 #   this arm decodes a real binary and asks "does every INSN lift" -- 6.18M insns,
 #     complete over what a compiler actually emits, and it can see a WIDTH-rule or
 #     operand-binding bug the template-level walk never reaches (it caught three).
+#     MEASURED 2026-08-21: it reaches 593 of 691 defs = 85.8%, so its 100.00% is a
+#     RATE OVER 85.8% OF THE DEF SET. The 98 defs it never touches are exactly where
+#     the def-set gate is load-bearing -- and until the census printed `distinct-defs`
+#     that pairing was an ARGUMENT rather than a MEASUREMENT. A rate over a skewed
+#     population measures the skew: a compiler's .text is dominated by mov/add/jcc,
+#     so 100% here is consistent with a vector family being exercised ZERO times.
 #
 # A green here plus a green there is a real pair. Either alone is a floor.
 #
