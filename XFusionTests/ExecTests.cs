@@ -54,6 +54,34 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PtestFlagsExecute() {
+		// PTEST a, b: ZF = ((a & b) == 0), CF = ((a & ~b) == 0), and AF/OF/PF/SF = 0.
+		// Fully declarative from generic heads that already lower -- (&), (~), (==) --
+		// so this needed no head at all, only the .isa row.
+		//
+		// THE THREE CASES ARE CHOSEN SO ZF AND CF DISAGREE, because an implementation
+		// that computed one and copied it to the other would pass any test where they
+		// happen to match:
+		//   a=0x0F b=0xF0   a&b = 0     -> ZF=1     a&~b = 0x0F -> CF=0
+		//   a=0x0F b=0x0F   a&b = 0x0F  -> ZF=0     a&~b = 0    -> CF=1
+		//   a=0x0F b=0x01   a&b = 0x01  -> ZF=0     a&~b = 0x0E -> CF=0
+		var cases = new (UInt128 a, UInt128 b, bool zf, bool cf)[] {
+			(0x0F, 0xF0, true,  false),
+			(0x0F, 0x0F, false, true),
+			(0x0F, 0x01, false, false),
+		};
+		foreach(var (av, bv, wzf, wcf) in cases) {
+			var m = M64("660f3817c1");         // PTEST 66 0F 38 17 /r
+			m.Xmm[0] = av; m.Xmm[1] = bv;
+			Assert.That(m.Step(), Is.True, $"ptest a={av} b={bv} did not step");
+			Assert.That((m.Flags & (1u << 6)) != 0, Is.EqualTo(wzf), $"ptest ZF a={av} b={bv}");
+			Assert.That((m.Flags & 1u) != 0, Is.EqualTo(wcf), $"ptest CF a={av} b={bv}");
+			Assert.That(m.Flags & ((1u << 11) | (1u << 7) | (1u << 4) | (1u << 2)), Is.EqualTo(0u),
+				$"ptest must clear OF/SF/AF/PF a={av} b={bv}");
+		}
+	}
+
+	[Test]
 	public void PackedLaneDupExecutes() {
 		// MOVSHDUP/MOVSLDUP (vdup): duplicate the odd (or even) 32-bit lanes into both
 		// halves of each pair. Four constant-index picks plus a build -- no new node, and

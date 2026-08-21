@@ -442,7 +442,7 @@ public static class LiftTables {
 		("PABSB", "dst src", "(block (= dst (viabs src 0x8)))"),
 		("PABSW", "dst src", "(block (= dst (viabs src 0x10)))"),
 		("PABSD", "dst src", "(block (= dst (viabs src 0x20)))"),
-		("PTEST", "a b", "(block (intrinsic ptest a b))"),
+		("PTEST", "a b", "(block (block (= ZF (== (& a b) 0x0)) (= CF (== (& a (~ b)) 0x0)) (= AF 0x0) (= OF 0x0) (= PF 0x0) (= SF 0x0)))"),
 		("PMOVZXBW", "dst src", "(block (= dst (vzext src 0x8 0x10)))"),
 		("PMOVZXWD", "dst src", "(block (= dst (vzext src 0x10 0x20)))"),
 		("PMULLD", "dst src", "(block (= dst (vibin dst src 0x20 0x2)))"),

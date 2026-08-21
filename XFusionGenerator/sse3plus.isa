@@ -33,7 +33,10 @@
     (encoding PABSD (Vdq Wdq) (opsize 0x0F 0x38 0x1E)))
 
 (featuring sse4.1
-    (instruction PTEST (a b) "ptest $a, $b" (intrinsic ptest a b))
+    (instruction PTEST (a b) "ptest $a, $b" (block
+        (= ZF (== (& a b) 0))
+        (= CF (== (& a (~ b)) 0))
+        (= AF 0) (= OF 0) (= PF 0) (= SF 0)))
     (encoding PTEST (Vdq Wdq) (opsize 0x0F 0x38 0x17))
     (instruction PMOVZXBW (dst src) "pmovzxbw $dst, $src" (= dst (vzext src 8 16)))
     (encoding PMOVZXBW (Vdq Wq) (opsize 0x0F 0x38 0x30))

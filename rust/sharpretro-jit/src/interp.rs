@@ -137,6 +137,11 @@ fn icmp(a: IVal, b: IVal, fu: impl Fn(u128,u128)->bool, fi: impl Fn(i128,i128)->
         IlType::I{..} | IlType::Bool => fu(a.bits, b.bits),
         IlType::F{width:32} => ff(a.as_f32() as f64, b.as_f32() as f64),
         IlType::F{width:64} => ff(a.as_f64(), b.as_f64()),
+        // V128 compares UNSIGNED over the whole 128 bits. PTEST needs exactly this
+        // ((a & b) == 0 on a full vector) and there is no lane semantics involved -- the
+        // question is whether the entire register is zero, so treating it as one 128-bit
+        // unsigned value is the operation rather than an approximation of it.
+        IlType::V128 => fu(a.bits, b.bits),
         _ => panic!("icmp on {:?}", a.ty),
     })
 }
