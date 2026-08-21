@@ -159,8 +159,17 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 #   this arm decodes a real binary and asks "does every INSN lift" -- 6.18M insns,
 #     complete over what a compiler actually emits, and it can see a WIDTH-rule or
 #     operand-binding bug the template-level walk never reaches (it caught three).
-#     MEASURED 2026-08-21: it reaches 593 of 691 defs = 85.8%, so its 100.00% is a
-#     RATE OVER 85.8% OF THE DEF SET. The 98 defs it never touches are exactly where
+#     MEASURED 2026-08-21: it reaches 593 of 804 defs = 73.8%, so its 100.00% is a
+#     RATE OVER 73.8% OF THE DEF SET. The 211 defs it never touches are exactly where
+#     ⚠ CORRECTED SAME DAY: I first published this as "593 of 691 = 85.8%" -- a
+#     CROSS-ARM JOIN. 593 comes from the C# census (d.DefId indexes DefNames, 804
+#     entries at the 14-feature set); 691 is the RUST table's size (DEF_MNEMONICS,
+#     whose regen.sh omits avx/avx2/avx512). The two arms are on DIFFERENT feature
+#     sets BY DESIGN -- oq[0]-(c) -- so a numerator from one and a denominator from
+#     the other reads plausible and overstates coverage by 12 points. Found by
+#     firing a peer's rule (read the emitter's INPUT, not another emitter's output)
+#     at my own figure: the census indexes DefNames, so DefNames.Length is the only
+#     sound denominator for it.
 #     the def-set gate is load-bearing -- and until the census printed `distinct-defs`
 #     that pairing was an ARGUMENT rather than a MEASUREMENT. A rate over a skewed
 #     population measures the skew: a compiler's .text is dominated by mov/add/jcc,
