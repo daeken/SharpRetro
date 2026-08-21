@@ -54,6 +54,40 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedLaneGetSetExecutes() {
+		// PEXTRB/PEXTRD (vlane-get) and PINSRB/PINSRW (vlane-set). NO NEW NODE: an
+		// extract with a compile-time index is what IlVecElem already is, and an insert
+		// is a rebuild of every lane substituting one -- the vzext shape.
+		//
+		// THE DISCRIMINATOR IS THE SELECTOR MASK, and it differs per width: PEXTRB takes
+		// sel & 0xF (16 byte lanes) while PEXTRD takes sel & 0x3 (4 dword lanes). A single
+		// hardcoded mask would pass one and fail the other, so both are tested with a
+		// selector ABOVE the lane count: 0x11 must wrap to lane 1 for PEXTRB, and 0x06
+		// must wrap to lane 2 for PEXTRD.
+		var src = (UInt128) 0x0706050403020100UL | ((UInt128) 0x0F0E0D0C0B0A0908UL << 64);
+
+		// PEXTRB 66 0F 3A 14 /r ib -- sel 0x11 & 0xF = lane 1 -> 0x01
+		var e1 = M64("660f3a14c811"); e1.Xmm[1] = src;
+		Assert.That(e1.Step(), Is.True, "pextrb did not step");
+		Assert.That((ulong) e1.Gpr[0] & 0xFF, Is.EqualTo(1UL), "pextrb sel wraps to lane 1");
+
+		// PEXTRD 66 0F 3A 16 /r ib -- sel 0x06 & 0x3 = lane 2 -> 0x0B0A0908
+		var e2 = M64("660f3a16c806"); e2.Xmm[1] = src;
+		Assert.That(e2.Step(), Is.True, "pextrd did not step");
+		Assert.That((uint) e2.Gpr[0], Is.EqualTo(0x0B0A0908u), "pextrd sel wraps to lane 2");
+
+		// PINSRB 66 0F 3A 20 /r ib -- write 0xAA into lane (0x13 & 0xF) = 3
+		var i1 = M64("660f3a20c113"); i1.Xmm[0] = src; i1.Gpr[1] = 0xFFFFFFAAUL;
+		Assert.That(i1.Step(), Is.True, "pinsrb did not step");
+		Assert.That((ulong) i1.Xmm[0], Is.EqualTo(0x07060504AA020100UL), "pinsrb lane 3");
+
+		// PINSRW 66 0F C4 /r ib -- write 0xBBBB into word lane (0x09 & 0x7) = 1
+		var i2 = M64("660fc4c109"); i2.Xmm[0] = src; i2.Gpr[1] = 0xFFFFBBBBUL;
+		Assert.That(i2.Step(), Is.True, "pinsrw did not step");
+		Assert.That((ulong) i2.Xmm[0], Is.EqualTo(0x07060504BBBB0100UL), "pinsrw word lane 1");
+	}
+
+	[Test]
 	public void PackedShuffleBytesExecutes() {
 		// PSHUFB (vshufv): a DATA-DEPENDENT shuffle -- the per-lane index comes from a
 		// register, and bit 7 of an index ZEROES its output lane.

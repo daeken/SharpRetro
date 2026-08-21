@@ -230,7 +230,7 @@
 (encoding PMULUDQ (Vdq Wdq) (opsize 0x0F 0xF4))
 (instruction PMADDWD (dst src) "pmaddwd $dst, $src" (intrinsic pmaddwd dst src))
 (encoding PMADDWD (Vdq Wdq) (opsize 0x0F 0xF5))
-(instruction PINSRW (dst src sel) "pinsrw $dst, $src, $sel" (intrinsic pinsrw dst src sel))
+(instruction PINSRW (dst src sel) "pinsrw $dst, $src, $sel" (= dst (vlane-set dst src sel 16)))
 (encoding PINSRW (Vdq Ed Ib) (opsize 0x0F 0xC4))
 (instruction PACKSSDW (dst src) "packssdw $dst, $src" (intrinsic packssdw dst src))
 (encoding PACKSSDW (Vdq Wdq) (opsize 0x0F 0x6B))

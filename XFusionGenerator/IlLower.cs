@@ -813,6 +813,42 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "vlane-get": {
+				// (vlane-get src sel ew) -- PEXTRB/PEXTRW/PEXTRD/PEXTRQ. NO NEW NODE: an
+				// extract with a COMPILE-TIME index, which is what IlVecElem already is
+				// everywhere else in this file. The selector arrives as an Ib OPERAND
+				// BINDING, not a literal, so it is resolved the way vshuf resolves its own
+				// (IlLower.cs:1230-1234): Binds -> OperandBind.Imm -> the value.
+				var gsrc = Expr(l[1]);
+				var gselN = ((PName) l[2]).Name;
+				var gew = (int) ((PInt) l[3]).Value;
+				if(!Binds.TryGetValue(gselN, out var gsb) || gsb is not OperandBind.Imm gsi)
+					throw new NotSupportedException($"vlane-get sel {gselN} not an imm bind");
+				var gn = 128 / gew;
+				var gidx = (int) ((ulong) gsi.Value & (ulong) (gn - 1));
+				return Lane(gsrc, new IlType.I(false, gew), gidx);
+			}
+			case "vlane-set": {
+				// (vlane-set dst val sel ew) -- PINSRB/PINSRW/PINSRD/PINSRQ. NO NEW NODE
+				// either: rebuild all n lanes, substituting the one the selector names.
+				// That is the same shape vzext uses (a build over per-lane extracts) and
+				// the same compile-time-selector resolution as vlane-get.
+				var sdst = Expr(l[1]);
+				var sval = Expr(l[2]);
+				var sselN = ((PName) l[3]).Name;
+				var sew = (int) ((PInt) l[4]).Value;
+				if(!Binds.TryGetValue(sselN, out var ssb) || ssb is not OperandBind.Imm ssi)
+					throw new NotSupportedException($"vlane-set sel {sselN} not an imm bind");
+				var sn = 128 / sew;
+				var sidx = (int) ((ulong) ssi.Value & (ulong) (sn - 1));
+				var slet = new IlType.I(false, sew);
+				var sel2 = new List<Il>();
+				for(var k = 0; k < sn; k++)
+					// The inserted value is a GPR read at its own width; narrow it to the
+					// lane width rather than assuming the widths match.
+					sel2.Add(k == sidx ? new IlCast(slet, CastKind.Trunc, sval) : Lane(sdst, slet, k));
+				return new IlVecBuild(128, slet, sel2);
+			}
 			case "vshufv": {
 				// (vshufv dst src) -- PSHUFB. A DATA-DEPENDENT shuffle: the per-lane index
 				// comes from a REGISTER, not an immediate, and bit 7 of each index zeroes

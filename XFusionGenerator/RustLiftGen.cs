@@ -582,6 +582,34 @@ public class RustLiftGen {
                 }
                 return cacc;
             }
+            case "vlane-get": {
+                // (vlane-get src sel ew) -- PEXTRB/PEXTRD. The C# arm resolves the Ib at
+                // CODEGEN via Binds/OperandBind.Imm; THIS arm has no Binds -- RustLiftGen
+                // emits ONE function per template and the imm differs per decode, so the
+                // selector is extracted at RUST-runtime exactly as vshuf does it
+                // (RustLiftGen.cs:682-684). Read off that case rather than composed: my
+                // first version called Binds.TryGetValue and CS0103'd.
+                var gs = Expr(l[1]);
+                var gselOp = ParamOp(((PName)l[2]).Name);
+                var gew = (int)((PInt)l[3]).Value;
+                var gmask = 128 / gew - 1;
+                var gidx = Rt($"{{ let _s = if let Operand::Imm{{value,..}} = {gselOp} {{ *value as u32 }} else {{ unreachable!() }}; bd.literal(IlType::U32, (_s & {gmask}) as u128) }}");
+                return Rt($"bd.velement_read({gs}, {gidx}, IlType::U{gew})");
+            }
+            case "vlane-set": {
+                // (vlane-set dst val sel ew) -- PINSRB/PINSRW. velement_write returns the
+                // new V128, so this is ONE call where the C# arm rebuilds every lane (that
+                // arm rebuilds because IlVecBuild is what the shared IL has; here the
+                // Builder carries the write directly). Same runtime-imm extraction.
+                var sd = Expr(l[1]);
+                var sv = Expr(l[2]);
+                var sselOp = ParamOp(((PName)l[3]).Name);
+                var sew = (int)((PInt)l[4]).Value;
+                var smask = 128 / sew - 1;
+                var sidx = Rt($"{{ let _s = if let Operand::Imm{{value,..}} = {sselOp} {{ *value as u32 }} else {{ unreachable!() }}; bd.literal(IlType::U32, (_s & {smask}) as u128) }}");
+                var sn = Rt($"bd.cast({sv}, IlType::U{sew})");
+                return Rt($"bd.velement_write({sd}, {sidx}, {sn})");
+            }
             case "vshufv": {
                 // (vshufv dst src) -- PSHUFB, data-dependent per-lane index with bit 7
                 // zeroing the lane. The Rust Builder's vshuf takes an IMMEDIATE sel and
