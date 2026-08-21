@@ -177,5 +177,37 @@
 (instruction STMXCSR (dst) "stmxcsr $dst" (= dst 0x1F80))
 (encoding STMXCSR (Md) (0x0F 0xAE /3))
 
+; ⚠ WAITPKG/CET DEFECT, MEASURED AND NOT YET FIXABLE HERE. The five 0F AE rows below
+; (LDMXCSR /2, STMXCSR /3, LFENCE /5, MFENCE /6, SFENCE /7) are PREFIX-BLIND: F2 and F3
+; on this opcode select DIFFERENT INSTRUCTIONS, and both generators drop a stray F3/F2 on
+; a legacy row, so three instructions render as one. objdump, the independent decoder:
+;     0F AE /6  bare -> mfence      F2 -> umwait       F3 -> umonitor
+;     0F AE /5  bare -> lfence                         F3 -> incsspd
+; 42 sites in a real .text; `mfence -> umwait` on 21 of 42, measured downstream by a
+; consumer walking a real image. MISDECODE, which is the danger -- a bare row should reject the prefix-siblings it does
+; not implement (the 41-90 lesson).
+;
+; WHY IT IS NOT FIXED AT THE GENERATOR: I tried, and the tests refuted it at 293 sites.
+; The decoder has TWO established contracts and this group falls between them:
+;     a LEGACY row DROPS a stray F3   (DecodeTests.cs:85, "f3c3" -> "ret", the rep-ret idiom)
+;     a VECTOR row REJECTS it         (66/F3/F2 always select a different insn there)
+; The existing reject gates on isVectorGroup, and 0F AE has no Xmm/Mmx operand, so it
+; takes the drop path. Widening that gate to all groups broke F3 C3 (rep ret), F3 A4
+; (rep movsb) and F3 48 AB (rep stosq) -- F3 as a genuine REPEAT prefix, 4 tests, caught
+; before commit and reverted.
+;
+; AND THE SCOPE IS NARROWER THAN "REJECT F2/F3", also measured at objdump:
+;     66 0F AE /2 -> "data16 ldmxcsr"   (66 is a LEGAL prefix here)
+;     66 0F BC    -> "bsf ax,cx"        (66 legal)
+; and 0F BC/BD already have F3-claiming siblings (TZCNT/LZCNT), so the mprefix-group
+; mechanism handles those correctly already.
+;
+; THE FIX WANTS AN .isa DECLARATION -- per-group knowledge this DSL cannot currently
+; express: "on this opcode, an unclaimed F2/F3 is an unimplemented SIBLING, not a stray
+; prefix." A `(rejects rep repnz)` clause on the encoding, or a feature-gated UMWAIT/
+; UMONITOR/INCSSPD row (there is no define-feature for waitpkg or cet yet, so the honest
+; disposition today is reject-not-render). Either way it is a DSL change, not a heuristic,
+; and a heuristic is what I just proved wrong.
+;
 (instruction SFENCE () "sfence" (fence))
 (encoding SFENCE () (0x0F 0xAE /7))
