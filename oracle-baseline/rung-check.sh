@@ -175,6 +175,18 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 # defect the XFusionTests arm above has a guard for.
 CORPUS=${XF_CORPUS:-/tmp/echidna}
 CORPUS_FAIL_FLOOR=0        # fail-classes; asserted in BOTH directions like the arm above
+# ── THIS GATE REPORTS TWO ZEROS AND BOTH HAVE A SEEN NONZERO. ────────────────────
+# A peer's rule: an IMPOSSIBLE zero is a gift (it tells you the instrument is
+# wrong), where a PLAUSIBLE zero doesn't. Neither of mine is impossible -- so the
+# rule doesn't fire here, and the reason it doesn't is the stronger property:
+#   "0 failed" (254 tests)     watched become nonzero 5x this session -- 3 sentinel
+#                              failures as defs became declarative, 2 deliberate plants
+#   "0 fail-classes" (corpus)  watched become nonzero 2x -- /bin/true triggered SHRANK,
+#                              a truncated ELF triggered the no-summary arm
+# AN IMPOSSIBLE ZERO IS A GIFT; A ZERO YOU HAVE WATCHED MOVE IS A MEASUREMENT.
+# A plausible zero with no seen nonzero is the one to distrust, and that is the state
+# both of these were in until this session.
+#
 # ── ALL THREE CORPUS GUARDS HAVE A SEEN FAILURE (fired 2026-08-21). ──────────────
 # An unexercised guard is a claim, not a gate -- so each was made to fail on purpose:
 #   XF_CORPUS=/nonexistent   ⟹ ⊘ SKIPPED and said        (never a silent pass)
