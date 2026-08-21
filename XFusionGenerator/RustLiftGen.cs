@@ -789,6 +789,15 @@ public class RustLiftGen {
                 }
                 return crc;
             }
+            // ⚠ A GROUPED CASE IS A SCOPE-WALK HAZARD, and the two arms differ: this file
+            // has 2 grouped fall-through bodies (this and vfmax/vfmin) and IlLower.cs has
+            // ZERO. So grepping a head name here lands on a REAL body that really exists
+            // but serves THREE heads -- reading it as vpacks-specific attributes all three
+            // heads' logic to one. horizon@seratb's finding one language over (a scope-walk
+            // needle that doesn't know the file's own definition form reports the wrong
+            // scope SILENTLY, and reports a real function, which is why they believed it
+            // three times). The mitigation here is that the body's first comment NAMES all
+            // three -- so a reader who lands mid-group is told immediately.
             case "vmulw": case "vmadd": case "vpacks": {
                 // PMULUDQ / PMADDWD / PACKSSDW. Per-lane composition from ops that all
                 // exist (velement_read/write + mul/add/cast + lt/gt/ternary) -- the same
