@@ -85,6 +85,32 @@
     (encoding DPPD (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x41)))
 
 (featuring sse4.2
+    ; ── PCMP*STR: the cost is PER-ARM, not "needs a primitive". ──────────────────
+    ; I published these as "a string-compare state machine" and that framing is
+    ; wrong for one arm and roughly right for the other, which is a real asymmetry
+    ; rather than a deferral:
+    ;
+    ;   the imm8 selects 4 data formats x 4 aggregations x 4 polarities x 2 output
+    ;   modes = 128 behaviours, plus (for the I-forms) an implicit-length scan that
+    ;   finds each operand's length by looking for a null element.
+    ;
+    ;   C#   the encoding is (Vdq Wdq Ib) -- an Ib OPERAND BINDING, so the imm8 is
+    ;        COMPILE-TIME (Binds -> OperandBind.Imm, the same mechanism vlane-get and
+    ;        valign use). Each combination is then a FIXED unrolled decomposition and
+    ;        only the imm8 values a real corpus actually uses need to exist. Not a
+    ;        state machine at all.
+    ;   Rust RustLiftGen emits ONE function per template and the imm differs per
+    ;        decode, so it would need the full 128-way runtime select. That IS
+    ;        expensive, and it is expensive for a structural reason rather than a
+    ;        semantic one.
+    ;
+    ; So the honest statement is: lowerable on the C# arm at the cost of one
+    ; decomposition per imm8 seen, and genuinely awkward on the Rust arm. 9,216 of
+    ; the ~10,274 remaining track-fail rows are these three defs, and they are the
+    ; largest single block left -- but the corpus enumerates ALL imm8 values, so
+    ; closing them means all 128 behaviours on both arms, not just the used ones.
+    ; Left intrinsic-bodied deliberately, with the cost named rather than the
+    ; capability mis-stated.
     (instruction PCMPISTRI (a b pred) "pcmpistri $a, $b, $pred" (intrinsic pcmpistri a b pred))
     (encoding PCMPISTRI (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x63))
     (instruction PCMPISTRM (a b pred) "pcmpistrm $a, $b, $pred" (intrinsic pcmpistrm a b pred))
