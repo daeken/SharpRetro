@@ -111,6 +111,42 @@ public class LiftTests {
 	}
 
 	[Test]
+	public void DieLoudGateCannotBeSatisfiedByAnEarlierThrow() {
+		// THE GATE'S OWN [neg] CONTROL, fired rather than reasoned about.
+		//
+		// NewDecodeGapsDecodeAndDieLoud asserts an intrinsic def's Step() throws
+		// NotSupportedException whose message CONTAINS the mnemonic. The hazard is the
+		// one horizon@seratb paid a [pos] chain for at a different bench: if the throw
+		// could come from an EARLIER stage (decode-fail, lift-fail), then "the intrinsic
+		// died loud" and "we never reached the intrinsic" would be the same pass.
+		//
+		// So: feed bytes that CANNOT decode. If they throw a NotSupportedException whose
+		// message contains a mnemonic, the guard is worthless. They must not.
+		// ⚠ MY FIRST VERSION OF THIS CONTROL PASSED VACUOUSLY, and a plant is what showed
+		// it: I fed 0F 0B (UD2) and an EVEX-garbage payload expecting throws from an
+		// earlier stage, guarded the assert with `if(msg != null)`, and NEITHER CASE THREW
+		// AT ALL -- so the assert never ran and the test was green over zero comparisons.
+		// Planting `Assert.That(msg, Is.Not.Null)` failed immediately and named it.
+		// A control whose subject can be ABSENT needs the subject asserted FIRST.
+		//
+		// The sound form: use the REAL sentinel and check the message NAMES it rather
+		// than merely being a NotSupportedException. That is what separates "the intrinsic
+		// site was reached and refused" from "something else refused first" -- the hazard
+		// the die-loud gate's .Contains(want) relies on excluding.
+		var m = new X86Machine { Mode = XMode.Bits64, Mem = new byte[0x2000], Ip = 0x100 };
+		Convert.FromHexString("0f53c1").CopyTo(m.Mem, 0x100);   // rcpps xmm0,xmm1 = the sentinel
+		string msg = null;
+		try { m.Step(); } catch(Exception e) { msg = e.Message; }
+		Assert.That(msg, Is.Not.Null,
+			"the sentinel must throw at all -- if it stops throwing, the die-loud gate "
+			+ "has no subject and its pass means nothing");
+		Assert.That(msg, Does.Contain("rcpps"),
+			"the message must NAME the intrinsic: a bare NotSupportedException could come "
+			+ "from decode or lift, and then 'the intrinsic died loud' and 'we never "
+			+ "reached the intrinsic' would be the same pass");
+	}
+
+	[Test]
 	public void NewDecodeGapsDecodeAndDieLoud() {
 		// The full-scope M0 gate (11,320,255 lengths vs capstone) named the
 		// undecodables. A missing ENCODING desynchronises a linear sweep for the
