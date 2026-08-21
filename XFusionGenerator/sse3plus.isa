@@ -85,6 +85,22 @@
     (encoding DPPD (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x41)))
 
 (featuring sse4.2
+    ; ⚠ AND THE ROW-COUNT ORDERING IS ORTHOGONAL TO SEVERITY, measured 2026-08-21.
+    ; These three defs are 9,216 of the ~10,274 remaining track-fail rows -- the
+    ; largest block by far -- and that number measures ENCODING DENSITY (imm8-space x
+    ; reg-combos), not what real code uses. Scanned the 25MB corpus .text for the
+    ; actual opcode bytes (66 0F 3A 60..63) with a live [pos] control (48 89 = 510,528
+    ; hits): 15 raw byte-matches, which for a 4-byte pattern across 25MB is consistent
+    ; with ZERO real uses. RCPPS-family: 91. RCPSS: 4. Same reading.
+    ;
+    ; ⟹ SO CLOSING THEM WOULD BUY SWEEP COMPLETENESS, NOT COVERAGE OF REAL BINARIES.
+    ; The corpus lift arm is already 100.00% over 6.18M real insns. That is a
+    ; different justification from the one a count-ordered worklist implies, and the
+    ; distinction decides priority: an oracle-completeness item, not an Alky blocker.
+    ;
+    ; ‡ The byte-counts are UPPER bounds -- a short pattern appears inside longer
+    ; instructions, in immediates and in data -- so they can only support "~none",
+    ; never an exact figure. Stated because the number invites over-reading.
     ; ── PCMP*STR: the cost is PER-ARM, not "needs a primitive". ──────────────────
     ; I published these as "a string-compare state machine" and that framing is
     ; wrong for one arm and roughly right for the other, which is a real asymmetry
