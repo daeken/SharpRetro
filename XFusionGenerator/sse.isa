@@ -97,6 +97,30 @@
 (instruction RSQRTSS (dst src) "rsqrtss $dst, $src" (intrinsic rsqrtss dst src))
 (encoding RSQRTSS (Vss Wss) (rep 0x0F 0x52))
 
+; ── RCPPS/RCPSS/RSQRTPS/RSQRTSS: NOT primitive-blocked. ORACLE-blocked. ──────────
+; I published "these need x86's ~12-bit reciprocal APPROXIMATION, not composable
+; from exact arithmetic" -- in a DM, a commit message, and my own notes -- and it
+; is two claims wearing one sentence. Fired them separately:
+;
+;   COMPOSABLE?   YES. The SDM's bound is "relative error <= 1.5 * 2^-12", and an
+;                 EXACT 1/x has error 0, which is INSIDE that band. A conforming
+;                 implementation may return the exact reciprocal, and (/ 1.0 x)
+;                 already lowers.
+;   BIT-MATCHING? NO. The silicon oracle compares BIT-EXACT against one specific
+;                 CPU's lookup table. Intel and AMD differ here, and Intel varies
+;                 by microarchitecture -- so an exact reciprocal would diff on
+;                 nearly every row while being architecturally CORRECT.
+;
+; So these stay intrinsic-bodied for a reason that is about the ORACLE, not about
+; the node set: a declarative form would be right by the manual and wrong against
+; the corpus, and a diff that is expected-and-permitted is worse than a refusal
+; because it trains the reader to discount diffs. RCPPS is the die-loud gate's
+; sentinel for exactly this property -- it cannot become declarative by accident.
+;
+; The remedy, if these ever need to execute: a tolerance mode in the runner
+; (compare within 1.5*2^-12 rather than bit-exact) -- an oracle change, not a
+; lowering. Recorded here because a refuted claim names which thing not to try,
+; which prose in a commit message does not.
 (instruction RCPPS (dst src) "rcpps $dst, $src" (intrinsic rcpps dst src))
 (encoding RCPPS (Vps Wps) (0x0F 0x53))
 (instruction RCPSS (dst src) "rcpss $dst, $src" (intrinsic rcpss dst src))
