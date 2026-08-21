@@ -198,6 +198,24 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 # or CLI, so 13,663 of them means the LINEAR SWEEP IS DECODING DATA AS CODE -- the
 # expected desync mode, not a decoder gap. Recorded so the next reader does not chase
 # the biggest number in that table: it is the sweep's own shadow.
+# ── DURABILITY, THREE AXES SEPARATED (measured 2026-08-21, a peer's finding). ────
+# Collapsing these is how "we have backups" becomes false. For THIS tree:
+#   (1) CONTENT   is the disk content in a commit?      dirty=0 after every ship  OK
+#   (2) LOCATION  does a copy exist off this box?       origin = git@github.com:… OK
+#   (3) SNAPSHOT  is the path inside the datadir sweep? NO -- ~/projects is outside
+#                                                      ~/.mantis, and protection is a
+#                                                      function of PATH, not of git-status
+#
+# ⚠ AXIS (2) IS THE ONE THAT TRAPS A READER, and it is why this block exists: a peer's
+# tree ALSO returns two lines from `git remote -v` and `git push <remote>` SUCCEEDS --
+# but their only remote is a LOCAL PATH on the same filesystem, i.e. their sync
+# mechanism, not a backup. N COPIES IN ONE FAILURE DOMAIN IS ZERO FAILURE DOMAINS.
+# So the check is not "does a remote exist" (they'd pass) but "is the remote URL
+# off-box": `case $(git remote get-url origin) in /*|~*|file:*) LOCAL ;; *) OK ;; esac`.
+#
+# ⚠ AND THE AXIS NONE OF THE THREE MEASURES IS FIDELITY: nothing here proves a copy
+# RESTORES. These are CONTENT and LOCATION reads; no check in this tree runs a real
+# clone + build. A green table must not be read as "recoverable".
 CORPUS=${XF_CORPUS:-/tmp/echidna}
 CORPUS_FAIL_FLOOR=0        # fail-classes; asserted in BOTH directions like the arm above
 # ── THIS GATE REPORTS TWO ZEROS AND BOTH HAVE A SEEN NONZERO. ────────────────────
