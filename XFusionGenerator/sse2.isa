@@ -264,9 +264,9 @@
 (instruction PSLLQ (dst count) "psllq $dst, $count" (intrinsic psllq dst count))
 (encoding PSLLQ (Vdq Wdq) (opsize 0x0F 0xF3))
 
-(instruction PMINUB (dst src) "pminub $dst, $src" (intrinsic pminub dst src))
+(instruction PMINUB (dst src) "pminub $dst, $src" (= dst (vibin dst src 8 8)))
 (encoding PMINUB (Vdq Wdq) (opsize 0x0F 0xDA))
-(instruction PMAXUB (dst src) "pmaxub $dst, $src" (intrinsic pmaxub dst src))
+(instruction PMAXUB (dst src) "pmaxub $dst, $src" (= dst (vibin dst src 8 7)))
 (encoding PMAXUB (Vdq Wdq) (opsize 0x0F 0xDE))
 
 ; --- integer xmm: shifts (imm forms are /N on 71/72/73) ---

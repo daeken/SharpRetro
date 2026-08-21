@@ -837,6 +837,33 @@ public class IlLower {
 				// this in disagreement with the interpreter that already executes it.
 				// cmpgt is SIGNED (BinOp.Sgt); the ElemTy is signed for both, since
 				// PCMPEQ's equality is width-exact either way.
+				// ops 5-8 = PMAX/PMIN, signed and unsigned. THE NODE SET EXPRESSES THESE
+				// AND NO NEW BinOp IS NEEDED, which is the same question I got wrong four
+				// times on this file's other heads: I asked whether ONE node carries the
+				// operation instead of whether the SET does.
+				//
+				// BinOp has FMin/FMax and no integer siblings, so adding SMax/UMin would
+				// be a shared-LiftIl change with a live consumer. It isn't necessary --
+				// per-lane max is the mask-then-blend idiom the all-1s convention above
+				// exists for:
+				//     mask = (a >  b)        all-1s per lane where a wins   (op 4's shape)
+				//     res  = (a & mask) | (b & ~mask)
+				// Three nodes I already emit and already evaluate (IlVecBin And/Or,
+				// IlVecUn Not), and the SIGNEDNESS rides the compare's ElemTy alone --
+				// Sgt with I(true,ew) for PMAXS*, Ugt with I(false,ew) for PMAXU*.
+				// A blend needs no select node because a lane mask IS the select.
+				if(op >= 5 && op <= 8) {
+					var signed = op is 5 or 6;              // 5=maxs 6=mins 7=maxu 8=minu
+					var wantA = op is 5 or 7;               // max keeps a where a > b
+					var cet = new IlType.I(signed, ew);
+					var cmp = new IlVecBin(128, cet, signed ? BinOp.Sgt : BinOp.Ugt, a, b);
+					var keep = wantA ? a : b;               // the operand the mask selects
+					var other = wantA ? b : a;
+					var inv = new IlVecUn(128, cet, UnOp.Not, cmp);
+					return new IlVecBin(128, cet, BinOp.Or,
+						new IlVecBin(128, cet, BinOp.And, keep, cmp),
+						new IlVecBin(128, cet, BinOp.And, other, inv));
+				}
 				var bop = op switch {
 					0 => BinOp.Add, 1 => BinOp.Sub, 2 => BinOp.Mul,
 					3 => BinOp.Eq, 4 => BinOp.Sgt,

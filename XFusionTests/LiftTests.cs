@@ -122,9 +122,13 @@ public class LiftTests {
 			("660fd2c1", "psrld"), ("660ff2c1", "pslld"), ("660fe2c1", "psrad"),
 			("660fd3c1", "psrlq"), ("660ff3c1", "psllq"), ("660fd1c1", "psrlw"),
 			("660ff1c1", "psllw"), ("660fe1c1", "psraw"),
-			("660f3840c1", "pmulld"), ("660f383dc1", "pmaxsd"), ("660f383cc1", "pmaxsb"),
-			("660f3839c1", "pminsd"), ("660f3838c1", "pminsb"), ("660f383fc1", "pmaxud"),
-			("660f383ec1", "pmaxuw"),
+			("660f3840c1", "pmulld"),
+			// PMAX/PMIN moved OUT of this list at the vibin-5..8 commit: ten rows became
+			// declarative (mask-then-blend, no new BinOp), so they now EXECUTE and this
+			// gate's die-loud assert is no longer true of them. They are covered by
+			// ExecTests.PackedIntMinMaxExecutes with operands where maxs != maxu in every
+			// lane. Removing them here rather than weakening the assert: a gate that
+			// tolerates both outcomes stops being a gate.
 		}) {
 			var b = Convert.FromHexString(hex);
 			Assert.That(Disassembler.DecodeInsn(b, XMode.Bits64, out var d), Is.True,

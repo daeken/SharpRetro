@@ -54,6 +54,43 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedIntMinMaxExecutes() {
+		// PMAXSB/PMINSB/PMAXUB/PMINUB via the mask-then-blend idiom (vibin ops 5-8):
+		//   mask = a >s b or a >u b (all-1s per lane), res = (keep & mask) | (other & ~mask)
+		// No new BinOp -- integer min/max is expressible with And/Or/Not, and the
+		// SIGNEDNESS rides the compare's ElemTy alone.
+		//
+		// THE OPERANDS ARE CHOSEN SO EVERY LANE DISCRIMINATES, and my first pair did not:
+		// I used A=0x7F80017F / B=0x01FF7F02, where maxs and maxu are the SAME VALUE
+		// (0x7FFF7F7F) because lane 2's maxs(-128,-1) = -1 = 0xFF = maxu(0x80,0xFF).
+		// Both asserts passed and the signed/unsigned split was never tested -- the
+		// test-topology-excludes-the-failure-mode class at n=5 at this bench (the IC unit
+		// test's 2-block loop, the LLVM oracle that never wrote a flag, the x87 gate's
+		// symmetric operands, the mulss lo-only compare).
+		//
+		// Here each lane has ONE operand >=0x80 and one <0x80, so maxs != maxu and
+		// mins != minu in EVERY lane. A wrong signedness cannot pass.
+		var A = (UInt128) 0x7FFF0180UL;   // lanes lo->hi: 80 01 FF 7F
+		var B = (UInt128) 0xFF7F8001UL;   // lanes lo->hi: 01 80 7F FF
+
+		var m = M64("660f383cc1"); m.Xmm[0] = A; m.Xmm[1] = B;   // PMAXSB 66 0F 38 3C
+		Assert.That(m.Step(), Is.True, "pmaxsb did not step");
+		Assert.That((uint) m.Xmm[0], Is.EqualTo(0x7F7F0101u), "pmaxsb");
+
+		var n2 = M64("660f3838c1"); n2.Xmm[0] = A; n2.Xmm[1] = B; // PMINSB 66 0F 38 38
+		Assert.That(n2.Step(), Is.True, "pminsb did not step");
+		Assert.That((uint) n2.Xmm[0], Is.EqualTo(0xFFFF8080u), "pminsb");
+
+		var u = M64("660fdec1"); u.Xmm[0] = A; u.Xmm[1] = B;      // PMAXUB 66 0F DE
+		Assert.That(u.Step(), Is.True, "pmaxub did not step");
+		Assert.That((uint) u.Xmm[0], Is.EqualTo(0xFFFF8080u), "pmaxub");
+
+		var v = M64("660fdac1"); v.Xmm[0] = A; v.Xmm[1] = B;      // PMINUB 66 0F DA
+		Assert.That(v.Step(), Is.True, "pminub did not step");
+		Assert.That((uint) v.Xmm[0], Is.EqualTo(0x7F7F0101u), "pminub");
+	}
+
+	[Test]
 	public void ScalarSsePreservesUpperBits() {  // F3 0F 59 C1 = mulss xmm0, xmm1
 		// SDM Vol 2A, MULSS: "The three high-order doublewords of the destination operand
 		// remain unchanged." IlLower emits the merge for that (IlLower.cs:442-451) and the
