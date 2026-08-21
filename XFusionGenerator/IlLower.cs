@@ -64,7 +64,26 @@ public class IlLower {
 		1 => IlType.U1, 8 => IlType.U8, 32 => IlType.U32, 64 => IlType.U64,
 		_ => new IlType.I(false, w)
 	};
-	static int W(Il e) => e.Ty is IlType.I(_, var b) ? b : 64;
+	// MEASURE, don't guess. This answered 64 for any non-I type, and that default was the
+	// root of three separate bugs in one night: (signed (bitwidth src) src) read a 64-bit
+	// source as 32, (u64 x) read a Vec(128) as 64, and int-of's own site carries an
+	// eleven-line comment warning that W(fv) on an F-typed value silently reads 64.
+	// F and Vec both KNOW their width; there was never a reason to guess for them.
+	//
+	// MEASURED with a temporary CallerLineNumber instrument over 3,500,000 golden rows:
+	// 232,128 calls arrived with an F type, at four ctxW-HINT sites (fmax/fmin, flt, and
+	// the two n-ary fold sites). Those were harmless TODAY -- both goldens read 0 diff
+	// before this change -- because the hint only types a literal operand and the float
+	// paths in question don't take one. Harmless-today is the state that becomes a bug
+	// when someone adds an arm, which is exactly how the three above happened.
+	//
+	// The 64 fallback stays for Void/unknown, where there is genuinely nothing to read.
+	static int W(Il e) => e.Ty switch {
+		IlType.I(_, var b) => b,
+		IlType.F(var fb) => fb,
+		IlType.Vec(var vb) => vb,
+		_ => 64,
+	};
 
 	// Resolve an 8-predicate compare's `pred` operand to its compile-time value. Like
 	// vshuf's selector this is an Ib imm bind, so it is known here and the compare
