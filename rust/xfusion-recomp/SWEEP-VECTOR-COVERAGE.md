@@ -94,6 +94,42 @@ The 40 are verified at **link-1 only** — `.isa` formula against silicon, throu
 `interp.rs`. The C# `IlLower` transcription is verified by nothing; see
 `DIFFERENTIAL-SCOPING.md`.
 
+## The corpus is now stale in a NEW way: 34 defs became executable after it was cut
+
+**Measured 2026-08-21**, and it corrects a claim in the paragraph below (*"no `.isa`
+semantics have changed since"* was true when written and is now false).
+
+The intrinsic-stub census made 34 previously-`(intrinsic ...)` defs declarative
+(PMAX/PMIN, PABS, PMULLD, PCMPEQQ, PMOVZX, PSHUFB, PINSR/PEXTR, PALIGNR, the
+register-count shifts, MOVSHDUP/MOVSLDUP, PTEST, PMULUDQ, PMADDWD, PACKSSDW, CRC32,
+BSWAP-16). Two arms:
+
+| arm | result |
+|---|---|
+| frozen p2 corpus (4,088,162 rows) | **ZERO rows** for any of the 34 |
+| fresh 1/64-stride smoke (8,484 rows, 380 defs) | **all 28 mnemonics present, 884 rows** |
+
+**The zero is structurally certain rather than a finding.** An `(intrinsic ...)` def makes
+`lift_one` panic → `discover()` returns `None` → no row is emitted. That is *why* those defs
+were in the track-fail census. So the frozen corpus could not have graded them, and the
+walk confirming it was redundant.
+
+**The fresh corpus is the load-bearing half: the encoder reached them all along.** So the
+gap is corpus STALENESS, not encoder coverage — a distinction that matters because the
+remedy is a re-capture (needs an x86 box) rather than encoder work (needs none).
+
+**⚠ And the shape to name: `p2-GOLDEN` is honest about what it graded and SILENT about the
+census work.** A green golden over a corpus that predates 34 defs says nothing about those
+34 — zero comparisons produce zero diffs, which is the same failure as a def whose eval was
+dropped at parse (day-54): the count stays clean because the population shrank.
+
+**‡ The walk that measured this was DEAD on its first fire** and worth recording as a
+method note: I derived the state-word count from a byte-size division (`1553/8`, not even an
+integer — and I read past that) instead of reading `STATE_WORDS_X64 = 90` at `state.rs:44`.
+It walked 25 of 4,088,162 rows and printed a clean ZERO that **agreed with my hypothesis**.
+What separated a dead read from a measurement was a `[pos]` control: the corrected walk finds
+364 distinct `def_id`s and its row count **matches the header exactly**.
+
 And the corpus is nine days stale. It remains a valid answer key for the rows it
 contains (they were silicon-exact when generated, and no `.isa` semantics have changed
 since — 0 `.isa` files touched in the vector-lowering arc). But a fresh sweep would
