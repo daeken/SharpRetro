@@ -813,6 +813,22 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "vdup": {
+				// (vdup src ew odd) -- MOVSHDUP/MOVSLDUP: duplicate the odd (or even)
+				// ew-wide lanes into both halves of each pair.
+				//   odd:  r[0]=s[1] r[1]=s[1] r[2]=s[3] r[3]=s[3]
+				//   even: r[0]=s[0] r[1]=s[0] r[2]=s[2] r[3]=s[2]
+				// NO NEW NODE -- four CONSTANT-index picks plus a build, the PALIGNR shape.
+				var us = Expr(l[1]);
+				var uew = (int) ((PInt) l[2]).Value;
+				var uodd = l[3] is PName("#t");
+				var uet = new IlType.I(false, uew);
+				var un = 128 / uew;
+				var uel = new List<Il>();
+				for(var k = 0; k < un; k++)
+					uel.Add(Lane(us, uet, (k & ~1) + (uodd ? 1 : 0)));
+				return new IlVecBuild(128, uet, uel);
+			}
 			case "vishr": {
 				// (vishr dst count ew dir) -- the REGISTER-count shifts PSLLW/D/Q,
 				// PSRLW/D/Q, PSRAW/D. dir: 0=shl 1=shr 2=sar. The count is the SOURCE

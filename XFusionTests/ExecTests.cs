@@ -54,6 +54,31 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedLaneDupExecutes() {
+		// MOVSHDUP/MOVSLDUP (vdup): duplicate the odd (or even) 32-bit lanes into both
+		// halves of each pair. Four constant-index picks plus a build -- no new node, and
+		// unlike valign/vishr the lane pattern is fixed by the OPCODE, so both arms use
+		// compile-time indices.
+		//
+		// THE FOUR LANES ARE ALL DISTINCT VALUES, which is what makes the odd-vs-even
+		// split testable: with any repeated lane value the two instructions could agree
+		// on data they should differ on.
+		var src = (UInt128) 0xBBBBBBBBAAAAAAAAUL | ((UInt128) 0xDDDDDDDDCCCCCCCCUL << 64);
+
+		// MOVSHDUP F3 0F 16 -- odd lanes: r = [B,B,D,D]
+		var h = M64("f30f16c1"); h.Xmm[1] = src;
+		Assert.That(h.Step(), Is.True, "movshdup did not step");
+		Assert.That((ulong) h.Xmm[0], Is.EqualTo(0xBBBBBBBBBBBBBBBBUL), "movshdup lo");
+		Assert.That((ulong) (h.Xmm[0] >> 64), Is.EqualTo(0xDDDDDDDDDDDDDDDDUL), "movshdup hi");
+
+		// MOVSLDUP F3 0F 12 -- even lanes: r = [A,A,C,C]
+		var lo = M64("f30f12c1"); lo.Xmm[1] = src;
+		Assert.That(lo.Step(), Is.True, "movsldup did not step");
+		Assert.That((ulong) lo.Xmm[0], Is.EqualTo(0xAAAAAAAAAAAAAAAAUL), "movsldup lo");
+		Assert.That((ulong) (lo.Xmm[0] >> 64), Is.EqualTo(0xCCCCCCCCCCCCCCCCUL), "movsldup hi");
+	}
+
+	[Test]
 	public void PackedRegisterCountShiftsExecute() {
 		// PSLLW/PSRLW/PSRAW etc with a REGISTER count (vishr) -- the count is the source
 		// XMM's low 64 bits, not an immediate, which is what separates these from the -I

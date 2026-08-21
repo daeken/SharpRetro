@@ -764,6 +764,24 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var ew = ((PInt)l[2]).Value;
                 return Rt($"bd.vmovmsk({a}, {ew})");
             }
+            case "vdup": {
+                // (vdup src ew odd) -- MOVSHDUP/MOVSLDUP. Constant indices at BOTH arms
+                // (the lane pattern is fixed by the opcode, not by an operand), so unlike
+                // valign/vishr this one needs no runtime-index machinery.
+                var us = Expr(l[1]);
+                var uew = (int)((PInt)l[2]).Value;
+                var uodd = l[3] is PName("#t");
+                var un = 128 / uew;
+                var dAcc = Rt("bd.literal(IlType::V128, 0)");
+                for(var k = 0; k < un; k++) {
+                    var src = (k & ~1) + (uodd ? 1 : 0);
+                    var si = Rt($"bd.literal(IlType::U32, {src})");
+                    var di = Rt($"bd.literal(IlType::U32, {k})");
+                    var lv = Rt($"bd.velement_read({us}, {si}, IlType::U{uew})");
+                    dAcc = Rt($"bd.velement_write({dAcc}, {di}, {lv})");
+                }
+                return dAcc;
+            }
             case "vishr": {
                 // (vishr dst count ew dir) -- the REGISTER-count shifts PSLLW/D/Q,
                 // PSRLW/D/Q, PSRAW/D. The count is the SOURCE XMM's low 64 bits.

@@ -3,9 +3,9 @@
 ; corpus presence is small. Split when any grows.
 
 (featuring sse3
-    (instruction MOVSLDUP (dst src) "movsldup $dst, $src" (intrinsic movsldup dst src))
+    (instruction MOVSLDUP (dst src) "movsldup $dst, $src" (= dst (vdup src 32 #f)))
     (encoding MOVSLDUP (Vps Wps) (rep 0x0F 0x12))
-    (instruction MOVSHDUP (dst src) "movshdup $dst, $src" (intrinsic movshdup dst src))
+    (instruction MOVSHDUP (dst src) "movshdup $dst, $src" (= dst (vdup src 32 #t)))
     (encoding MOVSHDUP (Vps Wps) (rep 0x0F 0x16))
     ; dst.lo = src.lo, dst.hi = src.lo — the vzip-64-lo shape with src as both halves
     ; (wall #32, OA/SDL SSE3 path; same family as MOVLHPS/MOVHPS wall #30).
