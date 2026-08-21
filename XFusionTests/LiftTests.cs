@@ -122,7 +122,11 @@ public class LiftTests {
 			("660fd2c1", "psrld"), ("660ff2c1", "pslld"), ("660fe2c1", "psrad"),
 			("660fd3c1", "psrlq"), ("660ff3c1", "psllq"), ("660fd1c1", "psrlw"),
 			("660ff1c1", "psllw"), ("660fe1c1", "psraw"),
-			("660f3840c1", "pmulld"),
+			// PMULLD left this list at the vibin-2 commit (ew=32 Mul) and PCMPEQQ was
+			// never in it; both now EXECUTE and are covered by
+			// ExecTests.PackedMulldAndCmpeqqExecute with a wrap-to-zero lane and a
+			// 64-vs-32 compare-width lane. The shift/PABS rows below stay: those are
+			// still intrinsic-bodied.
 			// PMAX/PMIN moved OUT of this list at the vibin-5..8 commit: ten rows became
 			// declarative (mask-then-blend, no new BinOp), so they now EXECUTE and this
 			// gate's die-loud assert is no longer true of them. They are covered by

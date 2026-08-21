@@ -41,7 +41,7 @@
     (encoding PMOVZXWD (Vdq Wq) (opsize 0x0F 0x38 0x33))
     ; verified at bytes with objdump -M intel before adding:
     ;   66 0F 38 40 C1 = pmulld xmm0,xmm1   ·   66 0F 38 3D C1 = pmaxsd xmm0,xmm1
-    (instruction PMULLD (dst src) "pmulld $dst, $src" (intrinsic pmulld dst src))
+    (instruction PMULLD (dst src) "pmulld $dst, $src" (= dst (vibin dst src 32 2)))
     (encoding PMULLD (Vdq Wdq) (opsize 0x0F 0x38 0x40))
     (instruction PMAXSD (dst src) "pmaxsd $dst, $src" (= dst (vibin dst src 32 5)))
     (encoding PMAXSD (Vdq Wdq) (opsize 0x0F 0x38 0x3D))
@@ -59,7 +59,7 @@
     (encoding PMINUD (Vdq Wdq) (opsize 0x0F 0x38 0x3B))
     (instruction PMINUW (dst src) "pminuw $dst, $src" (= dst (vibin dst src 16 8)))
     (encoding PMINUW (Vdq Wdq) (opsize 0x0F 0x38 0x3A))
-    (instruction PCMPEQQ (dst src) "pcmpeqq $dst, $src" (intrinsic pcmpeqq dst src))
+    (instruction PCMPEQQ (dst src) "pcmpeqq $dst, $src" (= dst (vibin dst src 64 3)))
     (encoding PCMPEQQ (Vdq Wdq) (opsize 0x0F 0x38 0x29))
     (instruction PEXTRB (dst src sel) "pextrb $dst, $src, $sel" (intrinsic pextrb dst src sel))
     (encoding PEXTRB (Ed Vdq Ib) (opsize 0x0F 0x3A 0x14))

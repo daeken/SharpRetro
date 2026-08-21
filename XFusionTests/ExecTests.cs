@@ -54,6 +54,34 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedMulldAndCmpeqqExecute() {
+		// PMULLD = vibin ew=32 op=2 (Mul), PCMPEQQ = vibin ew=64 op=3 (Eq). Both map to
+		// ops that already existed; the point of the test is that a cleared track-fail
+		// means the def LIFTS, not that it computes the right thing.
+		//
+		// PMULLD keeps the LOW 32 bits of each 32x32 product, which is what a wrapping
+		// multiply gives -- so the discriminating lane is one that OVERFLOWS. 0x10000 *
+		// 0x10000 = 2^32, whose low 32 bits are ZERO: a non-wrapping implementation
+		// cannot produce that, and a widening one would need a lane it doesn't have.
+		var m = M64("660f3840c1");                        // PMULLD 66 0F 38 40
+		m.Xmm[0] = ((UInt128) 0x00010000UL) | ((UInt128) 3UL << 32);
+		m.Xmm[1] = ((UInt128) 0x00010000UL) | ((UInt128) 5UL << 32);
+		Assert.That(m.Step(), Is.True, "pmulld did not step");
+		Assert.That((uint) m.Xmm[0], Is.EqualTo(0u), "pmulld lane0 must WRAP to 0");
+		Assert.That((uint) (m.Xmm[0] >> 32), Is.EqualTo(15u), "pmulld lane1");
+
+		// PCMPEQQ at ew=64: all-1s per QWORD lane on equality. The discriminating pair
+		// has one lane equal and one not -- a compare done at the wrong width (32) would
+		// see lane0's halves as two separate equal lanes and give a different answer.
+		var q = M64("660f3829c1");                        // PCMPEQQ 66 0F 38 29
+		q.Xmm[0] = ((UInt128) 0xAAAAAAAABBBBBBBBUL) | ((UInt128) 0x1111UL << 64);
+		q.Xmm[1] = ((UInt128) 0xAAAAAAAABBBBBBBBUL) | ((UInt128) 0x2222UL << 64);
+		Assert.That(q.Step(), Is.True, "pcmpeqq did not step");
+		Assert.That((ulong) q.Xmm[0], Is.EqualTo(ulong.MaxValue), "pcmpeqq lane0 equal");
+		Assert.That((ulong) (q.Xmm[0] >> 64), Is.EqualTo(0UL), "pcmpeqq lane1 differs");
+	}
+
+	[Test]
 	public void PackedAbsExecutes() {
 		// PABSB/PABSW/PABSD via the sign-mask identity (viabs), NO new node and no
 		// UnOp.Abs on an integer lane:
