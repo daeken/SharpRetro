@@ -582,6 +582,44 @@ public class RustLiftGen {
                 }
                 return cacc;
             }
+            case "valign": {
+                // (valign dst src sel) -- PALIGNR. The C# arm decides src-vs-dst-vs-zero
+                // per lane AT CODEGEN because Binds gives it the immediate there; THIS arm
+                // gets the immediate at RUST-runtime, so the per-lane choice has to be a
+                // runtime index into a 32-byte window instead of a codegen-time branch.
+                //
+                // Expressed with velement_read on a RUNTIME index (lib.rs:255 takes
+                // `i: Self::Val`): for each output lane k, idx = sel + k, and
+                //   idx < 16  -> src[idx]        16 <= idx < 32 -> dst[idx-16]
+                //   idx >= 32 -> 0
+                // The two selects use the sign-mask idiom (no ternary in the trait), same
+                // as vshufv's bit-7 rule.
+                var ad = Expr(l[1]);
+                var asrc = Expr(l[2]);
+                var aselOp = ParamOp(((PName)l[3]).Name);
+                var asel = Rt($"{{ let _s = if let Operand::Imm{{value,..}} = {aselOp} {{ *value as u32 }} else {{ unreachable!() }}; _s & 0xFF }}");
+                var pbAcc = Rt("bd.literal(IlType::V128, 0)");
+                for(var k = 0; k < 16; k++) {
+                    var ki = Rt($"bd.literal(IlType::U32, {k})");
+                    // idx = sel + k, computed on the HOST side of codegen is impossible
+                    // (sel is runtime), so it rides as a Val.
+                    var kc = Rt($"bd.literal(IlType::U32, {k})");
+                    var sv = Rt($"bd.literal(IlType::U32, ({asel}) as u128)");
+                    var idx = Rt($"bd.add({sv}, {kc})");
+                    var lo = Rt($"bd.velement_read({asrc}, {idx}, IlType::U8)");
+                    var c16 = Rt("bd.literal(IlType::U32, 16)");
+                    var i2 = Rt($"bd.sub({idx}, {c16})");
+                    var hi = Rt($"bd.velement_read({ad}, {i2}, IlType::U8)");
+                    var cmp = Rt($"bd.lt({idx}, {c16})");
+                    var pick = Rt($"bd.ternary({cmp}, {lo}, {hi})");
+                    var c32 = Rt("bd.literal(IlType::U32, 32)");
+                    var z8 = Rt("bd.literal(IlType::U8, 0)");
+                    var inr = Rt($"bd.lt({idx}, {c32})");
+                    var pick2 = Rt($"bd.ternary({inr}, {pick}, {z8})");
+                    pbAcc = Rt($"bd.velement_write({pbAcc}, {ki}, {pick2})");
+                }
+                return pbAcc;
+            }
             case "vlane-get": {
                 // (vlane-get src sel ew) -- PEXTRB/PEXTRD. The C# arm resolves the Ib at
                 // CODEGEN via Binds/OperandBind.Imm; THIS arm has no Binds -- RustLiftGen

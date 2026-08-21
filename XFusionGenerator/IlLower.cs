@@ -813,6 +813,31 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "valign": {
+				// (valign dst src sel) -- PALIGNR. Concatenate src:dst as 32 bytes (src is
+				// the LOW half per the SDM) and take 16 starting at the immediate.
+				//
+				// NO NEW NODE. Every output byte is a CONSTANT index into ONE of two
+				// vectors and the immediate is compile-time, so this is the vlane-get shape
+				// sixteen times with the src-vs-dst choice made AT CODEGEN plus a build.
+				// The out-of-range rules fall out of the same arithmetic rather than needing
+				// a branch: idx >= 32 yields a zero byte, and 16 <= idx < 32 reads dst.
+				var ad = Expr(l[1]);
+				var asrc = Expr(l[2]);
+				var aselN = ((PName) l[3]).Name;
+				if(!Binds.TryGetValue(aselN, out var asb) || asb is not OperandBind.Imm asi)
+					throw new NotSupportedException($"valign sel {aselN} not an imm bind");
+				var ash = (int) ((ulong) asi.Value & 0xFF);
+				var ab8 = new IlType.I(false, 8);
+				var ael = new List<Il>();
+				for(var k = 0; k < 16; k++) {
+					var idx = ash + k;
+					ael.Add(idx >= 32 ? new IlConst(ab8, 0)
+						: idx >= 16 ? Lane(ad, ab8, idx - 16)
+						: Lane(asrc, ab8, idx));
+				}
+				return new IlVecBuild(128, ab8, ael);
+			}
 			case "vlane-get": {
 				// (vlane-get src sel ew) -- PEXTRB/PEXTRW/PEXTRD/PEXTRQ. NO NEW NODE: an
 				// extract with a COMPILE-TIME index, which is what IlVecElem already is

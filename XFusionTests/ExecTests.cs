@@ -54,6 +54,38 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedAlignRightExecutes() {
+		// PALIGNR dst, src, imm8 (valign): concatenate src:dst as 32 bytes (SRC is the LOW
+		// half per the SDM) and take 16 starting at imm8.
+		//
+		// THREE REGIONS AND EACH IS A SEPARATE ASSERT, because a single imm8 exercises at
+		// most two of them:
+		//   imm8 = 4   every byte comes from src+dst straddle (idx 4..19)
+		//   imm8 = 20  every byte comes from dst, ZERO-FILLED past idx 31
+		//   imm8 = 32  ALL ZERO (the out-of-range rule; an implementation that masked the
+		//              immediate to 0x1F instead would return src unchanged here)
+		var dst = (UInt128) 0xD7D6D5D4D3D2D1D0UL | ((UInt128) 0xDFDEDDDCDBDAD9D8UL << 64);
+		var src = (UInt128) 0x5756555453525150UL | ((UInt128) 0x5F5E5D5C5B5A5958UL << 64);
+
+		// imm8=4: bytes src[4..15] then dst[0..3]
+		var a1 = M64("660f3a0fc104"); a1.Xmm[0] = dst; a1.Xmm[1] = src;
+		Assert.That(a1.Step(), Is.True, "palignr imm=4 did not step");
+		Assert.That((ulong) a1.Xmm[0], Is.EqualTo(0x5B5A595857565554UL), "palignr imm=4 lo");
+		Assert.That((ulong) (a1.Xmm[0] >> 64), Is.EqualTo(0xD3D2D1D05F5E5D5CUL), "palignr imm=4 hi");
+
+		// imm8=20: idx 20..31 -> dst[4..15], idx 32..35 -> ZERO
+		var a2 = M64("660f3a0fc114"); a2.Xmm[0] = dst; a2.Xmm[1] = src;
+		Assert.That(a2.Step(), Is.True, "palignr imm=20 did not step");
+		Assert.That((ulong) a2.Xmm[0], Is.EqualTo(0xDBDAD9D8D7D6D5D4UL), "palignr imm=20 lo");
+		Assert.That((ulong) (a2.Xmm[0] >> 64), Is.EqualTo(0x00000000DFDEDDDCUL), "palignr imm=20 hi zero-fill");
+
+		// imm8=32: ALL ZERO -- the assert that catches a 0x1F mask
+		var a3 = M64("660f3a0fc120"); a3.Xmm[0] = dst; a3.Xmm[1] = src;
+		Assert.That(a3.Step(), Is.True, "palignr imm=32 did not step");
+		Assert.That(a3.Xmm[0], Is.EqualTo((UInt128) 0), "palignr imm=32 must be all zero");
+	}
+
+	[Test]
 	public void PackedLaneGetSetExecutes() {
 		// PEXTRB/PEXTRD (vlane-get) and PINSRB/PINSRW (vlane-set). NO NEW NODE: an
 		// extract with a compile-time index is what IlVecElem already is, and an insert

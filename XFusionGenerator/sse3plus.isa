@@ -23,7 +23,7 @@
 (featuring ssse3
     (instruction PSHUFB-S (dst src) "pshufb $dst, $src" (= dst (vshufv dst src)))
     (encoding PSHUFB-S (Vdq Wdq) (opsize 0x0F 0x38 0x00))
-    (instruction PALIGNR (dst src sel) "palignr $dst, $src, $sel" (intrinsic palignr dst src sel))
+    (instruction PALIGNR (dst src sel) "palignr $dst, $src, $sel" (= dst (valign dst src sel)))
     (encoding PALIGNR (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x0F))
     (instruction PABSB (dst src) "pabsb $dst, $src" (= dst (viabs src 8)))
     (encoding PABSB (Vdq Wdq) (opsize 0x0F 0x38 0x1C))
