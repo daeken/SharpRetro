@@ -663,6 +663,53 @@ mod tests {
     use super::*;
 
     #[test]
+    fn census_defs_are_phase1_or_phase2_eligible() {
+        // ⚠ THIS TEST EXISTS BECAUSE A PLANT PROVED MY CORRECTION WAS PROSE.
+        //
+        // I published "the 34 intrinsic-stub census defs have NO sweep-encoder
+        // coverage", then refuted it with a fresh corpus (884 rows across all 28
+        // mnemonics) and rewrote the claim in three places -- WITHOUT adding any arm
+        // over the mechanism. Then, per barkeep@seratb's rule (after inverting a
+        // claim, PLANT the world the OLD claim described), I made PALIGNR and CRC32-B
+        // unreachable in phase1_skip and the whole suite stayed GREEN at 18 passed.
+        // A correction with no arm behind it is prose.
+        //
+        // So: every def the census made declarative must be REACHABLE by the encoder
+        // in some phase. Not "emits rows in the current corpus" -- that depends on
+        // stride/max-pre knobs -- but "phase1_skip does not reject it outright, or it
+        // rejects it for a REASON that is itself a phase (vex => phase-2 by design)".
+        let census = [
+            "PMAXSB", "PMINSB", "PMAXUW", "PMINUW", "PMAXSD", "PMINSD", "PMAXUD",
+            "PMINUD", "PABSB", "PABSW", "PABSD", "PMULLD", "PCMPEQQ", "PSHUFB-S",
+            "PALIGNR", "PTEST", "PMULUDQ", "PMADDWD", "PACKSSDW", "MOVSHDUP",
+            "MOVSLDUP", "CRC32-B", "CRC32-V", "BSWAP",
+        ];
+        let mut missing = Vec::new();
+        let mut unreachable = Vec::new();
+        for m in census {
+            let defs: Vec<_> = SWEEP_DEFS.iter().filter(|d| d.mnem == m).collect();
+            if defs.is_empty() { missing.push(m); continue; }
+            // At least ONE encoding of this mnemonic must survive phase1_skip in
+            // Bits64, OR be skipped for a phase-bearing reason.
+            let ok = defs.iter().any(|d| match phase1_skip(d, XMode::Bits64) {
+                None => true,
+                Some("vex/evex") => true,   // phase-2 by design, not unreachable
+                Some(_) => false,
+            });
+            if !ok { unreachable.push(m); }
+        }
+        // A ZERO HERE MUST NOT BE VACUOUS: assert the SUBJECT exists before the
+        // property. If SWEEP_DEFS ever stops carrying these, `missing` catches it
+        // rather than the loop silently examining nothing.
+        assert!(missing.is_empty(),
+            "census mnemonics absent from SWEEP_DEFS entirely: {missing:?} -- the \
+             encoder cannot reach what it has no row for");
+        assert!(unreachable.is_empty(),
+            "census mnemonics the encoder rejects outright: {unreachable:?} -- this is \
+             the world my refuted claim described, and it must fail loudly");
+    }
+
+    #[test]
     fn add_eb_gb_encodes() {
         // ADD Eb,Gb (opcode 00) at reg=0(al) rm=1(cl) → 00 C1 (mod=11 reg=0 rm=1)
         let d = SWEEP_DEFS.iter().find(|d| d.mnem == "ADD" && d.opcode == 0x00).unwrap();
