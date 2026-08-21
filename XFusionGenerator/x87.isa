@@ -65,6 +65,23 @@
 
 (instruction FNOP () "fnop" (intrinsic fnop))
 (encoding FNOP () (0xD9 /2 mod11 rm=0))
+; ── THE x87 ESCAPE SINGLES: 1 row each, and they are a DIFFERENT TIER's subject. ──
+; The sweep census names ~15 of these (FCHS, FABS, F2XM1, FCOMPP, FDECSTP,
+; FINCSTP, FCOS, ...) at exactly ONE track-fail row apiece. Two facts about them,
+; both checked rather than assumed:
+;
+;   (1) THEY ARE NOT LOWERED HERE AND SHOULD NOT BE. x87 execution lives in a
+;       per-thread ST-stack tier in the alky-jit-bridge (a separate repo), not in
+;       the .isa lift -- an 80-bit stack machine with its own rounding-control and
+;       tag word does not decompose into the IL's flat register model. The
+;       (intrinsic ...) body is the correct declaration of that boundary, not a gap.
+;   (2) 1 ROW EACH means they are essentially unmeasured by the corpus anyway: a
+;       no-operand escape single has exactly one encoding, so the sweep emits one
+;       row and a diff there would be one row of information.
+;
+; So these are not on the worklist and not "blocked" -- they are declared-elsewhere.
+; Recorded because a reader counting track-fail mnemonics sees 15 entries and would
+; reasonably read them as 15 gaps.
 (instruction FCHS () "fchs" (intrinsic fchs))
 (encoding FCHS () (0xD9 /4 mod11 rm=0))
 (instruction FABS () "fabs" (intrinsic fabs))
