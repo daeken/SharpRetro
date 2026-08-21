@@ -54,6 +54,45 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedRegisterCountShiftsExecute() {
+		// PSLLW/PSRLW/PSRAW etc with a REGISTER count (vishr) -- the count is the source
+		// XMM's low 64 bits, not an immediate, which is what separates these from the -I
+		// forms that lower via vishi.
+		//
+		// THE SATURATION IS THE WHOLE TEST. SDM: count >= ew gives 0 for SHL/SHR, and the
+		// SIGN-FILL for SAR. An implementation that masked the count to (ew-1) -- the
+		// natural thing to write, and what a host shift instruction does -- passes every
+		// in-range case and fails ONLY here, so each op is tested at cnt=1 AND cnt>=ew.
+		var v = (UInt128) 0x8001800180018001UL | ((UInt128) 0x8001800180018001UL << 64);
+
+		// PSLLW 66 0F F1 -- cnt=1: 0x8001 << 1 = 0x0002 per word
+		var s1 = M64("660ff1c1"); s1.Xmm[0] = v; s1.Xmm[1] = 1;
+		Assert.That(s1.Step(), Is.True, "psllw did not step");
+		Assert.That((ulong) s1.Xmm[0], Is.EqualTo(0x0002000200020002UL), "psllw cnt=1");
+
+		// PSLLW cnt=16 -> ZERO (a count-mask impl would shift by 0 and return v unchanged)
+		var s2 = M64("660ff1c1"); s2.Xmm[0] = v; s2.Xmm[1] = 16;
+		Assert.That(s2.Step(), Is.True, "psllw sat did not step");
+		Assert.That(s2.Xmm[0], Is.EqualTo((UInt128) 0), "psllw cnt=16 must be ZERO");
+
+		// PSRLW cnt=99 -> ZERO (well past ew; also tests that the test is on the FULL
+		// 64-bit count rather than a narrowed one)
+		var s3 = M64("660fd1c1"); s3.Xmm[0] = v; s3.Xmm[1] = 99;
+		Assert.That(s3.Step(), Is.True, "psrlw sat did not step");
+		Assert.That(s3.Xmm[0], Is.EqualTo((UInt128) 0), "psrlw cnt=99 must be ZERO");
+
+		// PSRAW cnt=1: 0x8001 is negative -> 0xC000 per word (arithmetic, not logical)
+		var s4 = M64("660fe1c1"); s4.Xmm[0] = v; s4.Xmm[1] = 1;
+		Assert.That(s4.Step(), Is.True, "psraw did not step");
+		Assert.That((ulong) s4.Xmm[0], Is.EqualTo(0xC000C000C000C000UL), "psraw cnt=1");
+
+		// PSRAW cnt=16 -> SIGN-FILL, not zero. The one case where SHL/SHR and SAR differ.
+		var s5 = M64("660fe1c1"); s5.Xmm[0] = v; s5.Xmm[1] = 16;
+		Assert.That(s5.Step(), Is.True, "psraw sat did not step");
+		Assert.That((ulong) s5.Xmm[0], Is.EqualTo(0xFFFFFFFFFFFFFFFFUL), "psraw cnt=16 must be sign-fill");
+	}
+
+	[Test]
 	public void PackedAlignRightExecutes() {
 		// PALIGNR dst, src, imm8 (valign): concatenate src:dst as 32 bytes (SRC is the LOW
 		// half per the SDM) and take 16 starting at imm8.

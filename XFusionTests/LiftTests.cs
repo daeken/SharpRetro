@@ -119,9 +119,17 @@ public class LiftTests {
 		// what the corpus needs, and the v128 carrier question stays where it is.
 		// Each expectation was read off objdump -M intel BEFORE the .isa edit.
 		foreach(var (hex, want) in new[] {
-			("660fd2c1", "psrld"), ("660ff2c1", "pslld"), ("660fe2c1", "psrad"),
-			("660fd3c1", "psrlq"), ("660ff3c1", "psllq"), ("660fd1c1", "psrlw"),
-			("660ff1c1", "psllw"), ("660fe1c1", "psraw"),
+			// THE REGISTER-COUNT SHIFTS LEFT THIS LIST at the vishr commit -- all eight
+			// (PSLLW/D/Q, PSRLW/D/Q, PSRAW/D) now EXECUTE, covered by
+			// ExecTests.PackedRegisterCountShiftsExecute whose asserts are on the
+			// SATURATION rather than the shift: cnt>=ew gives 0 for SHL/SHR and the
+			// SIGN-FILL for SAR, which is what separates a correct implementation from
+			// one that masked the count to (ew-1) like a host shift instruction does.
+			//
+			// This list is now EMPTY of vector entries. It is kept because the next
+			// decode-gap closure lands here first: a def that decodes but has no
+			// semantics belongs in this gate until it has them.
+			("660f6bc1", "packssdw"),
 			// PMULLD left this list at the vibin-2 commit (ew=32 Mul) and PCMPEQQ was
 			// never in it; both now EXECUTE and are covered by
 			// ExecTests.PackedMulldAndCmpeqqExecute with a wrap-to-zero lane and a

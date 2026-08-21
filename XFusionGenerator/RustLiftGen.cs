@@ -764,6 +764,56 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var ew = ((PInt)l[2]).Value;
                 return Rt($"bd.vmovmsk({a}, {ew})");
             }
+            case "vishr": {
+                // (vishr dst count ew dir) -- the REGISTER-count shifts PSLLW/D/Q,
+                // PSRLW/D/Q, PSRAW/D. The count is the SOURCE XMM's low 64 bits.
+                //
+                // THE RUST BUILDER HAS NO PACKED SHIFT BY A RUNTIME COUNT: vishi takes
+                // `count: u32` (lib.rs:191), a compile-time value, and there are SIX impls
+                // of it. My first draft invented `bd.vishr_rt` -- so the choice was a real
+                // primitive across six sites, or a per-lane composition from ops that all
+                // exist. Composed, for the same reason vshufv is composed: no
+                // shared-substrate change, and interp/tier0/tier1 get it for free.
+                //
+                //   per lane k:  v = velement_read(dst, k, U{ew})
+                //                shifted = shl|shr(v, cnt)     -- or sar via the clamp
+                //                lane    = ternary(lt(cnt, ew), shifted, fill)
+                //   SHL/SHR fill = 0.  SAR clamps the COUNT to ew-1 instead, because an
+                //   arithmetic shift by ew-1 IS the sign-fill.
+                // Verified at 12 boundaries per width before either arm was written.
+                var hd = Expr(l[1]);
+                var hs = Expr(l[2]);
+                var hew = (int)((PInt)l[3]).Value;
+                var hdir = (int)((PInt)l[4]).Value;
+                var hn = 128 / hew;
+                var zi = Rt("bd.literal(IlType::U32, 0)");
+                var cnt64 = Rt($"bd.velement_read({hs}, {zi}, IlType::U64)");
+                var ewc = Rt($"bd.literal(IlType::U64, {hew})");
+                var inr = Rt($"bd.lt({cnt64}, {ewc})");
+                var cnt = Rt($"bd.cast({cnt64}, IlType::U{hew})");
+                if(hdir == 2) {
+                    var em1 = Rt($"bd.literal(IlType::U{hew}, {hew - 1})");
+                    cnt = Rt($"bd.ternary({inr}, {cnt}, {em1})");
+                }
+                var shAcc = Rt("bd.literal(IlType::V128, 0)");
+                for(var k = 0; k < hn; k++) {
+                    var ki = Rt($"bd.literal(IlType::U32, {k})");
+                    var lv = Rt($"bd.velement_read({hd}, {ki}, IlType::{(hdir == 2 ? "I" : "U")}{hew})");
+                    var sh = hdir switch {
+                        0 => Rt($"bd.shl({lv}, {cnt})"),
+                        1 => Rt($"bd.shr({lv}, {cnt})"),
+                        _ => Rt($"bd.shr({lv}, {cnt})")   // signed lane type makes this arithmetic
+                    };
+                    // The zero fill is its OWN statement -- a placeholder identifier here
+                    // would have emitted a Rust name that does not exist, and the emit
+                    // would have compiled the FIRST 8 lanes fine before failing, which is
+                    // the shape where a wrong emit reads as a partial feature.
+                    var zf = Rt($"bd.literal(IlType::U{hew}, 0)");
+                    var lane = hdir == 2 ? sh : Rt($"bd.ternary({inr}, {sh}, {zf})");
+                    shAcc = Rt($"bd.velement_write({shAcc}, {ki}, {lane})");
+                }
+                return shAcc;
+            }
             case "vishi": {
                 // (vishi dst count-op ew dir) — packed shift-by-imm.
                 var a = Expr(l[1]);

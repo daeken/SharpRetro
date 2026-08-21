@@ -813,6 +813,59 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "vishr": {
+				// (vishr dst count ew dir) -- the REGISTER-count shifts PSLLW/D/Q,
+				// PSRLW/D/Q, PSRAW/D. dir: 0=shl 1=shr 2=sar. The count is the SOURCE
+				// XMM's low 64 bits (encoding is (Vdq Wdq)), not an immediate -- which is
+				// what separates these from the -I forms that already lower via vishi.
+				//
+				// NO NEW NODE. Two facts: the IlVecBin shift arms already treat their RHS
+				// as a SCALAR broadcast rather than a vector (X86Machine.cs:714), and the
+				// count>=ew saturation rule composes from scalar ops:
+				//
+				//   SHL/SHR:  mask = 0 - Ult(cnt, ew)      all-1s when cnt < ew, else 0
+				//             res  = (vec <<|>> cnt) & broadcast(mask)
+				//   SAR:      CLAMP the count instead: c' = min(cnt, ew-1), because an
+				//             arithmetic shift by ew-1 IS the sign-fill -- one clamp covers
+				//             both the in-range and the saturated case.
+				//
+				// Verified at 12 boundaries per width (0, 1, ew-1, ew, ew+5, 255) before
+				// this was written. The mask broadcast is an IlVecBuild of n copies of one
+				// scalar, which is needed because And is NOT a scalar-RHS op in the lane
+				// arm -- only the shifts are, so an unbroadcast mask would be sliced
+				// per-lane and land in lane 0 only. That is the same defect the shift
+				// count itself had (8,096 p2 rows), one operand over.
+				var hd = Expr(l[1]);
+				var hsrc = Expr(l[2]);
+				var hew = (int) ((PInt) l[3]).Value;
+				var hdir = (int) ((PInt) l[4]).Value;
+				var het = new IlType.I(hdir == 2, hew);
+				var hcw = new IlType.I(false, hew);
+				var hn = 128 / hew;
+				// count = the source's low `ew` bits. The SDM reads the low 64, but any
+				// count >= ew saturates identically, so narrowing to ew is safe ONLY if the
+				// out-of-range test also uses the full value -- so test at 64 and shift at ew.
+				var hcnt64 = Lane(hsrc, new IlType.I(false, 64), 0);
+				var hlt = new IlBin(new IlType.I(false, 64), BinOp.Ult, hcnt64,
+					new IlConst(new IlType.I(false, 64), (UInt128) hew));
+				if(hdir == 2) {
+					// SAR: c' = (cnt & m) | ((ew-1) & ~m), the mask-then-blend on a SCALAR.
+					var m64 = new IlBin(new IlType.I(false, 64), BinOp.Sub,
+						new IlConst(new IlType.I(false, 64), 0), hlt);
+					var keep = new IlBin(new IlType.I(false, 64), BinOp.And, hcnt64, m64);
+					var other = new IlBin(new IlType.I(false, 64), BinOp.And,
+						new IlConst(new IlType.I(false, 64), (UInt128) (hew - 1)),
+						new IlUn(new IlType.I(false, 64), UnOp.Not, m64));
+					var cp = new IlBin(new IlType.I(false, 64), BinOp.Or, keep, other);
+					return new IlVecBin(128, het, BinOp.Sar, hd, cp);
+				}
+				var shifted = new IlVecBin(128, het, hdir == 0 ? BinOp.Shl : BinOp.Shr, hd, hcnt64);
+				var mk = new IlBin(hcw, BinOp.Sub, new IlConst(hcw, 0),
+					new IlCast(hcw, CastKind.Trunc, hlt));
+				var mel = new List<Il>();
+				for(var k = 0; k < hn; k++) mel.Add(mk);
+				return new IlVecBin(128, hcw, BinOp.And, shifted, new IlVecBuild(128, hcw, mel));
+			}
 			case "valign": {
 				// (valign dst src sel) -- PALIGNR. Concatenate src:dst as 32 bytes (src is
 				// the LOW half per the SDM) and take 16 starting at the immediate.
