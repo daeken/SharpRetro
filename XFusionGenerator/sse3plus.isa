@@ -42,6 +42,23 @@
     (encoding PMOVZXBW (Vdq Wq) (opsize 0x0F 0x38 0x30))
     (instruction PMOVZXWD (dst src) "pmovzxwd $dst, $src" (= dst (vzext src 16 32)))
     (encoding PMOVZXWD (Vdq Wq) (opsize 0x0F 0x38 0x33))
+    ; THE SIBLING SWEEP I OWED WHEN I ADDED vzext (day-53's own law, at the arc that
+    ; banked it): I wrote the head for BW/WD and never swept the family. vzext takes
+    ; (sew dew) as PARAMETERS, so the four remaining members need NO new head -- the
+    ; same call with different widths. Found by a hole-probe: for every absent opcode
+    ; flanked by declared ones, decode a synthetic encoding at objdump ALONE and ask
+    ; whether an independent decoder reads it as real. map-2 gave 34 of 222 holes real,
+    ; map-3 gave 6 of 75 -- and 69-of-75 (bad) is what makes the 6 a finding rather
+    ; than an artifact of a broad needle. Every operand shape below verified at
+    ; objdump -M intel before transcription (own #67/#100).
+    (instruction PMOVZXBD (dst src) "pmovzxbd $dst, $src" (= dst (vzext src 8 32)))
+    (encoding PMOVZXBD (Vdq Wd) (opsize 0x0F 0x38 0x31))
+    (instruction PMOVZXBQ (dst src) "pmovzxbq $dst, $src" (= dst (vzext src 8 64)))
+    (encoding PMOVZXBQ (Vdq Ww) (opsize 0x0F 0x38 0x32))
+    (instruction PMOVZXWQ (dst src) "pmovzxwq $dst, $src" (= dst (vzext src 16 64)))
+    (encoding PMOVZXWQ (Vdq Wd) (opsize 0x0F 0x38 0x34))
+    (instruction PMOVZXDQ (dst src) "pmovzxdq $dst, $src" (= dst (vzext src 32 64)))
+    (encoding PMOVZXDQ (Vdq Wq) (opsize 0x0F 0x38 0x35))
     ; verified at bytes with objdump -M intel before adding:
     ;   66 0F 38 40 C1 = pmulld xmm0,xmm1   ·   66 0F 38 3D C1 = pmaxsd xmm0,xmm1
     (instruction PMULLD (dst src) "pmulld $dst, $src" (= dst (vibin dst src 32 2)))
@@ -138,10 +155,16 @@
     ; than by any instrument here: the sweep census only lists defs it HAS, and the XED
     ; census's blocker table is clipped to top-15 by blocked-insns, so ~7 live sites could
     ; never appear in it. A truncating report's absence reads identically to a real zero.
-    ; DECODE-ONLY on purpose: a decode refusal STOPS the linear sweep (a peer measured the
-    ; per-refusal cost at ~570x an unexecutable row, since every insn past it in that
-    ; function contributes no call edges), so a declared-but-intrinsic row is strictly
-    ; better than no row. /tmp/echidna carries 7 real sites, all `66 0f 3a 60 c1 0a`
+    ; DECODE-ONLY on purpose, and the JUSTIFICATION IS NARROWER THAN IT FIRST READ:
+    ; I wrote "a refusal STOPS the linear sweep, ~570x an unexecutable row" here and the
+    ; consumer REFUTED it at their own source -- their walk is `off++; undecodable++;
+    ; continue;`, one byte, the loop continues, so a refusal costs the PER-FN STATS and
+    ; never a call edge. Their A/B over 26 of these commits closed 657 undecodable bytes
+    ; and call-edges held EXACT (990,299 -> 990,299). So the ~570x figure is retracted:
+    ; what a declared row buys is the per-fn stats + the def-set census, which is what a
+    ; trusted-tier read keys on -- real, and not 570x. Recorded rather than quietly
+    ; dropped, because I propagated the bigger number into two artifacts and the bigger
+    ; number flattered the work. /tmp/echidna carries 7 real sites, all `66 0f 3a 60 c1 0a`
     ; = pcmpestrm xmm0,xmm1,0xa in one SSE4.2 string routine at 21310311..21310422
     ; (+2 more that objdump reads as an opcode TABLE, i.e. data, not code).
     (instruction PCMPESTRM (a b pred) "pcmpestrm $a, $b, $pred" (intrinsic pcmpestrm a b pred))

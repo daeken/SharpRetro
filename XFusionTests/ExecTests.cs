@@ -332,6 +332,35 @@ public class ExecTests {
 		Assert.That(w.Step(), Is.True, "pmovzxwd did not step");
 		// words 80FF 7F01 -> dwords 000080FF 00007F01
 		Assert.That((ulong) w.Xmm[0], Is.EqualTo(0x00007F01_000080FFUL), "pmovzxwd lo");
+
+		// THE FOUR SIBLINGS, added when a hole-probe found them undeclared while BW/WD
+		// were (day-53's sibling-completeness law at the arc that banked it). Same head,
+		// different (sew dew) -- so what these test is that the WIDTH PARAMETERS reach the
+		// lowering correctly, not that the lowering is new. Same 0x80FF source, so the
+		// high-bit lanes still discriminate zero-fill from sign-fill at every width.
+		var bd = M64("660f3831c1"); bd.Xmm[1] = src;      // PMOVZXBD 66 0F 38 31
+		Assert.That(bd.Step(), Is.True, "pmovzxbd did not step");
+		// bytes FF 80 01 7F -> dwords 000000FF 00000080 00000001 0000007F
+		Assert.That((ulong) bd.Xmm[0], Is.EqualTo(0x00000080_000000FFUL), "pmovzxbd lo");
+		Assert.That((ulong) (bd.Xmm[0] >> 64), Is.EqualTo(0x0000007F_00000001UL), "pmovzxbd hi");
+
+		var bq = M64("660f3832c1"); bq.Xmm[1] = src;      // PMOVZXBQ 66 0F 38 32
+		Assert.That(bq.Step(), Is.True, "pmovzxbq did not step");
+		// bytes FF 80 -> qwords 00000000000000FF 0000000000000080
+		Assert.That((ulong) bq.Xmm[0], Is.EqualTo(0xFFUL), "pmovzxbq lo");
+		Assert.That((ulong) (bq.Xmm[0] >> 64), Is.EqualTo(0x80UL), "pmovzxbq hi");
+
+		var wq = M64("660f3834c1"); wq.Xmm[1] = src;      // PMOVZXWQ 66 0F 38 34
+		Assert.That(wq.Step(), Is.True, "pmovzxwq did not step");
+		// words 80FF 7F01 -> qwords 80FF 7F01 (zero-filled, NOT FFFF_FFFF_FFFF_80FF)
+		Assert.That((ulong) wq.Xmm[0], Is.EqualTo(0x80FFUL), "pmovzxwq lo");
+		Assert.That((ulong) (wq.Xmm[0] >> 64), Is.EqualTo(0x7F01UL), "pmovzxwq hi");
+
+		var dq = M64("660f3835c1"); dq.Xmm[1] = src;      // PMOVZXDQ 66 0F 38 35
+		Assert.That(dq.Step(), Is.True, "pmovzxdq did not step");
+		// dword 7F01_80FF -> qword 000000007F0180FF; upper source dword is 0 here
+		Assert.That((ulong) dq.Xmm[0], Is.EqualTo(0x7F0180FFUL), "pmovzxdq lo");
+		Assert.That((ulong) (dq.Xmm[0] >> 64), Is.EqualTo(0UL), "pmovzxdq hi");
 	}
 
 	[Test]
