@@ -23,8 +23,11 @@ public class X86Machine {
 
 	public byte[] Mem;
 	/// XMM scalar-lane values, as bit patterns. 32 slots per RegKind.Xmm's documented
-	/// range. NOT the full 128 bits: Eval's carrier is ulong, so anything wider dies
-	/// loud at the Eval default rather than silently truncating.
+	/// range. THE FULL 128 BITS: the carrier was widened at de0c231 and both silicon
+	/// goldens now grade the high half (p1 2,473,490 / p2 3,700,000, diff=0 skip=0).
+	/// Before that this said "NOT the full 128 bits: Eval's carrier is ulong" -- true
+	/// when written, false for ~an hour after, and a peer reading it against what I'd
+	/// told them is what made them check ancestry rather than trust either.
 	public readonly UInt128[] Xmm = new UInt128[32];
 	/// x87 stack slots, same carrier caveat (f64 bit patterns, no 80-bit extended).
 	public readonly ulong[] St = new ulong[8];
@@ -116,9 +119,11 @@ public class X86Machine {
 				break;
 			// XMM/x87: REAL files. They used to alias RegKind.X86 via OperandBind.Reg's
 			// missing File field, so an xmm write clobbered a GPR. Scalar lanes only --
-			// Eval's carrier is ulong, so a v128 op still dies loud at the Eval default,
-			// which is the honest state: the IlVec* node kinds exist in the shared IL
-			// (Il.cs:143-151) and nothing emits or evaluates them yet.
+			// The carrier is UInt128 (de0c231) and the four IlVec* kinds IlLower emits
+			// are evaluated per-lane (b808cc3), so a packed op computes rather than
+			// dying at the default. This said "a v128 op still dies loud... nothing
+			// emits or evaluates them yet" -- both halves now false: IlLower emits at
+			// 16 sites and this file has the arms.
 			case IlWriteReg(RegKind.Xmm, var i, var v): Xmm[i] = Eval(v); break;
 			case IlWriteReg(RegKind.St, var i, var v): St[i] = N64(Eval(v)); break;
 			case IlWriteReg(RegKind.X86Seg, var i, var v): {
@@ -384,9 +389,10 @@ public class X86Machine {
 				// this one line zeroed the preserved upper bits of every scalar SSE write --
 				// 374,544 rows once the reader started grading the high word at all.
 				var w = WOf(new IlConst(ty, 0));
-				// WIDTH > 64 DIES LOUD. Eval's carrier is ulong (see the note at the top of
-				// this file), so a wider op cannot be computed here -- and the previous form
-				// did not say so: `w` was used as a MASK WIDTH, so an i128 op computed at 64
+				// WIDTH > 64 IS COMPUTED, at UInt128 (de0c231). This comment used to say it
+				// DIED LOUD because the carrier was ulong; the wide arm below is what
+				// replaced that. The historical note is kept because the defect it
+				// describes is the one to avoid: `w` was used as a MASK WIDTH, so an i128 op computed at 64
 				// and truncated, silently.
 				//
 				// That is not academic. IMUL-Gv-Ev lowers to exactly this shape:
@@ -597,7 +603,7 @@ public class X86Machine {
 				// value to mask. So the fix is the Vec case alone; F keeps 64.
 				// One variable, one A/B, and the wider change looked more principled.
 				var w = ty switch { IlType.I(_, var tb) => tb, IlType.Vec(var vb) => vb, _ => 64 };
-				// FLOAT CASTS. Eval's carrier is ulong, so an F-typed value rides as
+				// FLOAT CASTS. An F-typed value rides in the carrier (now UInt128) as
 				// its IEEE BIT PATTERN — the same convention MaxwellEval uses
 				// (MaxwellEval.cs:119, UInt32BitsToSingle on an F-typed read). A
 				// Bitcast is therefore a no-op on the carrier, which is why the
