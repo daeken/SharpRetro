@@ -667,6 +667,64 @@ public class X86Machine {
 				return Load(N64(Eval(addr)), WOf(new IlConst(ty, 0)));
 			case IlIfV(_, var c, var t, var f):
 				return (Eval(c) & 1) != 0 ? Eval(t) : Eval(f);
+			// PACKED-VECTOR NODES. IlLower emits four kinds at 16 sites, all at 128 bits with
+			// a COMPILE-TIME lane type, so lane count = 128/ElemTy.Bits and every index is
+			// static. That bound is what makes this arm small: no dynamic shuffles, no
+			// variable lane widths.
+			//
+			// Until now these threw at the default and XFReader counted them as `unlowered`:
+			// 651,633 p2 rows, i.e. the lowering was verified as STRUCTURE by the def-set gate
+			// and unverified as SEMANTICS by anything. The lane convention is transcribed from
+			// the emit sites (IlLower.cs:766/845/895/1019) rather than composed -- an IlVecBin
+			// over I(true,ew) is signed per-lane, over F(ew) is float per-lane, and a mask
+			// result is ALL-ONES per lane (sse2.isa:158 declares it, interp.rs:484 implements
+			// it), NOT 1.
+			case IlVecBuild(var vbits, var bet, var els): {
+				var lw = bet is IlType.F bf ? bf.Bits : ((IlType.I) bet).Bits;
+				UInt128 acc = 0;
+				for(var li = 0; li < els.Count; li++) {
+					var lv = Eval(els[li]) & LaneMask(lw);
+					acc |= lv << (li * lw);
+				}
+				return acc;
+			}
+			case IlVecElem(var eet, var vv, var vi): {
+				var lw = eet is IlType.F ef ? ef.Bits : ((IlType.I) eet).Bits;
+				var idx = (int) N64(Eval(vi));
+				return (Eval(vv) >> (idx * lw)) & LaneMask(lw);
+			}
+			case IlVecBin(var vbits2, var bet2, var bop, var bl, var br): {
+				var lw = bet2 is IlType.F bf2 ? bf2.Bits : ((IlType.I) bet2).Bits;
+				var (av, bv) = (Eval(bl), Eval(br));
+				var n = vbits2 / lw;
+				// THE SHIFT COUNT IS A SCALAR, NOT A VECTOR. IlLower emits the packed shifts as
+				//   IlVecBin(128, I(signed,ew), Shl|Shr|Sar, vec, IlConst(I(false,32), cnt))
+				// (IlLower.cs:895) -- the RHS is one count broadcast to every lane, and its own
+				// type is I(false,32) rather than the vector's element type. Slicing it per-lane
+				// like a vector operand gives cnt in lane 0 and ZERO everywhere else, so a
+				// PSRAW-by-1 returned its input almost unchanged: 8,096 p2 rows, entirely the
+				// shift-by-immediate family, and got==input is exactly what a zero shift looks
+				// like. The RHS's OWN width is the discriminator and it is in the node.
+				var rhsIsScalar = bop is BinOp.Shl or BinOp.Shr or BinOp.Sar;
+				UInt128 acc = 0;
+				for(var li = 0; li < n; li++) {
+					var la = (av >> (li * lw)) & LaneMask(lw);
+					var lb = rhsIsScalar ? bv : (bv >> (li * lw)) & LaneMask(lw);
+					acc |= (LaneBin(bop, la, lb, bet2, lw) & LaneMask(lw)) << (li * lw);
+				}
+				return acc;
+			}
+			case IlVecUn(var vbits3, var bet3, var uop, var ux): {
+				var lw = bet3 is IlType.F uf ? uf.Bits : ((IlType.I) bet3).Bits;
+				var xv = Eval(ux);
+				var n = vbits3 / lw;
+				UInt128 acc = 0;
+				for(var li = 0; li < n; li++) {
+					var lx = (xv >> (li * lw)) & LaneMask(lw);
+					acc |= (LaneUn(uop, lx, bet3, lw) & LaneMask(lw)) << (li * lw);
+				}
+				return acc;
+			}
 			default: throw new NotSupportedException($"eval {e.GetType().Name}");
 		}
 	}
@@ -683,6 +741,111 @@ public class X86Machine {
 	// unreachable. Widening a carrier makes previously-dead arms live, and a helper that
 	// guesses a width is exactly what greets them. Fixed at BOTH helpers now; F and Vec
 	// both know their width and there was never a reason to answer for them.
+	// PER-LANE HELPERS for the IlVec* arms. Kept separate so a reader can see the lane
+	// convention in one place: a lane is `lw` bits wide, masked on the way in and on the
+	// way out, and the ELEM TYPE decides signedness/floatness -- never the op alone.
+	static UInt128 LaneMask(int lw) => lw >= 128 ? ~UInt128.Zero : (UInt128.One << lw) - 1;
+
+	// A COMPARE RESULT IS ALL-ONES PER LANE, NOT 1. sse2.isa:158 declares the convention
+	// and interp.rs:484 implements it; PAND-after-PCMPEQ depends on it, so a boolean 1
+	// would be silently wrong on every mask-then-blend idiom.
+	static UInt128 LaneBin(BinOp op, UInt128 a, UInt128 b, IlType et, int lw) {
+		UInt128 T = LaneMask(lw), F = 0;
+		if(et is IlType.F fe) {
+			double x = fe.Bits == 32 ? BitConverter.UInt32BitsToSingle((uint) a) : BitConverter.UInt64BitsToDouble((ulong) a);
+			double y = fe.Bits == 32 ? BitConverter.UInt32BitsToSingle((uint) b) : BitConverter.UInt64BitsToDouble((ulong) b);
+			double r;
+			switch(op) {
+				case BinOp.Add: r = x + y; break;
+				case BinOp.Sub: r = x - y; break;
+				case BinOp.Mul: r = x * y; break;
+				case BinOp.UDiv: case BinOp.SDiv: r = x / y; break;
+				// x86-EXACT, NOT ARM's FMAX: on a NaN operand or +-0 the SECOND source wins.
+				// Transcribed from this file's own scalar arm (:466/:483, `fa > fb ? fa : fb`)
+				// rather than composed -- the C# ternary gives exactly that, because any
+				// comparison with NaN is false so the false-branch (y) is taken. MAXPS/MINPS/
+				// MAXPD/MINPD, 25,792 p2 rows.
+				case BinOp.FMax: r = x > y ? x : y; break;
+				case BinOp.FMin: r = x < y ? x : y; break;
+				// Float COMPARES return a lane MASK, not a float.
+				case BinOp.Eq: return x == y ? T : F;
+				case BinOp.Ne: return x != y ? T : F;
+				case BinOp.Slt: case BinOp.Ult: return x < y ? T : F;
+				case BinOp.Sle: case BinOp.Ule: return x <= y ? T : F;
+				case BinOp.Sgt: case BinOp.Ugt: return x > y ? T : F;
+				case BinOp.Sge: case BinOp.Uge: return x >= y ? T : F;
+				// Bitwise ops on an F-typed vector act on the BIT PATTERN (ANDPS/ORPS/XORPS).
+				case BinOp.And: return a & b;
+				case BinOp.Or: return a | b;
+				case BinOp.Xor: return a ^ b;
+				default: throw new NotSupportedException($"vec-f lane op {op}");
+			}
+			return fe.Bits == 32 ? BitConverter.SingleToUInt32Bits((float) r) : BitConverter.DoubleToUInt64Bits(r);
+		}
+		var ie = (IlType.I) et;
+		// SIGNED lanes sign-extend to Int128 before the op; unsigned stay as-is.
+		Int128 sa = SxLane(a, lw), sb = SxLane(b, lw);
+		return op switch {
+			BinOp.Add => a + b,
+			BinOp.Sub => a - b,
+			BinOp.Mul => ie.Signed ? (UInt128) (sa * sb) : a * b,
+			BinOp.And => a & b,
+			BinOp.Or => a | b,
+			BinOp.Xor => a ^ b,
+			BinOp.Eq => a == b ? T : F,
+			BinOp.Ne => a != b ? T : F,
+			BinOp.Slt => sa < sb ? T : F,
+			BinOp.Sle => sa <= sb ? T : F,
+			BinOp.Sgt => sa > sb ? T : F,
+			BinOp.Sge => sa >= sb ? T : F,
+			BinOp.Ult => a < b ? T : F,
+			BinOp.Ule => a <= b ? T : F,
+			BinOp.Ugt => a > b ? T : F,
+			BinOp.Uge => a >= b ? T : F,
+			// A SHIFT COUNT >= LANE WIDTH GIVES ZERO (SDM: the packed-shift forms saturate
+			// to 0 rather than masking the count, unlike the scalar forms).
+			BinOp.Shl => b >= (UInt128) lw ? 0 : a << (int) b,
+			BinOp.Shr => b >= (UInt128) lw ? 0 : a >> (int) b,
+			BinOp.Sar => b >= (UInt128) lw
+				? (sa < 0 ? T : F)
+				: (UInt128) (sa >> (int) b),
+			_ => throw new NotSupportedException($"vec-i lane op {op}"),
+		};
+	}
+
+	static Int128 SxLane(UInt128 v, int lw) {
+		if(lw >= 128) return (Int128) v;
+		var sb = UInt128.One << (lw - 1);
+		return (Int128) ((v & sb) != 0 ? v | ~LaneMask(lw) : v & LaneMask(lw));
+	}
+
+	static UInt128 LaneUn(UnOp op, UInt128 a, IlType et, int lw) {
+		if(et is IlType.F fe) {
+			double x = fe.Bits == 32 ? BitConverter.UInt32BitsToSingle((uint) a) : BitConverter.UInt64BitsToDouble((ulong) a);
+			// NOT ON AN F-TYPED LANE IS BITWISE, and it is the ONLY reason CMPPS/CMPPD were
+			// still unlowered after every other vector arm landed. FloatPred's Invert() emits
+			//     IlVecUn(128, F(ew), UnOp.Not, <a mask>)
+			// (IlLower.cs:119) for predicates 4-7 (NEQ/NLT/NLE/ORD) -- the operand is already
+			// an all-ones-or-zero MASK, not a float, so the node's F element type describes the
+			// COMPARE's operands rather than what Not acts on. Routing it through the float
+			// switch would reinterpret a mask as an IEEE bit pattern and negate it.
+			// 64,480 p2 rows, the last two templates.
+			if(op == UnOp.Not) return ~a;
+			double r = op switch {
+				UnOp.Sqrt => Math.Sqrt(x),
+				UnOp.Abs => Math.Abs(x),
+				UnOp.Neg => -x,
+				_ => throw new NotSupportedException($"vec-f lane un {op}"),
+			};
+			return fe.Bits == 32 ? BitConverter.SingleToUInt32Bits((float) r) : BitConverter.DoubleToUInt64Bits(r);
+		}
+		return op switch {
+			UnOp.Not => ~a,
+			UnOp.Neg => UInt128.Zero - a,
+			_ => throw new NotSupportedException($"vec-i lane un {op}"),
+		};
+	}
+
 	static int WOf(Il e) => e.Ty switch {
 		IlType.I(_, var b) => b,
 		IlType.F(var fb) => fb,
