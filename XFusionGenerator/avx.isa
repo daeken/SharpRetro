@@ -35,6 +35,36 @@
 (encoding VPMOVMSKB (Gd Udq) (vex-2src opsize 0x0F 0xD7))
 
 ; --- integer compare/arith (3src: vvvv = second source) ---
+; VEX LOGICALS -- the 8 rows a real binary's .text hits hardest after the arithmetic.
+; Measured by the Pagentry index over a 44MB .text: 39 sites at op 0x54/0x55/0x56/0x57
+; decode-REFUSED, against 0 defs here. That is worse than an unexecutable row, because a
+; decode refusal STOPS THE LINEAR WALK -- every instruction past it in the function
+; contributes no call edges, which is the truncated-callee mechanism measured at 417
+; functions (86.3% zero-callee vs 29.5% for a size-matched control). A decode-only row
+; costs a die-loud at lift; a refusal costs the rest of the function silently.
+;
+; Intrinsic-bodied per this file's convention -- and for these there is a second reason
+; beyond convention: at VEX.L=1 the result is 256 bits and NEITHER evaluator can hold one
+; (X86Machine.Xmm[] is u128, Eval's carrier is ulong), so a declarative body would be
+; correct at L=0 and unrepresentable at L=1 in the same row. The legacy siblings' bodies
+; are right and reusable when a 256-bit value exists to put them in.
+(instruction VANDPS (dst a b) "vandps $dst, $a, $b" (intrinsic vandps dst a b))
+(encoding VANDPS (Vps Hps Wps) (vex-3src 0x0F 0x54))
+(instruction VANDNPS (dst a b) "vandnps $dst, $a, $b" (intrinsic vandnps dst a b))
+(encoding VANDNPS (Vps Hps Wps) (vex-3src 0x0F 0x55))
+(instruction VORPS (dst a b) "vorps $dst, $a, $b" (intrinsic vorps dst a b))
+(encoding VORPS (Vps Hps Wps) (vex-3src 0x0F 0x56))
+(instruction VXORPS (dst a b) "vxorps $dst, $a, $b" (intrinsic vxorps dst a b))
+(encoding VXORPS (Vps Hps Wps) (vex-3src 0x0F 0x57))
+(instruction VANDPD (dst a b) "vandpd $dst, $a, $b" (intrinsic vandpd dst a b))
+(encoding VANDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x54))
+(instruction VANDNPD (dst a b) "vandnpd $dst, $a, $b" (intrinsic vandnpd dst a b))
+(encoding VANDNPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x55))
+(instruction VORPD (dst a b) "vorpd $dst, $a, $b" (intrinsic vorpd dst a b))
+(encoding VORPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x56))
+(instruction VXORPD (dst a b) "vxorpd $dst, $a, $b" (intrinsic vxorpd dst a b))
+(encoding VXORPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x57))
+
 (instruction VPCMPEQB (dst a b) "vpcmpeqb $dst, $a, $b" (intrinsic vpcmpeqb dst a b))
 (encoding VPCMPEQB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x74))
 (instruction VPCMPEQW (dst a b) "vpcmpeqw $dst, $a, $b" (intrinsic vpcmpeqw dst a b))
