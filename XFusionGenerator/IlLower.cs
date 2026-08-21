@@ -399,9 +399,40 @@ public class IlLower {
 					new IlBin(IlType.U64, BinOp.Shl,
 						new IlCast(IlType.U64, CastKind.Zext, e), C(64, 8)))));
 				break;
-			// NON-GPR files (Xmm/St/mask/seg): write the value WHOLE, no partial-write
-			// wart. x86's zext-32 / masked-insert rules are GPR semantics; an xmm lane
-			// write does not zero-extend into a GPR and must not touch one.
+			// XMM SCALAR WRITE: low `w` bits only, upper 128-w PRESERVED. SDM Vol 2A
+			// ADDSS: "The three high-order doublewords of the destination operand remain
+			// unchanged." The comment that used to sit here said to write the value WHOLE
+			// and gave a correct reason for the wrong conclusion -- x86's zext-32 and
+			// masked-insert rules ARE GPR semantics, and an xmm write must not touch a
+			// GPR, both true; neither implies that an xmm write replaces all 128 bits.
+			//
+			// The Rust arm fixed this on the silicon sweep's phase-2 FIRST FIRE, where it
+			// was ~1,350 of 1,600 diffs in one operand rule (operand.rs:191-215, its
+			// comment names the whole family: ADDSS/SUBSS/MULSS/DIVSS/SQRTSS/CMPSS + all
+			// the SD forms + MOVSS/MOVSD reg,reg + CVTSS2SD/SD2SS). This side never got
+			// it. XFReader found it at p2 row 2,480,156 -- and the tell was that `got` was
+			// CONSTANT across three consecutive rows while `want` varied, which is not
+			// what a wrong computation looks like; it is what a write that ignores the
+			// destination looks like.
+			//
+			// Transcribed from that rule rather than composed: read full at V128, keep
+			// the high bits, bitcast the value to its own integer width (bit-preserve, not
+			// value-convert -- it may be F32/F64), widen into V128, mask defensively, or.
+			// ‡ The mem->reg form ZEROES the upper bits instead of merging (Wss-mem is a
+			// different bind), so this is the reg,reg and computed-result path.
+			case OperandBind.Reg(var reg, var w, _, RegKind.Xmm) when w < 128: {
+				var v128 = new IlType.Vec(128);
+				var full = new IlReadReg(v128, RegKind.Xmm, reg);
+				var mask = (UInt128.One << w) - 1;
+				var kept = new IlBin(v128, BinOp.And, full, new IlConst(v128, ~mask));
+				var vi = new IlCast(new IlType.I(false, w), CastKind.Bitcast, e);
+				var vv = new IlCast(v128, CastKind.Zext, vi);
+				var vlo = new IlBin(v128, BinOp.And, vv, new IlConst(v128, mask));
+				Stmts.Add(new IlWriteReg(RegKind.Xmm, reg,
+					new IlBin(v128, BinOp.Or, kept, vlo)));
+				break;
+			}
+			// NON-GPR files (full-width Xmm, St, mask, seg): write the value WHOLE.
 			case OperandBind.Reg(var reg, _, _, var f) when f != RegKind.X86:
 				Stmts.Add(new IlWriteReg(f, reg, e));
 				break;
@@ -409,8 +440,25 @@ public class IlLower {
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, e));
 				break;
 			case OperandBind.Reg(var reg, 32, _, _):
-				// x86-64 rule: 32-bit write ZERO-EXTENDS to 64 (not insert)
-				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlCast(IlType.U64, CastKind.Zext, e)));
+				// x86-64 rule: 32-bit write ZERO-EXTENDS to 64 (not insert). TRUNC FIRST:
+				// a bare Zext from a value that is ALREADY U64 is a NO-OP, so the upper 32
+				// bits of a wider computed value survived into the register. Hit by MOVD
+				// xmm->r32, whose source is a 128-bit XMM read narrowed to 64 (XFReader p2
+				// row 3,430,889: got 0x8090a0b0c0d0e0f, want 0xc0d0e0f -- the low 32 are
+				// right and the next 32 should not be there).
+				//
+				// This is the Rust arm's own LEA-32 bug at this site -- there `write_operand` did
+				// cast(v, U64) for a 32-bit reg, which was likewise a no-op for an
+				// already-U64 value, and LEA at op_w=32 wrote an untruncated address (129
+				// sites in the CP2077 CRT). Fixed there as cast-to-U32-then-U64; same shape
+				// here, and the reason it took a second finding to reach this arm is that
+				// most 32-bit writes receive an expression already computed at 32.
+				// ...and skip the trunc when e is ALREADY exactly 32 bits, which is the
+				// common case and the one three golden IL tests pin: emitting
+				// `(u64 zext (u32 trunc (u32 x)))` is semantically identical but changes the
+				// tree, and a golden that pins the tree is right to reject it.
+				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlCast(IlType.U64, CastKind.Zext,
+					e.Ty is IlType.I(_, 32) ? e : new IlCast(IlType.U32, CastKind.Trunc, e))));
 				break;
 			case OperandBind.Reg(var reg, var w, _, _):  // 8/16 low: masked insert
 				Stmts.Add(new IlWriteReg(RegKind.X86, reg, new IlBin(IlType.U64, BinOp.Or,
@@ -492,7 +540,34 @@ public class IlLower {
 			case "u8": return new IlCast(IlType.U8, CastKind.Trunc, Expr(l[1]));
 			case "u16": return new IlCast(U(16), CastKind.Trunc, Expr(l[1]));
 			case "u32": return new IlCast(IlType.U32, CastKind.Trunc, Expr(l[1]));
-			case "u64": return new IlCast(IlType.U64, CastKind.Zext, Expr(l[1]));
+			// (u64 x) is the only width-cast head that was unconditionally ZEXT while its
+			// three siblings above all TRUNC. That is right for a NARROWER source (the
+			// common case -- widening a u32 to a u64) and wrong for a wider one, and the
+			// wider one exists: MOVD/MOVQ xmm->GPR reads an XMM at Vec(128), so
+			// `(= dst (u64 src))` emitted `(u64 zext (u128 XMM0))` and wrote BOTH 32-bit
+			// lanes into the GPR. XFReader found it at p2 row 3,430,881 -- got
+			// 0x3f8000003f800000 where silicon wants 0x3f800000, i.e. the value duplicated
+			// rather than computed wrong, which is the signature of a cast that didn't cut.
+			//
+			// Direction now comes from the source's own width. ‡ W() returns 64 for any
+			// non-I type (:67), so a Vec/F source reads as 64 and would pick Zext again --
+			// hence the explicit Vec arm rather than relying on W(). That same W() gap is
+			// documented at the int-of site (:1127) for the F axis and cost a bug there
+			// too; this is its third site, and the honest fix for all three is for W() to
+			// stop answering for types it cannot measure.
+			case "u64": {
+				var src = Expr(l[1]);
+				var sw = src.Ty switch {
+					IlType.I(_, var sb) => sb,
+					IlType.Vec(var vb) => vb,
+					IlType.F(var fb) => fb,
+					_ => 64,
+				};
+				return sw > 64 ? new IlCast(IlType.U64, CastKind.Trunc, src)
+				     : sw < 64 ? new IlCast(IlType.U64, CastKind.Zext, src)
+				     : src.Ty is IlType.I ? src
+				     : new IlCast(IlType.U64, CastKind.Bitcast, src);
+			}
 			case "bitwidth": return C(ctxW, W(Expr(l[1])));
 			case "pop": {
 				// ·62: load [RSP], bump RSP, yield the tmp.
@@ -553,9 +628,28 @@ public class IlLower {
 			case "f32":
 			case "f64": {
 				// CONVERT (not reinterpret): int→float or float→float. RustLiftGen:491-492.
+				//
+				// THE KIND DEPENDS ON THE SOURCE and the previous form always said SToF,
+				// which reads the source's BITS as a signed integer. For an int source that
+				// is right; for a FLOAT source it converts the wrong value entirely, since
+				// an f32's bit-pattern read as an integer is a large positive number.
+				// CVTSS2SD of 1.0f (0x3F800000) gave 0x41CFC00000000000 = (double)
+				// 0x3F800000 = 1065353216.0, where silicon gives 0x3FF0000000000000 = 1.0.
+				// XFReader found it at p2 row 3,880,993 -- and the tell is that `got` is a
+				// PLAUSIBLE double, so nothing about the value looks like a type error.
+				//
+				// Float->float wants FExt (widen) or FTrunc (narrow) per LiftIl's own
+				// CastKind list (Il.cs:43-44), which carries all four kinds precisely
+				// because they are not interchangeable.
 				var a = Expr(l[1]);
 				var w = h == "f32" ? 32 : 64;
-				return new IlCast(new IlType.F(w), CastKind.SToF, a);
+				var kind = a.Ty switch {
+					IlType.F(var sfw) => sfw == w ? CastKind.Bitcast     // same width: no-op
+					                  : sfw < w  ? CastKind.FExt
+					                             : CastKind.FTrunc,
+					_ => CastKind.SToF,                                  // int source
+				};
+				return new IlCast(new IlType.F(w), kind, a);
 			}
 			case "as-f32":
 			case "as-f64": {
@@ -570,7 +664,32 @@ public class IlLower {
 				// (signed W v) — reinterpret as signed int of W bits, no bit change.
 				// Used before div/rem for IDIV and before f64 for CVTSI2SD.
 				// RustLiftGen:535-540.
-				var w = l[1] is PInt(var sw) ? (int) sw : OpWidth;
+				//
+				// W CAN BE A `(bitwidth <operand>)` LIST, not only an integer literal, and
+				// the previous form fell through to OpWidth for anything that wasn't a
+				// PInt. CVTSI2SS/SD are `(signed (bitwidth src) src)` with src = Ey, so
+				// under REX.W the source is 64 bits while OpWidth is the def's 32 — the
+				// value got reinterpreted as i32 and any source with bit 31 set flipped
+				// sign. XFReader found it at p2 row 2,939,745: cvtsi2ss of 0x80000000 gave
+				// 0xCF000000 (-2^31 as f32) where silicon gives 0x4F000000 (+2^31).
+				//
+				// The Rust arm never had this because its generator emits the width from
+				// the OPERAND (`ops[i].width()`, RustLiftGen:688-693) rather than resolving
+				// it from the IL expression's type — so `bitwidth` there is a property of
+				// the bind and here it is a property of the tree. Same head, two different
+				// sources of truth, and only one of them knows about REX.W.
+				//
+				// ⚠ AND THE SIBLING SITE ALREADY CARRIES THIS EXACT TRAP, documented: the
+				// f_to_si_x86 arm at :1099 handles `(bitwidth …)` explicitly and its own
+				// comment warns that W() returns 64 for any non-I type. That warning was
+				// eleven lines long and about the FLOAT axis; the int axis, in the same
+				// file, silently discarded the whole list. A caveat at one site is not a
+				// rule at the other.
+				var w = l[1] switch {
+					PInt(var sw) => (int) sw,
+					PList bwl when bwl.Count == 2 && bwl[0] is PName("bitwidth") => W(Expr(bwl[1])),
+					_ => OpWidth,
+				};
 				return new IlCast(new IlType.I(true, w), CastKind.Bitcast, Expr(l[2]));
 			}
 			case "fmax":
@@ -1076,9 +1195,31 @@ public class IlLower {
 				// compare said TRUE. The width must come from the F type itself.
 				var fw = fv.Ty is IlType.F ff2 ? ff2.Bits : 64;
 				var fty = new IlType.F(fw);
-				// 2^(iw-1) as a float constant of the source width
-				var limit = new IlCast(fty, CastKind.SToF,
-					new IlConst(IlType.U64, (UInt128) 1 << (iw - 1)));
+				// 2^(iw-1) as a float constant, BY BIT-PATTERN. The previous form built it
+				// with SToF(1 << (iw-1)) -- and at iw=64 that shifts into the SIGN BIT, so
+				// the "limit" was SToF(0x8000000000000000) read as a signed i64 = -2^63.
+				// |f| < (a negative number) is FALSE for every input, so every 64-bit
+				// conversion returned the indefinite integer: CVTSS2SI/CVTSD2SI with REX.W
+				// produced 0x8000000000000000 regardless of the source value. XFReader found
+				// it at p2 row 2,995,775 (got constant while want varied 0,1,2,... which is
+				// the signature of a guard that can only go one way).
+				//
+				// It fired ONLY at iw=64 -- at iw=32 the same expression is SToF(0x80000000)
+				// = +2147483648.0, correct, which is why the 32-bit forms were clean and the
+				// bug sat behind a passing majority.
+				//
+				// Transcribed from the Rust arm (operand.rs:70-77), which uses the literal
+				// bit-patterns for exactly this reason and says so: "bit-patterns
+				// objdump/python-verified (not composed)". Re-verified here before use:
+				//   2^31 as f32 = 0x4F000000            2^63 as f32 = 0x5F000000
+				//   2^31 as f64 = 0x41E0000000000000    2^63 as f64 = 0x43E0000000000000
+				var limit = new IlConst(fty, (fw, iw) switch {
+					(32, 32) => (UInt128) 0x4F000000,
+					(32, 64) => (UInt128) 0x5F000000,
+					(64, 32) => (UInt128) 0x41E0000000000000,
+					(64, 64) => (UInt128) 0x43E0000000000000,
+					_ => throw new NotSupportedException($"int-of fw={fw} iw={iw}"),
+				});
 				var mag = new IlUn(fty, UnOp.Abs, fv);
 				var inRange = new IlBin(IlType.U1, BinOp.Slt, mag, limit);
 				var conv = new IlCast(new IlType.I(true, iw), CastKind.FToSI, fv);
