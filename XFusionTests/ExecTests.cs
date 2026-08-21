@@ -54,6 +54,47 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedWideningAndPackExecute() {
+		// PMULUDQ (vmulw), PMADDWD (vmadd), PACKSSDW (vpacks). All three were on my
+		// "genuinely needs a new primitive" list and none of them did: a widening multiply
+		// is IlCast's own type plus a halved lane count, a multiply-then-pairwise-add is
+		// two sext-mul pairs and an add, and a saturating narrow is the mask-then-blend
+		// clamp the PMAX/PMIN lowering already uses.
+		//
+		// PMULUDQ 66 0F F4: r[i:64] = zext(a[2i:32]) * zext(b[2i:32]). The discriminator
+		// is a product that OVERFLOWS 32 bits -- 0x10000 * 0x10000 = 2^32, which a
+		// same-width multiply would give as 0. Also 0xFFFFFFFF^2 to catch a SIGNED widen.
+		var m1 = M64("660ff4c1");
+		m1.Xmm[0] = (UInt128) 0x00010000UL | ((UInt128) 0xFFFFFFFFUL << 64);
+		m1.Xmm[1] = (UInt128) 0x00010000UL | ((UInt128) 0xFFFFFFFFUL << 64);
+		Assert.That(m1.Step(), Is.True, "pmuludq did not step");
+		Assert.That((ulong) m1.Xmm[0], Is.EqualTo(0x100000000UL), "pmuludq lane0 = 2^32");
+		Assert.That((ulong) (m1.Xmm[0] >> 64), Is.EqualTo(0xFFFFFFFE00000001UL),
+			"pmuludq lane1 must be UNSIGNED (a signed widen gives 1)");
+
+		// PMADDWD 66 0F F5: r[i:32] = a[2i]*b[2i] + a[2i+1]*b[2i+1], SIGNED 16x16.
+		// Discriminator: a NEGATIVE word. -2 * 3 + 4 * 5 = 14; an unsigned read of
+		// 0xFFFE would give 0xFFFE*3 + 20 = 196,634.
+		var m2 = M64("660ff5c1");
+		m2.Xmm[0] = (UInt128) 0x0004FFFEUL;   // words lo->hi: FFFE(-2), 0004
+		m2.Xmm[1] = (UInt128) 0x00050003UL;   // words lo->hi: 0003,    0005
+		Assert.That(m2.Step(), Is.True, "pmaddwd did not step");
+		Assert.That((uint) m2.Xmm[0], Is.EqualTo(14u), "pmaddwd -2*3 + 4*5 = 14");
+
+		// PACKSSDW 66 0F 6B: signed saturate 32->16, low half from dst, high from src.
+		// Discriminators are the two SATURATION directions plus one in-range value:
+		//   0x00010000 (65536) -> 0x7FFF     0xFFFF0000 (-65536) -> 0x8000     5 -> 5
+		var m3 = M64("660f6bc1");
+		m3.Xmm[0] = (UInt128) 0x00000005_00010000UL | ((UInt128) 0xFFFF0000UL << 64);
+		m3.Xmm[1] = 0;
+		Assert.That(m3.Step(), Is.True, "packssdw did not step");
+		var got = (ulong) m3.Xmm[0];
+		Assert.That(got & 0xFFFF, Is.EqualTo(0x7FFFUL), "packssdw +65536 saturates to 0x7FFF");
+		Assert.That((got >> 16) & 0xFFFF, Is.EqualTo(5UL), "packssdw 5 passes through");
+		Assert.That((got >> 32) & 0xFFFF, Is.EqualTo(0x8000UL), "packssdw -65536 saturates to 0x8000");
+	}
+
+	[Test]
 	public void PtestFlagsExecute() {
 		// PTEST a, b: ZF = ((a & b) == 0), CF = ((a & ~b) == 0), and AF/OF/PF/SF = 0.
 		// Fully declarative from generic heads that already lower -- (&), (~), (==) --

@@ -129,7 +129,13 @@ public class LiftTests {
 			// This list is now EMPTY of vector entries. It is kept because the next
 			// decode-gap closure lands here first: a def that decodes but has no
 			// semantics belongs in this gate until it has them.
-			("660f6bc1", "packssdw"),
+			// THE SENTINEL, third of the session -- and chosen for a PROPERTY rather than
+			// for being currently-true. lzcnt and packssdw both got picked from memory and
+			// both were (or became) declarative within the hour, so the gate failed on its
+			// own subject twice. RCPPS needs a reciprocal APPROXIMATION to x86's ~12-bit
+			// precision, which no node expresses and which cannot be composed from exact
+			// arithmetic, so it will not stop being intrinsic-bodied by accident.
+			("0f53c1", "rcpps"),
 			// PMULLD left this list at the vibin-2 commit (ew=32 Mul) and PCMPEQQ was
 			// never in it; both now EXECUTE and are covered by
 			// ExecTests.PackedMulldAndCmpeqqExecute with a wrap-to-zero lane and a

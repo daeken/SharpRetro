@@ -813,6 +813,79 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "vmulw": {
+				// (vmulw a b sew) -- PMULUDQ: r[i] = zext(a[2i]) * zext(b[2i]) at 2*sew.
+				// A WIDENING multiply, which vibin cannot express (it is same-width
+				// lane-wise) -- but the node set can: the widening is IlCast's own type and
+				// the halved lane count is how many extracts there are. The vzext lesson.
+				var wa = Expr(l[1]); var wb = Expr(l[2]);
+				var wsew = (int) ((PInt) l[3]).Value;
+				var wdew = wsew * 2;
+				var wst = new IlType.I(false, wsew);
+				var wdt = new IlType.I(false, wdew);
+				var wel = new List<Il>();
+				for(var k = 0; k < 128 / wdew; k++)
+					wel.Add(new IlBin(wdt, BinOp.Mul,
+						new IlCast(wdt, CastKind.Zext, Lane(wa, wst, k * 2)),
+						new IlCast(wdt, CastKind.Zext, Lane(wb, wst, k * 2))));
+				return new IlVecBuild(128, wdt, wel);
+			}
+			case "vmadd": {
+				// (vmadd a b sew) -- PMADDWD: r[i] = a[2i]*b[2i] + a[2i+1]*b[2i+1], SIGNED,
+				// widening sew -> 2*sew. Multiply-then-pairwise-add, which I had listed as
+				// needing a new primitive -- it does not. Two sext-mul pairs and an add per
+				// output lane, all existing nodes.
+				var ma = Expr(l[1]); var mb = Expr(l[2]);
+				var msew = (int) ((PInt) l[3]).Value;
+				var mdew = msew * 2;
+				var mst = new IlType.I(true, msew);
+				var mdt = new IlType.I(true, mdew);
+				var mel = new List<Il>();
+				for(var k = 0; k < 128 / mdew; k++) {
+					Il Prod(int li) => new IlBin(mdt, BinOp.Mul,
+						new IlCast(mdt, CastKind.Sext, Lane(ma, mst, li)),
+						new IlCast(mdt, CastKind.Sext, Lane(mb, mst, li)));
+					mel.Add(new IlBin(mdt, BinOp.Add, Prod(k * 2), Prod(k * 2 + 1)));
+				}
+				return new IlVecBuild(128, mdt, mel);
+			}
+			case "vpacks": {
+				// (vpacks a b sew) -- PACKSSDW/PACKSSWB: signed SATURATING narrow from sew
+				// to sew/2, low half from a and high half from b.
+				//
+				// The saturation is the only interesting part and it needs no min/max node:
+				//     hi = (1 << (dew-1)) - 1        lo = -(1 << (dew-1))
+				//     clamped = v > hi ? hi : (v < lo ? lo : v)
+				// which is two Slt/Sgt tests and two ternaries on a SCALAR lane -- and
+				// IlTernary is already emitted by this file (one existing site).
+				var pa = Expr(l[1]); var pb = Expr(l[2]);
+				var psew = (int) ((PInt) l[3]).Value;
+				var pdew = psew / 2;
+				var pst = new IlType.I(true, psew);
+				var pdt = new IlType.I(true, pdew);
+				var pn = 128 / pdew;
+				var phi = (UInt128) ((1UL << (pdew - 1)) - 1);
+				var plo = (UInt128) (ulong) -(1L << (pdew - 1));
+				var pel = new List<Il>();
+				for(var k = 0; k < pn; k++) {
+					var srcv = k < pn / 2 ? pa : pb;
+					var v = Lane(srcv, pst, k % (pn / 2));
+					var hiC = new IlConst(pst, phi);
+					var loC = new IlConst(pst, plo & (UInt128) (ulong) MaskW(psew));
+					Il Blend(Il cmp, Il pick, Il keep) {
+						var m = new IlBin(pst, BinOp.Sub, new IlConst(pst, 0), cmp);
+						return new IlBin(pst, BinOp.Or,
+							new IlBin(pst, BinOp.And, pick, m),
+							new IlBin(pst, BinOp.And, keep, new IlUn(pst, UnOp.Not, m)));
+					}
+					var tooHi = new IlBin(pst, BinOp.Sgt, v, hiC);
+					var tooLo = new IlBin(pst, BinOp.Slt, v, loC);
+					var clampLo = Blend(tooLo, loC, v);
+					var clamped = Blend(tooHi, hiC, clampLo);
+					pel.Add(new IlCast(pdt, CastKind.Trunc, clamped));
+				}
+				return new IlVecBuild(128, pdt, pel);
+			}
 			case "vdup": {
 				// (vdup src ew odd) -- MOVSHDUP/MOVSLDUP: duplicate the odd (or even)
 				// ew-wide lanes into both halves of each pair.

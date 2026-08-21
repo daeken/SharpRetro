@@ -764,6 +764,64 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var ew = ((PInt)l[2]).Value;
                 return Rt($"bd.vmovmsk({a}, {ew})");
             }
+            case "vmulw": case "vmadd": case "vpacks": {
+                // PMULUDQ / PMADDWD / PACKSSDW. Per-lane composition from ops that all
+                // exist (velement_read/write + mul/add/cast + lt/gt/ternary) -- the same
+                // choice as vishr: no new Builder primitive across six impls.
+                var xa = Expr(l[1]); var xb = Expr(l[2]);
+                var xew = (int)((PInt)l[3]).Value;
+                var vAcc = Rt("bd.literal(IlType::V128, 0)");
+                if(h == "vmulw") {
+                    var dw = xew * 2;
+                    for(var k = 0; k < 128 / dw; k++) {
+                        var si = Rt($"bd.literal(IlType::U32, {k * 2})");
+                        var di = Rt($"bd.literal(IlType::U32, {k})");
+                        var la = Rt($"bd.velement_read({xa}, {si}, IlType::U{xew})");
+                        var lb = Rt($"bd.velement_read({xb}, {si}, IlType::U{xew})");
+                        var wa2 = Rt($"bd.cast({la}, IlType::U{dw})");
+                        var wb2 = Rt($"bd.cast({lb}, IlType::U{dw})");
+                        var pr = Rt($"bd.mul({wa2}, {wb2})");
+                        vAcc = Rt($"bd.velement_write({vAcc}, {di}, {pr})");
+                    }
+                    return vAcc;
+                }
+                if(h == "vmadd") {
+                    var dw = xew * 2;
+                    for(var k = 0; k < 128 / dw; k++) {
+                        var di = Rt($"bd.literal(IlType::U32, {k})");
+                        var acc2 = "";
+                        for(var j = 0; j < 2; j++) {
+                            var si = Rt($"bd.literal(IlType::U32, {k * 2 + j})");
+                            var la = Rt($"bd.velement_read({xa}, {si}, IlType::I{xew})");
+                            var lb = Rt($"bd.velement_read({xb}, {si}, IlType::I{xew})");
+                            var wa2 = Rt($"bd.sext({la}, IlType::I{dw})");
+                            var wb2 = Rt($"bd.sext({lb}, IlType::I{dw})");
+                            var pr = Rt($"bd.mul({wa2}, {wb2})");
+                            acc2 = j == 0 ? pr : Rt($"bd.add({acc2}, {pr})");
+                        }
+                        vAcc = Rt($"bd.velement_write({vAcc}, {di}, {acc2})");
+                    }
+                    return vAcc;
+                }
+                // vpacks: signed saturating narrow sew -> sew/2, low half from a.
+                var pdw = xew / 2;
+                var pn = 128 / pdw;
+                var hiV = Rt($"bd.literal(IlType::I{xew}, {(1L << (xew / 2 - 1)) - 1})");
+                var loV = Rt($"bd.literal(IlType::I{xew}, {(ulong)(-(1L << (xew / 2 - 1))) & (xew == 32 ? 0xFFFFFFFFUL : 0xFFFFUL)})");
+                for(var k = 0; k < pn; k++) {
+                    var srcv = k < pn / 2 ? xa : xb;
+                    var si = Rt($"bd.literal(IlType::U32, {k % (pn / 2)})");
+                    var di = Rt($"bd.literal(IlType::U32, {k})");
+                    var v = Rt($"bd.velement_read({srcv}, {si}, IlType::I{xew})");
+                    var tl = Rt($"bd.lt({v}, {loV})");
+                    var c1 = Rt($"bd.ternary({tl}, {loV}, {v})");
+                    var th = Rt($"bd.gt({v}, {hiV})");
+                    var c2 = Rt($"bd.ternary({th}, {hiV}, {c1})");
+                    var nv = Rt($"bd.cast({c2}, IlType::U{pdw})");
+                    vAcc = Rt($"bd.velement_write({vAcc}, {di}, {nv})");
+                }
+                return vAcc;
+            }
             case "vdup": {
                 // (vdup src ew odd) -- MOVSHDUP/MOVSLDUP. Constant indices at BOTH arms
                 // (the lane pattern is fixed by the opcode, not by an operand), so unlike

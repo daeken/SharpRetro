@@ -226,13 +226,13 @@
 ; same-width lane-wise, and there is no widening or saturating vector op). Adding four
 ; primitives to lower four defs is a worse trade than the row that unblocks the walk;
 ; the declarative bodies land when a second consumer wants them executed.
-(instruction PMULUDQ (dst src) "pmuludq $dst, $src" (intrinsic pmuludq dst src))
+(instruction PMULUDQ (dst src) "pmuludq $dst, $src" (= dst (vmulw dst src 32)))
 (encoding PMULUDQ (Vdq Wdq) (opsize 0x0F 0xF4))
-(instruction PMADDWD (dst src) "pmaddwd $dst, $src" (intrinsic pmaddwd dst src))
+(instruction PMADDWD (dst src) "pmaddwd $dst, $src" (= dst (vmadd dst src 16)))
 (encoding PMADDWD (Vdq Wdq) (opsize 0x0F 0xF5))
 (instruction PINSRW (dst src sel) "pinsrw $dst, $src, $sel" (= dst (vlane-set dst src sel 16)))
 (encoding PINSRW (Vdq Ed Ib) (opsize 0x0F 0xC4))
-(instruction PACKSSDW (dst src) "packssdw $dst, $src" (intrinsic packssdw dst src))
+(instruction PACKSSDW (dst src) "packssdw $dst, $src" (= dst (vpacks dst src 32)))
 (encoding PACKSSDW (Vdq Wdq) (opsize 0x0F 0x6B))
 
 (instruction PXOR (dst src) "pxor $dst, $src" (= dst (^ dst src)))
