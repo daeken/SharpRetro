@@ -91,7 +91,17 @@ for(uint r = 0; r < count && r < maxRows; r++) {
 	for(var i = 0; i < 6; i++) m.SegBase[i] = pre[OFF_SEG + i];
 	// Xmm is ulong[32] here where a row carries u128 per register: LO WORD ONLY.
 	// That is the CARRIER LIMIT, and it is why lanes 2-3 are not graded -- see
-	// DIFFERENTIAL-SCOPING.md step 2. Counted as a scope, not silently dropped.
+	// rust/xfusion-recomp/DIFFERENTIAL-SCOPING.md step 2 (path corrected: this cite
+	// said "DIFFERENTIAL-SCOPING.md" with no directory, and the file lives two trees
+	// over -- a named artifact whose reader has to hunt for it).
+	//
+	// AND THE SCOPE IS NOW SIZED, which it wasn't when I wrote this line. Walking p2's
+	// bytes and asking per row whether any xmm HI word moves pre-vs-post:
+	//   rows 4,088,162 | LO changed 1,296,848 (graded) | HI changed 921,360 = 22.5% (not)
+	// So this is not a corner. Nearly a quarter of the corpus mutates a lane that the
+	// loop below LOADS (pre[OFF_XMM + i*2] reads only even offsets) and the compare at
+	// :124 never reads. The hi words are already on disk, so widening the carrier grades
+	// them with no fresh sweep. Counted as a scope, not silently dropped.
 	for(var i = 0; i < 32; i++) m.Xmm[i] = pre[OFF_XMM + i*2];
 	// Execute the stub's insn in place: copy it to a known IP.
 	var ip = 0x1000UL;

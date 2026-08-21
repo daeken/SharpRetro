@@ -110,7 +110,28 @@ oracle-baseline(XFCorpus), plus the `Pagentry.Lifter` consumer outside this tree
             No carrier change needed -- those are scalar.
 2. carrier  Eval returns ulong (17 call sites) and Xmm is ulong[32]. An IlVecElem at
             lane >= 2 is UNREPRESENTABLE until this widens. UInt128 is already used
-            8x in the file.
+            8x in the file -- but at X86Machine.cs:226-262, inside StringOp, which is
+            a separate exec arm and NOT Eval's generic IL path. Checked rather than
+            carried: the two are different methods, so the existing uses do not make
+            the widening free.
+
+            SIZED, 2026-08-21, and this was an unsized note until it was measured.
+            Walking p2's own bytes (the row format below), per row asking whether any
+            xmm HI word differs pre-vs-post:
+
+              rows                  4,088,162
+              LO word changed       1,296,848    <- what XFReader grades today
+              HI word changed         921,360    <- 22.5%, graded by NOTHING
+              pre-hi nonzero        2,564,928 register-instances
+
+            So the lo-word-only comparison is not a corner: nearly a quarter of the
+            corpus mutates a lane the reader loads and never reads. The hi words are
+            ALREADY IN THE ROWS -- Program.cs:95 loads `pre[OFF_XMM + i*2]`, i.e. only
+            the even offsets -- so step 2 unlocks grading over a population that exists
+            on disk, with no fresh sweep and no silicon time.
+
+            e.g. def 272 writes hi=0x3f8000003f800000 (two f32 1.0s in lanes 2-3) over
+            a pre-hi of 0. A lift that dropped that write entirely would read CLEAN.
 3. arms     the 5 IlVec* Eval arms. Differential against the 15 silicon-clean families.
 ```
 
