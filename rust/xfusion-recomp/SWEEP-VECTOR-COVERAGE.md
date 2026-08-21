@@ -130,6 +130,25 @@ It walked 25 of 4,088,162 rows and printed a clean ZERO that **agreed with my hy
 What separated a dead read from a measurement was a `[pos]` control: the corrected walk finds
 364 distinct `def_id`s and its row count **matches the header exactly**.
 
+## ‡ A working copy's mtime cannot date the artifact
+
+Checked 2026-08-21 after a peer's finding that a cross-machine time comparison is a
+JOIN with two clocks. My own version was one machine, two FILES:
+
+| artifact | mtime | size |
+|---|---|---|
+| `~/.mantis/data/artifacts/xfusion-sweep/sweep_p2_GOLDEN.x64d.gz` | **2026-08-11** | 137 MB gz |
+| `/tmp/p2g.x64d` (what the row-walk reads) | 2026-08-20 | 7.1 GB |
+
+I read the second and nearly filed the doc's `2026-08-11` as stale by nine days. It
+isn't: **both carry 4,088,162 rows**, and two separate generation runs would not
+match to the row — so `/tmp/p2g.x64d` is the DECOMPRESSED golden and its mtime is
+the DECOMPRESSION date. The doc's date is the archive's, which is the only one that
+dates the artifact.
+
+**⟹ So a corpus claim needs the ARCHIVE's mtime, not the working copy's** — and the
+discriminating check is the row count, not either timestamp.
+
 And the corpus is nine days stale. It remains a valid answer key for the rows it
 contains (they were silicon-exact when generated, and no `.isa` semantics have changed
 since — 0 `.isa` files touched in the vector-lowering arc). But a fresh sweep would
