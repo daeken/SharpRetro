@@ -813,6 +813,47 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "crc32": {
+				// (crc32 acc src nbits) -- the SSE4.2 CRC32 accumulator step, CRC32C
+				// (Castagnoli) reflected, POLY = 0x82F63B78.
+				//
+				// I CLAIMED THIS WAS PRIMITIVE-BLOCKED ("needs a polynomial table") in a DM
+				// and in my own notes. It is not, and it is the FOURTH time on this file
+				// that a deferral fell to writing out the decomposition:
+				//     for each bit i:  bit = (acc & 1) ^ ((src >> i) & 1)
+				//                      acc = (acc >> 1) ^ (POLY & (0 - bit))
+				// which is {shr, xor, and, sub} unrolled nbits times -- all existing ops. A
+				// TABLE is a speed choice, not a correctness requirement.
+				//
+				// KNOWN-ANSWER VERIFIED BEFORE WRITING THIS, and the first check FAILED:
+				// chaining 'a','b','c' from acc=0 gives 0x562F9CCD, not the published
+				// CRC32C("abc") = 0x364B3FB7. The published value includes init=0xFFFFFFFF
+				// and a final invert; the INSTRUCTION does neither -- it is the raw step. Re-run
+				// with init+invert: 0x364B3FB7 exact. So the step function was right and my
+				// comparand was wrong, which is a different failure from a wrong formula and
+				// would have read as one.
+				var cacc = Expr(l[1]);
+				var csrc = Expr(l[2]);
+				var cnb = (int) ((PInt) l[3]).Value;
+				var cu = new IlType.I(false, 32);
+				var one = new IlConst(cu, 1);
+				Il crc = new IlCast(cu, CastKind.Trunc, cacc);
+				for(var i = 0; i < cnb; i++) {
+					// Take bit i of the source AT ITS OWN WIDTH, then narrow -- mixing a
+					// 64-bit source into a 32-bit xor directly would truncate the wrong end.
+					var sh = new IlBin(csrc.Ty, BinOp.Shr, csrc,
+						new IlConst(new IlType.I(false, 32), (UInt128) i));
+					var sbit = new IlCast(cu, CastKind.Trunc,
+						new IlBin(csrc.Ty, BinOp.And, sh, new IlConst(csrc.Ty, 1)));
+					var abit = new IlBin(cu, BinOp.And, crc, one);
+					var bit = new IlBin(cu, BinOp.Xor, abit, sbit);
+					var mask = new IlBin(cu, BinOp.Sub, new IlConst(cu, 0), bit);
+					crc = new IlBin(cu, BinOp.Xor,
+						new IlBin(cu, BinOp.Shr, crc, one),
+						new IlBin(cu, BinOp.And, new IlConst(cu, 0x82F63B78), mask));
+				}
+				return crc;
+			}
 			case "vmulw": {
 				// (vmulw a b sew) -- PMULUDQ: r[i] = zext(a[2i]) * zext(b[2i]) at 2*sew.
 				// A WIDENING multiply, which vibin cannot express (it is same-width

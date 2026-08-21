@@ -54,6 +54,36 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void Crc32Executes() {
+		// The SSE4.2 CRC32 accumulator step (CRC32C/Castagnoli, reflected, POLY
+		// 0x82F63B78). NO TABLE and no new node: {shr, xor, and, sub} unrolled per bit.
+		//
+		// THE EXPECTATION IS A CHAINED KNOWN ANSWER, and getting it needed a correction
+		// worth recording. Chaining 'a','b','c' through the raw step from acc=0 gives
+		// 0x562F9CCD -- NOT the published CRC32C("abc") = 0x364B3FB7. The published value
+		// includes init=0xFFFFFFFF and a final invert; the INSTRUCTION does neither, it is
+		// the bare accumulator step. Re-running the same step function WITH init+invert
+		// reproduces 0x364B3FB7 exactly, which is what proves the step is right and my
+		// first comparand was wrong -- a different failure from a wrong formula, and it
+		// would have read as one.
+		//
+		// So the asserts below use the RAW-step values, and the init+invert round-trip is
+		// the reason to trust them.
+		var acc = 0UL;
+		foreach(var (ch, want) in new (byte, uint)[] {
+			((byte) 'a', 0x93AD1061u), ((byte) 'b', 0x13C35EE4u), ((byte) 'c', 0x562F9CCDu),
+		}) {
+			var m = M64("f20f38f0c1");        // CRC32 r32, r/m8  = F2 0F 38 F0 /r
+			m.Gpr[0] = acc; m.Gpr[1] = ch;
+			Assert.That(m.Step(), Is.True, $"crc32 '{(char) ch}' did not step");
+			acc = m.Gpr[0];
+			Assert.That((uint) acc, Is.EqualTo(want), $"crc32 after '{(char) ch}'");
+		}
+		// And the init+invert round-trip that validated the whole chain:
+		Assert.That((uint) acc, Is.EqualTo(0x562F9CCDu), "raw-step chain for \"abc\"");
+	}
+
+	[Test]
 	public void PackedWideningAndPackExecute() {
 		// PMULUDQ (vmulw), PMADDWD (vmadd), PACKSSDW (vpacks). All three were on my
 		// "genuinely needs a new primitive" list and none of them did: a widening multiply

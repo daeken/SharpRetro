@@ -764,6 +764,31 @@ public class RustLiftGen {
                 var a = Expr(l[1]); var ew = ((PInt)l[2]).Value;
                 return Rt($"bd.vmovmsk({a}, {ew})");
             }
+            case "crc32": {
+                // (crc32 acc src nbits) -- the SSE4.2 accumulator step, CRC32C reflected,
+                // POLY 0x82F63B78. Same decomposition as the C# arm: {shr, xor, and, sub}
+                // unrolled per bit, no table and no new Builder op.
+                var cacc = Expr(l[1]);
+                var csrc = Expr(l[2]);
+                var cnb = (int)((PInt)l[3]).Value;
+                var crc = Rt($"bd.cast({cacc}, IlType::U32)");
+                var one = Rt("bd.literal(IlType::U32, 1)");
+                var poly = Rt("bd.literal(IlType::U32, 0x82F63B78)");
+                var zer = Rt("bd.literal(IlType::U32, 0)");
+                for(var i = 0; i < cnb; i++) {
+                    var shc = Rt($"bd.literal(IlType::U32, {i})");
+                    var sh = Rt($"bd.shr({csrc}, {shc})");
+                    var sb32 = Rt($"bd.cast({sh}, IlType::U32)");
+                    var sbit = Rt($"bd.and({sb32}, {one})");
+                    var abit = Rt($"bd.and({crc}, {one})");
+                    var bit = Rt($"bd.xor({abit}, {sbit})");
+                    var mask = Rt($"bd.sub({zer}, {bit})");
+                    var pm = Rt($"bd.and({poly}, {mask})");
+                    var sc = Rt($"bd.shr({crc}, {one})");
+                    crc = Rt($"bd.xor({sc}, {pm})");
+                }
+                return crc;
+            }
             case "vmulw": case "vmadd": case "vpacks": {
                 // PMULUDQ / PMADDWD / PACKSSDW. Per-lane composition from ops that all
                 // exist (velement_read/write + mul/add/cast + lt/gt/ternary) -- the same
