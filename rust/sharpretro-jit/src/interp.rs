@@ -500,6 +500,22 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
                     let sbv = if lb & sb != 0 { lb | !m } else { lb } as i128;
                     if sa > sbv { m } else { 0 }
                 }
+                // 5=maxs 6=mins 7=maxu 8=minu. THE SIBLING of the C# IlLower change:
+                // ten PMAX/PMIN rows became declarative there via mask-then-blend, and
+                // this arm is where the Rust interp has to agree. Written as a direct
+                // per-lane min/max rather than as the blend, because at the INTERPRETER
+                // the blend is the lowering's business and the answer is the same -- the
+                // blend exists so the IL needs no select node, not because min/max is
+                // hard to compute.
+                5 | 6 => {
+                    let sb = 1u128 << (ew - 1);
+                    let sa = if la & sb != 0 { la | !m } else { la } as i128;
+                    let sbv = if lb & sb != 0 { lb | !m } else { lb } as i128;
+                    let w = if op == 5 { sa.max(sbv) } else { sa.min(sbv) };
+                    (w as u128) & m
+                }
+                7 => la.max(lb),
+                8 => la.min(lb),
                 _ => panic!("vibin op={op}"),
             } & m;
             r |= lr << (i*ew);
