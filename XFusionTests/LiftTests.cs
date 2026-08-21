@@ -368,7 +368,21 @@ public class LiftTests {
 				failures.Add($"{hex} → {e.Message}");
 			}
 		}
-		Assert.That(failures, Is.Empty, string.Join("\n", failures.Take(12)));
+		// ⚠ THE POPULATION IS NAMED AT THE ASSERT, not only in the doc-comment above.
+		// A peer measured the general form today: a MEASURED FACT RECORDED AS PROSE IS
+		// INDISTINGUISHABLE FROM A GUESS -- their pin was a comment, which cannot fail, and
+		// re-firing the claim it pinned found two gate-properties nothing asserted. This arm
+		// walks HAND-WRITTEN rows, so a reader who sees it pass must be told the denominator
+		// in the same breath: a green here is bounded by whether anyone WROTE a row reaching
+		// a given def, and the unbounded claim is carried by the def-set arm below.
+		var rowCount = DecodeTests.AllRows().Count();
+		Assert.That(rowCount, Is.GreaterThan(50),
+			$"the row corpus SHRANK to {rowCount} -- a high pass-rate over a stub reads green, "
+			+ "so the floor is on the SUBJECT rather than on the failures.");
+		Assert.That(failures, Is.Empty,
+			$"lift failed on {failures.Count} of {rowCount} HAND-WRITTEN decode rows "
+			+ "(reach-bounded: this arm cannot see a def no row reaches):\n"
+			+ string.Join("\n", failures.Take(12)));
 	}
 
 	/// EveryDecodableTestRowLifts' comment claims "the lift arm must never be narrower
