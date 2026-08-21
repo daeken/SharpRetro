@@ -115,7 +115,11 @@ echo "=== rung-4 gate-(x86): the x86 lift+exec arm ==="
 # that already existed.
 #
 # ⚠ AND THE READ THAT MATTERS BEFORE LOWERING A FLOOR: "0 failed" is also what a
-# test that stopped RUNNING looks like. Verified it is 232 PASSED / 0 failed and
+# test that stopped RUNNING looks like. Verified it is 240 PASSED / 0 failed and
+# not 0-of-0 before touching this. [was 232 when written -- a LIVE-CELL count: the
+# subject moves every time I add a gate row, and this comment did not ride the ship.
+# The pass-count floor below is derived from the run, so the gate never depended on
+# this number; a reader deciding whether the floor is safe did.]
 # not 0-of-0 before touching this -- a floor lowered on an absent subject is a
 # gate that can no longer fail. Same shape as the arm-count check above.
 X86_FAIL_FLOOR=0
@@ -148,7 +152,8 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 # measure different populations and each is blind where the other sees.
 #
 #   the def-set gate (XFusionTests) walks LiftTables and asks "does every TEMPLATE
-#     reach an IlLower case" -- 552 templates, complete over the .isa, and it can
+#     reach an IlLower case" -- 564 templates (was 552; a LIVE-CELL count, it moves
+#     with every .isa row), complete over the .isa, and it can
 #     see a head no corpus happens to contain. It caught vhadd and vdpp, which
 #     appear ZERO times in 25MB of real compiler output.
 #   this arm decodes a real binary and asks "does every INSN lift" -- 6.18M insns,
