@@ -163,6 +163,15 @@ for(uint r = 0; r < count && r < maxRows; r++) {
 	if(bad.Count == 0) { nOk++; continue; }
 	nDiff++;
 	if(nPrinted++ < DiffCap)
+		// TWO DIFFERENT def-ids on this line, and the distinction is load-bearing:
+		//   defId    (:78)  the STORED one, read from the corpus row. Joined against a
+		//                   LIVE table it mislabels ~74% of rows in a frozen corpus, and
+		//                   every mislabel is a plausible mnemonic -- hence the hedge.
+		//   d.DefId  (:95)  DECODED FRESH from this row's own stub bytes. Sound by
+		//                   construction, which is why the mnemonic reads off THIS one.
+		// I mis-read my own line once (thought the mnemonic rode the stale id) -- the
+		// two variables differ by one character of case, so the check is to trace each
+		// to its assignment rather than to read the expression.
 		Console.Error.WriteLine($"  DIFF row={r} def_id={defId}(stale-index, informational) mnem={Disassembler.DefNames[d.DefId]} len={d.Len}: {string.Join(" | ", bad)}");
 }
 
