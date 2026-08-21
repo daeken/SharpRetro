@@ -68,6 +68,9 @@ Console.Error.WriteLine($"[XFReader] {path}: magic={magic} count={count} mode={m
 
 int nOk = 0, nDiff = 0, nPrinted = 0;
 var DiffCap = int.TryParse(Environment.GetEnvironmentVariable("XF_DIFFCAP"), out var _dc) ? _dc : 20;
+var SkipNames = Environment.GetEnvironmentVariable("XF_SKIPNAMES") == "1";
+var skByDef = new Dictionary<int,int>();
+void NoteSkip(int id) { if(SkipNames) skByDef[id] = skByDef.GetValueOrDefault(id) + 1; }
 // Skip reasons kept SEPARATE. A single skip count hides which population went ungraded.
 int skDecode = 0, skFault = 0, skLift = 0, skStep = 0, skNoSlot = 0;
 
@@ -134,8 +137,12 @@ for(uint r = 0; r < count && r < maxRows; r++) {
 
 	bool stepped;
 	try { stepped = m.Step(); }
-	catch(NotSupportedException) { skLift++; continue; }   // an unlowered node: LOUD by design
-	catch(NotImplementedException) { skLift++; continue; }
+	// NAME THE DEF, don't just count it. A skip TOTAL says how much wasn't graded and
+	// cannot say WHAT -- so "3 unlowered" and "99,198 unlowered" read the same way, and the
+	// residual after a widening is exactly the population you want named. XF_SKIPNAMES=1
+	// prints the per-def tally at the end.
+	catch(NotSupportedException) { skLift++; NoteSkip(d.DefId); continue; }   // unlowered: LOUD by design
+	catch(NotImplementedException) { skLift++; NoteSkip(d.DefId); continue; }
 	if(!stepped && !m.Halted) { skStep++; continue; }
 
 	// COMPARE. GPRs and the DECLARED flag bits. Xmm lo-word only (carrier limit above).
@@ -162,6 +169,9 @@ for(uint r = 0; r < count && r < maxRows; r++) {
 var skTotal = skDecode + skFault + skLift + skStep + skNoSlot;
 Console.Error.WriteLine($"[XFReader] rows_read={Math.Min(count, maxRows)} ok={nOk} diff={nDiff} skip={skTotal}");
 Console.Error.WriteLine($"[XFReader]   skip breakdown: decode={skDecode} fault={skFault} unlowered={skLift} step={skStep} no-slot={skNoSlot}");
+if(SkipNames && skByDef.Count > 0)
+	foreach(var kv in skByDef.OrderByDescending(kv => kv.Value))
+		Console.Error.WriteLine($"[XFReader]     unlowered {kv.Value,8}  def_id={kv.Key} {(kv.Key < Disassembler.DefNames.Length ? Disassembler.DefNames[kv.Key] : "?")}");
 if(nOk == 0) {
 	// A zero-graded run with diff=0 reads exactly like success. It is not.
 	Console.Error.WriteLine("  x NOTHING GRADED (ok=0) -- read this as BLIND, not clean.");

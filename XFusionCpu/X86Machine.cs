@@ -159,6 +159,7 @@ public class X86Machine {
 	public void RunIntrinsic(string name, ulong[] args, out ulong? branchTo) {
 		var save = _branchTo;
 		_branchTo = null;
+		if(Ordering(name)) { branchTo = null; _branchTo = save; return; }
 		var handled = StringOp(name, args);
 		branchTo = _branchTo;
 		_branchTo = save ?? _branchTo;  // preserve any prior branch; loop's branch wins if set
@@ -168,10 +169,24 @@ public class X86Machine {
 	}
 	// Overload for the exec path (branchTo → _branchTo directly).
 	void RunIntrinsic(string name, ulong[] args) {
+		if(Ordering(name)) return;
 		if(StringOp(name, args)) return;
 		if(OnIntrin == null || !OnIntrin(this, name, args))
 			throw new NotSupportedException($"unhandled intrinsic {name}");
 	}
+
+	/// MEMORY-ORDERING BARRIERS ARE A NO-OP HERE, BY CONSTRUCTION, NOT BY OMISSION.
+	/// MFENCE/LFENCE/SFENCE constrain the ORDER two observers see writes in; this machine
+	/// has one thread and executes statements in program order, so there is no reordering
+	/// for a barrier to forbid. The Rust arm lowers the same head to a real `dmb ish`
+	/// because it JITs and runs multi-threaded guests -- the divergence is correct and is
+	/// a property of the consumer, not of the .isa.
+	///
+	/// This threw `unhandled intrinsic fence` and was the ENTIRE p1 residual after the
+	/// carrier widening -- 3 rows, one per mnemonic. A count could not say that: "3
+	/// unlowered" and "99,198 unlowered" read identically, which is why XF_SKIPNAMES
+	/// prints the per-def tally. Naming them turned a residual into a disposition.
+	static bool Ordering(string name) => name == "fence";
 
 	/// The string family, machine-native. Convention from the .isa: args[0] =
 	/// width (literal or bitwidth-const) — but we re-derive everything from
