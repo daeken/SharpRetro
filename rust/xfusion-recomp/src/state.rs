@@ -46,6 +46,19 @@ pub const OFF_GPR: usize = 0;
 pub const OFF_EFLAGS: usize = 16;
 pub const OFF_RIP: usize = 17;
 pub const OFF_SEG: usize = 18;
+// ── WHY AVX-256 IS A ROW-FORMAT QUESTION BEFORE IT IS A CARRIER QUESTION. ────────
+// The sweep's corpus row is [def_id][flags][stub_len][stub][pre words][post words],
+// and `to_flat` writes the vector file at 2 WORDS PER REGISTER (f[OFF_XMM + i*2],
+// :92). So a 256-bit ymm value HAS NO ROOM IN THE ROW -- verified at bytes rather
+// than assumed:
+//     STATE_WORDS_X64 = 90 · OFF_XMM = 24 · xmm block = 32 regs x 2 = 64 words (24..88)
+//     a ymm sweep needs 32 x 4 = 128 words ⟹ 90 - 64 + 128 = 154 words per state,
+//     doubled per row (pre + post)
+// ⟹ So "which carrier holds a 256-bit lane" cannot be answered first: the corpus
+// format has to widen, every existing golden becomes unreadable by the new runner
+// (or the runner has to version-dispatch on the magic), and only then does the
+// carrier choice matter. Recorded here because the constraint lives in THIS struct
+// and a reader deciding to add AVX would otherwise start at the lift.
 pub const OFF_XMM: usize = 24;
 pub const OFF_MEMBASE: usize = 88;
 /// Per-thread RrThread* (record/replay handle; rr.rs). 0 when rr off.
