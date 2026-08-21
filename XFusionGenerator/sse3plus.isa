@@ -122,7 +122,7 @@
     ;
     ; So the honest statement is: lowerable on the C# arm at the cost of one
     ; decomposition per imm8 seen, and genuinely awkward on the Rust arm. 9,216 of
-    ; the ~10,274 remaining track-fail rows are these three defs, and they are the
+    ; the remaining track-fail rows are these FOUR defs (PCMPESTRM added 08-21), the
     ; largest single block left -- but the corpus enumerates ALL imm8 values, so
     ; closing them means all 128 behaviours on both arms, not just the used ones.
     ; Left intrinsic-bodied deliberately, with the cost named rather than the
@@ -133,6 +133,19 @@
     (encoding PCMPISTRM (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x62))
     (instruction PCMPESTRI (a b pred) "pcmpestri $a, $b, $pred" (intrinsic pcmpestri a b pred))
     (encoding PCMPESTRI (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x61))
+    ; PCMPESTRM (0x60) -- the FOURTH family member, absent from every .isa until 2026-08-21
+    ; while its three siblings were declared. Found by reading the family at objdump rather
+    ; than by any instrument here: the sweep census only lists defs it HAS, and the XED
+    ; census's blocker table is clipped to top-15 by blocked-insns, so ~7 live sites could
+    ; never appear in it. A truncating report's absence reads identically to a real zero.
+    ; DECODE-ONLY on purpose: a decode refusal STOPS the linear sweep (a peer measured the
+    ; per-refusal cost at ~570x an unexecutable row, since every insn past it in that
+    ; function contributes no call edges), so a declared-but-intrinsic row is strictly
+    ; better than no row. /tmp/echidna carries 7 real sites, all `66 0f 3a 60 c1 0a`
+    ; = pcmpestrm xmm0,xmm1,0xa in one SSE4.2 string routine at 21310311..21310422
+    ; (+2 more that objdump reads as an opcode TABLE, i.e. data, not code).
+    (instruction PCMPESTRM (a b pred) "pcmpestrm $a, $b, $pred" (intrinsic pcmpestrm a b pred))
+    (encoding PCMPESTRM (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x60))
     (instruction CRC32-B (dst src) "crc32 $dst, $src" (= dst (crc32 dst src 8)))
     (encoding CRC32-B (Gv Eb) (repnz 0x0F 0x38 0xF0))
     (instruction CRC32-V (dst src) "crc32 $dst, $src" (= dst (crc32 dst src 32)))
