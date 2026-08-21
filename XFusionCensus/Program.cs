@@ -22,6 +22,14 @@ public class Program {
 		Console.WriteLine($"{path}: .text {text.Length} bytes, lift-smoke mode {mode}");
 		long decoded = 0, lifted = 0;
 		var fails = new Dictionary<string, long>();
+		// A RATE OVER A SKEWED POPULATION MEASURES THE SKEW. This arm reported
+		// "6,180,187 / 6,180,187 (100.00%)" and that says little about the 34 vector
+		// defs the intrinsic-stub census landed: a compiler's .text is dominated by
+		// mov/add/jcc, so a 100% lift-rate is consistent with a vector family being
+		// exercised ZERO times. So the SPREAD ships beside the rate -- how many
+		// distinct defs the corpus actually reached, which is the figure that says
+		// whether a green here covers the work you just did.
+		var seen = new Dictionary<int, long>();
 		var firstFail = new Dictionary<string, string>();
 		var i = 0;
 		while(i < text.Length) {
@@ -31,6 +39,7 @@ public class Program {
 			try {
 				if(X86Lifter.Lift(in d, (ulong) i, mode) == null) fail = "null-block";
 			} catch(Exception e) { fail = e.Message.Length > 50 ? e.Message[..50] : e.Message; }
+			seen[d.DefId] = seen.GetValueOrDefault(d.DefId) + 1;
 			if(fail == null) lifted++;
 			else {
 				var key = $"{Disassembler.DefNames[d.DefId]}: {fail}";
@@ -39,7 +48,7 @@ public class Program {
 			}
 			i += d.Len;
 		}
-		Console.WriteLine($"decoded {decoded} | lifted {lifted} ({100.0 * lifted / decoded:f2}%) | fail-classes {fails.Count}");
+		Console.WriteLine($"decoded {decoded} | lifted {lifted} ({100.0 * lifted / decoded:f2}%) | fail-classes {fails.Count} | distinct-defs {seen.Count}");
 		foreach(var (k, n) in fails.OrderByDescending(x => x.Value).Take(15))
 			Console.WriteLine($"  {n,6}  {k}   e.g. {firstFail[k]}");
 		return fails.Count > 0 ? 1 : 0;
