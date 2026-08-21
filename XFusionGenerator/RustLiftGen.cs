@@ -582,6 +582,25 @@ public class RustLiftGen {
                 }
                 return cacc;
             }
+            case "vzext": {
+                // (vzext a sew dew) -- PMOVZXBW/PMOVZXWD. The C# lowering builds
+                // n Zext(elem(a,i)) lanes because the DSL has no vector-literal form;
+                // HERE a V128 zero IS expressible, and interleaving with zeros is a
+                // zero-extension (verified byte-exact before writing either arm:
+                // vzip(src,0,sew,lo) reads as zext'd sew->2*sew lanes).
+                //
+                // So this emits vzip against a zero rather than N element-reads: one
+                // Builder call every arm already carries, versus n velement_read/
+                // velement_write pairs. The two arms agree on the ANSWER and differ in
+                // the ops used to get it -- which is the co-blind gap the silicon sweep
+                // exists to grade, so it wants a row rather than a matching transcription.
+                var za = Expr(l[1]);
+                var sew = ((PInt)l[2]).Value;
+                var dew = ((PInt)l[3]).Value;
+                if(dew != sew * 2) throw new NotSupportedException($"vzext {sew}->{dew}: only 2x widening is expressible via vzip");
+                var zz = Rt("bd.literal(IlType::V128, 0)");
+                return Rt($"bd.vzip({za}, {zz}, {sew}, false)");
+            }
             case "vzip": {
                 var a = Expr(l[1]); var b = Expr(l[2]);
                 var ew = ((PInt)l[3]).Value;

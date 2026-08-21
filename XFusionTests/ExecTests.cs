@@ -54,6 +54,30 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedZeroExtendExecutes() {
+		// PMOVZXBW/PMOVZXWD (vzext): take the LOW 128/dew lanes at width sew and
+		// zero-extend each into a dew-wide lane.
+		//
+		// THE DISCRIMINATING LANES ARE THE HIGH-BIT ONES. 0xFF must become 0x00FF, not
+		// 0xFFFF -- a SIGN-extending implementation differs on exactly those and nowhere
+		// else, so a source whose bytes are all <0x80 cannot test this at all. And the
+		// UPPER half of the source must be IGNORED: I put 0xEE there, which would show up
+		// as a lane if the extraction walked all 16 bytes.
+		var src = (UInt128) 0x7F01_80FFUL | ((UInt128) 0xEEEEEEEEEEEEEEEEUL << 64);
+
+		var m = M64("660f3830c1"); m.Xmm[1] = src;        // PMOVZXBW 66 0F 38 30
+		Assert.That(m.Step(), Is.True, "pmovzxbw did not step");
+		// bytes FF 80 01 7F -> words 00FF 0080 0001 007F
+		Assert.That((ulong) m.Xmm[0], Is.EqualTo(0x007F_0001_0080_00FFUL), "pmovzxbw lo");
+		Assert.That((ulong) (m.Xmm[0] >> 64), Is.EqualTo(0UL), "pmovzxbw hi lanes come from bytes 4-7");
+
+		var w = M64("660f3833c1"); w.Xmm[1] = src;        // PMOVZXWD 66 0F 38 33
+		Assert.That(w.Step(), Is.True, "pmovzxwd did not step");
+		// words 80FF 7F01 -> dwords 000080FF 00007F01
+		Assert.That((ulong) w.Xmm[0], Is.EqualTo(0x00007F01_000080FFUL), "pmovzxwd lo");
+	}
+
+	[Test]
 	public void PackedMulldAndCmpeqqExecute() {
 		// PMULLD = vibin ew=32 op=2 (Mul), PCMPEQQ = vibin ew=64 op=3 (Eq). Both map to
 		// ops that already existed; the point of the test is that a cleared track-fail

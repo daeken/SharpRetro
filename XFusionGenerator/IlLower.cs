@@ -813,6 +813,31 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "vzext": {
+				// (vzext a sew dew) -- PMOVZXBW/PMOVZXWD: take the LOW 128/dew lanes of a
+				// at width sew and zero-extend each into a dew-wide lane.
+				//
+				// NO NEW NODE, and NOT via vzip-with-a-zero-operand even though that also
+				// computes it (verified byte-exact first: interleaving with zeros IS a
+				// zero-extension). The DSL has no vector-literal form, so a bare 0 would
+				// lower as a SCALAR IlConst and Lane() would wrap it in an IlVecElem over
+				// a scalar -- an operand shape nothing else in the tree produces. The
+				// direct build needs no literal at all:
+				//     build(dew, [ Zext(elem(a, i, sew), dew) for i in 0..128/dew ])
+				// which is the vcvt lesson (day-57) reused: a LANE-COUNT change is just
+				// how many extracts there are, and the width change rides IlCast's own
+				// type. Both nodes already emitted and evaluated.
+				var za = Expr(l[1]);
+				var sew = (int) ((PInt) l[2]).Value;
+				var dew = (int) ((PInt) l[3]).Value;
+				var set = new IlType.I(false, sew);
+				var det = new IlType.I(false, dew);
+				var zn = 128 / dew;
+				var zel = new List<Il>();
+				for(var k = 0; k < zn; k++)
+					zel.Add(new IlCast(det, CastKind.Zext, Lane(za, set, k)));
+				return new IlVecBuild(128, det, zel);
+			}
 			case "viabs": {
 				// (viabs a ew) -- PABSB/PABSW/PABSD. NO NEW NODE, and no UnOp.Abs on an
 				// integer lane either: abs is the sign-mask identity, three ops I already

@@ -35,9 +35,9 @@
 (featuring sse4.1
     (instruction PTEST (a b) "ptest $a, $b" (intrinsic ptest a b))
     (encoding PTEST (Vdq Wdq) (opsize 0x0F 0x38 0x17))
-    (instruction PMOVZXBW (dst src) "pmovzxbw $dst, $src" (intrinsic pmovzxbw dst src))
+    (instruction PMOVZXBW (dst src) "pmovzxbw $dst, $src" (= dst (vzext src 8 16)))
     (encoding PMOVZXBW (Vdq Wq) (opsize 0x0F 0x38 0x30))
-    (instruction PMOVZXWD (dst src) "pmovzxwd $dst, $src" (intrinsic pmovzxwd dst src))
+    (instruction PMOVZXWD (dst src) "pmovzxwd $dst, $src" (= dst (vzext src 16 32)))
     (encoding PMOVZXWD (Vdq Wq) (opsize 0x0F 0x38 0x33))
     ; verified at bytes with objdump -M intel before adding:
     ;   66 0F 38 40 C1 = pmulld xmm0,xmm1   ·   66 0F 38 3D C1 = pmaxsd xmm0,xmm1
