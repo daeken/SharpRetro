@@ -2,7 +2,7 @@
 namespace XFusionCpu;
 
 public static partial class Disassembler {
-	public const int EncodingCount = 744;
+	public const int EncodingCount = 748;
 
 	/// Returns (text, length) or (null, 0) if undecodable.
 	public static (string Text, int Length) Disassemble(ReadOnlySpan<byte> code, ulong pc, XMode mode) {
@@ -7352,7 +7352,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0x6C): {
+			case (OpcodeMap.TwoByte0F, 0x6B): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -7369,7 +7369,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0x6D): {
+			case (OpcodeMap.TwoByte0F, 0x6C): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -7386,18 +7386,35 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
+			case (OpcodeMap.TwoByte0F, 0x6D): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m560Len = Decode.ReadModRm(code[i..], mode, in p, out var m560);
+					if(m560Len < 0) return false;
+					i += m560Len;
+					d.DefId = 560;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m560;
+					return true;
+				}
+				return false;
+			}
 			case (OpcodeMap.TwoByte0F, 0x6E): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
-						var m560Len = Decode.ReadModRm(code[i..], mode, in p, out var m560);
-						if(m560Len < 0) return false;
-						i += m560Len;
-						d.DefId = 560;
+						var m561Len = Decode.ReadModRm(code[i..], mode, in p, out var m561);
+						if(m561Len < 0) return false;
+						i += m561Len;
+						d.DefId = 561;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m560;
+						d.M = m561;
 						return true;
 					}
 					return false;
@@ -7406,14 +7423,14 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m561Len = Decode.ReadModRm(code[i..], mode, in p, out var m561);
-					if(m561Len < 0) return false;
-					i += m561Len;
-					d.DefId = 561;
+					var m562Len = Decode.ReadModRm(code[i..], mode, in p, out var m562);
+					if(m562Len < 0) return false;
+					i += m562Len;
+					d.DefId = 562;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m561;
+					d.M = m562;
 					return true;
 				}
 				return false;
@@ -7421,18 +7438,6 @@ public static partial class Disassembler {
 			case (OpcodeMap.TwoByte0F, 0x6F): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.Rep && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m562Len = Decode.ReadModRm(code[i..], mode, in p, out var m562);
-						if(m562Len < 0) return false;
-						i += m562Len;
-						d.DefId = 562;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m562;
-						return true;
-					}
-					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m563Len = Decode.ReadModRm(code[i..], mode, in p, out var m563);
 						if(m563Len < 0) return false;
@@ -7444,12 +7449,11 @@ public static partial class Disassembler {
 						d.M = m563;
 						return true;
 					}
-					if(p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
+					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m564Len = Decode.ReadModRm(code[i..], mode, in p, out var m564);
 						if(m564Len < 0) return false;
 						i += m564Len;
-						Decode.ScaleDisp8(ref m564, 16 << p.VecLen);
 						d.DefId = 564;
 						d.Len = i;
 						d.Op = op;
@@ -7457,7 +7461,7 @@ public static partial class Disassembler {
 						d.M = m564;
 						return true;
 					}
-					if(p.EvexValid && p.RepNz && p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m565Len = Decode.ReadModRm(code[i..], mode, in p, out var m565);
 						if(m565Len < 0) return false;
@@ -7470,7 +7474,7 @@ public static partial class Disassembler {
 						d.M = m565;
 						return true;
 					}
-					if(p.EvexValid && p.Rep && !p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.RepNz && p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m566Len = Decode.ReadModRm(code[i..], mode, in p, out var m566);
 						if(m566Len < 0) return false;
@@ -7483,7 +7487,7 @@ public static partial class Disassembler {
 						d.M = m566;
 						return true;
 					}
-					if(p.EvexValid && p.Rep && p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.Rep && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m567Len = Decode.ReadModRm(code[i..], mode, in p, out var m567);
 						if(m567Len < 0) return false;
@@ -7496,7 +7500,7 @@ public static partial class Disassembler {
 						d.M = m567;
 						return true;
 					}
-					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.Rep && p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m568Len = Decode.ReadModRm(code[i..], mode, in p, out var m568);
 						if(m568Len < 0) return false;
@@ -7509,7 +7513,7 @@ public static partial class Disassembler {
 						d.M = m568;
 						return true;
 					}
-					if(p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m569Len = Decode.ReadModRm(code[i..], mode, in p, out var m569);
 						if(m569Len < 0) return false;
@@ -7522,24 +7526,24 @@ public static partial class Disassembler {
 						d.M = m569;
 						return true;
 					}
+					if(p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m570Len = Decode.ReadModRm(code[i..], mode, in p, out var m570);
+						if(m570Len < 0) return false;
+						i += m570Len;
+						Decode.ScaleDisp8(ref m570, 16 << p.VecLen);
+						d.DefId = 570;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m570;
+						return true;
+					}
 					return false;
 				}
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
-					if(p.Lock) return false;
-					var m570Len = Decode.ReadModRm(code[i..], mode, in p, out var m570);
-					if(m570Len < 0) return false;
-					i += m570Len;
-					d.DefId = 570;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m570;
-					return true;
-				}
-				if(p.Rep) {
-					p.Rep = false;
 					if(p.Lock) return false;
 					var m571Len = Decode.ReadModRm(code[i..], mode, in p, out var m571);
 					if(m571Len < 0) return false;
@@ -7551,22 +7555,35 @@ public static partial class Disassembler {
 					d.M = m571;
 					return true;
 				}
+				if(p.Rep) {
+					p.Rep = false;
+					if(p.Lock) return false;
+					var m572Len = Decode.ReadModRm(code[i..], mode, in p, out var m572);
+					if(m572Len < 0) return false;
+					i += m572Len;
+					d.DefId = 572;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m572;
+					return true;
+				}
 				return false;
 			}
 			case (OpcodeMap.TwoByte0F, 0x70): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
-						var m572Len = Decode.ReadModRm(code[i..], mode, in p, out var m572);
-						if(m572Len < 0) return false;
-						i += m572Len;
+						var m573Len = Decode.ReadModRm(code[i..], mode, in p, out var m573);
+						if(m573Len < 0) return false;
+						i += m573Len;
 						if(i + (8) / 8 > code.Length) return false;
 						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 572;
+						d.DefId = 573;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m572;
+						d.M = m573;
 						return true;
 					}
 					return false;
@@ -7574,21 +7591,6 @@ public static partial class Disassembler {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
-					if(p.Lock) return false;
-					var m573Len = Decode.ReadModRm(code[i..], mode, in p, out var m573);
-					if(m573Len < 0) return false;
-					i += m573Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 573;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m573;
-					return true;
-				}
-				if(p.RepNz) {
-					p.RepNz = false;
 					if(p.Lock) return false;
 					var m574Len = Decode.ReadModRm(code[i..], mode, in p, out var m574);
 					if(m574Len < 0) return false;
@@ -7602,8 +7604,8 @@ public static partial class Disassembler {
 					d.M = m574;
 					return true;
 				}
-				if(p.Rep) {
-					p.Rep = false;
+				if(p.RepNz) {
+					p.RepNz = false;
 					if(p.Lock) return false;
 					var m575Len = Decode.ReadModRm(code[i..], mode, in p, out var m575);
 					if(m575Len < 0) return false;
@@ -7617,6 +7619,21 @@ public static partial class Disassembler {
 					d.M = m575;
 					return true;
 				}
+				if(p.Rep) {
+					p.Rep = false;
+					if(p.Lock) return false;
+					var m576Len = Decode.ReadModRm(code[i..], mode, in p, out var m576);
+					if(m576Len < 0) return false;
+					i += m576Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 576;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m576;
+					return true;
+				}
 				return false;
 			}
 			case (OpcodeMap.TwoByte0F, 0x71): {
@@ -7626,21 +7643,6 @@ public static partial class Disassembler {
 					if(i >= code.Length) return false;
 					switch((code[i] >> 3) & 7) {
 						case 2: {
-							if(p.Lock) return false;
-							var m576Len = Decode.ReadModRm(code[i..], mode, in p, out var m576);
-							if(m576Len < 0) return false;
-							i += m576Len;
-							if(!m576.IsReg) return false;
-							if(i + (8) / 8 > code.Length) return false;
-							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-							d.DefId = 576;
-							d.Len = i;
-							d.Op = op;
-							d.P = p;
-							d.M = m576;
-							return true;
-						}
-						case 4: {
 							if(p.Lock) return false;
 							var m577Len = Decode.ReadModRm(code[i..], mode, in p, out var m577);
 							if(m577Len < 0) return false;
@@ -7655,7 +7657,7 @@ public static partial class Disassembler {
 							d.M = m577;
 							return true;
 						}
-						case 6: {
+						case 4: {
 							if(p.Lock) return false;
 							var m578Len = Decode.ReadModRm(code[i..], mode, in p, out var m578);
 							if(m578Len < 0) return false;
@@ -7668,6 +7670,21 @@ public static partial class Disassembler {
 							d.Op = op;
 							d.P = p;
 							d.M = m578;
+							return true;
+						}
+						case 6: {
+							if(p.Lock) return false;
+							var m579Len = Decode.ReadModRm(code[i..], mode, in p, out var m579);
+							if(m579Len < 0) return false;
+							i += m579Len;
+							if(!m579.IsReg) return false;
+							if(i + (8) / 8 > code.Length) return false;
+							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+							d.DefId = 579;
+							d.Len = i;
+							d.Op = op;
+							d.P = p;
+							d.M = m579;
 							return true;
 						}
 						default: return false;
@@ -7683,21 +7700,6 @@ public static partial class Disassembler {
 					switch((code[i] >> 3) & 7) {
 						case 2: {
 							if(p.Lock) return false;
-							var m579Len = Decode.ReadModRm(code[i..], mode, in p, out var m579);
-							if(m579Len < 0) return false;
-							i += m579Len;
-							if(!m579.IsReg) return false;
-							if(i + (8) / 8 > code.Length) return false;
-							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-							d.DefId = 579;
-							d.Len = i;
-							d.Op = op;
-							d.P = p;
-							d.M = m579;
-							return true;
-						}
-						case 4: {
-							if(p.Lock) return false;
 							var m580Len = Decode.ReadModRm(code[i..], mode, in p, out var m580);
 							if(m580Len < 0) return false;
 							i += m580Len;
@@ -7711,7 +7713,7 @@ public static partial class Disassembler {
 							d.M = m580;
 							return true;
 						}
-						case 6: {
+						case 4: {
 							if(p.Lock) return false;
 							var m581Len = Decode.ReadModRm(code[i..], mode, in p, out var m581);
 							if(m581Len < 0) return false;
@@ -7724,6 +7726,21 @@ public static partial class Disassembler {
 							d.Op = op;
 							d.P = p;
 							d.M = m581;
+							return true;
+						}
+						case 6: {
+							if(p.Lock) return false;
+							var m582Len = Decode.ReadModRm(code[i..], mode, in p, out var m582);
+							if(m582Len < 0) return false;
+							i += m582Len;
+							if(!m582.IsReg) return false;
+							if(i + (8) / 8 > code.Length) return false;
+							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+							d.DefId = 582;
+							d.Len = i;
+							d.Op = op;
+							d.P = p;
+							d.M = m582;
 							return true;
 						}
 						default: return false;
@@ -7739,21 +7756,6 @@ public static partial class Disassembler {
 					switch((code[i] >> 3) & 7) {
 						case 2: {
 							if(p.Lock) return false;
-							var m582Len = Decode.ReadModRm(code[i..], mode, in p, out var m582);
-							if(m582Len < 0) return false;
-							i += m582Len;
-							if(!m582.IsReg) return false;
-							if(i + (8) / 8 > code.Length) return false;
-							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-							d.DefId = 582;
-							d.Len = i;
-							d.Op = op;
-							d.P = p;
-							d.M = m582;
-							return true;
-						}
-						case 3: {
-							if(p.Lock) return false;
 							var m583Len = Decode.ReadModRm(code[i..], mode, in p, out var m583);
 							if(m583Len < 0) return false;
 							i += m583Len;
@@ -7767,7 +7769,7 @@ public static partial class Disassembler {
 							d.M = m583;
 							return true;
 						}
-						case 6: {
+						case 3: {
 							if(p.Lock) return false;
 							var m584Len = Decode.ReadModRm(code[i..], mode, in p, out var m584);
 							if(m584Len < 0) return false;
@@ -7782,7 +7784,7 @@ public static partial class Disassembler {
 							d.M = m584;
 							return true;
 						}
-						case 7: {
+						case 6: {
 							if(p.Lock) return false;
 							var m585Len = Decode.ReadModRm(code[i..], mode, in p, out var m585);
 							if(m585Len < 0) return false;
@@ -7797,6 +7799,21 @@ public static partial class Disassembler {
 							d.M = m585;
 							return true;
 						}
+						case 7: {
+							if(p.Lock) return false;
+							var m586Len = Decode.ReadModRm(code[i..], mode, in p, out var m586);
+							if(m586Len < 0) return false;
+							i += m586Len;
+							if(!m586.IsReg) return false;
+							if(i + (8) / 8 > code.Length) return false;
+							d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+							d.DefId = 586;
+							d.Len = i;
+							d.Op = op;
+							d.P = p;
+							d.M = m586;
+							return true;
+						}
 						default: return false;
 					}
 				}
@@ -7806,27 +7823,27 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m586Len = Decode.ReadModRm(code[i..], mode, in p, out var m586);
-						if(m586Len < 0) return false;
-						i += m586Len;
-						d.DefId = 586;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m586;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize) {
-						if(p.Lock) return false;
 						var m587Len = Decode.ReadModRm(code[i..], mode, in p, out var m587);
 						if(m587Len < 0) return false;
 						i += m587Len;
-						Decode.ScaleDisp8(ref m587, 16 << p.VecLen);
 						d.DefId = 587;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
 						d.M = m587;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize) {
+						if(p.Lock) return false;
+						var m588Len = Decode.ReadModRm(code[i..], mode, in p, out var m588);
+						if(m588Len < 0) return false;
+						i += m588Len;
+						Decode.ScaleDisp8(ref m588, 16 << p.VecLen);
+						d.DefId = 588;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m588;
 						return true;
 					}
 					return false;
@@ -7835,14 +7852,14 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m588Len = Decode.ReadModRm(code[i..], mode, in p, out var m588);
-					if(m588Len < 0) return false;
-					i += m588Len;
-					d.DefId = 588;
+					var m589Len = Decode.ReadModRm(code[i..], mode, in p, out var m589);
+					if(m589Len < 0) return false;
+					i += m589Len;
+					d.DefId = 589;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m588;
+					d.M = m589;
 					return true;
 				}
 				return false;
@@ -7851,14 +7868,14 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m589Len = Decode.ReadModRm(code[i..], mode, in p, out var m589);
-						if(m589Len < 0) return false;
-						i += m589Len;
-						d.DefId = 589;
+						var m590Len = Decode.ReadModRm(code[i..], mode, in p, out var m590);
+						if(m590Len < 0) return false;
+						i += m590Len;
+						d.DefId = 590;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m589;
+						d.M = m590;
 						return true;
 					}
 					return false;
@@ -7867,14 +7884,14 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m590Len = Decode.ReadModRm(code[i..], mode, in p, out var m590);
-					if(m590Len < 0) return false;
-					i += m590Len;
-					d.DefId = 590;
+					var m591Len = Decode.ReadModRm(code[i..], mode, in p, out var m591);
+					if(m591Len < 0) return false;
+					i += m591Len;
+					d.DefId = 591;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m590;
+					d.M = m591;
 					return true;
 				}
 				return false;
@@ -7883,27 +7900,27 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m591Len = Decode.ReadModRm(code[i..], mode, in p, out var m591);
-						if(m591Len < 0) return false;
-						i += m591Len;
-						d.DefId = 591;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m591;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize) {
-						if(p.Lock) return false;
 						var m592Len = Decode.ReadModRm(code[i..], mode, in p, out var m592);
 						if(m592Len < 0) return false;
 						i += m592Len;
-						Decode.ScaleDisp8(ref m592, 16 << p.VecLen);
 						d.DefId = 592;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
 						d.M = m592;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize) {
+						if(p.Lock) return false;
+						var m593Len = Decode.ReadModRm(code[i..], mode, in p, out var m593);
+						if(m593Len < 0) return false;
+						i += m593Len;
+						Decode.ScaleDisp8(ref m593, 16 << p.VecLen);
+						d.DefId = 593;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m593;
 						return true;
 					}
 					return false;
@@ -7912,14 +7929,14 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m593Len = Decode.ReadModRm(code[i..], mode, in p, out var m593);
-					if(m593Len < 0) return false;
-					i += m593Len;
-					d.DefId = 593;
+					var m594Len = Decode.ReadModRm(code[i..], mode, in p, out var m594);
+					if(m594Len < 0) return false;
+					i += m594Len;
+					d.DefId = 594;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m593;
+					d.M = m594;
 					return true;
 				}
 				return false;
@@ -7928,7 +7945,7 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && p.VexVvvv == 0) {
 						if(p.Lock) return false;
-						d.DefId = 594;
+						d.DefId = 595;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
@@ -7944,19 +7961,6 @@ public static partial class Disassembler {
 				if(p.RepNz) {
 					p.RepNz = false;
 					if(p.Lock) return false;
-					var m595Len = Decode.ReadModRm(code[i..], mode, in p, out var m595);
-					if(m595Len < 0) return false;
-					i += m595Len;
-					d.DefId = 595;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m595;
-					return true;
-				}
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
 					var m596Len = Decode.ReadModRm(code[i..], mode, in p, out var m596);
 					if(m596Len < 0) return false;
 					i += m596Len;
@@ -7967,23 +7971,24 @@ public static partial class Disassembler {
 					d.M = m596;
 					return true;
 				}
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m597Len = Decode.ReadModRm(code[i..], mode, in p, out var m597);
+					if(m597Len < 0) return false;
+					i += m597Len;
+					d.DefId = 597;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m597;
+					return true;
+				}
 				return false;
 			}
 			case (OpcodeMap.TwoByte0F, 0x7E): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m597Len = Decode.ReadModRm(code[i..], mode, in p, out var m597);
-						if(m597Len < 0) return false;
-						i += m597Len;
-						d.DefId = 597;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m597;
-						return true;
-					}
-					if(!p.EvexValid && p.Rep && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m598Len = Decode.ReadModRm(code[i..], mode, in p, out var m598);
 						if(m598Len < 0) return false;
@@ -7995,24 +8000,23 @@ public static partial class Disassembler {
 						d.M = m598;
 						return true;
 					}
+					if(!p.EvexValid && p.Rep && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m599Len = Decode.ReadModRm(code[i..], mode, in p, out var m599);
+						if(m599Len < 0) return false;
+						i += m599Len;
+						d.DefId = 599;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m599;
+						return true;
+					}
 					return false;
 				}
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
-					if(p.Lock) return false;
-					var m599Len = Decode.ReadModRm(code[i..], mode, in p, out var m599);
-					if(m599Len < 0) return false;
-					i += m599Len;
-					d.DefId = 599;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m599;
-					return true;
-				}
-				if(p.Rep) {
-					p.Rep = false;
 					if(p.Lock) return false;
 					var m600Len = Decode.ReadModRm(code[i..], mode, in p, out var m600);
 					if(m600Len < 0) return false;
@@ -8024,23 +8028,24 @@ public static partial class Disassembler {
 					d.M = m600;
 					return true;
 				}
+				if(p.Rep) {
+					p.Rep = false;
+					if(p.Lock) return false;
+					var m601Len = Decode.ReadModRm(code[i..], mode, in p, out var m601);
+					if(m601Len < 0) return false;
+					i += m601Len;
+					d.DefId = 601;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m601;
+					return true;
+				}
 				return false;
 			}
 			case (OpcodeMap.TwoByte0F, 0x7F): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.Rep && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m601Len = Decode.ReadModRm(code[i..], mode, in p, out var m601);
-						if(m601Len < 0) return false;
-						i += m601Len;
-						d.DefId = 601;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m601;
-						return true;
-					}
-					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m602Len = Decode.ReadModRm(code[i..], mode, in p, out var m602);
 						if(m602Len < 0) return false;
@@ -8052,12 +8057,11 @@ public static partial class Disassembler {
 						d.M = m602;
 						return true;
 					}
-					if(p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
+					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m603Len = Decode.ReadModRm(code[i..], mode, in p, out var m603);
 						if(m603Len < 0) return false;
 						i += m603Len;
-						Decode.ScaleDisp8(ref m603, 16 << p.VecLen);
 						d.DefId = 603;
 						d.Len = i;
 						d.Op = op;
@@ -8065,7 +8069,7 @@ public static partial class Disassembler {
 						d.M = m603;
 						return true;
 					}
-					if(p.EvexValid && p.RepNz && p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m604Len = Decode.ReadModRm(code[i..], mode, in p, out var m604);
 						if(m604Len < 0) return false;
@@ -8078,7 +8082,7 @@ public static partial class Disassembler {
 						d.M = m604;
 						return true;
 					}
-					if(p.EvexValid && p.Rep && !p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.RepNz && p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m605Len = Decode.ReadModRm(code[i..], mode, in p, out var m605);
 						if(m605Len < 0) return false;
@@ -8091,7 +8095,7 @@ public static partial class Disassembler {
 						d.M = m605;
 						return true;
 					}
-					if(p.EvexValid && p.Rep && p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.Rep && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m606Len = Decode.ReadModRm(code[i..], mode, in p, out var m606);
 						if(m606Len < 0) return false;
@@ -8104,7 +8108,7 @@ public static partial class Disassembler {
 						d.M = m606;
 						return true;
 					}
-					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.Rep && p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m607Len = Decode.ReadModRm(code[i..], mode, in p, out var m607);
 						if(m607Len < 0) return false;
@@ -8117,7 +8121,7 @@ public static partial class Disassembler {
 						d.M = m607;
 						return true;
 					}
-					if(p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
+					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m608Len = Decode.ReadModRm(code[i..], mode, in p, out var m608);
 						if(m608Len < 0) return false;
@@ -8130,24 +8134,24 @@ public static partial class Disassembler {
 						d.M = m608;
 						return true;
 					}
+					if(p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m609Len = Decode.ReadModRm(code[i..], mode, in p, out var m609);
+						if(m609Len < 0) return false;
+						i += m609Len;
+						Decode.ScaleDisp8(ref m609, 16 << p.VecLen);
+						d.DefId = 609;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m609;
+						return true;
+					}
 					return false;
 				}
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
-					if(p.Lock) return false;
-					var m609Len = Decode.ReadModRm(code[i..], mode, in p, out var m609);
-					if(m609Len < 0) return false;
-					i += m609Len;
-					d.DefId = 609;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m609;
-					return true;
-				}
-				if(p.Rep) {
-					p.Rep = false;
 					if(p.Lock) return false;
 					var m610Len = Decode.ReadModRm(code[i..], mode, in p, out var m610);
 					if(m610Len < 0) return false;
@@ -8159,20 +8163,22 @@ public static partial class Disassembler {
 					d.M = m610;
 					return true;
 				}
+				if(p.Rep) {
+					p.Rep = false;
+					if(p.Lock) return false;
+					var m611Len = Decode.ReadModRm(code[i..], mode, in p, out var m611);
+					if(m611Len < 0) return false;
+					i += m611Len;
+					d.DefId = 611;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m611;
+					return true;
+				}
 				return false;
 			}
 			case (OpcodeMap.TwoByte0F, 0x80): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
-				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
-				d.Imm0 = Decode.ReadImm(code, ref i, p.BranchZWidth(mode), true);
-				d.DefId = 611;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0x81): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8183,7 +8189,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x82): {
+			case (OpcodeMap.TwoByte0F, 0x81): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8194,7 +8200,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x83): {
+			case (OpcodeMap.TwoByte0F, 0x82): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8205,7 +8211,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x84): {
+			case (OpcodeMap.TwoByte0F, 0x83): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8216,7 +8222,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x85): {
+			case (OpcodeMap.TwoByte0F, 0x84): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8227,7 +8233,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x86): {
+			case (OpcodeMap.TwoByte0F, 0x85): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8238,7 +8244,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x87): {
+			case (OpcodeMap.TwoByte0F, 0x86): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8249,7 +8255,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x88): {
+			case (OpcodeMap.TwoByte0F, 0x87): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8260,7 +8266,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x89): {
+			case (OpcodeMap.TwoByte0F, 0x88): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8271,7 +8277,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x8A): {
+			case (OpcodeMap.TwoByte0F, 0x89): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8282,7 +8288,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x8B): {
+			case (OpcodeMap.TwoByte0F, 0x8A): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8293,7 +8299,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x8C): {
+			case (OpcodeMap.TwoByte0F, 0x8B): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8304,7 +8310,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x8D): {
+			case (OpcodeMap.TwoByte0F, 0x8C): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8315,7 +8321,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x8E): {
+			case (OpcodeMap.TwoByte0F, 0x8D): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8326,7 +8332,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x8F): {
+			case (OpcodeMap.TwoByte0F, 0x8E): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
@@ -8337,21 +8343,20 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0x8F): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				if(i + (p.BranchZWidth(mode)) / 8 > code.Length) return false;
+				d.Imm0 = Decode.ReadImm(code, ref i, p.BranchZWidth(mode), true);
+				d.DefId = 627;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0x90): {
 				if(p.VexValid) {
 					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && !p.RexW && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m627Len = Decode.ReadModRm(code[i..], mode, in p, out var m627);
-						if(m627Len < 0) return false;
-						i += m627Len;
-						d.DefId = 627;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m627;
-						return true;
-					}
-					if(!p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m628Len = Decode.ReadModRm(code[i..], mode, in p, out var m628);
 						if(m628Len < 0) return false;
@@ -8363,7 +8368,7 @@ public static partial class Disassembler {
 						d.M = m628;
 						return true;
 					}
-					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && p.RexW && p.VexVvvv == 0) {
+					if(!p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m629Len = Decode.ReadModRm(code[i..], mode, in p, out var m629);
 						if(m629Len < 0) return false;
@@ -8375,7 +8380,7 @@ public static partial class Disassembler {
 						d.M = m629;
 						return true;
 					}
-					if(!p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
+					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m630Len = Decode.ReadModRm(code[i..], mode, in p, out var m630);
 						if(m630Len < 0) return false;
@@ -8387,21 +8392,20 @@ public static partial class Disassembler {
 						d.M = m630;
 						return true;
 					}
+					if(!p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m631Len = Decode.ReadModRm(code[i..], mode, in p, out var m631);
+						if(m631Len < 0) return false;
+						i += m631Len;
+						d.DefId = 631;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m631;
+						return true;
+					}
 					return false;
 				}
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
-				var m631Len = Decode.ReadModRm(code[i..], mode, in p, out var m631);
-				if(m631Len < 0) return false;
-				i += m631Len;
-				d.DefId = 631;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m631;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0x91): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m632Len = Decode.ReadModRm(code[i..], mode, in p, out var m632);
@@ -8414,21 +8418,22 @@ public static partial class Disassembler {
 				d.M = m632;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0x91): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				var m633Len = Decode.ReadModRm(code[i..], mode, in p, out var m633);
+				if(m633Len < 0) return false;
+				i += m633Len;
+				d.DefId = 633;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m633;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0x92): {
 				if(p.VexValid) {
 					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && !p.RexW && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m633Len = Decode.ReadModRm(code[i..], mode, in p, out var m633);
-						if(m633Len < 0) return false;
-						i += m633Len;
-						d.DefId = 633;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m633;
-						return true;
-					}
-					if(!p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m634Len = Decode.ReadModRm(code[i..], mode, in p, out var m634);
 						if(m634Len < 0) return false;
@@ -8440,7 +8445,7 @@ public static partial class Disassembler {
 						d.M = m634;
 						return true;
 					}
-					if(!p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
+					if(!p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m635Len = Decode.ReadModRm(code[i..], mode, in p, out var m635);
 						if(m635Len < 0) return false;
@@ -8452,35 +8457,35 @@ public static partial class Disassembler {
 						d.M = m635;
 						return true;
 					}
+					if(!p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m636Len = Decode.ReadModRm(code[i..], mode, in p, out var m636);
+						if(m636Len < 0) return false;
+						i += m636Len;
+						d.DefId = 636;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m636;
+						return true;
+					}
 					return false;
 				}
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
-				var m636Len = Decode.ReadModRm(code[i..], mode, in p, out var m636);
-				if(m636Len < 0) return false;
-				i += m636Len;
-				d.DefId = 636;
+				var m637Len = Decode.ReadModRm(code[i..], mode, in p, out var m637);
+				if(m637Len < 0) return false;
+				i += m637Len;
+				d.DefId = 637;
 				d.Len = i;
 				d.Op = op;
 				d.P = p;
-				d.M = m636;
+				d.M = m637;
 				return true;
 			}
 			case (OpcodeMap.TwoByte0F, 0x93): {
 				if(p.VexValid) {
 					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && !p.RexW && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m637Len = Decode.ReadModRm(code[i..], mode, in p, out var m637);
-						if(m637Len < 0) return false;
-						i += m637Len;
-						d.DefId = 637;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m637;
-						return true;
-					}
-					if(!p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m638Len = Decode.ReadModRm(code[i..], mode, in p, out var m638);
 						if(m638Len < 0) return false;
@@ -8492,21 +8497,20 @@ public static partial class Disassembler {
 						d.M = m638;
 						return true;
 					}
+					if(!p.EvexValid && p.RepNz && !p.RexW && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m639Len = Decode.ReadModRm(code[i..], mode, in p, out var m639);
+						if(m639Len < 0) return false;
+						i += m639Len;
+						d.DefId = 639;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m639;
+						return true;
+					}
 					return false;
 				}
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
-				var m639Len = Decode.ReadModRm(code[i..], mode, in p, out var m639);
-				if(m639Len < 0) return false;
-				i += m639Len;
-				d.DefId = 639;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m639;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0x94): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m640Len = Decode.ReadModRm(code[i..], mode, in p, out var m640);
@@ -8519,7 +8523,7 @@ public static partial class Disassembler {
 				d.M = m640;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x95): {
+			case (OpcodeMap.TwoByte0F, 0x94): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m641Len = Decode.ReadModRm(code[i..], mode, in p, out var m641);
@@ -8532,7 +8536,7 @@ public static partial class Disassembler {
 				d.M = m641;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x96): {
+			case (OpcodeMap.TwoByte0F, 0x95): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m642Len = Decode.ReadModRm(code[i..], mode, in p, out var m642);
@@ -8545,7 +8549,7 @@ public static partial class Disassembler {
 				d.M = m642;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x97): {
+			case (OpcodeMap.TwoByte0F, 0x96): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m643Len = Decode.ReadModRm(code[i..], mode, in p, out var m643);
@@ -8558,21 +8562,22 @@ public static partial class Disassembler {
 				d.M = m643;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0x97): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				var m644Len = Decode.ReadModRm(code[i..], mode, in p, out var m644);
+				if(m644Len < 0) return false;
+				i += m644Len;
+				d.DefId = 644;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m644;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0x98): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize && p.RexW && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m644Len = Decode.ReadModRm(code[i..], mode, in p, out var m644);
-						if(m644Len < 0) return false;
-						i += m644Len;
-						d.DefId = 644;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m644;
-						return true;
-					}
-					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m645Len = Decode.ReadModRm(code[i..], mode, in p, out var m645);
 						if(m645Len < 0) return false;
@@ -8584,21 +8589,20 @@ public static partial class Disassembler {
 						d.M = m645;
 						return true;
 					}
+					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz && !p.RexW && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m646Len = Decode.ReadModRm(code[i..], mode, in p, out var m646);
+						if(m646Len < 0) return false;
+						i += m646Len;
+						d.DefId = 646;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m646;
+						return true;
+					}
 					return false;
 				}
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
-				var m646Len = Decode.ReadModRm(code[i..], mode, in p, out var m646);
-				if(m646Len < 0) return false;
-				i += m646Len;
-				d.DefId = 646;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m646;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0x99): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m647Len = Decode.ReadModRm(code[i..], mode, in p, out var m647);
@@ -8611,7 +8615,7 @@ public static partial class Disassembler {
 				d.M = m647;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x9A): {
+			case (OpcodeMap.TwoByte0F, 0x99): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m648Len = Decode.ReadModRm(code[i..], mode, in p, out var m648);
@@ -8624,7 +8628,7 @@ public static partial class Disassembler {
 				d.M = m648;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x9B): {
+			case (OpcodeMap.TwoByte0F, 0x9A): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m649Len = Decode.ReadModRm(code[i..], mode, in p, out var m649);
@@ -8637,7 +8641,7 @@ public static partial class Disassembler {
 				d.M = m649;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x9C): {
+			case (OpcodeMap.TwoByte0F, 0x9B): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m650Len = Decode.ReadModRm(code[i..], mode, in p, out var m650);
@@ -8650,7 +8654,7 @@ public static partial class Disassembler {
 				d.M = m650;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x9D): {
+			case (OpcodeMap.TwoByte0F, 0x9C): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m651Len = Decode.ReadModRm(code[i..], mode, in p, out var m651);
@@ -8663,7 +8667,7 @@ public static partial class Disassembler {
 				d.M = m651;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x9E): {
+			case (OpcodeMap.TwoByte0F, 0x9D): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m652Len = Decode.ReadModRm(code[i..], mode, in p, out var m652);
@@ -8676,7 +8680,7 @@ public static partial class Disassembler {
 				d.M = m652;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0x9F): {
+			case (OpcodeMap.TwoByte0F, 0x9E): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m653Len = Decode.ReadModRm(code[i..], mode, in p, out var m653);
@@ -8689,10 +8693,23 @@ public static partial class Disassembler {
 				d.M = m653;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0x9F): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				var m654Len = Decode.ReadModRm(code[i..], mode, in p, out var m654);
+				if(m654Len < 0) return false;
+				i += m654Len;
+				d.DefId = 654;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m654;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0xA2): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
-				d.DefId = 654;
+				d.DefId = 655;
 				d.Len = i;
 				d.Op = op;
 				d.P = p;
@@ -8701,24 +8718,9 @@ public static partial class Disassembler {
 			case (OpcodeMap.TwoByte0F, 0xA3): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
-				var m655Len = Decode.ReadModRm(code[i..], mode, in p, out var m655);
-				if(m655Len < 0) return false;
-				i += m655Len;
-				d.DefId = 655;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m655;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0xA4): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
 				var m656Len = Decode.ReadModRm(code[i..], mode, in p, out var m656);
 				if(m656Len < 0) return false;
 				i += m656Len;
-				if(i + (8) / 8 > code.Length) return false;
-				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 				d.DefId = 656;
 				d.Len = i;
 				d.Op = op;
@@ -8726,12 +8728,14 @@ public static partial class Disassembler {
 				d.M = m656;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xA5): {
+			case (OpcodeMap.TwoByte0F, 0xA4): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m657Len = Decode.ReadModRm(code[i..], mode, in p, out var m657);
 				if(m657Len < 0) return false;
 				i += m657Len;
+				if(i + (8) / 8 > code.Length) return false;
+				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 				d.DefId = 657;
 				d.Len = i;
 				d.Op = op;
@@ -8739,12 +8743,12 @@ public static partial class Disassembler {
 				d.M = m657;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xAB): {
+			case (OpcodeMap.TwoByte0F, 0xA5): {
 				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
 				var m658Len = Decode.ReadModRm(code[i..], mode, in p, out var m658);
 				if(m658Len < 0) return false;
 				i += m658Len;
-				if(p.Lock && m658.IsReg) return false;
 				d.DefId = 658;
 				d.Len = i;
 				d.Op = op;
@@ -8752,14 +8756,12 @@ public static partial class Disassembler {
 				d.M = m658;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xAC): {
+			case (OpcodeMap.TwoByte0F, 0xAB): {
 				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
 				var m659Len = Decode.ReadModRm(code[i..], mode, in p, out var m659);
 				if(m659Len < 0) return false;
 				i += m659Len;
-				if(i + (8) / 8 > code.Length) return false;
-				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+				if(p.Lock && m659.IsReg) return false;
 				d.DefId = 659;
 				d.Len = i;
 				d.Op = op;
@@ -8767,17 +8769,32 @@ public static partial class Disassembler {
 				d.M = m659;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xAD): {
+			case (OpcodeMap.TwoByte0F, 0xAC): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m660Len = Decode.ReadModRm(code[i..], mode, in p, out var m660);
 				if(m660Len < 0) return false;
 				i += m660Len;
+				if(i + (8) / 8 > code.Length) return false;
+				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 				d.DefId = 660;
 				d.Len = i;
 				d.Op = op;
 				d.P = p;
 				d.M = m660;
+				return true;
+			}
+			case (OpcodeMap.TwoByte0F, 0xAD): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				var m661Len = Decode.ReadModRm(code[i..], mode, in p, out var m661);
+				if(m661Len < 0) return false;
+				i += m661Len;
+				d.DefId = 661;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m661;
 				return true;
 			}
 			case (OpcodeMap.TwoByte0F, 0xAE): {
@@ -8788,19 +8805,6 @@ public static partial class Disassembler {
 				var rmField = code[i] & 7;
 				switch(regField) {
 					case 2: {
-						if(p.Lock) return false;
-						var m661Len = Decode.ReadModRm(code[i..], mode, in p, out var m661);
-						if(m661Len < 0) return false;
-						i += m661Len;
-						if(m661.IsReg) return false;
-						d.DefId = 661;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m661;
-						return true;
-					}
-					case 3: {
 						if(p.Lock) return false;
 						var m662Len = Decode.ReadModRm(code[i..], mode, in p, out var m662);
 						if(m662Len < 0) return false;
@@ -8813,11 +8817,12 @@ public static partial class Disassembler {
 						d.M = m662;
 						return true;
 					}
-					case 5: {
+					case 3: {
 						if(p.Lock) return false;
 						var m663Len = Decode.ReadModRm(code[i..], mode, in p, out var m663);
 						if(m663Len < 0) return false;
 						i += m663Len;
+						if(m663.IsReg) return false;
 						d.DefId = 663;
 						d.Len = i;
 						d.Op = op;
@@ -8825,7 +8830,7 @@ public static partial class Disassembler {
 						d.M = m663;
 						return true;
 					}
-					case 6: {
+					case 5: {
 						if(p.Lock) return false;
 						var m664Len = Decode.ReadModRm(code[i..], mode, in p, out var m664);
 						if(m664Len < 0) return false;
@@ -8837,7 +8842,7 @@ public static partial class Disassembler {
 						d.M = m664;
 						return true;
 					}
-					case 7: {
+					case 6: {
 						if(p.Lock) return false;
 						var m665Len = Decode.ReadModRm(code[i..], mode, in p, out var m665);
 						if(m665Len < 0) return false;
@@ -8849,28 +8854,27 @@ public static partial class Disassembler {
 						d.M = m665;
 						return true;
 					}
+					case 7: {
+						if(p.Lock) return false;
+						var m666Len = Decode.ReadModRm(code[i..], mode, in p, out var m666);
+						if(m666Len < 0) return false;
+						i += m666Len;
+						d.DefId = 666;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m666;
+						return true;
+					}
 					default: return false;
 				}
 			}
 			case (OpcodeMap.TwoByte0F, 0xAF): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
-				var m666Len = Decode.ReadModRm(code[i..], mode, in p, out var m666);
-				if(m666Len < 0) return false;
-				i += m666Len;
-				d.DefId = 666;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m666;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0xB0): {
-				if(p.VexValid) return false;  // no VEX row here
 				var m667Len = Decode.ReadModRm(code[i..], mode, in p, out var m667);
 				if(m667Len < 0) return false;
 				i += m667Len;
-				if(p.Lock && m667.IsReg) return false;
 				d.DefId = 667;
 				d.Len = i;
 				d.Op = op;
@@ -8878,7 +8882,7 @@ public static partial class Disassembler {
 				d.M = m667;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xB1): {
+			case (OpcodeMap.TwoByte0F, 0xB0): {
 				if(p.VexValid) return false;  // no VEX row here
 				var m668Len = Decode.ReadModRm(code[i..], mode, in p, out var m668);
 				if(m668Len < 0) return false;
@@ -8891,7 +8895,7 @@ public static partial class Disassembler {
 				d.M = m668;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xB3): {
+			case (OpcodeMap.TwoByte0F, 0xB1): {
 				if(p.VexValid) return false;  // no VEX row here
 				var m669Len = Decode.ReadModRm(code[i..], mode, in p, out var m669);
 				if(m669Len < 0) return false;
@@ -8904,12 +8908,12 @@ public static partial class Disassembler {
 				d.M = m669;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xB6): {
+			case (OpcodeMap.TwoByte0F, 0xB3): {
 				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
 				var m670Len = Decode.ReadModRm(code[i..], mode, in p, out var m670);
 				if(m670Len < 0) return false;
 				i += m670Len;
+				if(p.Lock && m670.IsReg) return false;
 				d.DefId = 670;
 				d.Len = i;
 				d.Op = op;
@@ -8917,7 +8921,7 @@ public static partial class Disassembler {
 				d.M = m670;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xB7): {
+			case (OpcodeMap.TwoByte0F, 0xB6): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m671Len = Decode.ReadModRm(code[i..], mode, in p, out var m671);
@@ -8930,19 +8934,32 @@ public static partial class Disassembler {
 				d.M = m671;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0xB7): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				var m672Len = Decode.ReadModRm(code[i..], mode, in p, out var m672);
+				if(m672Len < 0) return false;
+				i += m672Len;
+				d.DefId = 672;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m672;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0xB8): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Rep) {
 					p.Rep = false;
 					if(p.Lock) return false;
-					var m672Len = Decode.ReadModRm(code[i..], mode, in p, out var m672);
-					if(m672Len < 0) return false;
-					i += m672Len;
-					d.DefId = 672;
+					var m673Len = Decode.ReadModRm(code[i..], mode, in p, out var m673);
+					if(m673Len < 0) return false;
+					i += m673Len;
+					d.DefId = 673;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m672;
+					d.M = m673;
 					return true;
 				}
 				return false;
@@ -8956,23 +8973,9 @@ public static partial class Disassembler {
 				switch(regField) {
 					case 4: {
 						if(p.Lock) return false;
-						var m673Len = Decode.ReadModRm(code[i..], mode, in p, out var m673);
-						if(m673Len < 0) return false;
-						i += m673Len;
-						if(i + (8) / 8 > code.Length) return false;
-						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 673;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m673;
-						return true;
-					}
-					case 5: {
 						var m674Len = Decode.ReadModRm(code[i..], mode, in p, out var m674);
 						if(m674Len < 0) return false;
 						i += m674Len;
-						if(p.Lock && m674.IsReg) return false;
 						if(i + (8) / 8 > code.Length) return false;
 						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 						d.DefId = 674;
@@ -8982,7 +8985,7 @@ public static partial class Disassembler {
 						d.M = m674;
 						return true;
 					}
-					case 6: {
+					case 5: {
 						var m675Len = Decode.ReadModRm(code[i..], mode, in p, out var m675);
 						if(m675Len < 0) return false;
 						i += m675Len;
@@ -8996,7 +8999,7 @@ public static partial class Disassembler {
 						d.M = m675;
 						return true;
 					}
-					case 7: {
+					case 6: {
 						var m676Len = Decode.ReadModRm(code[i..], mode, in p, out var m676);
 						if(m676Len < 0) return false;
 						i += m676Len;
@@ -9010,20 +9013,34 @@ public static partial class Disassembler {
 						d.M = m676;
 						return true;
 					}
+					case 7: {
+						var m677Len = Decode.ReadModRm(code[i..], mode, in p, out var m677);
+						if(m677Len < 0) return false;
+						i += m677Len;
+						if(p.Lock && m677.IsReg) return false;
+						if(i + (8) / 8 > code.Length) return false;
+						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						d.DefId = 677;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m677;
+						return true;
+					}
 					default: return false;
 				}
 			}
 			case (OpcodeMap.TwoByte0F, 0xBB): {
 				if(p.VexValid) return false;  // no VEX row here
-				var m677Len = Decode.ReadModRm(code[i..], mode, in p, out var m677);
-				if(m677Len < 0) return false;
-				i += m677Len;
-				if(p.Lock && m677.IsReg) return false;
-				d.DefId = 677;
+				var m678Len = Decode.ReadModRm(code[i..], mode, in p, out var m678);
+				if(m678Len < 0) return false;
+				i += m678Len;
+				if(p.Lock && m678.IsReg) return false;
+				d.DefId = 678;
 				d.Len = i;
 				d.Op = op;
 				d.P = p;
-				d.M = m677;
+				d.M = m678;
 				return true;
 			}
 			case (OpcodeMap.TwoByte0F, 0xBC): {
@@ -9031,25 +9048,25 @@ public static partial class Disassembler {
 				if(p.Rep) {
 					p.Rep = false;
 					if(p.Lock) return false;
-					var m678Len = Decode.ReadModRm(code[i..], mode, in p, out var m678);
-					if(m678Len < 0) return false;
-					i += m678Len;
-					d.DefId = 678;
+					var m679Len = Decode.ReadModRm(code[i..], mode, in p, out var m679);
+					if(m679Len < 0) return false;
+					i += m679Len;
+					d.DefId = 679;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m678;
+					d.M = m679;
 					return true;
 				}
 				if(p.Lock) return false;
-				var m679Len = Decode.ReadModRm(code[i..], mode, in p, out var m679);
-				if(m679Len < 0) return false;
-				i += m679Len;
-				d.DefId = 679;
+				var m680Len = Decode.ReadModRm(code[i..], mode, in p, out var m680);
+				if(m680Len < 0) return false;
+				i += m680Len;
+				d.DefId = 680;
 				d.Len = i;
 				d.Op = op;
 				d.P = p;
-				d.M = m679;
+				d.M = m680;
 				return true;
 			}
 			case (OpcodeMap.TwoByte0F, 0xBD): {
@@ -9057,29 +9074,16 @@ public static partial class Disassembler {
 				if(p.Rep) {
 					p.Rep = false;
 					if(p.Lock) return false;
-					var m680Len = Decode.ReadModRm(code[i..], mode, in p, out var m680);
-					if(m680Len < 0) return false;
-					i += m680Len;
-					d.DefId = 680;
+					var m681Len = Decode.ReadModRm(code[i..], mode, in p, out var m681);
+					if(m681Len < 0) return false;
+					i += m681Len;
+					d.DefId = 681;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m680;
+					d.M = m681;
 					return true;
 				}
-				if(p.Lock) return false;
-				var m681Len = Decode.ReadModRm(code[i..], mode, in p, out var m681);
-				if(m681Len < 0) return false;
-				i += m681Len;
-				d.DefId = 681;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m681;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0xBE): {
-				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m682Len = Decode.ReadModRm(code[i..], mode, in p, out var m682);
 				if(m682Len < 0) return false;
@@ -9091,7 +9095,7 @@ public static partial class Disassembler {
 				d.M = m682;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xBF): {
+			case (OpcodeMap.TwoByte0F, 0xBE): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				var m683Len = Decode.ReadModRm(code[i..], mode, in p, out var m683);
@@ -9104,12 +9108,12 @@ public static partial class Disassembler {
 				d.M = m683;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xC0): {
+			case (OpcodeMap.TwoByte0F, 0xBF): {
 				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
 				var m684Len = Decode.ReadModRm(code[i..], mode, in p, out var m684);
 				if(m684Len < 0) return false;
 				i += m684Len;
-				if(p.Lock && m684.IsReg) return false;
 				d.DefId = 684;
 				d.Len = i;
 				d.Op = op;
@@ -9117,7 +9121,7 @@ public static partial class Disassembler {
 				d.M = m684;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xC1): {
+			case (OpcodeMap.TwoByte0F, 0xC0): {
 				if(p.VexValid) return false;  // no VEX row here
 				var m685Len = Decode.ReadModRm(code[i..], mode, in p, out var m685);
 				if(m685Len < 0) return false;
@@ -9130,25 +9134,23 @@ public static partial class Disassembler {
 				d.M = m685;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0xC1): {
+				if(p.VexValid) return false;  // no VEX row here
+				var m686Len = Decode.ReadModRm(code[i..], mode, in p, out var m686);
+				if(m686Len < 0) return false;
+				i += m686Len;
+				if(p.Lock && m686.IsReg) return false;
+				d.DefId = 686;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m686;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0xC2): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Rep) {
 					p.Rep = false;
-					if(p.Lock) return false;
-					var m686Len = Decode.ReadModRm(code[i..], mode, in p, out var m686);
-					if(m686Len < 0) return false;
-					i += m686Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 686;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m686;
-					return true;
-				}
-				if(p.OpSize) {
-					p.OpSize = false;
 					if(p.Lock) return false;
 					var m687Len = Decode.ReadModRm(code[i..], mode, in p, out var m687);
 					if(m687Len < 0) return false;
@@ -9162,8 +9164,8 @@ public static partial class Disassembler {
 					d.M = m687;
 					return true;
 				}
-				if(p.RepNz) {
-					p.RepNz = false;
+				if(p.OpSize) {
+					p.OpSize = false;
 					if(p.Lock) return false;
 					var m688Len = Decode.ReadModRm(code[i..], mode, in p, out var m688);
 					if(m688Len < 0) return false;
@@ -9177,26 +9179,27 @@ public static partial class Disassembler {
 					d.M = m688;
 					return true;
 				}
-				if(p.Lock) return false;
-				var m689Len = Decode.ReadModRm(code[i..], mode, in p, out var m689);
-				if(m689Len < 0) return false;
-				i += m689Len;
-				if(i + (8) / 8 > code.Length) return false;
-				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-				d.DefId = 689;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m689;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0xC3): {
-				if(p.VexValid) return false;  // no VEX row here
+				if(p.RepNz) {
+					p.RepNz = false;
+					if(p.Lock) return false;
+					var m689Len = Decode.ReadModRm(code[i..], mode, in p, out var m689);
+					if(m689Len < 0) return false;
+					i += m689Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 689;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m689;
+					return true;
+				}
 				if(p.Lock) return false;
 				var m690Len = Decode.ReadModRm(code[i..], mode, in p, out var m690);
 				if(m690Len < 0) return false;
 				i += m690Len;
-				if(m690.IsReg) return false;
+				if(i + (8) / 8 > code.Length) return false;
+				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 				d.DefId = 690;
 				d.Len = i;
 				d.Op = op;
@@ -9204,34 +9207,67 @@ public static partial class Disassembler {
 				d.M = m690;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0xC3): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				var m691Len = Decode.ReadModRm(code[i..], mode, in p, out var m691);
+				if(m691Len < 0) return false;
+				i += m691Len;
+				if(m691.IsReg) return false;
+				d.DefId = 691;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				d.M = m691;
+				return true;
+			}
+			case (OpcodeMap.TwoByte0F, 0xC4): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m692Len = Decode.ReadModRm(code[i..], mode, in p, out var m692);
+					if(m692Len < 0) return false;
+					i += m692Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 692;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m692;
+					return true;
+				}
+				return false;
+			}
 			case (OpcodeMap.TwoByte0F, 0xC6): {
 				if(p.VexValid) {
 					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz) {
 						if(p.Lock) return false;
-						var m691Len = Decode.ReadModRm(code[i..], mode, in p, out var m691);
-						if(m691Len < 0) return false;
-						i += m691Len;
+						var m693Len = Decode.ReadModRm(code[i..], mode, in p, out var m693);
+						if(m693Len < 0) return false;
+						i += m693Len;
 						if(i + (8) / 8 > code.Length) return false;
 						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 691;
+						d.DefId = 693;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m691;
+						d.M = m693;
 						return true;
 					}
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m692Len = Decode.ReadModRm(code[i..], mode, in p, out var m692);
-						if(m692Len < 0) return false;
-						i += m692Len;
+						var m694Len = Decode.ReadModRm(code[i..], mode, in p, out var m694);
+						if(m694Len < 0) return false;
+						i += m694Len;
 						if(i + (8) / 8 > code.Length) return false;
 						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 692;
+						d.DefId = 694;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m692;
+						d.M = m694;
 						return true;
 					}
 					return false;
@@ -9240,51 +9276,33 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m693Len = Decode.ReadModRm(code[i..], mode, in p, out var m693);
-					if(m693Len < 0) return false;
-					i += m693Len;
+					var m695Len = Decode.ReadModRm(code[i..], mode, in p, out var m695);
+					if(m695Len < 0) return false;
+					i += m695Len;
 					if(i + (8) / 8 > code.Length) return false;
 					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 693;
+					d.DefId = 695;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m693;
+					d.M = m695;
 					return true;
 				}
 				if(p.Rep || p.RepNz) return false;
 				if(p.Lock) return false;
-				var m694Len = Decode.ReadModRm(code[i..], mode, in p, out var m694);
-				if(m694Len < 0) return false;
-				i += m694Len;
+				var m696Len = Decode.ReadModRm(code[i..], mode, in p, out var m696);
+				if(m696Len < 0) return false;
+				i += m696Len;
 				if(i + (8) / 8 > code.Length) return false;
 				d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-				d.DefId = 694;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				d.M = m694;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0xC8): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
-				d.DefId = 695;
-				d.Len = i;
-				d.Op = op;
-				d.P = p;
-				return true;
-			}
-			case (OpcodeMap.TwoByte0F, 0xC9): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.Lock) return false;
 				d.DefId = 696;
 				d.Len = i;
 				d.Op = op;
 				d.P = p;
+				d.M = m696;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xCA): {
+			case (OpcodeMap.TwoByte0F, 0xC8): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				d.DefId = 697;
@@ -9293,7 +9311,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xCB): {
+			case (OpcodeMap.TwoByte0F, 0xC9): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				d.DefId = 698;
@@ -9302,7 +9320,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xCC): {
+			case (OpcodeMap.TwoByte0F, 0xCA): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				d.DefId = 699;
@@ -9311,7 +9329,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xCD): {
+			case (OpcodeMap.TwoByte0F, 0xCB): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				d.DefId = 700;
@@ -9320,7 +9338,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xCE): {
+			case (OpcodeMap.TwoByte0F, 0xCC): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				d.DefId = 701;
@@ -9329,7 +9347,7 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
-			case (OpcodeMap.TwoByte0F, 0xCF): {
+			case (OpcodeMap.TwoByte0F, 0xCD): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.Lock) return false;
 				d.DefId = 702;
@@ -9338,41 +9356,25 @@ public static partial class Disassembler {
 				d.P = p;
 				return true;
 			}
+			case (OpcodeMap.TwoByte0F, 0xCE): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				d.DefId = 703;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				return true;
+			}
+			case (OpcodeMap.TwoByte0F, 0xCF): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Lock) return false;
+				d.DefId = 704;
+				d.Len = i;
+				d.Op = op;
+				d.P = p;
+				return true;
+			}
 			case (OpcodeMap.TwoByte0F, 0xD1): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m703Len = Decode.ReadModRm(code[i..], mode, in p, out var m703);
-					if(m703Len < 0) return false;
-					i += m703Len;
-					d.DefId = 703;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m703;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xD2): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m704Len = Decode.ReadModRm(code[i..], mode, in p, out var m704);
-					if(m704Len < 0) return false;
-					i += m704Len;
-					d.DefId = 704;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m704;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xD3): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -9389,7 +9391,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xD4): {
+			case (OpcodeMap.TwoByte0F, 0xD2): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -9406,42 +9408,46 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
+			case (OpcodeMap.TwoByte0F, 0xD3): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m707Len = Decode.ReadModRm(code[i..], mode, in p, out var m707);
+					if(m707Len < 0) return false;
+					i += m707Len;
+					d.DefId = 707;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m707;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xD4): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m708Len = Decode.ReadModRm(code[i..], mode, in p, out var m708);
+					if(m708Len < 0) return false;
+					i += m708Len;
+					d.DefId = 708;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m708;
+					return true;
+				}
+				return false;
+			}
 			case (OpcodeMap.TwoByte0F, 0xD6): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(i >= code.Length) return false;
 					if((code[i] >> 6) == 3) {
-						if(p.Lock) return false;
-						var m707Len = Decode.ReadModRm(code[i..], mode, in p, out var m707);
-						if(m707Len < 0) return false;
-						i += m707Len;
-						if(!m707.IsReg) return false;
-						d.DefId = 707;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m707;
-						return true;
-					} else {
-						if(p.Lock) return false;
-						var m708Len = Decode.ReadModRm(code[i..], mode, in p, out var m708);
-						if(m708Len < 0) return false;
-						i += m708Len;
-						if(m708.IsReg) return false;
-						d.DefId = 708;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m708;
-						return true;
-					}
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xD7): {
-				if(p.VexValid) {
-					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m709Len = Decode.ReadModRm(code[i..], mode, in p, out var m709);
 						if(m709Len < 0) return false;
@@ -9453,6 +9459,36 @@ public static partial class Disassembler {
 						d.P = p;
 						d.M = m709;
 						return true;
+					} else {
+						if(p.Lock) return false;
+						var m710Len = Decode.ReadModRm(code[i..], mode, in p, out var m710);
+						if(m710Len < 0) return false;
+						i += m710Len;
+						if(m710.IsReg) return false;
+						d.DefId = 710;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m710;
+						return true;
+					}
+				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xD7): {
+				if(p.VexValid) {
+					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m711Len = Decode.ReadModRm(code[i..], mode, in p, out var m711);
+						if(m711Len < 0) return false;
+						i += m711Len;
+						if(!m711.IsReg) return false;
+						d.DefId = 711;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m711;
+						return true;
 					}
 					return false;
 				}
@@ -9460,15 +9496,15 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m710Len = Decode.ReadModRm(code[i..], mode, in p, out var m710);
-					if(m710Len < 0) return false;
-					i += m710Len;
-					if(!m710.IsReg) return false;
-					d.DefId = 710;
+					var m712Len = Decode.ReadModRm(code[i..], mode, in p, out var m712);
+					if(m712Len < 0) return false;
+					i += m712Len;
+					if(!m712.IsReg) return false;
+					d.DefId = 712;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m710;
+					d.M = m712;
 					return true;
 				}
 				return false;
@@ -9477,27 +9513,27 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m711Len = Decode.ReadModRm(code[i..], mode, in p, out var m711);
-						if(m711Len < 0) return false;
-						i += m711Len;
-						d.DefId = 711;
+						var m713Len = Decode.ReadModRm(code[i..], mode, in p, out var m713);
+						if(m713Len < 0) return false;
+						i += m713Len;
+						d.DefId = 713;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m711;
+						d.M = m713;
 						return true;
 					}
 					if(p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m712Len = Decode.ReadModRm(code[i..], mode, in p, out var m712);
-						if(m712Len < 0) return false;
-						i += m712Len;
-						Decode.ScaleDisp8(ref m712, 16 << p.VecLen);
-						d.DefId = 712;
+						var m714Len = Decode.ReadModRm(code[i..], mode, in p, out var m714);
+						if(m714Len < 0) return false;
+						i += m714Len;
+						Decode.ScaleDisp8(ref m714, 16 << p.VecLen);
+						d.DefId = 714;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m712;
+						d.M = m714;
 						return true;
 					}
 					return false;
@@ -9506,14 +9542,14 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m713Len = Decode.ReadModRm(code[i..], mode, in p, out var m713);
-					if(m713Len < 0) return false;
-					i += m713Len;
-					d.DefId = 713;
+					var m715Len = Decode.ReadModRm(code[i..], mode, in p, out var m715);
+					if(m715Len < 0) return false;
+					i += m715Len;
+					d.DefId = 715;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m713;
+					d.M = m715;
 					return true;
 				}
 				return false;
@@ -9522,35 +9558,9 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m714Len = Decode.ReadModRm(code[i..], mode, in p, out var m714);
-						if(m714Len < 0) return false;
-						i += m714Len;
-						d.DefId = 714;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m714;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && !p.RexW) {
-						if(p.Lock) return false;
-						var m715Len = Decode.ReadModRm(code[i..], mode, in p, out var m715);
-						if(m715Len < 0) return false;
-						i += m715Len;
-						Decode.ScaleDisp8(ref m715, 16 << p.VecLen);
-						d.DefId = 715;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m715;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && p.RexW) {
-						if(p.Lock) return false;
 						var m716Len = Decode.ReadModRm(code[i..], mode, in p, out var m716);
 						if(m716Len < 0) return false;
 						i += m716Len;
-						Decode.ScaleDisp8(ref m716, 16 << p.VecLen);
 						d.DefId = 716;
 						d.Len = i;
 						d.Op = op;
@@ -9558,31 +9568,25 @@ public static partial class Disassembler {
 						d.M = m716;
 						return true;
 					}
-					return false;
-				}
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m717Len = Decode.ReadModRm(code[i..], mode, in p, out var m717);
-					if(m717Len < 0) return false;
-					i += m717Len;
-					d.DefId = 717;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m717;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xDE): {
-				if(p.VexValid) {
-					if(!p.EvexValid && p.OpSize) {
+					if(p.EvexValid && p.OpSize && !p.RexW) {
+						if(p.Lock) return false;
+						var m717Len = Decode.ReadModRm(code[i..], mode, in p, out var m717);
+						if(m717Len < 0) return false;
+						i += m717Len;
+						Decode.ScaleDisp8(ref m717, 16 << p.VecLen);
+						d.DefId = 717;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m717;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize && p.RexW) {
 						if(p.Lock) return false;
 						var m718Len = Decode.ReadModRm(code[i..], mode, in p, out var m718);
 						if(m718Len < 0) return false;
 						i += m718Len;
+						Decode.ScaleDisp8(ref m718, 16 << p.VecLen);
 						d.DefId = 718;
 						d.Len = i;
 						d.Op = op;
@@ -9608,7 +9612,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xDF): {
+			case (OpcodeMap.TwoByte0F, 0xDE): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
@@ -9640,24 +9644,22 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xE1): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m722Len = Decode.ReadModRm(code[i..], mode, in p, out var m722);
-					if(m722Len < 0) return false;
-					i += m722Len;
-					d.DefId = 722;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m722;
-					return true;
+			case (OpcodeMap.TwoByte0F, 0xDF): {
+				if(p.VexValid) {
+					if(!p.EvexValid && p.OpSize) {
+						if(p.Lock) return false;
+						var m722Len = Decode.ReadModRm(code[i..], mode, in p, out var m722);
+						if(m722Len < 0) return false;
+						i += m722Len;
+						d.DefId = 722;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m722;
+						return true;
+					}
+					return false;
 				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xE2): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -9674,10 +9676,10 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xE6): {
+			case (OpcodeMap.TwoByte0F, 0xE1): {
 				if(p.VexValid) return false;  // no VEX row here
-				if(p.Rep) {
-					p.Rep = false;
+				if(p.OpSize) {
+					p.OpSize = false;
 					if(p.Lock) return false;
 					var m724Len = Decode.ReadModRm(code[i..], mode, in p, out var m724);
 					if(m724Len < 0) return false;
@@ -9689,8 +9691,12 @@ public static partial class Disassembler {
 					d.M = m724;
 					return true;
 				}
-				if(p.RepNz) {
-					p.RepNz = false;
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xE2): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
 					if(p.Lock) return false;
 					var m725Len = Decode.ReadModRm(code[i..], mode, in p, out var m725);
 					if(m725Len < 0) return false;
@@ -9702,8 +9708,12 @@ public static partial class Disassembler {
 					d.M = m725;
 					return true;
 				}
-				if(p.OpSize) {
-					p.OpSize = false;
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xE6): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.Rep) {
+					p.Rep = false;
 					if(p.Lock) return false;
 					var m726Len = Decode.ReadModRm(code[i..], mode, in p, out var m726);
 					if(m726Len < 0) return false;
@@ -9715,35 +9725,61 @@ public static partial class Disassembler {
 					d.M = m726;
 					return true;
 				}
+				if(p.RepNz) {
+					p.RepNz = false;
+					if(p.Lock) return false;
+					var m727Len = Decode.ReadModRm(code[i..], mode, in p, out var m727);
+					if(m727Len < 0) return false;
+					i += m727Len;
+					d.DefId = 727;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m727;
+					return true;
+				}
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m728Len = Decode.ReadModRm(code[i..], mode, in p, out var m728);
+					if(m728Len < 0) return false;
+					i += m728Len;
+					d.DefId = 728;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m728;
+					return true;
+				}
 				return false;
 			}
 			case (OpcodeMap.TwoByte0F, 0xE7): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
 						if(p.Lock) return false;
-						var m727Len = Decode.ReadModRm(code[i..], mode, in p, out var m727);
-						if(m727Len < 0) return false;
-						i += m727Len;
-						if(m727.IsReg) return false;
-						d.DefId = 727;
+						var m729Len = Decode.ReadModRm(code[i..], mode, in p, out var m729);
+						if(m729Len < 0) return false;
+						i += m729Len;
+						if(m729.IsReg) return false;
+						d.DefId = 729;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m727;
+						d.M = m729;
 						return true;
 					}
 					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
-						var m728Len = Decode.ReadModRm(code[i..], mode, in p, out var m728);
-						if(m728Len < 0) return false;
-						i += m728Len;
-						if(m728.IsReg) return false;
-						Decode.ScaleDisp8(ref m728, 16 << p.VecLen);
-						d.DefId = 728;
+						var m730Len = Decode.ReadModRm(code[i..], mode, in p, out var m730);
+						if(m730Len < 0) return false;
+						i += m730Len;
+						if(m730.IsReg) return false;
+						Decode.ScaleDisp8(ref m730, 16 << p.VecLen);
+						d.DefId = 730;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m728;
+						d.M = m730;
 						return true;
 					}
 					return false;
@@ -9752,15 +9788,15 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m729Len = Decode.ReadModRm(code[i..], mode, in p, out var m729);
-					if(m729Len < 0) return false;
-					i += m729Len;
-					if(m729.IsReg) return false;
-					d.DefId = 729;
+					var m731Len = Decode.ReadModRm(code[i..], mode, in p, out var m731);
+					if(m731Len < 0) return false;
+					i += m731Len;
+					if(m731.IsReg) return false;
+					d.DefId = 731;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m729;
+					d.M = m731;
 					return true;
 				}
 				return false;
@@ -9769,40 +9805,40 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m730Len = Decode.ReadModRm(code[i..], mode, in p, out var m730);
-						if(m730Len < 0) return false;
-						i += m730Len;
-						d.DefId = 730;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m730;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && !p.RexW) {
-						if(p.Lock) return false;
-						var m731Len = Decode.ReadModRm(code[i..], mode, in p, out var m731);
-						if(m731Len < 0) return false;
-						i += m731Len;
-						Decode.ScaleDisp8(ref m731, 16 << p.VecLen);
-						d.DefId = 731;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m731;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && p.RexW) {
-						if(p.Lock) return false;
 						var m732Len = Decode.ReadModRm(code[i..], mode, in p, out var m732);
 						if(m732Len < 0) return false;
 						i += m732Len;
-						Decode.ScaleDisp8(ref m732, 16 << p.VecLen);
 						d.DefId = 732;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
 						d.M = m732;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize && !p.RexW) {
+						if(p.Lock) return false;
+						var m733Len = Decode.ReadModRm(code[i..], mode, in p, out var m733);
+						if(m733Len < 0) return false;
+						i += m733Len;
+						Decode.ScaleDisp8(ref m733, 16 << p.VecLen);
+						d.DefId = 733;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m733;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize && p.RexW) {
+						if(p.Lock) return false;
+						var m734Len = Decode.ReadModRm(code[i..], mode, in p, out var m734);
+						if(m734Len < 0) return false;
+						i += m734Len;
+						Decode.ScaleDisp8(ref m734, 16 << p.VecLen);
+						d.DefId = 734;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m734;
 						return true;
 					}
 					return false;
@@ -9811,14 +9847,14 @@ public static partial class Disassembler {
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m733Len = Decode.ReadModRm(code[i..], mode, in p, out var m733);
-					if(m733Len < 0) return false;
-					i += m733Len;
-					d.DefId = 733;
+					var m735Len = Decode.ReadModRm(code[i..], mode, in p, out var m735);
+					if(m735Len < 0) return false;
+					i += m735Len;
+					d.DefId = 735;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m733;
+					d.M = m735;
 					return true;
 				}
 				return false;
@@ -9827,35 +9863,9 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m734Len = Decode.ReadModRm(code[i..], mode, in p, out var m734);
-						if(m734Len < 0) return false;
-						i += m734Len;
-						d.DefId = 734;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m734;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && !p.RexW) {
-						if(p.Lock) return false;
-						var m735Len = Decode.ReadModRm(code[i..], mode, in p, out var m735);
-						if(m735Len < 0) return false;
-						i += m735Len;
-						Decode.ScaleDisp8(ref m735, 16 << p.VecLen);
-						d.DefId = 735;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m735;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && p.RexW) {
-						if(p.Lock) return false;
 						var m736Len = Decode.ReadModRm(code[i..], mode, in p, out var m736);
 						if(m736Len < 0) return false;
 						i += m736Len;
-						Decode.ScaleDisp8(ref m736, 16 << p.VecLen);
 						d.DefId = 736;
 						d.Len = i;
 						d.Op = op;
@@ -9863,43 +9873,34 @@ public static partial class Disassembler {
 						d.M = m736;
 						return true;
 					}
+					if(p.EvexValid && p.OpSize && !p.RexW) {
+						if(p.Lock) return false;
+						var m737Len = Decode.ReadModRm(code[i..], mode, in p, out var m737);
+						if(m737Len < 0) return false;
+						i += m737Len;
+						Decode.ScaleDisp8(ref m737, 16 << p.VecLen);
+						d.DefId = 737;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m737;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize && p.RexW) {
+						if(p.Lock) return false;
+						var m738Len = Decode.ReadModRm(code[i..], mode, in p, out var m738);
+						if(m738Len < 0) return false;
+						i += m738Len;
+						Decode.ScaleDisp8(ref m738, 16 << p.VecLen);
+						d.DefId = 738;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m738;
+						return true;
+					}
 					return false;
 				}
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m737Len = Decode.ReadModRm(code[i..], mode, in p, out var m737);
-					if(m737Len < 0) return false;
-					i += m737Len;
-					d.DefId = 737;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m737;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xF0): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.RepNz) {
-					p.RepNz = false;
-					if(p.Lock) return false;
-					var m738Len = Decode.ReadModRm(code[i..], mode, in p, out var m738);
-					if(m738Len < 0) return false;
-					i += m738Len;
-					if(m738.IsReg) return false;
-					d.DefId = 738;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m738;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xF1): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -9916,14 +9917,15 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xF2): {
+			case (OpcodeMap.TwoByte0F, 0xF0): {
 				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
+				if(p.RepNz) {
+					p.RepNz = false;
 					if(p.Lock) return false;
 					var m740Len = Decode.ReadModRm(code[i..], mode, in p, out var m740);
 					if(m740Len < 0) return false;
 					i += m740Len;
+					if(m740.IsReg) return false;
 					d.DefId = 740;
 					d.Len = i;
 					d.Op = op;
@@ -9933,7 +9935,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xF3): {
+			case (OpcodeMap.TwoByte0F, 0xF1): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -9950,35 +9952,41 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xF8): {
-				if(p.VexValid) {
-					if(!p.EvexValid && p.OpSize) {
-						if(p.Lock) return false;
-						var m742Len = Decode.ReadModRm(code[i..], mode, in p, out var m742);
-						if(m742Len < 0) return false;
-						i += m742Len;
-						d.DefId = 742;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m742;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize) {
-						if(p.Lock) return false;
-						var m743Len = Decode.ReadModRm(code[i..], mode, in p, out var m743);
-						if(m743Len < 0) return false;
-						i += m743Len;
-						Decode.ScaleDisp8(ref m743, 16 << p.VecLen);
-						d.DefId = 743;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m743;
-						return true;
-					}
-					return false;
+			case (OpcodeMap.TwoByte0F, 0xF2): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m742Len = Decode.ReadModRm(code[i..], mode, in p, out var m742);
+					if(m742Len < 0) return false;
+					i += m742Len;
+					d.DefId = 742;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m742;
+					return true;
 				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xF3): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m743Len = Decode.ReadModRm(code[i..], mode, in p, out var m743);
+					if(m743Len < 0) return false;
+					i += m743Len;
+					d.DefId = 743;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m743;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xF4): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -9995,7 +10003,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xF9): {
+			case (OpcodeMap.TwoByte0F, 0xF5): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10012,69 +10020,69 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xFA): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m746Len = Decode.ReadModRm(code[i..], mode, in p, out var m746);
-					if(m746Len < 0) return false;
-					i += m746Len;
-					d.DefId = 746;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m746;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xFB): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m747Len = Decode.ReadModRm(code[i..], mode, in p, out var m747);
-					if(m747Len < 0) return false;
-					i += m747Len;
-					d.DefId = 747;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m747;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.TwoByte0F, 0xFC): {
+			case (OpcodeMap.TwoByte0F, 0xF8): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m748Len = Decode.ReadModRm(code[i..], mode, in p, out var m748);
-						if(m748Len < 0) return false;
-						i += m748Len;
-						d.DefId = 748;
+						var m746Len = Decode.ReadModRm(code[i..], mode, in p, out var m746);
+						if(m746Len < 0) return false;
+						i += m746Len;
+						d.DefId = 746;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m748;
+						d.M = m746;
 						return true;
 					}
 					if(p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
-						var m749Len = Decode.ReadModRm(code[i..], mode, in p, out var m749);
-						if(m749Len < 0) return false;
-						i += m749Len;
-						Decode.ScaleDisp8(ref m749, 16 << p.VecLen);
-						d.DefId = 749;
+						var m747Len = Decode.ReadModRm(code[i..], mode, in p, out var m747);
+						if(m747Len < 0) return false;
+						i += m747Len;
+						Decode.ScaleDisp8(ref m747, 16 << p.VecLen);
+						d.DefId = 747;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m749;
+						d.M = m747;
 						return true;
 					}
 					return false;
 				}
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m748Len = Decode.ReadModRm(code[i..], mode, in p, out var m748);
+					if(m748Len < 0) return false;
+					i += m748Len;
+					d.DefId = 748;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m748;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xF9): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m749Len = Decode.ReadModRm(code[i..], mode, in p, out var m749);
+					if(m749Len < 0) return false;
+					i += m749Len;
+					d.DefId = 749;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m749;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xFA): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10091,7 +10099,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xFD): {
+			case (OpcodeMap.TwoByte0F, 0xFB): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10108,30 +10116,26 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.TwoByte0F, 0xFE): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m752Len = Decode.ReadModRm(code[i..], mode, in p, out var m752);
-					if(m752Len < 0) return false;
-					i += m752Len;
-					d.DefId = 752;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m752;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F38, 0x00): {
+			case (OpcodeMap.TwoByte0F, 0xFC): {
 				if(p.VexValid) {
 					if(!p.EvexValid && p.OpSize) {
+						if(p.Lock) return false;
+						var m752Len = Decode.ReadModRm(code[i..], mode, in p, out var m752);
+						if(m752Len < 0) return false;
+						i += m752Len;
+						d.DefId = 752;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m752;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize) {
 						if(p.Lock) return false;
 						var m753Len = Decode.ReadModRm(code[i..], mode, in p, out var m753);
 						if(m753Len < 0) return false;
 						i += m753Len;
+						Decode.ScaleDisp8(ref m753, 16 << p.VecLen);
 						d.DefId = 753;
 						d.Len = i;
 						d.Op = op;
@@ -10157,22 +10161,24 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x17): {
-				if(p.VexValid) {
-					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m755Len = Decode.ReadModRm(code[i..], mode, in p, out var m755);
-						if(m755Len < 0) return false;
-						i += m755Len;
-						d.DefId = 755;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m755;
-						return true;
-					}
-					return false;
+			case (OpcodeMap.TwoByte0F, 0xFD): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m755Len = Decode.ReadModRm(code[i..], mode, in p, out var m755);
+					if(m755Len < 0) return false;
+					i += m755Len;
+					d.DefId = 755;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m755;
+					return true;
 				}
+				return false;
+			}
+			case (OpcodeMap.TwoByte0F, 0xFE): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10189,24 +10195,22 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x1C): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m757Len = Decode.ReadModRm(code[i..], mode, in p, out var m757);
-					if(m757Len < 0) return false;
-					i += m757Len;
-					d.DefId = 757;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m757;
-					return true;
+			case (OpcodeMap.ThreeByte0F38, 0x00): {
+				if(p.VexValid) {
+					if(!p.EvexValid && p.OpSize) {
+						if(p.Lock) return false;
+						var m757Len = Decode.ReadModRm(code[i..], mode, in p, out var m757);
+						if(m757Len < 0) return false;
+						i += m757Len;
+						d.DefId = 757;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m757;
+						return true;
+					}
+					return false;
 				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F38, 0x1D): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10223,19 +10227,85 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
+			case (OpcodeMap.ThreeByte0F38, 0x17): {
+				if(p.VexValid) {
+					if(!p.EvexValid && p.OpSize && p.VexVvvv == 0) {
+						if(p.Lock) return false;
+						var m759Len = Decode.ReadModRm(code[i..], mode, in p, out var m759);
+						if(m759Len < 0) return false;
+						i += m759Len;
+						d.DefId = 759;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m759;
+						return true;
+					}
+					return false;
+				}
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m760Len = Decode.ReadModRm(code[i..], mode, in p, out var m760);
+					if(m760Len < 0) return false;
+					i += m760Len;
+					d.DefId = 760;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m760;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F38, 0x1C): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m761Len = Decode.ReadModRm(code[i..], mode, in p, out var m761);
+					if(m761Len < 0) return false;
+					i += m761Len;
+					d.DefId = 761;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m761;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F38, 0x1D): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m762Len = Decode.ReadModRm(code[i..], mode, in p, out var m762);
+					if(m762Len < 0) return false;
+					i += m762Len;
+					d.DefId = 762;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m762;
+					return true;
+				}
+				return false;
+			}
 			case (OpcodeMap.ThreeByte0F38, 0x1E): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
 					if(p.Lock) return false;
-					var m759Len = Decode.ReadModRm(code[i..], mode, in p, out var m759);
-					if(m759Len < 0) return false;
-					i += m759Len;
-					d.DefId = 759;
+					var m763Len = Decode.ReadModRm(code[i..], mode, in p, out var m763);
+					if(m763Len < 0) return false;
+					i += m763Len;
+					d.DefId = 763;
 					d.Len = i;
 					d.Op = op;
 					d.P = p;
-					d.M = m759;
+					d.M = m763;
 					return true;
 				}
 				return false;
@@ -10244,41 +10314,41 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(p.EvexValid && p.OpSize && !p.RexW) {
 						if(p.Lock) return false;
-						var m760Len = Decode.ReadModRm(code[i..], mode, in p, out var m760);
-						if(m760Len < 0) return false;
-						i += m760Len;
-						Decode.ScaleDisp8(ref m760, 16 << p.VecLen);
-						d.DefId = 760;
+						var m764Len = Decode.ReadModRm(code[i..], mode, in p, out var m764);
+						if(m764Len < 0) return false;
+						i += m764Len;
+						Decode.ScaleDisp8(ref m764, 16 << p.VecLen);
+						d.DefId = 764;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m760;
+						d.M = m764;
 						return true;
 					}
 					if(p.EvexValid && p.OpSize && p.RexW) {
 						if(p.Lock) return false;
-						var m761Len = Decode.ReadModRm(code[i..], mode, in p, out var m761);
-						if(m761Len < 0) return false;
-						i += m761Len;
-						Decode.ScaleDisp8(ref m761, 16 << p.VecLen);
-						d.DefId = 761;
+						var m765Len = Decode.ReadModRm(code[i..], mode, in p, out var m765);
+						if(m765Len < 0) return false;
+						i += m765Len;
+						Decode.ScaleDisp8(ref m765, 16 << p.VecLen);
+						d.DefId = 765;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m761;
+						d.M = m765;
 						return true;
 					}
 					if(p.EvexValid && p.Rep && !p.RexW) {
 						if(p.Lock) return false;
-						var m762Len = Decode.ReadModRm(code[i..], mode, in p, out var m762);
-						if(m762Len < 0) return false;
-						i += m762Len;
-						Decode.ScaleDisp8(ref m762, 16 << p.VecLen);
-						d.DefId = 762;
+						var m766Len = Decode.ReadModRm(code[i..], mode, in p, out var m766);
+						if(m766Len < 0) return false;
+						i += m766Len;
+						Decode.ScaleDisp8(ref m766, 16 << p.VecLen);
+						d.DefId = 766;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m762;
+						d.M = m766;
 						return true;
 					}
 					return false;
@@ -10290,15 +10360,15 @@ public static partial class Disassembler {
 				if(p.VexValid) {
 					if(p.EvexValid && p.OpSize && !p.RexW) {
 						if(p.Lock) return false;
-						var m763Len = Decode.ReadModRm(code[i..], mode, in p, out var m763);
-						if(m763Len < 0) return false;
-						i += m763Len;
-						Decode.ScaleDisp8(ref m763, 16 << p.VecLen);
-						d.DefId = 763;
+						var m767Len = Decode.ReadModRm(code[i..], mode, in p, out var m767);
+						if(m767Len < 0) return false;
+						i += m767Len;
+						Decode.ScaleDisp8(ref m767, 16 << p.VecLen);
+						d.DefId = 767;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m763;
+						d.M = m767;
 						return true;
 					}
 					return false;
@@ -10307,75 +10377,6 @@ public static partial class Disassembler {
 				return false;
 			}
 			case (OpcodeMap.ThreeByte0F38, 0x29): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m764Len = Decode.ReadModRm(code[i..], mode, in p, out var m764);
-					if(m764Len < 0) return false;
-					i += m764Len;
-					d.DefId = 764;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m764;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F38, 0x2A): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m765Len = Decode.ReadModRm(code[i..], mode, in p, out var m765);
-					if(m765Len < 0) return false;
-					i += m765Len;
-					if(m765.IsReg) return false;
-					d.DefId = 765;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m765;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F38, 0x30): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m766Len = Decode.ReadModRm(code[i..], mode, in p, out var m766);
-					if(m766Len < 0) return false;
-					i += m766Len;
-					d.DefId = 766;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m766;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F38, 0x33): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m767Len = Decode.ReadModRm(code[i..], mode, in p, out var m767);
-					if(m767Len < 0) return false;
-					i += m767Len;
-					d.DefId = 767;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m767;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F38, 0x38): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10392,7 +10393,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x39): {
+			case (OpcodeMap.ThreeByte0F38, 0x2A): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10400,6 +10401,7 @@ public static partial class Disassembler {
 					var m769Len = Decode.ReadModRm(code[i..], mode, in p, out var m769);
 					if(m769Len < 0) return false;
 					i += m769Len;
+					if(m769.IsReg) return false;
 					d.DefId = 769;
 					d.Len = i;
 					d.Op = op;
@@ -10409,7 +10411,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x3A): {
+			case (OpcodeMap.ThreeByte0F38, 0x30): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10426,7 +10428,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x3B): {
+			case (OpcodeMap.ThreeByte0F38, 0x33): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10443,7 +10445,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x3C): {
+			case (OpcodeMap.ThreeByte0F38, 0x38): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10460,7 +10462,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x3D): {
+			case (OpcodeMap.ThreeByte0F38, 0x39): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10477,7 +10479,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x3E): {
+			case (OpcodeMap.ThreeByte0F38, 0x3A): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10494,7 +10496,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x3F): {
+			case (OpcodeMap.ThreeByte0F38, 0x3B): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10511,7 +10513,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x40): {
+			case (OpcodeMap.ThreeByte0F38, 0x3C): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10528,50 +10530,44 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x58): {
-				if(p.VexValid) {
-					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m777Len = Decode.ReadModRm(code[i..], mode, in p, out var m777);
-						if(m777Len < 0) return false;
-						i += m777Len;
-						Decode.ScaleDisp8(ref m777, 4);
-						d.DefId = 777;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m777;
-						return true;
-					}
-					return false;
-				}
+			case (OpcodeMap.ThreeByte0F38, 0x3D): {
 				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m777Len = Decode.ReadModRm(code[i..], mode, in p, out var m777);
+					if(m777Len < 0) return false;
+					i += m777Len;
+					d.DefId = 777;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m777;
+					return true;
+				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0x78): {
-				if(p.VexValid) {
-					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
-						if(p.Lock) return false;
-						var m778Len = Decode.ReadModRm(code[i..], mode, in p, out var m778);
-						if(m778Len < 0) return false;
-						i += m778Len;
-						Decode.ScaleDisp8(ref m778, 1);
-						d.DefId = 778;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m778;
-						return true;
-					}
-					return false;
-				}
+			case (OpcodeMap.ThreeByte0F38, 0x3E): {
 				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m778Len = Decode.ReadModRm(code[i..], mode, in p, out var m778);
+					if(m778Len < 0) return false;
+					i += m778Len;
+					d.DefId = 778;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m778;
+					return true;
+				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0xF0): {
+			case (OpcodeMap.ThreeByte0F38, 0x3F): {
 				if(p.VexValid) return false;  // no VEX row here
-				if(p.RepNz) {
-					p.RepNz = false;
+				if(p.OpSize) {
+					p.OpSize = false;
 					if(p.Lock) return false;
 					var m779Len = Decode.ReadModRm(code[i..], mode, in p, out var m779);
 					if(m779Len < 0) return false;
@@ -10585,10 +10581,10 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0xF1): {
+			case (OpcodeMap.ThreeByte0F38, 0x40): {
 				if(p.VexValid) return false;  // no VEX row here
-				if(p.RepNz) {
-					p.RepNz = false;
+				if(p.OpSize) {
+					p.OpSize = false;
 					if(p.Lock) return false;
 					var m780Len = Decode.ReadModRm(code[i..], mode, in p, out var m780);
 					if(m780Len < 0) return false;
@@ -10602,13 +10598,14 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0xF5): {
+			case (OpcodeMap.ThreeByte0F38, 0x58): {
 				if(p.VexValid) {
-					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz) {
+					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m781Len = Decode.ReadModRm(code[i..], mode, in p, out var m781);
 						if(m781Len < 0) return false;
 						i += m781Len;
+						Decode.ScaleDisp8(ref m781, 4);
 						d.DefId = 781;
 						d.Len = i;
 						d.Op = op;
@@ -10621,13 +10618,14 @@ public static partial class Disassembler {
 				if(p.VexValid) return false;  // no VEX row here
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F38, 0xF7): {
+			case (OpcodeMap.ThreeByte0F38, 0x78): {
 				if(p.VexValid) {
-					if(!p.EvexValid && p.Rep) {
+					if(p.EvexValid && p.OpSize && !p.RexW && p.VexVvvv == 0) {
 						if(p.Lock) return false;
 						var m782Len = Decode.ReadModRm(code[i..], mode, in p, out var m782);
 						if(m782Len < 0) return false;
 						i += m782Len;
+						Decode.ScaleDisp8(ref m782, 1);
 						d.DefId = 782;
 						d.Len = i;
 						d.Op = op;
@@ -10635,28 +10633,57 @@ public static partial class Disassembler {
 						d.M = m782;
 						return true;
 					}
-					if(!p.EvexValid && p.OpSize) {
+					return false;
+				}
+				if(p.VexValid) return false;  // no VEX row here
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F38, 0xF0): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.RepNz) {
+					p.RepNz = false;
+					if(p.Lock) return false;
+					var m783Len = Decode.ReadModRm(code[i..], mode, in p, out var m783);
+					if(m783Len < 0) return false;
+					i += m783Len;
+					d.DefId = 783;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m783;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F38, 0xF1): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.RepNz) {
+					p.RepNz = false;
+					if(p.Lock) return false;
+					var m784Len = Decode.ReadModRm(code[i..], mode, in p, out var m784);
+					if(m784Len < 0) return false;
+					i += m784Len;
+					d.DefId = 784;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m784;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F38, 0xF5): {
+				if(p.VexValid) {
+					if(!p.EvexValid && !p.OpSize && !p.Rep && !p.RepNz) {
 						if(p.Lock) return false;
-						var m783Len = Decode.ReadModRm(code[i..], mode, in p, out var m783);
-						if(m783Len < 0) return false;
-						i += m783Len;
-						d.DefId = 783;
+						var m785Len = Decode.ReadModRm(code[i..], mode, in p, out var m785);
+						if(m785Len < 0) return false;
+						i += m785Len;
+						d.DefId = 785;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m783;
-						return true;
-					}
-					if(!p.EvexValid && p.RepNz) {
-						if(p.Lock) return false;
-						var m784Len = Decode.ReadModRm(code[i..], mode, in p, out var m784);
-						if(m784Len < 0) return false;
-						i += m784Len;
-						d.DefId = 784;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m784;
+						d.M = m785;
 						return true;
 					}
 					return false;
@@ -10664,73 +10691,37 @@ public static partial class Disassembler {
 				if(p.VexValid) return false;  // no VEX row here
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F3A, 0x0F): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m785Len = Decode.ReadModRm(code[i..], mode, in p, out var m785);
-					if(m785Len < 0) return false;
-					i += m785Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 785;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m785;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x14): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m786Len = Decode.ReadModRm(code[i..], mode, in p, out var m786);
-					if(m786Len < 0) return false;
-					i += m786Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 786;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m786;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x16): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m787Len = Decode.ReadModRm(code[i..], mode, in p, out var m787);
-					if(m787Len < 0) return false;
-					i += m787Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 787;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m787;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x1E): {
+			case (OpcodeMap.ThreeByte0F38, 0xF7): {
 				if(p.VexValid) {
-					if(p.EvexValid && p.OpSize && !p.RexW) {
+					if(!p.EvexValid && p.Rep) {
+						if(p.Lock) return false;
+						var m786Len = Decode.ReadModRm(code[i..], mode, in p, out var m786);
+						if(m786Len < 0) return false;
+						i += m786Len;
+						d.DefId = 786;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m786;
+						return true;
+					}
+					if(!p.EvexValid && p.OpSize) {
+						if(p.Lock) return false;
+						var m787Len = Decode.ReadModRm(code[i..], mode, in p, out var m787);
+						if(m787Len < 0) return false;
+						i += m787Len;
+						d.DefId = 787;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m787;
+						return true;
+					}
+					if(!p.EvexValid && p.RepNz) {
 						if(p.Lock) return false;
 						var m788Len = Decode.ReadModRm(code[i..], mode, in p, out var m788);
 						if(m788Len < 0) return false;
 						i += m788Len;
-						Decode.ScaleDisp8(ref m788, 16 << p.VecLen);
-						if(i + (8) / 8 > code.Length) return false;
-						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
 						d.DefId = 788;
 						d.Len = i;
 						d.Op = op;
@@ -10743,44 +10734,45 @@ public static partial class Disassembler {
 				if(p.VexValid) return false;  // no VEX row here
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F3A, 0x1F): {
-				if(p.VexValid) {
-					if(p.EvexValid && p.OpSize && !p.RexW) {
-						if(p.Lock) return false;
-						var m789Len = Decode.ReadModRm(code[i..], mode, in p, out var m789);
-						if(m789Len < 0) return false;
-						i += m789Len;
-						Decode.ScaleDisp8(ref m789, 16 << p.VecLen);
-						if(i + (8) / 8 > code.Length) return false;
-						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 789;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m789;
-						return true;
-					}
-					if(p.EvexValid && p.OpSize && p.RexW) {
-						if(p.Lock) return false;
-						var m790Len = Decode.ReadModRm(code[i..], mode, in p, out var m790);
-						if(m790Len < 0) return false;
-						i += m790Len;
-						Decode.ScaleDisp8(ref m790, 16 << p.VecLen);
-						if(i + (8) / 8 > code.Length) return false;
-						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 790;
-						d.Len = i;
-						d.Op = op;
-						d.P = p;
-						d.M = m790;
-						return true;
-					}
-					return false;
-				}
+			case (OpcodeMap.ThreeByte0F3A, 0x0F): {
 				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m789Len = Decode.ReadModRm(code[i..], mode, in p, out var m789);
+					if(m789Len < 0) return false;
+					i += m789Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 789;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m789;
+					return true;
+				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F3A, 0x20): {
+			case (OpcodeMap.ThreeByte0F3A, 0x14): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m790Len = Decode.ReadModRm(code[i..], mode, in p, out var m790);
+					if(m790Len < 0) return false;
+					i += m790Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 790;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m790;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x16): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10799,7 +10791,7 @@ public static partial class Disassembler {
 				}
 				return false;
 			}
-			case (OpcodeMap.ThreeByte0F3A, 0x3E): {
+			case (OpcodeMap.ThreeByte0F3A, 0x1E): {
 				if(p.VexValid) {
 					if(p.EvexValid && p.OpSize && !p.RexW) {
 						if(p.Lock) return false;
@@ -10816,7 +10808,14 @@ public static partial class Disassembler {
 						d.M = m792;
 						return true;
 					}
-					if(p.EvexValid && p.OpSize && p.RexW) {
+					return false;
+				}
+				if(p.VexValid) return false;  // no VEX row here
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x1F): {
+				if(p.VexValid) {
+					if(p.EvexValid && p.OpSize && !p.RexW) {
 						if(p.Lock) return false;
 						var m793Len = Decode.ReadModRm(code[i..], mode, in p, out var m793);
 						if(m793Len < 0) return false;
@@ -10831,14 +10830,7 @@ public static partial class Disassembler {
 						d.M = m793;
 						return true;
 					}
-					return false;
-				}
-				if(p.VexValid) return false;  // no VEX row here
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x3F): {
-				if(p.VexValid) {
-					if(p.EvexValid && p.OpSize && !p.RexW) {
+					if(p.EvexValid && p.OpSize && p.RexW) {
 						if(p.Lock) return false;
 						var m794Len = Decode.ReadModRm(code[i..], mode, in p, out var m794);
 						if(m794Len < 0) return false;
@@ -10853,19 +10845,97 @@ public static partial class Disassembler {
 						d.M = m794;
 						return true;
 					}
-					if(p.EvexValid && p.OpSize && p.RexW) {
+					return false;
+				}
+				if(p.VexValid) return false;  // no VEX row here
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x20): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m795Len = Decode.ReadModRm(code[i..], mode, in p, out var m795);
+					if(m795Len < 0) return false;
+					i += m795Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 795;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m795;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x3E): {
+				if(p.VexValid) {
+					if(p.EvexValid && p.OpSize && !p.RexW) {
 						if(p.Lock) return false;
-						var m795Len = Decode.ReadModRm(code[i..], mode, in p, out var m795);
-						if(m795Len < 0) return false;
-						i += m795Len;
-						Decode.ScaleDisp8(ref m795, 16 << p.VecLen);
+						var m796Len = Decode.ReadModRm(code[i..], mode, in p, out var m796);
+						if(m796Len < 0) return false;
+						i += m796Len;
+						Decode.ScaleDisp8(ref m796, 16 << p.VecLen);
 						if(i + (8) / 8 > code.Length) return false;
 						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-						d.DefId = 795;
+						d.DefId = 796;
 						d.Len = i;
 						d.Op = op;
 						d.P = p;
-						d.M = m795;
+						d.M = m796;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize && p.RexW) {
+						if(p.Lock) return false;
+						var m797Len = Decode.ReadModRm(code[i..], mode, in p, out var m797);
+						if(m797Len < 0) return false;
+						i += m797Len;
+						Decode.ScaleDisp8(ref m797, 16 << p.VecLen);
+						if(i + (8) / 8 > code.Length) return false;
+						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						d.DefId = 797;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m797;
+						return true;
+					}
+					return false;
+				}
+				if(p.VexValid) return false;  // no VEX row here
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x3F): {
+				if(p.VexValid) {
+					if(p.EvexValid && p.OpSize && !p.RexW) {
+						if(p.Lock) return false;
+						var m798Len = Decode.ReadModRm(code[i..], mode, in p, out var m798);
+						if(m798Len < 0) return false;
+						i += m798Len;
+						Decode.ScaleDisp8(ref m798, 16 << p.VecLen);
+						if(i + (8) / 8 > code.Length) return false;
+						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						d.DefId = 798;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m798;
+						return true;
+					}
+					if(p.EvexValid && p.OpSize && p.RexW) {
+						if(p.Lock) return false;
+						var m799Len = Decode.ReadModRm(code[i..], mode, in p, out var m799);
+						if(m799Len < 0) return false;
+						i += m799Len;
+						Decode.ScaleDisp8(ref m799, 16 << p.VecLen);
+						if(i + (8) / 8 > code.Length) return false;
+						d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+						d.DefId = 799;
+						d.Len = i;
+						d.Op = op;
+						d.P = p;
+						d.M = m799;
 						return true;
 					}
 					return false;
@@ -10874,82 +10944,6 @@ public static partial class Disassembler {
 				return false;
 			}
 			case (OpcodeMap.ThreeByte0F3A, 0x40): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m796Len = Decode.ReadModRm(code[i..], mode, in p, out var m796);
-					if(m796Len < 0) return false;
-					i += m796Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 796;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m796;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x41): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m797Len = Decode.ReadModRm(code[i..], mode, in p, out var m797);
-					if(m797Len < 0) return false;
-					i += m797Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 797;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m797;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x61): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m798Len = Decode.ReadModRm(code[i..], mode, in p, out var m798);
-					if(m798Len < 0) return false;
-					i += m798Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 798;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m798;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x62): {
-				if(p.VexValid) return false;  // no VEX row here
-				if(p.OpSize) {
-					p.OpSize = false;
-					if(p.Lock) return false;
-					var m799Len = Decode.ReadModRm(code[i..], mode, in p, out var m799);
-					if(m799Len < 0) return false;
-					i += m799Len;
-					if(i + (8) / 8 > code.Length) return false;
-					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
-					d.DefId = 799;
-					d.Len = i;
-					d.Op = op;
-					d.P = p;
-					d.M = m799;
-					return true;
-				}
-				return false;
-			}
-			case (OpcodeMap.ThreeByte0F3A, 0x63): {
 				if(p.VexValid) return false;  // no VEX row here
 				if(p.OpSize) {
 					p.OpSize = false;
@@ -10964,6 +10958,82 @@ public static partial class Disassembler {
 					d.Op = op;
 					d.P = p;
 					d.M = m800;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x41): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m801Len = Decode.ReadModRm(code[i..], mode, in p, out var m801);
+					if(m801Len < 0) return false;
+					i += m801Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 801;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m801;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x61): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m802Len = Decode.ReadModRm(code[i..], mode, in p, out var m802);
+					if(m802Len < 0) return false;
+					i += m802Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 802;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m802;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x62): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m803Len = Decode.ReadModRm(code[i..], mode, in p, out var m803);
+					if(m803Len < 0) return false;
+					i += m803Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 803;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m803;
+					return true;
+				}
+				return false;
+			}
+			case (OpcodeMap.ThreeByte0F3A, 0x63): {
+				if(p.VexValid) return false;  // no VEX row here
+				if(p.OpSize) {
+					p.OpSize = false;
+					if(p.Lock) return false;
+					var m804Len = Decode.ReadModRm(code[i..], mode, in p, out var m804);
+					if(m804Len < 0) return false;
+					i += m804Len;
+					if(i + (8) / 8 > code.Length) return false;
+					d.Imm0 = (long) Decode.MaskToWidth(Decode.ReadImm(code, ref i, 8, false), 8);
+					d.DefId = 804;
+					d.Len = i;
+					d.Op = op;
+					d.P = p;
+					d.M = m804;
 					return true;
 				}
 				return false;
@@ -11532,249 +11602,253 @@ public static partial class Disassembler {
 			case 555: return Decode.MnemonicPrefix(in d.P) + $"punpckhbw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
 			case 556: return Decode.MnemonicPrefix(in d.P) + $"punpckhwd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
 			case 557: return Decode.MnemonicPrefix(in d.P) + $"punpckhdq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 558: return Decode.MnemonicPrefix(in d.P) + $"punpcklqdq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 559: return Decode.MnemonicPrefix(in d.P) + $"punpckhqdq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 560: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "vmovd", 32 => "vmovd", _ => "vmovq" })} {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 561: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "movd", 32 => "movd", _ => "movq" })} {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 562: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 563: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 564: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu8 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 565: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu16 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 566: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu32 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 567: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu64 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 568: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa32 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 569: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa64 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 570: return Decode.MnemonicPrefix(in d.P) + $"movdqa {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 571: return Decode.MnemonicPrefix(in d.P) + $"movdqu {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 572: return Decode.MnemonicPrefix(in d.P) + $"vpshufd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 573: return Decode.MnemonicPrefix(in d.P) + $"pshufd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 574: return Decode.MnemonicPrefix(in d.P) + $"pshuflw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 575: return Decode.MnemonicPrefix(in d.P) + $"pshufhw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 576: return Decode.MnemonicPrefix(in d.P) + $"psrlw {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 577: return Decode.MnemonicPrefix(in d.P) + $"psraw {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 578: return Decode.MnemonicPrefix(in d.P) + $"psllw {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 579: return Decode.MnemonicPrefix(in d.P) + $"psrld {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 580: return Decode.MnemonicPrefix(in d.P) + $"psrad {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 581: return Decode.MnemonicPrefix(in d.P) + $"pslld {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 582: return Decode.MnemonicPrefix(in d.P) + $"psrlq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 583: return Decode.MnemonicPrefix(in d.P) + $"psrldq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 584: return Decode.MnemonicPrefix(in d.P) + $"psllq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 585: return Decode.MnemonicPrefix(in d.P) + $"pslldq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 586: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 587: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 588: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 589: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 590: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 591: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 592: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqd {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 593: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 594: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + (d.P.VexL ? "vzeroall" : "vzeroupper");
-			case 595: return Decode.MnemonicPrefix(in d.P) + $"haddps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 596: return Decode.MnemonicPrefix(in d.P) + $"haddpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 597: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "vmovd", 32 => "vmovd", _ => "vmovq" })} {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 598: return Decode.MnemonicPrefix(in d.P) + $"vmovq {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
-			case 599: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "movd", 32 => "movd", _ => "movq" })} {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 600: return Decode.MnemonicPrefix(in d.P) + $"movq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
-			case 601: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 602: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 603: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu8 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 604: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu16 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 605: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu32 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 606: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu64 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 607: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa32 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 608: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa64 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 609: return Decode.MnemonicPrefix(in d.P) + $"movdqa {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 610: return Decode.MnemonicPrefix(in d.P) + $"movdqu {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 611: return Decode.MnemonicPrefix(in d.P) + $"jo {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 612: return Decode.MnemonicPrefix(in d.P) + $"jno {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 613: return Decode.MnemonicPrefix(in d.P) + $"jb {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 614: return Decode.MnemonicPrefix(in d.P) + $"jnb {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 615: return Decode.MnemonicPrefix(in d.P) + $"jz {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 616: return Decode.MnemonicPrefix(in d.P) + $"jnz {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 617: return Decode.MnemonicPrefix(in d.P) + $"jbe {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 618: return Decode.MnemonicPrefix(in d.P) + $"jnbe {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 619: return Decode.MnemonicPrefix(in d.P) + $"js {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 620: return Decode.MnemonicPrefix(in d.P) + $"jns {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 621: return Decode.MnemonicPrefix(in d.P) + $"jp {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 622: return Decode.MnemonicPrefix(in d.P) + $"jnp {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 623: return Decode.MnemonicPrefix(in d.P) + $"jl {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 624: return Decode.MnemonicPrefix(in d.P) + $"jnl {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 625: return Decode.MnemonicPrefix(in d.P) + $"jle {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 626: return Decode.MnemonicPrefix(in d.P) + $"jnle {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
-			case 627: return Decode.MnemonicPrefix(in d.P) + $"kmovw {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
-			case 628: return Decode.MnemonicPrefix(in d.P) + $"kmovb {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
-			case 629: return Decode.MnemonicPrefix(in d.P) + $"kmovq {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
-			case 630: return Decode.MnemonicPrefix(in d.P) + $"kmovd {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
-			case 631: return Decode.MnemonicPrefix(in d.P) + $"seto {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 632: return Decode.MnemonicPrefix(in d.P) + $"setno {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 633: return Decode.MnemonicPrefix(in d.P) + $"kmovw {Decode.MaskName(d.M.Reg)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
-			case 634: return Decode.MnemonicPrefix(in d.P) + $"kmovb {Decode.MaskName(d.M.Reg)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
-			case 635: return Decode.MnemonicPrefix(in d.P) + $"kmovd {Decode.MaskName(d.M.Reg)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
-			case 636: return Decode.MnemonicPrefix(in d.P) + $"setb {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 637: return Decode.MnemonicPrefix(in d.P) + $"kmovw {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.MaskName(d.M.Rm)}";
-			case 638: return Decode.MnemonicPrefix(in d.P) + $"kmovd {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.MaskName(d.M.Rm)}";
-			case 639: return Decode.MnemonicPrefix(in d.P) + $"setnb {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 640: return Decode.MnemonicPrefix(in d.P) + $"setz {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 641: return Decode.MnemonicPrefix(in d.P) + $"setnz {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 642: return Decode.MnemonicPrefix(in d.P) + $"setbe {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 643: return Decode.MnemonicPrefix(in d.P) + $"setnbe {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 644: return Decode.MnemonicPrefix(in d.P) + $"kortestd {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
-			case 645: return Decode.MnemonicPrefix(in d.P) + $"kortestw {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
-			case 646: return Decode.MnemonicPrefix(in d.P) + $"sets {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 647: return Decode.MnemonicPrefix(in d.P) + $"setns {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 648: return Decode.MnemonicPrefix(in d.P) + $"setp {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 649: return Decode.MnemonicPrefix(in d.P) + $"setnp {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 650: return Decode.MnemonicPrefix(in d.P) + $"setl {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 651: return Decode.MnemonicPrefix(in d.P) + $"setnl {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 652: return Decode.MnemonicPrefix(in d.P) + $"setle {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 653: return Decode.MnemonicPrefix(in d.P) + $"setnle {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 654: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "cpuid";
-			case 655: return Decode.MnemonicPrefix(in d.P) + $"bt {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 656: return Decode.MnemonicPrefix(in d.P) + $"shld {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {$"0x{d.Imm0:x}"}";
-			case 657: return Decode.MnemonicPrefix(in d.P) + $"shld {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {Decode.GprName(1, 8, d.P.Rex != 0)}";
-			case 658: return Decode.MnemonicPrefix(in d.P) + $"bts {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 659: return Decode.MnemonicPrefix(in d.P) + $"shrd {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {$"0x{d.Imm0:x}"}";
-			case 660: return Decode.MnemonicPrefix(in d.P) + $"shrd {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {Decode.GprName(1, 8, d.P.Rex != 0)}";
-			case 661: return Decode.MnemonicPrefix(in d.P) + $"ldmxcsr {Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len)}";
-			case 662: return Decode.MnemonicPrefix(in d.P) + $"stmxcsr {Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len)}";
-			case 663: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "lfence";
-			case 664: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "mfence";
-			case 665: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "sfence";
-			case 666: return Decode.MnemonicPrefix(in d.P) + $"imul {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 667: return Decode.MnemonicPrefix(in d.P) + $"cmpxchg {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, 8, d.P.Rex != 0)}";
-			case 668: return Decode.MnemonicPrefix(in d.P) + $"cmpxchg {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 669: return Decode.MnemonicPrefix(in d.P) + $"btr {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 670: return Decode.MnemonicPrefix(in d.P) + $"movzx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 671: return Decode.MnemonicPrefix(in d.P) + $"movzx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 16, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 16, pc + (ulong)d.Len))}";
-			case 672: return Decode.MnemonicPrefix(in d.P) + $"popcnt {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 673: return Decode.MnemonicPrefix(in d.P) + $"bt {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 674: return Decode.MnemonicPrefix(in d.P) + $"bts {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 675: return Decode.MnemonicPrefix(in d.P) + $"btr {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 676: return Decode.MnemonicPrefix(in d.P) + $"btc {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 677: return Decode.MnemonicPrefix(in d.P) + $"btc {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 678: return Decode.MnemonicPrefix(in d.P) + $"tzcnt {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 679: return Decode.MnemonicPrefix(in d.P) + $"bsf {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 680: return Decode.MnemonicPrefix(in d.P) + $"lzcnt {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 681: return Decode.MnemonicPrefix(in d.P) + $"bsr {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 682: return Decode.MnemonicPrefix(in d.P) + $"movsx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 683: return Decode.MnemonicPrefix(in d.P) + $"movsx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 16, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 16, pc + (ulong)d.Len))}";
-			case 684: return Decode.MnemonicPrefix(in d.P) + $"xadd {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, 8, d.P.Rex != 0)}";
-			case 685: return Decode.MnemonicPrefix(in d.P) + $"xadd {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 686: return Decode.MnemonicPrefix(in d.P) + $"cmpss {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 687: return Decode.MnemonicPrefix(in d.P) + $"cmppd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 688: return Decode.MnemonicPrefix(in d.P) + $"cmpsd {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 689: return Decode.MnemonicPrefix(in d.P) + $"cmpps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 690: return Decode.MnemonicPrefix(in d.P) + $"movnti {Decode.MemOperandString(in d.M, in d.P, mode, d.P.YWidth(mode), pc + (ulong)d.Len)}, {Decode.GprName(d.M.Reg, d.P.YWidth(mode), d.P.Rex != 0)}";
-			case 691: return Decode.MnemonicPrefix(in d.P) + $"vshufps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 692: return Decode.MnemonicPrefix(in d.P) + $"vshufpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 693: return Decode.MnemonicPrefix(in d.P) + $"shufpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 694: return Decode.MnemonicPrefix(in d.P) + $"shufps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 695: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 696: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 558: return Decode.MnemonicPrefix(in d.P) + $"packssdw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 559: return Decode.MnemonicPrefix(in d.P) + $"punpcklqdq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 560: return Decode.MnemonicPrefix(in d.P) + $"punpckhqdq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 561: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "vmovd", 32 => "vmovd", _ => "vmovq" })} {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 562: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "movd", 32 => "movd", _ => "movq" })} {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 563: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 564: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 565: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu8 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 566: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu16 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 567: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu32 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 568: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu64 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 569: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa32 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 570: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa64 {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 571: return Decode.MnemonicPrefix(in d.P) + $"movdqa {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 572: return Decode.MnemonicPrefix(in d.P) + $"movdqu {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 573: return Decode.MnemonicPrefix(in d.P) + $"vpshufd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 574: return Decode.MnemonicPrefix(in d.P) + $"pshufd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 575: return Decode.MnemonicPrefix(in d.P) + $"pshuflw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 576: return Decode.MnemonicPrefix(in d.P) + $"pshufhw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 577: return Decode.MnemonicPrefix(in d.P) + $"psrlw {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 578: return Decode.MnemonicPrefix(in d.P) + $"psraw {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 579: return Decode.MnemonicPrefix(in d.P) + $"psllw {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 580: return Decode.MnemonicPrefix(in d.P) + $"psrld {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 581: return Decode.MnemonicPrefix(in d.P) + $"psrad {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 582: return Decode.MnemonicPrefix(in d.P) + $"pslld {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 583: return Decode.MnemonicPrefix(in d.P) + $"psrlq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 584: return Decode.MnemonicPrefix(in d.P) + $"psrldq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 585: return Decode.MnemonicPrefix(in d.P) + $"psllq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 586: return Decode.MnemonicPrefix(in d.P) + $"pslldq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 587: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 588: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 589: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 590: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 591: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 592: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 593: return Decode.MnemonicPrefix(in d.P) + $"vpcmpeqd {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 594: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 595: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + (d.P.VexL ? "vzeroall" : "vzeroupper");
+			case 596: return Decode.MnemonicPrefix(in d.P) + $"haddps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 597: return Decode.MnemonicPrefix(in d.P) + $"haddpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 598: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "vmovd", 32 => "vmovd", _ => "vmovq" })} {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 599: return Decode.MnemonicPrefix(in d.P) + $"vmovq {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
+			case 600: return Decode.MnemonicPrefix(in d.P) + $"{(d.P.VWidth(mode) switch { 16 => "movd", 32 => "movd", _ => "movq" })} {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 601: return Decode.MnemonicPrefix(in d.P) + $"movq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
+			case 602: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 603: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 604: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu8 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 605: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu16 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 606: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu32 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 607: return Decode.MnemonicPrefix(in d.P) + $"vmovdqu64 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 608: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa32 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 609: return Decode.MnemonicPrefix(in d.P) + $"vmovdqa64 {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len)) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 610: return Decode.MnemonicPrefix(in d.P) + $"movdqa {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 611: return Decode.MnemonicPrefix(in d.P) + $"movdqu {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 612: return Decode.MnemonicPrefix(in d.P) + $"jo {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 613: return Decode.MnemonicPrefix(in d.P) + $"jno {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 614: return Decode.MnemonicPrefix(in d.P) + $"jb {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 615: return Decode.MnemonicPrefix(in d.P) + $"jnb {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 616: return Decode.MnemonicPrefix(in d.P) + $"jz {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 617: return Decode.MnemonicPrefix(in d.P) + $"jnz {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 618: return Decode.MnemonicPrefix(in d.P) + $"jbe {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 619: return Decode.MnemonicPrefix(in d.P) + $"jnbe {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 620: return Decode.MnemonicPrefix(in d.P) + $"js {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 621: return Decode.MnemonicPrefix(in d.P) + $"jns {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 622: return Decode.MnemonicPrefix(in d.P) + $"jp {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 623: return Decode.MnemonicPrefix(in d.P) + $"jnp {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 624: return Decode.MnemonicPrefix(in d.P) + $"jl {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 625: return Decode.MnemonicPrefix(in d.P) + $"jnl {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 626: return Decode.MnemonicPrefix(in d.P) + $"jle {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 627: return Decode.MnemonicPrefix(in d.P) + $"jnle {$"0x{Decode.MaskToWidth((long)(pc + (ulong)d.Len + (ulong)d.Imm0), mode == XMode.Bits64 ? 64 : mode == XMode.Bits32 ? 32 : 16):x}"}";
+			case 628: return Decode.MnemonicPrefix(in d.P) + $"kmovw {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
+			case 629: return Decode.MnemonicPrefix(in d.P) + $"kmovb {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
+			case 630: return Decode.MnemonicPrefix(in d.P) + $"kmovq {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
+			case 631: return Decode.MnemonicPrefix(in d.P) + $"kmovd {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
+			case 632: return Decode.MnemonicPrefix(in d.P) + $"seto {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 633: return Decode.MnemonicPrefix(in d.P) + $"setno {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 634: return Decode.MnemonicPrefix(in d.P) + $"kmovw {Decode.MaskName(d.M.Reg)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
+			case 635: return Decode.MnemonicPrefix(in d.P) + $"kmovb {Decode.MaskName(d.M.Reg)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
+			case 636: return Decode.MnemonicPrefix(in d.P) + $"kmovd {Decode.MaskName(d.M.Reg)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
+			case 637: return Decode.MnemonicPrefix(in d.P) + $"setb {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 638: return Decode.MnemonicPrefix(in d.P) + $"kmovw {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.MaskName(d.M.Rm)}";
+			case 639: return Decode.MnemonicPrefix(in d.P) + $"kmovd {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.MaskName(d.M.Rm)}";
+			case 640: return Decode.MnemonicPrefix(in d.P) + $"setnb {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 641: return Decode.MnemonicPrefix(in d.P) + $"setz {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 642: return Decode.MnemonicPrefix(in d.P) + $"setnz {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 643: return Decode.MnemonicPrefix(in d.P) + $"setbe {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 644: return Decode.MnemonicPrefix(in d.P) + $"setnbe {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 645: return Decode.MnemonicPrefix(in d.P) + $"kortestd {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
+			case 646: return Decode.MnemonicPrefix(in d.P) + $"kortestw {Decode.MaskName(d.M.Reg)}, {Decode.MaskName(d.M.Rm)}";
+			case 647: return Decode.MnemonicPrefix(in d.P) + $"sets {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 648: return Decode.MnemonicPrefix(in d.P) + $"setns {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 649: return Decode.MnemonicPrefix(in d.P) + $"setp {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 650: return Decode.MnemonicPrefix(in d.P) + $"setnp {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 651: return Decode.MnemonicPrefix(in d.P) + $"setl {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 652: return Decode.MnemonicPrefix(in d.P) + $"setnl {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 653: return Decode.MnemonicPrefix(in d.P) + $"setle {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 654: return Decode.MnemonicPrefix(in d.P) + $"setnle {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 655: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "cpuid";
+			case 656: return Decode.MnemonicPrefix(in d.P) + $"bt {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 657: return Decode.MnemonicPrefix(in d.P) + $"shld {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {$"0x{d.Imm0:x}"}";
+			case 658: return Decode.MnemonicPrefix(in d.P) + $"shld {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {Decode.GprName(1, 8, d.P.Rex != 0)}";
+			case 659: return Decode.MnemonicPrefix(in d.P) + $"bts {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 660: return Decode.MnemonicPrefix(in d.P) + $"shrd {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {$"0x{d.Imm0:x}"}";
+			case 661: return Decode.MnemonicPrefix(in d.P) + $"shrd {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {Decode.GprName(1, 8, d.P.Rex != 0)}";
+			case 662: return Decode.MnemonicPrefix(in d.P) + $"ldmxcsr {Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len)}";
+			case 663: return Decode.MnemonicPrefix(in d.P) + $"stmxcsr {Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len)}";
+			case 664: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "lfence";
+			case 665: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "mfence";
+			case 666: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "sfence";
+			case 667: return Decode.MnemonicPrefix(in d.P) + $"imul {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 668: return Decode.MnemonicPrefix(in d.P) + $"cmpxchg {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, 8, d.P.Rex != 0)}";
+			case 669: return Decode.MnemonicPrefix(in d.P) + $"cmpxchg {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 670: return Decode.MnemonicPrefix(in d.P) + $"btr {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 671: return Decode.MnemonicPrefix(in d.P) + $"movzx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 672: return Decode.MnemonicPrefix(in d.P) + $"movzx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 16, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 16, pc + (ulong)d.Len))}";
+			case 673: return Decode.MnemonicPrefix(in d.P) + $"popcnt {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 674: return Decode.MnemonicPrefix(in d.P) + $"bt {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 675: return Decode.MnemonicPrefix(in d.P) + $"bts {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 676: return Decode.MnemonicPrefix(in d.P) + $"btr {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 677: return Decode.MnemonicPrefix(in d.P) + $"btc {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 678: return Decode.MnemonicPrefix(in d.P) + $"btc {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 679: return Decode.MnemonicPrefix(in d.P) + $"tzcnt {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 680: return Decode.MnemonicPrefix(in d.P) + $"bsf {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 681: return Decode.MnemonicPrefix(in d.P) + $"lzcnt {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 682: return Decode.MnemonicPrefix(in d.P) + $"bsr {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 683: return Decode.MnemonicPrefix(in d.P) + $"movsx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 684: return Decode.MnemonicPrefix(in d.P) + $"movsx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 16, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 16, pc + (ulong)d.Len))}";
+			case 685: return Decode.MnemonicPrefix(in d.P) + $"xadd {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, 8, d.P.Rex != 0)}";
+			case 686: return Decode.MnemonicPrefix(in d.P) + $"xadd {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 687: return Decode.MnemonicPrefix(in d.P) + $"cmpss {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 688: return Decode.MnemonicPrefix(in d.P) + $"cmppd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 689: return Decode.MnemonicPrefix(in d.P) + $"cmpsd {Decode.XmmName(d.M.Reg, false)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 690: return Decode.MnemonicPrefix(in d.P) + $"cmpps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 691: return Decode.MnemonicPrefix(in d.P) + $"movnti {Decode.MemOperandString(in d.M, in d.P, mode, d.P.YWidth(mode), pc + (ulong)d.Len)}, {Decode.GprName(d.M.Reg, d.P.YWidth(mode), d.P.Rex != 0)}";
+			case 692: return Decode.MnemonicPrefix(in d.P) + $"pinsrw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 693: return Decode.MnemonicPrefix(in d.P) + $"vshufps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 694: return Decode.MnemonicPrefix(in d.P) + $"vshufpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 695: return Decode.MnemonicPrefix(in d.P) + $"shufpd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 696: return Decode.MnemonicPrefix(in d.P) + $"shufps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
 			case 697: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
 			case 698: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
 			case 699: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
 			case 700: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
 			case 701: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
 			case 702: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
-			case 703: return Decode.MnemonicPrefix(in d.P) + $"psrlw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 704: return Decode.MnemonicPrefix(in d.P) + $"psrld {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 705: return Decode.MnemonicPrefix(in d.P) + $"psrlq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 706: return Decode.MnemonicPrefix(in d.P) + $"paddq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 707: return Decode.MnemonicPrefix(in d.P) + $"movq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {Decode.XmmName(d.M.Reg, false)}";
-			case 708: return Decode.MnemonicPrefix(in d.P) + $"movq {Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len)}, {Decode.XmmName(d.M.Reg, false)}";
-			case 709: return Decode.MnemonicPrefix(in d.P) + $"vpmovmskb {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.XmmName(d.M.Rm, d.P.VexL)}";
-			case 710: return Decode.MnemonicPrefix(in d.P) + $"pmovmskb {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.XmmName(d.M.Rm, d.P.VexL)}";
-			case 711: return Decode.MnemonicPrefix(in d.P) + $"vpminub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 712: return Decode.MnemonicPrefix(in d.P) + $"vpminub {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 713: return Decode.MnemonicPrefix(in d.P) + $"pminub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 714: return Decode.MnemonicPrefix(in d.P) + $"vpand {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 715: return Decode.MnemonicPrefix(in d.P) + $"vpandd {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 716: return Decode.MnemonicPrefix(in d.P) + $"vpandq {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 717: return Decode.MnemonicPrefix(in d.P) + $"pand {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 718: return Decode.MnemonicPrefix(in d.P) + $"vpmaxub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 719: return Decode.MnemonicPrefix(in d.P) + $"pmaxub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 720: return Decode.MnemonicPrefix(in d.P) + $"vpandn {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 721: return Decode.MnemonicPrefix(in d.P) + $"pandn {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 722: return Decode.MnemonicPrefix(in d.P) + $"psraw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 723: return Decode.MnemonicPrefix(in d.P) + $"psrad {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 724: return Decode.MnemonicPrefix(in d.P) + $"cvtdq2pd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
-			case 725: return Decode.MnemonicPrefix(in d.P) + $"cvtpd2dq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 726: return Decode.MnemonicPrefix(in d.P) + $"cvttpd2dq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 727: return Decode.MnemonicPrefix(in d.P) + $"vmovntdq {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 728: return Decode.MnemonicPrefix(in d.P) + $"vmovntdq {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
-			case 729: return Decode.MnemonicPrefix(in d.P) + $"movntdq {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
-			case 730: return Decode.MnemonicPrefix(in d.P) + $"vpor {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 731: return Decode.MnemonicPrefix(in d.P) + $"vpord {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 732: return Decode.MnemonicPrefix(in d.P) + $"vporq {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 733: return Decode.MnemonicPrefix(in d.P) + $"por {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 734: return Decode.MnemonicPrefix(in d.P) + $"vpxor {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 735: return Decode.MnemonicPrefix(in d.P) + $"vpxord {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 736: return Decode.MnemonicPrefix(in d.P) + $"vpxorq {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 737: return Decode.MnemonicPrefix(in d.P) + $"pxor {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 738: return Decode.MnemonicPrefix(in d.P) + $"lddqu {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}";
-			case 739: return Decode.MnemonicPrefix(in d.P) + $"psllw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 740: return Decode.MnemonicPrefix(in d.P) + $"pslld {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 741: return Decode.MnemonicPrefix(in d.P) + $"psllq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 742: return Decode.MnemonicPrefix(in d.P) + $"vpsubb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 743: return Decode.MnemonicPrefix(in d.P) + $"vpsubb {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 744: return Decode.MnemonicPrefix(in d.P) + $"psubb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 745: return Decode.MnemonicPrefix(in d.P) + $"psubw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 746: return Decode.MnemonicPrefix(in d.P) + $"psubd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 747: return Decode.MnemonicPrefix(in d.P) + $"psubq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 748: return Decode.MnemonicPrefix(in d.P) + $"vpaddb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 749: return Decode.MnemonicPrefix(in d.P) + $"vpaddb {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 750: return Decode.MnemonicPrefix(in d.P) + $"paddb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 751: return Decode.MnemonicPrefix(in d.P) + $"paddw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 752: return Decode.MnemonicPrefix(in d.P) + $"paddd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 753: return Decode.MnemonicPrefix(in d.P) + $"vpshufb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 754: return Decode.MnemonicPrefix(in d.P) + $"pshufb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 755: return Decode.MnemonicPrefix(in d.P) + $"vptest {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 756: return Decode.MnemonicPrefix(in d.P) + $"ptest {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 757: return Decode.MnemonicPrefix(in d.P) + $"pabsb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 758: return Decode.MnemonicPrefix(in d.P) + $"pabsw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 759: return Decode.MnemonicPrefix(in d.P) + $"pabsd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 760: return Decode.MnemonicPrefix(in d.P) + $"vptestmb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 761: return Decode.MnemonicPrefix(in d.P) + $"vptestmw {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 762: return Decode.MnemonicPrefix(in d.P) + $"vptestnmb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 763: return Decode.MnemonicPrefix(in d.P) + $"vptestmd {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
-			case 764: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 765: return Decode.MnemonicPrefix(in d.P) + $"movntdqa {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}";
-			case 766: return Decode.MnemonicPrefix(in d.P) + $"pmovzxbw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
-			case 767: return Decode.MnemonicPrefix(in d.P) + $"pmovzxwd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
-			case 768: return Decode.MnemonicPrefix(in d.P) + $"pminsb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 769: return Decode.MnemonicPrefix(in d.P) + $"pminsd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 770: return Decode.MnemonicPrefix(in d.P) + $"pminuw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 771: return Decode.MnemonicPrefix(in d.P) + $"pminud {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 772: return Decode.MnemonicPrefix(in d.P) + $"pmaxsb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 773: return Decode.MnemonicPrefix(in d.P) + $"pmaxsd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 774: return Decode.MnemonicPrefix(in d.P) + $"pmaxuw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 775: return Decode.MnemonicPrefix(in d.P) + $"pmaxud {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 776: return Decode.MnemonicPrefix(in d.P) + $"pmulld {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
-			case 777: return Decode.MnemonicPrefix(in d.P) + $"vpbroadcastd {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
-			case 778: return Decode.MnemonicPrefix(in d.P) + $"vpbroadcastb {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 779: return Decode.MnemonicPrefix(in d.P) + $"crc32 {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
-			case 780: return Decode.MnemonicPrefix(in d.P) + $"crc32 {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 781: return Decode.MnemonicPrefix(in d.P) + $"bzhi {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
-			case 782: return Decode.MnemonicPrefix(in d.P) + $"sarx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
-			case 783: return Decode.MnemonicPrefix(in d.P) + $"shlx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
-			case 784: return Decode.MnemonicPrefix(in d.P) + $"shrx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
-			case 785: return Decode.MnemonicPrefix(in d.P) + $"palignr {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 786: return Decode.MnemonicPrefix(in d.P) + $"pextrb {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 787: return Decode.MnemonicPrefix(in d.P) + $"pextrd {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
-			case 788: return Decode.MnemonicPrefix(in d.P) + $"vpcmpud {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 789: return Decode.MnemonicPrefix(in d.P) + $"vpcmpd {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 790: return Decode.MnemonicPrefix(in d.P) + $"vpcmpq {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 791: return Decode.MnemonicPrefix(in d.P) + $"pinsrb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 792: return Decode.MnemonicPrefix(in d.P) + $"vpcmpub {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 793: return Decode.MnemonicPrefix(in d.P) + $"vpcmpuw {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 794: return Decode.MnemonicPrefix(in d.P) + $"vpcmpb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 795: return Decode.MnemonicPrefix(in d.P) + $"vpcmpw {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 796: return Decode.MnemonicPrefix(in d.P) + $"dpps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 797: return Decode.MnemonicPrefix(in d.P) + $"dppd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 798: return Decode.MnemonicPrefix(in d.P) + $"pcmpestri {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 799: return Decode.MnemonicPrefix(in d.P) + $"pcmpistrm {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
-			case 800: return Decode.MnemonicPrefix(in d.P) + $"pcmpistri {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 703: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 704: return Decode.MnemonicPrefix(in d.P) + $"bswap {Decode.GprName((d.Op & 7) | (d.P.RexB ? 8 : 0), d.P.VWidth(mode), d.P.Rex != 0)}";
+			case 705: return Decode.MnemonicPrefix(in d.P) + $"psrlw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 706: return Decode.MnemonicPrefix(in d.P) + $"psrld {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 707: return Decode.MnemonicPrefix(in d.P) + $"psrlq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 708: return Decode.MnemonicPrefix(in d.P) + $"paddq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 709: return Decode.MnemonicPrefix(in d.P) + $"movq {Decode.XmmName(d.M.Rm, d.P.VexL)}, {Decode.XmmName(d.M.Reg, false)}";
+			case 710: return Decode.MnemonicPrefix(in d.P) + $"movq {Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len)}, {Decode.XmmName(d.M.Reg, false)}";
+			case 711: return Decode.MnemonicPrefix(in d.P) + $"vpmovmskb {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.XmmName(d.M.Rm, d.P.VexL)}";
+			case 712: return Decode.MnemonicPrefix(in d.P) + $"pmovmskb {Decode.GprName(d.M.Reg, 32, d.P.Rex != 0)}, {Decode.XmmName(d.M.Rm, d.P.VexL)}";
+			case 713: return Decode.MnemonicPrefix(in d.P) + $"vpminub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 714: return Decode.MnemonicPrefix(in d.P) + $"vpminub {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 715: return Decode.MnemonicPrefix(in d.P) + $"pminub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 716: return Decode.MnemonicPrefix(in d.P) + $"vpand {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 717: return Decode.MnemonicPrefix(in d.P) + $"vpandd {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 718: return Decode.MnemonicPrefix(in d.P) + $"vpandq {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 719: return Decode.MnemonicPrefix(in d.P) + $"pand {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 720: return Decode.MnemonicPrefix(in d.P) + $"vpmaxub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 721: return Decode.MnemonicPrefix(in d.P) + $"pmaxub {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 722: return Decode.MnemonicPrefix(in d.P) + $"vpandn {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 723: return Decode.MnemonicPrefix(in d.P) + $"pandn {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 724: return Decode.MnemonicPrefix(in d.P) + $"psraw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 725: return Decode.MnemonicPrefix(in d.P) + $"psrad {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 726: return Decode.MnemonicPrefix(in d.P) + $"cvtdq2pd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
+			case 727: return Decode.MnemonicPrefix(in d.P) + $"cvtpd2dq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 728: return Decode.MnemonicPrefix(in d.P) + $"cvttpd2dq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 729: return Decode.MnemonicPrefix(in d.P) + $"vmovntdq {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 730: return Decode.MnemonicPrefix(in d.P) + $"vmovntdq {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen)}";
+			case 731: return Decode.MnemonicPrefix(in d.P) + $"movntdq {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}, {Decode.XmmName(d.M.Reg, d.P.VexL)}";
+			case 732: return Decode.MnemonicPrefix(in d.P) + $"vpor {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 733: return Decode.MnemonicPrefix(in d.P) + $"vpord {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 734: return Decode.MnemonicPrefix(in d.P) + $"vporq {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 735: return Decode.MnemonicPrefix(in d.P) + $"por {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 736: return Decode.MnemonicPrefix(in d.P) + $"vpxor {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 737: return Decode.MnemonicPrefix(in d.P) + $"vpxord {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 738: return Decode.MnemonicPrefix(in d.P) + $"vpxorq {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 739: return Decode.MnemonicPrefix(in d.P) + $"pxor {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 740: return Decode.MnemonicPrefix(in d.P) + $"lddqu {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}";
+			case 741: return Decode.MnemonicPrefix(in d.P) + $"psllw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 742: return Decode.MnemonicPrefix(in d.P) + $"pslld {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 743: return Decode.MnemonicPrefix(in d.P) + $"psllq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 744: return Decode.MnemonicPrefix(in d.P) + $"pmuludq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 745: return Decode.MnemonicPrefix(in d.P) + $"pmaddwd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 746: return Decode.MnemonicPrefix(in d.P) + $"vpsubb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 747: return Decode.MnemonicPrefix(in d.P) + $"vpsubb {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 748: return Decode.MnemonicPrefix(in d.P) + $"psubb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 749: return Decode.MnemonicPrefix(in d.P) + $"psubw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 750: return Decode.MnemonicPrefix(in d.P) + $"psubd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 751: return Decode.MnemonicPrefix(in d.P) + $"psubq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 752: return Decode.MnemonicPrefix(in d.P) + $"vpaddb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 753: return Decode.MnemonicPrefix(in d.P) + $"vpaddb {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 754: return Decode.MnemonicPrefix(in d.P) + $"paddb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 755: return Decode.MnemonicPrefix(in d.P) + $"paddw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 756: return Decode.MnemonicPrefix(in d.P) + $"paddd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 757: return Decode.MnemonicPrefix(in d.P) + $"vpshufb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.XmmName(d.P.VexVvvv, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 758: return Decode.MnemonicPrefix(in d.P) + $"pshufb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 759: return Decode.MnemonicPrefix(in d.P) + $"vptest {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 760: return Decode.MnemonicPrefix(in d.P) + $"ptest {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 761: return Decode.MnemonicPrefix(in d.P) + $"pabsb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 762: return Decode.MnemonicPrefix(in d.P) + $"pabsw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 763: return Decode.MnemonicPrefix(in d.P) + $"pabsd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 764: return Decode.MnemonicPrefix(in d.P) + $"vptestmb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 765: return Decode.MnemonicPrefix(in d.P) + $"vptestmw {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 766: return Decode.MnemonicPrefix(in d.P) + $"vptestnmb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 767: return Decode.MnemonicPrefix(in d.P) + $"vptestmd {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}";
+			case 768: return Decode.MnemonicPrefix(in d.P) + $"pcmpeqq {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 769: return Decode.MnemonicPrefix(in d.P) + $"movntdqa {Decode.XmmName(d.M.Reg, d.P.VexL)}, {Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len)}";
+			case 770: return Decode.MnemonicPrefix(in d.P) + $"pmovzxbw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
+			case 771: return Decode.MnemonicPrefix(in d.P) + $"pmovzxwd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, false) : Decode.MemOperandString(in d.M, in d.P, mode, 64, pc + (ulong)d.Len))}";
+			case 772: return Decode.MnemonicPrefix(in d.P) + $"pminsb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 773: return Decode.MnemonicPrefix(in d.P) + $"pminsd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 774: return Decode.MnemonicPrefix(in d.P) + $"pminuw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 775: return Decode.MnemonicPrefix(in d.P) + $"pminud {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 776: return Decode.MnemonicPrefix(in d.P) + $"pmaxsb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 777: return Decode.MnemonicPrefix(in d.P) + $"pmaxsd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 778: return Decode.MnemonicPrefix(in d.P) + $"pmaxuw {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 779: return Decode.MnemonicPrefix(in d.P) + $"pmaxud {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 780: return Decode.MnemonicPrefix(in d.P) + $"pmulld {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}";
+			case 781: return Decode.MnemonicPrefix(in d.P) + $"vpbroadcastd {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}";
+			case 782: return Decode.MnemonicPrefix(in d.P) + $"vpbroadcastb {Decode.VecName(d.M.Reg | (d.P.EvexRp ? 16 : 0), d.P.VecLen) + Decode.EvexDecoration(in d.P)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 783: return Decode.MnemonicPrefix(in d.P) + $"crc32 {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
+			case 784: return Decode.MnemonicPrefix(in d.P) + $"crc32 {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
+			case 785: return Decode.MnemonicPrefix(in d.P) + $"bzhi {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
+			case 786: return Decode.MnemonicPrefix(in d.P) + $"sarx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
+			case 787: return Decode.MnemonicPrefix(in d.P) + $"shlx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
+			case 788: return Decode.MnemonicPrefix(in d.P) + $"shrx {Decode.GprName(d.M.Reg, d.P.VWidth(mode), d.P.Rex != 0)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}, {Decode.GprName(d.P.VexVvvv, d.P.VWidth(mode), true)}";
+			case 789: return Decode.MnemonicPrefix(in d.P) + $"palignr {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 790: return Decode.MnemonicPrefix(in d.P) + $"pextrb {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 791: return Decode.MnemonicPrefix(in d.P) + $"pextrd {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {Decode.XmmName(d.M.Reg, d.P.VexL)}, {$"0x{d.Imm0:x}"}";
+			case 792: return Decode.MnemonicPrefix(in d.P) + $"vpcmpud {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 793: return Decode.MnemonicPrefix(in d.P) + $"vpcmpd {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 794: return Decode.MnemonicPrefix(in d.P) + $"vpcmpq {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 795: return Decode.MnemonicPrefix(in d.P) + $"pinsrb {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.GprName(d.M.Rm, 32, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 32, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 796: return Decode.MnemonicPrefix(in d.P) + $"vpcmpub {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 797: return Decode.MnemonicPrefix(in d.P) + $"vpcmpuw {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 798: return Decode.MnemonicPrefix(in d.P) + $"vpcmpb {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 799: return Decode.MnemonicPrefix(in d.P) + $"vpcmpw {Decode.MaskName(d.M.Reg) + Decode.EvexDecoration(in d.P)}, {Decode.VecName(d.P.VexVvvv, d.P.VecLen)}, {(d.M.IsReg ? Decode.VecName(d.M.Rm | (d.P.RexX ? 16 : 0), d.P.VecLen) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VecLen == 2 ? 512 : d.P.VecLen == 1 ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 800: return Decode.MnemonicPrefix(in d.P) + $"dpps {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 801: return Decode.MnemonicPrefix(in d.P) + $"dppd {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 802: return Decode.MnemonicPrefix(in d.P) + $"pcmpestri {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 803: return Decode.MnemonicPrefix(in d.P) + $"pcmpistrm {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
+			case 804: return Decode.MnemonicPrefix(in d.P) + $"pcmpistri {Decode.XmmName(d.M.Reg, d.P.VexL)}, {(d.M.IsReg ? Decode.XmmName(d.M.Rm, d.P.VexL) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VexL ? 256 : 128, pc + (ulong)d.Len))}, {$"0x{d.Imm0:x}"}";
 			default: return null;
 		}
 	}
@@ -12339,6 +12413,7 @@ public static partial class Disassembler {
 		"PUNPCKHBW-Vdq-Wdq",
 		"PUNPCKHWD-Vdq-Wdq",
 		"PUNPCKHDQ-Vdq-Wdq",
+		"PACKSSDW-Vdq-Wdq",
 		"PUNPCKLQDQ-Vdq-Wdq",
 		"PUNPCKHQDQ-Vdq-Wdq",
 		"VMOVD-V-Vdq-Ev",
@@ -12472,6 +12547,7 @@ public static partial class Disassembler {
 		"CMPSD-X-Vsd-Wsd-Ib",
 		"CMPPS-Vps-Wps-Ib",
 		"MOVNTI-My-Gy",
+		"PINSRW-Vdq-Ed-Ib",
 		"VSHUFPS-Vps-Hps-Wps-Ib",
 		"VSHUFPD-Vpd-Hpd-Wpd-Ib",
 		"SHUFPD-Vpd-Wpd-Ib",
@@ -12523,6 +12599,8 @@ public static partial class Disassembler {
 		"PSLLW-Vdq-Wdq",
 		"PSLLD-Vdq-Wdq",
 		"PSLLQ-Vdq-Wdq",
+		"PMULUDQ-Vdq-Wdq",
+		"PMADDWD-Vdq-Wdq",
 		"VPSUBB-Vdq-Hdq-Wdq",
 		"VPSUBB-E-Vdq-Hdq-Wdq",
 		"PSUBB-Vdq-Wdq",

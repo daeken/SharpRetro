@@ -202,6 +202,39 @@
 (encoding PANDN (Vdq Wdq) (opsize 0x0F 0xDF))
 (instruction POR (dst src) "por $dst, $src" (= dst (| dst src)))
 (encoding POR (Vdq Wdq) (opsize 0x0F 0xEB))
+; FIVE DEF-ABSENT FORMS the Pagentry index measured as decode-REFUSALS on a real 44MB
+; .text: pmuludq 125 sites, pinsrw 95, pmaddwd 79, packssdw 63 (+ vinsertf128 65, a whole
+; AVX lane family, not added here). All four below are SSE2 -- baseline since 2001 -- and
+; each had a neighbour present and itself missing: PMULLD without pmuludq, PINSRB and
+; PEXTRB/PEXTRD without pinsrw, nothing in pack* at all. An unfinished set rather than an
+; unimplemented feature, which is the shape that survives because nothing complains.
+;
+; WHY A MISSING ROW IS WORSE THAN AN UNEXECUTABLE ONE: a decode refusal stops the linear
+; walk, so every instruction past it in that function contributes no call edges. Measured
+; at the consumer: 427 refusal sites concentrate in 50 functions, 88.0% of which have an
+; EMPTY outbound edge set against 24.8% for an extent-matched control -- +63.2pp with size
+; held. 13.8% of the sites sit in a function the index serves as trusted-tier. A
+; decode-only row costs a die-loud at lift; a refusal costs the rest of the function.
+;
+; Byte-verified before adding, per the sse3plus convention (the ops fall out of the bytes):
+;   66 0F F4 C1    = pmuludq  xmm0, xmm1        66 0F F5 C1    = pmaddwd  xmm0, xmm1
+;   66 0F C4 C3 03 = pinsrw   xmm0, ebx, 3      66 0F 6B C2    = packssdw xmm0, xmm2
+;
+; Intrinsic-bodied. Each is expressible declaratively -- pmuludq is a 2-lane 32x32->64
+; widening multiply, pmaddwd a multiply-then-pairwise-add, packssdw a saturating narrow,
+; pinsrw a single-lane insert -- but none has a primitive that carries it today (vibin is
+; same-width lane-wise, and there is no widening or saturating vector op). Adding four
+; primitives to lower four defs is a worse trade than the row that unblocks the walk;
+; the declarative bodies land when a second consumer wants them executed.
+(instruction PMULUDQ (dst src) "pmuludq $dst, $src" (intrinsic pmuludq dst src))
+(encoding PMULUDQ (Vdq Wdq) (opsize 0x0F 0xF4))
+(instruction PMADDWD (dst src) "pmaddwd $dst, $src" (intrinsic pmaddwd dst src))
+(encoding PMADDWD (Vdq Wdq) (opsize 0x0F 0xF5))
+(instruction PINSRW (dst src sel) "pinsrw $dst, $src, $sel" (intrinsic pinsrw dst src sel))
+(encoding PINSRW (Vdq Ed Ib) (opsize 0x0F 0xC4))
+(instruction PACKSSDW (dst src) "packssdw $dst, $src" (intrinsic packssdw dst src))
+(encoding PACKSSDW (Vdq Wdq) (opsize 0x0F 0x6B))
+
 (instruction PXOR (dst src) "pxor $dst, $src" (= dst (^ dst src)))
 (encoding PXOR (Vdq Wdq) (opsize 0x0F 0xEF))
 

@@ -191,6 +191,19 @@ public class DecodeTests {
 	// in gpr8 while our def said NOP. Both rows are needed: the REX.B ones must decode as
 	// XCHG and the bare one must STAY NOP, because a fix that just un-shadowed the plus_r
 	// row would break `90`.
+	// FIVE DEF-ABSENT FORMS the consumer's index measured as decode-REFUSALS on a real
+	// 44MB .text -- and a refusal stops the linear walk, so each site truncates its
+	// function's callee list from that point on (88.0% empty-edge-set across the 50
+	// affected functions vs 24.8% extent-matched). Each had a neighbour present and
+	// itself missing, which is an unfinished set rather than an unimplemented feature.
+	// Bytes are the consumer's, fired through their real decode path before I added a row.
+	[TestCase("660ff4c1", "pmuludq xmm0, xmm1")]       // 125 sites; PMULLD was present
+	[TestCase("660ff5c1", "pmaddwd xmm0, xmm1")]       //  79 sites
+	[TestCase("660fc4c303", "pinsrw xmm0, ebx, 0x3")]  //  95 sites; PINSRB/PEXTR* present
+	[TestCase("660f6bc2", "packssdw xmm0, xmm2")]      //  63 sites; nothing in pack* at all
+	// and the 8 VEX logicals (39 sites, ops 0x54-0x57) -- every legacy sibling existed
+	[TestCase("c5f057c1", "vxorps xmm0, xmm1, xmm1")]
+	[TestCase("c5f054c1", "vandps xmm0, xmm1, xmm1")]
 	[TestCase("90", "nop")]                           // no REX.B -> the exact def wins
 	[TestCase("4190", "xchg r8d, eax")]               // REX.B   -> the plus_r def, r8
 	[TestCase("664190", "xchg r8w, ax")]              // + 66    -> 16-bit form
