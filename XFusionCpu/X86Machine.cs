@@ -25,7 +25,7 @@ public class X86Machine {
 	/// XMM scalar-lane values, as bit patterns. 32 slots per RegKind.Xmm's documented
 	/// range. NOT the full 128 bits: Eval's carrier is ulong, so anything wider dies
 	/// loud at the Eval default rather than silently truncating.
-	public readonly ulong[] Xmm = new ulong[32];
+	public readonly UInt128[] Xmm = new UInt128[32];
 	/// x87 stack slots, same carrier caveat (f64 bit patterns, no 80-bit extended).
 	public readonly ulong[] St = new ulong[8];
 	/// Instruction-fetch hook — DISTINCT from LoadHook so a host can
@@ -68,7 +68,7 @@ public class X86Machine {
 	bool _halted;
 	public bool Halted => _halted;
 
-	readonly Dictionary<int, ulong> _tmps = [];
+	readonly Dictionary<int, UInt128> _tmps = [];
 
 	public void Halt() => _halted = true;
 
@@ -109,10 +109,10 @@ public class X86Machine {
 	void Exec(Il s) {
 		switch(s) {
 			case IlLet(var id, var v): _tmps[id] = Eval(v); break;
-			case IlWriteReg(RegKind.X86, var i, var v): Gpr[i] = Eval(v); break;
+			case IlWriteReg(RegKind.X86, var i, var v): Gpr[i] = N64(Eval(v)); break;
 			case IlWriteReg(RegKind.Eflags, var bit, var v):
-				if(bit < 0) Flags = Eval(v) | 2;
-				else Flags = (Flags & ~(1UL << bit)) | ((Eval(v) & 1) << bit);
+				if(bit < 0) Flags = N64(Eval(v)) | 2;
+				else Flags = (Flags & ~(1UL << bit)) | ((N64(Eval(v)) & 1) << bit);
 				break;
 			// XMM/x87: REAL files. They used to alias RegKind.X86 via OperandBind.Reg's
 			// missing File field, so an xmm write clobbered a GPR. Scalar lanes only --
@@ -120,25 +120,28 @@ public class X86Machine {
 			// which is the honest state: the IlVec* node kinds exist in the shared IL
 			// (Il.cs:143-151) and nothing emits or evaluates them yet.
 			case IlWriteReg(RegKind.Xmm, var i, var v): Xmm[i] = Eval(v); break;
-			case IlWriteReg(RegKind.St, var i, var v): St[i] = Eval(v); break;
+			case IlWriteReg(RegKind.St, var i, var v): St[i] = N64(Eval(v)); break;
 			case IlWriteReg(RegKind.X86Seg, var i, var v): {
-				var sel = (ushort) Eval(v);
+				var sel = (ushort) N64(Eval(v));
 				SegSel[i] = sel;
 				if(Mode == XMode.Bits16) SegBase[i] = (ulong) sel << 4;  // real mode
 				break;
 			}
 			case IlStore(var addr, var v):
-				Store(Eval(addr), Eval(v), (v.Ty as IlType.I)?.Bits ?? 64);
+				Store(N64(Eval(addr)), N64(Eval(v)), (v.Ty as IlType.I)?.Bits ?? 64);
 				break;
 			case IlBranch(var kind, var target, var cond):
 				if(cond == null || (Eval(cond) & 1) != 0)
-					_branchTo = Eval(target);
+					_branchTo = N64(Eval(target));
 				break;
 			case IlIf(var c, var then, var els):
 				ExecBlock((Eval(c) & 1) != 0 ? then : els);
 				break;
 			case IlIntrin(_, var name, var args): {
-				var vals = args.Select(Eval).ToArray();
+				// RunIntrinsic takes ulong[] -- every intrinsic here is 64-bit-or-less by
+				// contract (x87 stack ops, string ops, the host-query family). A V128
+				// intrinsic would need the wide overload, and there is none to bind.
+				var vals = args.Select(a => N64(Eval(a))).ToArray();
 				RunIntrinsic(name, vals);
 				break;
 			}
@@ -331,9 +334,24 @@ public class X86Machine {
 		Set(2, ((0x9669 >> (p & 0xF)) & 1) != 0);
 	}
 
-	ulong Eval(Il e) {
+	UInt128 Eval(Il e) {
 		switch(e) {
-			case IlConst(_, var bits): return MaskTy(e.Ty, (ulong) bits);
+			// A 128-BIT LITERAL SURVIVES AT 128. This was MaskTy(e.Ty, (ulong) bits) -- an
+			// unconditional narrowing INSIDE the arm that produces the mask, and MaskTy itself
+			// carries a sixth copy of the guess-a-width expression. IlConst.Bits has been
+			// UInt128 the whole time; this arm threw the top half away before any width test
+			// could see it.
+			//
+			// The scalar-preserve merge is IlBin(Vec(128), Or, kept, vlo) where `kept` is
+			// IlBin(And, full, IlConst(v128, ~mask)) and ~mask = 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_00000000.
+			// Truncated to 64 that constant is ZERO, so `kept` was zero and the merge preserved
+			// nothing -- 374,544 p2 rows, every scalar SSE write, invisible until the reader
+			// started grading the high word. Five arms above this one were correct; this is
+			// where the bits actually died.
+			case IlConst(var cty, var bits): {
+				var cw = WOf(e);
+				return cw >= 128 ? bits : bits & ((UInt128.One << cw) - 1);
+			}
 			case IlReadReg(_, RegKind.X86, var i): return Gpr[i];
 			case IlReadReg(_, RegKind.Eflags, var bit):
 				return bit < 0 ? Flags : (Flags >> bit) & 1;
@@ -344,7 +362,13 @@ public class X86Machine {
 			case IlTmp(_, var id): return _tmps[id];
 			case IlBin(var ty, var op, var l, var r): {
 				var (a, b) = (Eval(l), Eval(r));
-				var w = (ty as IlType.I)?.Bits ?? 64;
+				// WIDTH VIA WOf, NOT AN INLINE GUESS. Fourth copy of one defect: IlLower.W(),
+				// X86Machine.WOf(), the IlCast site, and here -- all answered 64 for a type they
+				// could not measure, so every Vec(128) op computed at 64 and lost its high half.
+				// The p2 scalar-preserve merge is emitted as IlBin(Vec(128), Or, kept, vlo), so
+				// this one line zeroed the preserved upper bits of every scalar SSE write --
+				// 374,544 rows once the reader started grading the high word at all.
+				var w = WOf(new IlConst(ty, 0));
 				// WIDTH > 64 DIES LOUD. Eval's carrier is ulong (see the note at the top of
 				// this file), so a wider op cannot be computed here -- and the previous form
 				// did not say so: `w` was used as a MASK WIDTH, so an i128 op computed at 64
@@ -370,19 +394,51 @@ public class X86Machine {
 				// ‡ The fix is a UInt128 carrier for Eval (DIFFERENTIAL-SCOPING step 2, the
 				// same widening the XMM lanes need); until then this is honest rather than
 				// correct, and the 39,315 rows are a NAMED gap.
-				if(w > 64) throw new NotSupportedException(
-					$"IlBin {op} at width {w}: Eval's carrier is ulong, so this would compute " +
-					$"at 64 and truncate. IMUL's CF=OF depends on the real high half -- see " +
-					$"the note here. Needs the UInt128 carrier widening.");
-				// FLOAT ARMS. Dispatch on the OPERAND type, not the result type: a
+				// CLOSED 2026-08-21: the carrier IS UInt128 now, so the wide arms compute
+				// for real instead of throwing. IMUL-Gv-Ev's CF=OF is the acceptance case.
+				if(w > 64) {
+					UInt128 wa = a, wb = b;
+					var sw = 128;   // the only width above 64 the .isa emits
+					UInt128 SxW(UInt128 v, int fw) {
+						if(fw >= sw) return v;
+						var sb = UInt128.One << (fw - 1);
+						return (v & sb) != 0 ? v | ~((UInt128.One << fw) - 1) : v & ((UInt128.One << fw) - 1);
+					}
+					UInt128 la = SxW(wa, WOf(l)), lb = SxW(wb, WOf(r));
+					return op switch {
+						BinOp.Add => wa + wb, BinOp.Sub => wa - wb, BinOp.Mul => wa * wb,
+						BinOp.And => wa & wb, BinOp.Or => wa | wb, BinOp.Xor => wa ^ wb,
+						BinOp.Shl => wb >= (UInt128) sw ? UInt128.Zero : wa << (int) wb,
+						BinOp.Shr => wb >= (UInt128) sw ? UInt128.Zero : wa >> (int) wb,
+						BinOp.Sar => wb >= (UInt128) sw
+							? ((Int128) la < 0 ? ~UInt128.Zero : UInt128.Zero)
+							: (UInt128) ((Int128) la >> (int) wb),
+						BinOp.UDiv => wb == 0 ? UInt128.Zero : wa / wb,
+						BinOp.URem => wb == 0 ? UInt128.Zero : wa % wb,
+						BinOp.SDiv => lb == 0 ? UInt128.Zero : (UInt128) ((Int128) la / (Int128) lb),
+						BinOp.SRem => lb == 0 ? UInt128.Zero : (UInt128) ((Int128) la % (Int128) lb),
+						BinOp.Eq => wa == wb ? UInt128.One : UInt128.Zero,  BinOp.Ne => wa != wb ? UInt128.One : UInt128.Zero,
+						BinOp.Ult => wa < wb ? UInt128.One : UInt128.Zero,  BinOp.Ule => wa <= wb ? UInt128.One : UInt128.Zero,
+						BinOp.Ugt => wa > wb ? UInt128.One : UInt128.Zero,  BinOp.Uge => wa >= wb ? UInt128.One : UInt128.Zero,
+						BinOp.Slt => (Int128) la <  (Int128) lb ? UInt128.One : UInt128.Zero,
+						BinOp.Sle => (Int128) la <= (Int128) lb ? UInt128.One : UInt128.Zero,
+						BinOp.Sgt => (Int128) la >  (Int128) lb ? UInt128.One : UInt128.Zero,
+						BinOp.Sge => (Int128) la >= (Int128) lb ? UInt128.One : UInt128.Zero,
+						_ => throw new NotSupportedException(
+							$"IlBin {op} at width {w}: no wide arm. The carrier holds it; this op " +
+							$"has no 128-bit implementation here. NOT a carrier limit -- a missing arm."),
+					};
+				}
+				var (a64, b64) = (N64(a), N64(b));
+				// FLOAT ARMS. Dispatch on the OPERAND type, not the result type: a64
 				// float compare has an integer (u1) result but float inputs, which
 				// is exactly the convention MaxwellEval:245-247 uses (BinOp.Slt =>
 				// fa < fb when the operands are F-typed). So `flt`/`feq` lowering to
 				// Slt/Eq is right by that contract rather than by coincidence.
 				if(l.Ty is IlType.F lf) {
 					if(lf.Bits == 32) {
-						var (fa, fb) = (BitConverter.UInt32BitsToSingle((uint) a),
-						                BitConverter.UInt32BitsToSingle((uint) b));
+						var (fa, fb) = (BitConverter.UInt32BitsToSingle((uint) a64),
+						                BitConverter.UInt32BitsToSingle((uint) b64));
 						// x86 MIN/MAX return the SECOND source on NaN or when both are
 						// zero -- NOT ARM's FMAX/FMIN, which propagate the NaN. MathF.Max
 						// propagates NaN too, so it can't be used here; the silicon sweep
@@ -402,8 +458,8 @@ public class X86Machine {
 							_ => throw new NotSupportedException($"f32 binop {op}")
 						};
 					} else {
-						var (fa, fb) = (BitConverter.UInt64BitsToDouble(a),
-						                BitConverter.UInt64BitsToDouble(b));
+						var (fa, fb) = (BitConverter.UInt64BitsToDouble(a64),
+						                BitConverter.UInt64BitsToDouble(b64));
 						return op switch {
 							BinOp.Add => BitConverter.DoubleToUInt64Bits(fa + fb),
 							BinOp.Sub => BitConverter.DoubleToUInt64Bits(fa - fb),
@@ -421,33 +477,57 @@ public class X86Machine {
 					}
 				}
 				var v = op switch {
-					BinOp.Add => a + b, BinOp.Sub => a - b, BinOp.Mul => a * b,
-					BinOp.UDiv => b == 0 ? throw new DivideByZeroException() : a / b,
-					BinOp.SDiv => (ulong) ((long) SignEx(a, WOf(l)) / (long) SignEx(b, WOf(r))),
-					BinOp.URem => a % b,
-					BinOp.SRem => (ulong) ((long) SignEx(a, WOf(l)) % (long) SignEx(b, WOf(r))),
-					BinOp.And => a & b, BinOp.Or => a | b, BinOp.Xor => a ^ b,
-					BinOp.Shl => b >= 64 ? 0 : a << (int) b,
-					BinOp.Shr => b >= 64 ? 0 : MaskW(a, WOf(l)) >> (int) b,
-					BinOp.Sar => (ulong) (SignEx(a, WOf(l)) >> (int) Math.Min(b, 63)),
-					BinOp.Ror => Ror(MaskW(a, WOf(l)), (int) b, WOf(l)),
-					BinOp.Eq => MaskW(a, WOf(l)) == MaskW(b, WOf(l)) ? 1UL : 0,
-					BinOp.Ne => MaskW(a, WOf(l)) != MaskW(b, WOf(l)) ? 1UL : 0,
-					BinOp.Ult => MaskW(a, WOf(l)) < MaskW(b, WOf(l)) ? 1UL : 0,
-					BinOp.Ule => MaskW(a, WOf(l)) <= MaskW(b, WOf(l)) ? 1UL : 0,
-					BinOp.Ugt => MaskW(a, WOf(l)) > MaskW(b, WOf(l)) ? 1UL : 0,
-					BinOp.Uge => MaskW(a, WOf(l)) >= MaskW(b, WOf(l)) ? 1UL : 0,
-					BinOp.Slt => SignEx(a, WOf(l)) < SignEx(b, WOf(r)) ? 1UL : 0,
-					BinOp.Sle => SignEx(a, WOf(l)) <= SignEx(b, WOf(r)) ? 1UL : 0,
-					BinOp.Sgt => SignEx(a, WOf(l)) > SignEx(b, WOf(r)) ? 1UL : 0,
-					BinOp.Sge => SignEx(a, WOf(l)) >= SignEx(b, WOf(r)) ? 1UL : 0,
+					BinOp.Add => a64 + b64, BinOp.Sub => a64 - b64, BinOp.Mul => a64 * b64,
+					BinOp.UDiv => b64 == 0 ? throw new DivideByZeroException() : a64 / b64,
+					BinOp.SDiv => (ulong) ((long) SignEx(a64, WOf(l)) / (long) SignEx(b64, WOf(r))),
+					BinOp.URem => a64 % b64,
+					BinOp.SRem => (ulong) ((long) SignEx(a64, WOf(l)) % (long) SignEx(b64, WOf(r))),
+					BinOp.And => a64 & b64, BinOp.Or => a64 | b64, BinOp.Xor => a64 ^ b64,
+					BinOp.Shl => b64 >= 64 ? 0 : a64 << (int) b64,
+					BinOp.Shr => b64 >= 64 ? 0 : MaskW(a64, WOf(l)) >> (int) b64,
+					BinOp.Sar => (ulong) (SignEx(a64, WOf(l)) >> (int) Math.Min(b64, 63)),
+					BinOp.Ror => Ror(MaskW(a64, WOf(l)), (int) b64, WOf(l)),
+					BinOp.Eq => MaskW(a64, WOf(l)) == MaskW(b64, WOf(l)) ? 1UL : 0,
+					BinOp.Ne => MaskW(a64, WOf(l)) != MaskW(b64, WOf(l)) ? 1UL : 0,
+					BinOp.Ult => MaskW(a64, WOf(l)) < MaskW(b64, WOf(l)) ? 1UL : 0,
+					BinOp.Ule => MaskW(a64, WOf(l)) <= MaskW(b64, WOf(l)) ? 1UL : 0,
+					BinOp.Ugt => MaskW(a64, WOf(l)) > MaskW(b64, WOf(l)) ? 1UL : 0,
+					BinOp.Uge => MaskW(a64, WOf(l)) >= MaskW(b64, WOf(l)) ? 1UL : 0,
+					BinOp.Slt => SignEx(a64, WOf(l)) < SignEx(b64, WOf(r)) ? 1UL : 0,
+					BinOp.Sle => SignEx(a64, WOf(l)) <= SignEx(b64, WOf(r)) ? 1UL : 0,
+					BinOp.Sgt => SignEx(a64, WOf(l)) > SignEx(b64, WOf(r)) ? 1UL : 0,
+					BinOp.Sge => SignEx(a64, WOf(l)) >= SignEx(b64, WOf(r)) ? 1UL : 0,
 					_ => throw new NotSupportedException($"binop {op}")
 				};
 				return MaskW(v, w);
 			}
 			case IlUn(var ty, var op, var x): {
-				var a = Eval(x);
-				var w = (ty as IlType.I)?.Bits ?? 64;
+				// WIDE ARM FIRST, because the narrowing below happens BEFORE any width test.
+				// `var a = N64(Eval(x))` threw the top half away unconditionally, so a
+				// Vec(128) Not computed ~ at 64 bits and the upper half came back zero.
+				//
+				// ANDNPS/ANDNPD/PANDN are (& (~ dst) src) -- the whole family routes through
+				// here, 16,560 p2 rows, and they were the entire residual after the IlConst
+				// fix. Only Neg and Not are meaningful at 128 (a packed float abs/sqrt is
+				// per-lane and belongs to the IlVec* nodes, which nothing emits yet), so the
+				// arm is deliberately narrow and everything else still narrows and dies loud.
+				var uw = WOf(new IlConst(ty, 0));
+				if(uw > 64) {
+					UInt128 wx = Eval(x);
+					return op switch {
+						UnOp.Not => ~wx,
+						UnOp.Neg => UInt128.Zero - wx,
+						_ => throw new NotSupportedException($"IlUn {op} at width {uw}"),
+					};
+				}
+				var a = N64(Eval(x));
+				// WIDTH VIA WOf, NOT AN INLINE GUESS. Fourth copy of one defect: IlLower.W(),
+				// X86Machine.WOf(), the IlCast site, and here -- all answered 64 for a type they
+				// could not measure, so every Vec(128) op computed at 64 and lost its high half.
+				// The p2 scalar-preserve merge is emitted as IlBin(Vec(128), Or, kept, vlo), so
+				// this one line zeroed the preserved upper bits of every scalar SSE write --
+				// 374,544 rows once the reader started grading the high word at all.
+				var w = WOf(new IlConst(ty, 0));
 				var v = op switch {
 					UnOp.Neg => 0 - a,
 					UnOp.Not => ~a,
@@ -477,8 +557,31 @@ public class X86Machine {
 				return MaskW(v, w);
 			}
 			case IlCast(var ty, var kind, var x): {
-				var a = Eval(x);
-				var w = (ty as IlType.I)?.Bits ?? 64;
+				var aw = Eval(x); var a = N64(aw);
+				// WIDTH FROM WOf, NOT FROM AN INLINE `as IlType.I ?? 64`. Third instance of one
+				// defect tonight: IlLower.W(), X86Machine.WOf(), and this inline copy of the same
+				// expression all answered 64 for a type they could not measure.
+				//
+				// PSRLDQ is what caught it. The lowering emits a THREE-node chain and only the
+				// last one has a Vec target:
+				//   IlCast(I(128), Bitcast, <Vec(128) read>)   -> wide arm fires, passes through
+				//   IlBin (I(128), Shr, .., 8)                 -> wide arm fires, shifts at 128
+				//   IlCast(Vec(128), Bitcast, ..)              -> w=64 HERE, so the wide arm did
+				//                                                 NOT fire and the result was
+				//                                                 masked to 64 bits
+				// got = want >> 8 on 304 rows of the p2 golden -- the high half fell off at the
+				// LAST node, after two arms had computed it correctly.
+				//
+				// The lesson is the placement, not the expression: I fixed the two NAMED helpers
+				// and left an unnamed copy of the same logic inline, where no grep for the
+				// helper's name would ever find it.
+				// VEC ONLY, and the narrowing is MEASURED not reasoned: swapping this for the
+				// full WOf() (which also measures F) took the p2 diff count from 304 to 800.
+				// The float arms below read `w` too, and they were correct at the old 64 -- an
+				// F(32) target is a 32-bit BIT PATTERN in a 64-bit carrier slot, not a 32-bit
+				// value to mask. So the fix is the Vec case alone; F keeps 64.
+				// One variable, one A/B, and the wider change looked more principled.
+				var w = ty switch { IlType.I(_, var tb) => tb, IlType.Vec(var vb) => vb, _ => 64 };
 				// FLOAT CASTS. Eval's carrier is ulong, so an F-typed value rides as
 				// its IEEE BIT PATTERN — the same convention MaxwellEval uses
 				// (MaxwellEval.cs:119, UInt32BitsToSingle on an F-typed read). A
@@ -517,6 +620,28 @@ public class X86Machine {
 					return kind == CastKind.FToUI ? MaskW((ulong) d, w)
 					                              : MaskW((ulong) (long) d, w);
 				}
+				// WIDE TARGETS use the un-narrowed `aw`. Before the carrier widened, every
+				// arm here went through MaskW(a, w) with `a` already truncated to 64, so an
+				// (i128 sext a) produced a 64-bit value whose high half was zero -- and
+				// IMUL's CF=OF, which compares the product's high half against the sign of
+				// its low half, read that as "no overflow" for every operand pair.
+				//
+				// The inverse is just as wrong and is what I hit first: computing the
+				// product at 128 while STILL sign-extending through a 64-bit path gives a
+				// high half that disagrees the OTHER way, so CF|OF read SET for every pair
+				// (28,785 rows of the golden corpus, got=801 want=0). One truncation, two
+				// opposite wrong answers -- which is why the acceptance case is a corpus
+				// and not a hand-written expectation.
+				if(w > 64) {
+					var sw = WOf(x);
+					return kind switch {
+						CastKind.Zext or CastKind.Trunc or CastKind.Bitcast =>
+							sw >= 128 ? aw : aw & ((UInt128.One << sw) - 1),
+						CastKind.Sext => SignEx128(aw, sw),
+						_ => throw new NotSupportedException(
+							$"IlCast {kind} to width {w}: no wide arm."),
+					};
+				}
 				return kind switch {
 					CastKind.Zext or CastKind.Trunc or CastKind.Bitcast => MaskW(a, w),
 					CastKind.Sext => MaskW((ulong) SignEx(a, WOf(x)), w),
@@ -524,15 +649,51 @@ public class X86Machine {
 				};
 			}
 			case IlLoad(var ty, var addr):
-				return Load(Eval(addr), (ty as IlType.I)?.Bits ?? 64);
+				return Load(N64(Eval(addr)), WOf(new IlConst(ty, 0)));
 			case IlIfV(_, var c, var t, var f):
 				return (Eval(c) & 1) != 0 ? Eval(t) : Eval(f);
 			default: throw new NotSupportedException($"eval {e.GetType().Name}");
 		}
 	}
 
-	static int WOf(Il e) => (e.Ty as IlType.I)?.Bits ?? 64;
+	// MEASURE, don't guess -- the exact sibling of IlLower.W(), and the same defect for
+	// the same reason: this answered 64 for any non-I type, so a Vec-typed operand read as
+	// 64 bits wide. PSRLDQ is the acceptance case. IlLower emits
+	//     IlCast(I(128), Bitcast, <a V128-typed IlReadReg>)
+	// and my wide Bitcast arm masks by WOf(x) -- which returned 64 for the Vec, so a
+	// 128-bit byte-shift got its source truncated to the low 8 bytes and the result came
+	// back shifted one byte too far (got = want >> 8, 304 rows of the p2 golden).
+	//
+	// That path was UNLOWERED before the carrier widened, so this bug is not new -- it was
+	// unreachable. Widening a carrier makes previously-dead arms live, and a helper that
+	// guesses a width is exactly what greets them. Fixed at BOTH helpers now; F and Vec
+	// both know their width and there was never a reason to answer for them.
+	static int WOf(Il e) => e.Ty switch {
+		IlType.I(_, var b) => b,
+		IlType.F(var fb) => fb,
+		IlType.Vec(var vb) => vb,
+		_ => 64,
+	};
 	static ulong MaskTy(IlType t, ulong v) => MaskW(v, (t as IlType.I)?.Bits ?? 64);
+	// NARROW BY CONSTRUCTION. Eval returns UInt128 since the carrier widened; these are
+	// the sites where the consumer is a 64-bit-or-less thing BY THE IL'S OWN TYPING -- a
+	// GPR, a flag bit, an address, a branch target, a segment selector. Kept as a named
+	// helper rather than a scatter of (ulong) casts so `grep N64` enumerates every place
+	// this evaluator throws bits away, which is the question a reader of a widened carrier
+	// actually has.
+	static ulong N64(UInt128 v) => (ulong) v;
+
+	// Sign-extend a value of `fw` bits to the full 128-bit carrier. The 64-bit sibling
+	// (SignEx) returns a ulong and therefore cannot express this -- which is the exact
+	// site where IMUL's high half was being lost.
+	static UInt128 SignEx128(UInt128 v, int fw) {
+		if(fw >= 128) return v;
+		var m = (UInt128.One << fw) - 1;
+		var sb = UInt128.One << (fw - 1);
+		v &= m;
+		return (v & sb) != 0 ? v | ~m : v;
+	}
+
 	static ulong MaskW(ulong v, int w) => w >= 64 ? v : v & ((1UL << w) - 1);
 	static long SignEx(ulong v, int w) => w >= 64 ? (long) v : ((long) (v << (64 - w))) >> (64 - w);
 	static ulong Ror(ulong v, int n, int w) { n %= w; return n == 0 ? v : MaskW((v >> n) | (v << (w - n)), w); }

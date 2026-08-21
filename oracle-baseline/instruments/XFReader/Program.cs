@@ -44,6 +44,11 @@ if(args.Length < 1) {
 var path = args[0];
 var bits = args.Length > 1 ? int.Parse(args[1]) : 64;
 var maxRows = args.Length > 2 ? int.Parse(args[2]) : int.MaxValue;
+// A DIFF LISTING IS NOT A DIFF CENSUS. This capped prints at 20 and I read the 20 as the
+// population -- twice on an 800-row diff, concluding "all PSRLDQ" from a truncated listing
+// whose cap I wrote myself. Then I "fixed" two width helpers against that reading and the
+// count did not move, because I was measuring the cap. XF_DIFFCAP raises it so a
+// distribution comes OUT of the output instead of being inferred from its head.
 var mode = bits == 32 ? XMode.Bits32 : XMode.Bits64;
 
 // STATE LAYOUT -- must match rust/xfusion-recomp/src/state.rs. Read from there, not
@@ -62,6 +67,7 @@ var count = br.ReadUInt32();
 Console.Error.WriteLine($"[XFReader] {path}: magic={magic} count={count} mode={mode}");
 
 int nOk = 0, nDiff = 0, nPrinted = 0;
+var DiffCap = int.TryParse(Environment.GetEnvironmentVariable("XF_DIFFCAP"), out var _dc) ? _dc : 20;
 // Skip reasons kept SEPARATE. A single skip count hides which population went ungraded.
 int skDecode = 0, skFault = 0, skLift = 0, skStep = 0, skNoSlot = 0;
 
@@ -102,7 +108,16 @@ for(uint r = 0; r < count && r < maxRows; r++) {
 	// loop below LOADS (pre[OFF_XMM + i*2] reads only even offsets) and the compare at
 	// :124 never reads. The hi words are already on disk, so widening the carrier grades
 	// them with no fresh sweep. Counted as a scope, not silently dropped.
-	for(var i = 0; i < 32; i++) m.Xmm[i] = pre[OFF_XMM + i*2];
+	// SEED THE FULL 128, both words. This read pre[OFF_XMM + i*2] alone -- the LO word --
+	// so every xmm register entered the machine with a ZERO high half, and the corpus's own
+	// hi words sat on disk unread. The rows were still GRADED, which is what made it
+	// invisible: a lo-only compare against a lo-only seed agrees.
+	//
+	// PSRLDQ is what surfaced it. A byte-shift-right pulls the top byte DOWN from the hi
+	// half, so with hi=0 the answer is want>>8 -- and I read that as a lowering bug and
+	// "fixed" two width helpers against it before reading the seed.
+	for(var i = 0; i < 32; i++)
+		m.Xmm[i] = ((UInt128) pre[OFF_XMM + i*2 + 1] << 64) | pre[OFF_XMM + i*2];
 	// Execute the stub's insn in place: copy it to a known IP.
 	var ip = 0x1000UL;
 	stub.AsSpan(slot, Math.Min(15, stub.Length - slot)).CopyTo(m.Mem.AsSpan((int) ip));
@@ -130,12 +145,17 @@ for(uint r = 0; r < count && r < maxRows; r++) {
 	var declared = fmask & 0x7FFF_FFFFu;
 	if(((m.Flags ^ post[OFF_EFLAGS]) & declared) != 0)
 		bad.Add($"eflags&{declared:x} got={m.Flags & declared:x} want={post[OFF_EFLAGS] & declared:x}");
-	for(var i = 0; i < 32; i++)
-		if(m.Xmm[i] != post[OFF_XMM + i*2]) bad.Add($"xmm{i}.lo got={m.Xmm[i]:x} want={post[OFF_XMM + i*2]:x}");
+	// COMPARE THE FULL 128. The hi word was on disk the whole time and never read: 22.5%
+	// of p2's 4,088,162 rows mutate an xmm hi word (measured at c243eaf), so a lo-only
+	// compare graded 3.17M rows and silently exempted the high half of every one.
+	for(var i = 0; i < 32; i++) {
+		var wantX = ((UInt128) post[OFF_XMM + i*2 + 1] << 64) | post[OFF_XMM + i*2];
+		if(m.Xmm[i] != wantX) bad.Add($"xmm{i} got={m.Xmm[i]:x} want={wantX:x}");
+	}
 
 	if(bad.Count == 0) { nOk++; continue; }
 	nDiff++;
-	if(nPrinted++ < 20)
+	if(nPrinted++ < DiffCap)
 		Console.Error.WriteLine($"  DIFF row={r} def_id={defId}(stale-index, informational) mnem={Disassembler.DefNames[d.DefId]} len={d.Len}: {string.Join(" | ", bad)}");
 }
 

@@ -48,10 +48,31 @@ public class ExecTests {
 		m.Step();
 		Assert.That(m.Gpr[0], Is.EqualTo(0xAAAAAAAAAAAAAAAA), "RAX must be UNTOUCHED");
 		Assert.That(m.Gpr[1], Is.EqualTo(0xBBBBBBBBBBBBBBBB), "RCX must be UNTOUCHED");
-		Assert.That(m.Xmm[0], Is.EqualTo(0x2222UL), "xmm0 := xmm1");
-		Assert.That(m.Xmm[1], Is.EqualTo(0x2222UL), "xmm1 unchanged");
+		Assert.That(m.Xmm[0], Is.EqualTo((UInt128) 0x2222UL), "xmm0 := xmm1");
+		Assert.That(m.Xmm[1], Is.EqualTo((UInt128) 0x2222UL), "xmm1 unchanged");
 	}
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
+
+	[Test]
+	public void ScalarSsePreservesUpperBits() {  // F3 0F 59 C1 = mulss xmm0, xmm1
+		// SDM Vol 2A, MULSS: "The three high-order doublewords of the destination operand
+		// remain unchanged." IlLower emits the merge for that (IlLower.cs:442-451) and the
+		// oracle could not grade it: XFReader seeded and compared the LO WORD ONLY, so a
+		// machine that zeroed the upper 96 bits agreed with silicon on 3.17M rows.
+		//
+		// This is the acceptance case for the UInt128 carrier. Pre-widening it fails at the
+		// upper-96 assert; the corpus row that named it (p2 #2886576, CVTSI2SS) has
+		// pre=3f8000003f8000003f8000003f800000 and post=3f8000003f8000003f80000000000000 --
+		// silicon keeping the top three doublewords while only lane 0 changes.
+		var hi = ((UInt128) 0x3f8000003f800000UL << 64) | 0x3f80000000000000UL;
+		var m = M64("f30f59c1");
+		m.Xmm[0] = hi | Fb(6.0f);
+		m.Xmm[1] = Fb(7.0f);
+		Assert.That(m.Step(), Is.True, "mulss did not step");
+		Assert.That((uint) m.Xmm[0], Is.EqualTo(Fb(42.0f)), "lane 0 = 6*7 bit-exact");
+		Assert.That(m.Xmm[0] >> 32, Is.EqualTo(hi >> 32),
+			"upper 96 bits MUST be preserved -- this is what the lo-only oracle could not see");
+	}
 
 	[Test]
 	public void SseScalarFloatArithExecutes() {  // F3 0F 59 C1 = mulss xmm0, xmm1
