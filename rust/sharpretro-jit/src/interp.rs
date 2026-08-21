@@ -373,6 +373,13 @@ impl<'a, S: RegState, M: GuestMem> Builder for InterpretingBuilder<'a, S, M> {
         let w = match a.ty { IlType::I{width,..} => width, _ => panic!("bswap non-int") };
         let r = match w { 64 => (a.bits as u64).swap_bytes() as u128,
                           32 => (a.bits as u32).swap_bytes() as u128,
+                          // 16 is the `66 0F C8` form, which the SDM calls UNDEFINED.
+                          // Implementing it as a 2-byte swap does NOT assert that is what
+                          // silicon does -- it makes the def EXECUTABLE so the sweep can
+                          // grade it. A track-fail is unmeasurable; a diff is information,
+                          // and hardware > SDM is settled at this bench (the BSF/BSR
+                          // src=0 finding). 16 rows.
+                          16 => (a.bits as u16).swap_bytes() as u128,
                           _ => panic!("bswap width={w}") };
         IVal { ty: a.ty, bits: r }
     }
