@@ -108,9 +108,19 @@ public partial class CoreRecompiler : Recompiler {
             }
             var nameI = 0;
             if(used.Contains(name)) {
-                while(used.Contains($"name_{nameI}"))
+                // THE SPELLING SLIPPED BETWEEN THE TEST AND THE FIX: this used to detect
+                // the collision on `name` the VARIABLE and resolve it in a namespace of
+                // LITERAL "name_0"/"name_1"/... -- so every collided block in the image
+                // shared one counter, disconnected from the symbol that actually collided,
+                // and the guest address that every other path here carries (f_<ADDR:X> or
+                // <sym>_<ADDR:X>) was dropped. Two consequences: a collided block's symbol
+                // stopped telling you which guest address it came from, and the probe was
+                // against the WRONG KEY-SPACE -- the loop found the first free "name_N"
+                // without checking whether that spelling was taken under a different
+                // original name, so it could hand back a name already in `used`.
+                while(used.Contains($"{name}_{nameI}"))
                     nameI++;
-                name = $"name_{nameI}";
+                name = $"{name}_{nameI}";
             }
             used.Add(name);
             BlockNames[addr] = name;
