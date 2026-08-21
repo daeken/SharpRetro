@@ -582,6 +582,34 @@ public class RustLiftGen {
                 }
                 return cacc;
             }
+            case "vshufv": {
+                // (vshufv dst src) -- PSHUFB, data-dependent per-lane index with bit 7
+                // zeroing the lane. The Rust Builder's vshuf takes an IMMEDIATE sel and
+                // cannot express this, but velement_read takes `i: Self::Val` -- a RUNTIME
+                // index (lib.rs:255) -- so the same composition works here:
+                //     lane_i = velement_read(dst, ix & 0xF, U8) & !(ix >>a 7)
+                // Every call is its own statement (the double-mut-borrow the SSA
+                // linearizer exists to kill), and the lanes are assembled with
+                // velement_write onto a zero V128 rather than a build node.
+                var vd = Expr(l[1]);
+                var vs = Expr(l[2]);
+                var pbAcc = Rt("bd.literal(IlType::V128, 0)");
+                for(var k = 0; k < 16; k++) {
+                    var ki = Rt($"bd.literal(IlType::U32, {k})");
+                    var ix = Rt($"bd.velement_read({vs}, {ki}, IlType::U8)");
+                    var c7 = Rt("bd.literal(IlType::U8, 7)");
+                    var b1 = Rt($"bd.shr({ix}, {c7})");
+                    var z0 = Rt("bd.literal(IlType::U8, 0)");
+                    var sm = Rt($"bd.sub({z0}, {b1})");   // 0-1 = 0xFF at U8; 0-0 = 0. No SAR in the trait.
+                    var nm = Rt($"bd.not({sm})");
+                    var cf = Rt("bd.literal(IlType::U8, 0xF)");
+                    var lo = Rt($"bd.and({ix}, {cf})");
+                    var vl = Rt($"bd.velement_read({vd}, {lo}, IlType::U8)");
+                    var mv = Rt($"bd.and({vl}, {nm})");
+                    pbAcc = Rt($"bd.velement_write({pbAcc}, {ki}, {mv})");
+                }
+                return pbAcc;
+            }
             case "vzext": {
                 // (vzext a sew dew) -- PMOVZXBW/PMOVZXWD. The C# lowering builds
                 // n Zext(elem(a,i)) lanes because the DSL has no vector-literal form;

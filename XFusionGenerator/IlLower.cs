@@ -813,6 +813,35 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "vshufv": {
+				// (vshufv dst src) -- PSHUFB. A DATA-DEPENDENT shuffle: the per-lane index
+				// comes from a REGISTER, not an immediate, and bit 7 of each index zeroes
+				// its output lane.
+				//
+				// NO NEW NODE. Two facts made it expressible and both were checked rather
+				// than assumed: IlVecElem.Idx is an `Il`, not a constant, so a RUNTIME
+				// index is already representable and my eval arm already evaluates one
+				// (X86Machine.cs:699 does `(int) N64(Eval(vi))`); and there is no
+				// IlTernary anywhere in LiftIl, so the zeroing rule uses the sign-mask
+				// idiom on a scalar lane instead of a select:
+				//     ix   = elem(src, i, U8)
+				//     sm   = Sar(ix, 7)              all-1s if bit 7 set, else 0
+				//     lane = elem(dst, ix & 0xF, U8) & ~sm
+				// Verified byte-exact against the SDM rule on a 16-lane case including
+				// bit-7-set, index-wrap (0x1F -> lane 0xF) and 0xFF before writing it.
+				var sd = Expr(l[1]);
+				var ss = Expr(l[2]);
+				var b8 = new IlType.I(false, 8);
+				var sel = new List<Il>();
+				for(var k = 0; k < 16; k++) {
+					var ix = Lane(ss, b8, k);
+					var sm = new IlBin(b8, BinOp.Sar, ix, new IlConst(new IlType.I(false, 32), 7));
+					var lo = new IlBin(b8, BinOp.And, ix, new IlConst(b8, 0xF));
+					var val = new IlVecElem(b8, sd, lo);
+					sel.Add(new IlBin(b8, BinOp.And, val, new IlUn(b8, UnOp.Not, sm)));
+				}
+				return new IlVecBuild(128, b8, sel);
+			}
 			case "vzext": {
 				// (vzext a sew dew) -- PMOVZXBW/PMOVZXWD: take the LOW 128/dew lanes of a
 				// at width sew and zero-extend each into a dew-wide lane.

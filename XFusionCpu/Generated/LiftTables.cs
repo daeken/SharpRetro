@@ -437,7 +437,7 @@ public static class LiftTables {
 		("LDDQU", "dst src", "(block (intrinsic lddqu dst src))"),
 		("HADDPS", "dst src", "(block (= dst (vhadd dst src 0x20)))"),
 		("HADDPD", "dst src", "(block (= dst (vhadd dst src 0x40)))"),
-		("PSHUFB-S", "dst src", "(block (intrinsic pshufb-s dst src))"),
+		("PSHUFB-S", "dst src", "(block (= dst (vshufv dst src)))"),
 		("PALIGNR", "dst src sel", "(block (intrinsic palignr dst src sel))"),
 		("PABSB", "dst src", "(block (= dst (viabs src 0x8)))"),
 		("PABSW", "dst src", "(block (= dst (viabs src 0x10)))"),

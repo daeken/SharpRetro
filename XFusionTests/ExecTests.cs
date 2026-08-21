@@ -54,6 +54,34 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedShuffleBytesExecutes() {
+		// PSHUFB (vshufv): a DATA-DEPENDENT shuffle -- the per-lane index comes from a
+		// register, and bit 7 of an index ZEROES its output lane.
+		//
+		// THREE DISCRIMINATING PROPERTIES, all in one source:
+		//   index 0x80 / 0xFF  -> lane must be ZERO (the bit-7 rule; an implementation
+		//                         that ignored bit 7 would index lane 0 and lane 15)
+		//   index 0x1F         -> lane 0xF (the index WRAPS: only the low 4 bits select,
+		//                         and 0x1F has bit 7 CLEAR so it must NOT zero)
+		//   a runtime index at all -> IlVecElem.Idx is an Il, not a constant
+		var dst = (UInt128) 0x1716151413121110UL | ((UInt128) 0x1F1E1D1C1B1A1918UL << 64);
+		var src = (UInt128) 0x071F05FF03800F00UL;   // lanes lo->hi: 00 0F 80 03 FF 05 1F 07
+
+		var m = M64("660f3800c1"); m.Xmm[0] = dst; m.Xmm[1] = src;   // PSHUFB 66 0F 38 00
+		Assert.That(m.Step(), Is.True, "pshufb did not step");
+		// lanes lo->hi: 00->0x10  0F->0x1F  80->ZERO  03->0x13  FF->ZERO  05->0x15
+		//               1F->0x1F  07->0x17     packed little-endian = 0x171F150013001F10
+		// (My first expectation was 0x171F001500131F10 -- the same eight VALUES with the
+		// two zero lanes one position off. The comment above it listed the source bytes
+		// correctly and I packed them wrong, so the prose and the constant disagreed and
+		// only the constant was checked. DERIVED here from the source qword rather than
+		// composed: bytes = [(src >> 8i) & 0xFF], lane_i = bit7 ? 0 : dst[idx & 0xF].)
+		Assert.That((ulong) m.Xmm[0], Is.EqualTo(0x171F150013001F10UL), "pshufb lo 8 lanes");
+		// the source's upper 8 index bytes are all 0x00 -> every high lane selects dst[0]
+		Assert.That((ulong) (m.Xmm[0] >> 64), Is.EqualTo(0x1010101010101010UL), "pshufb hi 8 lanes");
+	}
+
+	[Test]
 	public void PackedZeroExtendExecutes() {
 		// PMOVZXBW/PMOVZXWD (vzext): take the LOW 128/dew lanes at width sew and
 		// zero-extend each into a dew-wide lane.
