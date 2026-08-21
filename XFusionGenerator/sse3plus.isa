@@ -25,11 +25,11 @@
     (encoding PSHUFB-S (Vdq Wdq) (opsize 0x0F 0x38 0x00))
     (instruction PALIGNR (dst src sel) "palignr $dst, $src, $sel" (intrinsic palignr dst src sel))
     (encoding PALIGNR (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x0F))
-    (instruction PABSB (dst src) "pabsb $dst, $src" (intrinsic pabsb dst src))
+    (instruction PABSB (dst src) "pabsb $dst, $src" (= dst (viabs src 8)))
     (encoding PABSB (Vdq Wdq) (opsize 0x0F 0x38 0x1C))
-    (instruction PABSW (dst src) "pabsw $dst, $src" (intrinsic pabsw dst src))
+    (instruction PABSW (dst src) "pabsw $dst, $src" (= dst (viabs src 16)))
     (encoding PABSW (Vdq Wdq) (opsize 0x0F 0x38 0x1D))
-    (instruction PABSD (dst src) "pabsd $dst, $src" (intrinsic pabsd dst src))
+    (instruction PABSD (dst src) "pabsd $dst, $src" (= dst (viabs src 32)))
     (encoding PABSD (Vdq Wdq) (opsize 0x0F 0x38 0x1E)))
 
 (featuring sse4.1

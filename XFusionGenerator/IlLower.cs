@@ -813,6 +813,25 @@ public class IlLower {
 				}
 				return acc2;
 			}
+			case "viabs": {
+				// (viabs a ew) -- PABSB/PABSW/PABSD. NO NEW NODE, and no UnOp.Abs on an
+				// integer lane either: abs is the sign-mask identity, three ops I already
+				// emit and evaluate.
+				//     sign = Sar(x, ew-1)        all-1s if negative, 0 if not
+				//     abs  = Sub(Xor(x, sign), sign)
+				// Verified at the boundaries before writing it, including the one that
+				// looks wrong: 0x80 (-128) -> 0x80, which is what x86 does (INT_MIN has
+				// no positive representation at the width; SDM says the result is
+				// INT_MIN). A composed "clamp to 0x7F" would be the wrong fix for a
+				// correct answer.
+				var xa = Expr(l[1]);
+				var aew = (int) ((PInt) l[2]).Value;
+				var aet = new IlType.I(true, aew);
+				var shamt = new IlConst(new IlType.I(false, 32), (UInt128) (aew - 1));
+				var sign = new IlVecBin(128, aet, BinOp.Sar, xa, shamt);
+				return new IlVecBin(128, aet, BinOp.Sub,
+					new IlVecBin(128, aet, BinOp.Xor, xa, sign), sign);
+			}
 			case "vibin": {
 				// (vibin a b ew op) -- packed-int per-lane wrapping arith on V128.
 				// ew in {8,16,32,64}; op in {0=add,1=sub,2=mul,3=cmpeq,4=cmpgt}

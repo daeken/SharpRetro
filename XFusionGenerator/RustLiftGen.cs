@@ -665,6 +665,29 @@ public class RustLiftGen {
                 var ew = ((PInt)l[3]).Value; var op = ((PInt)l[4]).Value;
                 return Rt($"bd.vibin({a}, {b}, {ew}, {op})");
             }
+            case "viabs": {
+                // (viabs a ew) -- PABSB/PABSW/PABSD, with NO new Builder op:
+                //     abs(x) = maxs(x, 0 - x)      per lane
+                // vibin op 1 is Sub and op 5 is signed-max, both of which already exist,
+                // so this is two calls to an op the interp/tier0/tier1 arms all carry.
+                //
+                // THE INT_MIN CASE IS WHY IT WORKS RATHER THAN AN EXCEPTION TO IT: at
+                // ew=8, 0 - 0x80 WRAPS to 0x80, so maxs(-128, -128) = -128 and the answer
+                // is INT_MIN -- exactly what x86 does (SDM: PABS of INT_MIN is INT_MIN).
+                // Verified at all five boundaries (0x80/0xFF/0x7F/0x01/0x00) before this
+                // was written; my first draft of this comment composed a (x^s)-s identity
+                // and then contradicted itself mid-sentence, which is the tell that it was
+                // being written from expectation rather than from an arithmetic check.
+                var a2 = Expr(l[1]);
+                var ew2 = ((PInt)l[2]).Value;
+                // EACH bd.* CALL MUST BE ITS OWN STATEMENT. An inline block nesting two
+                // bd calls reintroduces the double-mut-borrow the SSA linearizer exists to
+                // kill (rung-4's 7,767x E0499) -- my first form did exactly that and cargo
+                // caught it at 4 sites. Route through the sink like every other head.
+                var zero = Rt("bd.literal(IlType::V128, 0)");
+                var neg = Rt($"bd.vibin({zero}, {a2}, {ew2}, 1)");
+                return Rt($"bd.vibin({a2}, {neg}, {ew2}, 5)");
+            }
             case "vfbin": {
                 // (vfbin a b elw op) — packed-float per-lane arith on V128 → V128.
                 // Expression head; .isa does (= dst (vfbin dst src elw op)) for RMW.

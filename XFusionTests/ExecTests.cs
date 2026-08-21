@@ -54,6 +54,36 @@ public class ExecTests {
 	static uint Fb(float f) => BitConverter.SingleToUInt32Bits(f);
 
 	[Test]
+	public void PackedAbsExecutes() {
+		// PABSB/PABSW/PABSD via the sign-mask identity (viabs), NO new node and no
+		// UnOp.Abs on an integer lane:
+		//     sign = Sar(x, ew-1)          all-1s if negative, 0 if not
+		//     abs  = Sub(Xor(x, sign), sign)
+		//
+		// THE DISCRIMINATING LANE IS INT_MIN, and it looks like a bug: 0x80 (-128)
+		// abs'es to 0x80, because INT_MIN has no positive representation at the width.
+		// That is what x86 does (SDM: the result is INT_MIN) and a composed "clamp to
+		// 0x7F" would be the wrong fix for a correct answer. A lane arm that computed
+		// abs via a compare-and-negate WITHOUT the wrap would differ here and nowhere
+		// else, so this lane is the whole test.
+		var A = (UInt128) 0x7F01FF80UL;   // lanes lo->hi: 80 FF 01 7F  = -128, -1, 1, 127
+
+		var m = M64("660f381cc1"); m.Xmm[1] = A;            // PABSB 66 0F 38 1C
+		Assert.That(m.Step(), Is.True, "pabsb did not step");
+		Assert.That((uint) m.Xmm[0], Is.EqualTo(0x7F0101_80u), "pabsb");
+
+		// PABSW 66 0F 38 1D -- word lanes: 0xFF80 = -128 -> 0x0080, 0x7F01 -> 0x7F01
+		var w = M64("660f381dc1"); w.Xmm[1] = A;
+		Assert.That(w.Step(), Is.True, "pabsw did not step");
+		Assert.That((uint) w.Xmm[0], Is.EqualTo(0x7F01_0080u), "pabsw");
+
+		// PABSD 66 0F 38 1E -- one dword lane: 0x7F01FF80 is positive, unchanged
+		var dd = M64("660f381ec1"); dd.Xmm[1] = A;
+		Assert.That(dd.Step(), Is.True, "pabsd did not step");
+		Assert.That((uint) dd.Xmm[0], Is.EqualTo(0x7F01FF80u), "pabsd");
+	}
+
+	[Test]
 	public void PackedIntMinMaxExecutes() {
 		// PMAXSB/PMINSB/PMAXUB/PMINUB via the mask-then-blend idiom (vibin ops 5-8):
 		//   mask = a >s b or a >u b (all-1s per lane), res = (keep & mask) | (other & ~mask)
