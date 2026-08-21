@@ -169,6 +169,23 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 # defect the XFusionTests arm above has a guard for.
 CORPUS=${XF_CORPUS:-/tmp/echidna}
 CORPUS_FAIL_FLOOR=0        # fail-classes; asserted in BOTH directions like the arm above
+# ── ALL THREE CORPUS GUARDS HAVE A SEEN FAILURE (fired 2026-08-21). ──────────────
+# An unexercised guard is a claim, not a gate -- so each was made to fail on purpose:
+#   XF_CORPUS=/nonexistent   ⟹ ⊘ SKIPPED and said        (never a silent pass)
+#   a TRUNCATED copy         ⟹ ✗ no summary line          (the FIRST arm, see below)
+#   XF_CORPUS=/bin/true      ⟹ ✗ corpus SHRANK: 2742 < 6000000
+#
+# TWO THINGS THE EXERCISE TAUGHT THAT READING THE CODE DID NOT:
+#  (1) MY FIRST PLANT DID NOT LAND. `truncate` on the real corpus was
+#      permission-denied (it is another seat's file in /tmp), so the fire ran against
+#      the FULL corpus and printed ✓. A plant that fails to land is indistinguishable
+#      from a guard that passed -- assert the plant CHANGED the subject before
+#      believing either outcome. (Copy to a mktemp dir, chmod u+w, then truncate.)
+#  (2) A TRUNCATED ELF REACHES THE WRONG ARM. It has no readable .text, so the census
+#      emits no summary and the FIRST branch catches it -- the SHRANK arm needs a
+#      corpus that DECODES but is genuinely small, i.e. a real small binary. Two
+#      different failures, two different messages, and only one of them is the
+#      wrong-binary case this floor exists for.
 CORPUS_MIN_DECODED=6000000 # a floor on the SUBJECT: a corpus that silently shrank to a
                            # stub would otherwise lift 100% of very little and read green
 if [ ! -f "$CORPUS" ]; then
