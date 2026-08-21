@@ -182,6 +182,22 @@ echo "== corpus lift: every insn the decoder produces must LIFT (x86-64, real .t
 # from a dozen seats and anything there can vanish between runs. A gate that
 # reports nothing when its subject is gone is a PASS-shaped nothing -- the same
 # defect the XFusionTests arm above has a guard for.
+# ── LINE-KIND ENUMERATION OF THE CENSUS LOG, fired 2026-08-21 (never done before). ──
+# A peer's rule: A LOG YOU HAVE NEVER ENUMERATED BY LINE-KIND IS A CORPUS YOU HAVE NOT
+# READ -- every needle you fire is keyed on your own framing, so an answer keyed on a
+# word your framing lacks is invisible however many times it prints. Cost: one
+# `sed -E 's/[0-9]+/N/g' | sort | uniq -c | sort -rn | head`.
+#
+# THE LIFT log (what this arm reads) is TWO LINES, so there is nothing to enumerate --
+# a rare case where the rule finds nothing. The XED CENSUS log is the real corpus, and
+# it is HAND-FIRED ONLY (this gate runs `-- lift`, not the XED arm). Its enumeration:
+#   the "top blockers" section, which I had never read, ranks undecoded opcodes:
+#     0F00 13,663 insns (SLDT/STR/LLDT/LTR group) · FB 3,163 (sti) · C8 2,826 (enter)
+#     FA 1,505 (cli) · F1 1,213 (int1) · CB/CA 2,018 (ret far) · F6 933
+# EVERY ONE IS RING-0 OR INVALID-IN-64-BIT. A userland game binary does not emit SLDT
+# or CLI, so 13,663 of them means the LINEAR SWEEP IS DECODING DATA AS CODE -- the
+# expected desync mode, not a decoder gap. Recorded so the next reader does not chase
+# the biggest number in that table: it is the sweep's own shadow.
 CORPUS=${XF_CORPUS:-/tmp/echidna}
 CORPUS_FAIL_FLOOR=0        # fail-classes; asserted in BOTH directions like the arm above
 # ── THIS GATE REPORTS TWO ZEROS AND BOTH HAVE A SEEN NONZERO. ────────────────────
