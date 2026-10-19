@@ -191,6 +191,15 @@ public static class X86Lifter {
 			var disp = new IlConst(IlType.U64, (ulong) (long) m.Disp);
 			e = e == null ? disp : new IlBin(IlType.U64, BinOp.Add, e, disp);
 		}
+		// Effective offsets wrap at ADDRESS size, independently of operand width.
+		// Do this after base+index*scale+signed displacement (including EIP-relative
+		// forms), but BEFORE adding a segment base: FS/GS may be above 4 GiB.
+		// Keep the address carrier u64; a narrow truncation followed by zext makes
+		// the modulo operation explicit to every LiftIl consumer.
+		var addressWidth = d.P.AWidth(mode);
+		if(addressWidth < 64)
+			e = new IlCast(IlType.U64, CastKind.Zext,
+				new IlCast(new IlType.I(false, addressWidth), CastKind.Trunc, e));
 		// segment-base context (64-bit: only fs/gs are live)
 		if(d.P.Segment is 0x64 or 0x65 || (mode != XMode.Bits64 && d.P.Segment != 0)) {
 			var segIdx = d.P.Segment switch { 0x26 => 0, 0x2E => 1, 0x36 => 2, 0x3E => 3, 0x64 => 4, 0x65 => 5, _ => 3 };
