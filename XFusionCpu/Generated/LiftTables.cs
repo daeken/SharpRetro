@@ -119,7 +119,7 @@ public static class LiftTables {
 		("NOP", "", "(block (block))"),
 		("PAUSE", "", "(block (block))"),
 		("NOPL", "src", "(block (block))"),
-		("CALL", "target", "(block (push (next-pc)) (call target))"),
+		("CALL", "target", "(block (mlet (t target) (push (next-pc)) (call t)))"),
 		("JMP", "target", "(block (branch target))"),
 		("RET", "", "(block (ret (pop)))"),
 		("RETI", "imm", "(block (mlet (t (pop)) (= SP (+ SP imm)) (ret t)))"),

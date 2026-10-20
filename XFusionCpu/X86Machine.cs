@@ -91,13 +91,16 @@ public class X86Machine {
 			for(var i = 0; i < 15; i++) fbuf[i] = (byte) Load(lin + (ulong) i, 8);
 			if(!Disassembler.DecodeInsn(fbuf, Mode, out d)) return false;
 		}
+		var nearCall = X86Lifter.IsNearCall(in d);
 		var block = X86Lifter.Lift(in d, Ip, Mode);
 		if(block == null) return false;
 		_branchTo = null;
 		_tmps.Clear();
 		ExecBlock(block.Body);
 		Ip = _branchTo ?? Ip + (ulong) d.Len;
-		if(Mode == XMode.Bits16) Ip &= 0xFFFF;
+		// Near CALL/RET targets are already narrowed by their operand size in IL.
+		// Bits16 code can use 32-bit operands; masking here loses high EIP bits.
+		if(Mode == XMode.Bits16 && !nearCall && !X86Lifter.IsNearReturn(in d)) Ip &= 0xFFFF;
 		else if(Mode == XMode.Bits32) Ip &= 0xFFFFFFFF;
 		return !_halted;
 	}

@@ -24,19 +24,34 @@ public static class X86Lifter {
 	public static IlBlock Lift(in DecodedInsn d, ulong pc, XMode mode) {
 		var (tid, specsText, d64) = LiftTables.Defs[d.DefId];
 		var (params_, eval) = Template(tid);
+		var nearCall = IsNearCall(in d);
+		var stackOp = LiftTables.Templates[tid].Mnemonic is "CALL" or "PUSH" or "POP" or "RET" or "RETI";
+		var stackWidth = mode == XMode.Bits16 ? 16 : mode == XMode.Bits32 ? 32 : 64;
+		if(nearCall && (d.P.Lock || d.P.RepNz))
+			throw new NotSupportedException("LOCK/BND near CALL is outside the supported near-call model");
 		var specs = SpecCache[d.DefId] ??= specsText.Length == 0 ? []
 			: specsText.Split(' ').Select(OperandSpec.Parse).ToArray();
 
-		var vw = d64 ? d.P.VWidthD64(mode) : d.P.VWidth(mode);
+		var vw = nearCall && mode == XMode.Bits64 ? 64
+			: d64 ? d.P.VWidthD64(mode) : d.P.VWidth(mode);
 
 		var binds = new Dictionary<string, OperandBind>();
 		var immSlot = 0;
 		for(var k = 0; k < specs.Length && k < params_.Count; k++)
 			binds[params_[k]] = Bind(specs[k], in d, mode, vw, pc, ref immSlot);
+		if(nearCall && specs[0].Class == OpClass.RelBranch) {
+			var abs = unchecked(pc + (ulong)d.Len + (ulong)d.Imm0);
+			if(vw < 64) abs &= (1UL << vw) - 1;
+			binds[params_[0]] = new OperandBind.Imm((long)abs, vw);
+		}
 
-		binds["%nextpc"] = new OperandBind.Imm((long) (pc + (ulong) d.Len), 64);
-		var opWidth = specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
-		var block = IlLower.Lower(params_, eval, binds, opWidth);
+		binds["%nextpc"] = new OperandBind.Imm((long) (pc + (ulong) d.Len), nearCall ? vw : 64);
+		if(stackOp) binds["SP"] = new OperandBind.Reg(4, stackWidth);
+		var opWidth = stackOp ? vw : specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
+		var block = IlLower.Lower(params_, eval, binds, opWidth,
+			// API models a mode-default stack (no independent SS.B state).
+			stackOp ? stackWidth : 64,
+			stackOp && mode != XMode.Bits64 ? new IlReadReg(IlType.U64, RegKind.X86Seg, 2) : null);
 
 		// rep/repe/repne on the string family → intrinsic-name prefix (·62 naming).
 		// movs/stos/lods take plain rep; scas/cmps distinguish repe (F3) / repne (F2).
@@ -87,6 +102,14 @@ public static class X86Lifter {
 		WCode.ps or WCode.pd or WCode.dq or WCode.x => d.P.VexL ? 256 : 128,
 		_ => vw
 	};
+
+	// CALL uses an Intel near-call model: long-mode 66 is ignored. Legacy
+	// stack address size equals XMode; independent SS.B and faults are not modeled.
+	internal static bool IsNearCall(in DecodedInsn d) =>
+		LiftTables.Templates[LiftTables.Defs[d.DefId].Item1].Mnemonic == "CALL";
+
+	internal static bool IsNearReturn(in DecodedInsn d) =>
+		LiftTables.Templates[LiftTables.Defs[d.DefId].Item1].Mnemonic is "RET" or "RETI";
 
 	static bool IsStringOp(string n) => n is "movs" or "stos" or "lods" or "scas" or "cmps";
 

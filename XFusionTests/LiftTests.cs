@@ -319,7 +319,8 @@ public class LiftTests {
 		}
 		// spot semantics: push bp in 16-bit = SP-2, word store
 		var push = LiftText("55", XMode.Bits16);
-		Assert.That(push, Does.Contain("(RSP := (u64 sub (u64 RSP) (u64 #2)))"));
+		Assert.That(push, Does.Contain("(u16 sub (u16 trunc (u64 RSP)) (u16 #2))"));
+		Assert.That(push, Does.Contain("(store (u64 add (u64 SS)"));
 		// mov ah, 9: high-8 write = masked insert at bits 8-15... AH is reg4 in
 		// byte-file terms — pinned below in Dos16AhWrite.
 	}
@@ -329,7 +330,8 @@ public class LiftTests {
 	[Test]
 	public void CallEmitsCallKindAbsoluteTarget() {  // E8 FB 05 00 00 @ pc=0x1000, len 5 → target 0x1600
 		var il = LiftText("e8fb050000", pc: 0x1000);
-		Assert.That(il, Does.Contain("(call (u64 #1600))"));       // Kind=Call, abs
+		Assert.That(il, Does.Contain("(let %0 = (u64 #1600))"));
+		Assert.That(il, Does.Contain("(call (u64 %0))"));       // Kind=Call, abs
 		Assert.That(il, Does.Contain("(store (u64 RSP)"));         // return-addr push intact
 	}
 

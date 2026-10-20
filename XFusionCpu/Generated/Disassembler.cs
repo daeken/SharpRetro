@@ -11526,7 +11526,7 @@ public static partial class Disassembler {
 			case 392: return Decode.MnemonicPrefix(in d.P) + $"dec {(d.M.IsReg ? Decode.GprName(d.M.Rm, 8, d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, 8, pc + (ulong)d.Len))}";
 			case 393: return Decode.MnemonicPrefix(in d.P) + $"inc {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
 			case 394: return Decode.MnemonicPrefix(in d.P) + $"dec {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidth(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidth(mode), pc + (ulong)d.Len))}";
-			case 395: return Decode.MnemonicPrefix(in d.P) + $"call {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidthD64(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidthD64(mode), pc + (ulong)d.Len))}";
+			case 395: return Decode.MnemonicPrefix(in d.P) + $"call {(d.M.IsReg ? Decode.GprName(d.M.Rm, (mode == XMode.Bits64 ? 64 : d.P.VWidth(mode)), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, (mode == XMode.Bits64 ? 64 : d.P.VWidth(mode)), pc + (ulong)d.Len))}";
 			case 396: return Decode.MnemonicPrefix(in d.P) + $"jmp {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidthD64(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidthD64(mode), pc + (ulong)d.Len))}";
 			case 397: return Decode.MnemonicPrefix(in d.P) + $"push {(d.M.IsReg ? Decode.GprName(d.M.Rm, d.P.VWidthD64(mode), d.P.Rex != 0) : Decode.MemOperandString(in d.M, in d.P, mode, d.P.VWidthD64(mode), pc + (ulong)d.Len))}";
 			case 398: return (d.P.OpSize ? "data16 " : "") + Decode.MnemonicPrefix(in d.P) + "syscall";

@@ -41,13 +41,20 @@ public class IlLower {
 	readonly Dictionary<string, IlTmp> MemAddr = [];// operand name -> bound addr tmp
 	int TmpN;
 	readonly int OpWidth;
+	readonly int StackAddressWidth;
+	readonly Il StackBase;
 	IReadOnlyDictionary<string, OperandBind> Binds;
 
-	IlLower(int opWidth) => OpWidth = opWidth;
+	IlLower(int opWidth, int stackAddressWidth = 64, Il stackBase = null) {
+		OpWidth = opWidth;
+		StackAddressWidth = stackAddressWidth;
+		StackBase = stackBase;
+	}
 
 	public static IlBlock Lower(IReadOnlyList<string> params_, IEnumerable<PTree> evalForms,
-		IReadOnlyDictionary<string, OperandBind> binds, int opWidth) {
-		var l = new IlLower(opWidth) { Binds = binds };
+		IReadOnlyDictionary<string, OperandBind> binds, int opWidth, int stackAddressWidth = 64, Il stackBase = null) {
+		if(stackAddressWidth is not (16 or 32 or 64)) throw new NotSupportedException("stack address width");
+		var l = new IlLower(opWidth, stackAddressWidth, stackBase) { Binds = binds };
 		// Pre-bind memory operand addresses (x86: address evaluated ONCE per insn).
 		foreach(var (name, b) in binds)
 			if(b is OperandBind.Mem mem) {
@@ -215,7 +222,7 @@ public class IlLower {
 					break;
 				}
 				// general form: guarded stmt block (SHL flag-writes) → IlIf(then, else:[])
-				var inner = new IlLower(OpWidth) { Binds = Binds, TmpN = TmpN };
+				var inner = new IlLower(OpWidth, StackAddressWidth, StackBase) { Binds = Binds, TmpN = TmpN };
 				foreach(var (k, v) in Env) inner.Env[k] = v;
 				foreach(var (k, v) in MemAddr) inner.MemAddr[k] = v;
 				// (if cond then...) has a variadic THEN; (if cond then else) is the
@@ -245,7 +252,7 @@ public class IlLower {
 				TmpN = inner.TmpN;
 				var elseStmts = new List<Il>();
 				if(isThenElse) {
-					var eInner = new IlLower(OpWidth) { Binds = Binds, TmpN = TmpN };
+					var eInner = new IlLower(OpWidth, StackAddressWidth, StackBase) { Binds = Binds, TmpN = TmpN };
 					foreach(var (k, v) in Env) eInner.Env[k] = v;
 					foreach(var (k, v) in MemAddr) eInner.MemAddr[k] = v;
 					eInner.Stmt(l[3]);
@@ -259,9 +266,8 @@ public class IlLower {
 				// ·62: explicit RSP arithmetic. Value BEFORE the adjust (push rsp = OLD rsp).
 				var v = Expr(l[1]);
 				var vt = Let(v);
-				Stmts.Add(new IlWriteReg(RegKind.X86, 4,
-					new IlBin(IlType.U64, BinOp.Sub, Rsp(), C(64, W(v) / 8))));
-				Stmts.Add(new IlStore(Rsp(), vt));
+				AdjustStack(BinOp.Sub, W(v) / 8);
+				Stmts.Add(new IlStore(StackAddress(), vt));
 				break;
 			}
 			case PName("branch"):
@@ -408,6 +414,18 @@ public class IlLower {
 	}
 
 	static Il Rsp() => new IlReadReg(IlType.U64, RegKind.X86, 4);
+
+	Il StackOffset() => StackAddressWidth == 64 ? Rsp() :
+		new IlCast(U(StackAddressWidth), CastKind.Trunc, Rsp());
+
+	Il StackAddress() {
+		Il addr = StackAddressWidth == 64 ? Rsp() : new IlCast(IlType.U64, CastKind.Zext, StackOffset());
+		return StackBase == null ? addr : new IlBin(IlType.U64, BinOp.Add, StackBase, addr);
+	}
+
+	void AdjustStack(BinOp op, int bytes) => WriteOperand("%stack",
+		new OperandBind.Reg(4, StackAddressWidth),
+		new IlBin(U(StackAddressWidth), op, StackOffset(), C(StackAddressWidth, bytes)));
 
 	void WriteOperand(string name, OperandBind b, Il e) {
 		switch(b) {
@@ -590,16 +608,15 @@ public class IlLower {
 			case "bitwidth": return C(ctxW, W(Expr(l[1])));
 			case "pop": {
 				// ·62: load [RSP], bump RSP, yield the tmp.
-				var vt = Let(new IlLoad(U(OpWidth), Rsp()));
-				Stmts.Add(new IlWriteReg(RegKind.X86, 4,
-					new IlBin(IlType.U64, BinOp.Add, Rsp(), C(64, OpWidth / 8))));
+				var vt = Let(new IlLoad(U(OpWidth), StackAddress()));
+				AdjustStack(BinOp.Add, OpWidth / 8);
 				return vt;
 			}
 			case "next-pc":
 				// resolved at lift time when the lifter provides it (pc+len as a bind);
 				// falls back to the pc node for hand-bind tests.
-				return Binds != null && Binds.TryGetValue("%nextpc", out var np) && np is OperandBind.Imm(var nv, _)
-					? new IlConst(IlType.U64, (ulong) nv) : new IlReadPc(IlType.U64);
+				return Binds != null && Binds.TryGetValue("%nextpc", out var np) && np is OperandBind.Imm(var nv, var nw)
+					? C(nw, nv) : new IlReadPc(IlType.U64);
 			case "addr-of": {
 				var opName = ((PName) l[1]).Name;
 				return Binds[opName] is OperandBind.Mem ? MemAddr[opName]

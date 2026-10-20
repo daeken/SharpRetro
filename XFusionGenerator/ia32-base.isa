@@ -951,8 +951,10 @@
 ; --- control flow ---
 (instruction CALL (target)
     "call $target"
-    (push (next-pc))
-    (call target))
+    ; Read an indirect target (including SP or [SP]) before pushing the return.
+    (mlet (t target)
+        (push (next-pc))
+        (call t)))
 
 (encoding CALL (Jz) (0xE8 d64))
 (encoding CALL (Ev) (0xFF /2 d64))

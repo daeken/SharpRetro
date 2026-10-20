@@ -341,7 +341,8 @@ public static class DisassemblerGenerator {
 
 	/// Emits decode statements for one operand; returns the C# expression producing its text.
 	static string EmitOperand(StringBuilder sb, XFusionDef def, OperandSpec spec, string ind, string m) {
-		var vw = def.D64 ? "p.VWidthD64(mode)" : "p.VWidth(mode)";
+		var vw = def.Mnemonic == "CALL" ? "(mode == XMode.Bits64 ? 64 : p.VWidth(mode))"
+			: def.D64 ? "p.VWidthD64(mode)" : "p.VWidth(mode)";
 		string VWidthExpr() => vw;
 		bool Packed() => spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.x;
 		string VecPtrBits() => spec.Width switch {
