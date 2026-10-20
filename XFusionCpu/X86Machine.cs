@@ -359,6 +359,9 @@ public class X86Machine {
 
 	UInt128 Eval(Il e) {
 		switch(e) {
+            // One lawful concrete representative of an architecturally undefined value.
+            // The lifted node remains explicitly unconstrained for symbolic users.
+            case IlUndefined: return UInt128.Zero;
 			// A 128-BIT LITERAL SURVIVES AT 128. This was MaskTy(e.Ty, (ulong) bits) -- an
 			// unconditional narrowing INSIDE the arm that produces the mask, and MaskTy itself
 			// carries a sixth copy of the guess-a-width expression. IlConst.Bits has been

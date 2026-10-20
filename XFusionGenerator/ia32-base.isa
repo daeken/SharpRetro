@@ -588,10 +588,9 @@
 (encoding MUL (Eb) (0xF6 /4))
 (encoding MUL (Ev) (0xF7 /4))
 
-; IMUL1 (one-operand): RDX:RAX = RAX × src, signed. (mul-wide src #t) does the
-; sext-to-2W → mul → hi64/lo64 → RDX:RAX + CF=OF=(hi≠sext(lo)). ‡ CF/OF for
-; signed: overflow = hi ≠ sign-extend-of-lo (v1 uses hi≠0 like unsigned MUL —
-; wrong for negative products; game code rarely reads CF/OF post-imul-1op).
+; IMUL1 (one-operand): signed 2W product in AX or DX:AX/EDX:EAX/RDX:RAX.
+; C# IlLower emits typed effects, CF=OF=(product != sext(low)), and explicitly
+; undefined PF/AF/ZF/SF. RustLiftGen retains its separate mul-wide backend.
 (instruction IMUL1 (src)
     "imul $src"
     (mul-wide src #t))

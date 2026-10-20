@@ -50,6 +50,7 @@ public abstract record Il(IlType Ty) {
 
     static string Pp(Il il, int d) => il switch {
         IlConst(var t, var b) => $"({t} #{(b > ulong.MaxValue ? b.ToString() : ((ulong)b).ToString("x"))})",
+        IlUndefined(var t, var reason) => $"({t} undefined {reason})",
         IlReadReg(var t, var k, var i) => $"({t} {RegName(k, i)})",
         IlReadPc(var t) => $"({t} pc)",
         IlTmp(var t, var id) => $"({t} %{id})",
@@ -117,6 +118,10 @@ public abstract record Il(IlType Ty) {
 }
 
 // — values —
+// An unconstrained architectural value, not a preserved input or defined zero.
+// Symbolic consumers must keep it unknown. Concrete engines may choose a
+// representative, but such choices are not defined instruction results.
+public record IlUndefined(IlType Ty, string Reason) : Il(Ty);
 public record IlConst(IlType Ty, UInt128 Bits) : Il(Ty);
 public record IlReadReg(IlType Ty, RegKind Kind, int Idx) : Il(Ty);
 public record IlReadPc(IlType Ty) : Il(Ty);

@@ -103,7 +103,11 @@ public class X86Recompiler {
 	}
 
 	IRuntimeValue<ulong> Eval(Il e) {
+        // This backend has only a 64-bit scalar carrier. Never silently truncate
+        // the 128-bit signed product needed by IMUL r/m64.
+        if(W(e.Ty) > 64) throw new NotSupportedException("wide scalar IL requires a 128-bit backend");
 		switch(e) {
+            case IlUndefined: return B.LiteralValue(0UL); // permitted concrete representative
 			case IlConst(var ty, var bits):
 				return B.LiteralValue(MaskC((ulong) bits, W(ty)));
 			case IlReadReg(_, RegKind.X86, var i):

@@ -24,6 +24,9 @@ public static class X86Lifter {
 	public static IlBlock Lift(in DecodedInsn d, ulong pc, XMode mode) {
 		var (tid, specsText, d64) = LiftTables.Defs[d.DefId];
 		var (params_, eval) = Template(tid);
+        if(LiftTables.Templates[tid].Mnemonic == "IMUL1" &&
+            (mode is not (XMode.Bits16 or XMode.Bits32 or XMode.Bits64) || d.P.Rep || d.P.RepNz))
+            throw new NotSupportedException("IMUL1 mode/REP prefix outside supported ISA model");
 		var nearCall = IsNearCall(in d);
 		var stackOp = LiftTables.Templates[tid].Mnemonic is "CALL" or "PUSH" or "POP" or "RET" or "RETI";
 		var stackWidth = mode == XMode.Bits16 ? 16 : mode == XMode.Bits32 ? 32 : 64;

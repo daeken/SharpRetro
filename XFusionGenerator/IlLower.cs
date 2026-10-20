@@ -314,6 +314,38 @@ public class IlLower {
 			// The other three need real IL and are transcribed from RustLiftGen's
 			// own arms (NOT composed — a rewrite's composed-from-memory
 			// semantics is exactly what the freeze-oracle exists to catch).
+			case PName("mul-wide") when l[2] is PName("#t"): {
+                // One-operand signed multiply: capture BOTH operands before implicit
+                // register writes, including AH/AL and address-register aliases.
+                var source = Let(Expr(l[1]));
+                var width = W(source);
+                if(width is not (8 or 16 or 32 or 64))
+                    throw new NotSupportedException($"one-operand IMUL width {width}");
+                var accumulator = Let(new IlCast(U(width), CastKind.Trunc,
+                    new IlReadReg(IlType.U64, RegKind.X86, 0)));
+                var wide = new IlType.I(true, width * 2);
+                var product = Let(new IlBin(wide, BinOp.Mul,
+                    new IlCast(wide, CastKind.Sext, accumulator),
+                    new IlCast(wide, CastKind.Sext, source)));
+                var low = Let(new IlCast(U(width), CastKind.Trunc, product));
+                var high = Let(new IlCast(U(width), CastKind.Trunc,
+                    new IlBin(wide, BinOp.Shr, product, C(width * 2, width))));
+                var fill = new IlBin(U(width), BinOp.Sar, low, C(width, width - 1));
+                var overflow = Let(new IlBin(IlType.U1, BinOp.Ne, high, fill));
+                if(width == 8) {
+                    WriteOperand("%ax", new OperandBind.Reg(0, 16),
+                        new IlCast(U(16), CastKind.Bitcast, product));
+                } else {
+                    WriteOperand("%ax", new OperandBind.Reg(0, width), low);
+                    WriteOperand("%dx", new OperandBind.Reg(2, width), high);
+                }
+                Stmts.Add(new IlWriteReg(RegKind.Eflags, 0, overflow));
+                Stmts.Add(new IlWriteReg(RegKind.Eflags, 11, overflow));
+                foreach(var bit in new[] { 2, 4, 6, 7 })
+                    Stmts.Add(new IlWriteReg(RegKind.Eflags, bit,
+                        new IlUndefined(IlType.U1, "IMUL1 flag " + bit)));
+                break;
+            }
 			case PName("mul-wide"):
 			case PName("div-wide"): {
 				// (mul-wide src #t|#f) / (div-wide src #t|#f) — F6/F7 /4-/7.
