@@ -323,6 +323,108 @@ public class IlLower {
 				Stmts.Add(new IlIntrin(IlType.V0, name, args.ToArray()));
 				break;
 			}
+			case PName("pcmpstr"): {
+				// (pcmpstr a b imm explicit? index?) -- SSE4.2 PCMPESTRI/ESTRM/ISTRI/ISTRM,
+				// lowered per SDM Vol 2B 4.1: element compares -> validity override ->
+				// aggregation -> polarity -> ECX index or XMM0 mask, plus CF ZF SF OF
+				// (AF = PF = 0). imm[1:0] format, [3:2] aggregation, [5:4] polarity, [6]
+				// msb-index / expanded mask. All of it is compile-time per encoding.
+				var av = Let(Expr(l[1]));
+				var bv = Let(Expr(l[2]));
+				var imm = ImmOf(l[3], "pcmpstr");
+				var expl = l[4] is PName("#t");
+				var index = l[5] is PName("#t");
+				var words = (imm & 1) != 0;
+				var sgn = (imm & 2) != 0;
+				var n = words ? 8 : 16;
+				var ew = words ? 16 : 8;
+				var et = new IlType.I(sgn, ew);
+				var agg = (imm >> 2) & 3;
+				var pol = (imm >> 4) & 3;
+				var u1 = IlType.U1;
+				Il T() => new IlConst(u1, 1);
+				Il F() => new IlConst(u1, 0);
+				Il And(Il x, Il y) => new IlBin(u1, BinOp.And, x, y);
+				Il Or(Il x, Il y) => new IlBin(u1, BinOp.Or, x, y);
+				Il Not(Il x) => new IlUn(u1, UnOp.Not, x);
+				var ae = Enumerable.Range(0, n).Select(i => Lane(av, et, i)).ToArray();
+				var be = Enumerable.Range(0, n).Select(i => Lane(bv, et, i)).ToArray();
+				// lengths -> per-element validity
+				Il[] Valid(Il[] el, int gpr) {
+					var v = new Il[n];
+					if(expl) {
+						var rw = Binds.TryGetValue("%rexw", out var rb) && rb is OperandBind.Imm { Value: 1 } ? 64 : 32;
+						var st = new IlType.I(true, rw);
+						var raw = Let(new IlCast(st, CastKind.Trunc, new IlReadReg(IlType.U64, RegKind.X86, gpr)));
+						var abs = new IlIfV(st, new IlBin(u1, BinOp.Slt, raw, new IlConst(st, 0)),
+							new IlBin(st, BinOp.Sub, new IlConst(st, 0), raw), raw);
+						var len = Let(new IlIfV(st, new IlBin(u1, BinOp.Ugt, abs, new IlConst(st, (UInt128) n)),
+							new IlConst(st, (UInt128) n), abs));
+						for(var i = 0; i < n; i++) v[i] = Let(new IlBin(u1, BinOp.Ult, new IlConst(st, (UInt128) i), len));
+					} else {
+						Il acc = T();
+						for(var i = 0; i < n; i++)
+							v[i] = acc = Let(And(acc, new IlBin(u1, BinOp.Ne, el[i], new IlConst(et, 0))));
+					}
+					return v;
+				}
+				var va = Valid(ae, 0);   // EAX/RAX = length of a
+				var vb = Valid(be, 2);   // EDX/RDX = length of b
+				Il Bool(int j, int i) {
+					Il cmp = agg == 1
+						? new IlBin(u1, j % 2 == 0 ? (sgn ? BinOp.Sge : BinOp.Uge) : (sgn ? BinOp.Sle : BinOp.Ule), be[i], ae[j])
+						: new IlBin(u1, BinOp.Eq, ae[j], be[i]);
+					// SDM table 4-7 overrides for invalid elements
+					var bothBad = And(Not(va[j]), Not(vb[i]));
+					var aBadOnly = And(Not(va[j]), vb[i]);
+					return agg switch {
+						0 or 1 => And(And(va[j], vb[i]), cmp),
+						2 => Or(And(And(va[j], vb[i]), cmp), bothBad),
+						_ => Or(Or(And(And(va[j], vb[i]), cmp), bothBad), aBadOnly),
+					};
+				}
+				var res1 = new Il[n];
+				for(var i = 0; i < n; i++)
+					res1[i] = Let(agg switch {
+						0 => Enumerable.Range(0, n).Select(j => Bool(j, i)).Aggregate(Or),
+						1 => Enumerable.Range(0, n / 2).Select(k => And(Bool(2 * k, i), Bool(2 * k + 1, i))).Aggregate(Or),
+						2 => Bool(i, i),
+						_ => Enumerable.Range(0, n - i).Select(k => Bool(k, i + k)).Aggregate(And),
+					});
+				var res2 = res1.Select((r, i) => pol switch {
+					0 or 2 => r,
+					1 => Not(r),
+					_ => (Il) new IlIfV(u1, vb[i], Not(r), r),
+				}).Select(x => (Il) Let(x)).ToArray();
+				var u32 = IlType.U32;
+				Il mask = new IlConst(u32, 0);
+				for(var i = 0; i < n; i++)
+					mask = new IlBin(u32, BinOp.Or, mask, new IlBin(u32, BinOp.Shl, new IlCast(u32, CastKind.Zext, res2[i]), C(32, i)));
+				var m = Let(mask);
+				if(index) {
+					// lsb or msb set position, n when none
+					Il idx = C(32, n);
+					if((imm & 0x40) == 0)
+						for(var i = n - 1; i >= 0; i--) idx = new IlIfV(u32, res2[i], C(32, i), idx);
+					else
+						for(var i = 0; i < n; i++) idx = new IlIfV(u32, res2[i], C(32, i), idx);
+					Stmts.Add(new IlWriteReg(RegKind.X86, 1, new IlCast(IlType.U64, CastKind.Zext, idx)));
+				} else {
+					var v128 = new IlType.Vec(128);
+					Il xm = (imm & 0x40) == 0
+						? new IlCast(v128, CastKind.Zext, m)
+						: new IlVecBuild(128, new IlType.I(false, ew), res2.Select(r =>
+							(Il) new IlCast(new IlType.I(false, ew), CastKind.Sext, r)).ToList());
+					Stmts.Add(new IlWriteReg(RegKind.Xmm, 0, xm));
+				}
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, 0, new IlBin(u1, BinOp.Ne, m, C(32, 0))));   // CF
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, 6, Not(vb[n - 1])));                         // ZF: b ends early
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, 7, Not(va[n - 1])));                         // SF: a ends early
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, 11, res2[0]));                               // OF
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, 4, F()));
+				Stmts.Add(new IlWriteReg(RegKind.Eflags, 2, F()));
+				break;
+			}
 			case PName("rotc"): {
 				// (rotc lval count #t=left|#f=right) -- RCL/RCR: rotate the (w+1)-bit value
 				// CF:lval. Count is masked like every shift (5/6 bits), then taken modulo

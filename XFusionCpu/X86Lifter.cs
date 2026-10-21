@@ -68,6 +68,7 @@ public static class X86Lifter {
 
 		binds["%nextpc"] = new OperandBind.Imm((long) (pc + (ulong) d.Len), nearCall ? vw : 64);
 		binds["%vexl"] = new OperandBind.Imm(d.P.VexL ? 1 : 0, 8);
+		binds["%rexw"] = new OperandBind.Imm(d.P.RexW ? 1 : 0, 8);
 		if(stackOp) binds["SP"] = new OperandBind.Reg(4, stackWidth);
 		var opWidth = stackOp ? vw : specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
 		var block = IlLower.Lower(params_, eval, binds, opWidth,

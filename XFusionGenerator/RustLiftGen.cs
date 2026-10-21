@@ -211,6 +211,11 @@ public class RustLiftGen {
                 }
                 return;
             }
+            case PName("pcmpstr"):
+                // SSE4.2 string compares: this backend keeps the named intrinsics.
+                Stmt(new PList(new PTree[] { new PName("intrinsic"),
+                    new PName((l[4] is PName("#t") ? "pcmpestr" : "pcmpistr") + (l[5] is PName("#t") ? "i" : "m")), l[1], l[2], l[3] }));
+                break;
             case PName("rotc"):
                 // RCL/RCR: this backend keeps the named intrinsic it had before the
                 // C# side lowered them (rotc), rather than going UNHANDLED.
