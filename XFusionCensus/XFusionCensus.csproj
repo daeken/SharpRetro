@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../XFusionCpu/XFusionCpu.csproj"/>
+        <PackageReference Include="Iced" Version="1.21.0"/>
     </ItemGroup>
 
 </Project>
