@@ -153,7 +153,44 @@ public static class PeCensus {
 
 	class Stats {
 		public long Insns, Decoded, Lifted, Stubbed, IcedInvalid;
-		public long Undecoded, LenMismatch, MnemonicMismatch, LiftFail;
+		public long Undecoded, LenMismatch, MnemonicMismatch, TextMismatch, LiftFail;
+		readonly IntelFormatter formatter = new() {
+			Options = {
+				HexPrefix = "0x", HexSuffix = null, UppercaseHex = false, SpaceAfterOperandSeparator = true,
+				MemorySizeOptions = MemorySizeOptions.Always, RipRelativeAddresses = true, ShowBranchSize = false,
+				BranchLeadingZeros = false, SmallHexNumbersInDecimal = false, AddLeadingZeroToHexNumbers = false,
+				AlwaysShowScale = true, ShowZeroDisplacements = false, DisplacementLeadingZeros = false,
+				LeadingZeros = false, UsePseudoOps = false,
+			}
+		};
+		readonly Dictionary<string, (long N, string Ex)> textMis = new();
+
+		/// Spelling normalization shared by both sides: whitespace, case, condition-code
+		/// aliases on the mnemonic. Anything beyond this is a real operand disagreement.
+		static string Norm(string s) {
+			s = s.Trim().ToLowerInvariant().Replace(" ,", ",");
+			while(s.Contains("  ")) s = s.Replace("  ", " ");
+			var sp = s.IndexOf(' ');
+			var mn = sp < 0 ? s : s[..sp];
+			var rest = sp < 0 ? "" : s[sp..];
+			var prefix = "";
+			while(mn is "lock" or "rep" or "repe" or "repne" or "repnz" or "data16" or "notrack" or "bnd" && rest.Length > 0) {
+				prefix += mn + " ";
+				rest = rest.TrimStart();
+				sp = rest.IndexOf(' ');
+				mn = sp < 0 ? rest : rest[..sp];
+				rest = sp < 0 ? "" : rest[sp..];
+			}
+			if(prefix == "repe " && mn is "movs" or "stos" or "lods" || mn.StartsWith("movs") || mn.StartsWith("stos") || mn.StartsWith("lods")) prefix = prefix.Replace("repe ", "rep ");
+			prefix = prefix.Replace("repnz ", "repne ");
+			mn = OurMnemonic(mn);
+			// Address-only operands: XED/ours print no size (or a bare "ptr"), iced "byte ptr".
+			if(mn == "lea" || mn.StartsWith("prefetch"))
+				rest = System.Text.RegularExpressions.Regex.Replace(rest, @"(\b[a-z]+word |byte )?ptr \[", "[");
+			if(prefix + mn + rest is "xchg ax, ax") return "data16 nop";
+			if(prefix + mn == "rep ret") prefix = "";  // F3 C3: ours drops the stray rep
+			return prefix + mn + rest;
+		}
 		readonly Dictionary<string, (long N, string Ex)> undecoded = new(), lenMis = new(), mnemMis = new(),
 			liftFail = new(), stubs = new();
 		readonly Dictionary<int, long> defHits = new();
@@ -184,6 +221,18 @@ public static class PeCensus {
 			if(om != im) {
 				MnemonicMismatch++;
 				Bump(mnemMis, $"{def} -> iced {im}", () => $"{hex} = iced '{icedText}' ours '{ours}'");
+			} else {
+				// Operand-level agreement. Iced's formatter is configured toward XED's
+				// spelling (0x-hex, explicit ptr sizes, [rip+disp], *1 scale); the
+				// residual differences are alias spellings normalized in Norm().
+				var output = new StringOutput();
+				formatter.Format(in ins, output);
+				var it = Norm(output.ToStringAndReset());
+				var ot = Norm(ours);
+				if(it != ot) {
+					TextMismatch++;
+					Bump(textMis, def, () => $"{hex} = iced '{it}' ours '{ot}'");
+				}
 			}
 			IlBlock block;
 			try {
@@ -258,16 +307,17 @@ public static class PeCensus {
 
 		public void Report(int top, string outDir) {
 			Console.WriteLine();
-			Console.WriteLine($"insns {Insns} | decoded {Decoded} ({Pct(Decoded, Insns)}) | undecoded {Undecoded} | LEN-MISMATCH {LenMismatch} | MNEMONIC-MISMATCH {MnemonicMismatch}");
+			Console.WriteLine($"insns {Insns} | decoded {Decoded} ({Pct(Decoded, Insns)}) | undecoded {Undecoded} | LEN-MISMATCH {LenMismatch} | MNEMONIC-MISMATCH {MnemonicMismatch} | TEXT-MISMATCH {TextMismatch}");
 			Console.WriteLine($"lifted {Lifted} ({Pct(Lifted, Decoded)} of decoded) | lift-fail {LiftFail} | stubbed {Stubbed} ({Pct(Stubbed, Lifted)} of lifted) | distinct defs {defHits.Count} | rejected-run ends {IcedInvalid}");
 			Section("UNDECODED", undecoded, top);
 			Section("LENGTH MISMATCHES", lenMis, top);
 			Section("MNEMONIC MISMATCHES", mnemMis, top);
+			Section("TEXT MISMATCHES (by def)", textMis, top);
 			Section("LIFT FAILURES", liftFail, top);
 			Section("STUBBED LIFTS (intrin/unimpl)", stubs, top);
 			if(outDir == null) return;
 			Directory.CreateDirectory(outDir);
-			foreach(var (name, d) in new[] { ("undecoded", undecoded), ("lenmismatch", lenMis), ("mnemonic", mnemMis), ("liftfail", liftFail), ("stubs", stubs) })
+			foreach(var (name, d) in new[] { ("undecoded", undecoded), ("lenmismatch", lenMis), ("mnemonic", mnemMis), ("text", textMis), ("liftfail", liftFail), ("stubs", stubs) })
 				File.WriteAllLines(Path.Combine(outDir, name + ".txt"),
 					d.OrderByDescending(x => x.Value.N).Select(x => $"{x.Value.N,9}  {x.Key}   e.g. {x.Value.Ex}"));
 		}

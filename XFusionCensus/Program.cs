@@ -54,10 +54,24 @@ public class Program {
 		return fails.Count > 0 ? 1 : 0;
 	}
 
+	/// Dev aid: decode + render + lift each hex-encoded instruction (64-bit mode).
+	/// Usage: XFusionCensus show <hex> [<hex> ...]
+	static int Show(string[] args) {
+		foreach(var hex in args.Skip(1)) {
+			var bytes = Convert.FromHexString(hex.Replace(" ", ""));
+			if(!Disassembler.DecodeInsn(bytes, XMode.Bits64, out var d)) { Console.WriteLine($"{hex}: UNDECODED"); continue; }
+			Console.WriteLine($"{hex}: {Disassembler.RenderInsn(in d, 0x1000, XMode.Bits64)}   [{Disassembler.DefNames[d.DefId]}, len {d.Len}]");
+			try { Console.WriteLine(X86Lifter.Lift(in d, 0x1000, XMode.Bits64)); }
+			catch(Exception e) { Console.WriteLine($"  LIFT FAILED: {e.Message}"); }
+		}
+		return 0;
+	}
+
 	public static int Main(string[] args) {
 		if(args.Length > 0 && args[0] == "lift") return LiftSmoke(args);
 		if(args.Length > 0 && args[0] == "fuzz") return Fuzz.Run(args);
 		if(args.Length > 1 && args[0] == "pe") return PeCensus.Run(args);
+		if(args.Length > 1 && args[0] == "show") return Show(args);
 		if(args.Length < 2) { Console.Error.WriteLine("usage: XFusionCensus <elf> <16|32|64> [maxInsns] [--mismatches N] | XFusionCensus fuzz [n] [seed] [32|64] | XFusionCensus pe <exe> [--symbols json] [--out dir] [--top N]"); return 1; }
 		var path = args[0];
 		var mode = args[1] switch { "16" => XMode.Bits16, "32" => XMode.Bits32, _ => XMode.Bits64 };
