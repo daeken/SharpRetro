@@ -194,6 +194,9 @@ public static class PeCensus {
 		readonly Dictionary<string, (long N, string Ex)> undecoded = new(), lenMis = new(), mnemMis = new(),
 			liftFail = new(), stubs = new();
 		readonly Dictionary<int, long> defHits = new();
+		const int SamplesPerDef = 16;
+		readonly Dictionary<int, List<string>> samples = new();
+		readonly Random rng = new(1);
 
 		static void Bump(Dictionary<string, (long N, string Ex)> d, string k, Func<string> ex) =>
 			d[k] = d.TryGetValue(k, out var v) ? (v.N + 1, v.Ex) : (1, ex());
@@ -208,7 +211,13 @@ public static class PeCensus {
 				return;
 			}
 			Decoded++;
-			defHits[d.DefId] = defHits.GetValueOrDefault(d.DefId) + 1;
+			var hits = defHits[d.DefId] = defHits.GetValueOrDefault(d.DefId) + 1;
+			// Per-def reservoir of distinct encodings: the oracle's work list.
+			if(!samples.TryGetValue(d.DefId, out var sl)) samples[d.DefId] = sl = new();
+			if(!sl.Contains(hex)) {
+				if(sl.Count < SamplesPerDef) sl.Add(hex);
+				else if(rng.Next((int) Math.Min(hits, int.MaxValue)) < SamplesPerDef) sl[rng.Next(SamplesPerDef)] = hex;
+			}
 			var def = Disassembler.DefNames[d.DefId];
 			if(d.Len != ins.Length) {
 				LenMismatch++;
@@ -317,6 +326,9 @@ public static class PeCensus {
 			Section("STUBBED LIFTS (intrin/unimpl)", stubs, top);
 			if(outDir == null) return;
 			Directory.CreateDirectory(outDir);
+			File.WriteAllLines(Path.Combine(outDir, "samples.txt"),
+				samples.OrderByDescending(x => defHits[x.Key]).SelectMany(x =>
+					x.Value.Select(h => $"{Disassembler.DefNames[x.Key]}\t{defHits[x.Key]}\t{h}")));
 			foreach(var (name, d) in new[] { ("undecoded", undecoded), ("lenmismatch", lenMis), ("mnemonic", mnemMis), ("text", textMis), ("liftfail", liftFail), ("stubs", stubs) })
 				File.WriteAllLines(Path.Combine(outDir, name + ".txt"),
 					d.OrderByDescending(x => x.Value.N).Select(x => $"{x.Value.N,9}  {x.Key}   e.g. {x.Value.Ex}"));

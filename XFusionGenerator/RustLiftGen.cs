@@ -211,6 +211,10 @@ public class RustLiftGen {
                 }
                 return;
             }
+            case PName("undef"):
+                // (undef FLAG...): SDM-undefined flags. This backend leaves them
+                // unwritten (its prior behavior for every undefined flag).
+                break;
             case PName("str-op"): {
                 // String-op ONE ITERATION body (movs/stos/lods). rsi/rdi read at u64
                 // (address, not op_w); the value is at op_w. DF: step = ±(op_w/8).
@@ -497,6 +501,7 @@ public class RustLiftGen {
             // For reading Wsd/Wss operands (xmm-lane bits) as float before fcvtzs/fcvt.
             case "popcnt": return Rt($"bd.popcnt({Expr(l[1])})");
             case "fsqrt": return Rt($"bd.fsqrt({Expr(l[1])})");
+            case "fround": return Rt($"bd.fround({Expr(l[1])}, sharpretro_jit::RoundMode::Nearest)");
             case "fisnan": return Rt($"bd.fisnan({Expr(l[1])})");
             case "fcmpp": {
                 // (fcmpp a b pred-op w) — CMPSS/SD 8-predicate compare → mask.

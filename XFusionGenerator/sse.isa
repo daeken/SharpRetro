@@ -7,9 +7,14 @@
 (encoding MOVUPS (Vps Wps) (0x0F 0x10))
 (encoding MOVUPS (Wps Vps) (0x0F 0x11))
 
+; MOVSS: reg,reg merges lane 0 (upper 96 preserved); the LOAD form zeroes bits
+; 127:32 (SDM: "DEST[127:32] := 0" for the m32 source), so it is its own row:
+; Vdq dst = a full 128-bit write of the zero-extended dword. Store writes 32 bits.
 (instruction MOVSS (dst src) "movss $dst, $src" (= dst src))
-(encoding MOVSS (Vss Wss) (rep 0x0F 0x10))
+(encoding MOVSS (Vss Uss) (rep 0x0F 0x10))
 (encoding MOVSS (Wss Vss) (rep 0x0F 0x11))
+(instruction MOVSS-LD (dst src) "movss $dst, $src" (= dst (zext src 128)))
+(encoding MOVSS-LD (Vdq Md) (rep 0x0F 0x10))
 
 (instruction MOVAPS (dst src) "movaps $dst, $src" (= dst src))
 (encoding MOVAPS (Vps Wps) (0x0F 0x28))
@@ -174,8 +179,10 @@
 (instruction CVTSI2SS (dst src) "cvtsi2ss $dst, $src"
     (= dst (f32 (signed (bitwidth src) src))))
 (encoding CVTSI2SS (Vss Ey) (rep 0x0F 0x2A))
+; CVTSS2SI rounds per MXCSR.RC (default round-to-nearest-even; MXCSR is not modeled,
+; see LDMXCSR); the CVTT form truncates. (fround x) is that round-to-nearest.
 (instruction CVTSS2SI (dst src) "cvtss2si $dst, $src"
-    (= dst (int-of (bitwidth dst) (as-f32 src))))
+    (= dst (int-of (bitwidth dst) (fround (as-f32 src)))))
 ; Ⓓ 6th .isa-tier: Gv→Gy (32/64 by REX.W only, 0x66 IGNORED). SDM's own
 ; Gy/Ey convention. Silicon-sweep phase-2: 66 F3 0F 2C C0 → silicon eax=
 ; (i32)f (66 ignored), interp was ax=(i16)f. 54 diffs across the 6 CVT rows.

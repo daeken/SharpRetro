@@ -126,20 +126,21 @@ public class ExecTests {
 
 	[Test]
 	public void PtestFlagsExecute() {
-		// PTEST a, b: ZF = ((a & b) == 0), CF = ((a & ~b) == 0), and AF/OF/PF/SF = 0.
-		// Fully declarative from generic heads that already lower -- (&), (~), (==) --
-		// so this needed no head at all, only the .isa row.
+		// PTEST a, b: ZF = ((a & b) == 0), CF = ((b & ~a) == 0) -- SDM: CF tests the
+		// SOURCE AND NOT the DESTINATION -- and AF/OF/PF/SF = 0. (This test used to assert
+		// a & ~b, the operands swapped; the native oracle disagreed on every CF where
+		// the two differ.)
 		//
-		// THE THREE CASES ARE CHOSEN SO ZF AND CF DISAGREE, because an implementation
-		// that computed one and copied it to the other would pass any test where they
-		// happen to match:
-		//   a=0x0F b=0xF0   a&b = 0     -> ZF=1     a&~b = 0x0F -> CF=0
-		//   a=0x0F b=0x0F   a&b = 0x0F  -> ZF=0     a&~b = 0    -> CF=1
-		//   a=0x0F b=0x01   a&b = 0x01  -> ZF=0     a&~b = 0x0E -> CF=0
+		// THE CASES ARE CHOSEN SO ZF AND CF DISAGREE, and so a & ~b and b & ~a differ:
+		//   a=0x0F b=0xF0   a&b = 0     -> ZF=1     b&~a = 0xF0 -> CF=0
+		//   a=0x0F b=0x0F   a&b = 0x0F  -> ZF=0     b&~a = 0    -> CF=1
+		//   a=0x0F b=0x01   a&b = 0x01  -> ZF=0     b&~a = 0    -> CF=1   (a&~b = 0x0E)
+		//   a=0x01 b=0x0F   a&b = 0x01  -> ZF=0     b&~a = 0x0E -> CF=0   (a&~b = 0)
 		var cases = new (UInt128 a, UInt128 b, bool zf, bool cf)[] {
 			(0x0F, 0xF0, true,  false),
 			(0x0F, 0x0F, false, true),
-			(0x0F, 0x01, false, false),
+			(0x0F, 0x01, false, true),
+			(0x01, 0x0F, false, false),
 		};
 		foreach(var (av, bv, wzf, wcf) in cases) {
 			var m = M64("660f3817c1");         // PTEST 66 0F 38 17 /r

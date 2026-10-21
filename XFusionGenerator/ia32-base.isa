@@ -180,9 +180,11 @@
         (= AF (& (>> (^ _lval _rval tval) 4) 1))
         (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))
+        ; Mismatch: accumulator := DEST and DEST := DEST (SDM writes it back, which
+        ; for a 32-bit register destination zero-extends its upper half).
         (if (== tval 0)
             (= dst src)
-            (= AX _rval))))
+            (block (= AX _rval) (= dst _rval)))))
 (encoding CMPXCHG (Eb Gb) (0x0F 0xB0))
 (encoding CMPXCHG (Ev Gv) (0x0F 0xB1))
 
@@ -439,7 +441,12 @@
     (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) tval (rotl lval c))
         (= lval tval)
         (if (!= c 0)
-            (= CF (& tval 1)))))
+            (= CF (& tval 1)))
+        ; OF = MSB(result) ^ CF for 1-bit rotates, undefined for larger counts.
+        (if (== c 1)
+            (= OF (^ (& (>> tval (- (bitwidth lval) 1)) 1) (& tval 1))))
+        (if (> c 1)
+            (undef OF))))
 (encoding ROL (Eb Ib) (0xC0 /0))
 (encoding ROL (Ev Ib) (0xC1 /0))
 (encoding ROL (Eb 1)  (0xD0 /0))
@@ -462,7 +469,12 @@
     (mlet (c (& count (| 31 (>> (bitwidth lval) 1))) tval (rotr lval c))
         (= lval tval)
         (if (!= c 0)
-            (= CF (& (>> tval (- (bitwidth lval) 1)) 1)))))
+            (= CF (& (>> tval (- (bitwidth lval) 1)) 1)))
+        ; OF = XOR of the two most-significant result bits for 1-bit rotates.
+        (if (== c 1)
+            (= OF (& (^ (>> tval (- (bitwidth lval) 1)) (>> tval (- (bitwidth lval) 2))) 1)))
+        (if (> c 1)
+            (undef OF))))
 (encoding ROR (Eb Ib) (0xC0 /1))
 (encoding ROR (Ev Ib) (0xC1 /1))
 (encoding ROR (Eb 1)  (0xD0 /1))
@@ -515,7 +527,13 @@
                 ; shl al,1 al=0x80 CF=(>>0x80 31)&1=0. (bitwidth lval)→width()=8 → 1.
                 (= CF (& (>> _lval (- (bitwidth lval) c)) 1))
                 (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
-                (= ZF (== lval 0))))))
+                (= ZF (== lval 0))
+                (let low8 (u8 lval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+                ; OF = MSB(result) ^ CF for 1-bit shifts, undefined otherwise; AF undefined.
+                (if (== c 1)
+                    (= OF (^ (& (>> lval (- (bitwidth lval) 1)) 1) CF))
+                    (undef OF))
+                (undef AF)))))
 (encoding SHL (Eb Ib) (0xC0 /4))
 (encoding SHL (Ev Ib) (0xC1 /4))
 (encoding SHL (Eb 1)  (0xD0 /4))
@@ -531,7 +549,13 @@
             (block
                 (= CF (& (>> _lval (- c 1)) 1))
                 (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
-                (= ZF (== lval 0))))))
+                (= ZF (== lval 0))
+                (let low8 (u8 lval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+                ; OF = MSB of the ORIGINAL operand for 1-bit shifts, undefined otherwise.
+                (if (== c 1)
+                    (= OF (& (>> _lval (- (bitwidth lval) 1)) 1))
+                    (undef OF))
+                (undef AF)))))
 (encoding SHR (Eb Ib) (0xC0 /5))
 (encoding SHR (Ev Ib) (0xC1 /5))
 (encoding SHR (Eb 1)  (0xD0 /5))
@@ -551,7 +575,13 @@
                 ; ×90 all at pre=0x80 (PRE_VALS[4], smoke's max-pre-3 never hit).
                 (= CF (& (>>a _lval (- c 1)) 1))
                 (= SF (& (>> lval (- (bitwidth lval) 1)) 1))
-                (= ZF (== lval 0))))))
+                (= ZF (== lval 0))
+                (let low8 (u8 lval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
+                ; OF = 0 for 1-bit SAR (sign cannot change), undefined otherwise.
+                (if (== c 1)
+                    (= OF 0)
+                    (undef OF))
+                (undef AF)))))
 (encoding SAR (Eb Ib) (0xC0 /7))
 (encoding SAR (Ev Ib) (0xC1 /7))
 (encoding SAR (Eb 1)  (0xD0 /7))
@@ -566,12 +596,16 @@
 (encoding NOT (Eb) (0xF6 /2))
 (encoding NOT (Ev) (0xF7 /2))
 
+; NEG = SUB(0, v): OF = (v & result) sign bit, AF = bit 4 of v ^ result.
 (instruction NEG (lval)
     "neg $lval"
     (mlet (_v lval tval (- 0 _v))
         (= lval tval)
         (= CF (!= _v 0))
-        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= SF (>> tval (- (bitwidth lval) 1)))
+        (= OF (& _v tval (<< 1 (- (bitwidth lval) 1))))
+        (= AF (& (>> (^ _v tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 (encoding NEG (Eb) (0xF6 /3))
 (encoding NEG (Ev) (0xF7 /3))
@@ -624,20 +658,27 @@
 (encoding IMUL3 (Gv Ev Iz)    (0x69))
 
 ; --- FE/FF INC/DEC ---
+; INC/DEC: ADD/SUB's flag block with rval=1, except CF, which is preserved.
 (instruction INC (lval)
     "inc $lval"
-    (mlet (tval (+ lval 1))
+    (mlet (_lval lval tval (+ _lval 1))
         (= lval tval)
-        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= SF (>> tval (- (bitwidth lval) 1)))
+        (= OF (& (^ tval _lval) (^ tval 1) (<< 1 (- (bitwidth lval) 1))))
+        (= AF (& (>> (^ _lval 1 tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 (encoding INC (Eb) (0xFE /0))
 (encoding INC (Ev) (0xFF /0))
 
 (instruction DEC (lval)
     "dec $lval"
-    (mlet (tval (- lval 1))
+    (mlet (_lval lval tval (- _lval 1))
         (= lval tval)
-        (= SF (>> tval (- (bitwidth tval) 1)))
+        (= SF (>> tval (- (bitwidth lval) 1)))
+        (= OF (& (^ _lval 1) (^ _lval tval) (<< 1 (- (bitwidth lval) 1))))
+        (= AF (& (>> (^ _lval 1 tval) 4) 1))
+        (let low8 (u8 tval) (= PF (& (>> 0x9669 (& (^ low8 (>> low8 4)) 0xF)) 1)))
         (= ZF (== tval 0))))
 (encoding DEC (Eb) (0xFE /1))
 (encoding DEC (Ev) (0xFF /1))

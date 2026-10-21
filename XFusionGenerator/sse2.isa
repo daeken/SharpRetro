@@ -13,9 +13,12 @@
 ; divergence bites when a game relies on reg←mem clearing hi — flag when the
 ; recon surfaces a UCOMISD/etc reading garbage-hi. Follow-on: template splits
 ; on (is-mem src) → wrap in (zext ... 128) for mem-src.
+; Same split as MOVSS: the m64 load zeroes bits 127:64, reg,reg merges lane 0.
 (instruction MOVSD-X (dst src) "movsd $dst, $src" (= dst src))
-(encoding MOVSD-X (Vsd Wsd) (repnz 0x0F 0x10))
+(encoding MOVSD-X (Vsd Usd) (repnz 0x0F 0x10))
 (encoding MOVSD-X (Wsd Vsd) (repnz 0x0F 0x11))
+(instruction MOVSD-LD (dst src) "movsd $dst, $src" (= dst (zext src 128)))
+(encoding MOVSD-LD (Vdq Mq) (repnz 0x0F 0x10))
 
 (instruction MOVAPD (dst src) "movapd $dst, $src" (= dst src))
 (encoding MOVAPD (Vpd Wpd) (opsize 0x0F 0x28))
@@ -338,7 +341,7 @@
     (= dst (f64 (signed (bitwidth src) src))))
 (encoding CVTSI2SD (Vsd Ey) (repnz 0x0F 0x2A))
 (instruction CVTSD2SI (dst src) "cvtsd2si $dst, $src"
-    (= dst (int-of (bitwidth dst) (as-f64 src))))
+    (= dst (int-of (bitwidth dst) (fround (as-f64 src)))))
 (encoding CVTSD2SI (Gy Wsd) (repnz 0x0F 0x2D))
 (instruction CVTTSD2SI (dst src) "cvttsd2si $dst, $src"
     (= dst (int-of (bitwidth dst) (as-f64 src))))

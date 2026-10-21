@@ -60,6 +60,18 @@ public class X86Machine {
 		if(Mem == null) throw new IndexOutOfRangeException($"Store @{a:X} w={w} (no Mem)");
 		for(var b = 0; b < w / 8; b++) Mem[(int) (a + (ulong) b)] = (byte) (val >> (b * 8));
 	}
+	/// Accesses wider than 64 bits (xmm loads/stores) as little-endian 64-bit pieces,
+	/// so hook-backed memory sees ordinary 64-bit accesses.
+	public UInt128 LoadWide(ulong a, int w) {
+		UInt128 v = 0;
+		for(var o = 0; o < w / 8; o += 8)
+			v |= (UInt128) Load(a + (ulong) o, Math.Min(64, w - o * 8)) << (o * 8);
+		return v;
+	}
+	public void StoreWide(ulong a, UInt128 v, int w) {
+		for(var o = 0; o < w / 8; o += 8)
+			Store(a + (ulong) o, (ulong) (v >> (o * 8)), Math.Min(64, w - o * 8));
+	}
 	public XMode Mode = XMode.Bits16;
 
 	/// Intrinsic handler: (machine, name, evaluated-args) → handled?
@@ -143,9 +155,15 @@ public class X86Machine {
 				if(Mode == XMode.Bits16) SegBase[i] = (ulong) sel << 4;  // real mode
 				break;
 			}
-			case IlStore(var addr, var v):
-				Store(N64(Eval(addr)), N64(Eval(v)), (v.Ty as IlType.I)?.Bits ?? 64);
+			case IlStore(var addr, var v): {
+				// Width from the VALUE's type, whatever its kind: an f32 store is 4 bytes and
+				// a v128 store is 16 (this used to read only IlType.I and default to 8).
+				var sw = WOf(v);
+				var sa = N64(Eval(addr));
+				if(sw > 64) StoreWide(sa, Eval(v), sw);
+				else Store(sa, N64(Eval(v)), sw);
 				break;
+			}
 			case IlBranch(var kind, var target, var cond):
 				if(cond == null || (Eval(cond) & 1) != 0)
 					_branchTo = N64(Eval(target));
@@ -348,7 +366,8 @@ public class X86Machine {
 			switch(baseName) {
 				case "movs": Wr(Di(), Rd(Si())); Adv(6); Adv(7); break;
 				case "stos": Wr(Di(), MaskW(Gpr[0], w)); Adv(7); break;
-				case "lods": Gpr[0] = w == 64 ? Rd(Si()) : (Gpr[0] & ~((1UL << w) - 1)) | Rd(Si()); Adv(6); break;
+				// 32-bit destination writes zero-extend (x86-64 rule); 8/16 merge.
+				case "lods": Gpr[0] = w >= 32 ? Rd(Si()) : (Gpr[0] & ~((1UL << w) - 1)) | Rd(Si()); Adv(6); break;
 				case "scas": SubFlags(MaskW(Gpr[0], w), Rd(Di()), w); Adv(7); break;
 				case "cmps": { var a = Rd(Si()); var b = Rd(Di()); SubFlags(a, b, w); Adv(6); Adv(7); break; }
 			}
@@ -372,6 +391,7 @@ public class X86Machine {
 		Set(7, (r >> (w - 1) & 1) != 0);                         // SF
 		var of = ((a ^ b) & (a ^ r)) >> (w - 1) & 1;             // OF (sub form)
 		Set(11, of != 0);
+		Set(4, ((a ^ b ^ r) >> 4 & 1) != 0);                     // AF (borrow out of bit 3)
 		var p = (byte) r; p ^= (byte) (p >> 4);                  // PF (even parity, 0x9669)
 		Set(2, ((0x9669 >> (p & 0xF)) & 1) != 0);
 	}
@@ -485,6 +505,8 @@ public class X86Machine {
 				// fa < fb when the operands are F-typed). So `flt`/`feq` lowering to
 				// Slt/Eq is right by that contract rather than by coincidence.
 				if(l.Ty is IlType.F lf) {
+					// Arithmetic and min/max with x86's NaN rules (X86Float); compares below.
+					if(X86Float.Bin(op, a64, b64, lf.Bits) is { } xr) return xr;
 					if(lf.Bits == 32) {
 						var (fa, fb) = (BitConverter.UInt32BitsToSingle((uint) a64),
 						                BitConverter.UInt32BitsToSingle((uint) b64));
@@ -582,6 +604,7 @@ public class X86Machine {
 					UnOp.Not => ~a,
 					UnOp.Popcnt => (ulong) System.Numerics.BitOperations.PopCount(MaskW(a, WOf(x))),
 					// float unops -- carrier is the bit pattern (see the Cast arm's note)
+					_ when x.Ty is IlType.F xf && X86Float.Un(op, a, xf.Bits) is { } xr => xr,
 					UnOp.Abs when x.Ty is IlType.F fa2 => fa2.Bits == 32
 						? BitConverter.SingleToUInt32Bits(MathF.Abs(BitConverter.UInt32BitsToSingle((uint) a)))
 						: BitConverter.DoubleToUInt64Bits(Math.Abs(BitConverter.UInt64BitsToDouble(a))),
@@ -647,12 +670,10 @@ public class X86Machine {
 							return ft.Bits == 32
 								? BitConverter.SingleToUInt32Bits((float) a)
 								: BitConverter.DoubleToUInt64Bits((double) a);
-						case CastKind.FTrunc:   // f64 -> f32 (CVTSD2SS)
-							return BitConverter.SingleToUInt32Bits(
-								(float) BitConverter.UInt64BitsToDouble(a));
+						case CastKind.FTrunc:   // f64 -> f32 (CVTSD2SS); x86 NaN payload rule
+							return X86Float.Narrow(a);
 						case CastKind.FExt:     // f32 -> f64 (CVTSS2SD)
-							return BitConverter.DoubleToUInt64Bits(
-								(double) BitConverter.UInt32BitsToSingle((uint) a));
+							return X86Float.Widen((uint) a);
 						case CastKind.Bitcast:  // reinterpret: carrier unchanged
 							return ft.Bits == 32 ? a & 0xFFFFFFFF : a;
 					}
@@ -697,8 +718,11 @@ public class X86Machine {
 					_ => throw new NotSupportedException($"cast {kind}")
 				};
 			}
-			case IlLoad(var ty, var addr):
-				return Load(N64(Eval(addr)), WOf(new IlConst(ty, 0)));
+			case IlLoad(var ty, var addr): {
+				var lw = WOf(new IlConst(ty, 0));
+				var la = N64(Eval(addr));
+				return lw > 64 ? LoadWide(la, lw) : Load(la, lw);
+			}
 			case IlIfV(_, var c, var t, var f):
 				return (Eval(c) & 1) != 0 ? Eval(t) : Eval(f);
 			// PACKED-VECTOR NODES. IlLower emits four kinds at 16 sites, all at 128 bits with
@@ -786,6 +810,7 @@ public class X86Machine {
 	static UInt128 LaneBin(BinOp op, UInt128 a, UInt128 b, IlType et, int lw) {
 		UInt128 T = LaneMask(lw), F = 0;
 		if(et is IlType.F fe) {
+			if(X86Float.Bin(op, (ulong) a, (ulong) b, fe.Bits) is { } xr) return xr;
 			double x = fe.Bits == 32 ? BitConverter.UInt32BitsToSingle((uint) a) : BitConverter.UInt64BitsToDouble((ulong) a);
 			double y = fe.Bits == 32 ? BitConverter.UInt32BitsToSingle((uint) b) : BitConverter.UInt64BitsToDouble((ulong) b);
 			double r;
@@ -865,6 +890,7 @@ public class X86Machine {
 			// switch would reinterpret a mask as an IEEE bit pattern and negate it.
 			// 64,480 p2 rows, the last two templates.
 			if(op == UnOp.Not) return ~a;
+			if(X86Float.Un(op, (ulong) a, fe.Bits) is { } xr) return xr;
 			double r = op switch {
 				UnOp.Sqrt => Math.Sqrt(x),
 				UnOp.Abs => Math.Abs(x),

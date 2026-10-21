@@ -297,6 +297,17 @@ public class IlLower {
 				Stmts.Add(new IlIntrin(IlType.V0, name, args.ToArray()));
 				break;
 			}
+			case PName("undef"):
+				// (undef FLAG...) -- the SDM leaves these flags UNDEFINED after the
+				// instruction. Written as IlUndefined rather than left alone: leaving a
+				// flag unwritten claims it is PRESERVED, which is a different (and false)
+				// statement to every consumer that reasons about flag liveness.
+				foreach(var f in l.Skip(1)) {
+					var fn = ((PName) f).Name;
+					if(!IsFlag(fn)) throw new NotSupportedException($"undef of non-flag {fn}");
+					Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit(fn), new IlUndefined(IlType.U1, fn)));
+				}
+				break;
 			case PName("fence"):
 				// Memory-ordering barrier (MFENCE/SFENCE/LFENCE). C#-side
 				// consumers are single-threaded (X86Machine oracle, isa_diff's
@@ -568,7 +579,12 @@ public class IlLower {
 						new IlReadReg(IlType.U64, RegKind.X86, reg), C(64, ~((1L << w) - 1))),
 					new IlCast(IlType.U64, CastKind.Zext, e))));
 				break;
-			case OperandBind.Mem:
+			case OperandBind.Mem(_, var mw):
+				// A store is exactly the operand's width. Integer values narrower or wider
+				// than the operand (a SETcc's u1 condition into an m8) are zero-extended or
+				// truncated here; storing the u1 itself wrote zero bytes.
+				if(e.Ty is IlType.I(_, var ew2) && ew2 != mw && mw is > 0 and <= 512)
+					e = new IlCast(U(mw), ew2 < mw ? CastKind.Zext : CastKind.Trunc, e);
 				Stmts.Add(new IlStore(MemAddr[name], e));
 				break;
 			default:
@@ -1604,6 +1620,12 @@ public class IlLower {
 			case "feq": {
 				var a = Expr(l[1]); var b = Expr(l[2], W(a));
 				return new IlBin(IlType.U1, BinOp.Eq, a, b);
+			}
+			case "fround": {
+				// (fround x) -- round a float to an integral float, ties-to-even (the
+				// MXCSR default rounding; MXCSR itself is not modeled).
+				var a = Expr(l[1], ctxW);
+				return new IlUn(a.Ty, UnOp.Round, a);
 			}
 			case "fsqrt": {
 				var a = Expr(l[1], ctxW);
