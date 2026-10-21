@@ -97,6 +97,17 @@ public unsafe class TestRecompiler : X86Recompiler {
 		B.CallVoid(_intrin, B.LiteralValue(id), a[0], a[1], a[2], a[3]);
 	}
 
+    // This test host exposes synchronous x86 #DE as a nonreturning host
+    // exception. It does not implement guest exception handlers/unwinding.
+    static readonly Action DivideError = () => throw new DivideByZeroException("#DE");
+    protected override void Fault(string architecture, int vector) {
+        if(architecture != "x86" || vector != 0) {
+            base.Fault(architecture, vector);
+            return;
+        }
+        B.CallVoid(DivideError);
+    }
+
 	// CilJit stubs Pointer<T> (LlvmJit too) — go via delegate calls on the
 	// instance's mem[]. Slower than raw ldind but correct + JIT-backend-portable.
 	protected override IRuntimeValue<ulong> Load(IRuntimeValue<ulong> addr, int w) =>

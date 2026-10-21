@@ -27,7 +27,11 @@ public static class X86Lifter {
         if(LiftTables.Templates[tid].Mnemonic == "IMUL1" &&
             (mode is not (XMode.Bits16 or XMode.Bits32 or XMode.Bits64) || d.P.Rep || d.P.RepNz))
             throw new NotSupportedException("IMUL1 mode/REP prefix outside supported ISA model");
-		var nearCall = IsNearCall(in d);
+		if(LiftTables.Templates[tid].Mnemonic == "DIV" &&
+            (mode is not (XMode.Bits16 or XMode.Bits32 or XMode.Bits64) ||
+             d.P.Lock || d.P.Rep || d.P.RepNz || d.P.VexValid || d.P.EvexValid))
+            throw new NotSupportedException("DIV mode/prefix outside supported ISA model");
+        var nearCall = IsNearCall(in d);
 		var stackOp = LiftTables.Templates[tid].Mnemonic is "CALL" or "PUSH" or "POP" or "RET" or "RETI";
 		var stackWidth = mode == XMode.Bits16 ? 16 : mode == XMode.Bits32 ? 32 : 64;
 		if(nearCall && (d.P.Lock || d.P.RepNz))

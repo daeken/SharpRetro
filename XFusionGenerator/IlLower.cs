@@ -304,16 +304,9 @@ public class IlLower {
 				// side (RustLiftGen) lowers to bd.fence() → dmb ish/SeqCst.
 				Stmts.Add(new IlIntrin(IlType.V0, "fence", Array.Empty<Il>()));
 				break;
-			// ---- the six heads below were NEVER handled by this lowerer (verified
-			// via `git log -S` over its whole history, 2026-08-20). The .isa
-			// carried them from 07-09/08-09; RustLiftGen lowered them 08-09/08-10;
-			// this arm never caught up, which is 21 red XFusionTests rather than a
-			// regression. THREE of them (mul/div-wide, str-op) are executed BY NAME
-			// in X86Machine — for those the correct lowering is the `fence` shape:
-			// emit the intrinsic marker with the args the machine already reads.
-			// The other three need real IL and are transcribed from RustLiftGen's
-			// own arms (NOT composed — a rewrite's composed-from-memory
-			// semantics is exactly what the freeze-oracle exists to catch).
+            // Wide multiplication and unsigned division have typed effects.
+            // Signed division and string operations retain named intrinsics;
+            // consumers must explicitly implement or refuse those markers.
 			case PName("mul-wide"): {
                 if(l[2] is not PName("#t" or "#f"))
                     throw new NotSupportedException("one-operand MUL signedness");
@@ -353,17 +346,51 @@ public class IlLower {
                         new IlUndefined(IlType.U1, (signed ? "IMUL1" : "MUL") + " flag " + bit)));
                 break;
             }
-			case PName("div-wide"): {
-				// (mul-wide src #t|#f) / (div-wide src #t|#f) — F6/F7 /4-/7.
-				// X86Machine:169 dispatches on {mul,imul,div,idiv}-wide with
-				// args = [width, src] (its own comment at :166). #t = signed,
-				// which selects the imul-/idiv- name the machine expects.
-				var signed = l[2] is PName("#t");
-				var stem = ((PName) l[0]).Name;                       // mul-wide | div-wide
-				var nm = signed ? "i" + stem : stem;                  // imul-wide | idiv-wide
-				Stmts.Add(new IlIntrin(IlType.V0, nm, [C(64, OpWidth), Expr(l[1])]));
-				break;
-			}
+            case PName("div-wide"): {
+                if(l[2] is not PName("#t" or "#f"))
+                    throw new NotSupportedException("one-operand DIV signedness");
+                // Preserve signed IDIV's existing opaque contract.
+                if(l[2] is PName("#t")) {
+                    Stmts.Add(new IlIntrin(IlType.V0, "idiv-wide", [C(64, OpWidth), Expr(l[1])]));
+                    break;
+                }
+                // Evaluate the source exactly once, before tests or implicit
+                // writes. A source memory fault takes precedence over #DE.
+                var source = Let(Expr(l[1]));
+                var width = W(source);
+                if(width is not (8 or 16 or 32 or 64))
+                    throw new NotSupportedException($"one-operand DIV width {width}");
+                var wide = U(width * 2);
+                Il Read(int index, int bits) => new IlCast(U(bits), CastKind.Trunc,
+                    new IlReadReg(IlType.U64, RegKind.X86, index));
+                var low = Let(Read(0, width == 8 ? 16 : width));
+                var dividend = width == 8 ? low : Let(new IlBin(wide, BinOp.Or,
+                    new IlCast(wide, CastKind.Zext, low),
+                    new IlBin(wide, BinOp.Shl,
+                        new IlCast(wide, CastKind.Zext, Read(2, width)), C(width * 2, width))));
+                var divisor = Let(new IlCast(wide, CastKind.Zext, source));
+                Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.Eq, divisor, C(width * 2, 0)),
+                    [new IlFault("x86", 0)], []));
+                var quotient = Let(new IlBin(wide, BinOp.UDiv, dividend, divisor));
+                var maximum = new IlConst(wide, (UInt128.One << width) - 1);
+                Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.Ugt, quotient, maximum),
+                    [new IlFault("x86", 0)], []));
+                var remainder = Let(new IlBin(wide, BinOp.URem, dividend, divisor));
+                if(width == 8) {
+                    var ax = new IlBin(wide, BinOp.Or, quotient,
+                        new IlBin(wide, BinOp.Shl, remainder, C(16, 8)));
+                    WriteOperand("%ax", new OperandBind.Reg(0, 16), ax);
+                } else {
+                    WriteOperand("%ax", new OperandBind.Reg(0, width),
+                        new IlCast(U(width), CastKind.Trunc, quotient));
+                    WriteOperand("%dx", new OperandBind.Reg(2, width),
+                        new IlCast(U(width), CastKind.Trunc, remainder));
+                }
+                foreach(var bit in new[] { 0, 2, 4, 6, 7, 11 })
+                    Stmts.Add(new IlWriteReg(RegKind.Eflags, bit,
+                        new IlUndefined(IlType.U1, "DIV flag " + bit)));
+                break;
+            }
 			case PName("str-op"): {
 				// (str-op movs|stos|lods|scas|cmps) — ONE iteration. X86Machine:275
 				// takes args[0] = width (".isa convention", its own comment) and

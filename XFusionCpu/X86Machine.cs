@@ -153,6 +153,7 @@ public class X86Machine {
 				RunIntrinsic(name, vals);
 				break;
 			}
+			case IlFault("x86", 0): throw new DivideByZeroException("#DE");
 			case IlNote: break;
 			default: throw new NotSupportedException($"exec {s.GetType().Name}");
 		}
@@ -423,7 +424,10 @@ public class X86Machine {
 				// correct, and the 39,315 rows are a NAMED gap.
 				// CLOSED 2026-08-21: the carrier IS UInt128 now, so the wide arms compute
 				// for real instead of throwing. IMUL-Gv-Ev's CF=OF is the acceptance case.
-				if(w > 64) {
+				// Comparisons have a u1 result but must not narrow wide operands.
+                var comparison = op is BinOp.Eq or BinOp.Ne or BinOp.Ult or BinOp.Ule or BinOp.Ugt or BinOp.Uge
+                    or BinOp.Slt or BinOp.Sle or BinOp.Sgt or BinOp.Sge;
+                if(w > 64 || (comparison && (WOf(l) > 64 || WOf(r) > 64))) {
 					UInt128 wa = a, wb = b;
 					var sw = 128;   // the only width above 64 the .isa emits
 					UInt128 SxW(UInt128 v, int fw) {

@@ -97,6 +97,7 @@ public class X86Recompiler {
 			case IlIntrin(_, var name, var args):
 				Intrinsic(name, args.Select(Eval).ToArray());
 				break;
+			case IlFault(var architecture, var vector): Fault(architecture, vector); break;
 			case IlNote: break;
 			default: throw new NotSupportedException($"emit {st.GetType().Name}");
 		}
@@ -208,6 +209,11 @@ public class X86Recompiler {
 		S.SetField("Rip", 0x80, B.LiteralValue(NextPc));
 	protected virtual void Intrinsic(string name, IRuntimeValue<ulong>[] args) =>
 		throw new NotImplementedException();
+    /// Emit a nonreturning synchronous fault at the current guest instruction.
+    /// A host must preserve preceding effects and fault-site state. No default
+    /// delivery policy is assumed: unsupported hosts refuse at compile time.
+    protected virtual void Fault(string architecture, int vector) =>
+        throw new NotSupportedException($"architectural fault delivery {architecture}:{vector}");
 	/// Default load/store: builder.Pointer<T> — host overrides for MMU/MMIO.
 	protected virtual IRuntimeValue<ulong> Load(IRuntimeValue<ulong> addr, int w) => w switch {
 		8 => B.Pointer<byte>(addr).Value.Cast<ulong>(),

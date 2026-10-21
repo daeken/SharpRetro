@@ -76,6 +76,7 @@ public abstract record Il(IlType Ty) {
         IlVecUn(var b, var et, var op, var x) => $"(v{b} v{op.ToString().ToLower()}.{et} {Pp(x, d)})",
         IlVecInsert(var ri, var et, var i, var val) => $"(V{ri}[{Pp(i, d)}].{et} := {Pp(val, d)})",
         IlSyscall(var n) => $"(svc {Pp(n, d)})",
+        IlFault(var architecture, var vector) => $"(fault {architecture} vector {vector})",
         IlUnimpl(var src, var why) => $"(‡unimpl {src}{(why != null ? $" — {why}" : "")})",
         // shader-IL
         IlAttrLoad(var t, var o) => $"({t} attr-in {Pp(o, d)})",
@@ -171,6 +172,11 @@ public record IlIf(Il Cond, IReadOnlyList<Il> Then, IReadOnlyList<Il> Else) : Il
 // merge: load-vars. Reg-state round-trips through alloca vars on
 // BOTH paths (skip = store→immediate-load = identity).
 public record IlLoop(Il Cond, IReadOnlyList<Il> Body, Il EntryGuard = null) : Il(IlType.V0);
+// Synchronous architectural fault. Nonreturning: no subsequent effect in the
+// instruction may execute. Consumers without matching fault delivery must refuse
+// this node; it is not a note, host syscall or successful terminal return.
+// Effects before it (e.g. a faulting source load) retain their execution order.
+public record IlFault(string Architecture, int Vector) : Il(IlType.V0);
 public record IlUnimpl(string SourceOp, string Why = null) : Il(IlType.V0);
 
 // ─── Shader-IL (Maxwell tier-3 M1) ───
