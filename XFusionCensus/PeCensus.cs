@@ -55,7 +55,15 @@ public static class PeCensus {
 		var decoder = Iced.Intel.Decoder.Create(64, reader);
 		var run = new List<(uint Rva, Instruction Ins)>();
 		var pushes = new List<(int At, uint Target)>();
-		long runsRejected = 0;
+		long runsRejected = 0, jumpTables = 0;
+		var pdStarts = img.Pdata.Select(p => p.Begin).ToArray();
+		var pdSorted = img.Pdata.OrderBy(p => p.Begin).ToArray();
+		var pdKeys = pdSorted.Select(p => p.Begin).ToArray();
+		(uint, uint) funcOf(uint r) {
+			var k = Array.BinarySearch(pdKeys, r);
+			if(k < 0) k = ~k - 1;
+			return k >= 0 && r < pdSorted[k].End ? pdSorted[k] : (r, r + 0x10000);
+		}
 		while(work.Count > 0) {
 			// Decode one straight-line run speculatively and commit it only if it looks
 			// like code: no invalid encoding, nothing a user-mode MSVC binary never emits.
@@ -92,6 +100,12 @@ public static class PeCensus {
 						if(ins.Op0Kind is OpKind.NearBranch64) pushes.Add((run.Count - 1, (uint) (ins.NearBranchTarget - img.Base)));
 						stop = true;
 						break;
+					case FlowControl.IndirectBranch:
+						foreach(var t in JumpTableTargets(img, run, funcOf(rva)))
+							pushes.Add((run.Count - 1, t));
+						jumpTables++;
+						stop = true;
+						break;
 					default:
 						stop = true;
 						break;
@@ -116,20 +130,161 @@ public static class PeCensus {
 			}
 			foreach(var (_, t) in pushes) work.Push(t);
 		}
-		Console.WriteLine($"runs rejected as non-code: {runsRejected}");
+		Console.WriteLine($"runs rejected as non-code: {runsRejected}; indirect jumps {jumpTables}");
 
 		// How much .pdata-declared code did descent reach? The gap is jump-table-only
 		// blocks (indirect jmp targets) plus whatever .pdata over-claims.
 		long pdBytes = 0, pdSeen = 0;
-		foreach(var (b, e) in img.Pdata)
+		var gaps = new List<(uint Rva, uint Len)>();
+		foreach(var (b, e) in img.Pdata) {
+			uint gapStart = 0;
+			var inGap = false;
 			for(var r = b; r < e; r++) {
 				if(r < textVa || r >= textVa + textSize) continue;
 				pdBytes++;
-				if(visited[r - textVa]) pdSeen++;
+				if(visited[r - textVa]) {
+					pdSeen++;
+					if(inGap) { gaps.Add((gapStart, r - gapStart)); inGap = false; }
+				} else if(!inGap) { gapStart = r; inGap = true; }
 			}
+			if(inGap) gaps.Add((gapStart, e - gapStart));
+		}
+		if(outDir != null) {
+			// Unreached .pdata bytes, largest first, with a hex prefix -- what descent misses.
+			Directory.CreateDirectory(outDir);
+			File.WriteAllLines(Path.Combine(outDir, "gaps.txt"), gaps.OrderByDescending(g => g.Len).Select(g =>
+				$"{img.Base + g.Rva:x} {g.Len,6} {Convert.ToHexString(img.Data, img.RvaToOffset(g.Rva), (int) Math.Min(g.Len, 24u))}"));
+		}
 		st.Report(top, outDir);
+
+		// Gap sweep: what descent could not reach inside .pdata ranges (switch targets
+		// behind table shapes it does not recognize, plus the tables themselves) is
+		// linear-decoded with iced and checked by OUR decoder, reported apart from the
+		// census above because some of it is data. An undecoded instruction here is a
+		// lead to chase, not a confirmed gap.
+		long gapInsns = 0, gapUndecoded = 0;
+		var gapMiss = new Dictionary<string, (long N, string Ex)>();
+		foreach(var (g, len) in gaps) {
+			var off = img.RvaToOffset(g);
+			var gdec = Iced.Intel.Decoder.Create(64, new ByteArrayCodeReader(code, off, (int) len));
+			gdec.IP = img.Base + g;
+			while(gdec.IP < img.Base + g + len) {
+				var ip = gdec.IP;
+				var ins = gdec.Decode();
+				if(ins.IsInvalid || Implausible(ins)) break;
+				if(ins.Mnemonic == Mnemonic.Int3) continue;
+				gapInsns++;
+				var o = off + (int) (ip - img.Base - g);
+				if(!Disassembler.DecodeInsn(code.AsSpan(o, Math.Min(15, code.Length - o)), XMode.Bits64, out _)) {
+					gapUndecoded++;
+					var k = ins.Mnemonic.ToString().ToLowerInvariant();
+					gapMiss[k] = gapMiss.TryGetValue(k, out var v) ? (v.N + 1, v.Ex)
+						: (1, $"{ip:x}: {Convert.ToHexString(code, o, ins.Length)} = {ins}");
+				}
+			}
+		}
+		Console.WriteLine($"gap sweep (unreached .pdata bytes, linear, may include data): {gapInsns} insns, {gapUndecoded} undecoded");
+		// Outside .pdata: unreached, non-padding .text bytes (leaf code nothing names, or data).
+		long outside = 0;
+		var inPdata = new bool[textSize];
+		foreach(var (b, e) in img.Pdata)
+			for(var r = b; r < e; r++) if(r >= textVa && r < textVa + textSize) inPdata[r - textVa] = true;
+		for(var r = 0; r < textSize; r++)
+			if(!visited[r] && !inPdata[r] && code[img.RvaToOffset(textVa + (uint) r)] is not (0xCC or 0x00 or 0x90)) outside++;
+		Console.WriteLine($"unreached non-padding .text bytes outside .pdata: {outside}");
+		foreach(var (k, (n, ex)) in gapMiss.OrderByDescending(x => x.Value.N).Take(top))
+			Console.WriteLine($"  {n,6}  {k}   e.g. {ex}");
 		Console.WriteLine($".pdata coverage: {pdSeen}/{pdBytes} bytes reached ({100.0 * pdSeen / pdBytes:f2}%)");
 		return st.Undecoded + st.LenMismatch + st.MnemonicMismatch + st.LiftFail > 0 ? 1 : 0;
+	}
+
+	/// Switch tables (the clang/MSVC-x64 shape this binary uses):
+	///     lea   rB, [rip+table]
+	///     movsxd rX, dword [rB + rI*4]
+	///     add   rX, rB
+	///     jmp   rX
+	/// Entries are int32 offsets from the table base. The count is not recoverable
+	/// without range analysis, so entries are read while their targets stay inside the
+	/// function that owns the jump (its .pdata range) -- a following table's entries are
+	/// relative to ITS base and fall outside, ending the read.
+	static IEnumerable<uint> JumpTableTargets(PeImage img, List<(uint Rva, Instruction Ins)> run, (uint Begin, uint End) fn) {
+		if(run.Count < 3) yield break;
+		var jmp = run[^1].Ins;
+		if(jmp.Op0Kind != OpKind.Register) yield break;
+		var target = jmp.Op0Register.GetFullRegister();
+		var lo = Math.Max(0, run.Count - 14);
+		// 1. add target, base
+		var addAt = -1;
+		for(var k = run.Count - 2; k >= lo && addAt < 0; k--)
+			if(run[k].Ins.Mnemonic == Mnemonic.Add && run[k].Ins.Op0Register.GetFullRegister() == target
+			   && run[k].Ins.Op1Kind == OpKind.Register) addAt = k;
+		if(addAt < 0) yield break;
+		var baseReg = run[addAt].Ins.Op1Register.GetFullRegister();
+		// 2. the indexed load into target
+		for(var k = addAt - 1; k >= lo; k--) {
+			var ld = run[k].Ins;
+			if(ld.Op0Kind != OpKind.Register || ld.Op0Register.GetFullRegister() != target || ld.Op1Kind != OpKind.Memory
+			   || ld.MemoryIndexScale != 4) continue;
+			var count = BoundBefore(run, k, lo);
+			if(ld.Mnemonic == Mnemonic.Movsxd && ld.MemoryBase.GetFullRegister() == baseReg) {
+				// clang: entries are int32 offsets from the table base (= baseReg, a lea rip).
+				uint? tableRva = null;
+				for(var b = k - 1; b >= lo && tableRva == null; b--) {
+					var lea = run[b].Ins;
+					if(lea.Mnemonic != Mnemonic.Lea || lea.Op0Register.GetFullRegister() != baseReg) continue;
+					if(!lea.IsIPRelativeMemoryOperand) yield break;
+					tableRva = (uint) (lea.IPRelativeMemoryAddress - img.Base);
+				}
+				// The base is often hoisted out of the switch's block (a loop over a switch
+				// keeps it in a callee-saved register): take the last `lea base, [rip+X]`
+				// in a linear decode of the function up to the jump.
+				tableRva ??= LastRipLea(img, fn.Begin, run[^1].Rva, baseReg);
+				if(tableRva is not { } table) yield break;
+				foreach(var t in Entries(img, table, count, fn, e => (uint) (table + e))) yield return t;
+				yield break;
+			}
+			if(ld.Mnemonic == Mnemonic.Mov && ld.MemoryDisplacement64 is > 0x1000 and < 0x80000000) {
+				// MSVC: bases are __ImageBase, entries are RVAs, the table at disp32 (an RVA).
+				var table = (uint) ld.MemoryDisplacement64;
+				foreach(var t in Entries(img, table, count, fn, e => (uint) e)) yield return t;
+			}
+			yield break;
+		}
+	}
+
+	static uint? LastRipLea(PeImage img, uint from, uint to, Register reg) {
+		if(to <= from || to - from > 0x40000) return null;
+		var off = img.RvaToOffset(from);
+		var dec = Iced.Intel.Decoder.Create(64, new ByteArrayCodeReader(img.Data, off, (int) (to - from)));
+		dec.IP = img.Base + from;
+		uint? last = null;
+		while(dec.IP < img.Base + to) {
+			var ins = dec.Decode();
+			if(ins.IsInvalid) break;
+			if(ins.Mnemonic == Mnemonic.Lea && ins.Op0Register.GetFullRegister() == reg && ins.IsIPRelativeMemoryOperand)
+				last = (uint) (ins.IPRelativeMemoryAddress - img.Base);
+		}
+		return last;
+	}
+
+	/// `cmp idx, N ; ja default` shortly before the load bounds the table at N+1.
+	static int BoundBefore(List<(uint Rva, Instruction Ins)> run, int k, int lo) {
+		for(var c = k - 1; c >= lo; c--)
+			if(run[c].Ins.Mnemonic == Mnemonic.Cmp && run[c].Ins.Op1Kind is OpKind.Immediate8 or OpKind.Immediate32
+			   or OpKind.Immediate8to32 or OpKind.Immediate8to64 or OpKind.Immediate32to64)
+				return (int) Math.Min(4096, run[c].Ins.GetImmediate(1) + 1);
+		return 4096;
+	}
+
+	static IEnumerable<uint> Entries(PeImage img, uint table, int count, (uint Begin, uint End) fn, Func<int, uint> resolve) {
+		for(var e = 0; e < count; e++) {
+			int raw;
+			try { raw = BitConverter.ToInt32(img.Data, img.RvaToOffset(table + (uint) (4 * e))); }
+			catch(ArgumentOutOfRangeException) { yield break; }
+			var t = resolve(raw);
+			if(t < fn.Begin || t >= fn.End) yield break;
+			yield return t;
+		}
 	}
 
 	static bool Implausible(in Instruction ins) => ins.Mnemonic is
