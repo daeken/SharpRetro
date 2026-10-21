@@ -5,6 +5,7 @@
 	.text
 	.globl _xf_enter
 	.globl _xf_exit
+	.globl _xf_exit_taken
 
 _xf_enter:
 	push %rbx
@@ -54,6 +55,8 @@ _xf_enter:
 	mov 0x38(%rdi), %rdi
 	jmp *_g_code(%rip)
 
+_xf_exit_taken:
+	movl $1, _g_taken(%rip)        // a mov: flags stay as the instruction left them
 _xf_exit:
 	mov %rdi, _g_save_rdi(%rip)
 	mov _g_state(%rip), %rdi

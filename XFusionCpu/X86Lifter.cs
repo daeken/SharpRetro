@@ -70,7 +70,12 @@ public static class X86Lifter {
 		binds["%vexl"] = new OperandBind.Imm(d.P.VexL ? 1 : 0, 8);
 		binds["%rexw"] = new OperandBind.Imm(d.P.RexW ? 1 : 0, 8);
 		if(stackOp) binds["SP"] = new OperandBind.Reg(4, stackWidth);
-		var opWidth = stackOp ? vw : specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
+		// LOOPcc/JrCXZ count in rCX at the ADDRESS size; their only operand is the rel8,
+		// whose width (8) is not the counter's. (Found by the native oracle: loopne
+		// decremented CL and kept the upper 56 bits of RCX.)
+		var counterOp = LiftTables.Templates[tid].Mnemonic is "LOOP" or "LOOPE" or "LOOPNE" or "JCXZ";
+		var opWidth = counterOp ? d.P.AWidth(mode)
+			: stackOp ? vw : specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
 		var block = IlLower.Lower(params_, eval, binds, opWidth,
 			// API models a mode-default stack (no independent SS.B state).
 			stackOp ? stackWidth : 64,

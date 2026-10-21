@@ -36,6 +36,7 @@ public static class Oracle {
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	unsafe struct NativeCase {
 		public ulong CodeAddr;
+		public ulong Target;
 		public byte CodeLen;
 		public fixed byte Code[15];
 		public NativeState St;
@@ -52,17 +53,18 @@ public static class Oracle {
 			stdin = proc.StandardInput.BaseStream;
 			stdout = proc.StandardOutput.BaseStream;
 		}
-		public unsafe (uint Signal, NativeState St, byte[] Mem) Run(in NativeCase c) {
+		public unsafe (uint Signal, bool Taken, NativeState St, byte[] Mem) Run(in NativeCase c) {
 			var buf = new byte[sizeof(NativeCase)];
 			fixed(byte* p = buf) *(NativeCase*) p = c;
 			stdin.Write(buf);
 			stdin.Flush();
-			var outBuf = new byte[4 + sizeof(NativeState) + MemSize];
+			var outBuf = new byte[8 + sizeof(NativeState) + MemSize];
 			stdout.ReadExactly(outBuf);
 			fixed(byte* p = outBuf) {
 				var sig = *(uint*) p;
-				var st = *(NativeState*) (p + 4);
-				return (sig, st, outBuf.AsSpan(4 + sizeof(NativeState)).ToArray());
+				var taken = *(uint*) (p + 4) != 0;
+				var st = *(NativeState*) (p + 8);
+				return (sig, taken, st, outBuf.AsSpan(8 + sizeof(NativeState)).ToArray());
 			}
 		}
 		public void Dispose() {
@@ -195,7 +197,27 @@ public static class Oracle {
 		icedDec.IP = codeAddr;
 		var ins = icedDec.Decode();
 		if(ins.IsInvalid) return ("iced-invalid", null);
-		if(ins.FlowControl is not (FlowControl.Next)) return ("flow", null);
+		// Control flow: a stub at the branch destination tells the native side's
+		// "went there" apart from falling through; the lift is graded on where it put IP.
+		// Indirect forms and RET are given a destination (register, memory or stack slot).
+		const ulong IndirectTarget = CodeBase + 0x1800;
+		ulong brTarget = 0;
+		switch(ins.FlowControl) {
+			case FlowControl.Next:
+				break;
+			case FlowControl.ConditionalBranch or FlowControl.UnconditionalBranch or FlowControl.Call
+				when ins.Op0Kind is OpKind.NearBranch64:
+				brTarget = ins.NearBranchTarget;
+				break;
+			case FlowControl.IndirectBranch or FlowControl.IndirectCall or FlowControl.Return:
+				brTarget = IndirectTarget;
+				break;
+			default:
+				return ("flow", null);
+		}
+		if(brTarget != 0 && (brTarget + 14 > codeAddr && brTarget < codeAddr + (ulong) code.Length + 14
+		                   || brTarget + 0x2000 > MemBase && brTarget < MemBase + MemSize || brTarget < 0x10000))
+			return ("branch-overlap", null);
 		if(HostQuery.Contains(ins.Mnemonic)) return ("host-query", null);
 		if(ins.SegmentPrefix is Register.FS or Register.GS) return ("fs/gs", null);
 		if(d.P.AdSize) return ("addr32", null);
@@ -237,7 +259,7 @@ public static class Oracle {
 
 		// Steer a ModRM memory operand into the window.
 		if(HasModRmMem(in d) && !d.M.RipRelative) {
-			var target = MemBase + (ulong) memOff;
+			var memTarget = MemBase + (ulong) memOff;
 			var b = d.M.BaseReg; var x = d.M.IndexReg;
 			if(b < 0 && x < 0) return ("abs-addr", null);
 			if(b == x) return ("base==index", null);
@@ -247,18 +269,30 @@ public static class Oracle {
 				idxVal = (ulong) rng.Next(0, 8);
 				st.Gpr[x] = idxVal;
 			}
-			if(b >= 0) st.Gpr[b] = unchecked(target - (ulong) d.M.Disp - idxVal * d.M.Scale);
+			if(b >= 0) st.Gpr[b] = unchecked(memTarget - (ulong) d.M.Disp - idxVal * d.M.Scale);
 			else {
-				var need = unchecked(target - (ulong) d.M.Disp);
+				var need = unchecked(memTarget - (ulong) d.M.Disp);
 				if(need % d.M.Scale != 0) return ("index-align", null);
 				st.Gpr[x] = need / d.M.Scale;
 			}
 		}
 
-		var nc = new NativeCase { CodeAddr = codeAddr, CodeLen = (byte) code.Length, St = st };
+		// Indirect destinations: the register operand, the memory operand, or RET's stack slot.
+		if(brTarget == IndirectTarget) {
+			if(ins.FlowControl == FlowControl.Return)
+				BitConverter.TryWriteBytes(mem.AsSpan((int) (st.Gpr[4] - MemBase)), brTarget);
+			else if(ins.Op0Kind == OpKind.Register)
+				st.Gpr[RegIndex(ins.Op0Register)] = brTarget;
+			else if(ins.Op0Kind == OpKind.Memory) {
+				var ea = (long) (MemBase + (ulong) memOff - MemBase);
+				BitConverter.TryWriteBytes(mem.AsSpan((int) ea), brTarget);
+			} else return ("flow", null);
+		}
+
+		var nc = new NativeCase { CodeAddr = codeAddr, Target = brTarget, CodeLen = (byte) code.Length, St = st };
 		for(var i = 0; i < code.Length; i++) nc.Code[i] = code[i];
 		for(var i = 0; i < MemSize; i++) nc.Mem[i] = mem[i];
-		var (sig, nst, nmem) = runner.Run(in nc);
+		var (sig, taken, nst, nmem) = runner.Run(in nc);
 
 		// ---- lifted side ----
 		var m = new X86Machine { Mode = XMode.Bits64, Ip = codeAddr, Flags = st.Rflags };
@@ -293,6 +327,7 @@ public static class Oracle {
 		catch(DivideByZeroException) { ilFault = true; }
 		catch(Exception e) { ilErr = e.GetType().Name + ": " + e.Message; }
 
+		if(sig == 0xFFFF) return ("target-unmappable", null);
 		if(sig != 0) {
 			if(sig == 8 && ilFault) return (null, null);  // #DE on both sides
 			// Rosetta 2 raises SIGILL for some valid encodings it does not translate
@@ -305,6 +340,9 @@ public static class Oracle {
 		if(oob != null) return ("FAIL", "IL memory access outside window: " + oob);
 
 		var diffs = new List<string>();
+		var fallthrough = codeAddr + (ulong) code.Length;
+		var hwIp = taken ? brTarget : fallthrough;
+		if(m.Ip != hwIp) diffs.Add($"rip il={m.Ip:x} hw={hwIp:x} ({(taken ? "taken" : "fallthrough")})");
 		string[] gn = ["rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"];
 		// Rosetta 2 zero-extends RAX on a SUCCESSFUL 32-bit CMPXCHG; the SDM's operation
 		// only writes the accumulator on a mismatch, and the lift follows the SDM. Unverified
@@ -344,6 +382,12 @@ public static class Oracle {
 		if(diffs.Count == 0) return (null, null);
 		return ("FAIL", $"{ins} :: {string.Join("; ", diffs)}");
 	}
+
+	static int RegIndex(Register r) => r.GetFullRegister() switch {
+		Register.RAX => 0, Register.RCX => 1, Register.RDX => 2, Register.RBX => 3,
+		Register.RSP => 4, Register.RBP => 5, Register.RSI => 6, Register.RDI => 7,
+		var x => x - Register.R8 + 8,
+	};
 
 	static unsafe UInt128 Half(byte* ymm, int reg, int half) {
 		UInt128 v = 0;
