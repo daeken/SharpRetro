@@ -576,12 +576,10 @@
 (encoding NEG (Eb) (0xF6 /3))
 (encoding NEG (Ev) (0xF7 /3))
 
-; MUL/DIV/IDIV wide forms: rDX:rAX at 2×op_w. The .isa can't express type-at-
-; runtime-width cleanly (op_w is a per-encoding runtime Rust const, not a
-; DSL compile-time int), so these use dedicated RustLiftGen heads that emit
-; the widen/narrow directly using op_w. ‡ op_w=8 forms (AX/AL/AH-split) not
-; handled yet; F6-encodings will hit tier-0's div/mul at width=16 which
-; produces wrong hi/lo split — flag if the recon surfaces one.
+; MUL: unsigned 2W product in AX or DX:AX/EDX:EAX/RDX:RAX.
+; C# IlLower emits typed effects at widths 8/16/32/64, CF=OF=(high != 0),
+; with explicitly undefined PF/AF/ZF/SF. RustLiftGen is a separate backend.
+; DIV/IDIV remain dedicated opaque heads in the C# typed lift.
 (instruction MUL (src)
     "mul $src"
     (mul-wide src #f))
