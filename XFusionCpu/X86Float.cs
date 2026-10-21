@@ -96,6 +96,32 @@ public static class X86Float {
 		return null;
 	}
 
+	/// Fused multiply-add, one rounding. NaN operands propagate quieted, first of
+	/// (a, b, c) winning; an invalid product/sum yields the indefinite.
+	public static ulong Fma(ulong a, ulong b, ulong c, int bits, bool negProd = false, bool negAdd = false) {
+		if(bits == 32) {
+			uint x = (uint) a, y = (uint) b, z = (uint) c;
+			if(IsNan32(x)) return x | QuietBit32;
+			if(IsNan32(y)) return y | QuietBit32;
+			if(IsNan32(z)) return z | QuietBit32;
+			// NaNs were taken above on the ORIGINAL operands; signs apply only to numbers.
+			if(negProd) x ^= 0x80000000;
+			if(negAdd) z ^= 0x80000000;
+			var r = MathF.FusedMultiplyAdd(BitConverter.UInt32BitsToSingle(x), BitConverter.UInt32BitsToSingle(y),
+				BitConverter.UInt32BitsToSingle(z));
+			return float.IsNaN(r) ? Indefinite32 : BitConverter.SingleToUInt32Bits(r);
+		} else {
+			if(IsNan64(a)) return a | QuietBit64;
+			if(IsNan64(b)) return b | QuietBit64;
+			if(IsNan64(c)) return c | QuietBit64;
+			if(negProd) a ^= 0x8000000000000000;
+			if(negAdd) c ^= 0x8000000000000000;
+			var r = Math.FusedMultiplyAdd(BitConverter.UInt64BitsToDouble(a), BitConverter.UInt64BitsToDouble(b),
+				BitConverter.UInt64BitsToDouble(c));
+			return double.IsNaN(r) ? Indefinite64 : BitConverter.DoubleToUInt64Bits(r);
+		}
+	}
+
 	/// f64 -> f32 narrowing (CVTSD2SS/CVTPD2PS): a NaN keeps its sign and the top
 	/// payload bits and is quieted; everything else rounds per IEEE.
 	public static uint Narrow(ulong a) {

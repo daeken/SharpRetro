@@ -211,6 +211,11 @@ public class RustLiftGen {
                 }
                 return;
             }
+            case PName("rotc"):
+                // RCL/RCR: this backend keeps the named intrinsic it had before the
+                // C# side lowered them (rotc), rather than going UNHANDLED.
+                Stmt(new PList(new PTree[] { new PName("intrinsic"), new PName(l[3] is PName("#t") ? "rcl" : "rcr"), l[1], l[2] }));
+                break;
             case PName("undef"):
                 // (undef FLAG...): SDM-undefined flags. This backend leaves them
                 // unwritten (its prior behavior for every undefined flag).
@@ -634,6 +639,12 @@ public class RustLiftGen {
                 // first version called Binds.TryGetValue and CS0103'd.
                 var gs = Expr(l[1]);
                 var gselOp = ParamOp(((PName)l[2]).Name);
+                // (bitwidth op) lane width = PEXTRD/PEXTRQ under REX.W: 32 or 64 at runtime.
+                if(l[3] is PList { Count: 2 } gbw && gbw[0] is PName("bitwidth")) {
+                    var gwop = ParamOp(((PName)gbw[1]).Name);
+                    string GRead(int w) => $"{{ let _s = if let Operand::Imm{{value,..}} = {gselOp} {{ *value as u32 }} else {{ unreachable!() }}; let _i = bd.literal(IlType::U32, (_s & {128 / w - 1}) as u128); bd.velement_read({gs}, _i, IlType::U{w}) }}";
+                    return Rt($"if ({gwop}).width() == 64 {GRead(64)} else {GRead(32)}");
+                }
                 var gew = (int)((PInt)l[3]).Value;
                 var gmask = 128 / gew - 1;
                 var gidx = Rt($"{{ let _s = if let Operand::Imm{{value,..}} = {gselOp} {{ *value as u32 }} else {{ unreachable!() }}; bd.literal(IlType::U32, (_s & {gmask}) as u128) }}");
@@ -647,6 +658,11 @@ public class RustLiftGen {
                 var sd = Expr(l[1]);
                 var sv = Expr(l[2]);
                 var sselOp = ParamOp(((PName)l[3]).Name);
+                if(l[4] is PList { Count: 2 } sbw && sbw[0] is PName("bitwidth")) {
+                    var swop = ParamOp(((PName)sbw[1]).Name);
+                    string SWrite(int w) => $"{{ let _s = if let Operand::Imm{{value,..}} = {sselOp} {{ *value as u32 }} else {{ unreachable!() }}; let _i = bd.literal(IlType::U32, (_s & {128 / w - 1}) as u128); let _v = bd.cast({sv}, IlType::U{w}); bd.velement_write({sd}, _i, _v) }}";
+                    return Rt($"if ({swop}).width() == 64 {SWrite(64)} else {SWrite(32)}");
+                }
                 var sew = (int)((PInt)l[4]).Value;
                 var smask = 128 / sew - 1;
                 var sidx = Rt($"{{ let _s = if let Operand::Imm{{value,..}} = {sselOp} {{ *value as u32 }} else {{ unreachable!() }}; bd.literal(IlType::U32, (_s & {smask}) as u128) }}");
@@ -1280,7 +1296,8 @@ public static class OperandSpecExt {
     /// Concrete byte-width for this spec, or 0 if v-width-parameterized.
     public static int ByteWidth(this OperandSpec s) => s.Width switch {
         WCode.b => 8, WCode.w => 16, WCode.d => 32, WCode.q => 64,
-        WCode.dq or WCode.ps or WCode.pd or WCode.x => 128,
+        WCode.dq or WCode.ps or WCode.pd or WCode.x or WCode.o => 128,
+        WCode.h => 64,
         WCode.ss => 32, WCode.sd => 64,
         _ => 0,  // v/z/y = mode+prefix-parameterized → op_w
     };

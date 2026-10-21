@@ -482,9 +482,10 @@
 (encoding ROR (Eb CL) (0xD2 /1))
 (encoding ROR (Ev CL) (0xD3 /1))
 
+; RCL/RCR rotate through CF: a (w+1)-bit rotate of CF:lval (rotc head in IlLower).
 (instruction RCL (lval count)
     "rcl $lval, $count"
-    (intrinsic rcl lval count))
+    (rotc lval count #t))
 (encoding RCL (Eb Ib) (0xC0 /2))
 (encoding RCL (Ev Ib) (0xC1 /2))
 (encoding RCL (Eb 1)  (0xD0 /2))
@@ -494,7 +495,7 @@
 
 (instruction RCR (lval count)
     "rcr $lval, $count"
-    (intrinsic rcr lval count))
+    (rotc lval count #f))
 (encoding RCR (Eb Ib) (0xC0 /3))
 (encoding RCR (Ev Ib) (0xC1 /3))
 (encoding RCR (Eb 1)  (0xD0 /3))
@@ -1131,3 +1132,39 @@
     (branch-if (! (| ZF (!= SF OF))) target))
 (encoding JNLE (Jb) (0x7F d64))
 (encoding JNLE (Jz) (0x0F 0x8F d64))
+
+; --- SAHF/LAHF (9E/9F): AH <-> SF:ZF:0:AF:0:PF:1:CF. Valid in 64-bit mode (LAHF-SAHF CPUID bit). ---
+(instruction SAHF (src)
+    "sahf"
+    (mlet (v src)
+        (= CF (& v 1))
+        (= PF (& (>> v 2) 1))
+        (= AF (& (>> v 4) 1))
+        (= ZF (& (>> v 6) 1))
+        (= SF (& (>> v 7) 1))))
+(encoding SAHF (AH) (0x9E))
+(instruction LAHF (dst)
+    "lahf"
+    (= dst (| (zext CF 8) 0x2 (<< (zext PF 8) 2) (<< (zext AF 8) 4) (<< (zext ZF 8) 6) (<< (zext SF 8) 7))))
+(encoding LAHF (AH) (0x9F))
+
+; --- XGETBV (0F 01 D0): EDX:EAX := XCR[ECX]. A host-state query, like CPUID. ---
+(instruction XGETBV () "xgetbv" (intrinsic xgetbv))
+(encoding XGETBV () (0x0F 0x01 /2 mod11 rm=0))
+
+; --- CET hint-space ops. With shadow stacks disabled (the state a game runs in), RDSSP
+; is a NOP: the destination keeps its value, which is what the CRT's
+; `xor eax,eax; rdsspq rax; test rax,rax` probe relies on. ---
+(instruction RDSSP (dst) "$(wname rdsspd rdsspd rdsspq) $dst" (block))
+(encoding RDSSP (Ey) (rep 0x0F 0x1E /1 mod11))
+
+; --- WAITPKG: UMONITOR/UMWAIT (F3/F2 0F AE /6, register forms). These used to fall
+; through to MFENCE (the bare 0F AE /6 row dropped the F3/F2), see sse.isa. UMONITOR
+; arms address monitoring and changes no architectural register; UMWAIT clears
+; ZF/PF/AF/OF/SF and sets CF when the OS time limit, not the deadline, ended the wait --
+; not knowable here, so CF is undefined. ---
+(instruction UMONITOR (src) "umonitor $src" (block))
+(encoding UMONITOR (Eq) (rep 0x0F 0xAE /6 mod11))
+(instruction UMWAIT (src) "umwait $src"
+    (block (= ZF 0) (= PF 0) (= AF 0) (= OF 0) (= SF 0) (undef CF)))
+(encoding UMWAIT (Ed) (repnz 0x0F 0xAE /6 mod11))

@@ -67,12 +67,14 @@ public static class X86Lifter {
 		}
 
 		binds["%nextpc"] = new OperandBind.Imm((long) (pc + (ulong) d.Len), nearCall ? vw : 64);
+		binds["%vexl"] = new OperandBind.Imm(d.P.VexL ? 1 : 0, 8);
 		if(stackOp) binds["SP"] = new OperandBind.Reg(4, stackWidth);
 		var opWidth = stackOp ? vw : specs.Length > 0 ? WidthOf(specs[0], in d, mode, vw) : vw;
 		var block = IlLower.Lower(params_, eval, binds, opWidth,
 			// API models a mode-default stack (no independent SS.B state).
 			stackOp ? stackWidth : 64,
-			stackOp && mode != XMode.Bits64 ? new IlReadReg(IlType.U64, RegKind.X86Seg, 2) : null);
+			stackOp && mode != XMode.Bits64 ? new IlReadReg(IlType.U64, RegKind.X86Seg, 2) : null,
+			vex: d.P.VexValid);
 
 		// rep/repe/repne on the string family → intrinsic-name prefix (·62 naming).
 		// movs/stos/lods take plain rep; scas/cmps distinguish repe (F3) / repne (F2).
@@ -121,6 +123,8 @@ public static class X86Lifter {
 		WCode.q => 64,
 		WCode.ss => 32, WCode.sd => 64,
 		WCode.ps or WCode.pd or WCode.dq or WCode.x => d.P.VexL ? 256 : 128,
+		WCode.o => 128,
+		WCode.h => d.P.VexL ? 128 : 64,
 		_ => vw
 	};
 
@@ -173,6 +177,10 @@ public static class X86Lifter {
 			}
 			case OpClass.FixedInt:
 				return new OperandBind.Imm(spec.FixedValue, 8);
+			// AH/CH/DH/BH are bits 15:8 of registers 0-3 (OperandSpec keeps their
+			// encoding index 4-7); binding index 4 at width 8 named SPL.
+			case OpClass.FixedReg when spec.FixedRegByte && spec.Text is "AH" or "CH" or "DH" or "BH":
+				return new OperandBind.Reg(spec.FixedRegIndex - 4, 8, High8: true);
 			case OpClass.FixedReg:
 				return new OperandBind.Reg(spec.FixedRegIndex,
 					spec.FixedRegByte ? 8 : spec.FixedRegVSized ? vw : 16);

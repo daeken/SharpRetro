@@ -312,3 +312,7 @@
 ; ---- 9B: fwait (bare opcode, not D8-DF) ----
 (instruction FWAIT () "fwait" (intrinsic fwait))
 (encoding FWAIT () (0x9B))
+
+; FBLD m80bcd: packed-BCD load (DF /4). Intrinsic, like the other x87 memory loads.
+(instruction FBLD (src) "fbld $src" (intrinsic fbld src))
+(encoding FBLD (M) (0xDF /4 mem))

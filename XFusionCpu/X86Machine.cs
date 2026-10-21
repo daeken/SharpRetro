@@ -29,6 +29,10 @@ public class X86Machine {
 	/// when written, false for ~an hour after, and a peer reading it against what I'd
 	/// told them is what made them check ancestry rather than trust either.
 	public readonly UInt128[] Xmm = new UInt128[32];
+	/// Bits 255:128 of each vector register (the ymm upper half). A 128-bit write leaves
+	/// it alone (legacy SSE); a 256-bit write -- which is how a VEX-encoded write arrives,
+	/// zero-extended by the lifter -- replaces it.
+	public readonly UInt128[] YmmHi = new UInt128[32];
 	/// x87 stack slots, same carrier caveat (f64 bit patterns, no 80-bit extended).
 	public readonly ulong[] St = new ulong[8];
 	/// Instruction-fetch hook — DISTINCT from LoadHook so a host can
@@ -92,6 +96,96 @@ public class X86Machine {
 	public bool Halted => _halted;
 
 	readonly Dictionary<int, UInt128> _tmps = [];
+	readonly Dictionary<int, W256> _wtmps = [];
+
+	/// A 256-bit value (ymm): two 128-bit halves.
+	public readonly record struct W256(UInt128 Lo, UInt128 Hi) {
+		public UInt128 Lane(int bitOff, int lw) {
+			// Lanes are naturally aligned and at most 128 bits, so none straddles the halves.
+			var v = bitOff >= 128 ? Hi >> (bitOff - 128) : Lo >> bitOff;
+			return lw >= 128 ? v : v & ((UInt128.One << lw) - 1);
+		}
+		public W256 SetLane(int bitOff, int lw, UInt128 val) {
+			var m = lw >= 128 ? ~UInt128.Zero : (UInt128.One << lw) - 1;
+			val &= m;
+			return bitOff >= 128
+				? this with { Hi = (Hi & ~(m << (bitOff - 128))) | (val << (bitOff - 128)) }
+				: this with { Lo = (Lo & ~(m << bitOff)) | (val << bitOff) };
+		}
+	}
+
+	/// Evaluate a value wider than 128 bits. Narrower values are their zero-extension.
+	W256 EvalW(Il e) {
+		if(WOf(e) <= 128) return new W256(Eval(e), 0);
+		switch(e) {
+			case IlReadReg(_, RegKind.Xmm, var i): return new W256(Xmm[i], YmmHi[i]);
+			case IlTmp(_, var id): return _wtmps[id];
+			case IlConst(_, var bits): return new W256(bits, 0);
+			case IlUndefined: return default;
+			case IlLoad(_, var addr): {
+				var a = N64(Eval(addr));
+				return new W256(LoadWide(a, 128), LoadWide(a + 16, WOf(e) - 128));
+			}
+			case IlBin(_, var op and (BinOp.And or BinOp.Or or BinOp.Xor), var l, var r): {
+				var (a, b) = (EvalW(l), EvalW(r));
+				return op switch {
+					BinOp.And => new W256(a.Lo & b.Lo, a.Hi & b.Hi),
+					BinOp.Or => new W256(a.Lo | b.Lo, a.Hi | b.Hi),
+					_ => new W256(a.Lo ^ b.Lo, a.Hi ^ b.Hi),
+				};
+			}
+			case IlUn(_, UnOp.Not, var x): {
+				var a = EvalW(x);
+				return new W256(~a.Lo, ~a.Hi);
+			}
+			case IlCast(_, CastKind.Zext or CastKind.Bitcast or CastKind.Trunc, var x): {
+				var a = EvalW(x);
+				var w = WOf(e);
+				return w >= 256 ? a : new W256(a.Lo, a.Hi & ((UInt128.One << (w - 128)) - 1));
+			}
+			case IlIfV(_, var c, var t, var f):
+				return (Eval(c) & 1) != 0 ? EvalW(t) : EvalW(f);
+			case IlVecBuild(var vbits, var bet, var els): {
+				var lw = LaneW(bet);
+				var acc = new W256();
+				for(var li = 0; li < els.Count; li++)
+					acc = acc.SetLane(li * lw, lw, lw > 128 ? EvalW(els[li]).Lo : Eval(els[li]));
+				return acc;
+			}
+			case IlVecAll(var vbits, var bet, var sc): {
+				var lw = LaneW(bet);
+				var v = Eval(sc);
+				var acc = new W256();
+				for(var li = 0; li < vbits / lw; li++) acc = acc.SetLane(li * lw, lw, v);
+				return acc;
+			}
+			case IlVecBin(var vbits, var bet, var bop, var bl, var br): {
+				var lw = LaneW(bet);
+				var av = EvalW(bl);
+				var rhsIsScalar = bop is BinOp.Shl or BinOp.Shr or BinOp.Sar && WOf(br) <= 64;
+				var bv = rhsIsScalar ? new W256(Eval(br), 0) : EvalW(br);
+				var acc = new W256();
+				for(var li = 0; li < vbits / lw; li++) {
+					var lb = rhsIsScalar ? bv.Lo : bv.Lane(li * lw, lw);
+					acc = acc.SetLane(li * lw, lw, LaneBin(bop, av.Lane(li * lw, lw), lb, bet, lw));
+				}
+				return acc;
+			}
+			case IlVecUn(var vbits, var bet, var uop, var ux): {
+				var lw = LaneW(bet);
+				var xv = EvalW(ux);
+				var acc = new W256();
+				for(var li = 0; li < vbits / lw; li++)
+					acc = acc.SetLane(li * lw, lw, LaneUn(uop, xv.Lane(li * lw, lw), bet, lw));
+				return acc;
+			}
+			default: throw new NotSupportedException($"eval256 {e.GetType().Name}");
+		}
+	}
+
+	static int LaneW(IlType t) => t switch {
+		IlType.F f => f.Bits, IlType.I i => i.Bits, IlType.Vec v => v.Bits, _ => 64,
+	};
 
 	public void Halt() => _halted = true;
 
@@ -116,6 +210,7 @@ public class X86Machine {
 		if(block == null) return false;
 		_branchTo = null;
 		_tmps.Clear();
+		_wtmps.Clear();
 		ExecBlock(block.Body);
 		Ip = _branchTo ?? Ip + (ulong) d.Len;
 		// Near CALL/RET targets are already narrowed by their operand size in IL.
@@ -134,6 +229,7 @@ public class X86Machine {
 
 	void Exec(Il s) {
 		switch(s) {
+			case IlLet(var id, var v) when WOf(v) > 128: _wtmps[id] = EvalW(v); break;
 			case IlLet(var id, var v): _tmps[id] = Eval(v); break;
 			case IlWriteReg(RegKind.X86, var i, var v): Gpr[i] = N64(Eval(v)); break;
 			case IlWriteReg(RegKind.Eflags, var bit, var v):
@@ -147,6 +243,11 @@ public class X86Machine {
 			// dying at the default. This said "a v128 op still dies loud... nothing
 			// emits or evaluates them yet" -- both halves now false: IlLower emits at
 			// 16 sites and this file has the arms.
+			case IlWriteReg(RegKind.Xmm, var i, var v) when WOf(v) > 128: {
+				var wv = EvalW(v);
+				Xmm[i] = wv.Lo; YmmHi[i] = wv.Hi;
+				break;
+			}
 			case IlWriteReg(RegKind.Xmm, var i, var v): Xmm[i] = Eval(v); break;
 			case IlWriteReg(RegKind.St, var i, var v): St[i] = N64(Eval(v)); break;
 			case IlWriteReg(RegKind.X86Seg, var i, var v): {
@@ -160,7 +261,11 @@ public class X86Machine {
 				// a v128 store is 16 (this used to read only IlType.I and default to 8).
 				var sw = WOf(v);
 				var sa = N64(Eval(addr));
-				if(sw > 64) StoreWide(sa, Eval(v), sw);
+				if(sw > 128) {
+					var wv = EvalW(v);
+					StoreWide(sa, wv.Lo, 128);
+					StoreWide(sa + 16, wv.Hi, sw - 128);
+				} else if(sw > 64) StoreWide(sa, Eval(v), sw);
 				else Store(sa, N64(Eval(v)), sw);
 				break;
 			}
@@ -425,6 +530,10 @@ public class X86Machine {
 			case IlReadReg(_, RegKind.X86Seg, var i): return SegBase[i];
 			case IlReadPc: return SegBase[1] + Ip;  // linear pc (RIP-rel math wants linear)
 			case IlTmp(_, var id): return _tmps[id];
+			case IlBin(_, var op and (BinOp.Eq or BinOp.Ne), var l, var r) when WOf(l) > 128 || WOf(r) > 128: {
+				var eq = EvalW(l) == EvalW(r);
+				return (op == BinOp.Eq) == eq ? UInt128.One : UInt128.Zero;
+			}
 			case IlBin(var ty, var op, var l, var r): {
 				var (a, b) = (Eval(l), Eval(r));
 				// WIDTH VIA WOf, NOT AN INLINE GUESS. Fourth copy of one defect: IlLower.W(),
@@ -600,11 +709,12 @@ public class X86Machine {
 				// 374,544 rows once the reader started grading the high word at all.
 				var w = WOf(new IlConst(ty, 0));
 				var v = op switch {
+					// float unops FIRST -- carrier is the bit pattern (see the Cast arm's
+					// note); an F-typed Neg is a sign flip, not integer negation.
+					_ when x.Ty is IlType.F xf && X86Float.Un(op, a, xf.Bits) is { } xr => xr,
 					UnOp.Neg => 0 - a,
 					UnOp.Not => ~a,
 					UnOp.Popcnt => (ulong) System.Numerics.BitOperations.PopCount(MaskW(a, WOf(x))),
-					// float unops -- carrier is the bit pattern (see the Cast arm's note)
-					_ when x.Ty is IlType.F xf && X86Float.Un(op, a, xf.Bits) is { } xr => xr,
 					UnOp.Abs when x.Ty is IlType.F fa2 => fa2.Bits == 32
 						? BitConverter.SingleToUInt32Bits(MathF.Abs(BitConverter.UInt32BitsToSingle((uint) a)))
 						: BitConverter.DoubleToUInt64Bits(Math.Abs(BitConverter.UInt64BitsToDouble(a))),
@@ -627,6 +737,11 @@ public class X86Machine {
 					_ => throw new NotSupportedException($"unop {op}")
 				};
 				return MaskW(v, w);
+			}
+			case IlCast(var ty, CastKind.Trunc or CastKind.Bitcast, var x) when WOf(x) > 128 && WOf(e) <= 128: {
+				var lo = EvalW(x).Lo;
+				var cw = WOf(e);
+				return cw >= 128 ? lo : lo & ((UInt128.One << cw) - 1);
 			}
 			case IlCast(var ty, var kind, var x): {
 				var aw = Eval(x); var a = N64(aw);
@@ -670,6 +785,10 @@ public class X86Machine {
 							return ft.Bits == 32
 								? BitConverter.SingleToUInt32Bits((float) a)
 								: BitConverter.DoubleToUInt64Bits((double) a);
+						case CastKind.FTrunc when ft.Bits == 16:  // f32 -> f16 (VCVTPS2PH)
+							return BitConverter.HalfToUInt16Bits((Half) BitConverter.UInt32BitsToSingle((uint) a));
+						case CastKind.FExt when x.Ty is IlType.F { Bits: 16 }:  // f16 -> f32 (VCVTPH2PS)
+							return BitConverter.SingleToUInt32Bits((float) BitConverter.UInt16BitsToHalf((ushort) a));
 						case CastKind.FTrunc:   // f64 -> f32 (CVTSD2SS); x86 NaN payload rule
 							return X86Float.Narrow(a);
 						case CastKind.FExt:     // f32 -> f64 (CVTSS2SD)
@@ -725,6 +844,9 @@ public class X86Machine {
 			}
 			case IlIfV(_, var c, var t, var f):
 				return (Eval(c) & 1) != 0 ? Eval(t) : Eval(f);
+			case IlIntrin(IlType.F(var fb), var fn and ("fma" or "fms" or "fnma" or "fnms"), var fa):
+				return X86Float.Fma(N64(Eval(fa[0])), N64(Eval(fa[1])), N64(Eval(fa[2])), fb,
+					fn is "fnma" or "fnms", fn is "fms" or "fnms");
 			// PACKED-VECTOR NODES. IlLower emits four kinds at 16 sites, all at 128 bits with
 			// a COMPILE-TIME lane type, so lane count = 128/ElemTy.Bits and every index is
 			// static. That bound is what makes this arm small: no dynamic shuffles, no
@@ -746,6 +868,8 @@ public class X86Machine {
 				}
 				return acc;
 			}
+			case IlVecElem(var eet, var vv, var vi) when WOf(vv) > 128:
+				return EvalW(vv).Lane((int) N64(Eval(vi)) * LaneW(eet), LaneW(eet));
 			case IlVecElem(var eet, var vv, var vi): {
 				var lw = eet is IlType.F ef ? ef.Bits : ((IlType.I) eet).Bits;
 				var idx = (int) N64(Eval(vi));

@@ -44,6 +44,12 @@ public class IlLower {
 	readonly int StackAddressWidth;
 	readonly Il StackBase;
 	IReadOnlyDictionary<string, OperandBind> Binds;
+	// VEX/EVEX-encoded instruction: a vector register write zeroes every bit above the
+	// value it writes, up to MAXVL (SDM: "DEST[MAXVL-1:128] := 0" / ":256"), where the
+	// legacy SSE encoding of the same operation leaves those bits alone. MAXVL is taken
+	// as 256 (no zmm state is modeled).
+	bool Vex;
+	const int MaxVl = 256;
 
 	IlLower(int opWidth, int stackAddressWidth = 64, Il stackBase = null) {
 		OpWidth = opWidth;
@@ -52,9 +58,10 @@ public class IlLower {
 	}
 
 	public static IlBlock Lower(IReadOnlyList<string> params_, IEnumerable<PTree> evalForms,
-		IReadOnlyDictionary<string, OperandBind> binds, int opWidth, int stackAddressWidth = 64, Il stackBase = null) {
+		IReadOnlyDictionary<string, OperandBind> binds, int opWidth, int stackAddressWidth = 64, Il stackBase = null,
+		bool vex = false) {
 		if(stackAddressWidth is not (16 or 32 or 64)) throw new NotSupportedException("stack address width");
-		var l = new IlLower(opWidth, stackAddressWidth, stackBase) { Binds = binds };
+		var l = new IlLower(opWidth, stackAddressWidth, stackBase) { Binds = binds, Vex = vex };
 		// Pre-bind memory operand addresses (x86: address evaluated ONCE per insn).
 		foreach(var (name, b) in binds)
 			if(b is OperandBind.Mem mem) {
@@ -85,6 +92,10 @@ public class IlLower {
 	// when someone adds an arm, which is exactly how the three above happened.
 	//
 	// The 64 fallback stays for Void/unknown, where there is genuinely nothing to read.
+	// Vector width of a packed operand: 128, or 256 for a VEX.L=1 (ymm) operand. A
+	// narrower value (a Wq/Wd scalar-sized source) still lives in a 128-bit register.
+	static int VB(Il v) => Math.Max(128, W(v));
+
 	static int W(Il e) => e.Ty switch {
 		IlType.I(_, var b) => b,
 		IlType.F(var fb) => fb,
@@ -98,7 +109,7 @@ public class IlLower {
 	int PredOf(string name) {
 		if(!Binds.TryGetValue(name, out var b) || b is not OperandBind.Imm i)
 			throw new NotSupportedException($"cmp pred {name} not an imm bind");
-		return (int) ((ulong) i.Value & 7);
+		return (int) ((ulong) i.Value & (Vex ? 0x1FUL : 7));
 	}
 
 	// The 8-predicate float compare table, shared by the scalar (fcmpp) and packed
@@ -114,20 +125,24 @@ public class IlLower {
 	// NaN, because those would need to be unordered-true and a bare Sge isn't.
 	Il FloatPred(Il a, Il b, int pred, bool packed, int ew) {
 		var vt = new IlType.F(ew);
+		var vb = packed ? VB(a) : 128;
 		Il Cmp(BinOp op) => packed
-			? new IlVecBin(128, vt, op, a, b)
+			? new IlVecBin(vb, vt, op, a, b)
 			: new IlBin(IlType.U1, op, a, b);
 		// isnan(x) = Ne(x, x) -- the identity the "fisnan" arm uses, for the same
 		// reason: NaN != NaN IS the definition, so no UnOp is needed and none exists.
 		Il IsNan(Il x) => packed
-			? new IlVecBin(128, vt, BinOp.Ne, x, x)
+			? new IlVecBin(vb, vt, BinOp.Ne, x, x)
 			: new IlBin(IlType.U1, BinOp.Ne, x, x);
 		Il Invert(Il m) => packed
-			? new IlVecUn(128, vt, UnOp.Not, m)
+			? new IlVecUn(vb, vt, UnOp.Not, m)
 			: new IlUn(IlType.U1, UnOp.Not, m);
 		Il Unord() => packed
-			? new IlVecBin(128, vt, BinOp.Or, IsNan(a), IsNan(b))
+			? new IlVecBin(vb, vt, BinOp.Or, IsNan(a), IsNan(b))
 			: new IlBin(IlType.U1, BinOp.Or, IsNan(a), IsNan(b));
+		Il Or(Il x, Il y) => packed ? new IlVecBin(vb, vt, BinOp.Or, x, y) : new IlBin(IlType.U1, BinOp.Or, x, y);
+		Il And(Il x, Il y) => packed ? new IlVecBin(vb, vt, BinOp.And, x, y) : new IlBin(IlType.U1, BinOp.And, x, y);
+		Il False() => packed ? new IlConst(new IlType.Vec(vb), 0) : new IlConst(IlType.U1, 0);
 		return pred switch {
 			0 => Cmp(BinOp.Eq),            // EQ    (ordered)
 			1 => Cmp(BinOp.Slt),           // LT    (ordered; float operands => ordered-lt,
@@ -137,6 +152,17 @@ public class IlLower {
 			5 => Invert(Cmp(BinOp.Slt)),   // NLT   = !LT  => true on NaN
 			6 => Invert(Cmp(BinOp.Sle)),   // NLE   = !LE  => true on NaN
 			7 => Invert(Unord()),          // ORD
+			// VEX-only predicates 8-31 (imm[4] only selects signaling vs quiet, which no
+			// result depends on):
+			8 or 24 => Or(Cmp(BinOp.Eq), Unord()),          // EQ_UQ
+			9 or 25 => Invert(Cmp(BinOp.Sge)),              // NGE_US = !(a >= b), true on NaN
+			10 or 26 => Invert(Cmp(BinOp.Sgt)),             // NGT_US
+			11 or 27 => False(),                            // FALSE_OQ
+			12 or 28 => And(Invert(Cmp(BinOp.Eq)), Invert(Unord())),  // NEQ_OQ
+			13 or 29 => Cmp(BinOp.Sge),                     // GE_OS
+			14 or 30 => Cmp(BinOp.Sgt),                     // GT_OS
+			15 or 31 => Invert(False()),                    // TRUE_UQ
+			>= 16 and <= 23 => FloatPred(a, b, pred - 16, packed, ew),
 			_ => throw new NotSupportedException($"cmp pred {pred}")
 		};
 	}
@@ -222,7 +248,7 @@ public class IlLower {
 					break;
 				}
 				// general form: guarded stmt block (SHL flag-writes) → IlIf(then, else:[])
-				var inner = new IlLower(OpWidth, StackAddressWidth, StackBase) { Binds = Binds, TmpN = TmpN };
+				var inner = new IlLower(OpWidth, StackAddressWidth, StackBase) { Binds = Binds, TmpN = TmpN, Vex = Vex };
 				foreach(var (k, v) in Env) inner.Env[k] = v;
 				foreach(var (k, v) in MemAddr) inner.MemAddr[k] = v;
 				// (if cond then...) has a variadic THEN; (if cond then else) is the
@@ -252,7 +278,7 @@ public class IlLower {
 				TmpN = inner.TmpN;
 				var elseStmts = new List<Il>();
 				if(isThenElse) {
-					var eInner = new IlLower(OpWidth, StackAddressWidth, StackBase) { Binds = Binds, TmpN = TmpN };
+					var eInner = new IlLower(OpWidth, StackAddressWidth, StackBase) { Binds = Binds, TmpN = TmpN, Vex = Vex };
 					foreach(var (k, v) in Env) eInner.Env[k] = v;
 					foreach(var (k, v) in MemAddr) eInner.MemAddr[k] = v;
 					eInner.Stmt(l[3]);
@@ -295,6 +321,54 @@ public class IlLower {
 				foreach(var a in l.Skip(2))
 					args.Add(a is PInt(var iv) ? C(OpWidth, iv) : Expr(a));
 				Stmts.Add(new IlIntrin(IlType.V0, name, args.ToArray()));
+				break;
+			}
+			case PName("rotc"): {
+				// (rotc lval count #t=left|#f=right) -- RCL/RCR: rotate the (w+1)-bit value
+				// CF:lval. Count is masked like every shift (5/6 bits), then taken modulo
+				// w+1 (only matters for 8/16-bit operands). CF = the bit that lands in
+				// position w; OF is defined for 1-bit rotates only (RCL: MSB(result)^CF,
+				// RCR: MSB(original)^CF-in).
+				var left = l[3] is PName("#t");
+				var x = Let(Expr(l[1]));
+				var w = W(x);
+				var cnt = Expr(l[2], 8);
+				if(W(cnt) != 8) cnt = new IlCast(IlType.U8, W(cnt) > 8 ? CastKind.Trunc : CastKind.Zext, cnt);
+				var c = Let(new IlBin(IlType.U8, BinOp.And, cnt, C(8, w == 64 ? 63 : 31)));
+				var n = w < 32 ? Let(new IlBin(IlType.U8, BinOp.URem, c, C(8, w + 1))) : c;
+				var wt = U(w + 1);
+				var cfIn = Let(new IlReadReg(IlType.U1, RegKind.Eflags, 0));
+				var v = Let(new IlBin(wt, BinOp.Or, new IlCast(wt, CastKind.Zext, x),
+					new IlBin(wt, BinOp.Shl, new IlCast(wt, CastKind.Zext, cfIn), C(w + 1, w))));
+				var nw = new IlCast(wt, CastKind.Zext, n);
+				var back = new IlBin(wt, BinOp.Sub, C(w + 1, w + 1), nw);
+				var rot = left
+					? new IlBin(wt, BinOp.Or, new IlBin(wt, BinOp.Shl, v, nw), new IlBin(wt, BinOp.Shr, v, back))
+					: new IlBin(wt, BinOp.Or, new IlBin(wt, BinOp.Shr, v, nw), new IlBin(wt, BinOp.Shl, v, back));
+				var r = Let(new IlIfV(wt, new IlBin(IlType.U1, BinOp.Eq, n, C(8, 0)), v, rot));
+				var nx = Let(new IlCast(U(w), CastKind.Trunc, r));
+				var cfOut = Let(new IlCast(IlType.U1, CastKind.Trunc, new IlBin(wt, BinOp.Shr, r, C(w + 1, w))));
+				var lname = ((PName) l[1]).Name;
+				if(Binds.TryGetValue(lname, out var lb)) WriteOperand(lname, lb, nx);
+				else throw new NotSupportedException($"rotc target {lname}");
+				var msb = (Il v2) => new IlCast(IlType.U1, CastKind.Trunc, new IlBin(U(w), BinOp.Shr, v2, C(w, w - 1)));
+				var nonzero = new IlBin(IlType.U1, BinOp.Ne, c, C(8, 0));
+				Stmts.Add(new IlIf(nonzero, [new IlWriteReg(RegKind.Eflags, 0, cfOut)], []));
+				Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.Eq, c, C(8, 1)),
+					[new IlWriteReg(RegKind.Eflags, 11, new IlBin(IlType.U1, BinOp.Xor, left ? msb(nx) : msb(x), left ? cfOut : cfIn))],
+					[]));
+				Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.Ugt, c, C(8, 1)),
+					[new IlWriteReg(RegKind.Eflags, 11, new IlUndefined(IlType.U1, "OF"))], []));
+				break;
+			}
+			case PName("vzeroupper"): {
+				// VZEROUPPER (VEX.L=0) zeroes bits 255:128 of ymm0-15; VZEROALL (L=1) all
+				// 256. One row, L-selected, as the decoder renders it.
+				var all = Binds.TryGetValue("%vexl", out var lb) && lb is OperandBind.Imm { Value: 1 };
+				var v256 = new IlType.Vec(256);
+				for(var r = 0; r < 16; r++)
+					Stmts.Add(new IlWriteReg(RegKind.Xmm, r, all ? new IlConst(v256, 0)
+						: new IlCast(v256, CastKind.Zext, new IlReadReg(new IlType.Vec(128), RegKind.Xmm, r))));
 				break;
 			}
 			case PName("undef"):
@@ -360,9 +434,53 @@ public class IlLower {
             case PName("div-wide"): {
                 if(l[2] is not PName("#t" or "#f"))
                     throw new NotSupportedException("one-operand DIV signedness");
-                // Preserve signed IDIV's existing opaque contract.
+                // Signed IDIV: dividend = sign-extended RDX:RAX (AX for bytes), divisor
+                // sign-extended to 2w; #DE on a zero divisor or a quotient outside the
+                // signed w-bit range (which covers MIN / -1). Quotient truncates toward
+                // zero and the remainder takes the dividend's sign (SDiv/SRem).
                 if(l[2] is PName("#t")) {
-                    Stmts.Add(new IlIntrin(IlType.V0, "idiv-wide", [C(64, OpWidth), Expr(l[1])]));
+                    var sSource = Let(Expr(l[1]));
+                    var sWidth = W(sSource);
+                    if(sWidth is not (8 or 16 or 32 or 64))
+                        throw new NotSupportedException($"one-operand IDIV width {sWidth}");
+                    var sWide = new IlType.I(true, sWidth * 2);
+                    Il SRead(int index, int bits) => new IlCast(U(bits), CastKind.Trunc,
+                        new IlReadReg(IlType.U64, RegKind.X86, index));
+                    Il sDividend = sWidth == 8
+                        ? Let(new IlCast(sWide, CastKind.Bitcast, SRead(0, 16)))
+                        : Let(new IlBin(sWide, BinOp.Or,
+                            new IlCast(sWide, CastKind.Zext, SRead(0, sWidth)),
+                            new IlBin(sWide, BinOp.Shl, new IlCast(sWide, CastKind.Zext, SRead(2, sWidth)),
+                                new IlConst(sWide, (UInt128) sWidth))));
+                    var sDivisor = Let(new IlCast(sWide, CastKind.Sext, sSource));
+                    Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.Eq, sDivisor, new IlConst(sWide, 0)),
+                        [new IlFault("x86", 0)], []));
+                    // Range check BEFORE dividing: |q| fits iff the 2w-bit quotient sign-
+                    // extends from w bits. Computed on the quotient itself, so the only
+                    // wrapping case (2w-bit MIN / -1) must be excluded first: it implies
+                    // dividend = MIN(2w), whose quotient can never fit anyway.
+                    var minWide = new IlConst(sWide, UInt128.One << (sWidth * 2 - 1));
+                    var minusOne = new IlConst(sWide, (UInt128.One << (sWidth * 2)) - 1);
+                    Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.And,
+                            new IlBin(IlType.U1, BinOp.Eq, sDividend, minWide),
+                            new IlBin(IlType.U1, BinOp.Eq, sDivisor, minusOne)),
+                        [new IlFault("x86", 0)], []));
+                    var sQuot = Let(new IlBin(sWide, BinOp.SDiv, sDividend, sDivisor));
+                    var sLow = Let(new IlCast(U(sWidth), CastKind.Trunc, sQuot));
+                    Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.Ne, sQuot,
+                            new IlCast(sWide, CastKind.Sext, new IlCast(new IlType.I(true, sWidth), CastKind.Bitcast, sLow))),
+                        [new IlFault("x86", 0)], []));
+                    var sRem = Let(new IlCast(U(sWidth), CastKind.Trunc, new IlBin(sWide, BinOp.SRem, sDividend, sDivisor)));
+                    if(sWidth == 8)
+                        WriteOperand("%ax", new OperandBind.Reg(0, 16), new IlBin(U(16), BinOp.Or,
+                            new IlCast(U(16), CastKind.Zext, sLow),
+                            new IlBin(U(16), BinOp.Shl, new IlCast(U(16), CastKind.Zext, sRem), C(16, 8))));
+                    else {
+                        WriteOperand("%ax", new OperandBind.Reg(0, sWidth), sLow);
+                        WriteOperand("%dx", new OperandBind.Reg(2, sWidth), sRem);
+                    }
+                    foreach(var bit in new[] { 0, 2, 4, 6, 7, 11 })
+                        Stmts.Add(new IlWriteReg(RegKind.Eflags, bit, new IlUndefined(IlType.U1, "IDIV flag " + bit)));
                     break;
                 }
                 // Evaluate the source exactly once, before tests or implicit
@@ -533,6 +651,18 @@ public class IlLower {
 			// value-convert -- it may be F32/F64), widen into V128, mask defensively, or.
 			// ‡ The mem->reg form ZEROES the upper bits instead of merging (Wss-mem is a
 			// different bind), so this is the reg,reg and computed-result path.
+			// VEX register destination: the value IS the new register contents up to its own
+			// width, zero above. A scalar VEX op (vaddss) must therefore hand over the full
+			// 128-bit merged lane set -- its upper lanes come from SRC1, not from DEST, which
+			// is exactly what the legacy scalar-preserve rule below would get wrong -- so a
+			// narrower value here is a template error, not something to guess around.
+			case OperandBind.Reg(var reg, _, _, RegKind.Xmm) when Vex: {
+				var ew = W(e);
+				if(ew < 128) throw new NotSupportedException($"VEX xmm write of a {ew}-bit value (use vscalar)");
+				Stmts.Add(new IlWriteReg(RegKind.Xmm, reg,
+					ew >= MaxVl ? e : new IlCast(new IlType.Vec(MaxVl), CastKind.Zext, e)));
+				break;
+			}
 			case OperandBind.Reg(var reg, var w, _, RegKind.Xmm) when w < 128: {
 				var v128 = new IlType.Vec(128);
 				var full = new IlReadReg(v128, RegKind.Xmm, reg);
@@ -583,7 +713,7 @@ public class IlLower {
 				// A store is exactly the operand's width. Integer values narrower or wider
 				// than the operand (a SETcc's u1 condition into an m8) are zero-extended or
 				// truncated here; storing the u1 itself wrote zero bytes.
-				if(e.Ty is IlType.I(_, var ew2) && ew2 != mw && mw is > 0 and <= 512)
+				if(W(e) is var ew2 && ew2 != mw && mw is > 0 and <= 512 && e.Ty is IlType.I or IlType.Vec)
 					e = new IlCast(U(mw), ew2 < mw ? CastKind.Zext : CastKind.Trunc, e);
 				Stmts.Add(new IlStore(MemAddr[name], e));
 				break;
@@ -618,6 +748,9 @@ public class IlLower {
 				if(Env.TryGetValue(n, out var bound) && bound != null) return bound;
 				if(Binds != null && Binds.TryGetValue(n, out var b)) return ReadOperand(n, b);
 				if(IsFlag(n)) return new IlReadReg(IlType.U1, RegKind.Eflags, FlagBit(n));
+				// Implicit vector register (BLENDVPS's XMM0 mask).
+				if(n.StartsWith("XMM") && int.TryParse(n[3..], out var xn))
+					return new IlReadReg(new IlType.Vec(128), RegKind.Xmm, xn);
 				// An implicit arch-reg name in an eval body means the register AT THE
 				// OPERATION'S WIDTH, not always 64. CMPXCHG-Eb's `(- AX _rval)` compares
 				// AL against a byte; reading RAX whole made the compare 64-bit, so ZF was
@@ -654,7 +787,24 @@ public class IlLower {
 
 	Il ListExpr(PList l, int ctxW) {
 		var head = l[0] is PName(var h) ? h : throw new NotSupportedException(l[0].ToString());
+		if(InLaneHeads.Contains(h) && SplitLanes(l, ctxW) is { } split) return split;
 		switch(h) {
+			case "vscalar": {
+				// (vscalar base val) -- the 128-bit register `base` (an xmm bind, read whole
+				// whatever its operand width) with its low W(val) bits replaced by val. The
+				// VEX scalar shape: DEST[w-1:0] := op, DEST[127:w] := SRC1[127:w].
+				var bn = ((PName) l[1]).Name;
+				Il full = Binds.TryGetValue(bn, out var bb) && bb is OperandBind.Reg(var bi, _, _, RegKind.Xmm)
+					? new IlReadReg(new IlType.Vec(128), RegKind.Xmm, bi)
+					: Expr(l[1]);
+				var val = Expr(l[2]);
+				var sw = W(val);
+				var v128 = new IlType.Vec(128);
+				var mask = (UInt128.One << sw) - 1;
+				return new IlBin(v128, BinOp.Or,
+					new IlBin(v128, BinOp.And, full, new IlConst(v128, ~mask)),
+					new IlCast(v128, CastKind.Zext, new IlCast(new IlType.I(false, sw), CastKind.Bitcast, val)));
+			}
 			case "u8": return new IlCast(IlType.U8, CastKind.Trunc, Expr(l[1]));
 			case "u16": return new IlCast(U(16), CastKind.Trunc, Expr(l[1]));
 			case "u32": return new IlCast(IlType.U32, CastKind.Trunc, Expr(l[1]));
@@ -861,7 +1011,7 @@ public class IlLower {
 					0 => BinOp.Add, 1 => BinOp.Sub, 2 => BinOp.Mul, 3 => BinOp.UDiv,
 					_ => throw new NotSupportedException($"vfbin op {op}")
 				};
-				return new IlVecBin(128, new IlType.F(ew), bop, a, b);
+				return new IlVecBin(VB(a), new IlType.F(ew), bop, a, b);
 			}
 			case "vmovmsk": {
 				// (vmovmsk a ew) -- gather each lane's SIGN BIT into a scalar integer.
@@ -894,7 +1044,7 @@ public class IlLower {
 				// is U32 to match interp.rs:451's `IlType::I{signed:false, width:32}`.
 				var mv = Expr(l[1]);
 				var mew = (int) ((PInt) l[2]).Value;
-				var nl = 128 / mew;
+				var nl = VB(mv) / mew;
 				var lt = new IlType.I(false, mew);
 				Il acc2 = null;
 				for(var i = 0; i < nl; i++) {
@@ -963,11 +1113,12 @@ public class IlLower {
 				var wst = new IlType.I(false, wsew);
 				var wdt = new IlType.I(false, wdew);
 				var wel = new List<Il>();
-				for(var k = 0; k < 128 / wdew; k++)
+				var wvb = VB(wa);
+				for(var k = 0; k < wvb / wdew; k++)
 					wel.Add(new IlBin(wdt, BinOp.Mul,
 						new IlCast(wdt, CastKind.Zext, Lane(wa, wst, k * 2)),
 						new IlCast(wdt, CastKind.Zext, Lane(wb, wst, k * 2))));
-				return new IlVecBuild(128, wdt, wel);
+				return new IlVecBuild(wvb, wdt, wel);
 			}
 			case "vmadd": {
 				// (vmadd a b sew) -- PMADDWD: r[i] = a[2i]*b[2i] + a[2i+1]*b[2i+1], SIGNED,
@@ -980,13 +1131,14 @@ public class IlLower {
 				var mst = new IlType.I(true, msew);
 				var mdt = new IlType.I(true, mdew);
 				var mel = new List<Il>();
-				for(var k = 0; k < 128 / mdew; k++) {
+				var mvb = VB(ma);
+				for(var k = 0; k < mvb / mdew; k++) {
 					Il Prod(int li) => new IlBin(mdt, BinOp.Mul,
 						new IlCast(mdt, CastKind.Sext, Lane(ma, mst, li)),
 						new IlCast(mdt, CastKind.Sext, Lane(mb, mst, li)));
 					mel.Add(new IlBin(mdt, BinOp.Add, Prod(k * 2), Prod(k * 2 + 1)));
 				}
-				return new IlVecBuild(128, mdt, mel);
+				return new IlVecBuild(mvb, mdt, mel);
 			}
 			case "vpacks": {
 				// (vpacks a b sew) -- PACKSSDW/PACKSSWB: signed SATURATING narrow from sew
@@ -1069,7 +1221,8 @@ public class IlLower {
 				var hdir = (int) ((PInt) l[4]).Value;
 				var het = new IlType.I(hdir == 2, hew);
 				var hcw = new IlType.I(false, hew);
-				var hn = 128 / hew;
+				var hvb = VB(hd);
+				var hn = hvb / hew;
 				// count = the source's low `ew` bits. The SDM reads the low 64, but any
 				// count >= ew saturates identically, so narrowing to ew is safe ONLY if the
 				// out-of-range test also uses the full value -- so test at 64 and shift at ew.
@@ -1085,14 +1238,14 @@ public class IlLower {
 						new IlConst(new IlType.I(false, 64), (UInt128) (hew - 1)),
 						new IlUn(new IlType.I(false, 64), UnOp.Not, m64));
 					var cp = new IlBin(new IlType.I(false, 64), BinOp.Or, keep, other);
-					return new IlVecBin(128, het, BinOp.Sar, hd, cp);
+					return new IlVecBin(hvb, het, BinOp.Sar, hd, cp);
 				}
-				var shifted = new IlVecBin(128, het, hdir == 0 ? BinOp.Shl : BinOp.Shr, hd, hcnt64);
+				var shifted = new IlVecBin(hvb, het, hdir == 0 ? BinOp.Shl : BinOp.Shr, hd, hcnt64);
 				var mk = new IlBin(hcw, BinOp.Sub, new IlConst(hcw, 0),
 					new IlCast(hcw, CastKind.Trunc, hlt));
 				var mel = new List<Il>();
 				for(var k = 0; k < hn; k++) mel.Add(mk);
-				return new IlVecBin(128, hcw, BinOp.And, shifted, new IlVecBuild(128, hcw, mel));
+				return new IlVecBin(hvb, hcw, BinOp.And, shifted, new IlVecBuild(hvb, hcw, mel));
 			}
 			case "valign": {
 				// (valign dst src sel) -- PALIGNR. Concatenate src:dst as 32 bytes (src is
@@ -1127,7 +1280,7 @@ public class IlLower {
 				// (IlLower.cs:1230-1234): Binds -> OperandBind.Imm -> the value.
 				var gsrc = Expr(l[1]);
 				var gselN = ((PName) l[2]).Name;
-				var gew = (int) ((PInt) l[3]).Value;
+				var gew = IntArg(l[3]);
 				if(!Binds.TryGetValue(gselN, out var gsb) || gsb is not OperandBind.Imm gsi)
 					throw new NotSupportedException($"vlane-get sel {gselN} not an imm bind");
 				var gn = 128 / gew;
@@ -1142,7 +1295,7 @@ public class IlLower {
 				var sdst = Expr(l[1]);
 				var sval = Expr(l[2]);
 				var sselN = ((PName) l[3]).Name;
-				var sew = (int) ((PInt) l[4]).Value;
+				var sew = IntArg(l[4]);
 				if(!Binds.TryGetValue(sselN, out var ssb) || ssb is not OperandBind.Imm ssi)
 					throw new NotSupportedException($"vlane-set sel {sselN} not an imm bind");
 				var sn = 128 / sew;
@@ -1203,11 +1356,11 @@ public class IlLower {
 				var dew = (int) ((PInt) l[3]).Value;
 				var set = new IlType.I(false, sew);
 				var det = new IlType.I(false, dew);
-				var zn = 128 / dew;
+				var zn = W(za) / sew;
 				var zel = new List<Il>();
 				for(var k = 0; k < zn; k++)
 					zel.Add(new IlCast(det, CastKind.Zext, Lane(za, set, k)));
-				return new IlVecBuild(128, det, zel);
+				return new IlVecBuild(Math.Max(128, zn * dew), det, zel);
 			}
 			case "viabs": {
 				// (viabs a ew) -- PABSB/PABSW/PABSD. NO NEW NODE, and no UnOp.Abs on an
@@ -1224,9 +1377,10 @@ public class IlLower {
 				var aew = (int) ((PInt) l[2]).Value;
 				var aet = new IlType.I(true, aew);
 				var shamt = new IlConst(new IlType.I(false, 32), (UInt128) (aew - 1));
-				var sign = new IlVecBin(128, aet, BinOp.Sar, xa, shamt);
-				return new IlVecBin(128, aet, BinOp.Sub,
-					new IlVecBin(128, aet, BinOp.Xor, xa, sign), sign);
+				var avb = VB(xa);
+				var sign = new IlVecBin(avb, aet, BinOp.Sar, xa, shamt);
+				return new IlVecBin(avb, aet, BinOp.Sub,
+					new IlVecBin(avb, aet, BinOp.Xor, xa, sign), sign);
 			}
 			case "vibin": {
 				// (vibin a b ew op) -- packed-int per-lane wrapping arith on V128.
@@ -1271,20 +1425,21 @@ public class IlLower {
 					var signed = op is 5 or 6;              // 5=maxs 6=mins 7=maxu 8=minu
 					var wantA = op is 5 or 7;               // max keeps a where a > b
 					var cet = new IlType.I(signed, ew);
-					var cmp = new IlVecBin(128, cet, signed ? BinOp.Sgt : BinOp.Ugt, a, b);
+					var ivb = VB(a);
+					var cmp = new IlVecBin(ivb, cet, signed ? BinOp.Sgt : BinOp.Ugt, a, b);
 					var keep = wantA ? a : b;               // the operand the mask selects
 					var other = wantA ? b : a;
-					var inv = new IlVecUn(128, cet, UnOp.Not, cmp);
-					return new IlVecBin(128, cet, BinOp.Or,
-						new IlVecBin(128, cet, BinOp.And, keep, cmp),
-						new IlVecBin(128, cet, BinOp.And, other, inv));
+					var inv = new IlVecUn(ivb, cet, UnOp.Not, cmp);
+					return new IlVecBin(ivb, cet, BinOp.Or,
+						new IlVecBin(ivb, cet, BinOp.And, keep, cmp),
+						new IlVecBin(ivb, cet, BinOp.And, other, inv));
 				}
 				var bop = op switch {
 					0 => BinOp.Add, 1 => BinOp.Sub, 2 => BinOp.Mul,
 					3 => BinOp.Eq, 4 => BinOp.Sgt,
 					_ => throw new NotSupportedException($"op vibin-{op}")
 				};
-				return new IlVecBin(128, new IlType.I(true, ew), bop, a, b);
+				return new IlVecBin(VB(a), new IlType.I(true, ew), bop, a, b);
 			}
 			case "vfmax":
 			case "vfmin": {
@@ -1295,7 +1450,7 @@ public class IlLower {
 				// for exactly this reason).
 				var a = Expr(l[1]); var b = Expr(l[2]);
 				var ew = (int) ((PInt) l[3]).Value;
-				return new IlVecBin(128, new IlType.F(ew),
+				return new IlVecBin(VB(a), new IlType.F(ew),
 					h == "vfmax" ? BinOp.FMax : BinOp.FMin, a, b);
 			}
 			case "vfun": {
@@ -1308,7 +1463,7 @@ public class IlLower {
 					0 => UnOp.Sqrt,
 					_ => throw new NotSupportedException($"op vfun-{op}")
 				};
-				return new IlVecUn(128, new IlType.F(ew), uop, a);
+				return new IlVecUn(VB(a), new IlType.F(ew), uop, a);
 			}
 			case "vishi": {
 				// (vishi dst count-op ew dir) -- packed shift by a COMPILE-TIME imm.
@@ -1327,14 +1482,14 @@ public class IlLower {
 				var cnt = (int) ((ulong) vi.Value & 0xFF);
 				var et = new IlType.I(dir == 2, ew);
 				if(cnt >= ew) {
-					if(dir != 2) return new IlConst(new IlType.Vec(128), 0);
+					if(dir != 2) return new IlConst(new IlType.Vec(VB(a)), 0);
 					cnt = ew - 1;   // ashr: saturating to all-sign
 				}
 				var sop = dir switch {
 					0 => BinOp.Shl, 1 => BinOp.Shr, 2 => BinOp.Sar,
 					_ => throw new NotSupportedException($"op vishi-dir-{dir}")
 				};
-				return new IlVecBin(128, et, sop, a, new IlConst(new IlType.I(false, 32), (UInt128) cnt));
+				return new IlVecBin(VB(a), et, sop, a, new IlConst(new IlType.I(false, 32), (UInt128) cnt));
 			}
 			// ---- 8-PREDICATE COMPARE cluster: no new node kinds either ----
 			// Third head-family I had filed as "needs a shared-IL addition", and the
@@ -1412,17 +1567,21 @@ public class IlLower {
 				// not derived: kinds 6 and 7 ROUND ties-even (MXCSR default), 1 and 5
 				// TRUNCATE, and that difference is the whole distinction between
 				// CVTPS2DQ and CVTTPS2DQ.
-				var (sw, dw, n, toF, rnd) = kind switch {
-					0 => (32, 32, 4, true,  false),
-					1 => (32, 32, 4, false, false),
-					2 => (32, 64, 2, true,  false),
-					3 => (64, 32, 2, true,  false),
-					4 => (32, 64, 2, true,  false),
-					5 => (64, 32, 2, false, false),
-					6 => (64, 32, 2, false, true),
-					7 => (32, 32, 4, false, true),
+				var (sw, dw, toF, rnd) = kind switch {
+					0 => (32, 32, true,  false),
+					1 => (32, 32, false, false),
+					2 => (32, 64, true,  false),
+					3 => (64, 32, true,  false),
+					4 => (32, 64, true,  false),
+					5 => (64, 32, false, false),
+					6 => (64, 32, false, true),
+					7 => (32, 32, false, true),
 					_ => throw new NotSupportedException($"op vcvt-kind-{kind}")
 				};
+				// Lane count from the SOURCE operand's width: a widening convert reads a
+				// half-width source (Wq for CVTPS2PD, a 128-bit source for the VEX.256
+				// form), a narrowing one fills half the destination and zeroes the rest.
+				var n = W(a) / sw;
 				// The SOURCE lane type: kinds 0 and 4 read INTEGER lanes, everything
 				// else reads float lanes. Getting this wrong would silently reinterpret
 				// bits -- which is exactly the class the exec-oracle caught at (int-of).
@@ -1458,9 +1617,10 @@ public class IlLower {
 				// The result's OWN lane count is el.Count and its lane type is dstTy --
 				// so a 2xf64 result (128 bits, 2 lanes) and a 4xf32 one (128 bits, 4
 				// lanes) are different IlVecBuilds rather than one ambiguous cast.
-				return new IlVecBuild(128, dstTy, el);
+				return new IlVecBuild(Math.Max(128, n * dw), dstTy, el);
 			}
-			case "vhadd": {
+			case "vhadd":
+			case "vhsub": {
 				// (vhadd a b ew) -- HADDPS/HADDPD: PAIRWISE add within each source, a's
 				// pairs filling the low half of the result and b's the high half.
 				//   n = 128/ew;  for i in 0..n/2:
@@ -1481,10 +1641,11 @@ public class IlLower {
 				var ft = new IlType.F(ew);
 				var n = 128 / ew;
 				var el = new List<Il>();
+				var hop = h == "vhsub" ? BinOp.Sub : BinOp.Add;  // HSUBPS: a[2i] - a[2i+1]
 				for(var i = 0; i < n / 2; i++)
-					el.Add(new IlBin(ft, BinOp.Add, Lane(a, ft, 2 * i), Lane(a, ft, 2 * i + 1)));
+					el.Add(new IlBin(ft, hop, Lane(a, ft, 2 * i), Lane(a, ft, 2 * i + 1)));
 				for(var i = 0; i < n / 2; i++)
-					el.Add(new IlBin(ft, BinOp.Add, Lane(b, ft, 2 * i), Lane(b, ft, 2 * i + 1)));
+					el.Add(new IlBin(ft, hop, Lane(b, ft, 2 * i), Lane(b, ft, 2 * i + 1)));
 				return new IlVecBuild(128, ft, el);
 			}
 			case "vdpp": {
@@ -1511,11 +1672,15 @@ public class IlLower {
 				var ft = new IlType.F(ew);
 				var n = 128 / ew;
 				var zero = new IlConst(ft, (UInt128) 0);     // +0.0 at either width
-				Il sum = zero;
-				for(var i = 0; i < n; i++)
-					if((imm & (1u << (4 + i))) != 0)
-						sum = new IlBin(ft, BinOp.Add, sum,
-							new IlBin(ft, BinOp.Mul, Lane(a, ft, i), Lane(b, ft, i)));
+				// SDM DP_PS/DP_PD: masked-out products are +0.0 and the sum is PAIRWISE --
+				// (p0+p1)+(p2+p3) -- each add rounding on its own; a left fold rounds
+				// differently (oracle-found: one ulp on 1 of 512 random states).
+				var prods = Enumerable.Range(0, n).Select(i => (imm & (1u << (4 + i))) != 0
+					? new IlBin(ft, BinOp.Mul, Lane(a, ft, i), Lane(b, ft, i)) : (Il) zero).ToList();
+				var sum = Let(n == 2
+					? new IlBin(ft, BinOp.Add, prods[0], prods[1])
+					: new IlBin(ft, BinOp.Add, new IlBin(ft, BinOp.Add, prods[0], prods[1]),
+						new IlBin(ft, BinOp.Add, prods[2], prods[3])));
 				var el = new List<Il>();
 				for(var i = 0; i < n; i++)
 					el.Add((imm & (1u << i)) != 0 ? sum : zero);
@@ -1578,16 +1743,22 @@ public class IlLower {
 					32 => 2, 64 => 1,
 					_ => throw new NotSupportedException($"op vshuf-ew-{ew}")
 				};
+				// At 256 bits each 128-bit block shuffles within itself: SHUFPS reuses the
+				// same 8 selector bits per block, SHUFPD consumes one bit per element
+				// across the whole vector (VSHUFPD ymm reads imm[3:0]).
+				var vb = VB(a);
 				var n = 128 / ew;
 				var et = new IlType.I(false, ew);
 				var smask = (1u << bitsPer) - 1;
 				var el = new List<Il>();
-				for(var i = 0; i < n; i++) {
-					var src = i < n / 2 ? a : b;
-					var j = (int) ((sel >> (i * bitsPer)) & smask);
-					el.Add(Lane(src, et, j));
-				}
-				return new IlVecBuild(128, et, el);
+				for(var blk = 0; blk < vb / 128; blk++)
+					for(var i = 0; i < n; i++) {
+						var src = i < n / 2 ? a : b;
+						var bit = ew == 64 ? blk * n + i : i;
+						var j = (int) ((sel >> (bit * bitsPer)) & smask);
+						el.Add(Lane(src, et, blk * n + j));
+					}
+				return new IlVecBuild(vb, et, el);
 			}
 			case "vshufw": {
 				// (vshufw src sel hi) -- PSHUFLW/PSHUFHW. Shuffles the FOUR words of one
@@ -1620,6 +1791,206 @@ public class IlLower {
 			case "feq": {
 				var a = Expr(l[1]); var b = Expr(l[2], W(a));
 				return new IlBin(IlType.U1, BinOp.Eq, a, b);
+			}
+			case "vbcast": {
+				// (vbcast dst src ew) -- every ew-bit element of dst's width = low ew of src.
+				var vw = BindWidth(l[1]);
+				var ew = (int) ((PInt) l[3]).Value;
+				var sv = Expr(l[2]);
+				var et = new IlType.I(false, ew);
+				if(W(sv) != ew) sv = new IlCast(et, CastKind.Trunc, sv);
+				return new IlVecAll(vw, et, sv);
+			}
+			case "vhalf": {
+				// (vhalf src sel) -- 128-bit half sel[0] of a 256-bit value (VEXTRACTF128).
+				var sv = Expr(l[1]);
+				return Lane(sv, new IlType.I(false, 128), (int) (ImmOf(l[2], "vhalf") & 1));
+			}
+			case "vinsert-half": {
+				// (vinsert-half a b sel) -- a with 128-bit half sel[0] replaced by b (VINSERTF128).
+				var av = Expr(l[1]); var bv = Expr(l[2]);
+				var q = new IlType.I(false, 128);
+				if(W(bv) != 128) bv = new IlCast(q, W(bv) < 128 ? CastKind.Zext : CastKind.Trunc, bv);
+				return (ImmOf(l[3], "vinsert-half") & 1) == 0
+					? new IlVecBuild(256, q, [bv, Lane(av, q, 1)])
+					: new IlVecBuild(256, q, [Lane(av, q, 0), bv]);
+			}
+			case "vperm64": {
+				// (vperm64 src sel) -- VPERMQ/VPERMPD: r[i] = src[(sel >> 2i) & 3], 4 qwords.
+				var sv = Expr(l[1]);
+				var sel = ImmOf(l[2], "vperm64");
+				var q = new IlType.I(false, 64);
+				return new IlVecBuild(256, q, Enumerable.Range(0, 4)
+					.Select(i => Lane(sv, q, (int) ((sel >> (2 * i)) & 3))).ToList());
+			}
+			case "vaddsub": {
+				// (vaddsub a b ew) -- ADDSUBPS/PD: even lanes a-b, odd lanes a+b.
+				var av = Expr(l[1]); var bv = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				var ft = new IlType.F(ew);
+				var vb = VB(av);
+				return new IlVecBuild(vb, ft, Enumerable.Range(0, vb / ew).Select(i =>
+					(Il) new IlBin(ft, i % 2 == 0 ? BinOp.Sub : BinOp.Add, Lane(av, ft, i), Lane(bv, ft, i))).ToList());
+			}
+			case "vround": {
+				// (vround src sel ew) -- ROUNDPS/PD per lane.
+				var sv = Expr(l[1]);
+				var imm = ImmOf(l[2], "vround");
+				var ew = (int) ((PInt) l[3]).Value;
+				var ft = new IlType.F(ew);
+				var vb = VB(sv);
+				return new IlVecBuild(vb, ft, Enumerable.Range(0, vb / ew)
+					.Select(i => RoundImm(ft, Lane(sv, ft, i), imm)).ToList());
+			}
+			case "fround-imm": {
+				// (fround-imm x sel) -- ROUNDSS/SD on a scalar float.
+				var xv = Expr(l[1]);
+				return RoundImm(xv.Ty, xv, ImmOf(l[2], "fround-imm"));
+			}
+			case "vblend": {
+				// (vblend a b sel ew) -- BLENDPS/PD: lane i = sel[i] ? b : a.
+				var av = Expr(l[1]); var bv = Expr(l[2]);
+				var sel = ImmOf(l[3], "vblend");
+				var ew = (int) ((PInt) l[4]).Value;
+				var et = new IlType.I(false, ew);
+				var vb = VB(av);
+				return new IlVecBuild(vb, et, Enumerable.Range(0, vb / ew)
+					.Select(i => Lane((sel >> i & 1) != 0 ? bv : av, et, i)).ToList());
+			}
+			case "vblendv": {
+				// (vblendv a b mask ew) -- BLENDVPS/PD/PBLENDVB: lane i = sign(mask[i]) ? b : a.
+				var av = Expr(l[1]); var bv = Expr(l[2]); var mv = Expr(l[3]);
+				var ew = (int) ((PInt) l[4]).Value;
+				var et = new IlType.I(false, ew);
+				var st = new IlType.I(true, ew);
+				var vb = VB(av);
+				return new IlVecBuild(vb, et, Enumerable.Range(0, vb / ew).Select(i => (Il) new IlIfV(et,
+					new IlBin(IlType.U1, BinOp.Slt, Lane(mv, st, i), new IlConst(st, 0)),
+					Lane(bv, et, i), Lane(av, et, i))).ToList());
+			}
+			case "vfma": {
+				// (vfma a b c ew mode) -- packed FMA family; see FmaLane for mode.
+				var av = Expr(l[1]); var bv = Expr(l[2]); var cv = Expr(l[3]);
+				var ew = (int) ((PInt) l[4]).Value;
+				var mode = (int) ((PInt) l[5]).Value;
+				var ft = new IlType.F(ew);
+				var vb = VB(av);
+				return new IlVecBuild(vb, ft, Enumerable.Range(0, vb / ew).Select(i =>
+					FmaLane(ft, Lane(av, ft, i), Lane(bv, ft, i), Lane(cv, ft, i), mode, i)).ToList());
+			}
+			case "fma": {
+				// (fma a b c ew mode) -- scalar FMA on the low element (VFMADD213SS...).
+				var ew = (int) ((PInt) l[4]).Value;
+				var ft = new IlType.F(ew);
+				Il F(PTree t) { var v = Expr(t); return W(v) == ew && v.Ty is IlType.F ? v
+					: new IlCast(ft, CastKind.Bitcast, W(v) == ew ? v : new IlCast(new IlType.I(false, ew), CastKind.Trunc, v)); }
+				return FmaLane(ft, F(l[1]), F(l[2]), F(l[3]), (int) ((PInt) l[5]).Value, 0);
+			}
+			case "vcvtph2ps": {
+				// (vcvtph2ps src) -- F16C: each f16 lane widened to f32 (exact).
+				var sv = Expr(l[1]);
+				var n = W(sv) / 16;
+				var f16 = new IlType.F(16); var f32 = new IlType.F(32);
+				return new IlVecBuild(Math.Max(128, n * 32), f32, Enumerable.Range(0, n)
+					.Select(i => (Il) new IlCast(f32, CastKind.FExt, Lane(sv, f16, i))).ToList());
+			}
+			case "vcvtps2ph": {
+				// (vcvtps2ph src sel) -- F16C: each f32 lane narrowed to f16, rounded per
+				// imm[1:0] (imm[2]=1 selects MXCSR.RC, i.e. nearest). IlCast narrows to
+				// nearest; a directed mode corrects that result by one f16 ulp when it
+				// landed on the wrong side of the exact value (lane < or > the input).
+				var sv = Expr(l[1]);
+				var imm = ImmOf(l[2], "vcvtps2ph");
+				var mode = (imm & 4) != 0 ? 0 : (int) (imm & 3);
+				var n = W(sv) / 32;
+				var f16 = new IlType.F(16); var f32 = new IlType.F(32); var u16 = new IlType.I(false, 16);
+				Il Narrow(Il x) {
+					var near = new IlCast(f16, CastKind.FTrunc, x);
+					if(mode == 0) return near;
+					var r = Let(near);
+					var back = new IlCast(f32, CastKind.FExt, r);
+					var bits = new IlCast(u16, CastKind.Bitcast, r);
+					var neg = new IlBin(IlType.U1, BinOp.Ne, new IlBin(u16, BinOp.And, bits, new IlConst(u16, 0x8000)), new IlConst(u16, 0));
+					Il Step(int d) => new IlCast(f16, CastKind.Bitcast, new IlBin(u16, d > 0 ? BinOp.Add : BinOp.Sub, bits, new IlConst(u16, 1)));
+					Il Zero(bool negZero) => new IlBin(IlType.U1, BinOp.Eq, bits, new IlConst(u16, negZero ? 0x8000UL : 0));
+					return mode switch {
+						// toward -inf: overshoot if r > x; move down (magnitude -1 if positive,
+						// +1 if negative; +0 becomes the smallest negative subnormal)
+						1 => new IlIfV(f16, new IlBin(IlType.U1, BinOp.Sgt, back, x),
+							new IlIfV(f16, Zero(false), new IlConst(f16, 0x8001), new IlIfV(f16, neg, Step(1), Step(-1))), r),
+						// toward +inf: undershoot if r < x
+						2 => new IlIfV(f16, new IlBin(IlType.U1, BinOp.Slt, back, x),
+							new IlIfV(f16, Zero(true), new IlConst(f16, 0x0001), new IlIfV(f16, neg, Step(-1), Step(1))), r),
+						// toward zero: overshoot if |r| > |x| (r is then nonzero)
+						_ => new IlIfV(f16, new IlBin(IlType.U1, BinOp.Sgt, new IlUn(f32, UnOp.Abs, back), new IlUn(f32, UnOp.Abs, x)),
+							Step(-1), r),
+					};
+				}
+				return new IlVecBuild(Math.Max(128, n * 16), f16, Enumerable.Range(0, n)
+					.Select(i => Narrow(Lane(sv, f32, i))).ToList());
+			}
+			case "vsext": {
+				// (vsext src sew dew) -- PMOVSX*: low lanes of src sign-extended.
+				var za = Expr(l[1]);
+				var sew = (int) ((PInt) l[2]).Value;
+				var dew = (int) ((PInt) l[3]).Value;
+				var zn = W(za) / sew;
+				return new IlVecBuild(Math.Max(128, zn * dew), new IlType.I(true, dew), Enumerable.Range(0, zn)
+					.Select(k => (Il) new IlCast(new IlType.I(true, dew), CastKind.Sext, Lane(za, new IlType.I(true, sew), k))).ToList());
+			}
+			case "vmulws": {
+				// (vmulws a b sew) -- PMULDQ: r[i] = sext(a[2i]) * sext(b[2i]) at 2*sew.
+				var wa = Expr(l[1]); var wb = Expr(l[2]);
+				var sew = (int) ((PInt) l[3]).Value;
+				var st = new IlType.I(true, sew); var dt = new IlType.I(true, sew * 2);
+				var vb = VB(wa);
+				return new IlVecBuild(vb, dt, Enumerable.Range(0, vb / (sew * 2)).Select(k => (Il) new IlBin(dt, BinOp.Mul,
+					new IlCast(dt, CastKind.Sext, Lane(wa, st, k * 2)), new IlCast(dt, CastKind.Sext, Lane(wb, st, k * 2)))).ToList());
+			}
+			case "vmulhi": {
+				// (vmulhi a b ew signed) -- PMULHW/PMULHUW: high half of the 2*ew product.
+				var ma = Expr(l[1]); var mb = Expr(l[2]);
+				var ew = (int) ((PInt) l[3]).Value;
+				var sgn = l[4] is PName("#t");
+				var et = new IlType.I(sgn, ew); var wt = new IlType.I(sgn, ew * 2);
+				var kind = sgn ? CastKind.Sext : CastKind.Zext;
+				var vb = VB(ma);
+				return new IlVecBuild(vb, new IlType.I(false, ew), Enumerable.Range(0, vb / ew).Select(k => (Il) new IlCast(
+					new IlType.I(false, ew), CastKind.Trunc, new IlBin(wt, BinOp.Shr,
+						new IlBin(wt, BinOp.Mul, new IlCast(wt, kind, Lane(ma, et, k)), new IlCast(wt, kind, Lane(mb, et, k))),
+						new IlConst(new IlType.I(false, 32), (UInt128) ew)))).ToList());
+			}
+			case "vpacku": {
+				// (vpacku a b sew) -- PACKUSWB/PACKUSDW: SIGNED sew lanes saturated to
+				// UNSIGNED sew/2, a's lanes low, b's high. clamp(v, 0, 2^(sew/2)-1).
+				var pa = Expr(l[1]); var pb = Expr(l[2]);
+				var sew = (int) ((PInt) l[3]).Value;
+				var dew = sew / 2;
+				var st = new IlType.I(true, sew);
+				var dt = new IlType.I(false, dew);
+				var max = new IlConst(st, (UInt128) ((1UL << dew) - 1));
+				var zero = new IlConst(st, 0);
+				var n = 128 / sew;
+				var el = new List<Il>();
+				foreach(var src in new[] { pa, pb })
+					for(var k = 0; k < n; k++) {
+						var v = Lane(src, st, k);
+						el.Add(new IlCast(dt, CastKind.Trunc,
+							new IlIfV(st, new IlBin(IlType.U1, BinOp.Slt, v, zero), zero,
+								new IlIfV(st, new IlBin(IlType.U1, BinOp.Sgt, v, max), max, v))));
+					}
+				return new IlVecBuild(128, dt, el);
+			}
+			case "vbshift": {
+				// (vbshift src count l|r) -- PSLLDQ/PSRLDQ as a value (in-lane at 256).
+				var sv = Expr(l[1]);
+				var cnt = (int) (ImmOf(l[2], "vbshift") & 0xFF);
+				var right = ((PName) l[3]).Name == "r";
+				if(cnt >= 16) return new IlConst(new IlType.Vec(128), 0);
+				if(cnt == 0) return sv;
+				var v128 = new IlType.I(false, 128);
+				return new IlCast(new IlType.Vec(128), CastKind.Bitcast, new IlBin(v128, right ? BinOp.Shr : BinOp.Shl,
+					new IlCast(v128, CastKind.Bitcast, sv), new IlConst(IlType.U64, (UInt128) (cnt * 8))));
 			}
 			case "fround": {
 				// (fround x) -- round a float to an integral float, ties-to-even (the
@@ -1760,6 +2131,95 @@ public class IlLower {
 	}
 
 	/// Constant-fold pure-constant binops ((<< 1 31) → #80000000; (- 32 1) → #1f).
+	// Heads whose result lanes depend on OTHER lanes of the same 128-bit block (shuffles,
+	// interleaves, packs, horizontal ops). At 256 bits x86 applies them to each 128-bit
+	// half independently ("in-lane"), so a ymm operand lowers as two 128-bit instances
+	// joined by a 2x128 IlVecBuild. Element-wise heads need no split; they take their
+	// width from the operand (VB).
+	static readonly HashSet<string> InLaneHeads = [
+		"vpacks", "vpacku", "vdup", "valign", "vshufv", "vhadd", "vhsub", "vdpp", "vzip", "vshufw", "vbshift",
+	];
+
+	// A compile-time integer argument: a literal, or (bitwidth operand) -- the lane width
+	// of PEXTRD/PINSRD, which become the q forms under REX.W.
+	int IntArg(PTree t) => t switch {
+		PInt(var v) => (int) v,
+		PList { Count: 2 } bl when bl[0] is PName("bitwidth") => W(Expr(bl[1])),
+		_ => throw new NotSupportedException($"integer argument {t}"),
+	};
+
+	long ImmOf(PTree t, string what) {
+		if(t is PName(var n) && Binds.TryGetValue(n, out var b) && b is OperandBind.Imm i) return i.Value;
+		throw new NotSupportedException($"{what}: {t} is not an imm operand");
+	}
+
+	int BindWidth(PTree t) => t is PName(var n) && Binds.TryGetValue(n, out var b) ? b switch {
+		OperandBind.Reg r => r.Width, OperandBind.Mem m => m.Width, OperandBind.Imm i => i.Width, _ => 0,
+	} : throw new NotSupportedException($"{t} is not an operand");
+
+	// One lane of x86 FMA: round(+-(a*b) +- c) once, as a typed, pure IlIntrin -- "fma"
+	// (a*b+c), "fms" (a*b-c), "fnma" (-(a*b)+c), "fnms" (-(a*b)-c) -- not an opaque stub.
+	// Four names rather than "fma" over negated inputs because a NaN operand propagates
+	// UNNEGATED (quieted, sign kept) whichever family it is: fma(-a, b, c) would flip a
+	// NaN a's sign, which the native oracle measured on every NaN-input lane.
+	static Il Fma(IlType ft, Il a, Il b, Il c, bool negProd, bool negAdd) =>
+		new IlIntrin(ft, (negProd, negAdd) switch {
+			(false, false) => "fma", (false, true) => "fms", (true, false) => "fnma", _ => "fnms",
+		}, a, b, c);
+
+	// mode: 0 a*b+c, 1 a*b-c, 2 -(a*b)+c, 3 -(a*b)-c, 4 ADDSUB (even lanes subtract),
+	// 5 SUBADD (even lanes add). Lane index only matters for 4/5.
+	static Il FmaLane(IlType ft, Il a, Il b, Il c, int mode, int lane) => mode switch {
+		0 => Fma(ft, a, b, c, false, false),
+		1 => Fma(ft, a, b, c, false, true),
+		2 => Fma(ft, a, b, c, true, false),
+		3 => Fma(ft, a, b, c, true, true),
+		4 => Fma(ft, a, b, c, false, lane % 2 == 0),
+		5 => Fma(ft, a, b, c, false, lane % 2 == 1),
+		_ => throw new NotSupportedException($"fma mode {mode}"),
+	};
+
+	// ROUNDPS/ROUNDSS imm: bit 2 selects MXCSR.RC (round-to-nearest; MXCSR is not
+	// modeled), else imm[1:0] = nearest / down / up / toward zero.
+	static Il RoundImm(IlType ft, Il x, long imm) {
+		var mode = (imm & 4) != 0 ? 0 : imm & 3;
+		return mode switch {
+			0 => new IlUn(ft, UnOp.Round, x),
+			1 => new IlUn(ft, UnOp.Floor, x),
+			2 => new IlUn(ft, UnOp.Ceil, x),
+			_ => new IlIfV(ft, new IlBin(IlType.U1, BinOp.Slt, x, new IlConst(ft, 0)),
+				new IlUn(ft, UnOp.Ceil, x), new IlUn(ft, UnOp.Floor, x)),
+		};
+	}
+
+	Il SplitLanes(PList l, int ctxW) {
+		var (stmtMark, tmpMark) = (Stmts.Count, TmpN);
+		var vals = new Il[l.Count];
+		var wide = false;
+		for(var i = 1; i < l.Count; i++)
+			if(l[i] is PList || l[i] is PName(var an) && (Env.ContainsKey(an) || Binds.ContainsKey(an))) {
+				vals[i] = Expr(l[i], ctxW);
+				if(W(vals[i]) > 128) wide = true;
+			}
+		// Probing must not leave anything behind: roll back any Lets the probe emitted.
+		Stmts.RemoveRange(stmtMark, Stmts.Count - stmtMark);
+		TmpN = tmpMark;
+		if(!wide) return null;
+		var halves = new Il[2];
+		var lo = new PList(l.ToList()); var hi = new PList(l.ToList());
+		for(var i = 1; i < l.Count; i++) {
+			if(vals[i] == null || W(vals[i]) <= 128) continue;
+			var t = Let(Expr(l[i], ctxW));
+			var (ln, hn) = ($"%lane{TmpN}lo{i}", $"%lane{TmpN}hi{i}");
+			Env[ln] = Lane(t, new IlType.I(false, 128), 0);
+			Env[hn] = Lane(t, new IlType.I(false, 128), 1);
+			lo.Children[i] = new PName(ln); hi.Children[i] = new PName(hn);
+		}
+		halves[0] = ListExpr(lo, ctxW);
+		halves[1] = ListExpr(hi, ctxW);
+		return new IlVecBuild(256, new IlType.I(false, 128), halves);
+	}
+
 	static Il Fold(IlBin b) {
 		if(b.L is IlConst(_, var x) && b.R is IlConst(_, var y)) {
 			var (xv, yv) = ((long) (ulong) x, (long) (ulong) y);

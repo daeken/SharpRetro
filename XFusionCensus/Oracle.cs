@@ -264,9 +264,8 @@ public static class Oracle {
 		var m = new X86Machine { Mode = XMode.Bits64, Ip = codeAddr, Flags = st.Rflags };
 		for(var r = 0; r < 16; r++) m.Gpr[r] = st.Gpr[r];
 		for(var r = 0; r < 16; r++) {
-			UInt128 v = 0;
-			for(var bb = 15; bb >= 0; bb--) v = (v << 8) | st.Ymm[r * 32 + bb];
-			m.Xmm[r] = v;
+			m.Xmm[r] = Half(st.Ymm, r, 0);
+			m.YmmHi[r] = Half(st.Ymm, r, 1);
 		}
 		var lmem = (byte[]) mem.Clone();
 		string oob = null;
@@ -296,6 +295,9 @@ public static class Oracle {
 
 		if(sig != 0) {
 			if(sig == 8 && ilFault) return (null, null);  // #DE on both sides
+			// Rosetta 2 raises SIGILL for some valid encodings it does not translate
+			// (SAHF with stray prefixes). Nothing to grade against.
+			if(sig == 4 && !ilFault && ilErr == null) return ("native-sigill", null);
 			return ("FAIL", $"native signal {sig}, IL {(ilFault ? "#DE" : ilErr ?? "completed")}");
 		}
 		if(ilFault) return ("FAIL", "IL raised #DE, native completed");
@@ -309,8 +311,12 @@ public static class Oracle {
 		// against silicon here, so it is excluded rather than graded either way.
 		var skipRax = ins.Mnemonic is Mnemonic.Cmpxchg && ins.MemorySize is MemorySize.UInt32
 			&& (nst.Rflags & (1UL << 6)) != 0;
+		// Rosetta 2 sign-extends MOVSXD r32, r/m32 (63 /r without REX.W) into all 64 bits;
+		// the SDM's 32-bit destination zero-extends, as the lift does.
+		var skipMovsxd = ins.Mnemonic is Mnemonic.Movsxd && ins.Op0Register.GetSize() == 4;
 		for(var r = 0; r < 16; r++)
-			if(m.Gpr[r] != nst.Gpr[r] && !(r == 0 && skipRax)) diffs.Add($"{gn[r]} il={m.Gpr[r]:x} hw={nst.Gpr[r]:x} (in {st.Gpr[r]:x})");
+			if(m.Gpr[r] != nst.Gpr[r] && !(r == 0 && skipRax)
+			   && !(skipMovsxd && (uint) m.Gpr[r] == (uint) nst.Gpr[r])) diffs.Add($"{gn[r]} il={m.Gpr[r]:x} hw={nst.Gpr[r]:x} (in {st.Gpr[r]:x})");
 		var mask = (1UL << 0) | (1UL << 2) | (1UL << 4) | (1UL << 6) | (1UL << 7) | (1UL << 10) | (1UL << 11);
 		mask &= ~IcedUndefined(ins.RflagsUndefined) & ~ilUndefFlags;
 		// Rosetta 2 computes CMPXCHG's flags as (dest - accumulator); the SDM (and
@@ -322,13 +328,11 @@ public static class Oracle {
 		if(((m.Flags ^ nst.Rflags) & mask) != 0)
 			diffs.Add($"flags il={FlagStr(m.Flags & mask)} hw={FlagStr(nst.Rflags & mask)} (in {FlagStr(st.Rflags)})");
 		for(var r = 0; r < 16; r++) {
-			UInt128 hw = 0;
-			for(var bb = 15; bb >= 0; bb--) hw = (hw << 8) | nst.Ymm[r * 32 + bb];
-			if(hw != m.Xmm[r]) {
-				UInt128 inv = 0;
-				for(var bb = 15; bb >= 0; bb--) inv = (inv << 8) | st.Ymm[r * 32 + bb];
-				diffs.Add($"xmm{r} il={m.Xmm[r]:x32} hw={hw:x32} (in {inv:x32})");
-			}
+			var (hwLo, hwHi) = (Half(nst.Ymm, r, 0), Half(nst.Ymm, r, 1));
+			if(hwLo != m.Xmm[r] || hwHi != m.YmmHi[r])
+				diffs.Add(hwHi == m.YmmHi[r]
+					? $"xmm{r} il={m.Xmm[r]:x32} hw={hwLo:x32} (in {Half(st.Ymm, r, 0):x32})"
+					: $"ymm{r} il={m.YmmHi[r]:x32}_{m.Xmm[r]:x32} hw={hwHi:x32}_{hwLo:x32} (in {Half(st.Ymm, r, 1):x32}_{Half(st.Ymm, r, 0):x32})");
 		}
 		for(var i = 0; i < MemSize; i++)
 			if(lmem[i] != nmem[i]) {
@@ -339,6 +343,12 @@ public static class Oracle {
 			}
 		if(diffs.Count == 0) return (null, null);
 		return ("FAIL", $"{ins} :: {string.Join("; ", diffs)}");
+	}
+
+	static unsafe UInt128 Half(byte* ymm, int reg, int half) {
+		UInt128 v = 0;
+		for(var bb = 15; bb >= 0; bb--) v = (v << 8) | ymm[reg * 32 + half * 16 + bb];
+		return v;
 	}
 
 	static bool HasModRmMem(in DecodedInsn d) {

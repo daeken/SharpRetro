@@ -30,6 +30,7 @@ public class XFusionDef : Def {
 	public VexMode Vex;                // None = legacy-only row; TwoSrc/ThreeSrc = VEX row (vvvv unused/used); VEX rows only match p.VexValid
 	public bool Evex;                  // 62-encoded row (matches p.EvexValid; Vex carries the src-arity)
 	public bool? VexW;                 // null = W-agnostic; else row requires VEX/EVEX.W == value (vmovdqu8 w0 / vmovdqu64 w1)
+	public bool? VexL;                 // null = L-agnostic; else row requires VEX.L == value (vextractf128 l1, vzeroupper/all)
 	public bool? Mod11;                // null = either; true = reg-form only (mod==11); false = mem-form only. x87 rows.
 	public int RmExact = -1;           // exact ModRM.rm constraint (x87 singles: fxam = D9 /4 rm=5), or -1
 	public List<OperandSpec> Operands; // positional, matches template params
@@ -106,7 +107,7 @@ public class XFusionDef : Def {
 	}
 
 	public record OpcodeFacts(OpcodeMap Map, byte Opcode, int RegExt, bool D64, string MPrefix,
-		bool PlusR, VexMode Vex, bool Evex, bool? VexW, bool? Mod11, int RmExact);
+		bool PlusR, VexMode Vex, bool Evex, bool? VexW, bool? Mod11, int RmExact, bool? VexL = null);
 
 	static OpcodeFacts ParseOpcodes(PList opcList, string mnem) {
 		var bytes = new List<byte>();
@@ -116,6 +117,7 @@ public class XFusionDef : Def {
 		var vex = VexMode.None;
 		var evex = false;
 		bool? vexW = null;
+		bool? vexL = null;
 		bool? mod11 = null;
 		var rmExact = -1;
 		string mprefix = null;
@@ -153,6 +155,12 @@ public class XFusionDef : Def {
 				case PName("w1"):
 					vexW = true;
 					break;
+				case PName("l0"):
+					vexL = false;
+					break;
+				case PName("l1"):
+					vexL = true;
+					break;
 				case PName("mod11"):
 					mod11 = true;
 					break;
@@ -176,7 +184,7 @@ public class XFusionDef : Def {
 			[0x0F, 0x3A, var three] => (OpcodeMap.ThreeByte0F3A, three),
 			_ => throw new NotSupportedException($"opcode byte pattern in encoding {mnem}: [{string.Join(", ", bytes.Select(b => $"0x{b:X2}"))}]")
 		};
-		return new(map, op, regExt, d64, mprefix, plusR, vex, evex, vexW, mod11, rmExact);
+		return new(map, op, regExt, d64, mprefix, plusR, vex, evex, vexW, mod11, rmExact, vexL);
 	}
 
 	static XFusionDef Build(Template tmpl, List<OperandSpec> specs, OpcodeFacts f) {
@@ -199,6 +207,7 @@ public class XFusionDef : Def {
 			Vex = f.Vex,
 			Evex = f.Evex,
 			VexW = f.VexW,
+			VexL = f.VexL,
 			Mod11 = f.Mod11,
 			RmExact = f.RmExact,
 			Operands = specs,

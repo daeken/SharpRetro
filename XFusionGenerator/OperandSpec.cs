@@ -44,6 +44,8 @@ public enum WCode {
 	sd,    // scalar double (64-bit)
 	dq,    // double quadword (128-bit)
 	x,     // 128/256 by VEX.L — xmm tier reads as 128
+	o,     // 128 always, even under VEX.L=1 (vextractf128's xmm/m128 destination)
+	h,     // half the vector: 64 at VEX.L=0, 128 at L=1 (vcvtps2pd/vcvtph2ps source); an xmm register
 	none,  // width not applicable (fixed regs carry their own)
 }
 
@@ -145,7 +147,7 @@ public class OperandSpec {
 			"b" => WCode.b, "w" => WCode.w, "v" => WCode.v, "y" => WCode.y, "z" => WCode.z,
 			"d" => WCode.d, "q" => WCode.q, "p" => WCode.p,
 			"ps" => WCode.ps, "pd" => WCode.pd, "ss" => WCode.ss, "sd" => WCode.sd,
-			"dq" => WCode.dq, "x" => WCode.x,
+			"dq" => WCode.dq, "x" => WCode.x, "o" => WCode.o, "h" => WCode.h,
 			_ => throw new NotSupportedException($"width code in {s}")
 		};
 		spec.Class = cls switch {

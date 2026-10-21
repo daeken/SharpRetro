@@ -11,7 +11,16 @@
     ; (wall #32, OA/SDL SSE3 path; same family as MOVLHPS/MOVHPS wall #30).
     (instruction MOVDDUP (dst src) "movddup $dst, $src" (= dst (vzip src src 64 #f)))
     (encoding MOVDDUP (Vpd Wsd) (repnz 0x0F 0x12))
-    (instruction LDDQU (dst src) "lddqu $dst, $src" (intrinsic lddqu dst src))
+    (instruction LDDQU (dst src) "lddqu $dst, $src" (= dst src))
+    ; ADDSUBPS/PD: even lanes subtract, odd lanes add. HSUBPS/PD: pairwise a[2i]-a[2i+1].
+    (instruction ADDSUBPS (dst src) "addsubps $dst, $src" (= dst (vaddsub dst src 32)))
+    (encoding ADDSUBPS (Vps Wps) (repnz 0x0F 0xD0))
+    (instruction ADDSUBPD (dst src) "addsubpd $dst, $src" (= dst (vaddsub dst src 64)))
+    (encoding ADDSUBPD (Vpd Wpd) (opsize 0x0F 0xD0))
+    (instruction HSUBPS (dst src) "hsubps $dst, $src" (= dst (vhsub dst src 32)))
+    (encoding HSUBPS (Vps Wps) (repnz 0x0F 0x7D))
+    (instruction HSUBPD (dst src) "hsubpd $dst, $src" (= dst (vhsub dst src 64)))
+    (encoding HSUBPD (Vpd Wpd) (opsize 0x0F 0x7D))
     (encoding LDDQU (Vdq Mdq) (repnz 0x0F 0xF0))
     ; HADDPS: dst[0]=dst[0]+dst[1], dst[1]=dst[2]+dst[3], dst[2]=src[0]+src[1], dst[3]=src[2]+src[3].
     ; NEON FADDP Vd,Vn,Vm has the SAME pairing (Vn-pairs → lo, Vm-pairs → hi) → 1:1.
@@ -81,13 +90,21 @@
     (encoding PMINUW (Vdq Wdq) (opsize 0x0F 0x38 0x3A))
     (instruction PCMPEQQ (dst src) "pcmpeqq $dst, $src" (= dst (vibin dst src 64 3)))
     (encoding PCMPEQQ (Vdq Wdq) (opsize 0x0F 0x38 0x29))
+    ; PEXTRB/PINSRB: r32 register operand, but an m8 memory operand.
     (instruction PEXTRB (dst src sel) "pextrb $dst, $src, $sel" (= dst (vlane-get src sel 8)))
-    (encoding PEXTRB (Ed Vdq Ib) (opsize 0x0F 0x3A 0x14))
-    (instruction PEXTRD (dst src sel) "pextrd $dst, $src, $sel" (= dst (vlane-get src sel 32)))
-    (encoding PEXTRD (Ed Vdq Ib) (opsize 0x0F 0x3A 0x16))
+    (encoding PEXTRB (Ed Vdq Ib) (opsize 0x0F 0x3A 0x14 mod11))
+    (encoding PEXTRB (Mb Vdq Ib) (opsize 0x0F 0x3A 0x14 mem))
+    ; PEXTRD/PINSRD become PEXTRQ/PINSRQ under REX.W (Ey): lane width = operand width.
+    (instruction PEXTRD (dst src sel) "$(wname pextrd pextrd pextrq) $dst, $src, $sel"
+        (= dst (vlane-get src sel (bitwidth dst))))
+    (encoding PEXTRD (Ey Vdq Ib) (opsize 0x0F 0x3A 0x16))
     (instruction PINSRB (dst src sel) "pinsrb $dst, $src, $sel" (= dst (vlane-set dst src sel 8)))
-    (encoding PINSRB (Vdq Ed Ib) (opsize 0x0F 0x3A 0x20))
-    (instruction MOVNTDQA (dst src) "movntdqa $dst, $src" (intrinsic movntdqa dst src))
+    (encoding PINSRB (Vdq Ed Ib) (opsize 0x0F 0x3A 0x20 mod11))
+    (encoding PINSRB (Vdq Mb Ib) (opsize 0x0F 0x3A 0x20 mem))
+    (instruction PINSRD (dst src sel) "$(wname pinsrd pinsrd pinsrq) $dst, $src, $sel"
+        (= dst (vlane-set dst src sel (bitwidth src))))
+    (encoding PINSRD (Vdq Ey Ib) (opsize 0x0F 0x3A 0x22))
+    (instruction MOVNTDQA (dst src) "movntdqa $dst, $src" (= dst src))
     (encoding MOVNTDQA (Vdq Mdq) (opsize 0x0F 0x38 0x2A))
     ; DPPS/DPPD: masked dot-product. imm[7:4]=src-lane-mask (which multiply),
     ; imm[3:0]=dst-lane-mask (where the sum lands; else 0). CP2077 wall #29
@@ -173,3 +190,44 @@
     (encoding CRC32-B (Gv Eb) (repnz 0x0F 0x38 0xF0))
     (instruction CRC32-V (dst src) "crc32 $dst, $src" (= dst (crc32 dst src 32)))
     (encoding CRC32-V (Gv Ev) (repnz 0x0F 0x38 0xF1)))
+
+; Corpus-found SSE4.1 gaps (CP2077): sign-extending moves, blends, rounding, signed
+; widening multiply, unsigned-saturating dword pack.
+(featuring sse4.1
+    (instruction PMOVSXBW (dst src) "pmovsxbw $dst, $src" (= dst (vsext src 8 16)))
+    (encoding PMOVSXBW (Vdq Wq) (opsize 0x0F 0x38 0x20))
+    (instruction PMOVSXBD (dst src) "pmovsxbd $dst, $src" (= dst (vsext src 8 32)))
+    (encoding PMOVSXBD (Vdq Wd) (opsize 0x0F 0x38 0x21))
+    (instruction PMOVSXBQ (dst src) "pmovsxbq $dst, $src" (= dst (vsext src 8 64)))
+    (encoding PMOVSXBQ (Vdq Ww) (opsize 0x0F 0x38 0x22))
+    (instruction PMOVSXWD (dst src) "pmovsxwd $dst, $src" (= dst (vsext src 16 32)))
+    (encoding PMOVSXWD (Vdq Wq) (opsize 0x0F 0x38 0x23))
+    (instruction PMOVSXWQ (dst src) "pmovsxwq $dst, $src" (= dst (vsext src 16 64)))
+    (encoding PMOVSXWQ (Vdq Wd) (opsize 0x0F 0x38 0x24))
+    (instruction PMOVSXDQ (dst src) "pmovsxdq $dst, $src" (= dst (vsext src 32 64)))
+    (encoding PMOVSXDQ (Vdq Wq) (opsize 0x0F 0x38 0x25))
+    (instruction PMULDQ (dst src) "pmuldq $dst, $src" (= dst (vmulws dst src 32)))
+    (encoding PMULDQ (Vdq Wdq) (opsize 0x0F 0x38 0x28))
+    (instruction PACKUSDW (dst src) "packusdw $dst, $src" (= dst (vpacku dst src 32)))
+    (encoding PACKUSDW (Vdq Wdq) (opsize 0x0F 0x38 0x2B))
+    ; BLENDVPS/PD/PBLENDVB: the mask is the implicit XMM0 (its per-lane sign bits).
+    (instruction BLENDVPS (dst src) "blendvps $dst, $src, xmm0" (= dst (vblendv dst src XMM0 32)))
+    (encoding BLENDVPS (Vps Wps) (opsize 0x0F 0x38 0x14))
+    (instruction BLENDVPD (dst src) "blendvpd $dst, $src, xmm0" (= dst (vblendv dst src XMM0 64)))
+    (encoding BLENDVPD (Vpd Wpd) (opsize 0x0F 0x38 0x15))
+    (instruction PBLENDVB (dst src) "pblendvb $dst, $src, xmm0" (= dst (vblendv dst src XMM0 8)))
+    (encoding PBLENDVB (Vdq Wdq) (opsize 0x0F 0x38 0x10))
+    (instruction BLENDPS (dst src sel) "blendps $dst, $src, $sel" (= dst (vblend dst src sel 32)))
+    (encoding BLENDPS (Vps Wps Ib) (opsize 0x0F 0x3A 0x0C))
+    (instruction BLENDPD (dst src sel) "blendpd $dst, $src, $sel" (= dst (vblend dst src sel 64)))
+    (encoding BLENDPD (Vpd Wpd Ib) (opsize 0x0F 0x3A 0x0D))
+    (instruction PBLENDW (dst src sel) "pblendw $dst, $src, $sel" (= dst (vblend dst src sel 16)))
+    (encoding PBLENDW (Vdq Wdq Ib) (opsize 0x0F 0x3A 0x0E))
+    (instruction ROUNDPS (dst src sel) "roundps $dst, $src, $sel" (= dst (vround src sel 32)))
+    (encoding ROUNDPS (Vps Wps Ib) (opsize 0x0F 0x3A 0x08))
+    (instruction ROUNDPD (dst src sel) "roundpd $dst, $src, $sel" (= dst (vround src sel 64)))
+    (encoding ROUNDPD (Vpd Wpd Ib) (opsize 0x0F 0x3A 0x09))
+    (instruction ROUNDSS (dst src sel) "roundss $dst, $src, $sel" (= dst (fround-imm (as-f32 src) sel)))
+    (encoding ROUNDSS (Vss Wss Ib) (opsize 0x0F 0x3A 0x0A))
+    (instruction ROUNDSD (dst src sel) "roundsd $dst, $src, $sel" (= dst (fround-imm (as-f64 src) sel)))
+    (encoding ROUNDSD (Vsd Wsd Ib) (opsize 0x0F 0x3A 0x0B)))

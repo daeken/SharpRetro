@@ -1,241 +1,594 @@
-; avx.isa — VEX-encoded tier. Gated behind (featuring avx ...) in xfusion.isa.
-; VEX rows are separate encodings (vex-2src / vex-3src tokens) sharing semantics
-; templates via new v-prefixed instructions. The C4/C5 prefix supplies map+pp+vvvv+L;
-; dispatch folds pp into the same prefix fields legacy rows use (Decode.ApplyVexPp).
-; Corpus-ranked (glibc x86-64 @0c819df): vmovdqu 1208, vpmovmskb 1061, vpcmpeqb
-; 1017, vpaddb 460, vmovdqa 434, vzeroupper 422, vpandn 380 ...
+; avx.isa — VEX-encoded tier (AVX, AVX2, FMA, F16C). Gated behind (featuring avx ...).
+; VEX rows are separate encodings (vex-2src / vex-3src) with v-prefixed templates.
+; The C4/C5 prefix supplies map+pp+vvvv+L; dispatch folds pp into the same prefix
+; fields legacy rows use (Decode.ApplyVexPp).
 ;
-; 2src = vvvv must be 0 (mov class); 3src = vvvv is second source (arith class).
+; Lowering contract (IlLower, VEX mode -- set by the lifter for every VEX/EVEX insn):
+;   * Packed widths follow VEX.L: Vps/Wps/Hps/Vdq/Vx... bind at 128 or 256, and the
+;     vector heads (vfbin, vibin, vzip, ...) take their width from the operands; heads
+;     whose lanes interact (shuffles, interleaves, packs, hadd) apply per 128-bit block
+;     at 256 bits, as the SDM defines the ymm forms.
+;   * A VEX write of an xmm/ymm register zeroes everything above the value written, up
+;     to MAXVL (taken as 256). So a 128-bit VEX op clears the upper ymm half, where the
+;     legacy SSE row of the same op leaves it.
+;   * Scalar VEX ops take their upper lanes from SRC1 (the vvvv operand), not from DEST:
+;     DEST[127:w] := SRC1[127:w]. They write (vscalar src1 value), the full 128 bits.
+;   * Width codes: o = 128 regardless of L (vextractf128's destination), h = half the
+;     vector (64 at L=0, 128 at L=1: the source of a widening convert).
+;
+; 2src = vvvv must be 1111 (mov class); 3src = vvvv is a source operand.
+; Encodings were checked against iced (the census's text diff) on the CP2077 corpus.
 
-; 0F 77: L=0 = vzeroupper, L=1 = vzeroall — one row, L-selected mnemonic.
-(instruction VZEROUPPER () "$(lname vzeroupper vzeroall)" (intrinsic vzeroupper))
+; --- state ---
+; 0F 77: L=0 = vzeroupper (ymm0-15 bits 255:128 := 0), L=1 = vzeroall.
+(instruction VZEROUPPER () "$(lname vzeroupper vzeroall)" (vzeroupper))
 (encoding VZEROUPPER () (vex-2src 0x0F 0x77))
 
-; --- moves (2src: vvvv==0) ---
-(instruction VMOVDQU (dst src) "vmovdqu $dst, $src" (intrinsic vmovdqu dst src))
-(encoding VMOVDQU (Vdq Wdq) (vex-2src rep 0x0F 0x6F))
-(encoding VMOVDQU (Wdq Vdq) (vex-2src rep 0x0F 0x7F))
+(instruction VLDMXCSR (src) "vldmxcsr $src" (block))
+(encoding VLDMXCSR (Md) (vex-2src 0x0F 0xAE /2))
+(instruction VSTMXCSR (dst) "vstmxcsr $dst" (= dst 0x1F80))
+(encoding VSTMXCSR (Md) (vex-2src 0x0F 0xAE /3))
 
-(instruction VMOVDQA (dst src) "vmovdqa $dst, $src" (intrinsic vmovdqa dst src))
-(encoding VMOVDQA (Vdq Wdq) (vex-2src opsize 0x0F 0x6F))
-(encoding VMOVDQA (Wdq Vdq) (vex-2src opsize 0x0F 0x7F))
-
-(instruction VMOVUPS (dst src) "vmovups $dst, $src" (intrinsic vmovups dst src))
+; --- full-vector moves ---
+(instruction VMOVUPS (dst src) "vmovups $dst, $src" (= dst src))
 (encoding VMOVUPS (Vps Wps) (vex-2src 0x0F 0x10))
 (encoding VMOVUPS (Wps Vps) (vex-2src 0x0F 0x11))
-
-(instruction VMOVAPS (dst src) "vmovaps $dst, $src" (intrinsic vmovaps dst src))
+(instruction VMOVUPD (dst src) "vmovupd $dst, $src" (= dst src))
+(encoding VMOVUPD (Vpd Wpd) (vex-2src opsize 0x0F 0x10))
+(encoding VMOVUPD (Wpd Vpd) (vex-2src opsize 0x0F 0x11))
+(instruction VMOVAPS (dst src) "vmovaps $dst, $src" (= dst src))
 (encoding VMOVAPS (Vps Wps) (vex-2src 0x0F 0x28))
 (encoding VMOVAPS (Wps Vps) (vex-2src 0x0F 0x29))
-
-(instruction VMOVNTDQ (dst src) "vmovntdq $dst, $src" (intrinsic vmovntdq dst src))
+(instruction VMOVAPD (dst src) "vmovapd $dst, $src" (= dst src))
+(encoding VMOVAPD (Vpd Wpd) (vex-2src opsize 0x0F 0x28))
+(encoding VMOVAPD (Wpd Vpd) (vex-2src opsize 0x0F 0x29))
+(instruction VMOVDQU (dst src) "vmovdqu $dst, $src" (= dst src))
+(encoding VMOVDQU (Vdq Wdq) (vex-2src rep 0x0F 0x6F))
+(encoding VMOVDQU (Wdq Vdq) (vex-2src rep 0x0F 0x7F))
+(instruction VMOVDQA (dst src) "vmovdqa $dst, $src" (= dst src))
+(encoding VMOVDQA (Vdq Wdq) (vex-2src opsize 0x0F 0x6F))
+(encoding VMOVDQA (Wdq Vdq) (vex-2src opsize 0x0F 0x7F))
+(instruction VMOVNTDQ (dst src) "vmovntdq $dst, $src" (= dst src))
 (encoding VMOVNTDQ (Mdq Vdq) (vex-2src opsize 0x0F 0xE7))
+(instruction VMOVNTPS (dst src) "vmovntps $dst, $src" (= dst src))
+(encoding VMOVNTPS (Mps Vps) (vex-2src 0x0F 0x2B))
+(instruction VMOVNTPD (dst src) "vmovntpd $dst, $src" (= dst src))
+(encoding VMOVNTPD (Mpd Vpd) (vex-2src opsize 0x0F 0x2B))
 
-(instruction VPMOVMSKB (dst src) "vpmovmskb $dst, $src" (intrinsic vpmovmskb dst src))
-(encoding VPMOVMSKB (Gd Udq) (vex-2src opsize 0x0F 0xD7))
+; --- scalar moves: reg,reg,reg merges from SRC1; the load zeroes bits 127:w; store w bits ---
+(instruction VMOVSS (dst src1 src2) "vmovss $dst, $src1, $src2" (= dst (vscalar src1 src2)))
+(encoding VMOVSS (Vss Hss Uss) (vex-3src rep 0x0F 0x10))
+(encoding VMOVSS (Uss Hss Vss) (vex-3src rep 0x0F 0x11))
+(instruction VMOVSS-LD (dst src) "vmovss $dst, $src" (= dst (zext src 128)))
+(encoding VMOVSS-LD (Vss Md) (vex-2src rep 0x0F 0x10))
+(instruction VMOVSS-ST (dst src) "vmovss $dst, $src" (= dst src))
+(encoding VMOVSS-ST (Md Vss) (vex-2src rep 0x0F 0x11))
+(instruction VMOVSD (dst src1 src2) "vmovsd $dst, $src1, $src2" (= dst (vscalar src1 src2)))
+(encoding VMOVSD (Vsd Hsd Usd) (vex-3src repnz 0x0F 0x10))
+(encoding VMOVSD (Usd Hsd Vsd) (vex-3src repnz 0x0F 0x11))
+(instruction VMOVSD-LD (dst src) "vmovsd $dst, $src" (= dst (zext src 128)))
+(encoding VMOVSD-LD (Vsd Mq) (vex-2src repnz 0x0F 0x10))
+(instruction VMOVSD-ST (dst src) "vmovsd $dst, $src" (= dst src))
+(encoding VMOVSD-ST (Mq Vsd) (vex-2src repnz 0x0F 0x11))
 
-; --- integer compare/arith (3src: vvvv = second source) ---
-; VEX LOGICALS -- the 8 rows a real binary's .text hits hardest after the arithmetic.
-; Measured by the Pagentry index over a 44MB .text: 39 sites at op 0x54/0x55/0x56/0x57
-; decode-REFUSED, against 0 defs here. That is worse than an unexecutable row, because a
-; decode refusal STOPS THE LINEAR WALK -- every instruction past it in the function
-; contributes no call edges, which is the truncated-callee mechanism measured at 417
-; functions (86.3% zero-callee vs 29.5% for a size-matched control). A decode-only row
-; costs a die-loud at lift; a refusal costs the rest of the function silently.
-;
-; Intrinsic-bodied per this file's convention -- and for these there is a second reason
-; beyond convention: at VEX.L=1 the result is 256 bits and NEITHER evaluator can hold one
-; (X86Machine.Xmm[] is u128, Eval's carrier is ulong), so a declarative body would be
-; correct at L=0 and unrepresentable at L=1 in the same row. The legacy siblings' bodies
-; are right and reusable when a 256-bit value exists to put them in.
-(instruction VANDPS (dst a b) "vandps $dst, $a, $b" (intrinsic vandps dst a b))
-(encoding VANDPS (Vps Hps Wps) (vex-3src 0x0F 0x54))
-(instruction VANDNPS (dst a b) "vandnps $dst, $a, $b" (intrinsic vandnps dst a b))
-(encoding VANDNPS (Vps Hps Wps) (vex-3src 0x0F 0x55))
-(instruction VORPS (dst a b) "vorps $dst, $a, $b" (intrinsic vorps dst a b))
-(encoding VORPS (Vps Hps Wps) (vex-3src 0x0F 0x56))
-(instruction VXORPS (dst a b) "vxorps $dst, $a, $b" (intrinsic vxorps dst a b))
-(encoding VXORPS (Vps Hps Wps) (vex-3src 0x0F 0x57))
-(instruction VANDPD (dst a b) "vandpd $dst, $a, $b" (intrinsic vandpd dst a b))
-(encoding VANDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x54))
-(instruction VANDNPD (dst a b) "vandnpd $dst, $a, $b" (intrinsic vandnpd dst a b))
-(encoding VANDNPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x55))
-(instruction VORPD (dst a b) "vorpd $dst, $a, $b" (intrinsic vorpd dst a b))
-(encoding VORPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x56))
-(instruction VXORPD (dst a b) "vxorpd $dst, $a, $b" (intrinsic vxorpd dst a b))
-(encoding VXORPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x57))
-
-(instruction VPCMPEQB (dst a b) "vpcmpeqb $dst, $a, $b" (intrinsic vpcmpeqb dst a b))
-(encoding VPCMPEQB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x74))
-(instruction VPCMPEQW (dst a b) "vpcmpeqw $dst, $a, $b" (intrinsic vpcmpeqw dst a b))
-(encoding VPCMPEQW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x75))
-(instruction VPCMPEQD (dst a b) "vpcmpeqd $dst, $a, $b" (intrinsic vpcmpeqd dst a b))
-(encoding VPCMPEQD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x76))
-
-(instruction VPCMPGTB (dst a b) "vpcmpgtb $dst, $a, $b" (intrinsic vpcmpgtb dst a b))
-(encoding VPCMPGTB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x64))
-
-(instruction VPADDB (dst a b) "vpaddb $dst, $a, $b" (intrinsic vpaddb dst a b))
-(encoding VPADDB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFC))
-(instruction VPSUBB (dst a b) "vpsubb $dst, $a, $b" (intrinsic vpsubb dst a b))
-(encoding VPSUBB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xF8))
-
-(instruction VPAND (dst a b) "vpand $dst, $a, $b" (intrinsic vpand dst a b))
-(encoding VPAND (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDB))
-(instruction VPANDN (dst a b) "vpandn $dst, $a, $b" (intrinsic vpandn dst a b))
-(encoding VPANDN (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDF))
-(instruction VPOR (dst a b) "vpor $dst, $a, $b" (intrinsic vpor dst a b))
-(encoding VPOR (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEB))
-(instruction VPXOR (dst a b) "vpxor $dst, $a, $b" (intrinsic vpxor dst a b))
-(encoding VPXOR (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEF))
-
-(instruction VPMINUB (dst a b) "vpminub $dst, $a, $b" (intrinsic vpminub dst a b))
-(encoding VPMINUB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDA))
-(instruction VPMAXUB (dst a b) "vpmaxub $dst, $a, $b" (intrinsic vpmaxub dst a b))
-(encoding VPMAXUB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDE))
-
-; --- shuffles: 2src + imm ---
-(instruction VPSHUFD (dst src sel) "vpshufd $dst, $src, $sel" (intrinsic vpshufd dst src sel))
-(encoding VPSHUFD (Vdq Wdq Ib) (vex-2src opsize 0x0F 0x70))
-
-(instruction VPSHUFB (dst a b) "vpshufb $dst, $a, $b" (intrinsic vpshufb dst a b))
-(encoding VPSHUFB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x00))
-
-; --- ptest (0F38 map, 2src) ---
-(instruction VPTEST (a b) "vptest $a, $b" (intrinsic vptest a b))
-(encoding VPTEST (Vdq Wdq) (vex-2src opsize 0x0F 0x38 0x17))
-
-; --- vmovd/vmovq gpr<->xmm ---
-(instruction VMOVD-V (dst src) "$(wname vmovd vmovd vmovq) $dst, $src" (intrinsic vmovd-v dst src))
+; --- vmovd/vmovq gpr<->xmm, vmovq xmm<->xmm/m64 ---
+(instruction VMOVD-V (dst src) "$(wname vmovd vmovd vmovq) $dst, $src" (= dst (zext (u64 src) 128)))
 (encoding VMOVD-V (Vdq Ev) (vex-2src opsize 0x0F 0x6E))
-(instruction VMOVD-VS (dst src) "$(wname vmovd vmovd vmovq) $dst, $src" (intrinsic vmovd-vs dst src))
+(instruction VMOVD-VS (dst src) "$(wname vmovd vmovd vmovq) $dst, $src" (= dst (u64 src)))
 (encoding VMOVD-VS (Ev Vdq) (vex-2src opsize 0x0F 0x7E))
-(instruction VMOVQ-V (dst src) "vmovq $dst, $src" (intrinsic vmovq-v dst src))
-(encoding VMOVQ-V (Vq Wq) (vex-2src rep 0x0F 0x7E))
+(instruction VMOVQ-V (dst src) "vmovq $dst, $src" (= dst (zext (u64 src) 128)))
+(encoding VMOVQ-V (Vdq Wq) (vex-2src rep 0x0F 0x7E))
+(instruction VMOVQ-XS (dst src) "vmovq $dst, $src" (= dst (zext (u64 src) 128)))
+(encoding VMOVQ-XS (Udq Vq) (vex-2src opsize 0x0F 0xD6))
+(instruction VMOVQ-XM (dst src) "vmovq $dst, $src" (= dst (u64 src)))
+(encoding VMOVQ-XM (Mq Vq) (vex-2src opsize 0x0F 0xD6))
 
-; --- BMI2 shifts (0F38 map, vvvv = shift-count source, VEX-only) ---
-(instruction SARX (dst src count) "sarx $dst, $src, $count" (intrinsic sarx dst src count))
+; --- broadcast / 128-bit halves / cross-lane permutes ---
+(instruction VBROADCASTSS (dst src) "vbroadcastss $dst, $src" (= dst (vbcast dst src 32)))
+(encoding VBROADCASTSS (Vx Md) (vex-2src opsize w0 0x0F 0x38 0x18))
+(encoding VBROADCASTSS (Vx Uss) (vex-2src opsize w0 0x0F 0x38 0x18))
+(instruction VBROADCASTSD (dst src) "vbroadcastsd $dst, $src" (= dst (vbcast dst src 64)))
+(encoding VBROADCASTSD (Vx Mq) (vex-2src opsize w0 l1 0x0F 0x38 0x19))
+(encoding VBROADCASTSD (Vx Usd) (vex-2src opsize w0 l1 0x0F 0x38 0x19))
+(instruction VBROADCASTF128 (dst src) "vbroadcastf128 $dst, $src" (= dst (vbcast dst src 128)))
+(encoding VBROADCASTF128 (Vx Mo) (vex-2src opsize w0 l1 0x0F 0x38 0x1A))
+(instruction VEXTRACTF128 (dst src sel) "vextractf128 $dst, $src, $sel" (= dst (vhalf src sel)))
+(encoding VEXTRACTF128 (Wo Vx Ib) (vex-2src opsize w0 l1 0x0F 0x3A 0x19))
+(instruction VINSERTF128 (dst a b sel) "vinsertf128 $dst, $a, $b, $sel" (= dst (vinsert-half a b sel)))
+(encoding VINSERTF128 (Vx Hx Wo Ib) (vex-3src opsize w0 l1 0x0F 0x3A 0x18))
+; VPERMILPS/PD imm: shuffle within each 128-bit block (= PSHUFD's shape on one source).
+(instruction VPERMILPS-I (dst src sel) "vpermilps $dst, $src, $sel" (= dst (vshuf src src sel 32)))
+(encoding VPERMILPS-I (Vx Wx Ib) (vex-2src opsize w0 0x0F 0x3A 0x04))
+(instruction VPERMILPD-I (dst src sel) "vpermilpd $dst, $src, $sel" (= dst (vshuf src src sel 64)))
+(encoding VPERMILPD-I (Vx Wx Ib) (vex-2src opsize w0 0x0F 0x3A 0x05))
+(instruction VPERMQ (dst src sel) "vpermq $dst, $src, $sel" (= dst (vperm64 src sel)))
+(encoding VPERMQ (Vx Wx Ib) (vex-2src opsize w1 l1 0x0F 0x3A 0x00))
+(instruction VPERMPD (dst src sel) "vpermpd $dst, $src, $sel" (= dst (vperm64 src sel)))
+(encoding VPERMPD (Vx Wx Ib) (vex-2src opsize w1 l1 0x0F 0x3A 0x01))
+
+; --- packed float arithmetic (3src) ---
+(instruction VADDPS (dst a b) "vaddps $dst, $a, $b" (= dst (vfbin a b 32 0)))
+(encoding VADDPS (Vps Hps Wps) (vex-3src 0x0F 0x58))
+(instruction VADDPD (dst a b) "vaddpd $dst, $a, $b" (= dst (vfbin a b 64 0)))
+(encoding VADDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x58))
+(instruction VSUBPS (dst a b) "vsubps $dst, $a, $b" (= dst (vfbin a b 32 1)))
+(encoding VSUBPS (Vps Hps Wps) (vex-3src 0x0F 0x5C))
+(instruction VSUBPD (dst a b) "vsubpd $dst, $a, $b" (= dst (vfbin a b 64 1)))
+(encoding VSUBPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5C))
+(instruction VMULPS (dst a b) "vmulps $dst, $a, $b" (= dst (vfbin a b 32 2)))
+(encoding VMULPS (Vps Hps Wps) (vex-3src 0x0F 0x59))
+(instruction VMULPD (dst a b) "vmulpd $dst, $a, $b" (= dst (vfbin a b 64 2)))
+(encoding VMULPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x59))
+(instruction VDIVPS (dst a b) "vdivps $dst, $a, $b" (= dst (vfbin a b 32 3)))
+(encoding VDIVPS (Vps Hps Wps) (vex-3src 0x0F 0x5E))
+(instruction VDIVPD (dst a b) "vdivpd $dst, $a, $b" (= dst (vfbin a b 64 3)))
+(encoding VDIVPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5E))
+(instruction VMINPS (dst a b) "vminps $dst, $a, $b" (= dst (vfmin a b 32)))
+(encoding VMINPS (Vps Hps Wps) (vex-3src 0x0F 0x5D))
+(instruction VMINPD (dst a b) "vminpd $dst, $a, $b" (= dst (vfmin a b 64)))
+(encoding VMINPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5D))
+(instruction VMAXPS (dst a b) "vmaxps $dst, $a, $b" (= dst (vfmax a b 32)))
+(encoding VMAXPS (Vps Hps Wps) (vex-3src 0x0F 0x5F))
+(instruction VMAXPD (dst a b) "vmaxpd $dst, $a, $b" (= dst (vfmax a b 64)))
+(encoding VMAXPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5F))
+(instruction VSQRTPS (dst src) "vsqrtps $dst, $src" (= dst (vfun src 32 0)))
+(encoding VSQRTPS (Vps Wps) (vex-2src 0x0F 0x51))
+(instruction VSQRTPD (dst src) "vsqrtpd $dst, $src" (= dst (vfun src 64 0)))
+(encoding VSQRTPD (Vpd Wpd) (vex-2src opsize 0x0F 0x51))
+; RCP/RSQRT approximations: intrinsic, as for the legacy rows (sse.isa: the exact value
+; is architecturally permitted, but silicon returns a table-specific approximation).
+(instruction VRCPPS (dst src) "vrcpps $dst, $src" (intrinsic vrcpps dst src))
+(encoding VRCPPS (Vps Wps) (vex-2src 0x0F 0x53))
+(instruction VRSQRTPS (dst src) "vrsqrtps $dst, $src" (intrinsic vrsqrtps dst src))
+(encoding VRSQRTPS (Vps Wps) (vex-2src 0x0F 0x52))
+(instruction VANDPS (dst a b) "vandps $dst, $a, $b" (= dst (& a b)))
+(encoding VANDPS (Vps Hps Wps) (vex-3src 0x0F 0x54))
+(instruction VANDPD (dst a b) "vandpd $dst, $a, $b" (= dst (& a b)))
+(encoding VANDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x54))
+(instruction VANDNPS (dst a b) "vandnps $dst, $a, $b" (= dst (& (~ a) b)))
+(encoding VANDNPS (Vps Hps Wps) (vex-3src 0x0F 0x55))
+(instruction VANDNPD (dst a b) "vandnpd $dst, $a, $b" (= dst (& (~ a) b)))
+(encoding VANDNPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x55))
+(instruction VORPS (dst a b) "vorps $dst, $a, $b" (= dst (| a b)))
+(encoding VORPS (Vps Hps Wps) (vex-3src 0x0F 0x56))
+(instruction VORPD (dst a b) "vorpd $dst, $a, $b" (= dst (| a b)))
+(encoding VORPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x56))
+(instruction VXORPS (dst a b) "vxorps $dst, $a, $b" (= dst (^ a b)))
+(encoding VXORPS (Vps Hps Wps) (vex-3src 0x0F 0x57))
+(instruction VXORPD (dst a b) "vxorpd $dst, $a, $b" (= dst (^ a b)))
+(encoding VXORPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x57))
+(instruction VADDSUBPS (dst a b) "vaddsubps $dst, $a, $b" (= dst (vaddsub a b 32)))
+(encoding VADDSUBPS (Vps Hps Wps) (vex-3src repnz 0x0F 0xD0))
+(instruction VADDSUBPD (dst a b) "vaddsubpd $dst, $a, $b" (= dst (vaddsub a b 64)))
+(encoding VADDSUBPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0xD0))
+(instruction VHADDPS (dst a b) "vhaddps $dst, $a, $b" (= dst (vhadd a b 32)))
+(encoding VHADDPS (Vps Hps Wps) (vex-3src repnz 0x0F 0x7C))
+(instruction VHADDPD (dst a b) "vhaddpd $dst, $a, $b" (= dst (vhadd a b 64)))
+(encoding VHADDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x7C))
+(instruction VHSUBPS (dst a b) "vhsubps $dst, $a, $b" (= dst (vhsub a b 32)))
+(encoding VHSUBPS (Vps Hps Wps) (vex-3src repnz 0x0F 0x7D))
+(instruction VHSUBPD (dst a b) "vhsubpd $dst, $a, $b" (= dst (vhsub a b 64)))
+(encoding VHSUBPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x7D))
+(instruction VSHUFPS (dst a b sel) "vshufps $dst, $a, $b, $sel" (= dst (vshuf a b sel 32)))
+(encoding VSHUFPS (Vps Hps Wps Ib) (vex-3src 0x0F 0xC6))
+(instruction VSHUFPD (dst a b sel) "vshufpd $dst, $a, $b, $sel" (= dst (vshuf a b sel 64)))
+(encoding VSHUFPD (Vpd Hpd Wpd Ib) (vex-3src opsize 0x0F 0xC6))
+(instruction VUNPCKLPS (dst a b) "vunpcklps $dst, $a, $b" (= dst (vzip a b 32 #f)))
+(encoding VUNPCKLPS (Vps Hps Wps) (vex-3src 0x0F 0x14))
+(instruction VUNPCKHPS (dst a b) "vunpckhps $dst, $a, $b" (= dst (vzip a b 32 #t)))
+(encoding VUNPCKHPS (Vps Hps Wps) (vex-3src 0x0F 0x15))
+(instruction VUNPCKLPD (dst a b) "vunpcklpd $dst, $a, $b" (= dst (vzip a b 64 #f)))
+(encoding VUNPCKLPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x14))
+(instruction VUNPCKHPD (dst a b) "vunpckhpd $dst, $a, $b" (= dst (vzip a b 64 #t)))
+(encoding VUNPCKHPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x15))
+(instruction VCMPPS (dst a b pred) "vcmpps $dst, $a, $b, $pred" (= dst (vfcmpp a b pred 32)))
+(encoding VCMPPS (Vps Hps Wps Ib) (vex-3src 0x0F 0xC2))
+(instruction VCMPPD (dst a b pred) "vcmppd $dst, $a, $b, $pred" (= dst (vfcmpp a b pred 64)))
+(encoding VCMPPD (Vpd Hpd Wpd Ib) (vex-3src opsize 0x0F 0xC2))
+(instruction VBLENDPS (dst a b sel) "vblendps $dst, $a, $b, $sel" (= dst (vblend a b sel 32)))
+(encoding VBLENDPS (Vps Hps Wps Ib) (vex-3src opsize 0x0F 0x3A 0x0C))
+(instruction VBLENDPD (dst a b sel) "vblendpd $dst, $a, $b, $sel" (= dst (vblend a b sel 64)))
+(encoding VBLENDPD (Vpd Hpd Wpd Ib) (vex-3src opsize 0x0F 0x3A 0x0D))
+(instruction VROUNDPS (dst src sel) "vroundps $dst, $src, $sel" (= dst (vround src sel 32)))
+(encoding VROUNDPS (Vps Wps Ib) (vex-2src opsize 0x0F 0x3A 0x08))
+(instruction VROUNDPD (dst src sel) "vroundpd $dst, $src, $sel" (= dst (vround src sel 64)))
+(encoding VROUNDPD (Vpd Wpd Ib) (vex-2src opsize 0x0F 0x3A 0x09))
+(instruction VMOVMSKPS (dst src) "vmovmskps $dst, $src" (= dst (vmovmsk src 32)))
+(encoding VMOVMSKPS (Gd Ups) (vex-2src 0x0F 0x50))
+(instruction VMOVMSKPD (dst src) "vmovmskpd $dst, $src" (= dst (vmovmsk src 64)))
+(encoding VMOVMSKPD (Gd Upd) (vex-2src opsize 0x0F 0x50))
+
+; --- scalar float (3src): DEST[w-1:0] := op, DEST[127:w] := SRC1[127:w] ---
+(instruction VADDSS (dst a b) "vaddss $dst, $a, $b" (= dst (vscalar a (+ (as-f32 a) (as-f32 b)))))
+(encoding VADDSS (Vss Hss Wss) (vex-3src rep 0x0F 0x58))
+(instruction VADDSD (dst a b) "vaddsd $dst, $a, $b" (= dst (vscalar a (+ (as-f64 a) (as-f64 b)))))
+(encoding VADDSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x58))
+(instruction VSUBSS (dst a b) "vsubss $dst, $a, $b" (= dst (vscalar a (- (as-f32 a) (as-f32 b)))))
+(encoding VSUBSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5C))
+(instruction VSUBSD (dst a b) "vsubsd $dst, $a, $b" (= dst (vscalar a (- (as-f64 a) (as-f64 b)))))
+(encoding VSUBSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5C))
+(instruction VMULSS (dst a b) "vmulss $dst, $a, $b" (= dst (vscalar a (* (as-f32 a) (as-f32 b)))))
+(encoding VMULSS (Vss Hss Wss) (vex-3src rep 0x0F 0x59))
+(instruction VMULSD (dst a b) "vmulsd $dst, $a, $b" (= dst (vscalar a (* (as-f64 a) (as-f64 b)))))
+(encoding VMULSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x59))
+(instruction VDIVSS (dst a b) "vdivss $dst, $a, $b" (= dst (vscalar a (/ (as-f32 a) (as-f32 b)))))
+(encoding VDIVSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5E))
+(instruction VDIVSD (dst a b) "vdivsd $dst, $a, $b" (= dst (vscalar a (/ (as-f64 a) (as-f64 b)))))
+(encoding VDIVSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5E))
+(instruction VMINSS (dst a b) "vminss $dst, $a, $b" (= dst (vscalar a (fmin (as-f32 a) (as-f32 b)))))
+(encoding VMINSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5D))
+(instruction VMINSD (dst a b) "vminsd $dst, $a, $b" (= dst (vscalar a (fmin (as-f64 a) (as-f64 b)))))
+(encoding VMINSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5D))
+(instruction VMAXSS (dst a b) "vmaxss $dst, $a, $b" (= dst (vscalar a (fmax (as-f32 a) (as-f32 b)))))
+(encoding VMAXSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5F))
+(instruction VMAXSD (dst a b) "vmaxsd $dst, $a, $b" (= dst (vscalar a (fmax (as-f64 a) (as-f64 b)))))
+(encoding VMAXSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5F))
+(instruction VSQRTSS (dst a b) "vsqrtss $dst, $a, $b" (= dst (vscalar a (fsqrt (as-f32 b)))))
+(encoding VSQRTSS (Vss Hss Wss) (vex-3src rep 0x0F 0x51))
+(instruction VSQRTSD (dst a b) "vsqrtsd $dst, $a, $b" (= dst (vscalar a (fsqrt (as-f64 b)))))
+(encoding VSQRTSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x51))
+(instruction VCMPSS (dst a b pred) "vcmpss $dst, $a, $b, $pred" (= dst (vscalar a (fcmpp (as-f32 a) (as-f32 b) pred 32))))
+(encoding VCMPSS (Vss Hss Wss Ib) (vex-3src rep 0x0F 0xC2))
+(instruction VCMPSD (dst a b pred) "vcmpsd $dst, $a, $b, $pred" (= dst (vscalar a (fcmpp (as-f64 a) (as-f64 b) pred 64))))
+(encoding VCMPSD (Vsd Hsd Wsd Ib) (vex-3src repnz 0x0F 0xC2))
+(instruction VROUNDSS (dst a b sel) "vroundss $dst, $a, $b, $sel" (= dst (vscalar a (fround-imm (as-f32 b) sel))))
+(encoding VROUNDSS (Vss Hss Wss Ib) (vex-3src opsize 0x0F 0x3A 0x0A))
+(instruction VROUNDSD (dst a b sel) "vroundsd $dst, $a, $b, $sel" (= dst (vscalar a (fround-imm (as-f64 b) sel))))
+(encoding VROUNDSD (Vsd Hsd Wsd Ib) (vex-3src opsize 0x0F 0x3A 0x0B))
+(instruction VUCOMISS (a b) "vucomiss $a, $b"
+    (mlet (fa (as-f32 a) fb (as-f32 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
+(encoding VUCOMISS (Vss Wss) (vex-2src 0x0F 0x2E))
+(instruction VCOMISS (a b) "vcomiss $a, $b"
+    (mlet (fa (as-f32 a) fb (as-f32 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
+(encoding VCOMISS (Vss Wss) (vex-2src 0x0F 0x2F))
+(instruction VUCOMISD (a b) "vucomisd $a, $b"
+    (mlet (fa (as-f64 a) fb (as-f64 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
+(encoding VUCOMISD (Vsd Wsd) (vex-2src opsize 0x0F 0x2E))
+(instruction VCOMISD (a b) "vcomisd $a, $b"
+    (mlet (fa (as-f64 a) fb (as-f64 b) unord (| (fisnan fa) (fisnan fb)))
+        (= PF unord)
+        (= CF (| (flt fa fb) unord))
+        (= ZF (| (feq fa fb) unord))
+        (= OF 0) (= SF 0) (= AF 0)))
+(encoding VCOMISD (Vsd Wsd) (vex-2src opsize 0x0F 0x2F))
+
+; --- converts ---
+(instruction VCVTDQ2PS (dst src) "vcvtdq2ps $dst, $src" (= dst (vcvt src 0)))
+(encoding VCVTDQ2PS (Vps Wdq) (vex-2src 0x0F 0x5B))
+(instruction VCVTPS2DQ (dst src) "vcvtps2dq $dst, $src" (= dst (vcvt src 7)))
+(encoding VCVTPS2DQ (Vdq Wps) (vex-2src opsize 0x0F 0x5B))
+(instruction VCVTTPS2DQ (dst src) "vcvttps2dq $dst, $src" (= dst (vcvt src 1)))
+(encoding VCVTTPS2DQ (Vdq Wps) (vex-2src rep 0x0F 0x5B))
+(instruction VCVTPS2PD (dst src) "vcvtps2pd $dst, $src" (= dst (vcvt src 2)))
+(encoding VCVTPS2PD (Vpd Wh) (vex-2src 0x0F 0x5A))
+(instruction VCVTPD2PS (dst src) "vcvtpd2ps $dst, $src" (= dst (vcvt src 3)))
+(encoding VCVTPD2PS (Vo Wpd) (vex-2src opsize 0x0F 0x5A))
+(instruction VCVTDQ2PD (dst src) "vcvtdq2pd $dst, $src" (= dst (vcvt src 4)))
+(encoding VCVTDQ2PD (Vpd Wh) (vex-2src rep 0x0F 0xE6))
+(instruction VCVTPD2DQ (dst src) "vcvtpd2dq $dst, $src" (= dst (vcvt src 6)))
+(encoding VCVTPD2DQ (Vo Wpd) (vex-2src repnz 0x0F 0xE6))
+(instruction VCVTTPD2DQ (dst src) "vcvttpd2dq $dst, $src" (= dst (vcvt src 5)))
+(encoding VCVTTPD2DQ (Vo Wpd) (vex-2src opsize 0x0F 0xE6))
+(instruction VCVTSS2SD (dst a b) "vcvtss2sd $dst, $a, $b" (= dst (vscalar a (f64 (as-f32 b)))))
+(encoding VCVTSS2SD (Vsd Hsd Wss) (vex-3src rep 0x0F 0x5A))
+(instruction VCVTSD2SS (dst a b) "vcvtsd2ss $dst, $a, $b" (= dst (vscalar a (f32 (as-f64 b)))))
+(encoding VCVTSD2SS (Vss Hss Wsd) (vex-3src repnz 0x0F 0x5A))
+(instruction VCVTSI2SS (dst a b) "vcvtsi2ss $dst, $a, $b" (= dst (vscalar a (f32 (signed (bitwidth b) b)))))
+(encoding VCVTSI2SS (Vss Hss Ey) (vex-3src rep 0x0F 0x2A))
+(instruction VCVTSI2SD (dst a b) "vcvtsi2sd $dst, $a, $b" (= dst (vscalar a (f64 (signed (bitwidth b) b)))))
+(encoding VCVTSI2SD (Vsd Hsd Ey) (vex-3src repnz 0x0F 0x2A))
+(instruction VCVTSS2SI (dst src) "vcvtss2si $dst, $src" (= dst (int-of (bitwidth dst) (fround (as-f32 src)))))
+(encoding VCVTSS2SI (Gy Wss) (vex-2src rep 0x0F 0x2D))
+(instruction VCVTTSS2SI (dst src) "vcvttss2si $dst, $src" (= dst (int-of (bitwidth dst) (as-f32 src))))
+(encoding VCVTTSS2SI (Gy Wss) (vex-2src rep 0x0F 0x2C))
+(instruction VCVTSD2SI (dst src) "vcvtsd2si $dst, $src" (= dst (int-of (bitwidth dst) (fround (as-f64 src)))))
+(encoding VCVTSD2SI (Gy Wsd) (vex-2src repnz 0x0F 0x2D))
+(instruction VCVTTSD2SI (dst src) "vcvttsd2si $dst, $src" (= dst (int-of (bitwidth dst) (as-f64 src))))
+(encoding VCVTTSD2SI (Gy Wsd) (vex-2src repnz 0x0F 0x2C))
+; F16C: half <-> single (W0, 66 0F38 13 / 66 0F3A 1D).
+(instruction VCVTPH2PS (dst src) "vcvtph2ps $dst, $src" (= dst (vcvtph2ps src)))
+(encoding VCVTPH2PS (Vx Wh) (vex-2src opsize w0 0x0F 0x38 0x13))
+(instruction VCVTPS2PH (dst src sel) "vcvtps2ph $dst, $src, $sel" (= dst (vcvtps2ph src sel)))
+(encoding VCVTPS2PH (Wh Vx Ib) (vex-2src opsize w0 0x0F 0x3A 0x1D))
+
+; --- integer (AVX 128 / AVX2 256) ---
+(instruction VPAND (dst a b) "vpand $dst, $a, $b" (= dst (& a b)))
+(encoding VPAND (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDB))
+(instruction VPANDN (dst a b) "vpandn $dst, $a, $b" (= dst (& (~ a) b)))
+(encoding VPANDN (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDF))
+(instruction VPOR (dst a b) "vpor $dst, $a, $b" (= dst (| a b)))
+(encoding VPOR (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEB))
+(instruction VPXOR (dst a b) "vpxor $dst, $a, $b" (= dst (^ a b)))
+(encoding VPXOR (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEF))
+(instruction VPCMPEQB (dst a b) "vpcmpeqb $dst, $a, $b" (= dst (vibin a b 8 3)))
+(encoding VPCMPEQB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x74))
+(instruction VPCMPEQW (dst a b) "vpcmpeqw $dst, $a, $b" (= dst (vibin a b 16 3)))
+(encoding VPCMPEQW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x75))
+(instruction VPCMPEQD (dst a b) "vpcmpeqd $dst, $a, $b" (= dst (vibin a b 32 3)))
+(encoding VPCMPEQD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x76))
+(instruction VPCMPGTB (dst a b) "vpcmpgtb $dst, $a, $b" (= dst (vibin a b 8 4)))
+(encoding VPCMPGTB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x64))
+(instruction VPCMPGTW (dst a b) "vpcmpgtw $dst, $a, $b" (= dst (vibin a b 16 4)))
+(encoding VPCMPGTW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x65))
+(instruction VPCMPGTD (dst a b) "vpcmpgtd $dst, $a, $b" (= dst (vibin a b 32 4)))
+(encoding VPCMPGTD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x66))
+(instruction VPADDB (dst a b) "vpaddb $dst, $a, $b" (= dst (vibin a b 8 0)))
+(encoding VPADDB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFC))
+(instruction VPADDW (dst a b) "vpaddw $dst, $a, $b" (= dst (vibin a b 16 0)))
+(encoding VPADDW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFD))
+(instruction VPADDD (dst a b) "vpaddd $dst, $a, $b" (= dst (vibin a b 32 0)))
+(encoding VPADDD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFE))
+(instruction VPADDQ (dst a b) "vpaddq $dst, $a, $b" (= dst (vibin a b 64 0)))
+(encoding VPADDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xD4))
+(instruction VPSUBB (dst a b) "vpsubb $dst, $a, $b" (= dst (vibin a b 8 1)))
+(encoding VPSUBB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xF8))
+(instruction VPSUBW (dst a b) "vpsubw $dst, $a, $b" (= dst (vibin a b 16 1)))
+(encoding VPSUBW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xF9))
+(instruction VPSUBD (dst a b) "vpsubd $dst, $a, $b" (= dst (vibin a b 32 1)))
+(encoding VPSUBD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFA))
+(instruction VPSUBQ (dst a b) "vpsubq $dst, $a, $b" (= dst (vibin a b 64 1)))
+(encoding VPSUBQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xFB))
+(instruction VPMULLW (dst a b) "vpmullw $dst, $a, $b" (= dst (vibin a b 16 2)))
+(encoding VPMULLW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xD5))
+(instruction VPMULHW (dst a b) "vpmulhw $dst, $a, $b" (= dst (vmulhi a b 16 #t)))
+(encoding VPMULHW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xE5))
+(instruction VPMULHUW (dst a b) "vpmulhuw $dst, $a, $b" (= dst (vmulhi a b 16 #f)))
+(encoding VPMULHUW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xE4))
+(instruction VPMULUDQ (dst a b) "vpmuludq $dst, $a, $b" (= dst (vmulw a b 32)))
+(encoding VPMULUDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xF4))
+(instruction VPMINUB (dst a b) "vpminub $dst, $a, $b" (= dst (vibin a b 8 8)))
+(encoding VPMINUB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDA))
+(instruction VPMAXUB (dst a b) "vpmaxub $dst, $a, $b" (= dst (vibin a b 8 7)))
+(encoding VPMAXUB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xDE))
+(instruction VPMINSW (dst a b) "vpminsw $dst, $a, $b" (= dst (vibin a b 16 6)))
+(encoding VPMINSW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEA))
+(instruction VPMAXSW (dst a b) "vpmaxsw $dst, $a, $b" (= dst (vibin a b 16 5)))
+(encoding VPMAXSW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0xEE))
+(instruction VPUNPCKLBW (dst a b) "vpunpcklbw $dst, $a, $b" (= dst (vzip a b 8 #f)))
+(encoding VPUNPCKLBW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x60))
+(instruction VPUNPCKLWD (dst a b) "vpunpcklwd $dst, $a, $b" (= dst (vzip a b 16 #f)))
+(encoding VPUNPCKLWD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x61))
+(instruction VPUNPCKLDQ (dst a b) "vpunpckldq $dst, $a, $b" (= dst (vzip a b 32 #f)))
+(encoding VPUNPCKLDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x62))
+(instruction VPUNPCKLQDQ (dst a b) "vpunpcklqdq $dst, $a, $b" (= dst (vzip a b 64 #f)))
+(encoding VPUNPCKLQDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x6C))
+(instruction VPUNPCKHBW (dst a b) "vpunpckhbw $dst, $a, $b" (= dst (vzip a b 8 #t)))
+(encoding VPUNPCKHBW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x68))
+(instruction VPUNPCKHWD (dst a b) "vpunpckhwd $dst, $a, $b" (= dst (vzip a b 16 #t)))
+(encoding VPUNPCKHWD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x69))
+(instruction VPUNPCKHDQ (dst a b) "vpunpckhdq $dst, $a, $b" (= dst (vzip a b 32 #t)))
+(encoding VPUNPCKHDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x6A))
+(instruction VPUNPCKHQDQ (dst a b) "vpunpckhqdq $dst, $a, $b" (= dst (vzip a b 64 #t)))
+(encoding VPUNPCKHQDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x6D))
+(instruction VPACKSSDW (dst a b) "vpackssdw $dst, $a, $b" (= dst (vpacks a b 32)))
+(encoding VPACKSSDW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x6B))
+(instruction VPACKUSWB (dst a b) "vpackuswb $dst, $a, $b" (= dst (vpacku a b 16)))
+(encoding VPACKUSWB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x67))
+(instruction VPCMPEQQ (dst a b) "vpcmpeqq $dst, $a, $b" (= dst (vibin a b 64 3)))
+(encoding VPCMPEQQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x29))
+(instruction VPMULDQ (dst a b) "vpmuldq $dst, $a, $b" (= dst (vmulws a b 32)))
+(encoding VPMULDQ (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x28))
+(instruction VPMULLD (dst a b) "vpmulld $dst, $a, $b" (= dst (vibin a b 32 2)))
+(encoding VPMULLD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x40))
+(instruction VPSHUFB (dst a b) "vpshufb $dst, $a, $b" (= dst (vshufv a b)))
+(encoding VPSHUFB (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x00))
+(instruction VPACKUSDW (dst a b) "vpackusdw $dst, $a, $b" (= dst (vpacku a b 32)))
+(encoding VPACKUSDW (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x2B))
+(instruction VPMINSD (dst a b) "vpminsd $dst, $a, $b" (= dst (vibin a b 32 6)))
+(encoding VPMINSD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x39))
+(instruction VPMAXSD (dst a b) "vpmaxsd $dst, $a, $b" (= dst (vibin a b 32 5)))
+(encoding VPMAXSD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x3D))
+(instruction VPMINUD (dst a b) "vpminud $dst, $a, $b" (= dst (vibin a b 32 8)))
+(encoding VPMINUD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x3B))
+(instruction VPMAXUD (dst a b) "vpmaxud $dst, $a, $b" (= dst (vibin a b 32 7)))
+(encoding VPMAXUD (Vdq Hdq Wdq) (vex-3src opsize 0x0F 0x38 0x3F))
+(instruction VPSHUFD (dst src sel) "vpshufd $dst, $src, $sel" (= dst (vshuf src src sel 32)))
+(encoding VPSHUFD (Vdq Wdq Ib) (vex-2src opsize 0x0F 0x70))
+(instruction VPMOVMSKB (dst src) "vpmovmskb $dst, $src" (= dst (vmovmsk src 8)))
+(encoding VPMOVMSKB (Gd Udq) (vex-2src opsize 0x0F 0xD7))
+(instruction VPTEST (a b) "vptest $a, $b" (block
+    (= ZF (== (& a b) 0))
+    (= CF (== (& b (~ a)) 0))
+    (= AF 0) (= OF 0) (= PF 0) (= SF 0)))
+(encoding VPTEST (Vdq Wdq) (vex-2src opsize 0x0F 0x38 0x17))
+(instruction VPMOVSXBW (dst src) "vpmovsxbw $dst, $src" (= dst (vsext src 8 16)))
+(encoding VPMOVSXBW (Vdq Wh) (vex-2src opsize 0x0F 0x38 0x20))
+(instruction VPMOVZXBW (dst src) "vpmovzxbw $dst, $src" (= dst (vzext src 8 16)))
+(encoding VPMOVZXBW (Vdq Wh) (vex-2src opsize 0x0F 0x38 0x30))
+(instruction VPMOVSXWD (dst src) "vpmovsxwd $dst, $src" (= dst (vsext src 16 32)))
+(encoding VPMOVSXWD (Vdq Wh) (vex-2src opsize 0x0F 0x38 0x23))
+(instruction VPMOVZXWD (dst src) "vpmovzxwd $dst, $src" (= dst (vzext src 16 32)))
+(encoding VPMOVZXWD (Vdq Wh) (vex-2src opsize 0x0F 0x38 0x33))
+(instruction VPMOVSXDQ (dst src) "vpmovsxdq $dst, $src" (= dst (vsext src 32 64)))
+(encoding VPMOVSXDQ (Vdq Wh) (vex-2src opsize 0x0F 0x38 0x25))
+(instruction VPMOVZXDQ (dst src) "vpmovzxdq $dst, $src" (= dst (vzext src 32 64)))
+(encoding VPMOVZXDQ (Vdq Wh) (vex-2src opsize 0x0F 0x38 0x35))
+; shift by immediate: vvvv is the DESTINATION, rm the source (66 0F 71/72/73 /n).
+(instruction VPSRLW-I (dst src count) "vpsrlw $dst, $src, $count" (= dst (vishi src count 16 1)))
+(encoding VPSRLW-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x71 /2))
+(instruction VPSRAW-I (dst src count) "vpsraw $dst, $src, $count" (= dst (vishi src count 16 2)))
+(encoding VPSRAW-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x71 /4))
+(instruction VPSLLW-I (dst src count) "vpsllw $dst, $src, $count" (= dst (vishi src count 16 0)))
+(encoding VPSLLW-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x71 /6))
+(instruction VPSRLD-I (dst src count) "vpsrld $dst, $src, $count" (= dst (vishi src count 32 1)))
+(encoding VPSRLD-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x72 /2))
+(instruction VPSRAD-I (dst src count) "vpsrad $dst, $src, $count" (= dst (vishi src count 32 2)))
+(encoding VPSRAD-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x72 /4))
+(instruction VPSLLD-I (dst src count) "vpslld $dst, $src, $count" (= dst (vishi src count 32 0)))
+(encoding VPSLLD-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x72 /6))
+(instruction VPSRLQ-I (dst src count) "vpsrlq $dst, $src, $count" (= dst (vishi src count 64 1)))
+(encoding VPSRLQ-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x73 /2))
+(instruction VPSRLDQ-I (dst src count) "vpsrldq $dst, $src, $count" (= dst (vbshift src count r)))
+(encoding VPSRLDQ-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x73 /3))
+(instruction VPSLLQ-I (dst src count) "vpsllq $dst, $src, $count" (= dst (vishi src count 64 0)))
+(encoding VPSLLQ-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x73 /6))
+(instruction VPSLLDQ-I (dst src count) "vpslldq $dst, $src, $count" (= dst (vbshift src count l)))
+(encoding VPSLLDQ-I (Hdq Udq Ib) (vex-3src opsize 0x0F 0x73 /7))
+; shift by xmm count
+(instruction VPSRLW (dst a count) "vpsrlw $dst, $a, $count" (= dst (vishr a count 16 1)))
+(encoding VPSRLW (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xD1))
+(instruction VPSRLD (dst a count) "vpsrld $dst, $a, $count" (= dst (vishr a count 32 1)))
+(encoding VPSRLD (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xD2))
+(instruction VPSRLQ (dst a count) "vpsrlq $dst, $a, $count" (= dst (vishr a count 64 1)))
+(encoding VPSRLQ (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xD3))
+(instruction VPSRAW (dst a count) "vpsraw $dst, $a, $count" (= dst (vishr a count 16 2)))
+(encoding VPSRAW (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xE1))
+(instruction VPSRAD (dst a count) "vpsrad $dst, $a, $count" (= dst (vishr a count 32 2)))
+(encoding VPSRAD (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xE2))
+(instruction VPSLLW (dst a count) "vpsllw $dst, $a, $count" (= dst (vishr a count 16 0)))
+(encoding VPSLLW (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xF1))
+(instruction VPSLLD (dst a count) "vpslld $dst, $a, $count" (= dst (vishr a count 32 0)))
+(encoding VPSLLD (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xF2))
+(instruction VPSLLQ (dst a count) "vpsllq $dst, $a, $count" (= dst (vishr a count 64 0)))
+(encoding VPSLLQ (Vdq Hdq Wo) (vex-3src opsize 0x0F 0xF3))
+
+; --- BMI2 (VEX, GPR) ---
+(instruction SARX (dst src count) "sarx $dst, $src, $count"
+    (= dst (>>a src (& count (- (bitwidth dst) 1)))))
 (encoding SARX (Gv Ev Hv) (vex-3src rep 0x0F 0x38 0xF7))
-(instruction SHLX (dst src count) "shlx $dst, $src, $count" (intrinsic shlx dst src count))
+(instruction SHLX (dst src count) "shlx $dst, $src, $count"
+    (= dst (<< src (& count (- (bitwidth dst) 1)))))
 (encoding SHLX (Gv Ev Hv) (vex-3src opsize 0x0F 0x38 0xF7))
-(instruction SHRX (dst src count) "shrx $dst, $src, $count" (intrinsic shrx dst src count))
+(instruction SHRX (dst src count) "shrx $dst, $src, $count"
+    (= dst (>> src (& count (- (bitwidth dst) 1)))))
 (encoding SHRX (Gv Ev Hv) (vex-3src repnz 0x0F 0x38 0xF7))
 (instruction BZHI (dst src count) "bzhi $dst, $src, $count" (intrinsic bzhi dst src count))
 (encoding BZHI (Gv Ev Hv) (vex-3src 0x0F 0x38 0xF5))
 
-; --- VEX scalar-float: DECODE ONLY, and the reason is a real IL gap ---
-;
-; A full-scope capstone census over a 44MB shipped x86-64 binary names AVX as the
-; decoder's largest remaining gap (1,114 on-stream instructions vs 16 off-stream =
-; 70:1, so these are real code and not linear-sweep debris inside desync windows).
-; The scalar third of that population -- vmulsd 62, vmovsd 55, vsubsd 42 -- is
-; reachable through the same u64 carrier the SSE scalar cluster already uses, so it
-; looked like the cheap half. It isn't, and the reason is worth writing down.
-;
-; SDM Vol 2A on VADDSD: DEST[63:0] := SRC1[63:0] + SRC2[63:0]
-;                       DEST[127:64] := SRC1[127:64]
-;                       DEST[MAXVL-1:128] := 0
-; The upper lane comes from SRC1 -- the vvvv operand -- NOT from DEST. Our
-; write_operand for an Xmm at width<128 preserves DEST's own upper (day-47 Ⓐ,
-; silicon-verified against bare Intel: 1,350 of 1,600 diffs were this one fix).
-; Those agree ONLY when dst == src1, which is the common two-operand-looking case
-; and NOT the general one. So a `(= dst (+ (as-f64 src1) (as-f64 src2)))` body
-; would be silently wrong whenever a compiler emits the three-register form -- the
-; exact class the exec tier exists to catch, shipped as a body that type-checks.
-;
-; Expressing it faithfully needs a lane-insert primitive (write lane 0 of a v128
-; while taking lane 1 from a third operand). IlLower has no vector node at all
-; today: 7 IlVec* kinds exist in the shared IL, 0 are emitted, 0 evaluated.
-; So these land `(intrinsic ...)` -- decode is what the corpus needs (a missing
-; ENCODING desynchronises a linear sweep for the rest of the walk; a missing
-; SEMANTICS is one instruction that dies loud at RunIntrinsic).
-;
-; Every encoding below was verified against `objdump -M intel` BEFORE it was
-; written, not composed: C5 F3 59 C1 is `vmulsd xmm0,xmm1,xmm1`, C5 F2 10 C1 is
-; `vmovss xmm0,xmm1,xmm1`. Hsd/Hss parse with no generator change -- OperandSpec
-; maps 'H' with any non-"v" width to OpClass.XmmVvvv (:159).
-
-(instruction VMOVSS (dst src1 src2) "vmovss $dst, $src1, $src2" (intrinsic vmovss dst src1 src2))
-(encoding VMOVSS (Vss Hss Wss) (vex-3src rep 0x0F 0x10))
-(instruction VADDSS (dst src1 src2) "vaddss $dst, $src1, $src2" (intrinsic vaddss dst src1 src2))
-(encoding VADDSS (Vss Hss Wss) (vex-3src rep 0x0F 0x58))
-(instruction VMULSS (dst src1 src2) "vmulss $dst, $src1, $src2" (intrinsic vmulss dst src1 src2))
-(encoding VMULSS (Vss Hss Wss) (vex-3src rep 0x0F 0x59))
-(instruction VSUBSS (dst src1 src2) "vsubss $dst, $src1, $src2" (intrinsic vsubss dst src1 src2))
-(encoding VSUBSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5C))
-(instruction VDIVSS (dst src1 src2) "vdivss $dst, $src1, $src2" (intrinsic vdivss dst src1 src2))
-(encoding VDIVSS (Vss Hss Wss) (vex-3src rep 0x0F 0x5E))
-
-(instruction VMOVSD (dst src1 src2) "vmovsd $dst, $src1, $src2" (intrinsic vmovsd dst src1 src2))
-(encoding VMOVSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x10))
-(instruction VADDSD (dst src1 src2) "vaddsd $dst, $src1, $src2" (intrinsic vaddsd dst src1 src2))
-(encoding VADDSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x58))
-(instruction VMULSD (dst src1 src2) "vmulsd $dst, $src1, $src2" (intrinsic vmulsd dst src1 src2))
-(encoding VMULSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x59))
-(instruction VSUBSD (dst src1 src2) "vsubsd $dst, $src1, $src2" (intrinsic vsubsd dst src1 src2))
-(encoding VSUBSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5C))
-(instruction VDIVSD (dst src1 src2) "vdivsd $dst, $src1, $src2" (intrinsic vdivsd dst src1 src2))
-(encoding VDIVSD (Vsd Hsd Wsd) (vex-3src repnz 0x0F 0x5E))
-
-; --- VEX packed-float: DECODE ONLY, same lane reason plus a WIDTH one ---
-;
-; The packed half of the AVX census (vmulps 84, vaddps 73, vshufps 66, vsubps 43 =
-; 266 of the top-8's 472). Two reasons these can't carry semantics yet, and the
-; second one is the harder:
-;
-; (1) THE LANE PROBLEM, as for the scalar rows above: SDM says the unused upper
-;     lanes of a VEX 128-bit form are ZEROED (DEST[MAXVL-1:128] := 0), where the
-;     legacy SSE form leaves them untouched. That is a difference our
-;     write_operand cannot express -- it has one rule per width, not one per
-;     encoding-family.
-; (2) THE WIDTH PROBLEM, which is new here: VEX.L selects 128 or 256 bits at
-;     DECODE time, so `vmulps` is two different operations behind one def. The
-;     decoder already handles this (DecodedInsn.p.VexL, and v_width() returns
-;     256 when set), and the C# disassembler renders ymm correctly -- verified:
-;     C5 F1 EF C2 -> "vpxor xmm0, xmm1, xmm2" and C5 F5 EF C2 -> "vpxor ymm0,
-;     ymm1, ymm2". But there is no 256-bit VALUE in either evaluator. X86Machine's
-;     Xmm[] is ulong[32] -- SIXTY-FOUR bits per slot, not 128. X86Machine.cs:25-28
-;     says so in its own comment: "NOT the full 128 bits: Eval's carrier is ulong,
-;     so anything wider dies loud at the Eval default." The Rust interpreter is
-;     [u128; 32] (state.rs:12) and flattens each slot to TWO u64 words (state.rs:84).
-;     So the two evaluators do not even agree at 128, let alone 256: a ymm operand
-;     has nowhere to live in either, and a packed 128-bit value has nowhere to live
-;     in the C# one.
-;       (An earlier revision of this comment said the C# side was u128. Wrong, and
-;        the correction makes the case for decode-only STRONGER, not weaker. The
-;        right value was in the file the comment cites, in that file's own comment,
-;        two lines above the array declaration.)
-;
-; So a body here would be wrong in two independent ways at once, and one of them
-; (L=1) has no representable result at all. Intrinsic-bodied: the corpus gets its
-; lengths, and the vector tier gets a clean slate when it lands.
-;
-; Every encoding objdump-verified BEFORE the edit, at BOTH lengths:
-;   C5 F0 59 C1 = vmulps xmm0,xmm1,xmm1      C5 F4 59 C1 = vmulps ymm0,ymm1,ymm1
-;   C5 F1 59 C1 = vmulpd xmm0,xmm1,xmm1      C5 F0 C6 C1 00 = vshufps xmm...,0x0
-; Note pp=0 (no mprefix token) is the ps form -- first use of a prefix-less VEX row
-; in this .isa; ParseOpcodes leaves mprefix null unless rep/repnz/opsize appears,
-; so it parses with no generator change (XFusionDef.cs:165).
-
-(instruction VADDPS (dst src1 src2) "vaddps $dst, $src1, $src2" (intrinsic vaddps dst src1 src2))
-(encoding VADDPS (Vps Hps Wps) (vex-3src 0x0F 0x58))
-(instruction VMULPS (dst src1 src2) "vmulps $dst, $src1, $src2" (intrinsic vmulps dst src1 src2))
-(encoding VMULPS (Vps Hps Wps) (vex-3src 0x0F 0x59))
-(instruction VSUBPS (dst src1 src2) "vsubps $dst, $src1, $src2" (intrinsic vsubps dst src1 src2))
-(encoding VSUBPS (Vps Hps Wps) (vex-3src 0x0F 0x5C))
-(instruction VDIVPS (dst src1 src2) "vdivps $dst, $src1, $src2" (intrinsic vdivps dst src1 src2))
-(encoding VDIVPS (Vps Hps Wps) (vex-3src 0x0F 0x5E))
-
-(instruction VADDPD (dst src1 src2) "vaddpd $dst, $src1, $src2" (intrinsic vaddpd dst src1 src2))
-(encoding VADDPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x58))
-(instruction VMULPD (dst src1 src2) "vmulpd $dst, $src1, $src2" (intrinsic vmulpd dst src1 src2))
-(encoding VMULPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x59))
-(instruction VSUBPD (dst src1 src2) "vsubpd $dst, $src1, $src2" (intrinsic vsubpd dst src1 src2))
-(encoding VSUBPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5C))
-(instruction VDIVPD (dst src1 src2) "vdivpd $dst, $src1, $src2" (intrinsic vdivpd dst src1 src2))
-(encoding VDIVPD (Vpd Hpd Wpd) (vex-3src opsize 0x0F 0x5E))
-
-(instruction VSHUFPS (dst src1 src2 sel) "vshufps $dst, $src1, $src2, $sel" (intrinsic vshufps dst src1 src2 sel))
-(encoding VSHUFPS (Vps Hps Wps Ib) (vex-3src 0x0F 0xC6))
-(instruction VSHUFPD (dst src1 src2 sel) "vshufpd $dst, $src1, $src2, $sel" (intrinsic vshufpd dst src1 src2 sel))
-(encoding VSHUFPD (Vpd Hpd Wpd Ib) (vex-3src opsize 0x0F 0xC6))
+; --- FMA3 (66 0F38, W0 = single, W1 = double) ---
+; 132: dst = dst*src3 + src2   213: dst = src2*dst + src3   231: dst = src2*src3 + dst
+; (src2 = vvvv operand `a`, src3 = r/m operand `b`). One rounding: (vfma x y z ew mode)
+; lowers each lane to the typed "fma" IL intrinsic. mode: 0 madd, 1 msub, 2 nmadd,
+; 3 nmsub, 4 maddsub (even lanes subtract), 5 msubadd (even lanes add).
+(instruction VFMADDSUB132PS (dst a b) "vfmaddsub132ps $dst, $a, $b" (= dst (vfma dst b a 32 4)))
+(encoding VFMADDSUB132PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0x96))
+(instruction VFMADDSUB132PD (dst a b) "vfmaddsub132pd $dst, $a, $b" (= dst (vfma dst b a 64 4)))
+(encoding VFMADDSUB132PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0x96))
+(instruction VFMADDSUB213PS (dst a b) "vfmaddsub213ps $dst, $a, $b" (= dst (vfma a dst b 32 4)))
+(encoding VFMADDSUB213PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xA6))
+(instruction VFMADDSUB213PD (dst a b) "vfmaddsub213pd $dst, $a, $b" (= dst (vfma a dst b 64 4)))
+(encoding VFMADDSUB213PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xA6))
+(instruction VFMADDSUB231PS (dst a b) "vfmaddsub231ps $dst, $a, $b" (= dst (vfma a b dst 32 4)))
+(encoding VFMADDSUB231PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xB6))
+(instruction VFMADDSUB231PD (dst a b) "vfmaddsub231pd $dst, $a, $b" (= dst (vfma a b dst 64 4)))
+(encoding VFMADDSUB231PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xB6))
+(instruction VFMSUBADD132PS (dst a b) "vfmsubadd132ps $dst, $a, $b" (= dst (vfma dst b a 32 5)))
+(encoding VFMSUBADD132PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0x97))
+(instruction VFMSUBADD132PD (dst a b) "vfmsubadd132pd $dst, $a, $b" (= dst (vfma dst b a 64 5)))
+(encoding VFMSUBADD132PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0x97))
+(instruction VFMSUBADD213PS (dst a b) "vfmsubadd213ps $dst, $a, $b" (= dst (vfma a dst b 32 5)))
+(encoding VFMSUBADD213PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xA7))
+(instruction VFMSUBADD213PD (dst a b) "vfmsubadd213pd $dst, $a, $b" (= dst (vfma a dst b 64 5)))
+(encoding VFMSUBADD213PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xA7))
+(instruction VFMSUBADD231PS (dst a b) "vfmsubadd231ps $dst, $a, $b" (= dst (vfma a b dst 32 5)))
+(encoding VFMSUBADD231PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xB7))
+(instruction VFMSUBADD231PD (dst a b) "vfmsubadd231pd $dst, $a, $b" (= dst (vfma a b dst 64 5)))
+(encoding VFMSUBADD231PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xB7))
+(instruction VFMADD132PS (dst a b) "vfmadd132ps $dst, $a, $b" (= dst (vfma dst b a 32 0)))
+(encoding VFMADD132PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0x98))
+(instruction VFMADD132PD (dst a b) "vfmadd132pd $dst, $a, $b" (= dst (vfma dst b a 64 0)))
+(encoding VFMADD132PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0x98))
+(instruction VFMADD132SS (dst a b) "vfmadd132ss $dst, $a, $b" (= dst (vscalar dst (fma dst b a 32 0))))
+(encoding VFMADD132SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0x99))
+(instruction VFMADD132SD (dst a b) "vfmadd132sd $dst, $a, $b" (= dst (vscalar dst (fma dst b a 64 0))))
+(encoding VFMADD132SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0x99))
+(instruction VFMADD213PS (dst a b) "vfmadd213ps $dst, $a, $b" (= dst (vfma a dst b 32 0)))
+(encoding VFMADD213PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xA8))
+(instruction VFMADD213PD (dst a b) "vfmadd213pd $dst, $a, $b" (= dst (vfma a dst b 64 0)))
+(encoding VFMADD213PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xA8))
+(instruction VFMADD213SS (dst a b) "vfmadd213ss $dst, $a, $b" (= dst (vscalar dst (fma a dst b 32 0))))
+(encoding VFMADD213SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xA9))
+(instruction VFMADD213SD (dst a b) "vfmadd213sd $dst, $a, $b" (= dst (vscalar dst (fma a dst b 64 0))))
+(encoding VFMADD213SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xA9))
+(instruction VFMADD231PS (dst a b) "vfmadd231ps $dst, $a, $b" (= dst (vfma a b dst 32 0)))
+(encoding VFMADD231PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xB8))
+(instruction VFMADD231PD (dst a b) "vfmadd231pd $dst, $a, $b" (= dst (vfma a b dst 64 0)))
+(encoding VFMADD231PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xB8))
+(instruction VFMADD231SS (dst a b) "vfmadd231ss $dst, $a, $b" (= dst (vscalar dst (fma a b dst 32 0))))
+(encoding VFMADD231SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xB9))
+(instruction VFMADD231SD (dst a b) "vfmadd231sd $dst, $a, $b" (= dst (vscalar dst (fma a b dst 64 0))))
+(encoding VFMADD231SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xB9))
+(instruction VFMSUB132PS (dst a b) "vfmsub132ps $dst, $a, $b" (= dst (vfma dst b a 32 1)))
+(encoding VFMSUB132PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0x9A))
+(instruction VFMSUB132PD (dst a b) "vfmsub132pd $dst, $a, $b" (= dst (vfma dst b a 64 1)))
+(encoding VFMSUB132PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0x9A))
+(instruction VFMSUB132SS (dst a b) "vfmsub132ss $dst, $a, $b" (= dst (vscalar dst (fma dst b a 32 1))))
+(encoding VFMSUB132SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0x9B))
+(instruction VFMSUB132SD (dst a b) "vfmsub132sd $dst, $a, $b" (= dst (vscalar dst (fma dst b a 64 1))))
+(encoding VFMSUB132SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0x9B))
+(instruction VFMSUB213PS (dst a b) "vfmsub213ps $dst, $a, $b" (= dst (vfma a dst b 32 1)))
+(encoding VFMSUB213PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xAA))
+(instruction VFMSUB213PD (dst a b) "vfmsub213pd $dst, $a, $b" (= dst (vfma a dst b 64 1)))
+(encoding VFMSUB213PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xAA))
+(instruction VFMSUB213SS (dst a b) "vfmsub213ss $dst, $a, $b" (= dst (vscalar dst (fma a dst b 32 1))))
+(encoding VFMSUB213SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xAB))
+(instruction VFMSUB213SD (dst a b) "vfmsub213sd $dst, $a, $b" (= dst (vscalar dst (fma a dst b 64 1))))
+(encoding VFMSUB213SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xAB))
+(instruction VFMSUB231PS (dst a b) "vfmsub231ps $dst, $a, $b" (= dst (vfma a b dst 32 1)))
+(encoding VFMSUB231PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xBA))
+(instruction VFMSUB231PD (dst a b) "vfmsub231pd $dst, $a, $b" (= dst (vfma a b dst 64 1)))
+(encoding VFMSUB231PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xBA))
+(instruction VFMSUB231SS (dst a b) "vfmsub231ss $dst, $a, $b" (= dst (vscalar dst (fma a b dst 32 1))))
+(encoding VFMSUB231SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xBB))
+(instruction VFMSUB231SD (dst a b) "vfmsub231sd $dst, $a, $b" (= dst (vscalar dst (fma a b dst 64 1))))
+(encoding VFMSUB231SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xBB))
+(instruction VFNMADD132PS (dst a b) "vfnmadd132ps $dst, $a, $b" (= dst (vfma dst b a 32 2)))
+(encoding VFNMADD132PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0x9C))
+(instruction VFNMADD132PD (dst a b) "vfnmadd132pd $dst, $a, $b" (= dst (vfma dst b a 64 2)))
+(encoding VFNMADD132PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0x9C))
+(instruction VFNMADD132SS (dst a b) "vfnmadd132ss $dst, $a, $b" (= dst (vscalar dst (fma dst b a 32 2))))
+(encoding VFNMADD132SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0x9D))
+(instruction VFNMADD132SD (dst a b) "vfnmadd132sd $dst, $a, $b" (= dst (vscalar dst (fma dst b a 64 2))))
+(encoding VFNMADD132SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0x9D))
+(instruction VFNMADD213PS (dst a b) "vfnmadd213ps $dst, $a, $b" (= dst (vfma a dst b 32 2)))
+(encoding VFNMADD213PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xAC))
+(instruction VFNMADD213PD (dst a b) "vfnmadd213pd $dst, $a, $b" (= dst (vfma a dst b 64 2)))
+(encoding VFNMADD213PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xAC))
+(instruction VFNMADD213SS (dst a b) "vfnmadd213ss $dst, $a, $b" (= dst (vscalar dst (fma a dst b 32 2))))
+(encoding VFNMADD213SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xAD))
+(instruction VFNMADD213SD (dst a b) "vfnmadd213sd $dst, $a, $b" (= dst (vscalar dst (fma a dst b 64 2))))
+(encoding VFNMADD213SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xAD))
+(instruction VFNMADD231PS (dst a b) "vfnmadd231ps $dst, $a, $b" (= dst (vfma a b dst 32 2)))
+(encoding VFNMADD231PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xBC))
+(instruction VFNMADD231PD (dst a b) "vfnmadd231pd $dst, $a, $b" (= dst (vfma a b dst 64 2)))
+(encoding VFNMADD231PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xBC))
+(instruction VFNMADD231SS (dst a b) "vfnmadd231ss $dst, $a, $b" (= dst (vscalar dst (fma a b dst 32 2))))
+(encoding VFNMADD231SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xBD))
+(instruction VFNMADD231SD (dst a b) "vfnmadd231sd $dst, $a, $b" (= dst (vscalar dst (fma a b dst 64 2))))
+(encoding VFNMADD231SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xBD))
+(instruction VFNMSUB132PS (dst a b) "vfnmsub132ps $dst, $a, $b" (= dst (vfma dst b a 32 3)))
+(encoding VFNMSUB132PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0x9E))
+(instruction VFNMSUB132PD (dst a b) "vfnmsub132pd $dst, $a, $b" (= dst (vfma dst b a 64 3)))
+(encoding VFNMSUB132PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0x9E))
+(instruction VFNMSUB132SS (dst a b) "vfnmsub132ss $dst, $a, $b" (= dst (vscalar dst (fma dst b a 32 3))))
+(encoding VFNMSUB132SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0x9F))
+(instruction VFNMSUB132SD (dst a b) "vfnmsub132sd $dst, $a, $b" (= dst (vscalar dst (fma dst b a 64 3))))
+(encoding VFNMSUB132SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0x9F))
+(instruction VFNMSUB213PS (dst a b) "vfnmsub213ps $dst, $a, $b" (= dst (vfma a dst b 32 3)))
+(encoding VFNMSUB213PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xAE))
+(instruction VFNMSUB213PD (dst a b) "vfnmsub213pd $dst, $a, $b" (= dst (vfma a dst b 64 3)))
+(encoding VFNMSUB213PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xAE))
+(instruction VFNMSUB213SS (dst a b) "vfnmsub213ss $dst, $a, $b" (= dst (vscalar dst (fma a dst b 32 3))))
+(encoding VFNMSUB213SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xAF))
+(instruction VFNMSUB213SD (dst a b) "vfnmsub213sd $dst, $a, $b" (= dst (vscalar dst (fma a dst b 64 3))))
+(encoding VFNMSUB213SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xAF))
+(instruction VFNMSUB231PS (dst a b) "vfnmsub231ps $dst, $a, $b" (= dst (vfma a b dst 32 3)))
+(encoding VFNMSUB231PS (Vps Hps Wps) (vex-3src opsize w0 0x0F 0x38 0xBE))
+(instruction VFNMSUB231PD (dst a b) "vfnmsub231pd $dst, $a, $b" (= dst (vfma a b dst 64 3)))
+(encoding VFNMSUB231PD (Vpd Hpd Wpd) (vex-3src opsize w1 0x0F 0x38 0xBE))
+(instruction VFNMSUB231SS (dst a b) "vfnmsub231ss $dst, $a, $b" (= dst (vscalar dst (fma a b dst 32 3))))
+(encoding VFNMSUB231SS (Vss Hss Wss) (vex-3src opsize w0 0x0F 0x38 0xBF))
+(instruction VFNMSUB231SD (dst a b) "vfnmsub231sd $dst, $a, $b" (= dst (vscalar dst (fma a b dst 64 3))))
+(encoding VFNMSUB231SD (Vsd Hsd Wsd) (vex-3src opsize w1 0x0F 0x38 0xBF))

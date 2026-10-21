@@ -32,12 +32,15 @@
 (instruction UNPCKHPD (dst src) "unpckhpd $dst, $src" (= dst (vzip dst src 64 #t)))
 (encoding UNPCKHPD (Vpd Wpd) (opsize 0x0F 0x15))
 
-(instruction MOVLPD (dst src) "movlpd $dst, $src" (intrinsic movlpd dst src))
+; MOVLPD/MOVHPD: the double-typed spellings of MOVLPS/MOVHPS -- low/high qword
+; load with the other half preserved, or a 64-bit store of that half.
+(instruction MOVLPD (dst src) "movlpd $dst, $src" (= dst src))
 (encoding MOVLPD (Vq Mq) (opsize 0x0F 0x12))
 (encoding MOVLPD (Mq Vq) (opsize 0x0F 0x13))
-(instruction MOVHPD (dst src) "movhpd $dst, $src" (intrinsic movhpd dst src))
-(encoding MOVHPD (Vq Mq) (opsize 0x0F 0x16))
-(encoding MOVHPD (Mq Vq) (opsize 0x0F 0x17))
+(instruction MOVHPD (dst src) "movhpd $dst, $src" (= dst (vzip dst src 64 #f)))
+(encoding MOVHPD (Vpd Mq) (opsize 0x0F 0x16))
+(instruction MOVHPD-ST (dst src) "movhpd $dst, $src" (= dst (vzip src src 64 #t)))
+(encoding MOVHPD-ST (Mq Vpd) (opsize 0x0F 0x17))
 
 ; --- pd/sd arithmetic ---
 (instruction ADDPD (dst src) "addpd $dst, $src" (= dst (vfbin dst src 64 0)))
@@ -234,7 +237,11 @@
 (instruction PMADDWD (dst src) "pmaddwd $dst, $src" (= dst (vmadd dst src 16)))
 (encoding PMADDWD (Vdq Wdq) (opsize 0x0F 0xF5))
 (instruction PINSRW (dst src sel) "pinsrw $dst, $src, $sel" (= dst (vlane-set dst src sel 16)))
-(encoding PINSRW (Vdq Ed Ib) (opsize 0x0F 0xC4))
+; Register source is r32 (low word used); the memory source is m16, not m32.
+(encoding PINSRW (Vdq Ed Ib) (opsize 0x0F 0xC4 mod11))
+(encoding PINSRW (Vdq Mw Ib) (opsize 0x0F 0xC4 mem))
+(instruction PEXTRW (dst src sel) "pextrw $dst, $src, $sel" (= dst (vlane-get src sel 16)))
+(encoding PEXTRW (Gd Udq Ib) (opsize 0x0F 0xC5))
 (instruction PACKSSDW (dst src) "packssdw $dst, $src" (= dst (vpacks dst src 32)))
 (encoding PACKSSDW (Vdq Wdq) (opsize 0x0F 0x6B))
 
@@ -355,7 +362,7 @@
 (encoding CVTSD2SS (Vss Wsd) (repnz 0x0F 0x5A))
 ; CVTPS2PD: low 2× f32 → 2× f64.
 (instruction CVTPS2PD (dst src) "cvtps2pd $dst, $src" (= dst (vcvt src 2)))
-(encoding CVTPS2PD (Vpd Wps) (0x0F 0x5A))
+(encoding CVTPS2PD (Vpd Wq) (0x0F 0x5A))   ; m64 source: two f32 lanes
 ; CVTPD2PS: 2× f64 → low 2× f32, upper 64 zeroed.
 (instruction CVTPD2PS (dst src) "cvtpd2ps $dst, $src" (= dst (vcvt src 3)))
 (encoding CVTPD2PS (Vps Wpd) (opsize 0x0F 0x5A))
@@ -418,3 +425,19 @@
 (encoding PREFETCHW (M) (0x0F 0x0D /1))
 (instruction PREFETCH-A (src) "prefetch $src" (block))
 (encoding PREFETCH-A (M) (0x0F 0x0D /0))
+
+; --- integer multiply-high, word min/max, unsigned-saturating pack (corpus-found gaps) ---
+(instruction PMULLW (dst src) "pmullw $dst, $src" (= dst (vibin dst src 16 2)))
+(encoding PMULLW (Vdq Wdq) (opsize 0x0F 0xD5))
+(instruction PMULHW (dst src) "pmulhw $dst, $src" (= dst (vmulhi dst src 16 #t)))
+(encoding PMULHW (Vdq Wdq) (opsize 0x0F 0xE5))
+(instruction PMULHUW (dst src) "pmulhuw $dst, $src" (= dst (vmulhi dst src 16 #f)))
+(encoding PMULHUW (Vdq Wdq) (opsize 0x0F 0xE4))
+(instruction PMAXSW (dst src) "pmaxsw $dst, $src" (= dst (vibin dst src 16 5)))
+(encoding PMAXSW (Vdq Wdq) (opsize 0x0F 0xEE))
+(instruction PMINSW (dst src) "pminsw $dst, $src" (= dst (vibin dst src 16 6)))
+(encoding PMINSW (Vdq Wdq) (opsize 0x0F 0xEA))
+(instruction PACKUSWB (dst src) "packuswb $dst, $src" (= dst (vpacku dst src 16)))
+(encoding PACKUSWB (Vdq Wdq) (opsize 0x0F 0x67))
+(instruction PACKSSWB (dst src) "packsswb $dst, $src" (= dst (vpacks dst src 16)))
+(encoding PACKSSWB (Vdq Wdq) (opsize 0x0F 0x63))

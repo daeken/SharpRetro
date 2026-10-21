@@ -125,10 +125,12 @@ public class DivOneTests {
         Assert.That(b.Body.ToList().FindLastIndex(x => x is IlIf), Is.LessThan(firstWrite));
     }
     [Test]
-    public void SignedDivisionRemainsDistinctAndOpaque() {
+    public void SignedDivisionIsTypedAndDistinct() {
+        // IDIV lowers to typed effects (SDiv/SRem plus the #DE checks), no longer the
+        // opaque idiv-wide marker; it must still differ from DIV on the same bits.
         var b = X86Lifter.Lift(Convert.FromHexString("f7f9"), 0x1000, XMode.Bits32);
-        Assert.That(b.Body.Single(), Is.TypeOf<IlIntrin>());
-        Assert.That(((IlIntrin)b.Body.Single()).Name, Is.EqualTo("idiv-wide"));
+        Assert.That(b.Body.OfType<IlIntrin>(), Is.Empty);
+        Assert.That(b.ToString(), Does.Contain("sdiv").And.Contain("srem"));
         var u = Machine("f6f1", XMode.Bits32); var s = Machine("f6f9", XMode.Bits32);
         foreach(var m in new[] { u, s }) { m.Gpr[0] = 0xff80; m.Gpr[1] = 2; }
         Assert.Throws<DivideByZeroException>(() => u.Step());

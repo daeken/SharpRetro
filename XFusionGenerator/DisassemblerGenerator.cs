@@ -95,7 +95,15 @@ public static class DisassemblerGenerator {
 						_ => throw new NotSupportedException(vd.MandatoryPrefix)
 					});
 					if(vd.VexW is not null) conds.Add(vd.VexW.Value ? "p.RexW" : "!p.RexW");
+					if(vd.VexL is not null) conds.Add(vd.VexL.Value ? "p.VexL" : "!p.VexL");
 					if(vd.Vex == VexMode.TwoSrc) conds.Add("p.VexVvvv == 0");  // #UD otherwise
+					// VEX rows are tried in order and a body that rejects returns false for
+					// the whole opcode, so a row sharing (map, opcode, pp) with a sibling must
+					// be fully selected HERE: by ModRM.reg (/N groups: vpslld 66 0F 72 /6) and
+					// by ModRM.mod (vmovss reg,reg,reg vs reg,mem).
+					if(vd.RegExtension >= 0) conds.Add($"i < code.Length && ((code[i] >> 3) & 7) == {vd.RegExtension}");
+					if(vd.Mod11 == true || vd.Operands.Any(o => o.RegOnly)) conds.Add("i < code.Length && (code[i] >> 6) == 3");
+					if(vd.Mod11 == false || vd.Operands.Any(o => o.MemOnly)) conds.Add("i < code.Length && (code[i] >> 6) != 3");
 					sb.AppendLine($"\t\t\t\t\tif({string.Join(" && ", conds)}) {{");
 					EmitDefBody(sb, vd, "\t\t\t\t\t\t");
 					sb.AppendLine("\t\t\t\t\t}");
@@ -123,8 +131,8 @@ public static class DisassemblerGenerator {
 				// First case: MOVQ-XS(Udq)/MOVQ-XM(Mq) at 66 0F D6. Mirrors the
 				// byExt mod-split below (which only covers no-mprefix rows).
 				if(pdefs.Count == 2 && pdefs.All(d => d.RegExtension < 0)) {
-					var rF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
-					var mF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+					var rF = pdefs.FirstOrDefault(d => d.Mod11 == true || d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+					var mF = pdefs.FirstOrDefault(d => d.Mod11 == false || d.Operands.Any(o => o.MemOnly));
 					if(rF != null && mF != null && rF != mF) {
 						sb.AppendLine("\t\t\t\t\tif(i >= code.Length) return false;");
 						sb.AppendLine("\t\t\t\t\tif((code[i] >> 6) == 3) {");
@@ -185,8 +193,8 @@ public static class DisassemblerGenerator {
 			// mod-field discrimination (0F 12: movhlps mod==11 / movlps mem): a RegOnly
 			// (U*-operand) def and a MemOnly def can share (map, opcode) without /N.
 			if(byExt.Count == 2 && byExt.All(d => d.RegExtension < 0)) {
-				var regForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
-				var memForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+				var regForm = byExt.FirstOrDefault(d => d.Mod11 == true || d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+				var memForm = byExt.FirstOrDefault(d => d.Mod11 == false || d.Operands.Any(o => o.MemOnly));
 				if(regForm != null && memForm != null && regForm != memForm) {
 					sb.AppendLine("\t\t\t\tif(i >= code.Length) return false;");
 					sb.AppendLine("\t\t\t\tif((code[i] >> 6) == 3) {");
@@ -282,7 +290,8 @@ public static class DisassemblerGenerator {
 			// the XmmRmReg operand site used to carry a comment saying this was
 			// "enforced by MemOnly-inverse below" and no such gate was ever emitted.
 			// `0f 50 01` decoded as MOVMSKPS; objdump says `movmskps eax,(bad)`.
-			if(def.Operands.Any(o => o.RegOnly)) sb.AppendLine($"{ind}if(!{m}.IsReg) return false;");
+			if(def.Operands.Any(o => o.RegOnly) || def.Mod11 == true) sb.AppendLine($"{ind}if(!{m}.IsReg) return false;");
+			if(def.Mod11 == false && !memOnly) sb.AppendLine($"{ind}if({m}.IsReg) return false;");
 			// LOCK's other half: legal mnemonic but register destination — still #UD.
 			if(Lockable.Contains(def.Mnemonic) && def.Operands.Count > 0 && def.Operands[0].Class == OpClass.ModRmRm)
 				sb.AppendLine($"{ind}if(p.Lock && {m}.IsReg) return false;");
@@ -348,7 +357,8 @@ public static class DisassemblerGenerator {
 		string VecPtrBits() => spec.Width switch {
 			WCode.ss => "32", WCode.sd => "64", WCode.q => "64", WCode.d => "32",
 			WCode.b => "8", WCode.w => "16",
-			WCode.ps or WCode.pd or WCode.dq or WCode.x => "128",
+			WCode.ps or WCode.pd or WCode.dq or WCode.x or WCode.o => "128",
+			WCode.h => "(p.VexL ? 128 : 64)",
 			_ => throw new NotSupportedException($"vector width {spec.Width} for {spec.Text}")
 		};
 		string WidthExpr() => spec.Width switch {
@@ -367,7 +377,7 @@ public static class DisassemblerGenerator {
 			case OpClass.ModRmRm when spec.MemOnly && spec.Width == WCode.none:
 				// address-only operand (LEA): no size qualifier — XED renders bare 'ptr [...]'
 				return $"Decode.MemOperandString(in {m}, in p, mode, 0, pc + (ulong)i)";
-			case OpClass.ModRmRm when spec.MemOnly && spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.ss or WCode.sd or WCode.x: {
+			case OpClass.ModRmRm when spec.MemOnly && spec.Width is WCode.ps or WCode.pd or WCode.dq or WCode.ss or WCode.sd or WCode.x or WCode.o or WCode.h: {
 				var ptr = !Packed() ? VecPtrBits()
 					: def.Evex ? $"p.VecLen == 2 ? 512 : p.VecLen == 1 ? 256 : {VecPtrBits()}"
 					: $"p.VexL ? 256 : {VecPtrBits()}";

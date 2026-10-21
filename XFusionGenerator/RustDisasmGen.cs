@@ -72,7 +72,12 @@ public static class RustDisasmGen {
                         }
                     };
                     if(vd.VexW is not null) conds.Add(vd.VexW.Value ? "p.rex_w()" : "!p.rex_w()");
+                    if(vd.VexL is not null) conds.Add(vd.VexL.Value ? "p.vex_l" : "!p.vex_l");
                     if(vd.Vex == VexMode.TwoSrc) conds.Add("p.vex_vvvv == 0");
+                    // Same full row selection as the C# generator (ModRM.reg /N, ModRM.mod).
+                    if(vd.RegExtension >= 0) conds.Add($"i < code.len() && ((code[i] >> 3) & 7) == {vd.RegExtension}");
+                    if(vd.Mod11 == true || vd.Operands.Any(o => o.RegOnly)) conds.Add("i < code.len() && (code[i] >> 6) == 3");
+                    if(vd.Mod11 == false || vd.Operands.Any(o => o.MemOnly)) conds.Add("i < code.len() && (code[i] >> 6) != 3");
                     sb.AppendLine($"                if {string.Join(" && ", conds)} {{");
                     EmitDefBody(sb, vd, "                    ");
                     sb.AppendLine("                }");
@@ -103,8 +108,8 @@ public static class RustDisasmGen {
                 // Mirrors the byExt mod-split below (which only covers no-mprefix
                 // rows — 0F 12 movhlps/movlps).
                 if(pdefs.Count == 2 && pdefs.All(d => d.RegExtension < 0)) {
-                    var rF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
-                    var mF = pdefs.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+                    var rF = pdefs.FirstOrDefault(d => d.Mod11 == true || d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+                    var mF = pdefs.FirstOrDefault(d => d.Mod11 == false || d.Operands.Any(o => o.MemOnly));
                     if(rF != null && mF != null && rF != mF) {
                         sb.AppendLine("                if i >= code.len() { return None; }");
                         sb.AppendLine("                if (code[i] >> 6) == 3 {");
@@ -174,8 +179,8 @@ public static class RustDisasmGen {
 
             // mod-field discrimination (regonly + memonly pair, no /N — 0F 12 movhlps/movlps).
             if(byExt.Count == 2 && byExt.All(d => d.RegExtension < 0)) {
-                var regForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
-                var memForm = byExt.FirstOrDefault(d => d.Operands.Any(o => o.MemOnly));
+                var regForm = byExt.FirstOrDefault(d => d.Mod11 == true || d.Operands.Any(o => o.Class == OpClass.XmmRmReg));
+                var memForm = byExt.FirstOrDefault(d => d.Mod11 == false || d.Operands.Any(o => o.MemOnly));
                 if(regForm != null && memForm != null && regForm != memForm) {
                     sb.AppendLine("            if i >= code.len() { return None; }");
                     sb.AppendLine("            if (code[i] >> 6) == 3 {");
@@ -263,7 +268,9 @@ public static class RustDisasmGen {
             // Landed at BOTH generators in one edit -- a gate on one arm only is a
             // cross-backend divergence the byte-identity gate structurally cannot see,
             // because each backend is diffed against its OWN frozen oracle.
-            if(def.Operands.Any(o => o.RegOnly))
+            if(def.Mod11 == false && !def.Operands.Any(o => o.MemOnly))
+                sb.AppendLine($"{ind}if m.is_reg {{ return None; }}");
+            if(def.Operands.Any(o => o.RegOnly) || def.Mod11 == true)
                 sb.AppendLine($"{ind}if !m.is_reg {{ return None; }}");
             if(Lockable.Contains(def.Mnemonic) && def.Operands.Count > 0
                     && def.Operands[0].Class == OpClass.ModRmRm)

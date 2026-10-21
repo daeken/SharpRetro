@@ -285,6 +285,8 @@ public static class PeCensus {
 		/// First opaque node in the tree: intrinsic or unimplemented. Faults/traps are
 		/// real architectural semantics, not stubs.
 		static string FindStub(Il il) => il switch {
+			// Pure, fully specified value intrinsics are semantics, not stubs.
+			IlIntrin(_, "fma" or "fms" or "fnma" or "fnms", var a) => First(a),
 			IlIntrin(_, var n, var a) => "intrin." + n,
 			IlUnimpl(var s, var w) => $"unimpl {s}{(w != null ? " — " + w : "")}",
 			IlBlock(var b) => First(b),

@@ -45,6 +45,7 @@ public static class SweepGen {
 		WCode.d => "D", WCode.q => "Q", WCode.p => "P",
 		WCode.ps => "Ps", WCode.pd => "Pd", WCode.ss => "Ss", WCode.sd => "Sd",
 		WCode.dq => "Dq", WCode.x => "X", WCode.none => "N",
+		WCode.o => "Dq", WCode.h => "Q",  // nearest existing Rust codes (o: fixed 128; h: L-dependent half)
 		_ => throw new NotSupportedException($"WCode {w}")
 	};
 
