@@ -110,7 +110,7 @@ public static class Oracle {
 	public static int Run(string[] args) {
 		var samplesPath = args[1];
 		var cases = 24;
-		string filter = null, outDir = null;
+		string filter = null, outDir = null, golden = null;
 		var top = 40;
 		for(var a = 2; a < args.Length - 1; a++)
 			switch(args[a]) {
@@ -118,6 +118,7 @@ public static class Oracle {
 				case "--filter": filter = args[++a]; break;
 				case "--out": outDir = args[++a]; break;
 				case "--top": top = int.Parse(args[++a]); break;
+				case "--golden": golden = args[++a]; break;
 			}
 		var samples = File.ReadAllLines(samplesPath)
 			.Select(l => l.Split('\t'))
@@ -127,13 +128,20 @@ public static class Oracle {
 		Console.WriteLine($"oracle: {samples.Count} encodings x {cases} states");
 
 		using var runner = new Runner(EnsureHelper());
+		// --golden: freeze passing cases (2 encodings x 3 states per def) as replayable
+		// lines for XFusionTests' GoldenReplayTests, so the semantics stay pinned where
+		// Rosetta is not available.
+		using var goldenOut = golden == null ? null : new StreamWriter(golden);
+		var goldenPerDef = new Dictionary<string, int>();
 		var stats = new Dictionary<string, DefStats>();
 		foreach(var (def, hits, hex) in samples) {
 			if(!stats.TryGetValue(def, out var ds)) stats[def] = ds = new DefStats { Hits = hits };
 			var code = Convert.FromHexString(hex);
-			var rng = new Random(hex.GetHashCode() ^ 0x5eed);
+			var rng = new Random(OracleFill.SeedOf(hex));
+			var recordEnc = goldenOut != null && goldenPerDef.GetValueOrDefault(def) < 2;
+			if(recordEnc) goldenPerDef[def] = goldenPerDef.GetValueOrDefault(def) + 1;
 			for(var k = 0; k < cases; k++) {
-				var (verdict, detail) = OneCase(runner, code, rng);
+				var (verdict, detail) = OneCase(runner, code, rng, recordEnc && k < 3 ? goldenOut : null);
 				if(verdict == null) { ds.Cases++; ds.Pass++; continue; }
 				if(verdict == "FAIL") {
 					ds.Cases++; ds.Fail++;
@@ -180,7 +188,7 @@ public static class Oracle {
 
 	/// One random state through both sides. Returns (null, null) on agreement,
 	/// ("FAIL", detail) on disagreement, or (skip-reason, null).
-	static unsafe (string, string) OneCase(Runner runner, byte[] code, Random rng) {
+	static unsafe (string, string) OneCase(Runner runner, byte[] code, Random rng, TextWriter golden) {
 		if(!Disassembler.DecodeInsn(code, XMode.Bits64, out var d)) return ("undecoded", null);
 		if(d.Len != code.Length) return ("len", null);
 		var codeAddr = CodeBase;
@@ -248,14 +256,15 @@ public static class Oracle {
 		st.Rflags = 0x202;
 		foreach(var fb in flagBits) if(rng.Next(2) == 1) st.Rflags |= 1UL << fb;
 		if(ins.IsStringInstruction && rng.Next(4) == 0) st.Rflags |= 1UL << 10;  // DF
-		for(var r = 0; r < 16; r++) {
-			var lanes = new byte[32];
-			FillVector(rng, lanes);
-			for(var b = 0; b < 32; b++) st.Ymm[r * 32 + b] = lanes[b];
-		}
+		var ymmSeed = rng.Next();
+		var memSeed = rng.Next();
+		var ymmIn = new byte[16 * 32];
+		OracleFill.FillRegs(new Random(ymmSeed), ymmIn);
+		for(var b = 0; b < ymmIn.Length; b++) st.Ymm[b] = ymmIn[b];
 		st.Mxcsr = 0x1F80;
 		var mem = new byte[MemSize];
-		FillVector(rng, mem);
+		OracleFill.Fill(new Random(memSeed), mem);
+		var memPatch = "-";
 
 		// Steer a ModRM memory operand into the window.
 		if(HasModRmMem(in d) && !d.M.RipRelative) {
@@ -279,13 +288,14 @@ public static class Oracle {
 
 		// Indirect destinations: the register operand, the memory operand, or RET's stack slot.
 		if(brTarget == IndirectTarget) {
-			if(ins.FlowControl == FlowControl.Return)
+			if(ins.FlowControl == FlowControl.Return) {
 				BitConverter.TryWriteBytes(mem.AsSpan((int) (st.Gpr[4] - MemBase)), brTarget);
-			else if(ins.Op0Kind == OpKind.Register)
+				memPatch = $"{st.Gpr[4] - MemBase:x}:{brTarget:x}";
+			} else if(ins.Op0Kind == OpKind.Register)
 				st.Gpr[RegIndex(ins.Op0Register)] = brTarget;
 			else if(ins.Op0Kind == OpKind.Memory) {
-				var ea = (long) (MemBase + (ulong) memOff - MemBase);
-				BitConverter.TryWriteBytes(mem.AsSpan((int) ea), brTarget);
+				BitConverter.TryWriteBytes(mem.AsSpan(memOff), brTarget);
+				memPatch = $"{memOff:x}:{brTarget:x}";
 			} else return ("flow", null);
 		}
 
@@ -379,7 +389,37 @@ public static class Oracle {
 				diffs.Add($"mem+{i:x} il={Convert.ToHexString(lmem, i, end - i)} hw={Convert.ToHexString(nmem, i, end - i)}");
 				break;
 			}
-		if(diffs.Count == 0) return (null, null);
+		if(diffs.Count == 0) {
+			// (cases graded with a Rosetta carve-out are not frozen: the golden would have
+			// to carry the carve-out too)
+			if(golden != null && !skipRax && !skipMovsxd) {
+				// hex codeAddr target flagsIn gprIn ymmSeed memSeed memPatch | taken flagMask gprOut flagsOut ymmOut memOut
+				var gOutL = new List<string>();
+				var yOutL = new List<string>();
+				var gIn = new string[16];
+				for(var r = 0; r < 16; r++) {
+					gIn[r] = $"{st.Gpr[r]:x}";
+					if(nst.Gpr[r] != st.Gpr[r]) gOutL.Add($"{r}={nst.Gpr[r]:x}");
+					if(Half(nst.Ymm, r, 0) != Half(st.Ymm, r, 0) || Half(nst.Ymm, r, 1) != Half(st.Ymm, r, 1))
+						yOutL.Add($"{r}={Half(nst.Ymm, r, 1):x}_{Half(nst.Ymm, r, 0):x}");
+				}
+				var gOut = string.Join(",", gOutL);
+				var yOut = string.Join(",", yOutL);
+				var mOut = new List<string>();
+				for(var i = 0; i < MemSize; ) {
+					if(nmem[i] == mem[i]) { i++; continue; }
+					var e = i;
+					while(e < MemSize && nmem[e] != mem[e]) e++;
+					mOut.Add($"{i:x}:{Convert.ToHexString(nmem, i, e - i)}");
+					i = e;
+				}
+				golden.WriteLine(string.Join("\t", Convert.ToHexString(code), $"{codeAddr:x}", $"{brTarget:x}", $"{st.Rflags:x}",
+					string.Join(",", gIn), ymmSeed, memSeed, memPatch,
+					taken ? 1 : 0, $"{mask:x}", gOut.Length == 0 ? "-" : gOut, $"{nst.Rflags & mask:x}",
+					yOut.Length == 0 ? "-" : yOut, mOut.Count == 0 ? "-" : string.Join(";", mOut)));
+			}
+			return (null, null);
+		}
 		return ("FAIL", $"{ins} :: {string.Join("; ", diffs)}");
 	}
 
@@ -463,27 +503,4 @@ public static class Oracle {
 		_ => (ulong) rng.NextInt64() ^ ((ulong) rng.NextInt64() << 1),
 	};
 
-	/// Vector/memory fill: a mix of raw bits and plausible float lanes, so float ops
-	/// see ordinary values (raw bits alone are NaN/denormal-heavy and mostly test those).
-	static void FillVector(Random rng, byte[] buf) {
-		var mode = rng.Next(4);
-		for(var o = 0; o + 8 <= buf.Length; o += 8) {
-			ulong v = mode switch {
-				0 => (ulong) rng.NextInt64() ^ ((ulong) rng.NextInt64() << 1),
-				1 => (ulong) BitConverter.SingleToUInt32Bits(RandFloat(rng))
-				     | ((ulong) BitConverter.SingleToUInt32Bits(RandFloat(rng)) << 32),
-				2 => BitConverter.DoubleToUInt64Bits(RandFloat(rng) * (double) RandFloat(rng)),
-				_ => (ulong) rng.Next(-300, 300) & 0xFFFF | ((ulong) rng.Next(-300, 300) & 0xFFFF) << 16
-				     | ((ulong) rng.Next(0, 70000)) << 32,
-			};
-			BitConverter.TryWriteBytes(buf.AsSpan(o), v);
-		}
-	}
-
-	static float RandFloat(Random rng) => rng.Next(10) switch {
-		0 => 0f,
-		1 => rng.Next(2) == 0 ? 1f : -1f,
-		2 => rng.Next(-1000, 1000),
-		_ => (float) ((rng.NextDouble() * 2 - 1) * Math.Pow(10, rng.Next(-4, 5))),
-	};
 }

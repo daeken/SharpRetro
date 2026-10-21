@@ -562,7 +562,8 @@ public class IlLower {
                     // wrapping case (2w-bit MIN / -1) must be excluded first: it implies
                     // dividend = MIN(2w), whose quotient can never fit anyway.
                     var minWide = new IlConst(sWide, UInt128.One << (sWidth * 2 - 1));
-                    var minusOne = new IlConst(sWide, (UInt128.One << (sWidth * 2)) - 1);
+                    // all-ones at 2w; (1 << 128) - 1 would wrap to 0 for the 64-bit form
+                    var minusOne = new IlConst(sWide, UInt128.MaxValue >> (128 - sWidth * 2));
                     Stmts.Add(new IlIf(new IlBin(IlType.U1, BinOp.And,
                             new IlBin(IlType.U1, BinOp.Eq, sDividend, minWide),
                             new IlBin(IlType.U1, BinOp.Eq, sDivisor, minusOne)),

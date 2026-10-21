@@ -30,6 +30,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- Golden replay: native-oracle results frozen by the oracle's golden mode;
+             the state generator is shared source so the replay rebuilds identical inputs. -->
+        <Compile Include="../XFusionCensus/OracleFill.cs" Link="Golden/OracleFill.cs"/>
+        <None Include="Golden/oracle-golden.tsv.gz" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="../CoreArchCompiler/CoreArchCompiler.csproj"/>
         <ProjectReference Include="../XFusionCpu/XFusionCpu.csproj"/>
         <ProjectReference Include="../XFusionJit/XFusionJit.csproj"/>
