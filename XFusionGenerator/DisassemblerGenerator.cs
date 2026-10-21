@@ -331,7 +331,9 @@ public static class DisassemblerGenerator {
 		var fmt = RenderDasm(def, opTexts);
 		var data16 = def.Operands.Count == 0 ? "(p.OpSize ? \"data16 \" : \"\") + " : "";
 		var isStringOp = def.Operands.Any(o => o.Class is OpClass.StrSrc or OpClass.StrDst);
-		var repRender = isStringOp ? "(p.Rep ? \"rep \" : p.RepNz ? \"repnz \" : \"\") + " : "";
+		// F3 on CMPS/SCAS is REPE (it also tests ZF); on the other string ops plain REP.
+		var repe = def.Mnemonic.StartsWith("CMPS") || def.Mnemonic.StartsWith("SCAS");
+		var repRender = isStringOp ? $"(p.Rep ? \"{(repe ? "repe" : "rep")} \" : p.RepNz ? \"repnz \" : \"\") + " : "";
 		var expr = $"{data16}{repRender}Decode.MnemonicPrefix(in p) + {fmt}";
 		expr = expr.Replace($"in {m}", "in d.M").Replace($"{m}.", "d.M.")
 			.Replace("in p", "in d.P").Replace("p.", "d.P.")

@@ -344,6 +344,8 @@ public static class PeCensus {
 				rest = System.Text.RegularExpressions.Regex.Replace(rest, @"(\b[a-z]+word |byte )?ptr \[", "[");
 			if(prefix + mn + rest is "xchg ax, ax") return "data16 nop";
 			if(prefix + mn == "rep ret") prefix = "";  // F3 C3: ours drops the stray rep
+			// BLENDVPS/PD/PBLENDVB: ours (like XED) prints the implicit xmm0 mask, iced omits it.
+			if(mn is "blendvps" or "blendvpd" or "pblendvb" && rest.EndsWith(", xmm0")) rest = rest[..^6];
 			return prefix + mn + rest;
 		}
 		readonly Dictionary<string, (long N, string Ex)> undecoded = new(), lenMis = new(), mnemMis = new(),
