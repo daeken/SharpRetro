@@ -76,6 +76,7 @@ public abstract record Il(IlType Ty) {
         IlVecUn(var b, var et, var op, var x) => $"(v{b} v{op.ToString().ToLower()}.{et} {Pp(x, d)})",
         IlVecInsert(var ri, var et, var i, var val) => $"(V{ri}[{Pp(i, d)}].{et} := {Pp(val, d)})",
         IlSyscall(var n) => $"(svc {Pp(n, d)})",
+        IlTrap(var architecture, var vector, var instructionPc, var continuationPc) => $"(trap {architecture} vector {vector} at {Pp(instructionPc, d)} continue {Pp(continuationPc, d)})",
         IlFault(var architecture, var vector) => $"(fault {architecture} vector {vector})",
         IlUnimpl(var src, var why) => $"(‡unimpl {src}{(why != null ? $" — {why}" : "")})",
         // shader-IL
@@ -172,6 +173,12 @@ public record IlIf(Il Cond, IReadOnlyList<Il> Then, IReadOnlyList<Il> Else) : Il
 // merge: load-vars. Reg-state round-trips through alloca vars on
 // BOTH paths (skip = store→immediate-load = identity).
 public record IlLoop(Il Cond, IReadOnlyList<Il> Body, Il EntryGuard = null) : Il(IlType.V0);
+// Trap event boundary, distinct from a restartable IlFault. InstructionPc is
+// the instruction origin; ContinuationPc is the architectural saved/return PC.
+// Delivery may change guest state or resume via a handler, but those operations
+// are NOT implicit in this node. A consumer must stop at the event and explicitly
+// deliver/resume it or refuse; never drop the event as ordinary fallthrough.
+public record IlTrap(string Architecture, int Vector, Il InstructionPc, Il ContinuationPc) : Il(IlType.V0);
 // Synchronous architectural fault. Nonreturning: no subsequent effect in the
 // instruction may execute. Consumers without matching fault delivery must refuse
 // this node; it is not a note, host syscall or successful terminal return.

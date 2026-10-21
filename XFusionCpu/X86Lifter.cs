@@ -24,6 +24,20 @@ public static class X86Lifter {
 	public static IlBlock Lift(in DecodedInsn d, ulong pc, XMode mode) {
 		var (tid, specsText, d64) = LiftTables.Defs[d.DefId];
 		var (params_, eval) = Template(tid);
+        // Only the plain one-byte CC encoding is modeled here. Other software
+        // interrupts, prefixes and delivery environments retain their own limits.
+        if(LiftTables.Templates[tid].Mnemonic == "INT3") {
+            if(mode is not (XMode.Bits16 or XMode.Bits32 or XMode.Bits64) ||
+                d.Op != 0xcc || d.Len != 1 || d.P.Lock || d.P.Rep || d.P.RepNz ||
+                d.P.OpSize || d.P.AdSize || d.P.Segment != 0 || d.P.Rex != 0 ||
+                d.P.VexValid || d.P.EvexValid)
+                throw new NotSupportedException("INT3 mode/prefix/encoding outside supported trap model");
+            var next = unchecked(pc + 1);
+            if(mode == XMode.Bits16) next &= 0xffff;
+            else if(mode == XMode.Bits32) next &= 0xffffffff;
+            return new IlBlock([new IlTrap("x86", 3,
+                new IlConst(IlType.U64, pc), new IlConst(IlType.U64, next))]);
+        }
         if(LiftTables.Templates[tid].Mnemonic == "IMUL1" &&
             (mode is not (XMode.Bits16 or XMode.Bits32 or XMode.Bits64) || d.P.Rep || d.P.RepNz))
             throw new NotSupportedException("IMUL1 mode/REP prefix outside supported ISA model");

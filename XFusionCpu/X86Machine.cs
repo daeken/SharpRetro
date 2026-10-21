@@ -66,6 +66,14 @@ public class X86Machine {
 	/// The DOS shim installs itself here (int, in/out, string ops...).
 	public Func<X86Machine, string, ulong[], bool> OnIntrin;
 
+    /// Explicit trap-event delivery boundary. Arguments are machine,
+    /// architecture, vector, instruction origin and architectural continuation PC.
+    /// No guest context/stack/handler/resumption is synthesized. A host may inspect
+    /// the pre-delivery state and leave through its own nonreturning event signal;
+    /// returning is refused because resumption semantics are not implemented.
+    /// Ip remains the instruction origin; the continuation is separate event data.
+    public Action<X86Machine, string, int, ulong, ulong> OnTrap;
+
 	/// Branch taken during the last Step (consumed by Step to set IP).
 	ulong? _branchTo;
 	bool _halted;
@@ -153,6 +161,16 @@ public class X86Machine {
 				RunIntrinsic(name, vals);
 				break;
 			}
+			case IlTrap(var architecture, var vector, var instructionPc, var continuationPc): {
+                var origin = N64(Eval(instructionPc));
+                var continuation = N64(Eval(continuationPc));
+                if(architecture != "x86" || vector != 3)
+                    throw new NotSupportedException($"trap delivery {architecture}:{vector}");
+                if(OnTrap == null)
+                    throw new NotSupportedException("x86 #BP trap delivery/resumption is unsupported without a host event boundary");
+                OnTrap(this, architecture, vector, origin, continuation);
+                throw new NotSupportedException("trap delivery hook returned; explicit guest resumption is unsupported");
+            }
 			case IlFault("x86", 0): throw new DivideByZeroException("#DE");
 			case IlNote: break;
 			default: throw new NotSupportedException($"exec {s.GetType().Name}");
