@@ -1,0 +1,11 @@
+tests/__pycache__/
+__pycache__/
+*.py[cod]
+examples/cli/build/
+examples/cli/__pycache__/
+examples/b64/build/
+examples/b64/__pycache__/
+examples/stdio/build/
+examples/stdio/__pycache__/
+examples/lz4-pe/build/
+examples/lz4-pe/__pycache__/

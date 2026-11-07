@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/lz4/lz4",
+  "tag": "v1.8.3",
+  "release": "https://github.com/lz4/lz4/releases/tag/v1.8.3",
+  "archive_url": "https://github.com/lz4/lz4/releases/download/v1.8.3/lz4_v1_8_3_win64.zip",
+  "archive_sha256": "4fc382da9a2421de0c12d5d6bc18384694db33fcfdbafa2d8302d785757d69db",
+  "dll_member": "dll/liblz4.so.1.8.3.dll",
+  "dll_sha256": "1731d54f5ec77effa24beda1075105395aa9b9ff0a042a618a17204253c8a960",
+  "source_sha256": {
+    "lz4.c": "d6d9f35a344cb121c129cac06e7935688ffc70ec9a82b655939daa641f8e62b4",
+    "lz4.h": "98313b10f73a9fbf15c7d9b71fa64b6bfbd45532e47e8f6a45eb65e123fd97e6",
+    "LICENSE": "d15d99c8dc6b0ec22174c0e563a95bc40f9363ca7f9d9d793bb5c5a8e8d0af71"
+  },
+  "commit": "641b453d9db536ee020851bfcb1dc39f61006f0a"
+}

@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/iaseth/b64",
+  "commit": "20b0bf244e785443ae27bea06dc6f67b4639d880",
+  "license": "MIT",
+  "files": {
+    "src/main.c": "4fe35188383675e5f89f8d659f03fd422e8c5e47",
+    "src/base64.c": "c4ecf66ad165cc7cf45e748faf2238fb9a392c39",
+    "src/base64.h": "dbf6d492971ba56df76b9e2c1cb981f722e89cd8",
+    "src/version.h": "5c21a585c17b69aa889600734d90a564fc991d6e",
+    "LICENSE.md": "97fdb35f8679681a6e19e5c9bc723ad38e0c8500"
+  }
+}
