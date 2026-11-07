@@ -679,6 +679,11 @@ public class IlLower {
 				else throw new NotSupportedException($"imul-of dst {dst}");
 				Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit("CF"), ovf));
 				Stmts.Add(new IlWriteReg(RegKind.Eflags, FlagBit("OF"), ovf));
+				// Intel SDM Vol. 2A, IMUL / Flags Affected: these four flags
+				// are undefined, not preserved. Match the one-operand model.
+				foreach(var bit in new[] { 2, 4, 6, 7 })
+					Stmts.Add(new IlWriteReg(RegKind.Eflags, bit,
+						new IlUndefined(IlType.U1, "IMUL flag " + bit)));
 				break;
 			}
 			case PName("vshift-bytes"): {

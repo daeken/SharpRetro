@@ -92,6 +92,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XFusionJit", "XFusionJit\XF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XFusionCpu", "XFusionCpu\XFusionCpu.csproj", "{E8009E86-7B83-4060-928D-6A1E9EFB1D38}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Decompiler", "Decompiler\Decompiler.csproj", "{209C7568-6806-4F46-88F4-7D42268836E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -522,6 +524,18 @@ Global
 		{E8009E86-7B83-4060-928D-6A1E9EFB1D38}.Release|x64.Build.0 = Release|Any CPU
 		{E8009E86-7B83-4060-928D-6A1E9EFB1D38}.Release|x86.ActiveCfg = Release|Any CPU
 		{E8009E86-7B83-4060-928D-6A1E9EFB1D38}.Release|x86.Build.0 = Release|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Debug|x64.Build.0 = Debug|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Debug|x86.Build.0 = Debug|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Release|x64.ActiveCfg = Release|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Release|x64.Build.0 = Release|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Release|x86.ActiveCfg = Release|Any CPU
+		{209C7568-6806-4F46-88F4-7D42268836E5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
