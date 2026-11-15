@@ -9,6 +9,8 @@
   <ItemGroup>
     <ProjectReference Include="../XFusionCpu/XFusionCpu.csproj" />
     <None Include="CppRuntime.hpp" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="StringRuntime.hpp" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="DoubleShiftRuntime.hpp" CopyToOutputDirectory="PreserveNewest" />
     <None Include="IntegerRuntime.hpp" CopyToOutputDirectory="PreserveNewest" />
     <None Include="ApplicationRuntime.hpp" CopyToOutputDirectory="PreserveNewest" />
     <None Include="NativeRuntime.hpp" CopyToOutputDirectory="PreserveNewest" />

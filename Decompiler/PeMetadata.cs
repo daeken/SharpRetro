@@ -9,16 +9,22 @@ public sealed partial class BinaryImage {
     public uint PeImageSize { get; private set; }
     public bool PeHasTls { get; private set; }
     public IReadOnlyDictionary<string,PeExport> Exports => exports;
+    public IReadOnlyDictionary<uint,PeExport> PeOrdinalExports => peOrdinalExports;
     public IReadOnlyDictionary<ulong,string> PeImportSlots => peImportSlots;
     public IReadOnlyList<PeRuntimeFunction> PeRuntimeFunctions => peRuntimeFunctions;
     public IReadOnlyList<PeRelocation> PeRelocations => peRelocations;
     readonly Dictionary<string,PeExport> exports=[];
+    readonly Dictionary<uint,PeExport> peOrdinalExports=[];
     readonly Dictionary<ulong,string> peImportSlots=[];
     readonly List<PeRuntimeFunction> peRuntimeFunctions=[];
     readonly List<PeRelocation> peRelocations=[];
     readonly Dictionary<ulong,uint> peSectionFlags=[];
     public bool IsPeReadable(ImageRegion region) => peSectionFlags.TryGetValue(region.Address,out var flags) && (flags&0x40000000)!=0;
     uint peHeaders;
+    public byte[] ReadPeHeaders() {
+        if(Format!=BinaryFormat.Pe || peHeaders==0) throw new InvalidOperationException("No declared PE headers");
+        return Slice(0,peHeaders).ToArray();
+    }
 
     ulong PeFile(ulong rva,ulong bytes) {
         if(rva<peHeaders && bytes<=peHeaders-rva) { Slice(rva,bytes); return rva; }
@@ -62,6 +68,12 @@ public sealed partial class BinaryImage {
             uint funcs=U32(file+28),names=U32(file+32),ords=U32(file+36);
             if(nf>65536 || nn>65536) throw new NotSupportedException("PE export table limit");
             ulong ff=nf==0 ? 0 : PeFile(funcs,4UL*nf),nnf=nn==0 ? 0 : PeFile(names,4UL*nn),of=nn==0 ? 0 : PeFile(ords,2UL*nn);
+            for(uint i=0;i<nf;i++) {
+                uint rva=U32(ff+4UL*i); if(rva==0) continue;
+                string? forwarder=rva>=ex.Rva && (ulong)rva-ex.Rva<ex.Size ? PeString(rva,(ulong)ex.Rva+ex.Size-rva) : null;
+                uint number=checked(ordinal+i);
+                peOrdinalExports.Add(number,new(Add(imageBase,rva),number,forwarder));
+            }
             for(uint i=0;i<nn;i++) {
                 string name=PeString(U32(nnf+4UL*i)); uint ix=U16(of+2UL*i);
                 if(ix>=nf) throw new InvalidDataException("PE export ordinal outside function table");

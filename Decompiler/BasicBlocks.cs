@@ -18,10 +18,12 @@ public sealed class StructuringException(string message) : Exception(message);
 
 /// Preserve instruction IL verbatim; recover block/edge topology above it.
 public static class BasicBlocks {
-    public static BlockGraph Build(LiftedProgram program, bool includeCalls = false, IReadOnlySet<ulong>? functionEntries = null) {
+    public static BlockGraph Build(LiftedProgram program, bool includeCalls = false, IReadOnlySet<ulong>? functionEntries = null,
+        bool allowDynamicTargets = false) {
         var instructions = program.Instructions.ToDictionary(i => i.Address);
-        var terms = instructions.Values.ToDictionary(i => i.Address, i => Describe(i, includeCalls));
+        var terms = instructions.Values.ToDictionary(i => i.Address, i => Describe(i, includeCalls,allowDynamicTargets));
         var leaders = new HashSet<ulong> { program.Entry };
+        leaders.UnionWith(program.ExtraEntries);
         if(functionEntries != null) leaders.UnionWith(functionEntries.Where(instructions.ContainsKey));
         foreach(var term in terms.Values.Where(t => t.Branch != null))
             foreach(var target in term.Successors.Where(instructions.ContainsKey)) leaders.Add(target);
@@ -48,7 +50,7 @@ public static class BasicBlocks {
         return new(program.Entry, blocks, predecessors);
     }
 
-    static BasicBlock Describe(LiftedInstruction insn, bool includeCalls) {
+    static BasicBlock Describe(LiftedInstruction insn, bool includeCalls,bool allowDynamicTargets) {
         var branches = Branches(insn.Body).ToArray();
         if(branches.Length == 0) return new(insn.Address, [insn], TerminatorKind.Jump, insn.Next, 0, null);
         if(branches.Length != 1 || !ReferenceEquals(insn.Body.Body.LastOrDefault(), branches[0]))
@@ -58,6 +60,11 @@ public static class BasicBlocks {
             return new(insn.Address, [insn], TerminatorKind.Return, 0, 0, branch);
         if(includeCalls && branch.Kind == BranchKind.Call && branch.Cond == null && ControlFlow.ConstantTarget(insn.Body, branch) is { } target)
             return new(insn.Address, [insn], TerminatorKind.Call, target, insn.Next, branch);
+        // Zero is a topology placeholder for an unknown destination, not an
+        // executable target claim. The original branch IL remains authoritative.
+        if(allowDynamicTargets && branch.Cond==null && branch.Kind is BranchKind.Call or BranchKind.Jmp &&
+           ControlFlow.ConstantTarget(insn.Body,branch)==null)
+            return new(insn.Address,[insn],branch.Kind==BranchKind.Call ? TerminatorKind.Call : TerminatorKind.Jump,0,insn.Next,branch);
         if(branch.Kind is not (BranchKind.Jmp or BranchKind.CondJmp or BranchKind.Fallthrough) ||
            branch.Target is not IlConst(_, var bits) || bits > ulong.MaxValue)
             throw new StructuringException($"Unsupported block terminator at 0x{insn.Address:x}");

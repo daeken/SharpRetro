@@ -10,6 +10,23 @@ matching workflows. It does not invoke msvcdecomp, an MCP service, a Windows VM,
 or an original compiler. macOS, .NET 10, Python 3, and Clang are enough to develop
 and test the current pipeline.
 
+## PE32 recovery and annotations
+
+The machine-state emitter supports the PE32 recovery workflow in
+[DAODecomp](https://github.com/daeken/DAODecomp). SharpRetro emits C++ and reports
+the origin of each visible lifted temporary. The origin combines the defining
+instruction RVA, a normalized IL fingerprint and a canonical temporary index.
+A caller can pass origin-keyed names and compatible types back through
+`CppEmissionOptions`. The origin stays stable across display renumbering and
+structured or dispatch emission when the defining IL stays the same.
+
+DAODecomp owns the persistent annotation store and the agent workflow.
+Its [workbench guide](https://github.com/daeken/DAODecomp/blob/main/docs/recovery-workbench.md)
+shows how to inspect callers, callees, instruction bytes and object fields,
+submit semantic renames against a pinned source view, and propose shared
+guest-memory struct and class layouts. The PE32 path still uses a machine-state
+ABI. Names, signatures and object layouts need evidence and review.
+
 ## Current vertical slice
 
 | Layer | Implemented | Limits |

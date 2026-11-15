@@ -3,9 +3,16 @@
 #include <stdexcept>
 
 // Exact-width arithmetic shared by the machine and source backends.
-// unsigned __int128 is a Clang/GCC extension, required by this initial backend.
+// Host carrier width is independent of guest pointer/register width. Clang i686
+// lacks __int128 but supports the same unsigned modular arithmetic with _BitInt.
 namespace sharp_retro {
+#if defined(__SIZEOF_INT128__)
 using bits = unsigned __int128;
+#elif defined(__clang__) && defined(__BITINT_MAXWIDTH__) && __BITINT_MAXWIDTH__ >= 128
+using bits = unsigned _BitInt(128);
+#else
+#error "SharpRetro requires an unsigned integer carrier of at least 128 bits"
+#endif
 inline bits mask(unsigned width) { return width == 128 ? ~bits(0) : (bits(1) << width) - 1; }
 inline bits narrow(bits value, unsigned width) { return value & mask(width); }
 inline bits sext(bits value, unsigned from, unsigned to) {
