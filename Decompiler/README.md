@@ -21,7 +21,7 @@ A caller can pass origin-keyed names and compatible types back through
 structured or dispatch emission when the defining IL stays the same.
 
 DAODecomp owns the persistent annotation store and the agent workflow.
-Its [workbench guide](https://github.com/daeken/DAODecomp/blob/main/docs/recovery-workbench.md)
+Its [workbench guide](https://github.com/daeken/DAODecomp/blob/codex/recovery-workbench/docs/recovery-workbench.md)
 shows how to inspect callers, callees, instruction bytes and object fields,
 submit semantic renames against a pinned source view, and propose shared
 guest-memory struct and class layouts. The PE32 path still uses a machine-state
